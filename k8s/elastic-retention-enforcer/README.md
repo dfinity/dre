@@ -12,5 +12,5 @@ It is evaluated only if remaining indexes after the evaluation of age policy hav
 
 ### Example run
 ```bash
-poetry run python retention.py <elastic-url> [--max-age <days>] [--max-disk-util <humanfriendly>]
+rye run python retention.py <elastic-url> [--max-age <days>] [--max-disk-util <humanfriendly>]
 ```

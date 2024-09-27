@@ -4,11 +4,7 @@ use clap::Args;
 use ic_management_types::Network;
 use serde_json::Value;
 
-use crate::{
-    commands::{ExecutableCommand, IcAdminRequirement},
-    ic_admin::IcAdmin,
-    qualification::QualificationExecutorBuilder,
-};
+use crate::{commands::ExecutableCommand, ic_admin::IcAdmin, qualification::QualificationExecutorBuilder};
 
 #[derive(Args, Debug)]
 pub struct Execute {
@@ -44,11 +40,11 @@ pub struct Execute {
 }
 
 impl ExecutableCommand for Execute {
-    fn require_ic_admin(&self) -> crate::commands::IcAdminRequirement {
-        IcAdminRequirement::Detect
+    fn require_auth(&self) -> crate::commands::AuthRequirement {
+        crate::commands::AuthRequirement::Neuron
     }
 
-    fn validate(&self, cmd: &mut clap::Command) {
+    fn validate(&self, _args: &crate::commands::Args, cmd: &mut clap::Command) {
         if self.artifacts.is_some() && self.grafana_url.is_none() {
             cmd.error(
                 clap::error::ErrorKind::InvalidValue,
@@ -66,7 +62,7 @@ impl ExecutableCommand for Execute {
         let from_version = match &self.from_version {
             Some(v) => v.to_string(),
             None => {
-                let anonymous_admin_wrapper_for_mainnet = ctx.readonly_ic_admin_for_other_network(Network::mainnet_unchecked().unwrap());
+                let anonymous_admin_wrapper_for_mainnet = ctx.readonly_ic_admin_for_other_network(Network::mainnet_unchecked().unwrap()).await?;
 
                 let subnets = ctx.registry().await.subnets().await?;
                 let nns_subnet_id = subnets.keys().next().unwrap();
@@ -87,14 +83,11 @@ impl ExecutableCommand for Execute {
             .with_step_range(self.step_range.clone().unwrap_or_default())
             .with_from_version(from_version)
             .with_to_version(self.version.clone())
-            .with_deployment_namge(self.deployment_name.clone())
+            .with_deployment_name(self.deployment_name.clone())
             .with_prometheus_endpoint(self.prometheus_endpoint.clone());
         if let Some(path) = &self.artifacts {
             qualification_executor = qualification_executor.with_artifacts(path.to_owned());
         };
-        if let Some(grafana_url) = &self.grafana_url {
-            qualification_executor = qualification_executor.with_grafana_endpoint(grafana_url.to_owned());
-        }
         qualification_executor.build()?.execute().await
     }
 }

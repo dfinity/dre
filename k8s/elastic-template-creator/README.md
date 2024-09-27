@@ -4,5 +4,5 @@ Template creator for ElasticSearch which should create an index template for log
 
 ### Example run
 ```bash
-poetry run python template-creator.py <elastic-url> [--index-pattern <pattern>] [--template-name <template-name>] [--shard-size-per-index <num-of-shards>]
+rye run python template-creator.py <elastic-url> [--index-pattern <pattern>] [--template-name <template-name>] [--shard-size-per-index <num-of-shards>]
 ```

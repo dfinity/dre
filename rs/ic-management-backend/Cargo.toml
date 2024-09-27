@@ -5,6 +5,7 @@ authors.workspace = true
 edition.workspace = true
 description.workspace = true
 documentation.workspace = true
+license.workspace = true
 
 [dependencies]
 actix-web = { workspace = true }
@@ -40,6 +41,7 @@ ic-registry-local-store = { workspace = true }
 ic-registry-nns-data-provider = { workspace = true }
 ic-registry-subnet-type = { workspace = true }
 ic-types = { workspace = true }
+indexmap = { workspace = true }
 itertools = { workspace = true }
 lazy_static = { workspace = true }
 log = { workspace = true }
@@ -54,10 +56,10 @@ strum = { workspace = true }
 strum_macros = { workspace = true }
 tokio = { workspace = true }
 url = { workspace = true }
+mockall.workspace = true
 
 [dev-dependencies]
 actix-rt = { workspace = true }
-
 
 [[bin]]
 name = "ic-management-backend"

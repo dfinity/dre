@@ -1,4 +1,5 @@
 #![allow(dead_code)]
+pub mod artifact_downloader;
 pub mod auth;
 pub mod commands;
 pub mod ctx;
@@ -8,5 +9,3 @@ mod operations;
 mod qualification;
 mod runner;
 mod subnet_manager;
-#[cfg(test)]
-mod unit_tests;

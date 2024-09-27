@@ -1,22 +1,28 @@
-use std::collections::BTreeMap;
-
-use decentralization::{network::SubnetChange, SubnetChangeResponse};
+use decentralization::{
+    network::{DecentralizedSubnet, SubnetChange},
+    SubnetChangeResponse,
+};
 use ic_base_types::PrincipalId;
 use ic_management_types::{Node, TopologyChangeProposal};
+use indexmap::IndexMap;
 
 pub fn get_proposed_subnet_changes(
-    all_nodes: &BTreeMap<PrincipalId, Node>,
+    all_nodes: &IndexMap<PrincipalId, Node>,
     subnet: &ic_management_types::Subnet,
 ) -> Result<SubnetChangeResponse, anyhow::Error> {
     if let Some(proposal) = &subnet.proposal {
         let proposal: &TopologyChangeProposal = proposal;
+        let subnet_nodes: Vec<_> = subnet.nodes.iter().map(decentralization::network::Node::from).collect();
+        let penalties_after_change = DecentralizedSubnet::check_business_rules_for_subnet_with_nodes(&subnet.principal, &subnet_nodes)
+            .expect("Business rules check should succeed")
+            .0;
         let change = SubnetChange {
             id: subnet.principal,
-            old_nodes: subnet.nodes.iter().map(decentralization::network::Node::from).collect(),
-            new_nodes: subnet.nodes.iter().map(decentralization::network::Node::from).collect(),
+            old_nodes: subnet_nodes.clone(),
+            new_nodes: subnet_nodes,
             removed_nodes_desc: vec![],
             added_nodes_desc: vec![],
-            min_nakamoto_coefficients: None,
+            penalties_after_change,
             comment: None,
             run_log: vec![],
         }
@@ -125,8 +131,8 @@ mod tests {
         assert_eq!(change.removed_with_desc.iter().map(|x| x.0).collect::<Vec<_>>(), node_ids_removed);
     }
 
-    fn gen_test_nodes(subnet_id: PrincipalId, num_nodes: u64, start_at_number: u64) -> BTreeMap<PrincipalId, Node> {
-        let mut nodes = BTreeMap::new();
+    fn gen_test_nodes(subnet_id: PrincipalId, num_nodes: u64, start_at_number: u64) -> IndexMap<PrincipalId, Node> {
+        let mut nodes = IndexMap::new();
         for i in start_at_number..start_at_number + num_nodes {
             let node = Node {
                 principal: PrincipalId::new_node_test_id(i),

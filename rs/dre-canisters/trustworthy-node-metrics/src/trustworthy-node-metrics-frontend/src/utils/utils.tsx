@@ -1,5 +1,11 @@
-import { DailyNodeMetrics } from "../../../declarations/trustworthy-node-metrics/trustworthy-node-metrics.did";
+import React from 'react';
+import { Principal } from "@dfinity/principal";
+import { trustworthy_node_metrics } from "../../../declarations/trustworthy-node-metrics";
+import { DailyNodeMetrics, NodeRewardsArgs, NodeRewards, NodeProviderRewardsArgs, NodeProviderRewards } from "../../../declarations/trustworthy-node-metrics/trustworthy-node-metrics.did";
 import { PeriodFilter } from "../components/FilterBar";
+import { Box, CircularProgress } from "@mui/material";
+import { WidgetNumber } from '../components/Widgets';
+import { boxStyleWidget } from '../Styles';
 export interface ChartData {
   date: Date ;
   dailyNodeMetrics: DailyNodeMetrics | null;
@@ -66,4 +72,133 @@ export const computeAverageFailureRate = (data: number[]): number => {
     const sum = data.reduce((acc, val) => acc + val, 0);
     return sum / data.length;
   };
+
+export const dateStartToEnd = (date: Date): Date => {
+  return new Date(
+    Date.UTC(
+      date.getUTCFullYear(),
+      date.getUTCMonth(),
+      date.getUTCDate(),
+      23, 59, 59, 999
+    )
+  )
+};
+export const getDateRange = () => {
+  const now = new Date();
+  const dateStart = new Date(
+    Date.UTC(
+      now.getUTCFullYear(),
+      now.getUTCMonth() - 1,
+      1, 0, 0, 0, 0 
+    )
+  );
+
+  const dateEnd = new Date(
+    Date.UTC(
+      now.getUTCFullYear(),
+      now.getUTCMonth(),
+      now.getUTCDate(),
+      23, 59, 59, 999
+    )
+  );
+
+  return { dateStart, dateEnd };
+};
+
+export const getLatestRewardRange = () => {
+  const now = new Date();
+  const currentDay = now.getUTCDate();
+
+  const dateEnd = new Date(
+    Date.UTC(
+      now.getUTCFullYear(),
+      currentDay <= 13 ? now.getUTCMonth() - 1 : now.getUTCMonth(),
+      13, 23, 59, 59, 999
+    )
+  );
+
+  const dateStart = new Date(
+    Date.UTC(
+      dateEnd.getUTCFullYear(),
+      dateEnd.getUTCMonth() - 1 ,
+      14, 0, 0, 0, 0 
+    )
+  );
+  return { dateStart, dateEnd };
+};
+
+export const setNodeRewardsData = async (
+  periodFilter: PeriodFilter, 
+  node_id: Principal,
+  setNodeRewards: React.Dispatch<React.SetStateAction<NodeRewards | null>>,
+  setIsLoading: React.Dispatch<React.SetStateAction<boolean>>) => {
+  try {
+    setIsLoading(true);
+
+    const request: NodeRewardsArgs = {
+      from_ts: dateToNanoseconds(periodFilter.dateStart),
+      to_ts: dateToNanoseconds(periodFilter.dateEnd),
+      node_id: node_id,
+    };
+    const nodeRewardsResponse = await trustworthy_node_metrics.node_rewards(request);
+
+    setNodeRewards(nodeRewardsResponse);
+  } catch (error) {
+    console.error("Error fetching node:", error);
+  } finally {
+    setIsLoading(false);
+  }
+};
+
+export const setNodeProviderRewardsData = async (
+  periodFilter: PeriodFilter, 
+  provider: Principal,
+  setProviderRewards: React.Dispatch<React.SetStateAction<NodeProviderRewards | null>>,
+  setIsLoading: React.Dispatch<React.SetStateAction<boolean>>) => {
+  try {
+      setIsLoading(true);
+  
+      const request: NodeProviderRewardsArgs = {
+        from_ts: dateToNanoseconds(periodFilter.dateStart),
+        to_ts: dateToNanoseconds(periodFilter.dateEnd),
+        node_provider_id: Principal.from(provider),
+      };
+      const nodeRewardsResponse = await trustworthy_node_metrics.node_provider_rewards(request);
+  
+      setProviderRewards(nodeRewardsResponse);
+    } catch (error) {
+      console.error("Error fetching node:", error);
+    } finally {
+      setIsLoading(false);
+  }
+};
+
+export const LoadingIndicator: React.FC = () => (
+  <Box
+    sx={{
+      display: 'flex',
+      justifyContent: 'center',
+      alignItems: 'center',
+      height: '100vh',
+    }}
+  >
+    <CircularProgress />
+  </Box>
+);
+
+export const NodeMetricsStats: React.FC<{ stats: NodeRewards['rewards_computation'] | null }> = ({ stats }) => (
+  <Box sx={boxStyleWidget('left')}>
+      <WidgetNumber value={stats ? stats.blocks_proposed.toString() : "0"} title="Blocks Proposed Total" />
+      <WidgetNumber value={stats ? stats.blocks_failed.toString() : "0"} title="Blocks Failed Total" />
+  </Box>
+);
+
+export const NodePerformanceStats: React.FC<{ failureRateAvg: string, rewardMultiplier: string , baseRewardsXDR: string}> = ({ failureRateAvg, rewardMultiplier, baseRewardsXDR }) => (
+  <Box sx={boxStyleWidget('right')}>
+      <WidgetNumber value={failureRateAvg} title="Average Failure Rate" />
+      <WidgetNumber value={rewardMultiplier} title="Reward Multiplier" sxValue={{ color: '#FFCC00' }} />
+      <WidgetNumber value={baseRewardsXDR} title="Base Monthly Rewards XDR" sxValue={{ color: '#FFCC00' }} />
+  </Box>
+);
+
 

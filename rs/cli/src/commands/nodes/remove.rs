@@ -1,7 +1,7 @@
 use clap::{error::ErrorKind, Args};
 use decentralization::subnets::NodesRemover;
 
-use crate::commands::{ExecutableCommand, IcAdminRequirement};
+use crate::commands::{AuthRequirement, ExecutableCommand};
 
 #[derive(Args, Debug)]
 pub struct Remove {
@@ -26,12 +26,12 @@ pub struct Remove {
 }
 
 impl ExecutableCommand for Remove {
-    fn require_ic_admin(&self) -> IcAdminRequirement {
-        IcAdminRequirement::Detect
+    fn require_auth(&self) -> AuthRequirement {
+        AuthRequirement::Neuron
     }
 
     async fn execute(&self, ctx: crate::ctx::DreContext) -> anyhow::Result<()> {
-        let runner = ctx.runner().await;
+        let runner = ctx.runner().await?;
         runner
             .remove_nodes(NodesRemover {
                 no_auto: self.no_auto,
@@ -44,10 +44,10 @@ impl ExecutableCommand for Remove {
             .await
     }
 
-    fn validate(&self, cmd: &mut clap::Command) {
+    fn validate(&self, _args: &crate::commands::Args, cmd: &mut clap::Command) {
         if self.motivation.is_none() && !self.extra_nodes_filter.is_empty() {
             cmd.error(ErrorKind::MissingRequiredArgument, "Required argument motivation not found")
-                .exit();
+                .exit()
         }
     }
 }

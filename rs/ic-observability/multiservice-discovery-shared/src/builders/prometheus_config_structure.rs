@@ -1,7 +1,7 @@
 use std::collections::{BTreeMap, BTreeSet};
 
 use ic_types::PrincipalId;
-use serde::{Deserialize, Serialize, Serializer};
+use serde::{Deserialize, Serialize};
 
 use crate::{builders::ConfigBuilder, contracts::target::TargetDto};
 
@@ -9,21 +9,6 @@ use crate::{builders::ConfigBuilder, contracts::target::TargetDto};
 pub struct PrometheusStaticConfig {
     pub targets: BTreeSet<String>,
     pub labels: BTreeMap<String, String>,
-}
-
-#[derive(Debug, Eq, PartialEq, Clone)]
-pub struct PrometheusFileSdConfig {
-    configs: BTreeSet<PrometheusStaticConfig>,
-    updated: bool,
-}
-
-impl Serialize for PrometheusFileSdConfig {
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-    where
-        S: Serializer,
-    {
-        serializer.collect_seq(self.configs.clone())
-    }
 }
 
 #[derive(Debug, Clone)]

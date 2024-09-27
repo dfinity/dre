@@ -1,3 +1,4 @@
+import datetime
 import hashlib
 import logging
 import os
@@ -8,6 +9,7 @@ import tempfile
 import time
 import traceback
 import typing
+import dre_cli
 
 
 sys.path.append(os.path.join(os.path.dirname(__file__)))
@@ -30,8 +32,6 @@ from release_index_loader import GitReleaseLoader
 from release_index_loader import ReleaseLoader
 from util import version_name
 from watchdog import Watchdog
-
-from pylib.ic_admin import IcAdmin
 
 
 class ReconcilerState:
@@ -58,12 +58,27 @@ class ReconcilerState:
 
     def proposal_submitted(self, version: str) -> bool:
         """Check if a proposal has been submitted for the given version."""
+        version_path = self._version_path(version)
         if self._version_path(version).exists():
             proposal_id = self.version_proposal(version)
             if proposal_id:
-                logging.info("version %s: proposal %s already submitted", version, proposal_id)
+                logging.info(
+                    "version %s: proposal %s already submitted", version, proposal_id
+                )
             else:
-                logging.warning("version %s: earlier proposal submission attempted but failed, will not retry", version)
+                last_modified = datetime.datetime.fromtimestamp(os.path.getmtime(version_path))
+                remaining_time_until_retry = datetime.timedelta(minutes=10) - (
+                    datetime.datetime.now() - last_modified
+                )
+                if remaining_time_until_retry.total_seconds() > 0:
+                    logging.warning(
+                        "version %s: earlier proposal submission attempted but most likely failed, will retry in %s seconds",
+                        version,
+                        remaining_time_until_retry.total_seconds(),
+                    )
+                else:
+                    os.remove(version_path)
+                    return False
             return True
         return False
 
@@ -79,7 +94,9 @@ class ReconcilerState:
             f.write(str(proposal_id))
 
 
-def oldest_active_release(index: release_index.Model, active_versions: list[str]) -> release_index.Release:
+def oldest_active_release(
+    index: release_index.Model, active_versions: list[str]
+) -> release_index.Release:
     for rc in reversed(index.root.releases):
         for v in rc.versions:
             if v.version in active_versions:
@@ -92,30 +109,51 @@ def versions_to_unelect(
     index: release_index.Model, active_versions: list[str], elected_versions: list[str]
 ) -> list[str]:
     active_releases_versions = []
-    for rc in index.root.releases[: index.root.releases.index(oldest_active_release(index, active_versions)) + 1]:
+    for rc in index.root.releases[
+        : index.root.releases.index(oldest_active_release(index, active_versions)) + 1
+    ]:
         for v in rc.versions:
             active_releases_versions.append(v.version)
 
-    return [v for v in elected_versions if v not in active_releases_versions and v not in active_versions]
+    return [
+        v
+        for v in elected_versions
+        if v not in active_releases_versions and v not in active_versions
+    ]
 
 
-def find_base_release(ic_repo: GitRepo, config: release_index.Model, commit: str) -> typing.Tuple[str, str]:
+def find_base_release(
+    ic_repo: GitRepo, config: release_index.Model, commit: str
+) -> typing.Tuple[str, str]:
     """
     Find the parent release commit for the given commit. Optionally return merge base if it's not a direct parent.
     """
     ic_repo.fetch()
     rc, rc_idx = next(
-        (rc, i) for i, rc in enumerate(config.root.releases) if any(v.version == commit for v in rc.versions)
+        (rc, i)
+        for i, rc in enumerate(config.root.releases)
+        if any(v.version == commit for v in rc.versions)
     )
-    v_idx = next(i for i, v in enumerate(config.root.releases[rc_idx].versions) if v.version == commit)
+    v_idx = next(
+        i
+        for i, v in enumerate(config.root.releases[rc_idx].versions)
+        if v.version == commit
+    )
     return (
         (
             config.root.releases[rc_idx + 1].versions[0].version,
-            version_name(config.root.releases[rc_idx + 1].rc_name, config.root.releases[rc_idx + 1].versions[0].name),
+            version_name(
+                config.root.releases[rc_idx + 1].rc_name,
+                config.root.releases[rc_idx + 1].versions[0].name,
+            ),
         )  # take first version from the previous rc
         if v_idx == 0
         else min(
-            [(v.version, version_name(rc.rc_name, v.name)) for v in rc.versions if v.version != commit],
+            [
+                (v.version, version_name(rc.rc_name, v.name))
+                for v in rc.versions
+                if v.version != commit
+            ],
             key=lambda v: ic_repo.distance(ic_repo.merge_base(v[0], commit), commit),
         )
     )
@@ -142,7 +180,8 @@ def version_package_urls(version: str):
 def version_package_checksum(version: str):
     with tempfile.TemporaryDirectory() as d:
         response = requests.get(
-            f"https://download.dfinity.systems/ic/{version}/guest-os/update-img/SHA256SUMS", timeout=10
+            f"https://download.dfinity.systems/ic/{version}/guest-os/update-img/SHA256SUMS",
+            timeout=10,
         )
         checksum = [
             line
@@ -184,7 +223,9 @@ class Reconciler:
         self.nns_url = nns_url
         self.governance_canister = GovernanceCanister()
         self.state = state
-        self.ic_prometheus = ICPrometheus(url="https://victoria.mainnet.dfinity.network/select/0/prometheus")
+        self.ic_prometheus = ICPrometheus(
+            url="https://victoria.mainnet.dfinity.network/select/0/prometheus"
+        )
         self.ic_repo = ic_repo
         self.ignore_releases = ignore_releases or []
 
@@ -192,20 +233,38 @@ class Reconciler:
         """Reconcile the state of the network with the release index."""
         config = self.loader.index()
         active_versions = self.ic_prometheus.active_versions()
-        logging.info("GuestOS versions active on subnets or unassigned nodes: %s", active_versions)
-        ic_admin = IcAdmin(self.nns_url, git_revision=os.environ.get("IC_ADMIN_VERSION"))
+        logging.info(
+            "GuestOS versions active on subnets or unassigned nodes: %s",
+            active_versions,
+        )
+        dre = dre_cli.DRECli(
+            dre_cli.Auth(
+                key_path=os.environ["PROPOSER_KEY_FILE"],
+                neuron_id=os.environ["PROPOSER_NEURON_ID"],
+            )
+        )
         for rc_idx, rc in enumerate(
-            config.root.releases[: config.root.releases.index(oldest_active_release(config, active_versions)) + 1]
+            config.root.releases[
+                : config.root.releases.index(
+                    oldest_active_release(config, active_versions)
+                )
+                + 1
+            ]
         ):
             if rc.rc_name in self.ignore_releases:
                 continue
             rc_forum_topic = self.forum_client.get_or_create(rc)
             # update to create posts for any releases
-            rc_forum_topic.update(changelog=self.loader.proposal_summary, proposal=self.state.version_proposal)
+            rc_forum_topic.update(
+                changelog=self.loader.proposal_summary,
+                proposal=self.state.version_proposal,
+            )
             for v_idx, v in enumerate(rc.versions):
                 logging.info("Updating version %s", v)
                 push_release_tags(self.ic_repo, rc)
-                base_release_commit, base_release_name = find_base_release(self.ic_repo, config, v.version)
+                base_release_commit, base_release_name = find_base_release(
+                    self.ic_repo, config, v.version
+                )
                 self.notes_client.ensure(
                     base_release_commit=base_release_commit,
                     base_release_tag=base_release_name,
@@ -215,23 +274,34 @@ class Reconciler:
                 )
 
                 self.publish_client.publish_if_ready(
-                    google_doc_markdownified=self.notes_client.markdown_file(v.version), version=v.version
+                    google_doc_markdownified=self.notes_client.markdown_file(v.version),
+                    version=v.version,
                 )
 
                 # returns a result only if changelog is published
                 changelog = self.loader.proposal_summary(v.version)
                 if changelog:
                     if self.state.proposal_submitted(v.version):
-                        logging.info("RC %s: proposal already submitted for version %s", rc.rc_name, v.version)
+                        logging.info(
+                            "RC %s: proposal already submitted for version %s",
+                            rc.rc_name,
+                            v.version,
+                        )
                     else:
-                        logging.info("RC %s: submitting proposal for version %s", rc.rc_name, v.version)
+                        logging.info(
+                            "RC %s: submitting proposal for version %s",
+                            rc.rc_name,
+                            v.version,
+                        )
                         unelect_versions = []
                         if v_idx == 0:
                             unelect_versions.extend(
                                 versions_to_unelect(
                                     config,
                                     active_versions=active_versions,
-                                    elected_versions=ic_admin.get_blessed_versions()["value"]["blessed_version_ids"],
+                                    elected_versions=dre.get_blessed_versions()[
+                                        "value"
+                                    ]["blessed_version_ids"],
                                 ),
                             )
                         # This is a defensive approach in case the ic-admin exits with failure
@@ -240,37 +310,50 @@ class Reconciler:
                         self.state.mark_submitted(v.version)
 
                         place_proposal(
-                            ic_admin=ic_admin,
+                            dre=dre,
                             changelog=changelog,
                             version=v.version,
                             forum_post_url=rc_forum_topic.post_url(v.version),
                             unelect_versions=unelect_versions,
                         )
 
-                    versions_proposals = self.governance_canister.replica_version_proposals()
+                    versions_proposals = (
+                        self.governance_canister.replica_version_proposals()
+                    )
                     if v.version in versions_proposals:
-                        self.state.save_proposal(v.version, versions_proposals[v.version])
+                        self.state.save_proposal(
+                            v.version, versions_proposals[v.version]
+                        )
 
             # update the forum posts in case the proposal was created
-            rc_forum_topic.update(changelog=self.loader.proposal_summary, proposal=self.state.version_proposal)
+            rc_forum_topic.update(
+                changelog=self.loader.proposal_summary,
+                proposal=self.state.version_proposal,
+            )
 
 
-def place_proposal(ic_admin, changelog, version: str, forum_post_url: str, unelect_versions: list[str], dry_run=False):
+def place_proposal(
+    dre: dre_cli.DRECli,
+    changelog,
+    version: str,
+    forum_post_url: str,
+    unelect_versions: list[str],
+    dry_run=False,
+):
     unelect_versions_args = []
     if len(unelect_versions) > 0:
         unelect_versions_args.append("--replica-versions-to-unelect")
         unelect_versions_args.extend(unelect_versions)
     summary = changelog + f"\n\nLink to the forum post: {forum_post_url}"
     logging.info("submitting proposal for version %s", version)
-    ic_admin.ic_admin_run(
-        "propose-to-update-elected-replica-versions",
+    dre.run(
+        "propose",
+        "update-elected-replica-versions",
         "--proposal-title",
         f"Elect new IC/Replica revision (commit {version[:7]})",
         "--summary",
         summary,
-        *(["--dry-run"] if dry_run else []),
-        "--proposer",
-        os.environ["PROPOSER_NEURON_ID"],  # TODO: replace with system proposer
+        *(["--dry-run"] if dry_run else []),  # TODO: replace with system proposer
         "--release-package-sha256-hex",
         version_package_checksum(version),
         "--release-package-urls",
@@ -290,7 +373,9 @@ def main():
     else:
         load_dotenv()
 
-    watchdog = Watchdog(timeout_seconds=600)  # Reconciler should report healthy every 10 minutes
+    watchdog = Watchdog(
+        timeout_seconds=600
+    )  # Reconciler should report healthy every 10 minutes
     watchdog.start()
 
     discourse_client = DiscourseClient(
@@ -299,10 +384,17 @@ def main():
         api_key=os.environ["DISCOURSE_KEY"],
     )
     config_loader = (
-        GitReleaseLoader(f"https://github.com/{dre_repo}.git") if "dev" not in os.environ else DevReleaseLoader()
+        GitReleaseLoader(f"https://github.com/{dre_repo}.git")
+        if "dev" not in os.environ
+        else DevReleaseLoader()
     )
     state = ReconcilerState(
-        pathlib.Path(os.environ.get("RECONCILER_STATE_DIR", pathlib.Path.home() / ".cache/release-controller"))
+        pathlib.Path(
+            os.environ.get(
+                "RECONCILER_STATE_DIR",
+                pathlib.Path.home() / ".cache/release-controller",
+            )
+        )
     )
     forum_client = ReleaseCandidateForumClient(
         discourse_client,
@@ -314,7 +406,10 @@ def main():
         loader=config_loader,
         notes_client=ReleaseNotesClient(
             credentials_file=pathlib.Path(
-                os.environ.get("GDOCS_CREDENTIALS_PATH", pathlib.Path(__file__).parent.resolve() / "credentials.json")
+                os.environ.get(
+                    "GDOCS_CREDENTIALS_PATH",
+                    pathlib.Path(__file__).parent.resolve() / "credentials.json",
+                )
             )
         ),
         publish_client=PublishNotesClient(github_client.get_repo(dre_repo)),
@@ -324,7 +419,10 @@ def main():
             "rc--2024-03-06_23-01",
             "rc--2024-03-20_23-01",
         ],
-        ic_repo=GitRepo(f"https://oauth2:{github_token}@github.com/dfinity/ic.git", main_branch="master"),
+        ic_repo=GitRepo(
+            f"https://oauth2:{github_token}@github.com/dfinity/ic.git",
+            main_branch="master",
+        ),
     )
 
     while True:
@@ -343,9 +441,9 @@ def oneoff():
     version = "ac971e7b4c851b89b312bee812f6de542ed907c5"
     changelog = release_loader.proposal_summary(version)
 
-    ic_admin = IcAdmin("https://ic0.app", git_revision="5ba1412f9175d987661ae3c0d8dbd1ac3e092b7d")
+    dre = dre_cli.DRECli()
     place_proposal(
-        ic_admin=ic_admin,
+        dre=dre,
         changelog=changelog,
         version=version,
         forum_post_url="https://forum.dfinity.org/t/proposal-to-elect-new-release-rc-2024-03-27-23-01/29042/7",

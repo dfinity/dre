@@ -3,11 +3,11 @@ use std::str::FromStr;
 use clap::{Args, ValueEnum};
 
 use crate::{
-    commands::{ExecutableCommand, IcAdminRequirement},
+    commands::{AuthRequirement, ExecutableCommand},
     operations::hostos_rollout::{NodeGroupUpdate, NumberOfNodes},
 };
 
-#[derive(ValueEnum, Copy, Clone, Debug, Ord, Eq, PartialEq, PartialOrd, Default)]
+#[derive(ValueEnum, Copy, Clone, Debug, Ord, Eq, PartialEq, PartialOrd, Default, Hash)]
 pub enum NodeOwner {
     Dfinity,
     Others,
@@ -25,7 +25,7 @@ impl std::fmt::Display for NodeOwner {
     }
 }
 
-#[derive(ValueEnum, Copy, Clone, Debug, Ord, Eq, PartialEq, PartialOrd, Default)]
+#[derive(ValueEnum, Copy, Clone, Debug, Ord, Eq, PartialEq, PartialOrd, Default, Hash)]
 pub enum NodeAssignment {
     Unassigned,
     Assigned,
@@ -76,13 +76,13 @@ supported values are absolute numbers (10) or percentage (10%)"#
 }
 
 impl ExecutableCommand for RolloutFromNodeGroup {
-    fn require_ic_admin(&self) -> IcAdminRequirement {
-        IcAdminRequirement::Detect
+    fn require_auth(&self) -> AuthRequirement {
+        AuthRequirement::Neuron
     }
 
     async fn execute(&self, ctx: crate::ctx::DreContext) -> anyhow::Result<()> {
         let update_group = NodeGroupUpdate::new(self.assignment, self.owner, NumberOfNodes::from_str(&self.nodes_in_group)?);
-        let runner = ctx.runner().await;
+        let runner = ctx.runner().await?;
         if let Some((nodes_to_update, summary)) = runner
             .hostos_rollout_nodes(update_group, &self.version, &self.only, &self.exclude)
             .await?
@@ -95,5 +95,5 @@ impl ExecutableCommand for RolloutFromNodeGroup {
         Ok(())
     }
 
-    fn validate(&self, _cmd: &mut clap::Command) {}
+    fn validate(&self, _args: &crate::commands::Args, _cmd: &mut clap::Command) {}
 }

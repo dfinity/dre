@@ -62,10 +62,10 @@ def add_git_tag(tag_name):
 
 
 def update_change_log(current_version, new_version):
-    # call poetry run pychangelog generate to update CHANGELOG.md
+    # call rye run pychangelog generate to update CHANGELOG.md
     subprocess.check_call(
         [
-            "poetry",
+            "rye",
             "run",
             "git-changelog",
             "--filter-commits",

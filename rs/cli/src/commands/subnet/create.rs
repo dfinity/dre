@@ -2,17 +2,13 @@ use clap::{error::ErrorKind, Args};
 use ic_management_types::requests::SubnetCreateRequest;
 use ic_types::PrincipalId;
 
-use crate::commands::{ExecutableCommand, IcAdminRequirement};
+use crate::commands::{AuthRequirement, ExecutableCommand};
 
 #[derive(Args, Debug)]
 pub struct Create {
     /// Number of nodes in the subnet
     #[clap(long, default_value_t = 13)]
     pub size: usize,
-
-    /// Minimum nakamoto coefficients desired
-    #[clap(long, num_args(1..))]
-    pub min_nakamoto_coefficients: Vec<String>,
 
     /// Features or Node IDs to exclude from the available nodes pool
     #[clap(long, num_args(1..))]
@@ -44,12 +40,12 @@ regardless of the decentralization coefficients"#)]
 }
 
 impl ExecutableCommand for Create {
-    fn require_ic_admin(&self) -> IcAdminRequirement {
-        IcAdminRequirement::Detect
+    fn require_auth(&self) -> AuthRequirement {
+        AuthRequirement::Neuron
     }
 
     async fn execute(&self, ctx: crate::ctx::DreContext) -> anyhow::Result<()> {
-        let runner = ctx.runner().await;
+        let runner = ctx.runner().await?;
         let motivation = match &self.motivation {
             Some(m) => m,
             None if self.help_other_args => &"help for options".to_string(),
@@ -60,7 +56,6 @@ impl ExecutableCommand for Create {
             .subnet_create(
                 SubnetCreateRequest {
                     size: self.size,
-                    min_nakamoto_coefficients: Self::parse_min_nakamoto_coefficients(&self.min_nakamoto_coefficients),
                     exclude: self.exclude.clone().into(),
                     only: self.only.clone().into(),
                     include: self.include.clone().into(),
@@ -74,7 +69,7 @@ impl ExecutableCommand for Create {
             .await
     }
 
-    fn validate(&self, cmd: &mut clap::Command) {
+    fn validate(&self, _args: &crate::commands::Args, cmd: &mut clap::Command) {
         if self.motivation.is_none() && !self.help_other_args {
             cmd.error(
                 ErrorKind::MissingRequiredArgument,
@@ -82,7 +77,5 @@ impl ExecutableCommand for Create {
             )
             .exit()
         }
-
-        Self::validate_min_nakamoto_coefficients(cmd, &self.min_nakamoto_coefficients);
     }
 }

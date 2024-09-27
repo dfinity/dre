@@ -15,6 +15,12 @@ def test_create_release_notes_on_new_release():
         body='{"raw": "bogus text", "can_edit": true}',
         content_type="application/json; charset=utf-8",
     )
+    httpretty.register_uri(
+        httpretty.GET,
+        discourse_client.host + "c/76/show.json",
+        body='{"category": {"id": 76}}',
+        content_type="application/json; charset=utf-8",
+    )
     assert discourse_client.created_posts == []
     assert discourse_client.created_topics == []
     forum_client = ReleaseCandidateForumClient(discourse_client=discourse_client)
@@ -99,6 +105,12 @@ def test_create_post_in_new_category():
         body='{"raw": "bogus text", "can_edit": true}',
         content_type="application/json; charset=utf-8",
     )
+    httpretty.register_uri(
+        httpretty.GET,
+        discourse_client.host + "c/76/show.json",
+        body='{"category": {"id": 76}}',
+        content_type="application/json; charset=utf-8",
+    )
     existing_post_1 = {
         "raw": """\
 Hello there!
@@ -180,7 +192,11 @@ release notes for version test3...
         "can_edit": True,
     }
 
-    assert discourse_client.created_posts == [existing_post_1, existing_post_2, new_post]
+    assert discourse_client.created_posts == [
+        existing_post_1,
+        existing_post_2,
+        new_post,
+    ]
 
     assert discourse_client.created_topics == [
         {

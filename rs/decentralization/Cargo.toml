@@ -14,6 +14,7 @@ ahash = { workspace = true }
 anyhow = { workspace = true }
 ic-base-types = { workspace = true }
 ic-management-types = { workspace = true }
+indexmap = { workspace = true }
 itertools = { workspace = true }
 log = { workspace = true }
 rand = { workspace = true }

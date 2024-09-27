@@ -1,6 +1,4 @@
 use std::cell::RefCell;
-use std::collections::BTreeMap;
-use std::collections::BTreeSet;
 use std::sync::Arc;
 
 use decentralization::network::DecentralizedSubnet;
@@ -28,14 +26,17 @@ use ic_management_types::NodeFeature;
 use ic_management_types::Release;
 use ic_management_types::TopologyChangePayload;
 use ic_types::PrincipalId;
+use indexmap::{IndexMap, IndexSet};
 use itertools::Itertools;
 use log::info;
 use log::warn;
 
+use regex::Regex;
 use registry_canister::mutations::do_change_subnet_membership::ChangeSubnetMembershipPayload;
 use tabled::builder::Builder;
 use tabled::settings::Style;
 
+use crate::artifact_downloader::ArtifactDownloader;
 use crate::ic_admin::{self, IcAdmin};
 use crate::ic_admin::{ProposeCommand, ProposeOptions};
 use crate::operations::hostos_rollout::HostosRollout;
@@ -49,6 +50,7 @@ pub struct Runner {
     network: Network,
     proposal_agent: Arc<dyn ProposalAgent>,
     verbose: bool,
+    artifact_downloader: Arc<dyn ArtifactDownloader>,
 }
 
 impl Runner {
@@ -59,6 +61,7 @@ impl Runner {
         agent: Arc<dyn ProposalAgent>,
         verbose: bool,
         ic_repo: RefCell<Option<Arc<dyn LazyGit>>>,
+        artifact_downloader: Arc<dyn ArtifactDownloader>,
     ) -> Self {
         Self {
             ic_admin,
@@ -67,6 +70,7 @@ impl Runner {
             network,
             proposal_agent: agent,
             verbose,
+            artifact_downloader,
         }
     }
 
@@ -115,59 +119,11 @@ impl Runner {
         Ok(())
     }
 
-    pub async fn health_of_nodes(&self) -> anyhow::Result<BTreeMap<PrincipalId, HealthStatus>> {
+    pub async fn health_of_nodes(&self) -> anyhow::Result<IndexMap<PrincipalId, HealthStatus>> {
         let health_client = health::HealthClient::new(self.network.clone());
         health_client.nodes().await
     }
 
-    pub async fn subnet_resize(
-        &self,
-        request: ic_management_types::requests::SubnetResizeRequest,
-        motivation: String,
-        forum_post_link: Option<String>,
-        health_of_nodes: &BTreeMap<PrincipalId, HealthStatus>,
-    ) -> anyhow::Result<()> {
-        let change = self
-            .registry
-            .modify_subnet_nodes(SubnetQueryBy::SubnetId(request.subnet))
-            .await?
-            .excluding_from_available(request.exclude.clone().unwrap_or_default())
-            .including_from_available(request.only.clone().unwrap_or_default())
-            .including_from_available(request.include.clone().unwrap_or_default())
-            .resize(request.add, request.remove, 0, health_of_nodes)?;
-
-        let change = SubnetChangeResponse::from(&change).with_health_of_nodes(health_of_nodes.clone());
-
-        if self.verbose {
-            if let Some(run_log) = &change.run_log {
-                println!("{}\n", run_log.join("\n"));
-            }
-        }
-
-        if change.added_with_desc.is_empty() && change.removed_with_desc.is_empty() {
-            return Ok(());
-        }
-        if change.added_with_desc.len() == change.removed_with_desc.len() {
-            self.run_membership_change(change.clone(), replace_proposal_options(&change, forum_post_link)?)
-                .await
-        } else {
-            let action = if change.added_with_desc.len() < change.removed_with_desc.len() {
-                "Removing nodes from"
-            } else {
-                "Adding nodes to"
-            };
-            self.run_membership_change(
-                change,
-                ProposeOptions {
-                    title: format!("{action} subnet {}", request.subnet).into(),
-                    summary: format!("{action} subnet {}", request.subnet).into(),
-                    motivation: motivation.clone().into(),
-                    forum_post_link,
-                },
-            )
-            .await
-        }
-    }
     pub async fn subnet_create(
         &self,
         request: ic_management_types::requests::SubnetCreateRequest,
@@ -189,7 +145,6 @@ impl Runner {
             .registry
             .create_subnet(
                 request.size,
-                request.min_nakamoto_coefficients.clone(),
                 request.include.clone().unwrap_or_default(),
                 request.exclude.clone().unwrap_or_default(),
                 request.only.clone().unwrap_or_default(),
@@ -289,17 +244,19 @@ impl Runner {
         release_artifact: &Artifact,
         version: &str,
         release_tag: &str,
-        force: bool,
-        forum_post_link: Option<String>,
+        ignore_missing_urls: bool,
+        forum_post_link: String,
+        security_fix: bool,
     ) -> anyhow::Result<()> {
         let update_version = self
-            .ic_admin
             .prepare_to_propose_to_revise_elected_versions(
                 release_artifact,
                 version,
                 release_tag,
-                force,
+                ignore_missing_urls,
                 self.prepare_versions_to_retire(release_artifact, false).await.map(|r| r.1)?,
+                security_fix,
+                forum_post_link.clone(),
             )
             .await?;
 
@@ -313,11 +270,62 @@ impl Runner {
                     title: Some(update_version.title),
                     summary: Some(update_version.summary.clone()),
                     motivation: None,
-                    forum_post_link,
+                    forum_post_link: Some(forum_post_link),
                 },
             )
             .await?;
         Ok(())
+    }
+
+    async fn prepare_to_propose_to_revise_elected_versions(
+        &self,
+        release_artifact: &Artifact,
+        version: &str,
+        release_tag: &str,
+        ignore_missing_urls: bool,
+        retire_versions: Option<Vec<String>>,
+        security_fix: bool,
+        forum_post_link: String,
+    ) -> anyhow::Result<UpdateVersion> {
+        let (update_urls, expected_hash) = self
+            .artifact_downloader
+            .download_images_and_validate_sha256(release_artifact, version, ignore_missing_urls)
+            .await?;
+
+        let summary = match security_fix {
+            true => format_security_hotfix(forum_post_link),
+            false => format_regular_version_upgrade_summary(version, release_artifact, release_tag, forum_post_link)?,
+        };
+        if summary.contains("Remove this block of text from the proposal.") {
+            Err(anyhow::anyhow!("The edited proposal text has not been edited to add release notes."))
+        } else {
+            let proposal_title = match security_fix {
+                true => "Security patch update".to_string(),
+                false => match &retire_versions {
+                    Some(v) => {
+                        let pluralize = if v.len() == 1 { "version" } else { "versions" };
+                        format!(
+                            "Elect new IC/{} revision (commit {}), and retire old replica {} {}",
+                            release_artifact.capitalized(),
+                            &version[..8],
+                            pluralize,
+                            v.iter().map(|v| &v[..8]).join(",")
+                        )
+                    }
+                    None => format!("Elect new IC/{} revision (commit {})", release_artifact.capitalized(), &version[..8]),
+                },
+            };
+
+            Ok(UpdateVersion {
+                release_artifact: release_artifact.clone(),
+                version: version.to_string(),
+                title: proposal_title.clone(),
+                stringified_hash: expected_hash,
+                summary,
+                update_urls,
+                versions_to_retire: retire_versions.clone(),
+            })
+        }
     }
 
     pub async fn hostos_rollout_nodes(
@@ -515,7 +523,7 @@ impl Runner {
                 None => true,
             })
             .map(|(id, subnet)| (*id, subnet.clone()))
-            .collect::<BTreeMap<_, _>>();
+            .collect::<IndexMap<_, _>>();
         let (available_nodes, health_of_nodes) =
             try_join(self.registry.available_nodes().map_err(anyhow::Error::from), health_client.nodes()).await?;
 
@@ -621,8 +629,8 @@ impl Runner {
         let ic_repo = self.ic_repo().await;
         let hosts = ic_repo.hostos_releases().await?;
         let active_releases = hosts.get_active_branches();
-        let hostos_versions: BTreeSet<String> = self.registry.nodes().await?.values().map(|s| s.hostos_version.clone()).collect();
-        let versions_in_proposals: BTreeSet<String> = self
+        let hostos_versions: IndexSet<String> = self.registry.nodes().await?.values().map(|s| s.hostos_version.clone()).collect();
+        let versions_in_proposals: IndexSet<String> = self
             .proposal_agent
             .list_open_elect_hostos_proposals()
             .await?
@@ -648,9 +656,9 @@ impl Runner {
         let ic_repo = self.ic_repo().await;
         let guests = ic_repo.guestos_releases().await?;
         let active_releases = guests.get_active_branches();
-        let subnet_versions: BTreeSet<String> = self.registry.subnets().await?.values().map(|s| s.replica_version.clone()).collect();
+        let subnet_versions: IndexSet<String> = self.registry.subnets().await?.values().map(|s| s.replica_version.clone()).collect();
         let version_on_unassigned_nodes = self.registry.unassigned_nodes_replica_version().await?;
-        let versions_in_proposals: BTreeSet<String> = self
+        let versions_in_proposals: IndexSet<String> = self
             .proposal_agent
             .list_open_elect_replica_proposals()
             .await?
@@ -752,15 +760,21 @@ pub fn replace_proposal_options(change: &SubnetChangeResponse, forum_post_link: 
     };
     let subnet_id_short = subnet_id.split('-').next().unwrap();
 
+    let change_desc = if change.added_with_desc.len() == change.removed_with_desc.len() {
+        format!("Replace {} in subnet {}", replace_target, subnet_id_short)
+    } else {
+        format!("Resize subnet {}", subnet_id_short)
+    };
+
     Ok(ic_admin::ProposeOptions {
-        title: format!("Replace {replace_target} in subnet {subnet_id_short}",).into(),
-        summary: format!("# Replace {replace_target} in subnet {subnet_id_short}",).into(),
+        title: Some(change_desc.clone()),
+        summary: Some(format!("# {change_desc}")),
         motivation: Some(format!("{}\n\n{}\n", change.motivation.as_ref().unwrap_or(&String::new()), change)),
         forum_post_link,
     })
 }
 
-fn nodes_by_dc(nodes: Vec<Node>) -> BTreeMap<String, Vec<(String, String)>> {
+fn nodes_by_dc(nodes: Vec<Node>) -> IndexMap<String, Vec<(String, String)>> {
     nodes
         .iter()
         .cloned()
@@ -776,8 +790,117 @@ fn nodes_by_dc(nodes: Vec<Node>) -> BTreeMap<String, Vec<(String, String)>> {
                 n.operator.datacenter,
             )
         })
-        .fold(BTreeMap::new(), |mut acc, (node_id, subnet, dc)| {
+        .fold(IndexMap::new(), |mut acc, (node_id, subnet, dc)| {
             acc.entry(dc.unwrap_or_default().name).or_default().push((node_id, subnet));
             acc
         })
+}
+
+#[derive(Clone)]
+pub struct UpdateVersion {
+    pub release_artifact: Artifact,
+    pub version: String,
+    pub title: String,
+    pub summary: String,
+    pub update_urls: Vec<String>,
+    pub stringified_hash: String,
+    pub versions_to_retire: Option<Vec<String>>,
+}
+
+impl UpdateVersion {
+    pub fn get_update_cmd_args(&self) -> Vec<String> {
+        [
+            [
+                vec![
+                    "--replica-version-to-elect".to_string(),
+                    self.version.to_string(),
+                    "--release-package-sha256-hex".to_string(),
+                    self.stringified_hash.to_string(),
+                    "--release-package-urls".to_string(),
+                ],
+                self.update_urls.clone(),
+            ]
+            .concat(),
+            match self.versions_to_retire.clone() {
+                Some(versions) => [vec!["--replica-versions-to-unelect".to_string()], versions].concat(),
+                None => vec![],
+            },
+        ]
+        .concat()
+    }
+}
+
+pub fn format_regular_version_upgrade_summary(
+    version: &str,
+    release_artifact: &Artifact,
+    release_tag: &str,
+    forum_post_link: String,
+) -> anyhow::Result<String> {
+    let template = format!(
+        r#"Elect new {release_artifact} binary revision [{version}](https://github.com/dfinity/ic/tree/{release_tag})
+
+    # Release Notes:
+
+    [comment]: <> Remove this block of text from the proposal.
+    [comment]: <> Then, add the {release_artifact} binary release notes as bullet points here.
+    [comment]: <> Any [commit ID] within square brackets will auto-link to the specific changeset.
+
+    # IC-OS Verification
+
+    To build and verify the IC-OS disk image, run:
+
+    ```
+    # From https://github.com/dfinity/ic#verifying-releases
+    sudo apt-get install -y curl && curl --proto '=https' --tlsv1.2 -sSLO https://raw.githubusercontent.com/dfinity/ic/{version}/ci/tools/repro-check.sh && chmod +x repro-check.sh && ./repro-check.sh -c {version}
+    ```
+
+    The two SHA256 sums printed above from a) the downloaded CDN image and b) the locally built image,
+    must be identical, and must match the SHA256 from the payload of the NNS proposal.
+
+    Forum post link: {forum_post_link}
+    "#
+    );
+
+    // Remove <!--...--> from the commit
+    // Leading or trailing spaces are removed as well and replaced with a single space.
+    // Regex can be analyzed and tested at:
+    // https://rregex.dev/?version=1.7&method=replace&regex=%5Cs*%3C%21--.%2B%3F--%3E%5Cs*&replace=+&text=*+%5Babc%5D+%3C%21--+ignored+1+--%3E+line%0A*+%5Babc%5D+%3C%21--+ignored+2+--%3E+comment+1+%3C%21--+ignored+3+--%3E+comment+2%0A
+    let re_comment = Regex::new(r"\s*<!--.+?-->\s*").unwrap();
+
+    Ok(match cfg!(test) {
+        true => template.lines().map(|l| l.trim()).filter(|l| !l.starts_with("[comment]")).join("\n"),
+        false => {
+            let mut builder = edit::Builder::new();
+            let with_suffix = builder.suffix(".md");
+            edit::edit_with_builder(template, with_suffix)?
+        }
+    }
+    .trim()
+    .replace("\r(\n)?", "\n")
+    .split('\n')
+    .map(|f| {
+        let f = re_comment.replace_all(f.trim(), " ");
+
+        if !f.starts_with('*') {
+            return f.to_string();
+        }
+        match f.split_once(']') {
+            Some((left, message)) => {
+                let commit_hash = left.split_once('[').unwrap().1.to_string();
+
+                format!("* [[{}](https://github.com/dfinity/ic/commit/{})] {}", commit_hash, commit_hash, message)
+            }
+            None => f.to_string(),
+        }
+    })
+    .join("\n"))
+}
+
+pub fn format_security_hotfix(forum_post_link: String) -> String {
+    format!(r#"In accordance with the Security Patch Policy and Procedure that was adopted in proposal [48792](https://dashboard.internetcomputer.org/proposal/48792), the source code that was used to build this release will be exposed at the latest 10 days after the fix is rolled out to all subnets.
+
+    The community will be able to retroactively verify the binaries that were rolled out.
+
+    Forum post link: {forum_post_link}
+"#).lines().map(|l| l.trim()).join("\n")
 }

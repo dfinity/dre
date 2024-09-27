@@ -25,27 +25,30 @@ jobs:
     runs-on:
       labels: dre-runner-custom
     # This image is based on ubuntu:20.04
-    container: ghcr.io/dfinity/dre/actions-runner:f6690a4413269978d8b5d2e53b7346e99b0231b8
+    container: ghcr.io/dfinity/dre/actions-runner:f47914030bbdb5c3d542aa876ba8a11a6b183bff
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 2
-      - name: "🔒 Ensure singular opentelemetry version in Cargo.lock"
-        shell: bash
-        run: test "$(grep -n 'name = "opentelemetry"' Cargo.lock | wc -l)" -le 1
-
       - name: "☁️ Setup runner"
         uses: ./.github/workflows/manage-runner-pre
 
       ########################################
       # Build and test
+      # Will run test as a local subprocess because for some tests
+      # create status files on certain locations (like $HOME)
       ########################################
       - name: "🚀 Building"
         uses: ./.github/workflows/build
         with:
           GITHUB_TOKEN: "${{ secrets.GIX_CREATE_PR_PAT }}"
       - name: "🚀 Testing"
-        run: bazel test ...
+        env:
+          STAGING_PRIVATE_KEY_PEM: "${{ secrets.STAGING_PRIVATE_KEY_PEM }}"
+        run: |
+          mkdir -p ~/.config/dfx/identity/bootstrap-super-leader/
+          echo $STAGING_PRIVATE_KEY_PEM > ~/.config/dfx/identity/bootstrap-super-leader/identity.pem
+          bazel test ... --spawn_strategy=local --test_env=HOME=/home/runner
 
       # We don't need the linear-jira build and test step for now
       # - name: "🚀 Build and Test Linear-Jira with Bazel"
@@ -109,7 +112,7 @@ jobs:
             bases/apps/mainnet-dashboard/backend/base/deployment.yaml
             bases/apps/mainnet-dashboard/statefulset-slack.yaml
             bases/apps/service-discovery/service-discovery.yaml
-            gitlab-ci/vector-configs.yml
+            .github/workflows/dre-vector-configs.yaml
           )
           if [[ $changed == "true" ]]; then
             echo "Adding frontend to list of files"
@@ -123,15 +126,6 @@ jobs:
           echo "files=${files[@]}" >> $GITHUB_ENV
 
       ########################################
-      # Update k8s deployments
-      ########################################
-      - name: "🤖 Update k8s deployments"
-        if: ${{ github.ref == 'refs/heads/main' }}
-        uses: ./.github/workflows/update-k8s-deployments
-        with:
-          github_api_token: ${{ secrets.K8S_API_TOKEN }}
-
-      ########################################
       # Deploy to github pages
       ########################################
       - name: "🚢 Deploy to GitHub Pages"
@@ -140,6 +134,15 @@ jobs:
           git config --global user.email "actions@github.com"
           git config --global user.name "GitHub Actions"
           bazel run "//:mkdocs" -- gh-deploy --force
+
+      ########################################
+      # Update k8s deployments
+      ########################################
+      - name: "🤖 Update k8s deployments"
+        if: ${{ github.ref == 'refs/heads/main' }}
+        uses: ./.github/workflows/update-k8s-deployments
+        with:
+          github_api_token: ${{ secrets.K8S_API_TOKEN }}
 
       ########################################
       # Clean up runner

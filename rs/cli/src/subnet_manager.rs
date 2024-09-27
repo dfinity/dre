@@ -10,9 +10,10 @@ use decentralization::{
 };
 use ic_management_backend::health::{self, HealthStatusQuerier};
 use ic_management_backend::lazy_registry::LazyRegistry;
-use ic_management_types::MinNakamotoCoefficients;
+use ic_management_types::HealthStatus;
 use ic_management_types::Network;
 use ic_types::PrincipalId;
+use indexmap::IndexMap;
 use log::{info, warn};
 
 #[derive(Clone)]
@@ -104,7 +105,7 @@ impl SubnetManager {
     ///    1. Setting `heal` to `true` in the request to replace unhealthy nodes
     ///    2. Replace `optimize` nodes to optimize subnet decentralization.
     ///    3. Explicitly add or remove nodes from the subnet specifying their
-    /// Principals.
+    ///       Principals.
     ///
     /// All nodes in the request must belong to exactly one subnet.
     pub async fn membership_replace(
@@ -115,7 +116,6 @@ impl SubnetManager {
         exclude: Option<Vec<String>>,
         only: Vec<String>,
         include: Option<Vec<PrincipalId>>,
-        min_nakamoto_coefficients: Option<MinNakamotoCoefficients>,
     ) -> anyhow::Result<SubnetChangeResponse> {
         let subnet_query_by = self.get_subnet_query_by(self.target()?).await?;
         let mut motivations = vec![];
@@ -134,8 +134,7 @@ impl SubnetManager {
             .await?
             .excluding_from_available(exclude.clone().unwrap_or_default())
             .including_from_available(only.clone())
-            .including_from_available(include.clone().unwrap_or_default())
-            .with_min_nakamoto_coefficients(min_nakamoto_coefficients.clone());
+            .including_from_available(include.clone().unwrap_or_default());
 
         let mut node_ids_unhealthy = HashSet::new();
         if heal {
@@ -177,6 +176,44 @@ impl SubnetManager {
 
         let change = SubnetChangeResponse::from(&change)
             .with_health_of_nodes(health_of_nodes)
+            .with_motivation(motivation);
+
+        Ok(change)
+    }
+
+    pub async fn subnet_resize(
+        &self,
+        request: ic_management_types::requests::SubnetResizeRequest,
+        proposal_motivation: String,
+        health_of_nodes: &IndexMap<PrincipalId, HealthStatus>,
+    ) -> anyhow::Result<SubnetChangeResponse> {
+        let registry = self.registry_instance.clone();
+        let mut motivations = vec![];
+
+        let change = registry
+            .modify_subnet_nodes(SubnetQueryBy::SubnetId(request.subnet))
+            .await?
+            .excluding_from_available(request.exclude.clone().unwrap_or_default())
+            .including_from_available(request.only.clone().unwrap_or_default())
+            .including_from_available(request.include.clone().unwrap_or_default())
+            .resize(request.add, request.remove, 0, health_of_nodes)?;
+
+        for (n, _) in change.removed().iter() {
+            motivations.push(format!("removing {} as per user request", n.id));
+        }
+
+        for (n, _) in change.added().iter() {
+            motivations.push(format!("adding {} as per user request", n.id));
+        }
+
+        let motivation = format!(
+                "{}\n{}\n\nNOTE: The information below is provided for your convenience. Please independently verify the decentralization changes rather than relying solely on this summary.\nCode for calculating replacements is at https://github.com/dfinity/dre/blob/79066127f58c852eaf4adda11610e815a426878c/rs/decentralization/src/network.rs#L912",
+                proposal_motivation,
+                motivations.iter().map(|s| format!(" - {}", s)).collect::<Vec<String>>().join("\n")
+            );
+
+        let change = SubnetChangeResponse::from(&change)
+            .with_health_of_nodes(health_of_nodes.clone())
             .with_motivation(motivation);
 
         Ok(change)

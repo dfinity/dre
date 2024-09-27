@@ -9,6 +9,19 @@ inputs:
 runs:
   using: composite
   steps:
+    - name: "Cargo deny checks"
+      # Only run on pull request.  No need to run on tag or push.
+      if: ${{ contains(fromJSON('["pull_request"]'), github.event_name) }}
+      id: cargo-deny
+      run: |
+        set -xe
+        command -v cargo-deny >/dev/null 2>&1 || {
+          echo Installing cargo-deny >&2
+          cargo install --quiet cargo-deny
+        }
+        bin/cargo-deny-checks.sh
+      shell: bash
+
     - name: "Build and repin"
       id: build
       run: |

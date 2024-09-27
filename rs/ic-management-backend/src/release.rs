@@ -6,10 +6,10 @@ use chrono::{Datelike, NaiveDate, NaiveTime, TimeZone, Utc, Weekday};
 use futures_util::future::try_join_all;
 use ic_management_types::{Network, Release, Subnet};
 use ic_types::PrincipalId;
+use indexmap::{IndexMap, IndexSet};
 use itertools::Itertools;
 use log::info;
 use serde::{Deserialize, Serialize};
-use std::collections::{BTreeMap, BTreeSet};
 use std::str::FromStr;
 use strum_macros::{Display, EnumString};
 
@@ -144,7 +144,7 @@ impl RolloutConfig {
 pub struct RolloutBuilder {
     pub proposal_agent: ProposalAgentImpl,
     pub prometheus_client: prometheus_http_query::Client,
-    pub subnets: BTreeMap<PrincipalId, Subnet>,
+    pub subnets: IndexMap<PrincipalId, Subnet>,
     pub releases: Vec<Release>,
     pub network: Network,
 }
@@ -323,8 +323,8 @@ impl RolloutBuilder {
         });
 
         if let Some(last_stage) = stages.last_mut() {
-            let releases = last_stage.updates.iter().map(|u| u.replica_release.clone()).collect::<BTreeSet<_>>();
-            let mut update_states = BTreeMap::new();
+            let releases = last_stage.updates.iter().map(|u| u.replica_release.clone()).collect::<IndexSet<_>>();
+            let mut update_states = IndexMap::new();
             for release in releases {
                 let release_update_states = get_update_states(&self.network, &self.prometheus_client, &release, last_stage.start_date_time).await?;
                 update_states.insert(release, release_update_states);
@@ -526,7 +526,7 @@ async fn get_update_states(
     prometheus_client: &prometheus_http_query::Client,
     release: &Release,
     since: chrono::DateTime<Utc>,
-) -> Result<BTreeMap<PrincipalId, SubnetUpdateState>> {
+) -> Result<IndexMap<PrincipalId, SubnetUpdateState>> {
     const STATE_FIELD: &str = "state";
     let query = format!(
         r#"
@@ -624,7 +624,7 @@ pub async fn list_subnets_release_statuses(
     proposal_agent: &ProposalAgentImpl,
     prometheus_client: &prometheus_http_query::Client,
     network: Network,
-    subnets: BTreeMap<PrincipalId, Subnet>,
+    subnets: IndexMap<PrincipalId, Subnet>,
     releases: Vec<Release>,
 ) -> anyhow::Result<Vec<SubnetUpdate>> {
     let mut subnet_update_proposals = proposal_agent.list_update_subnet_version_proposals().await?;
@@ -633,7 +633,7 @@ pub async fn list_subnets_release_statuses(
     let latest_updates = subnets
         .keys()
         .map(|p| (p, subnet_update_proposals.iter().find(|sup| sup.payload.subnet_id == *p)))
-        .collect::<BTreeMap<_, _>>();
+        .collect::<IndexMap<_, _>>();
 
     let active_releases = latest_updates
         .values()
@@ -658,7 +658,7 @@ pub async fn list_subnets_release_statuses(
                     .unwrap_or_else(Utc::now),
             )
         })
-        .collect::<BTreeMap<_, _>>();
+        .collect::<IndexMap<_, _>>();
 
     let updates_statuses_for_revision = try_join_all(active_releases.clone().into_iter().cloned().map(|r| async {
         let retryable = || async {
@@ -677,7 +677,7 @@ pub async fn list_subnets_release_statuses(
     }))
     .await?
     .into_iter()
-    .collect::<BTreeMap<_, _>>();
+    .collect::<IndexMap<_, _>>();
 
     let latest_releases = releases.iter().rev().unique_by(|r| r.branch.clone()).collect::<Vec<_>>();
 

@@ -2,8 +2,8 @@ use super::*;
 use crate::subnets::get_proposed_subnet_changes;
 use ic_base_types::PrincipalId;
 use ic_management_types::Node;
+use indexmap::IndexMap;
 use serde::Deserialize;
-use std::collections::BTreeMap;
 
 #[derive(Deserialize)]
 struct SubnetRequest {
@@ -20,7 +20,7 @@ pub(crate) async fn change_preview(
             let subnet = subnets
                 .get(&request.subnet)
                 .ok_or_else(|| actix_web::error::ErrorNotFound(anyhow::format_err!("subnet {} not found", request.subnet)))?;
-            let registry_nodes: BTreeMap<PrincipalId, Node> = registry.read().await.nodes();
+            let registry_nodes: IndexMap<PrincipalId, Node> = registry.read().await.nodes();
 
             get_proposed_subnet_changes(&registry_nodes, subnet)
                 .map_err(actix_web::error::ErrorBadRequest)

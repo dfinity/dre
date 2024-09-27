@@ -57,7 +57,7 @@ rust_test(
         normal_dev = True,
         proc_macro_dev = True,
     ),
-    crate = ":dre-lib",
+    crate = ":dre",
     proc_macro_deps = all_crate_deps(
         proc_macro_dev = True,
     ),

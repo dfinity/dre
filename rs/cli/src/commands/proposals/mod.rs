@@ -47,7 +47,7 @@ use registry_canister::mutations::{
 };
 use serde::{Deserialize, Serialize};
 
-use super::{impl_executable_command_for_enums, ExecutableCommand, IcAdminRequirement};
+use super::{impl_executable_command_for_enums, AuthRequirement, ExecutableCommand};
 
 mod analyze;
 mod filter;
@@ -65,16 +65,16 @@ pub struct Proposals {
 impl_executable_command_for_enums! { Pending, Get, Analyze, Filter, List }
 
 impl ExecutableCommand for Proposals {
-    fn require_ic_admin(&self) -> IcAdminRequirement {
-        self.subcommand.require_ic_admin()
+    fn require_auth(&self) -> AuthRequirement {
+        self.subcommand.require_auth()
     }
 
     async fn execute(&self, ctx: crate::ctx::DreContext) -> anyhow::Result<()> {
         self.subcommand.execute(ctx).await
     }
 
-    fn validate(&self, cmd: &mut clap::Command) {
-        self.subcommand.validate(cmd)
+    fn validate(&self, args: &crate::commands::Args, cmd: &mut clap::Command) {
+        self.subcommand.validate(args, cmd)
     }
 }
 

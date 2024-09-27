@@ -90,6 +90,7 @@ impl Step for UpgradeSubnets {
                 let place_proposal = || async {
                     ctx.dre_ctx()
                         .ic_admin()
+                        .await?
                         .propose_run(
                             ProposeCommand::DeployGuestosToAllSubnetNodes {
                                 subnet: subnet.principal,
@@ -133,6 +134,7 @@ impl Step for UpgradeSubnets {
             let place_proposal = || async {
                 ctx.dre_ctx()
                     .ic_admin()
+                    .await?
                     .propose_run(
                         ProposeCommand::DeployGuestosToAllUnassignedNodes {
                             replica_version: self.to_version.clone(),

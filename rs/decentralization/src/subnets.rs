@@ -1,17 +1,17 @@
-use std::{collections::BTreeMap, sync::Arc};
-
 use crate::network::Node;
 use ic_base_types::PrincipalId;
 use ic_management_types::{
     requests::{NodeRemoval, NodeRemovalReason},
     HealthStatus, Subnet,
 };
+use indexmap::IndexMap;
 use itertools::Itertools;
+use std::sync::Arc;
 
 pub async fn unhealthy_with_nodes(
-    subnets: &BTreeMap<PrincipalId, Subnet>,
-    nodes_health: &BTreeMap<PrincipalId, HealthStatus>,
-) -> BTreeMap<PrincipalId, Vec<ic_management_types::Node>> {
+    subnets: &IndexMap<PrincipalId, Subnet>,
+    nodes_health: &IndexMap<PrincipalId, HealthStatus>,
+) -> IndexMap<PrincipalId, Vec<ic_management_types::Node>> {
     subnets
         .clone()
         .into_iter()
@@ -31,7 +31,7 @@ pub async fn unhealthy_with_nodes(
                 None
             }
         })
-        .collect::<BTreeMap<_, _>>()
+        .collect::<IndexMap<_, _>>()
 }
 
 pub struct NodesRemover {
@@ -45,14 +45,14 @@ pub struct NodesRemover {
 impl NodesRemover {
     pub fn remove_nodes(
         &self,
-        mut healths: std::collections::BTreeMap<ic_base_types::PrincipalId, ic_management_types::HealthStatus>,
-        nodes_with_proposals: Arc<std::collections::BTreeMap<ic_base_types::PrincipalId, ic_management_types::Node>>,
+        mut healths: IndexMap<ic_base_types::PrincipalId, ic_management_types::HealthStatus>,
+        nodes_with_proposals: Arc<IndexMap<ic_base_types::PrincipalId, ic_management_types::Node>>,
     ) -> (Vec<NodeRemoval>, String) {
         let nodes_to_rm = nodes_with_proposals
             .values()
             .cloned()
             .map(|n| {
-                let status = healths.remove(&n.principal).unwrap_or(ic_management_types::HealthStatus::Unknown);
+                let status = healths.shift_remove(&n.principal).unwrap_or(ic_management_types::HealthStatus::Unknown);
                 (n, status)
             })
             .filter(|(n, _)| n.proposal.is_none())

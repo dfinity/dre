@@ -10,11 +10,11 @@ pub struct Completions {
 }
 
 impl ExecutableCommand for Completions {
-    fn require_ic_admin(&self) -> super::IcAdminRequirement {
-        super::IcAdminRequirement::None
+    fn require_auth(&self) -> super::AuthRequirement {
+        super::AuthRequirement::Anonymous
     }
 
-    fn validate(&self, _cmd: &mut clap::Command) {}
+    fn validate(&self, _args: &crate::commands::Args, _cmd: &mut clap::Command) {}
 
     async fn execute(&self, _ctx: crate::ctx::DreContext) -> anyhow::Result<()> {
         let mut command = super::Args::command();

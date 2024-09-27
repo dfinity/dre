@@ -6,7 +6,7 @@ use rescue::Rescue;
 use resize::Resize;
 use whatif::WhatifDecentralization;
 
-use super::{impl_executable_command_for_enums, ExecutableCommand, IcAdminRequirement};
+use super::{impl_executable_command_for_enums, AuthRequirement, ExecutableCommand};
 
 mod create;
 mod deploy;
@@ -24,15 +24,15 @@ pub struct Subnet {
 impl_executable_command_for_enums! { WhatifDecentralization, Deploy, Replace, Resize, Create, Rescue }
 
 impl ExecutableCommand for Subnet {
-    fn require_ic_admin(&self) -> IcAdminRequirement {
-        self.subcommand.require_ic_admin()
+    fn require_auth(&self) -> AuthRequirement {
+        self.subcommand.require_auth()
     }
 
     async fn execute(&self, ctx: crate::ctx::DreContext) -> anyhow::Result<()> {
         self.subcommand.execute(ctx).await
     }
 
-    fn validate(&self, cmd: &mut clap::Command) {
-        self.subcommand.validate(cmd)
+    fn validate(&self, args: &crate::commands::Args, cmd: &mut clap::Command) {
+        self.subcommand.validate(args, cmd)
     }
 }
