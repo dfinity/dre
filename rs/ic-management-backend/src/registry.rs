@@ -419,7 +419,7 @@ impl RegistryState {
 
                             Datacenter {
                                 name: dc.id.clone(),
-                                city,
+                                area: city,
                                 country,
                                 continent,
                                 owner: DatacenterOwner { name: dc.owner.clone() },

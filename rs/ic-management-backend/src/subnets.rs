@@ -148,7 +148,7 @@ mod tests {
                         owner: DatacenterOwner {
                             name: format!("datacenter-owner-{}", i),
                         },
-                        city: format!("datacenter-city-{}", i),
+                        area: format!("datacenter-area-{}", i),
                         country: format!("datacenter-country-{}", i),
                         continent: format!("datacenter-continent-{}", i),
                         latitude: None,

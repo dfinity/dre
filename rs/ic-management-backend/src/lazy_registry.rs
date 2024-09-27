@@ -444,7 +444,7 @@ impl LazyRegistry for LazyRegistryImpl {
                                 .unwrap(),
                             allowance: or.node_allowance,
                             datacenter: data_centers.get(&or.dc_id).map(|dc| {
-                                let (continent, country, city): (_, _, _) = dc
+                                let (continent, country, area): (_, _, _) = dc
                                     .region
                                     .splitn(3, ',')
                                     .map(|s| s.to_string())
@@ -453,7 +453,7 @@ impl LazyRegistry for LazyRegistryImpl {
 
                                 Datacenter {
                                     name: dc.id.clone(),
-                                    city,
+                                    area,
                                     country,
                                     continent,
                                     owner: DatacenterOwner { name: dc.owner.clone() },
