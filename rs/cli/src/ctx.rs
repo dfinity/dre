@@ -117,7 +117,7 @@ impl DreContext {
             args.subcommands.require_auth(),
             args.forum_post_link.clone(),
             args.ic_admin_version.clone(),
-            Arc::new(CordonedFeatureFetcherImpl::new(args.offline, args.cordone_feature_fallback_file.clone())?) as Arc<dyn CordonedFeatureFetcher>,
+            Arc::new(CordonedFeatureFetcherImpl::new(args.offline, args.cordon_feature_fallback_file.clone())?) as Arc<dyn CordonedFeatureFetcher>,
             Arc::new(health::HealthClient::new(
                 ic_management_types::Network::new(args.network.clone(), &args.nns_urls).await?,
             )),

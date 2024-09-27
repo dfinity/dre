@@ -1095,6 +1095,23 @@ impl SubnetChangeRequest {
             .cloned()
             .chain(resized_subnet.removed_nodes_desc.iter().map(|(n, _)| n.clone()))
             .filter(|n| health_of_nodes.get(&n.id).unwrap_or(&HealthStatus::Unknown) == &HealthStatus::Healthy)
+            .filter(|n| {
+                for cordoned_feature in &self.cordoned_features {
+                    match n.features.get(&cordoned_feature.feature) {
+                        Some(node_feature) => {
+                            if PartialEq::eq(&node_feature, &cordoned_feature.value) {
+                                // Node contains cordoned feature
+                                // exclude it from available pool
+                                return false;
+                            }
+                        }
+                        None => {}
+                    }
+                }
+                // Node doesn't contain any cordoned features
+                // include it the available pool
+                true
+            })
             .collect::<Vec<_>>();
         let resized_subnet = resized_subnet
             .with_nodes(

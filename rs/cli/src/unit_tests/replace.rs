@@ -229,12 +229,12 @@ fn should_skip_cordoned_nodes() {
 
         let response = response.unwrap();
         if response.removed_with_desc.is_empty() {
-            failed_scenarios.push((Ok(response), cordoned_features, "Expected only one node to be removed".to_string()));
+            failed_scenarios.push((Ok(response), cordoned_features, "Expected nodes to be removed".to_string()));
             continue;
         }
 
         if response.added_with_desc.is_empty() {
-            failed_scenarios.push((Ok(response), cordoned_features, "Expected only one node to be added".to_string()));
+            failed_scenarios.push((Ok(response), cordoned_features, "Expected nodes to be added".to_string()));
             continue;
         }
 
