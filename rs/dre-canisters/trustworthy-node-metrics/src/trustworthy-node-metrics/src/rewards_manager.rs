@@ -1,6 +1,8 @@
 use std::collections::{self, btree_map::Entry};
 
 use candid::Principal;
+use ic_nns_constants::GOVERNANCE_CANISTER_ID;
+use ic_nns_governance_api::pb::v1::MonthlyNodeProviderRewards;
 use ic_protobuf::registry::node_rewards::{v2::NodeRewardRate, v2::NodeRewardsTable};
 use ic_registry_keys::NODE_REWARDS_TABLE_KEY;
 use itertools::Itertools;
@@ -114,7 +116,7 @@ fn compute_reward_multiplier(daily_metrics: &[DailyNodeMetrics]) -> RewardMultip
 
     let (operations, rewards_reduction) = rewards_reduction_percent(&overall_failure_rate);
     computation_logger.add_executed(operations);
-    let rewards_percent = computation_logger.execute("Total Rewards", Operation::Subtract(dec!(1), rewards_reduction));
+    let rewards_percent = computation_logger.execute("Reward Multiplier", Operation::Subtract(dec!(1), rewards_reduction));
 
     RewardMultiplierResult {
         // Overflow impossible
@@ -203,20 +205,9 @@ pub fn compute_node_rewards(node_id: Vec<Principal>, period_start: TimestampNano
         .collect_vec()
 }
 
-pub fn compute_node_provider_rewards(node_provider_id: Principal, period_start: TimestampNanos, period_end: TimestampNanos) -> NodeProviderRewards {
-    let node_ids = stable_memory::get_node_principals(&node_provider_id);
+pub fn coumpute_node_provider_rewards(nodes_rewards: &[NodeRewards]) -> Decimal {
     let mut rewards_xdr = dec!(0);
     let mut coefficient = dec!(1.0);
-
-    let nodes_rewards = compute_node_rewards(node_ids, period_start, period_end)
-        .into_iter()
-        .sorted_by(|a, b| {
-            Ord::cmp(
-                &b.node_rate.xdr_permyriad_per_node_per_month,
-                &a.node_rate.xdr_permyriad_per_node_per_month,
-            )
-        })
-        .collect_vec();
 
     let nodes_rewards_xdr_sum: Decimal = nodes_rewards
         .iter()
@@ -233,18 +224,80 @@ pub fn compute_node_provider_rewards(node_provider_id: Principal, period_start: 
                 let reward_coefficient_percent: Decimal = Decimal::from(node_rewards.node_rate.reward_coefficient_percent.unwrap_or(80)) / dec!(100);
                 coefficient *= reward_coefficient_percent;
 
-                nodes_rewards_xdr_avg * coefficient * Decimal::from_f64(node_rewards.rewards_computation.rewards_percent).unwrap()
+                nodes_rewards_xdr_avg * coefficient
             }
             _ => node_rewards.node_rate.xdr_permyriad_per_node_per_month.into(),
-        };
+        } * Decimal::from_f64(node_rewards.rewards_computation.rewards_percent).unwrap();
     }
+
+    rewards_xdr
+}
+
+pub fn node_provider_rewards(node_provider_id: Principal, period_start: TimestampNanos, period_end: TimestampNanos) -> NodeProviderRewards {
+    let node_ids = stable_memory::get_node_principals(&node_provider_id);
+    let nodes_rewards = compute_node_rewards(node_ids, period_start, period_end)
+        .into_iter()
+        .sorted_by(|a, b| {
+            Ord::cmp(
+                &b.node_rate.xdr_permyriad_per_node_per_month,
+                &a.node_rate.xdr_permyriad_per_node_per_month,
+            )
+        })
+        .collect_vec();
+    let rewards_xdr = coumpute_node_provider_rewards(&nodes_rewards);
+
+    let latest_np_rewards = stable_memory::get_latest_node_providers_rewards();
+    let ts_distribution = latest_np_rewards.timestamp;
+    let xdr_conversion_rate = latest_np_rewards.xdr_conversion_rate.and_then(|rate| rate.xdr_permyriad_per_icp);
+    let rewards_xdr_old = latest_np_rewards
+        .rewards
+        .into_iter()
+        .filter_map(|np_rewards| {
+            if let Some(node_provider) = np_rewards.node_provider {
+                if let Some(id) = node_provider.id {
+                    if id.0 == node_provider_id {
+                        return Some(np_rewards.amount_e8s);
+                    }
+                }
+            }
+            None
+        })
+        .next();
 
     NodeProviderRewards {
         node_provider_id,
-        rewards_xdr: rewards_xdr.to_f64().unwrap(),
-        rewards_xdr_old: 0.0,
+        rewards_xdr: rewards_xdr.to_u64().unwrap(),
+        rewards_xdr_old,
+        ts_distribution,
+        xdr_conversion_rate,
         nodes_rewards,
     }
+}
+
+pub async fn update_recent_provider_rewards() -> anyhow::Result<()> {
+    let (maybe_monthly_rewards,): (Option<MonthlyNodeProviderRewards>,) = ic_cdk::api::call::call(
+        Principal::from(GOVERNANCE_CANISTER_ID),
+        "get_most_recent_monthly_node_provider_rewards",
+        (),
+    )
+    .await
+    .map_err(|(code, msg)| {
+        anyhow::anyhow!(
+            "Error when calling get_most_recent_monthly_node_provider_rewards:\n Code:{:?}\nMsg:{}",
+            code,
+            msg
+        )
+    })?;
+
+    if let Some(monthly_rewards) = maybe_monthly_rewards {
+        let latest_np_rewards = stable_memory::get_latest_node_providers_rewards();
+
+        if latest_np_rewards.timestamp < monthly_rewards.timestamp {
+            stable_memory::insert_node_provider_rewards(monthly_rewards.timestamp, monthly_rewards)
+        }
+    }
+
+    Ok(())
 }
 
 #[cfg(test)]

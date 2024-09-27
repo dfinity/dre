@@ -7556,6 +7556,7 @@ version = "1.0.128"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "6ff5456707a1de34e7e37f2a6fd3d3f808c318259cbd01ab6377795054b483d8"
 dependencies = [
+ "indexmap 2.5.0",
  "itoa",
  "memchr",
  "ryu",
@@ -8593,6 +8594,8 @@ dependencies = [
  "ic-cdk-timers 0.10.0",
  "ic-management-canister-types",
  "ic-nns-common",
+ "ic-nns-constants",
+ "ic-nns-governance-api",
  "ic-protobuf",
  "ic-registry-keys",
  "ic-stable-structures",
@@ -8610,6 +8613,7 @@ dependencies = [
  "candid",
  "dfn_core",
  "ic-management-canister-types",
+ "ic-nns-governance-api",
  "ic-protobuf",
  "ic-stable-structures",
  "serde",

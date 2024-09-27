@@ -852,7 +852,6 @@ impl SubnetQuerier for RegistryState {
                         nodes: s.nodes.iter().map(decentralization::network::Node::from).collect(),
                         added_nodes_desc: Vec::new(),
                         removed_nodes_desc: Vec::new(),
-                        min_nakamoto_coefficients: None,
                         comment: None,
                         run_log: Vec::new(),
                     })
@@ -879,7 +878,6 @@ impl SubnetQuerier for RegistryState {
                                 .collect(),
                             added_nodes_desc: Vec::new(),
                             removed_nodes_desc: Vec::new(),
-                            min_nakamoto_coefficients: None,
                             comment: None,
                             run_log: Vec::new(),
                         })

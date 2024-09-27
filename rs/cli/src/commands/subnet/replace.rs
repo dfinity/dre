@@ -23,10 +23,6 @@ pub struct Replace {
     #[clap(long, short, aliases = [ "summary" ])]
     pub motivation: Option<String>,
 
-    /// Minimum Nakamoto coefficients after the replacement
-    #[clap(long, num_args(1..))]
-    pub min_nakamoto_coefficients: Vec<String>,
-
     /// Features or Node IDs to exclude from the available nodes pool
     #[clap(long, num_args(1..))]
     pub exclude: Vec<String>,
@@ -66,7 +62,6 @@ impl ExecutableCommand for Replace {
                 self.exclude.clone().into(),
                 self.only.clone(),
                 self.include.clone().into(),
-                Self::parse_min_nakamoto_coefficients(&self.min_nakamoto_coefficients),
             )
             .await?;
 
@@ -75,24 +70,22 @@ impl ExecutableCommand for Replace {
         runner.propose_subnet_change(subnet_change_response, ctx.forum_post_link()).await
     }
 
-    fn validate(&self, cmd: &mut clap::Command) {
+    fn validate(&self, _args: &crate::commands::Args, cmd: &mut clap::Command) {
         if !self.nodes.is_empty() && self.id.is_some() {
             cmd.error(
                 ErrorKind::ArgumentConflict,
                 "Both subnet id and a list of nodes to replace are provided. Only one of the two is allowed.",
             )
-            .exit();
+            .exit()
         } else if self.nodes.is_empty() && self.id.is_none() {
             cmd.error(
                 ErrorKind::MissingRequiredArgument,
                 "Specify either a subnet id or a list of nodes to replace",
             )
-            .exit();
+            .exit()
         } else if !self.nodes.is_empty() && self.motivation.is_none() {
             cmd.error(ErrorKind::MissingRequiredArgument, "Required argument motivation not found")
-                .exit();
+                .exit()
         }
-
-        Self::validate_min_nakamoto_coefficients(cmd, &self.min_nakamoto_coefficients);
     }
 }

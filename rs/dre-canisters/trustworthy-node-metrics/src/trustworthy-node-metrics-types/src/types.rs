@@ -3,6 +3,7 @@ use std::{borrow::Cow, fmt};
 use candid::{CandidType, Decode, Deserialize, Encode, Principal};
 use dfn_core::api::PrincipalId;
 use ic_management_canister_types::NodeMetricsHistoryResponse;
+use ic_nns_governance_api::pb::v1::MonthlyNodeProviderRewards;
 use ic_protobuf::registry::node_rewards::v2::{NodeRewardRate, NodeRewardRates};
 use ic_stable_structures::{storable::Bound, Storable};
 use serde::Serialize;
@@ -13,6 +14,29 @@ pub type NodeMetricsGrouped = (u64, PrincipalId, ic_management_canister_types::N
 // Stored in stable structure
 pub type TimestampNanos = u64;
 pub type NodeMetricsStoredKey = (TimestampNanos, Principal);
+
+#[derive(Debug, Deserialize, Serialize, CandidType, Clone)]
+pub struct MonthlyNodeProviderRewardsStored {
+    pub monthly_node_provider_rewards: MonthlyNodeProviderRewards,
+}
+
+const MAX_VALUE_SIZE: u32 = 20000;
+
+impl Storable for MonthlyNodeProviderRewardsStored {
+    fn to_bytes(&self) -> std::borrow::Cow<[u8]> {
+        Cow::Owned(Encode!(self).unwrap())
+    }
+
+    fn from_bytes(bytes: std::borrow::Cow<[u8]>) -> Self {
+        Decode!(bytes.as_ref(), Self).unwrap()
+    }
+
+    const BOUND: Bound = Bound::Bounded {
+        max_size: MAX_VALUE_SIZE,
+        is_fixed_size: false,
+    };
+}
+
 #[derive(Debug, Deserialize, Serialize, CandidType, Clone)]
 pub struct NodeMetricsStored {
     pub subnet_assigned: Principal,
@@ -195,7 +219,7 @@ pub struct RewardMultiplierResult {
     pub blocks_proposed: u64,
     pub blocks_total: u64,
     pub failure_rate: f64,
-    pub computation_log: String,
+    pub computation_log: Vec<OperationExecutorLog>,
 }
 
 #[derive(Debug, Deserialize, CandidType)]
@@ -209,8 +233,10 @@ pub struct NodeRewards {
 #[derive(Debug, Deserialize, CandidType)]
 pub struct NodeProviderRewards {
     pub node_provider_id: Principal,
-    pub rewards_xdr: f64,
-    pub rewards_xdr_old: f64,
+    pub rewards_xdr: u64,
+    pub rewards_xdr_old: Option<u64>,
+    pub ts_distribution: u64,
+    pub xdr_conversion_rate: Option<u64>,
     pub nodes_rewards: Vec<NodeRewards>,
 }
 
@@ -224,4 +250,11 @@ pub struct NodeProviderMapping {
 pub struct NodeMetadata {
     pub node_id: Principal,
     pub node_metadata_stored: NodeMetadataStoredV2,
+}
+
+#[derive(Debug, Deserialize, CandidType)]
+pub struct OperationExecutorLog {
+    pub reason: String,
+    pub operation: String,
+    pub result: String,
 }

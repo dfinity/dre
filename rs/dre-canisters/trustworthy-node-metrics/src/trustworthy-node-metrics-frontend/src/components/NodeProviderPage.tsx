@@ -58,12 +58,12 @@ export const NodeProviderPage: React.FC<NodeProviderPageProps> = ({ nodeMetadata
                             {map.node_id.toText()}
                         </Link>
                         </Typography>
-                    ))}
+                    ))} 
                     
                 </Grid>
                 <Grid item xs={12}>
                     <Typography variant="h6" component="div" >
-                        Last Provider Rewards
+                        Provider Rewards
                     </Typography>
                     <Divider/>
                 </Grid>

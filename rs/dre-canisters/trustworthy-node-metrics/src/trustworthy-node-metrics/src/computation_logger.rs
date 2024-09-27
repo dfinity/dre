@@ -3,6 +3,7 @@ use std::fmt;
 use itertools::Itertools;
 use num_traits::Zero;
 use rust_decimal::Decimal;
+use trustworthy_node_metrics_types::types::OperationExecutorLog;
 
 pub enum Operation {
     Set(Decimal),
@@ -41,7 +42,7 @@ impl fmt::Display for Operation {
             }
             Operation::Subtract(o1, o2) => ("-", o1, o2),
             Operation::Divide(o1, o2) => ("/", o1, o2),
-            Operation::Set(o1) => return write!(f, "{}", o1),
+            Operation::Set(o1) => return write!(f, "set {}", o1),
             Operation::Multiply(o1, o2) => ("*", o1, o2),
         };
         write!(f, "{} {} {}", o1.round_dp(4), symbol, o2.round_dp(4))
@@ -68,35 +69,15 @@ impl OperationExecutor {
     }
 }
 
-impl fmt::Display for OperationExecutor {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        match self.operation {
-            Operation::Set(x) => writeln!(f, "{}: {}", self.reason, x)?,
-            _ => writeln!(f, "{}: {} = {}", self.reason, self.operation, self.result.round_dp(4))?,
-        }
-        Ok(())
-    }
-}
-
 // Modify ComputationLogger to use NumberEnum
 pub struct ComputationLogger {
-    maybe_input: Option<String>,
     operations_executed: Vec<OperationExecutor>,
 }
 
 impl ComputationLogger {
     pub fn new() -> Self {
         Self {
-            maybe_input: None,
             operations_executed: Vec::new(),
-        }
-    }
-
-    #[allow(dead_code)]
-    pub fn with_input(self, input: String) -> Self {
-        Self {
-            maybe_input: Some(input),
-            ..self
         }
     }
 
@@ -118,19 +99,14 @@ impl ComputationLogger {
         }
     }
 
-    pub fn get_log(&self) -> String {
-        let operations_log = self
-            .operations_executed
+    pub fn get_log(&self) -> Vec<OperationExecutorLog> {
+        self.operations_executed
             .iter()
-            .enumerate()
-            .map(|(index, item)| format!("STEP {}: {}", index + 1, item))
+            .map(|operation_executor| OperationExecutorLog {
+                reason: operation_executor.reason.clone(),
+                operation: operation_executor.operation.to_string(),
+                result: operation_executor.result.to_string(),
+            })
             .collect_vec()
-            .join("\n");
-
-        if let Some(input) = &self.maybe_input {
-            format!("INPUT:\n{}\nCOMPUTATION LOG:\n\n{}", input, operations_log)
-        } else {
-            format!("COMPUTATION LOG:\n\n{}", operations_log)
-        }
     }
 }

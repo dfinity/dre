@@ -1,5 +1,5 @@
 {
-  "checksum": "477d8ee63917a92575509692e0eb19de29c567dceb066a343e4705ddf77e498e",
+  "checksum": "06da4df9dd66c389618b0921a08c03251c247c4325192eb08dcb94e4063b5f9b",
   "crates": {
     "actix-codec 0.5.2": {
       "name": "actix-codec",
@@ -38062,6 +38062,8 @@
         "crate_features": {
           "common": [
             "default",
+            "indexmap",
+            "preserve_order",
             "raw_value",
             "std",
             "unbounded_depth"
@@ -38070,6 +38072,10 @@
         },
         "deps": {
           "common": [
+            {
+              "id": "indexmap 2.5.0",
+              "target": "indexmap"
+            },
             {
               "id": "itoa 1.0.11",
               "target": "itoa"
@@ -43158,6 +43164,14 @@
               "target": "ic_nns_common"
             },
             {
+              "id": "ic-nns-constants 0.9.0",
+              "target": "ic_nns_constants"
+            },
+            {
+              "id": "ic-nns-governance-api 0.9.0",
+              "target": "ic_nns_governance_api"
+            },
+            {
               "id": "ic-protobuf 0.9.0",
               "target": "ic_protobuf"
             },
@@ -43235,6 +43249,10 @@
             {
               "id": "ic-management-canister-types 0.9.0",
               "target": "ic_management_canister_types"
+            },
+            {
+              "id": "ic-nns-governance-api 0.9.0",
+              "target": "ic_nns_governance_api"
             },
             {
               "id": "ic-protobuf 0.9.0",

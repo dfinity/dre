@@ -22,8 +22,8 @@ impl ExecutableCommand for Neuron {
         self.subcommand.require_auth()
     }
 
-    fn validate(&self, cmd: &mut Command) {
-        self.subcommand.validate(cmd)
+    fn validate(&self, args: &crate::commands::Args, cmd: &mut Command) {
+        self.subcommand.validate(args, cmd)
     }
 
     async fn execute(&self, ctx: DreContext) -> anyhow::Result<()> {

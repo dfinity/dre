@@ -275,7 +275,7 @@ pub mod tests {
             proposal_agent,
             verbose_runner: true,
             offline: false,
-            forum_post_link: None,
+            forum_post_link: "https://forum.dfinity.org/t/123".to_string().into(),
             dry_run: true,
             artifact_downloader,
             neuron,

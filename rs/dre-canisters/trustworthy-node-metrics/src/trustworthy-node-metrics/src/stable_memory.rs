@@ -1,4 +1,5 @@
 use candid::Principal;
+use ic_nns_governance_api::pb::v1::MonthlyNodeProviderRewards;
 use ic_protobuf::registry::node_rewards::v2::{NodeRewardRate, NodeRewardRates};
 use ic_stable_structures::memory_manager::{MemoryId, MemoryManager, VirtualMemory};
 use ic_stable_structures::{DefaultMemoryImpl, StableBTreeMap};
@@ -7,7 +8,8 @@ use std::cell::RefCell;
 use std::collections::BTreeMap;
 
 use trustworthy_node_metrics_types::types::{
-    NodeMetadata, NodeMetadataStored, NodeMetadataStoredV2, NodeMetricsStored, NodeMetricsStoredKey, NodeRewardRatesStored, TimestampNanos,
+    MonthlyNodeProviderRewardsStored, NodeMetadata, NodeMetadataStored, NodeMetadataStoredV2, NodeMetricsStored, NodeMetricsStoredKey,
+    NodeRewardRatesStored, TimestampNanos,
 };
 
 type Memory = VirtualMemory<DefaultMemoryImpl>;
@@ -16,31 +18,41 @@ thread_local! {
     static MEMORY_MANAGER: RefCell<MemoryManager<DefaultMemoryImpl>> =
     RefCell::new(MemoryManager::init(DefaultMemoryImpl::default()));
 
+    // Backups
+    static NODE_PROVIDER_MAP: RefCell<StableBTreeMap<Principal, Principal, Memory>> =
+    RefCell::new(StableBTreeMap::init(
+    MEMORY_MANAGER.with(|m| m.borrow().get(MemoryId::new(1)))
+    ));
+
+    static NODE_PROVIDER_MAP_V1: RefCell<StableBTreeMap<Principal, Principal, Memory>> =
+        RefCell::new(StableBTreeMap::init(
+        MEMORY_MANAGER.with(|m| m.borrow().get(MemoryId::new(2)))
+    ));
+
+    static NODE_METADATA: RefCell<StableBTreeMap<Principal, NodeMetadataStored, Memory>> =
+        RefCell::new(StableBTreeMap::init(
+        MEMORY_MANAGER.with(|m| m.borrow().get(MemoryId::new(3)))
+    ));
+
+    // Used
     static NODE_METRICS_MAP: RefCell<StableBTreeMap<NodeMetricsStoredKey, NodeMetricsStored, Memory>> =
       RefCell::new(StableBTreeMap::init(
         MEMORY_MANAGER.with(|m| m.borrow().get(MemoryId::new(0)))
     ));
 
-    static NODE_PROVIDER_MAP: RefCell<StableBTreeMap<Principal, Principal, Memory>> =
+    static REWARDS_TABLE: RefCell<StableBTreeMap<String, NodeRewardRatesStored, Memory>> =
         RefCell::new(StableBTreeMap::init(
-        MEMORY_MANAGER.with(|m| m.borrow().get(MemoryId::new(1)))
+        MEMORY_MANAGER.with(|m| m.borrow().get(MemoryId::new(4)))
     ));
-    static NODE_PROVIDER_MAP_V1: RefCell<StableBTreeMap<Principal, Principal, Memory>> =
-        RefCell::new(StableBTreeMap::init(
-        MEMORY_MANAGER.with(|m| m.borrow().get(MemoryId::new(2)))
-    ));
-    static NODE_METADATA: RefCell<StableBTreeMap<Principal, NodeMetadataStored, Memory>> =
-        RefCell::new(StableBTreeMap::init(
-        MEMORY_MANAGER.with(|m| m.borrow().get(MemoryId::new(3)))
-    ));
+
     static NODE_METADATA_V2: RefCell<StableBTreeMap<Principal, NodeMetadataStoredV2, Memory>> =
         RefCell::new(StableBTreeMap::init(
         MEMORY_MANAGER.with(|m| m.borrow().get(MemoryId::new(5)))
     ));
 
-    static REWARDS_TABLE: RefCell<StableBTreeMap<String, NodeRewardRatesStored, Memory>> =
+    static MONTHLY_NP_REWARDS: RefCell<StableBTreeMap<u64, MonthlyNodeProviderRewardsStored, Memory>> =
         RefCell::new(StableBTreeMap::init(
-        MEMORY_MANAGER.with(|m| m.borrow().get(MemoryId::new(4)))
+        MEMORY_MANAGER.with(|m| m.borrow().get(MemoryId::new(6)))
     ));
 }
 
@@ -186,4 +198,19 @@ pub fn node_types_count(node_operator_id: Principal) -> Option<BTreeMap<String, 
     } else {
         Some(node_types_count)
     }
+}
+
+pub fn insert_node_provider_rewards(timestamp: u64, monthly_node_provider_rewards: MonthlyNodeProviderRewards) {
+    MONTHLY_NP_REWARDS.with_borrow_mut(|p| {
+        p.insert(
+            timestamp,
+            MonthlyNodeProviderRewardsStored {
+                monthly_node_provider_rewards,
+            },
+        )
+    });
+}
+
+pub fn get_latest_node_providers_rewards() -> MonthlyNodeProviderRewards {
+    MONTHLY_NP_REWARDS.with_borrow(|p| p.last_key_value().map(|(_, v)| v.monthly_node_provider_rewards).unwrap())
 }

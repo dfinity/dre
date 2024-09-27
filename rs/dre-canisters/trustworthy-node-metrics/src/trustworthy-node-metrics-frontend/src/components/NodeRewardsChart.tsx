@@ -1,10 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { ChartData, generateChartData, getLatestRewardRange, LoadingIndicator, NodeMetricsStats, NodePerformanceStats, setNodeRewardsData } from '../utils/utils';
-import { Grid } from '@mui/material';
+import { Grid, Typography } from '@mui/material';
 import PerformanceChart from './PerformanceChart';
 import { NodeRewards } from '../../../declarations/trustworthy-node-metrics/trustworthy-node-metrics.did';
 import RewardsInfo, { LinearReductionChart } from './RewardsInfo';
 import { Principal } from '@dfinity/principal';
+import { ExportTable } from './ExportTable';
+import { GridColDef, GridRowsProp } from '@mui/x-data-grid';
 
 export interface NodeRewardsChartProps {
     node: string;
@@ -38,6 +40,21 @@ export const NodeRewardsChart: React.FC<NodeRewardsChartProps> = ({ node }) => {
     const millisecondsPerDay = 24 * 60 * 60 * 1000;
     const daysTotal = Math.round((latestRewardRange.dateEnd.getTime() - latestRewardRange.dateStart.getTime()) / millisecondsPerDay);
     const rewardMultiplier = Math.round((daysAssigned * rewardsPercent + (daysTotal - daysAssigned) * 100) / daysTotal);
+    const rows: GridRowsProp = latestNodeRewards.rewards_computation.computation_log.map((data, index) => {
+        return { 
+            id: index,
+            col0: index,
+            col1: data.reason, 
+            col2: data.operation,
+            col3: data.result
+            };
+    });
+    const colDef: GridColDef[] = [
+        { field: 'col0', headerName: 'Step', width: 500},
+        { field: 'col1', headerName: 'Description', width: 500},
+        { field: 'col2', headerName: 'Operation', width: 1000 },
+        { field: 'col3', headerName: 'Result', width: 200 },
+        ];
 
     return (
         <>
@@ -58,6 +75,12 @@ export const NodeRewardsChart: React.FC<NodeRewardsChartProps> = ({ node }) => {
             </Grid>
             <Grid item xs={12} md={12}>
                 <RewardsInfo/>
+            </Grid>
+            <Grid item xs={12} md={12}>
+                <Typography variant="body1" gutterBottom>
+                    Computation Log
+                </Typography>
+                <ExportTable colDef={colDef} rows={rows}/>
             </Grid>
         </>
     );

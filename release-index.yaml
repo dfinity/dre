@@ -1,4 +1,27 @@
 releases:
+  - rc_name: rc--2024-09-26_01-31
+    versions:
+      # Qualification pipeline:
+      # https://github.com/dfinity/ic/actions/runs/11043903413
+      # NOTE: failed qualification is due to a failure in
+      # uploading of bep file which is not related to the
+      # qualification test
+      - name: base
+        version: 35153c7cb7b9d1da60472ca7e94c693e418f87bd
+      # Qualification pipeline:
+      # https://github.com/dfinity/ic/actions/runs/11055135437
+      # NOTE: failed qualification is due to a failure in
+      # uploading of bep file which is not related to the
+      # qualification test
+      - name: ubuntu24
+        version: d101161c54df27f514902d22958c77aae9ce8035
+      # Qualification pipeline:
+      # https://github.com/dfinity/ic/actions/runs/11066543182
+      # NOTE: failed qualification is due to a failure in
+      # uploading of bep file which is not related to the
+      # qualification test
+      - name: no-canister-snapshots
+        version: c43a4880199c00135c8415957851e823b3fb769e
   - rc_name: rc--2024-09-19_01-31
     versions:
       # Qualification pipeline:
