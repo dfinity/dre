@@ -1,4 +1,5 @@
 use candid::Principal;
+use chrono_utils::DateTimeRange;
 use ic_cdk_macros::*;
 use itertools::Itertools;
 use std::collections::{btree_map::Entry, BTreeMap};
@@ -6,6 +7,7 @@ use trustworthy_node_metrics_types::types::{
     NodeMetadata, NodeMetrics, NodeMetricsStored, NodeMetricsStoredKey, NodeProviderRewards, NodeProviderRewardsArgs, NodeRewards, NodeRewardsArgs,
     SubnetNodeMetricsArgs, SubnetNodeMetricsResponse,
 };
+mod chrono_utils;
 mod computation_logger;
 mod metrics_manager;
 mod rewards_manager;
@@ -108,19 +110,17 @@ fn nodes_metadata() -> Vec<NodeMetadata> {
 
 #[query]
 fn node_rewards(args: NodeRewardsArgs) -> NodeRewards {
-    let period_start = args.from_ts;
-    let period_end = args.to_ts;
+    let rewarding_period = DateTimeRange::new(args.from_ts, args.to_ts);
     let node_id = args.node_id;
 
-    let rewards = rewards_manager::compute_node_rewards(vec![node_id], period_start, period_end);
+    let rewards = rewards_manager::compute_node_rewards(vec![node_id], rewarding_period);
     rewards.into_iter().next().unwrap()
 }
 
 #[query]
 fn node_provider_rewards(args: NodeProviderRewardsArgs) -> NodeProviderRewards {
-    let period_start = args.from_ts;
-    let period_end = args.to_ts;
+    let rewarding_period = DateTimeRange::new(args.from_ts, args.to_ts);
     let node_provider_id = args.node_provider_id;
 
-    rewards_manager::node_provider_rewards(node_provider_id, period_start, period_end)
+    rewards_manager::node_provider_rewards(node_provider_id, rewarding_period)
 }

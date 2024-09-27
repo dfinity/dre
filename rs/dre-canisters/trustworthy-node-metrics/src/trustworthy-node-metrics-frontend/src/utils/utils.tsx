@@ -188,14 +188,15 @@ export const LoadingIndicator: React.FC = () => (
 
 export const NodeMetricsStats: React.FC<{ stats: NodeRewards['rewards_computation'] | null }> = ({ stats }) => (
   <Box sx={boxStyleWidget('left')}>
+      <WidgetNumber value={stats ? stats.days_assigned.toString() : "0"} title="Days Assigned" />
+      <WidgetNumber value={stats ? stats.days_unassigned.toString() : "0"} title="Days Unassigned" />
       <WidgetNumber value={stats ? stats.blocks_proposed.toString() : "0"} title="Blocks Proposed Total" />
       <WidgetNumber value={stats ? stats.blocks_failed.toString() : "0"} title="Blocks Failed Total" />
   </Box>
 );
 
-export const NodePerformanceStats: React.FC<{ failureRateAvg: string, rewardMultiplier: string , baseRewardsXDR: string}> = ({ failureRateAvg, rewardMultiplier, baseRewardsXDR }) => (
+export const NodePerformanceStats: React.FC<{ rewardMultiplier: string , baseRewardsXDR: string}> = ({ rewardMultiplier, baseRewardsXDR }) => (
   <Box sx={boxStyleWidget('right')}>
-      <WidgetNumber value={failureRateAvg} title="Average Failure Rate" />
       <WidgetNumber value={rewardMultiplier} title="Reward Multiplier" sxValue={{ color: '#FFCC00' }} />
       <WidgetNumber value={baseRewardsXDR} title="Base Monthly Rewards XDR" sxValue={{ color: '#FFCC00' }} />
   </Box>
