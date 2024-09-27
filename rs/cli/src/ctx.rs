@@ -48,6 +48,7 @@ pub struct DreContext {
     health_client: Arc<dyn HealthStatusQuerier>,
 }
 
+#[allow(clippy::too_many_arguments)]
 impl DreContext {
     pub async fn new(
         network: String,

@@ -1051,15 +1051,12 @@ impl SubnetChangeRequest {
             .into_iter()
             .filter(|n| {
                 for cordoned_feature in &self.cordoned_features {
-                    match n.features.get(&cordoned_feature.feature) {
-                        Some(node_feature) => {
-                            if PartialEq::eq(&node_feature, &cordoned_feature.value) {
-                                // Node contains cordoned feature
-                                // exclude it from available pool
-                                return false;
-                            }
+                    if let Some(node_feature) = n.features.get(&cordoned_feature.feature) {
+                        if PartialEq::eq(&node_feature, &cordoned_feature.value) {
+                            // Node contains cordoned feature
+                            // exclude it from available pool
+                            return false;
                         }
-                        None => {}
                     }
                 }
                 // Node doesn't contain any cordoned features
@@ -1097,15 +1094,12 @@ impl SubnetChangeRequest {
             .filter(|n| health_of_nodes.get(&n.id).unwrap_or(&HealthStatus::Unknown) == &HealthStatus::Healthy)
             .filter(|n| {
                 for cordoned_feature in &self.cordoned_features {
-                    match n.features.get(&cordoned_feature.feature) {
-                        Some(node_feature) => {
-                            if PartialEq::eq(&node_feature, &cordoned_feature.value) {
-                                // Node contains cordoned feature
-                                // exclude it from available pool
-                                return false;
-                            }
+                    if let Some(node_feature) = n.features.get(&cordoned_feature.feature) {
+                        if PartialEq::eq(&node_feature, &cordoned_feature.value) {
+                            // Node contains cordoned feature
+                            // exclude it from available pool
+                            return false;
                         }
-                        None => {}
                     }
                 }
                 // Node doesn't contain any cordoned features
