@@ -32,7 +32,7 @@ async fn main() -> anyhow::Result<()> {
     let args = Args::parse();
 
     let mut cmd = Args::command();
-    args.validate(&mut cmd);
+    args.validate(&args, &mut cmd);
 
     if let commands::Subcommands::Upgrade(upgrade) = args.subcommands {
         let response = upgrade.run().await?;

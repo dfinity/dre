@@ -32,7 +32,7 @@ impl ExecutableCommand for Subnet {
         self.subcommand.execute(ctx).await
     }
 
-    fn validate(&self, cmd: &mut clap::Command) {
-        self.subcommand.validate(cmd)
+    fn validate(&self, args: &crate::commands::Args, cmd: &mut clap::Command) {
+        self.subcommand.validate(args, cmd)
     }
 }

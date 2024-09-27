@@ -773,7 +773,7 @@ pub fn replace_proposal_options(change: &SubnetChangeResponse, forum_post_link: 
 
     Ok(ic_admin::ProposeOptions {
         title: Some(change_desc.clone()),
-        summary: Some(change_desc),
+        summary: Some(format!("# {change_desc}")),
         motivation: Some(format!("{}\n\n{}\n", change.motivation.as_ref().unwrap_or(&String::new()), change)),
         forum_post_link,
     })

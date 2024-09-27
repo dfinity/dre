@@ -64,5 +64,5 @@ impl ExecutableCommand for Resize {
         runner.propose_subnet_change(subnet_change_response, ctx.forum_post_link()).await
     }
 
-    fn validate(&self, _cmd: &mut clap::Command) {}
+    fn validate(&self, _args: &crate::commands::Args, _cmd: &mut clap::Command) {}
 }
