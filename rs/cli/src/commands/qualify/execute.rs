@@ -44,7 +44,7 @@ impl ExecutableCommand for Execute {
         crate::commands::AuthRequirement::Neuron
     }
 
-    fn validate(&self, cmd: &mut clap::Command) {
+    fn validate(&self, _args: &crate::commands::Args, cmd: &mut clap::Command) {
         if self.artifacts.is_some() && self.grafana_url.is_none() {
             cmd.error(
                 clap::error::ErrorKind::InvalidValue,
