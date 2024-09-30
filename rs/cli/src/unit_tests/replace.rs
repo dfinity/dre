@@ -336,7 +336,7 @@ Test output:
                 explaination,
                 cordoned_features
                     .iter()
-                    .map(|pair| format!("({}, {})", pair.feature.to_string(), pair.value))
+                    .map(|pair| format!("({}, {})", pair.feature, pair.value))
                     .join(", "),
                 test_pretty_format_response(outcome)
             ))
