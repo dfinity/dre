@@ -84,7 +84,14 @@ async fn fetch_metrics(subnets: Vec<PrincipalId>, refresh_ts: TimestampNanos) ->
         )
         .map(move |result| {
             result
-                .map_err(|(code, msg)| anyhow::anyhow!("Error when calling management canister:\n Code:{:?}\nMsg:{}", code, msg))
+                .map_err(|(code, msg)| {
+                    anyhow::anyhow!(
+                        "Error when calling management canister for subnet {}:\n Code:{:?}\nMsg:{}",
+                        subnet_id,
+                        code,
+                        msg
+                    )
+                })
                 .map(|(node_metrics,)| (subnet_id, node_metrics))
         });
 

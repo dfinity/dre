@@ -8571,6 +8571,7 @@ version = "0.5.5"
 dependencies = [
  "anyhow",
  "candid",
+ "chrono",
  "dfn_core",
  "futures",
  "ic-base-types",

@@ -33,13 +33,9 @@ export const NodeRewardsChart: React.FC<NodeRewardsChartProps> = ({ node }) => {
     }
 
     const rewardsDailyData: ChartData[] = generateChartData(latestRewardRange, latestNodeRewards.daily_node_metrics);
-    const daysAssigned = latestNodeRewards.daily_node_metrics.length;
     const failureRateAvg = Math.round((latestNodeRewards.rewards_computation.failure_rate) * 100)
-    const rewardsPercent = Math.round((latestNodeRewards.rewards_computation.rewards_percent) * 100);
-    const rewardsReduction = 100 - rewardsPercent;
-    const millisecondsPerDay = 24 * 60 * 60 * 1000;
-    const daysTotal = Math.round((latestRewardRange.dateEnd.getTime() - latestRewardRange.dateStart.getTime()) / millisecondsPerDay);
-    const rewardMultiplier = Math.round((daysAssigned * rewardsPercent + (daysTotal - daysAssigned) * 100) / daysTotal);
+    const rewardsMultiplier = Math.round((latestNodeRewards.rewards_computation.rewards_multiplier) * 100);
+    const rewardsReduction = 100 - rewardsMultiplier;
     const rows: GridRowsProp = latestNodeRewards.rewards_computation.computation_log.map((data, index) => {
         return { 
             id: index,
@@ -50,9 +46,9 @@ export const NodeRewardsChart: React.FC<NodeRewardsChartProps> = ({ node }) => {
             };
     });
     const colDef: GridColDef[] = [
-        { field: 'col0', headerName: 'Step', width: 500},
-        { field: 'col1', headerName: 'Description', width: 500},
-        { field: 'col2', headerName: 'Operation', width: 1000 },
+        { field: 'col0', headerName: 'Step', width: 100},
+        { field: 'col1', headerName: 'Description', width: 300},
+        { field: 'col2', headerName: 'Operation', width: 500 },
         { field: 'col3', headerName: 'Result', width: 200 },
         ];
 
@@ -63,9 +59,8 @@ export const NodeRewardsChart: React.FC<NodeRewardsChartProps> = ({ node }) => {
             </Grid>
             <Grid item xs={12} md={6}>
                 <NodePerformanceStats 
-                    failureRateAvg={failureRateAvg.toString().concat("%")} 
-                    rewardMultiplier={rewardMultiplier.toString().concat("%")}
-                    baseRewardsXDR={latestNodeRewards.node_rate.xdr_permyriad_per_node_per_month.toString()} />
+                    rewardMultiplier={rewardsMultiplier.toString().concat("%")}
+                    baseRewardsXDR={(Number(latestNodeRewards.node_rate.xdr_permyriad_per_node_per_month) / 10000).toString()} />
             </Grid>
             <Grid item xs={12} md={6}>
                 <PerformanceChart chartDailyData={rewardsDailyData} />

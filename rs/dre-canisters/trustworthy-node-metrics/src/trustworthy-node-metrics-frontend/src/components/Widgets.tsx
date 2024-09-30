@@ -8,13 +8,16 @@ export function WidgetNumber({
   value,
   title,
   sxValue = {},
+  sxPaper = {}, 
 }: {
   value: string;
   title: string;
   sxValue?: SxProps;
+  sxPaper?: SxProps;
 }) {
+  const sxPaperJoin = { ...paperStyleWidget, ...sxPaper };
   return (
-    <Paper elevation={5} sx={paperStyleWidget}>
+    <Paper elevation={5} sx={sxPaperJoin}> 
       <Stack spacing={0.8}>
         <Typography variant="h4" sx={sxValue}>
           {value}

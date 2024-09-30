@@ -1,5 +1,5 @@
 {
-  "checksum": "af89dd63754a410f065e63d1f5c995d00917264ee3f108f5771db1d5967254c3",
+  "checksum": "abee9a1e183890980b7417228d49c17fa7e3379b15e022a305a18ccf1a343194",
   "crates": {
     "actix-codec 0.5.2": {
       "name": "actix-codec",
@@ -43138,6 +43138,10 @@
             {
               "id": "candid 0.10.10",
               "target": "candid"
+            },
+            {
+              "id": "chrono 0.4.38",
+              "target": "chrono"
             },
             {
               "id": "dfn_core 0.9.0",
