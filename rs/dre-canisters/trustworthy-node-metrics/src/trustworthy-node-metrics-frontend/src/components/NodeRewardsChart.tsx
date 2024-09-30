@@ -60,7 +60,7 @@ export const NodeRewardsChart: React.FC<NodeRewardsChartProps> = ({ node }) => {
             <Grid item xs={12} md={6}>
                 <NodePerformanceStats 
                     rewardMultiplier={rewardsMultiplier.toString().concat("%")}
-                    baseRewardsXDR={latestNodeRewards.node_rate.xdr_permyriad_per_node_per_month.toString()} />
+                    baseRewardsXDR={(Number(latestNodeRewards.node_rate.xdr_permyriad_per_node_per_month) / 10000).toString()} />
             </Grid>
             <Grid item xs={12} md={6}>
                 <PerformanceChart chartDailyData={rewardsDailyData} />
