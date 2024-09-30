@@ -8,8 +8,7 @@ use std::cell::RefCell;
 use std::collections::BTreeMap;
 
 use trustworthy_node_metrics_types::types::{
-    MonthlyNodeProviderRewardsStored, NodeMetadata, NodeMetadataStored, NodeMetadataStoredV2, NodeMetricsStored, NodeMetricsStoredKey,
-    NodeRewardRatesStored, TimestampNanos,
+    MonthlyNodeProviderRewardsStored, NodeMetadata, NodeMetadataStored, NodeMetadataStoredV2, NodeMetricsStored, NodeMetricsStoredKey, NodeProviderRewardableKey, NodeProviderRewardableNodes, NodeRewardRatesStored, TimestampNanos
 };
 
 type Memory = VirtualMemory<DefaultMemoryImpl>;
@@ -54,6 +53,12 @@ thread_local! {
         RefCell::new(StableBTreeMap::init(
         MEMORY_MANAGER.with(|m| m.borrow().get(MemoryId::new(6)))
     ));
+
+    static NP_REWARDABLE_NODES: RefCell<StableBTreeMap<NodeProviderRewardableKey, u32, Memory>> =
+        RefCell::new(StableBTreeMap::init(
+        MEMORY_MANAGER.with(|m| m.borrow().get(MemoryId::new(7)))
+    ));
+
 }
 
 pub fn insert_node_metrics(key: NodeMetricsStoredKey, value: NodeMetricsStored) {
@@ -213,4 +218,12 @@ pub fn insert_node_provider_rewards(timestamp: u64, monthly_node_provider_reward
 
 pub fn get_latest_node_providers_rewards() -> MonthlyNodeProviderRewards {
     MONTHLY_NP_REWARDS.with_borrow(|p| p.last_key_value().map(|(_, v)| v.monthly_node_provider_rewards).unwrap())
+}
+
+pub(crate) fn get_all_operators() -> std::collections::HashSet<Principal> {
+    NODE_METADATA_V2.with_borrow(|metadata| metadata.iter().map(|meta| meta.1.node_operator_id).collect())
+}
+
+pub(crate) fn add_rewardable(key: NodeProviderRewardableKey, count: u32) {
+    NP_REWARDABLE_NODES.with_borrow_mut(|rewardable| rewardable.insert(key, count));
 }

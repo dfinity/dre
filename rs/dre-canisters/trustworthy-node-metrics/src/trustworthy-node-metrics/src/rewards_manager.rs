@@ -252,15 +252,7 @@ pub fn coumpute_node_provider_rewards(nodes_rewards: &[NodeRewards]) -> (Decimal
 
 pub fn node_provider_rewards(node_provider_id: Principal, rewarding_period: DateTimeRange) -> NodeProviderRewards {
     let node_ids = stable_memory::get_node_principals(&node_provider_id);
-    let nodes_rewards = compute_node_rewards(node_ids, rewarding_period)
-        .into_iter()
-        .sorted_by(|a, b| {
-            Ord::cmp(
-                &b.node_rate.xdr_permyriad_per_node_per_month,
-                &a.node_rate.xdr_permyriad_per_node_per_month,
-            )
-        })
-        .collect_vec();
+    let nodes_rewards = compute_node_rewards(node_ids, rewarding_period);
     let (rewards_xdr_no_reduction, rewards_xdr) = coumpute_node_provider_rewards(&nodes_rewards);
 
     let latest_np_rewards = stable_memory::get_latest_node_providers_rewards();

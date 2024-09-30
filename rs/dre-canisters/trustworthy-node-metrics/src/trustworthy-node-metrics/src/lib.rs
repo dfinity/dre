@@ -124,3 +124,9 @@ fn node_provider_rewards(args: NodeProviderRewardsArgs) -> NodeProviderRewards {
 
     rewards_manager::node_provider_rewards(node_provider_id, rewarding_period)
 }
+
+#[update]
+fn update_rewardable_nodes() {
+    ic_cdk_timers::set_timer(std::time::Duration::from_secs(0), || ic_cdk::spawn(metrics_manager::update_rewardable_nodes()));
+}
+

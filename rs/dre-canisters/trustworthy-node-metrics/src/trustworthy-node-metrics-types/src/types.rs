@@ -1,4 +1,4 @@
-use std::{borrow::Cow, fmt};
+use std::{borrow::Cow, collections::BTreeMap, fmt, u32};
 
 use candid::{CandidType, Decode, Deserialize, Encode, Principal};
 use dfn_core::api::PrincipalId;
@@ -33,6 +33,30 @@ impl Storable for MonthlyNodeProviderRewardsStored {
 
     const BOUND: Bound = Bound::Bounded {
         max_size: MAX_VALUE_SIZE,
+        is_fixed_size: false,
+    };
+}
+
+#[derive(Debug, Deserialize, Serialize, CandidType, Clone, PartialEq, Eq, PartialOrd, Ord)]
+pub struct NodeProviderRewardableKey {
+    pub node_provider_id: Principal,
+    pub node_type: String,
+    pub region: String
+}
+
+const MAX_VALUE_SIZE_REWARDABLE_NODES: u32 = 300;
+
+impl Storable for NodeProviderRewardableKey {
+    fn to_bytes(&self) -> std::borrow::Cow<[u8]> {
+        Cow::Owned(Encode!(self).unwrap())
+    }
+
+    fn from_bytes(bytes: std::borrow::Cow<[u8]>) -> Self {
+        Decode!(bytes.as_ref(), Self).unwrap()
+    }
+
+    const BOUND: Bound = Bound::Bounded {
+        max_size: MAX_VALUE_SIZE_REWARDABLE_NODES,
         is_fixed_size: false,
     };
 }
