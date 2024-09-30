@@ -108,18 +108,17 @@ fn pretty_print_node(node: &Node, num_ident: usize) -> String {
     )
 }
 
-fn pretty_print_world(available_nodes: &Vec<Node>, subnet: &DecentralizedSubnet) -> String {
+fn pretty_print_world(available_nodes: &[Node], subnet: &DecentralizedSubnet) -> String {
     format!(
         r#"Available nodes:
 {}
 Observed subnet:
+    - id: {}
+      nodes:
 {}"#,
         available_nodes.iter().map(|node| pretty_print_node(node, 1)).join("\n"),
-        format!(
-            "\t- id: {}\n\t- nodes:\n{}",
-            subnet.id,
-            subnet.nodes.iter().map(|node| pretty_print_node(node, 2)).join("\n")
-        )
+        subnet.id,
+        subnet.nodes.iter().map(|node| pretty_print_node(node, 2)).join("\n")
     )
 }
 
@@ -337,7 +336,7 @@ Test output:
                 explaination,
                 cordoned_features
                     .iter()
-                    .map(|pair| format!("({}, {})", pair.feature.to_string(), pair.value.to_string()))
+                    .map(|pair| format!("({}, {})", pair.feature.to_string(), pair.value))
                     .join(", "),
                 test_pretty_format_response(outcome)
             ))
