@@ -1252,10 +1252,10 @@ impl NetworkHealRequest {
         &self,
         mut available_nodes: Vec<Node>,
         health_of_nodes: &IndexMap<PrincipalId, HealthStatus>,
+        cordoned_features: Vec<NodeFeaturePair>,
     ) -> Result<Vec<SubnetChangeResponse>, NetworkError> {
         let mut subnets_changed = Vec::new();
         let subnets_to_heal = unhealthy_with_nodes(&self.subnets, health_of_nodes)
-            .await
             .iter()
             .flat_map(|(subnet_id, unhealthy_nodes)| {
                 let unhealthy_nodes = unhealthy_nodes.iter().map(Node::from).collect::<Vec<_>>();
@@ -1305,6 +1305,7 @@ impl NetworkHealRequest {
             let change_req = SubnetChangeRequest {
                 subnet: subnet.decentralized_subnet.clone(),
                 available_nodes: available_nodes.clone(),
+                cordoned_features: cordoned_features.clone(),
                 ..Default::default()
             };
 

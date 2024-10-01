@@ -532,7 +532,7 @@ impl Runner {
             try_join(self.registry.available_nodes().map_err(anyhow::Error::from), self.health_client.nodes()).await?;
 
         let subnets_change_response = NetworkHealRequest::new(subnets_without_proposals)
-            .heal_and_optimize(available_nodes, &health_of_nodes)
+            .heal_and_optimize(available_nodes, &health_of_nodes, self.cordoned_features_fetcher.fetch().await?)
             .await?;
 
         for change in &subnets_change_response {
