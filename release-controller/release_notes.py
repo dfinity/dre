@@ -148,6 +148,7 @@ EXCLUDED_SCOPES = [
     "ic-admin",
     "nns",
     "sns",
+    "PocketIC",
 ]
 
 INCLUDE_CHANGES = ["bazel/external_crates.bzl"]
