@@ -17,6 +17,10 @@ fn node_principal(id: u64) -> PrincipalId {
     PrincipalId::new_node_test_id(id)
 }
 
+fn user_principal(id: u64) -> String {
+    PrincipalId::new_user_test_id(id).to_string()
+}
+
 fn node(id: u64, dfinity_owned: bool, features: &[(NodeFeature, &str)]) -> Node {
     Node {
         id: node_principal(id),
@@ -30,8 +34,15 @@ fn node(id: u64, dfinity_owned: bool, features: &[(NodeFeature, &str)]) -> Node 
                 });
 
                 // Insert mandatory features
-                for feature in &[NodeFeature::NodeProvider, NodeFeature::DataCenter, NodeFeature::DataCenterOwner] {
-                    map.insert(feature.clone(), "Some value".to_string());
+                for feature in &[
+                    NodeFeature::NodeProvider,
+                    NodeFeature::DataCenter,
+                    NodeFeature::DataCenterOwner,
+                    NodeFeature::Country,
+                ] {
+                    if !map.contains_key(feature) {
+                        map.insert(feature.clone(), "Some value".to_string());
+                    }
                 }
 
                 map
@@ -88,7 +99,7 @@ fn test_pretty_format_response(response: &Result<SubnetChangeResponse, anyhow::E
                 ))
                 .join("\n")
         ),
-        Err(r) => format!("Response was ERR: {}", r),
+        Err(r) => format!("Response was ERR: {}", r.to_string()),
     }
 }
 
@@ -126,17 +137,41 @@ Observed subnet:
 fn should_skip_cordoned_nodes() {
     // World setup
     let available_nodes = vec![
-        node(1, true, &[(NodeFeature::Country, "Country 1"), (NodeFeature::City, "City 1")]),
-        node(2, true, &[(NodeFeature::Country, "Country 1"), (NodeFeature::City, "City 2")]),
-        node(3, true, &[(NodeFeature::Country, "Country 2"), (NodeFeature::City, "City 3")]),
-        node(4, true, &[(NodeFeature::Country, "Country 2"), (NodeFeature::City, "City 4")]),
+        node(
+            1,
+            true,
+            &[(NodeFeature::DataCenter, "DC 1"), (NodeFeature::DataCenterOwner, &user_principal(1))],
+        ),
+        node(
+            2,
+            true,
+            &[(NodeFeature::DataCenter, "DC 2"), (NodeFeature::DataCenterOwner, &user_principal(1))],
+        ),
+        node(
+            3,
+            true,
+            &[(NodeFeature::DataCenter, "DC 3"), (NodeFeature::DataCenterOwner, &user_principal(2))],
+        ),
+        node(
+            4,
+            true,
+            &[(NodeFeature::DataCenter, "DC 4"), (NodeFeature::DataCenterOwner, &user_principal(2))],
+        ),
     ];
 
     let subnet = subnet(
         1,
         &[
-            node(5, true, &[(NodeFeature::Country, "Country 1"), (NodeFeature::City, "City 1")]),
-            node(6, true, &[(NodeFeature::Country, "Country 2"), (NodeFeature::City, "City 3")]),
+            node(
+                5,
+                true,
+                &[(NodeFeature::DataCenter, "DC 1"), (NodeFeature::DataCenterOwner, &user_principal(1))],
+            ),
+            node(
+                6,
+                true,
+                &[(NodeFeature::DataCenter, "DC 2"), (NodeFeature::DataCenterOwner, &user_principal(2))],
+            ),
         ],
     );
 
@@ -186,8 +221,8 @@ fn should_skip_cordoned_nodes() {
             // No available nodes contain cordoned features.
             // All of them should be suitable for replacements.
             vec![
-                cordoned_feature(NodeFeature::Country, "Random new country"),
-                cordoned_feature(NodeFeature::City, "Random new city"),
+                cordoned_feature(NodeFeature::DataCenter, "Random new dc"),
+                cordoned_feature(NodeFeature::DataCenterOwner, &user_principal(42)),
             ],
             true,
         ),
@@ -195,7 +230,7 @@ fn should_skip_cordoned_nodes() {
             // First two nodes from available pool must not
             // be selected for replacement. Also node 5 could
             // be replaced if it increases decentralization.
-            vec![cordoned_feature(NodeFeature::Country, "Country 1")],
+            vec![cordoned_feature(NodeFeature::DataCenterOwner, &user_principal(1))],
             true,
         ),
         (
@@ -203,16 +238,16 @@ fn should_skip_cordoned_nodes() {
             // not be selected for replacement. Also node with
             // id 6 could be replaced if it increases decentralization
             vec![
-                cordoned_feature(NodeFeature::City, "City 2"),
-                cordoned_feature(NodeFeature::City, "City 3"),
+                cordoned_feature(NodeFeature::DataCenter, "DC 2"),
+                cordoned_feature(NodeFeature::DataCenter, "DC 3"),
             ],
             true,
         ),
         (
             // All available nodes are unavailable
             vec![
-                cordoned_feature(NodeFeature::Country, "Country 1"),
-                cordoned_feature(NodeFeature::Country, "Country 2"),
+                cordoned_feature(NodeFeature::DataCenterOwner, &user_principal(1)),
+                cordoned_feature(NodeFeature::DataCenterOwner, &user_principal(2)),
             ],
             false,
         ),
@@ -249,6 +284,11 @@ fn should_skip_cordoned_nodes() {
             // assume it is the correct error. ATM this
             // is not ideal but since we use anyhow its
             // hard to test exact expected errors
+            continue;
+        }
+
+        if response.is_ok() == false {
+            failed_scenarios.push((response, cordoned_features, "Expected outcome to be successful".to_string()));
             continue;
         }
 

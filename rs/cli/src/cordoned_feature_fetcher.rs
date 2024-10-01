@@ -46,8 +46,8 @@ impl CordonedFeatureFetcherImpl {
         self.parse(&bytes)
     }
 
-    fn fetch_from_file(&self, path: &PathBuf) -> anyhow::Result<Vec<NodeFeaturePair>> {
-        let contents = std::fs::read(path)?;
+    fn fetch_from_file(&self) -> anyhow::Result<Vec<NodeFeaturePair>> {
+        let contents = std::fs::read(self.fallback_file.as_ref().unwrap())?;
 
         self.parse(&contents)
     }
@@ -102,15 +102,15 @@ impl CordonedFeatureFetcherImpl {
 impl CordonedFeatureFetcher for CordonedFeatureFetcherImpl {
     fn fetch(&self) -> BoxFuture<'_, anyhow::Result<Vec<NodeFeaturePair>>> {
         Box::pin(async {
-            match (self.offline, self.fallback_file.as_ref()) {
-                (true, Some(path)) => self.fetch_from_file(path),
-                (true, None) => Err(anyhow::anyhow!("Cannot fetch cordoned features offline without a fallback file")),
-                (false, Some(path)) => match self.fetch_from_git().await {
+            match (self.offline, self.fallback_file.is_some()) {
+                (true, true) => self.fetch_from_file(),
+                (true, false) => Err(anyhow::anyhow!("Cannot fetch cordoned features offline without a fallback file")),
+                (false, true) => match self.fetch_from_git().await {
                     Ok(from_git) => Ok(from_git),
                     Err(e_from_git) => {
                         warn!("Failed to fetch cordoned features from git: {:?}", e_from_git);
                         warn!("Falling back to fetching from file");
-                        match self.fetch_from_file(path) {
+                        match self.fetch_from_file() {
                             Ok(from_file) => Ok(from_file),
                             Err(e_from_file) => Err(anyhow::anyhow!(
                                 "Failed to fetch cordoned features both from file and from git.\nError from git: {:?}\nError from file: {:?}",
@@ -120,7 +120,7 @@ impl CordonedFeatureFetcher for CordonedFeatureFetcherImpl {
                         }
                     }
                 },
-                (false, None) => self.fetch_from_git().await,
+                (false, false) => self.fetch_from_git().await,
             }
         })
     }
