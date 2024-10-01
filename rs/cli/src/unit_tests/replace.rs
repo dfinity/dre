@@ -287,7 +287,8 @@ fn should_skip_cordoned_nodes() {
             continue;
         }
 
-        if !response.is_ok() {
+        // Here we know it should have succeeded
+        if response.is_err() {
             failed_scenarios.push((response, cordoned_features, "Expected outcome to be successful".to_string()));
             continue;
         }
