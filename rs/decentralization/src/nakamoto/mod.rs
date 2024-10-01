@@ -784,8 +784,8 @@ mod tests {
                 .collect::<Vec<_>>()
         );
 
-        let subnet_change_req = SubnetChangeRequest::new(subnet_initial, nodes_available, Vec::new(), Vec::new(), Vec::new(), vec![]);
-        let subnet_change = subnet_change_req.optimize(2, &[], &health_of_nodes).unwrap();
+        let subnet_change_req = SubnetChangeRequest::new(subnet_initial, nodes_available, Vec::new(), Vec::new(), Vec::new());
+        let subnet_change = subnet_change_req.optimize(2, &[], &health_of_nodes, vec![]).unwrap();
         for log in subnet_change.after().run_log.iter() {
             println!("{}", log);
         }
@@ -841,8 +841,8 @@ mod tests {
                 .collect::<Vec<_>>()
         );
 
-        let subnet_change_req = SubnetChangeRequest::new(subnet_initial, nodes_available, Vec::new(), Vec::new(), Vec::new(), vec![]);
-        let subnet_change = subnet_change_req.optimize(2, &[], &health_of_nodes).unwrap();
+        let subnet_change_req = SubnetChangeRequest::new(subnet_initial, nodes_available, Vec::new(), Vec::new(), Vec::new());
+        let subnet_change = subnet_change_req.optimize(2, &[], &health_of_nodes, vec![]).unwrap();
         println!("Replacement run log:");
         for line in subnet_change.after().run_log.iter() {
             println!("{}", line);
@@ -899,8 +899,8 @@ mod tests {
                 .collect::<Vec<_>>()
         );
 
-        let subnet_change_req = SubnetChangeRequest::new(subnet_initial, nodes_available, Vec::new(), Vec::new(), Vec::new(), vec![]);
-        let subnet_change = subnet_change_req.optimize(2, &[], &health_of_nodes).unwrap();
+        let subnet_change_req = SubnetChangeRequest::new(subnet_initial, nodes_available, Vec::new(), Vec::new(), Vec::new());
+        let subnet_change = subnet_change_req.optimize(2, &[], &health_of_nodes, vec![]).unwrap();
 
         println!("Replacement run log:");
         for line in subnet_change.after().run_log.iter() {
@@ -1105,7 +1105,7 @@ mod tests {
         important.insert(subnet.principal, subnet);
 
         let network_heal_response = NetworkHealRequest::new(important.clone())
-            .heal_and_optimize(nodes_available.clone(), &health_of_nodes)
+            .heal_and_optimize(nodes_available.clone(), &health_of_nodes, vec![])
             .await
             .unwrap();
         let result = network_heal_response.first().unwrap().clone();
@@ -1126,12 +1126,12 @@ mod tests {
             .map(|n| (n.id, HealthStatus::Healthy))
             .collect::<IndexMap<_, _>>();
 
-        let change_initial = SubnetChangeRequest::new(subnet_initial.clone(), nodes_available, Vec::new(), Vec::new(), Vec::new(), vec![]);
+        let change_initial = SubnetChangeRequest::new(subnet_initial.clone(), nodes_available, Vec::new(), Vec::new(), Vec::new());
 
         let with_keeping_features = change_initial
             .clone()
             .keeping_from_used(vec!["CH".to_string()])
-            .rescue(&health_of_nodes)
+            .rescue(&health_of_nodes, vec![])
             .unwrap();
 
         assert_eq!(with_keeping_features.added().len(), 6);
@@ -1149,7 +1149,7 @@ mod tests {
         let with_keeping_principals = change_initial
             .clone()
             .keeping_from_used(vec!["CH".to_string()])
-            .rescue(&health_of_nodes)
+            .rescue(&health_of_nodes, vec![])
             .unwrap();
 
         assert_eq!(with_keeping_principals.added().len(), 6);
@@ -1163,7 +1163,7 @@ mod tests {
             1
         );
 
-        let rescue_all = change_initial.clone().rescue(&health_of_nodes).unwrap();
+        let rescue_all = change_initial.clone().rescue(&health_of_nodes, vec![]).unwrap();
 
         assert_eq!(rescue_all.added().len(), 7);
         assert_eq!(rescue_all.removed().len(), 7);
