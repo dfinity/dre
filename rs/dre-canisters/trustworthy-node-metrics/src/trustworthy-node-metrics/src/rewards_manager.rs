@@ -8,12 +8,12 @@ use num_traits::{FromPrimitive, ToPrimitive};
 use rust_decimal::Decimal;
 use rust_decimal_macros::dec;
 use std::collections::{self};
-use trustworthy_node_metrics_types::types::{DailyNodeMetrics, NodeProviderRewards, NodeRewards, RewardMultiplierResult};
+use trustworthy_node_metrics_types::types::{DailyNodeMetrics, NodeProviderRewards, NodeRewardsMultiplier, RewardMultiplierResult};
 
 use crate::{
     chrono_utils::DateTimeRange,
     computation_logger::{ComputationLogger, Operation, OperationExecutor},
-    stable_memory,
+    stable_memory::{self, RegionNodeTypeCategory},
 };
 
 const MIN_FAILURE_RATE: Decimal = dec!(0.1);
@@ -145,20 +145,15 @@ fn compute_reward_multiplier(daily_metrics: &[DailyNodeMetrics], total_days: u64
     }
 }
 
-fn get_node_rate(node_id: &Principal) -> NodeRewardRate {
-    let node_metadata = stable_memory::get_node_metadata(node_id).expect("Node should have one node provider");
-
-    match stable_memory::get_rate(&node_metadata.region, &node_metadata.node_type) {
+fn get_node_rate(region: &String, node_type: &String ) -> NodeRewardRate {
+    match stable_memory::get_rate(region, node_type) {
         Some(rate) => rate,
         None => {
             ic_cdk::println!(
                 "The Node Rewards Table does not have an entry for \
-                     node type '{}' within region '{}' or parent region, defaulting to 1 xdr per month per node, for \
-                     NodeProvider '{}' on Node Operator '{}'",
-                node_metadata.node_type,
-                node_metadata.region,
-                node_metadata.node_provider_id,
-                node_metadata.node_operator_id
+                     node type '{}' within region '{}' or parent region, defaulting to 1 xdr per month per node",
+                node_type,
+                region
             );
             NodeRewardRate {
                 xdr_permyriad_per_node_per_month: 1,
@@ -168,17 +163,7 @@ fn get_node_rate(node_id: &Principal) -> NodeRewardRate {
     }
 }
 
-/// Update node rewards table
-pub async fn update_node_rewards_table() -> anyhow::Result<()> {
-    let (rewards_table, _): (NodeRewardsTable, _) = ic_nns_common::registry::get_value(NODE_REWARDS_TABLE_KEY.as_bytes(), None).await?;
-    for (region, rewards_rates) in rewards_table.table {
-        stable_memory::insert_rewards_rates(region, rewards_rates)
-    }
-
-    Ok(())
-}
-
-pub fn compute_node_rewards(node_ids: Vec<Principal>, rewarding_period: DateTimeRange) -> Vec<NodeRewards> {
+pub fn node_rewards_multiplier(node_ids: Vec<Principal>, rewarding_period: DateTimeRange) -> Vec<NodeRewardsMultiplier> {
     let total_days = rewarding_period.days_between();
     let nodes_metrics = stable_memory::get_metrics_range(
         rewarding_period.start_timestamp_nanos(),
@@ -206,9 +191,10 @@ pub fn compute_node_rewards(node_ids: Vec<Principal>, rewarding_period: DateTime
         .into_iter()
         .map(|(node_id, daily_node_metrics)| {
             let rewards_computation = compute_reward_multiplier(&daily_node_metrics, total_days);
-            let node_rate = get_node_rate(&node_id);
+            let node_metadata = stable_memory::get_node_metadata(&node_id).expect("Node should have one node provider");
+            let node_rate = get_node_rate(&node_metadata.region, &node_metadata.node_type);
 
-            NodeRewards {
+            NodeRewardsMultiplier {
                 node_id,
                 daily_node_metrics,
                 node_rate,
@@ -218,46 +204,69 @@ pub fn compute_node_rewards(node_ids: Vec<Principal>, rewarding_period: DateTime
         .collect_vec()
 }
 
-pub fn coumpute_node_provider_rewards(nodes_rewards: &[NodeRewards]) -> (Decimal, Decimal) {
-    let mut rewards_xdr = dec!(0);
-    let mut rewards_xdr_no_reduction = dec!(0);
-    let mut coefficient = dec!(1.0);
+fn coumpute_node_provider_rewards(nodes_multiplier: &[NodeRewardsMultiplier], rewardable_nodes: collections::BTreeMap<RegionNodeTypeCategory, u32>) -> (Decimal, Decimal) {
+    let mut assigned_multipliers: collections::BTreeMap<RegionNodeTypeCategory, Vec<f64>> = collections::BTreeMap::new();
 
-    let nodes_rewards_xdr_sum: Decimal = nodes_rewards
-        .iter()
-        .map(|node_rewards| Decimal::from(node_rewards.node_rate.xdr_permyriad_per_node_per_month))
-        .sum();
-    let nodes_rewards_total: Decimal = nodes_rewards.len().into();
-    let nodes_rewards_xdr_avg = nodes_rewards_xdr_sum / nodes_rewards_total;
+    for node in nodes_multiplier {
+        let metadata = stable_memory::get_node_metadata(&node.node_id).unwrap();
 
-    for node_rewards in nodes_rewards.iter() {
-        let metadata = stable_memory::get_node_metadata(&node_rewards.node_id).unwrap();
-
-        let node_xdr = match &metadata.node_type {
-            t if t.starts_with("type3") => {
-                let reward_coefficient_percent: Decimal = Decimal::from(node_rewards.node_rate.reward_coefficient_percent.unwrap_or(80)) / dec!(100);
-                let nodes_rewards_xdr = nodes_rewards_xdr_avg * coefficient;
-
-                coefficient *= reward_coefficient_percent;
-                nodes_rewards_xdr
-            }
-            _ => node_rewards.node_rate.xdr_permyriad_per_node_per_month.into(),
-        };
-        rewards_xdr_no_reduction += node_xdr;
-        rewards_xdr += node_xdr * Decimal::from_f64(node_rewards.rewards_computation.rewards_multiplier).unwrap();
+        assigned_multipliers
+            .entry((metadata.region, metadata.node_type))
+            .or_default()
+            .push(node.rewards_computation.rewards_multiplier);
     }
 
-    (rewards_xdr_no_reduction, rewards_xdr)
+    // Compute total and average xdr_permyriad_per_node_per_month across all nodes
+    let mut nodes_rewards_xdr_sum: Decimal = dec!(0);
+    let mut nodes_rewards_total: Decimal = dec!(0);
+
+    for ((region, node_type), count) in &rewardable_nodes {
+        let rate = get_node_rate(region, node_type);
+
+        nodes_rewards_xdr_sum += Decimal::from(rate.xdr_permyriad_per_node_per_month) * Decimal::from(*count);
+        nodes_rewards_total += Decimal::from(*count);
+    }
+    let nodes_rewards_xdr_avg: Decimal = nodes_rewards_xdr_sum / nodes_rewards_total;
+
+    let mut rewards_xdr_total = dec!(0);
+    let mut rewards_xdr_no_reduction_total = dec!(0);
+    let mut coefficient = dec!(1.0);
+
+    for ((region, node_type), count) in rewardable_nodes {
+        let rate = get_node_rate(&region, &node_type);
+        let multipliers = assigned_multipliers
+            .entry((region, node_type.clone()))
+            .or_default();
+    
+        multipliers.resize(count as usize, 1.0);
+    
+        for &multiplier_factor in multipliers.iter() {
+            let rewards_xdr = if node_type.starts_with("type3") {
+                let reward_coefficient_percent = Decimal::from(rate.reward_coefficient_percent.unwrap_or(80)) / dec!(100);
+                let rewards_type3 = nodes_rewards_xdr_avg * coefficient;
+    
+                coefficient *= reward_coefficient_percent;
+                rewards_type3
+            } else {
+                nodes_rewards_xdr_avg
+            };
+    
+            rewards_xdr_no_reduction_total += rewards_xdr;
+            rewards_xdr_total += rewards_xdr * Decimal::from_f64(multiplier_factor).unwrap();
+        }
+    }
+    
+    (rewards_xdr_no_reduction_total, rewards_xdr_total)
 }
 
 pub fn node_provider_rewards(node_provider_id: Principal, rewarding_period: DateTimeRange) -> NodeProviderRewards {
     let node_ids = stable_memory::get_node_principals(&node_provider_id);
-    let nodes_rewards = compute_node_rewards(node_ids, rewarding_period);
-    let (rewards_xdr_no_reduction, rewards_xdr) = coumpute_node_provider_rewards(&nodes_rewards);
-
+    let rewardable_nodes: collections::BTreeMap<RegionNodeTypeCategory, u32> = stable_memory::get_rewardable_nodes(&node_provider_id);
     let latest_np_rewards = stable_memory::get_latest_node_providers_rewards();
-    let ts_distribution = latest_np_rewards.timestamp;
-    let xdr_conversion_rate = latest_np_rewards.xdr_conversion_rate.and_then(|rate| rate.xdr_permyriad_per_icp);
+
+    let nodes_multiplier = node_rewards_multiplier(node_ids, rewarding_period);
+    let (rewards_xdr_no_reduction, rewards_xdr) = coumpute_node_provider_rewards(&nodes_multiplier, rewardable_nodes);
+
     let rewards_xdr_old = latest_np_rewards
         .rewards
         .into_iter()
@@ -278,12 +287,23 @@ pub fn node_provider_rewards(node_provider_id: Principal, rewarding_period: Date
         rewards_xdr: rewards_xdr.to_u64().unwrap(),
         rewards_xdr_no_reduction: rewards_xdr_no_reduction.to_u64().unwrap(),
         rewards_xdr_old,
-        ts_distribution,
-        xdr_conversion_rate,
-        nodes_rewards,
+        ts_distribution: latest_np_rewards.timestamp,
+        xdr_conversion_rate: latest_np_rewards.xdr_conversion_rate.and_then(|rate| rate.xdr_permyriad_per_icp),
+        nodes_rewards: nodes_multiplier,
     }
 }
 
+/// Update node rewards table
+pub async fn update_node_rewards_table() -> anyhow::Result<()> {
+    let (rewards_table, _): (NodeRewardsTable, _) = ic_nns_common::registry::get_value(NODE_REWARDS_TABLE_KEY.as_bytes(), None).await?;
+    for (region, rewards_rates) in rewards_table.table {
+        stable_memory::insert_rewards_rates(region, rewards_rates)
+    }
+
+    Ok(())
+}
+
+/// Update recent node providers rewards
 pub async fn update_recent_provider_rewards() -> anyhow::Result<()> {
     let (maybe_monthly_rewards,): (Option<MonthlyNodeProviderRewards>,) = ic_cdk::api::call::call(
         Principal::from(GOVERNANCE_CANISTER_ID),

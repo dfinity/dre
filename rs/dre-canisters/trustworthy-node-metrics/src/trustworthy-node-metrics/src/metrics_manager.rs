@@ -1,4 +1,4 @@
-use std::collections::{BTreeMap, HashSet};
+use std::collections::BTreeMap;
 
 use candid::Principal;
 use dfn_core::api::PrincipalId;
@@ -13,7 +13,7 @@ use ic_registry_keys::{make_data_center_record_key, make_node_operator_record_ke
 
 use crate::stable_memory;
 use itertools::Itertools;
-use trustworthy_node_metrics_types::types::{NodeMetricsGrouped, NodeMetricsStored, NodeMetricsStoredKey, NodeProviderRewardableKey};
+use trustworthy_node_metrics_types::types::{NodeMetricsGrouped, NodeMetricsStored, NodeMetricsStoredKey};
 use trustworthy_node_metrics_types::types::{SubnetNodeMetricsHistory, TimestampNanos};
 
 /// Node metrics storable
@@ -273,59 +273,6 @@ fn update_nodes_metrics(metrics_by_node: BTreeMap<PrincipalId, Vec<NodeMetricsGr
         }
     }
 }
-
-
-pub async fn update_rewardable_nodes() {
-    let operators_id: HashSet<Principal> = stable_memory::get_all_operators();
-    let mut np_rewardable: BTreeMap<NodeProviderRewardableKey, u32> = BTreeMap::new();
-
-    for node_operator_id in operators_id  {
-
-        ic_cdk::println!("Fetching node operator record for {}", PrincipalId::from(node_operator_id));
-        let node_operator_record =
-        match ic_nns_common::registry::get_value::<NodeOperatorRecord>(make_node_operator_record_key(PrincipalId::from(node_operator_id)).as_bytes(), None).await {
-            Ok((record, _)) => record,
-            Err(e) => {
-                ic_cdk::println!("Error fetching node operator record for {}: {:?}", PrincipalId::from(node_operator_id), e);
-                continue;
-            }
-        };
-    
-        let dc_id = node_operator_record.dc_id;
-
-        let node_provider_id: PrincipalId = match node_operator_record.node_provider_principal_id.try_into() {
-            Ok(id) => id,
-            Err(e) => {
-                ic_cdk::println!("Error converting node provider ID for Operator {}: {:?}", node_operator_id, e);
-                continue;
-            }
-        };
-    
-        let data_center_record =
-            match ic_nns_common::registry::get_value::<DataCenterRecord>(make_data_center_record_key(&dc_id).as_bytes(), None).await {
-                Ok((record, _)) => record,
-                Err(e) => {
-                    ic_cdk::println!("Error fetching data center record for {}: {:?}", dc_id, e);
-                    continue;
-                }
-            };
-    
-        let region = data_center_record.region;
-
-
-        for (node_type, count) in node_operator_record.rewardable_nodes {
-            let rewardable_cat = np_rewardable.entry(NodeProviderRewardableKey { node_provider_id: node_provider_id.0, region: region.clone(), node_type }).or_default();
-
-            *rewardable_cat += count;
-        }
-    }
-
-    for (key, count) in np_rewardable {
-        ic_cdk::println!("Adding rewardables for  {}", PrincipalId::from(key.node_provider_id));
-        stable_memory::add_rewardable(key, count);
-    }
-}
-
 
 /// Update metrics
 pub async fn update_metrics() -> anyhow::Result<()> {

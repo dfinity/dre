@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { ChartData, generateChartData, getLatestRewardRange, LoadingIndicator, NodeMetricsStats, NodePerformanceStats, setNodeRewardsData } from '../utils/utils';
 import { Grid, Typography } from '@mui/material';
 import PerformanceChart from './PerformanceChart';
-import { NodeRewards } from '../../../declarations/trustworthy-node-metrics/trustworthy-node-metrics.did';
+import { NodeRewardsMultiplier } from '../../../declarations/trustworthy-node-metrics/trustworthy-node-metrics.did';
 import RewardsInfo, { LinearReductionChart } from './RewardsInfo';
 import { Principal } from '@dfinity/principal';
 import { ExportTable } from './ExportTable';
@@ -14,7 +14,7 @@ export interface NodeRewardsChartProps {
 
 export const NodeRewardsChart: React.FC<NodeRewardsChartProps> = ({ node }) => {
     const latestRewardRange = getLatestRewardRange();
-    const [latestNodeRewards, setLatestNodeRewards] = useState<NodeRewards | null>(null);
+    const [latestNodeRewards, setLatestNodeRewards] = useState<NodeRewardsMultiplier | null>(null);
     const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {

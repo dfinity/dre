@@ -1,7 +1,7 @@
 import React from 'react';
 import { Principal } from "@dfinity/principal";
 import { trustworthy_node_metrics } from "../../../declarations/trustworthy-node-metrics";
-import { DailyNodeMetrics, NodeRewardsArgs, NodeRewards, NodeProviderRewardsArgs, NodeProviderRewards } from "../../../declarations/trustworthy-node-metrics/trustworthy-node-metrics.did";
+import { DailyNodeMetrics, NodeRewardsArgs, NodeRewardsMultiplier, NodeProviderRewardsArgs, NodeProviderRewards } from "../../../declarations/trustworthy-node-metrics/trustworthy-node-metrics.did";
 import { PeriodFilter } from "../components/FilterBar";
 import { Box, CircularProgress } from "@mui/material";
 import { WidgetNumber } from '../components/Widgets';
@@ -130,7 +130,7 @@ export const getLatestRewardRange = () => {
 export const setNodeRewardsData = async (
   periodFilter: PeriodFilter, 
   node_id: Principal,
-  setNodeRewards: React.Dispatch<React.SetStateAction<NodeRewards | null>>,
+  setNodeRewards: React.Dispatch<React.SetStateAction<NodeRewardsMultiplier | null>>,
   setIsLoading: React.Dispatch<React.SetStateAction<boolean>>) => {
   try {
     setIsLoading(true);
@@ -186,7 +186,7 @@ export const LoadingIndicator: React.FC = () => (
   </Box>
 );
 
-export const NodeMetricsStats: React.FC<{ stats: NodeRewards['rewards_computation'] | null }> = ({ stats }) => (
+export const NodeMetricsStats: React.FC<{ stats: NodeRewardsMultiplier['rewards_computation'] | null }> = ({ stats }) => (
   <Box sx={boxStyleWidget('left')}>
       <WidgetNumber value={stats ? stats.days_assigned.toString() : "0"} title="Days Assigned" />
       <WidgetNumber value={stats ? stats.days_unassigned.toString() : "0"} title="Days Unassigned" />

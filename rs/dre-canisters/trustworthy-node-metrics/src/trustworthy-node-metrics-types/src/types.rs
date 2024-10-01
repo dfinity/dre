@@ -40,8 +40,8 @@ impl Storable for MonthlyNodeProviderRewardsStored {
 #[derive(Debug, Deserialize, Serialize, CandidType, Clone, PartialEq, Eq, PartialOrd, Ord)]
 pub struct NodeProviderRewardableKey {
     pub node_provider_id: Principal,
+    pub region: String,
     pub node_type: String,
-    pub region: String
 }
 
 const MAX_VALUE_SIZE_REWARDABLE_NODES: u32 = 300;
@@ -92,7 +92,7 @@ pub struct NodeRewardRatesStored {
     pub rewards_rates: NodeRewardRates,
 }
 
-const MAX_VALUE_SIZE_BYTES_REWARD_RATES: u32 = 133;
+const MAX_VALUE_SIZE_BYTES_REWARD_RATES: u32 = 200;
 
 impl Storable for NodeRewardRatesStored {
     fn to_bytes(&self) -> std::borrow::Cow<[u8]> {
@@ -249,7 +249,7 @@ pub struct RewardMultiplierResult {
 }
 
 #[derive(Debug, Deserialize, CandidType)]
-pub struct NodeRewards {
+pub struct NodeRewardsMultiplier {
     pub node_id: Principal,
     pub daily_node_metrics: Vec<DailyNodeMetrics>,
     pub node_rate: NodeRewardRate,
@@ -264,7 +264,7 @@ pub struct NodeProviderRewards {
     pub rewards_xdr_old: Option<u64>,
     pub ts_distribution: u64,
     pub xdr_conversion_rate: Option<u64>,
-    pub nodes_rewards: Vec<NodeRewards>,
+    pub nodes_rewards: Vec<NodeRewardsMultiplier>,
 }
 
 #[derive(Debug, Deserialize, CandidType)]
