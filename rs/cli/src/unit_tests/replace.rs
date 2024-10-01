@@ -99,7 +99,7 @@ fn test_pretty_format_response(response: &Result<SubnetChangeResponse, anyhow::E
                 ))
                 .join("\n")
         ),
-        Err(r) => format!("Response was ERR: {}", r.to_string()),
+        Err(r) => format!("Response was ERR: {}", r),
     }
 }
 
@@ -287,7 +287,7 @@ fn should_skip_cordoned_nodes() {
             continue;
         }
 
-        if response.is_ok() == false {
+        if !response.is_ok() {
             failed_scenarios.push((response, cordoned_features, "Expected outcome to be successful".to_string()));
             continue;
         }
