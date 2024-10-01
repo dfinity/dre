@@ -140,8 +140,7 @@ impl SubnetManager {
             .await?
             .excluding_from_available(exclude.clone().unwrap_or_default())
             .including_from_available(only.clone())
-            .including_from_available(include.clone().unwrap_or_default())
-            .with_cordoned_features(self.cordoned_features_fetcher.fetch().await?);
+            .including_from_available(include.clone().unwrap_or_default());
 
         let mut node_ids_unhealthy = HashSet::new();
         if heal {
@@ -162,7 +161,12 @@ impl SubnetManager {
 
         let health_of_nodes = self.health_client.nodes().await?;
 
-        let change = subnet_change_request.optimize(optimize.unwrap_or(0), &to_be_replaced, &health_of_nodes)?;
+        let change = subnet_change_request.optimize(
+            optimize.unwrap_or(0),
+            &to_be_replaced,
+            &health_of_nodes,
+            self.cordoned_features_fetcher.fetch().await?,
+        )?;
 
         for (n, _) in change.removed().iter().filter(|(n, _)| !node_ids_unhealthy.contains(&n.id)) {
             motivations.push(format!(
@@ -202,8 +206,13 @@ impl SubnetManager {
             .excluding_from_available(request.exclude.clone().unwrap_or_default())
             .including_from_available(request.only.clone().unwrap_or_default())
             .including_from_available(request.include.clone().unwrap_or_default())
-            .with_cordoned_features(self.cordoned_features_fetcher.fetch().await?)
-            .resize(request.add, request.remove, 0, health_of_nodes)?;
+            .resize(
+                request.add,
+                request.remove,
+                0,
+                health_of_nodes,
+                self.cordoned_features_fetcher.fetch().await?,
+            )?;
 
         for (n, _) in change.removed().iter() {
             motivations.push(format!("removing {} as per user request", n.id));

@@ -603,8 +603,7 @@ impl Runner {
             .registry
             .modify_subnet_nodes(SubnetQueryBy::SubnetId(*subnet))
             .await
-            .map_err(|e| anyhow::anyhow!(e))?
-            .with_cordoned_features(self.cordoned_features_fetcher.fetch().await?);
+            .map_err(|e| anyhow::anyhow!(e))?;
 
         let change_request = match keep_nodes {
             Some(n) => change_request.keeping_from_used(n),
@@ -613,7 +612,8 @@ impl Runner {
 
         let health_of_nodes = self.health_of_nodes().await?;
 
-        let change = SubnetChangeResponse::from(&change_request.rescue(&health_of_nodes)?).with_health_of_nodes(health_of_nodes);
+        let change = SubnetChangeResponse::from(&change_request.rescue(&health_of_nodes, self.cordoned_features_fetcher.fetch().await?)?)
+            .with_health_of_nodes(health_of_nodes);
 
         if change.added_with_desc.is_empty() && change.removed_with_desc.is_empty() {
             return Ok(());

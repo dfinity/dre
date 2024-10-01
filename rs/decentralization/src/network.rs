@@ -847,8 +847,7 @@ pub trait TopologyManager: SubnetQuerier + AvailableNodesQuerier + Sync {
             .including_from_available(include_nodes.clone())
             .excluding_from_available(exclude_nodes.clone())
             .including_from_available(only_nodes.clone())
-            .with_cordoned_features(cordoned_features)
-            .resize(size, 0, 0, health_of_nodes)
+            .resize(size, 0, 0, health_of_nodes, cordoned_features)
         })
     }
 }
@@ -898,7 +897,6 @@ pub struct SubnetChangeRequest {
     include_nodes: Vec<Node>,
     nodes_to_remove: Vec<Node>,
     nodes_to_keep: Vec<Node>,
-    cordoned_features: Vec<NodeFeaturePair>,
 }
 
 impl SubnetChangeRequest {
@@ -908,7 +906,6 @@ impl SubnetChangeRequest {
         include_nodes: Vec<Node>,
         nodes_to_remove: Vec<Node>,
         nodes_to_keep: Vec<Node>,
-        cordoned_features: Vec<NodeFeaturePair>,
     ) -> Self {
         SubnetChangeRequest {
             subnet,
@@ -916,7 +913,6 @@ impl SubnetChangeRequest {
             include_nodes,
             nodes_to_remove,
             nodes_to_keep,
-            cordoned_features,
         }
     }
 
@@ -968,10 +964,6 @@ impl SubnetChangeRequest {
         }
     }
 
-    pub fn with_cordoned_features(self, cordoned_features: Vec<NodeFeaturePair>) -> Self {
-        Self { cordoned_features, ..self }
-    }
-
     pub fn subnet(&self) -> DecentralizedSubnet {
         self.subnet.clone()
     }
@@ -990,6 +982,7 @@ impl SubnetChangeRequest {
         optimize_count: usize,
         replacements_unhealthy_with_desc: &[(Node, String)],
         health_of_nodes: &IndexMap<PrincipalId, HealthStatus>,
+        cordoned_features: Vec<NodeFeaturePair>,
     ) -> Result<SubnetChange, NetworkError> {
         let old_nodes = self.subnet.nodes.clone();
         self.subnet = self.subnet.without_nodes(replacements_unhealthy_with_desc.to_owned())?;
@@ -998,11 +991,16 @@ impl SubnetChangeRequest {
             optimize_count,
             replacements_unhealthy_with_desc.len(),
             health_of_nodes,
+            cordoned_features,
         )?;
         Ok(SubnetChange { old_nodes, ..result })
     }
 
-    pub fn rescue(mut self, health_of_nodes: &IndexMap<PrincipalId, HealthStatus>) -> Result<SubnetChange, NetworkError> {
+    pub fn rescue(
+        mut self,
+        health_of_nodes: &IndexMap<PrincipalId, HealthStatus>,
+        cordoned_features: Vec<NodeFeaturePair>,
+    ) -> Result<SubnetChange, NetworkError> {
         let old_nodes = self.subnet.nodes.clone();
         let nodes_to_remove = self
             .subnet
@@ -1024,6 +1022,7 @@ impl SubnetChangeRequest {
             0,
             self.subnet.removed_nodes_desc.len(),
             health_of_nodes,
+            cordoned_features,
         )?;
         Ok(SubnetChange { old_nodes, ..result })
     }
@@ -1035,6 +1034,7 @@ impl SubnetChangeRequest {
         how_many_nodes_to_remove: usize,
         how_many_nodes_unhealthy: usize,
         health_of_nodes: &IndexMap<PrincipalId, HealthStatus>,
+        cordoned_features: Vec<NodeFeaturePair>,
     ) -> Result<SubnetChange, NetworkError> {
         let old_nodes = self.subnet.nodes.clone();
 
@@ -1050,7 +1050,7 @@ impl SubnetChangeRequest {
         let available_nodes = all_healthy_nodes
             .into_iter()
             .filter(|n| {
-                for cordoned_feature in &self.cordoned_features {
+                for cordoned_feature in &cordoned_features {
                     if let Some(node_feature) = n.features.get(&cordoned_feature.feature) {
                         if PartialEq::eq(&node_feature, &cordoned_feature.value) {
                             // Node contains cordoned feature
@@ -1093,7 +1093,7 @@ impl SubnetChangeRequest {
             .chain(resized_subnet.removed_nodes_desc.iter().map(|(n, _)| n.clone()))
             .filter(|n| health_of_nodes.get(&n.id).unwrap_or(&HealthStatus::Unknown) == &HealthStatus::Healthy)
             .filter(|n| {
-                for cordoned_feature in &self.cordoned_features {
+                for cordoned_feature in &cordoned_features {
                     if let Some(node_feature) = n.features.get(&cordoned_feature.feature) {
                         if PartialEq::eq(&node_feature, &cordoned_feature.value) {
                             // Node contains cordoned feature
@@ -1136,8 +1136,12 @@ impl SubnetChangeRequest {
     /// Evaluates the subnet change request to simulate the requested topology
     /// change. Command returns all the information about the subnet before
     /// and after the change.
-    pub fn evaluate(self, health_of_nodes: &IndexMap<PrincipalId, HealthStatus>) -> Result<SubnetChange, NetworkError> {
-        self.resize(0, 0, 0, health_of_nodes)
+    pub fn evaluate(
+        self,
+        health_of_nodes: &IndexMap<PrincipalId, HealthStatus>,
+        cordoned_features: Vec<NodeFeaturePair>,
+    ) -> Result<SubnetChange, NetworkError> {
+        self.resize(0, 0, 0, health_of_nodes, cordoned_features)
     }
 }
 
@@ -1305,7 +1309,6 @@ impl NetworkHealRequest {
             let change_req = SubnetChangeRequest {
                 subnet: subnet.decentralized_subnet.clone(),
                 available_nodes: available_nodes.clone(),
-                cordoned_features: cordoned_features.clone(),
                 ..Default::default()
             };
 
@@ -1325,7 +1328,12 @@ impl NetworkHealRequest {
                 .filter_map(|num_nodes_to_optimize| {
                     change_req
                         .clone()
-                        .optimize(num_nodes_to_optimize, unhealthy_nodes_with_desc, health_of_nodes)
+                        .optimize(
+                            num_nodes_to_optimize,
+                            unhealthy_nodes_with_desc,
+                            health_of_nodes,
+                            cordoned_features.clone(),
+                        )
                         .map_err(|e| warn!("{}", e))
                         .ok()
                 })
