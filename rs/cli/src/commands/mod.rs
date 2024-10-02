@@ -186,6 +186,10 @@ The argument is mandatory for testnets, and is optional for mainnet and staging"
     /// Link to the related forum post, where proposal details can be discussed
     #[clap(long, global = true, visible_aliases = &["forum-link", "forum"])]
     pub forum_post_link: Option<String>,
+
+    /// Path to file which contains cordoned features
+    #[clap(long, global = true, visible_aliases = &["cf-file", "cfff"])]
+    pub cordon_feature_fallback_file: Option<PathBuf>,
 }
 
 // Do not use outside of DRE CLI.

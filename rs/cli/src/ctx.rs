@@ -7,6 +7,7 @@ use std::{
 
 use ic_canisters::{governance::governance_canister_version, IcAgentCanisterClient};
 use ic_management_backend::{
+    health::{self, HealthStatusQuerier},
     lazy_git::LazyGit,
     lazy_registry::{LazyRegistry, LazyRegistryImpl},
     proposal::{ProposalAgent, ProposalAgentImpl},
@@ -21,6 +22,7 @@ use crate::{
     artifact_downloader::{ArtifactDownloader, ArtifactDownloaderImpl},
     auth::Neuron,
     commands::{Args, AuthOpts, AuthRequirement, ExecutableCommand, IcAdminVersion},
+    cordoned_feature_fetcher::{CordonedFeatureFetcher, CordonedFeatureFetcherImpl},
     ic_admin::{download_ic_admin, should_update_ic_admin, IcAdmin, IcAdminImpl, FALLBACK_IC_ADMIN_VERSION},
     runner::Runner,
     subnet_manager::SubnetManager,
@@ -50,8 +52,11 @@ pub struct DreContext {
     proceed_without_confirmation: bool,
     version: IcAdminVersion,
     neuron_opts: NeuronOpts,
+    cordoned_features_fetcher: Arc<dyn CordonedFeatureFetcher>,
+    health_client: Arc<dyn HealthStatusQuerier>,
 }
 
+#[allow(clippy::too_many_arguments)]
 impl DreContext {
     pub async fn new(
         network: String,
@@ -65,6 +70,8 @@ impl DreContext {
         auth_requirement: AuthRequirement,
         forum_post_link: Option<String>,
         ic_admin_version: IcAdminVersion,
+        cordoned_features_fetcher: Arc<dyn CordonedFeatureFetcher>,
+        health_client: Arc<dyn HealthStatusQuerier>,
     ) -> anyhow::Result<Self> {
         let network = match offline {
             false => ic_management_types::Network::new(network.clone(), &nns_urls)
@@ -93,6 +100,8 @@ impl DreContext {
                 requirement: auth_requirement,
                 neuron_id,
             },
+            cordoned_features_fetcher,
+            health_client,
         })
     }
 
@@ -109,6 +118,10 @@ impl DreContext {
             args.subcommands.require_auth(),
             args.forum_post_link.clone(),
             args.ic_admin_version.clone(),
+            Arc::new(CordonedFeatureFetcherImpl::new(args.offline, args.cordon_feature_fallback_file.clone())?) as Arc<dyn CordonedFeatureFetcher>,
+            Arc::new(health::HealthClient::new(
+                ic_management_types::Network::new(args.network.clone(), &args.nns_urls).await?,
+            )),
         )
         .await
     }
@@ -238,10 +251,14 @@ impl DreContext {
         ))
     }
 
-    pub async fn subnet_manager(&self) -> SubnetManager {
+    pub async fn subnet_manager(&self) -> anyhow::Result<SubnetManager> {
         let registry = self.registry().await;
 
-        SubnetManager::new(registry, self.network().clone())
+        Ok(SubnetManager::new(
+            registry,
+            self.cordoned_features_fetcher.clone(),
+            self.health_client.clone(),
+        ))
     }
 
     pub fn proposals_agent(&self) -> Arc<dyn ProposalAgent> {
@@ -260,6 +277,8 @@ impl DreContext {
             self.verbose_runner,
             self.ic_repo.clone(),
             self.artifact_downloader.clone(),
+            self.cordoned_features_fetcher.clone(),
+            self.health_client.clone(),
         ));
         *self.runner.borrow_mut() = Some(runner.clone());
         Ok(runner)
@@ -275,13 +294,14 @@ impl DreContext {
 pub mod tests {
     use std::{cell::RefCell, sync::Arc};
 
-    use ic_management_backend::{lazy_git::LazyGit, lazy_registry::LazyRegistry, proposal::ProposalAgent};
+    use ic_management_backend::{health::HealthStatusQuerier, lazy_git::LazyGit, lazy_registry::LazyRegistry, proposal::ProposalAgent};
     use ic_management_types::Network;
 
     use crate::{
         artifact_downloader::ArtifactDownloader,
         auth::Neuron,
         commands::{AuthOpts, HsmOpts, HsmParams},
+        cordoned_feature_fetcher::CordonedFeatureFetcher,
         ic_admin::IcAdmin,
     };
 
@@ -295,6 +315,8 @@ pub mod tests {
         git: Arc<dyn LazyGit>,
         proposal_agent: Arc<dyn ProposalAgent>,
         artifact_downloader: Arc<dyn ArtifactDownloader>,
+        cordoned_features_fetcher: Arc<dyn CordonedFeatureFetcher>,
+        health_client: Arc<dyn HealthStatusQuerier>,
     ) -> DreContext {
         DreContext {
             network,
@@ -328,6 +350,8 @@ pub mod tests {
                     n => Some(n),
                 },
             },
+            cordoned_features_fetcher,
+            health_client,
         }
     }
 }
