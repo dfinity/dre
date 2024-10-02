@@ -180,20 +180,10 @@ fn coumpute_node_provider_rewards(
     for ((region, node_type), count) in rewardable_nodes {
         if node_type.starts_with("type3") && count > 0 {
             let rate = get_node_rate(&region, &node_type);
-            let current_coefficients = vec![
-                Decimal::from(rate.reward_coefficient_percent.unwrap_or(80)) / dec!(100);
-                count as usize
-            ];
-            let current_rewards = vec![
-                Decimal::from(rate.xdr_permyriad_per_node_per_month);
-                count as usize
-            ];
+            let current_coefficients = vec![Decimal::from(rate.reward_coefficient_percent.unwrap_or(80)) / dec!(100); count as usize];
+            let current_rewards = vec![Decimal::from(rate.xdr_permyriad_per_node_per_month); count as usize];
 
-            let region_key = region
-                .splitn(3, ',')
-                .take(2)
-                .collect::<Vec<&str>>()
-                .join(":");
+            let region_key = region.splitn(3, ',').take(2).collect::<Vec<&str>>().join(":");
 
             type3_coefficients
                 .entry(region_key.clone())
@@ -223,22 +213,19 @@ fn coumpute_node_provider_rewards(
         })
         .collect();
 
-    let type3_rewards_reduced = type3_rewards
-        .into_iter()
-        .map(|(region, individual_rewards)|{
-            let mut coefficient = dec!(1);
-            let mut rewards_reduced_by_coeff = dec!(0);
-            let region_coefficient_avg = type3_coefficients_avg.get(&region).unwrap();
-            let region_rewards_avg = type3_coefficients_avg.get(&region).unwrap();
+    let type3_rewards_reduced = type3_rewards.into_iter().map(|(region, individual_rewards)| {
+        let mut coefficient = dec!(1);
+        let mut rewards_reduced_by_coeff = dec!(0);
+        let region_coefficient_avg = type3_coefficients_avg.get(&region).unwrap();
+        let region_rewards_avg = type3_coefficients_avg.get(&region).unwrap();
 
-            for _ in individual_rewards.clone() {
-                rewards_reduced_by_coeff += region_rewards_avg * coefficient;
-                coefficient *= region_coefficient_avg;
-            }
+        for _ in individual_rewards.clone() {
+            rewards_reduced_by_coeff += region_rewards_avg * coefficient;
+            coefficient *= region_coefficient_avg;
+        }
 
-            let rewards_reduced_by_coeff_avg = rewards_reduced_by_coeff / Decimal::from(individual_rewards.len());
-
-        });
+        let rewards_reduced_by_coeff_avg = rewards_reduced_by_coeff / Decimal::from(individual_rewards.len());
+    });
 
     NodeProviderRewardsComputation {
         rewards_xdr: rewards_xdr_total.to_u64().unwrap(),
