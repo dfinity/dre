@@ -189,7 +189,7 @@ impl Runner {
         }
 
         let options = replace_proposal_options(&change, forum_post_link)?;
-        self.run_membership_change(change, options).await.map(|prop| Some(prop))
+        self.run_membership_change(change, options).await.map(Some)
     }
 
     pub async fn prepare_versions_to_retire(&self, release_artifact: &Artifact, edit_summary: bool) -> anyhow::Result<(String, Option<Vec<String>>)> {
@@ -605,7 +605,7 @@ impl Runner {
 
         self.run_membership_change(change.clone(), replace_proposal_options(&change, forum_post_link)?)
             .await
-            .map(|prop| Some(prop))
+            .map(Some)
     }
 
     pub async fn retireable_versions(&self, artifact: &Artifact) -> anyhow::Result<Vec<Release>> {

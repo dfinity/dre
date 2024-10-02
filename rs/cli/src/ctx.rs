@@ -208,7 +208,7 @@ impl DreContext {
             self.neuron_opts.auth_opts.clone(),
             self.neuron_opts.requirement.clone(),
             self.network(),
-            self.neuron_opts.neuron_id.clone(),
+            self.neuron_opts.neuron_id,
         )
         .await;
 
