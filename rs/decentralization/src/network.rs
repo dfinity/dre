@@ -384,15 +384,13 @@ impl DecentralizedSubnet {
             Some((name, value)) => {
                 if is_european_subnet && name == "EU" {
                     // European subnet is expected to be controlled by European countries
-                } else {
-                    if value > max_nodes_per_country {
-                        let penalty = (value - max_nodes_per_country) * 10;
-                        checks.push(format!(
-                            "Country {} controls {} of nodes, which is higher than target of {} for the subnet. Applying penalty of {}.",
-                            name, value, max_nodes_per_country, penalty
-                        ));
-                        penalties += penalty;
-                    }
+                } else if value > max_nodes_per_country {
+                    let penalty = (value - max_nodes_per_country) * 10;
+                    checks.push(format!(
+                        "Country {} controls {} of nodes, which is higher than target of {} for the subnet. Applying penalty of {}.",
+                        name, value, max_nodes_per_country, penalty
+                    ));
+                    penalties += penalty;
                 }
             }
             _ => {
@@ -1091,7 +1089,6 @@ impl SubnetChangeRequest {
             .filter(|n| health_of_nodes.get(&n.id).unwrap_or(&HealthStatus::Unknown) == &HealthStatus::Healthy)
             .collect::<Vec<_>>();
 
-        let all_healthy_nodes_count = all_healthy_nodes.len();
         let available_nodes = all_healthy_nodes
             .into_iter()
             .filter(|n| {
@@ -1117,10 +1114,6 @@ impl SubnetChangeRequest {
             how_many_nodes_to_remove,
             how_many_nodes_unhealthy,
             available_nodes.len(),
-            match all_healthy_nodes_count - available_nodes.len() {
-                0 => "".to_string(),
-                cordoned_nodes => format!(" (There are {} cordoned healthy nodes)", cordoned_nodes),
-            },
         );
 
         let resized_subnet = if how_many_nodes_to_remove > 0 {
