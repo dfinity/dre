@@ -14,6 +14,7 @@ use cryptoki::{
 use dialoguer::{console::Term, theme::ColorfulTheme, Password, Select};
 use ic_canisters::governance::GovernanceCanisterWrapper;
 use ic_canisters::IcAgentCanisterClient;
+use ic_icrc1_test_utils::KeyPairGenerator;
 use ic_management_types::Network;
 use keyring::{Entry, Error};
 use log::{debug, info, warn};
@@ -96,8 +97,10 @@ impl Neuron {
             std::fs::create_dir_all(parent)?
         }
 
+        let key_pair = rosetta_core::models::Ed25519KeyPair::generate(42);
+
         if !path.exists() {
-            std::fs::write(&path, "Some private key")?;
+            std::fs::write(&path, key_pair.to_pem())?;
         }
         Ok(path)
     }
