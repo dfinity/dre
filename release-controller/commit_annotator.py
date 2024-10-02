@@ -64,7 +64,11 @@ def annotate_object(ic_repo: GitRepo, object: str):
             [
                 l
                 for l in subprocess.check_output(
-                    ["bazel", "query", f"deps({GUESTOS_BAZEL_TARGETS})"],
+                    [
+                        resolve_binary("bazel"),
+                        "query",
+                        f"deps({GUESTOS_BAZEL_TARGETS})",
+                    ],
                     cwd=ic_repo.dir,
                 )
                 .decode()
