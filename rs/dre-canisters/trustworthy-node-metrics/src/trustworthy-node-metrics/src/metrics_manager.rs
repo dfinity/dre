@@ -257,6 +257,7 @@ async fn update_nodes_metadata(nodes_principal: Vec<&PrincipalId>) {
     }
 }
 
+
 fn update_nodes_metrics(metrics_by_node: BTreeMap<PrincipalId, Vec<NodeMetricsGrouped>>) {
     let principals = metrics_by_node.keys().map(|p| p.0).collect_vec();
     let latest_metrics = stable_memory::latest_metrics(&principals);
