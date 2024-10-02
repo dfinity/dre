@@ -4,7 +4,7 @@ use ic_nns_governance_api::pb::v1::MonthlyNodeProviderRewards;
 use ic_protobuf::registry::node_rewards::{v2::NodeRewardRate, v2::NodeRewardsTable};
 use ic_registry_keys::NODE_REWARDS_TABLE_KEY;
 use itertools::Itertools;
-use num_traits::{FromPrimitive, ToPrimitive, Zero};
+use num_traits::{ToPrimitive, Zero};
 use rust_decimal::Decimal;
 use rust_decimal_macros::dec;
 use std::collections::{self, HashMap};
@@ -165,13 +165,14 @@ fn get_node_rate(region: &String, node_type: &String) -> NodeRewardRate {
     }
 }
 
+#[allow(unused_variables)]
 fn coumpute_node_provider_rewards(
     nodes_multiplier: &[NodeRewardsMultiplier],
     rewardable_nodes: collections::BTreeMap<RegionNodeTypeCategory, u32>,
 ) -> NodeProviderRewardsComputation {
-    let mut rewards_xdr_total = dec!(0);
-    let mut rewards_xdr_no_reduction_total = dec!(0);
-    let mut computation_logger = ComputationLogger::new();
+    let rewards_xdr_total = dec!(0);
+    let rewards_xdr_no_reduction_total = dec!(0);
+    let computation_logger = ComputationLogger::new();
 
     // 1 - Compute rewards and coefficients average for all nodes type3 and type3.1 in the same region
     let mut type3_coefficients: HashMap<String, Vec<Decimal>> = HashMap::new();
