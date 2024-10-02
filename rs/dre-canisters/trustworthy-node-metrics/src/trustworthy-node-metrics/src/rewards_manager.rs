@@ -4,7 +4,7 @@ use ic_nns_governance_api::pb::v1::MonthlyNodeProviderRewards;
 use ic_protobuf::registry::node_rewards::{v2::NodeRewardRate, v2::NodeRewardsTable};
 use ic_registry_keys::NODE_REWARDS_TABLE_KEY;
 use itertools::Itertools;
-use num_traits::{FromPrimitive, ToPrimitive};
+use num_traits::{FromPrimitive, ToPrimitive, Zero};
 use rust_decimal::Decimal;
 use rust_decimal_macros::dec;
 use std::collections::{self, HashMap};
@@ -171,10 +171,11 @@ fn coumpute_node_provider_rewards(
 ) -> NodeProviderRewardsComputation {
     let mut rewards_xdr_total = dec!(0);
     let mut rewards_xdr_no_reduction_total = dec!(0);
+    let mut computation_logger = ComputationLogger::new();
 
     // 1 - Compute rewards and coefficients average for all nodes type3 and type3.1 in the same region
-    let type3_coefficients: HashMap<String, Vec<Decimal>> = HashMap::new();
-    let type3_rewards: HashMap<String, Vec<Decimal>> = HashMap::new();
+    let mut type3_coefficients: HashMap<String, Vec<Decimal>> = HashMap::new();
+    let mut type3_rewards: HashMap<String, Vec<Decimal>> = HashMap::new();
 
     for ((region, node_type), count) in rewardable_nodes {
         if node_type.starts_with("type3") && count > 0 {
@@ -195,22 +196,31 @@ fn coumpute_node_provider_rewards(
                 .join(":");
 
             type3_coefficients
-                .entry(region_key)
-                .and_modify(|c| c.extend(current_coefficients))
+                .entry(region_key.clone())
+                .and_modify(|c| c.extend(current_coefficients.clone()))
                 .or_insert(current_coefficients);
             type3_rewards
                 .entry(region_key)
-                .and_modify(|c| c.extend(current_rewards))
+                .and_modify(|c| c.extend(current_rewards.clone()))
                 .or_insert(current_rewards);
         }
     }
     let type3_coefficients_avg: HashMap<String, Decimal> = type3_coefficients
-        .values()
-        .map(|coefficients| coefficients.iter().sum() / coefficients.len())
+        .iter()
+        .map(|(key, coefficients)| {
+            let sum: Decimal = coefficients.iter().cloned().fold(Decimal::zero(), |acc, val| acc + val);
+            let avg = sum / Decimal::from(coefficients.len());
+            (key.clone(), avg)
+        })
         .collect();
+
     let type3_rewards_avg: HashMap<String, Decimal> = type3_rewards
-        .values()
-        .map(|rewards| rewards.iter().sum() / rewards.len())
+        .iter()
+        .map(|(key, rewards)| {
+            let sum: Decimal = rewards.iter().cloned().fold(Decimal::zero(), |acc, val| acc + val);
+            let avg = sum / Decimal::from(rewards.len());
+            (key.clone(), avg)
+        })
         .collect();
 
     let type3_rewards_reduced = type3_rewards
@@ -221,67 +231,14 @@ fn coumpute_node_provider_rewards(
             let region_coefficient_avg = type3_coefficients_avg.get(&region).unwrap();
             let region_rewards_avg = type3_coefficients_avg.get(&region).unwrap();
 
-            for _ in individual_rewards {
+            for _ in individual_rewards.clone() {
                 rewards_reduced_by_coeff += region_rewards_avg * coefficient;
                 coefficient *= region_coefficient_avg;
             }
 
             let rewards_reduced_by_coeff_avg = rewards_reduced_by_coeff / Decimal::from(individual_rewards.len());
 
-
-        })
-
-    let mut assigned_multipliers: collections::BTreeMap<RegionNodeTypeCategory, Vec<Decimal>> = collections::BTreeMap::new();
-    let mut computation_logger = ComputationLogger::new();
-
-    for node in nodes_multiplier {
-        let metadata = stable_memory::get_node_metadata(&node.node_id).expect("Node should have one node provider");
-        let rewards_multiplier = computation_logger.execute(
-            &format!(
-                "Set rewards multiplier for Node {}, in region {} with type {}\n",
-                node.node_id, metadata.region, metadata.node_type
-            ),
-            Operation::Set(Decimal::from_f64(node.rewards_multiplier.rewards_multiplier).unwrap()),
-        );
-        let region_key = metadata.region
-            .splitn(3, ',')
-            .take(2)
-            .collect::<Vec<&str>>()
-            .join(":");
-
-        assigned_multipliers
-            .entry((region_key, metadata.node_type))
-            .or_default()
-            .push(rewards_multiplier);
-    }
-
-    let multipliers = assigned_multipliers.entry((region.clone(), node_type.clone())).or_default();
-
-    multipliers.resize(count as usize, dec!(1.0));
-    
-        for &multiplier_factor in multipliers.iter() {
-            let rewards_xdr = if node_type.starts_with("type3") {
-                let rewards_type3 = computation_logger.execute(
-                    "Type3 node, applying multiple node coefficient",
-                    Operation::Multiply(nodes_rewards_xdr_avg, country_coeff),
-                );
-
-                country_coeff *= Decimal::from(rate.reward_coefficient_percent.unwrap_or(80)) / dec!(100);
-                rewards_type3
-            } else {
-                computation_logger.execute("Not a type3 node, no multiple node coefficient", Operation::Set(nodes_rewards_xdr_avg))
-            };
-
-            let rewards_xdr_reduced = computation_logger.execute(
-                "Reducing rewards multiplying by multiplier factor",
-                Operation::Multiply(rewards_xdr, multiplier_factor),
-            );
-
-            rewards_xdr_no_reduction_total += rewards_xdr;
-            rewards_xdr_total =
-                computation_logger.execute("Update Total 10,000ths XDR", Operation::Sum(vec![rewards_xdr_total, rewards_xdr_reduced]));
-        }
-    // 1 - Compute  average for all nodes type3 and type3.1
+        });
 
     NodeProviderRewardsComputation {
         rewards_xdr: rewards_xdr_total.to_u64().unwrap(),
