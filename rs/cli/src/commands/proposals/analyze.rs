@@ -18,7 +18,7 @@ impl ExecutableCommand for Analyze {
     }
 
     async fn execute(&self, ctx: crate::ctx::DreContext) -> anyhow::Result<()> {
-        let client = GovernanceCanisterWrapper::from(ctx.create_ic_agent_canister_client(None)?);
+        let client = GovernanceCanisterWrapper::from(ctx.create_ic_agent_canister_client(None).await?);
         let proposal = client.get_proposal(self.proposal_id).await?;
 
         if proposal.status() != ProposalStatus::Open {

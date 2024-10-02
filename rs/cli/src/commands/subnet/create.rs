@@ -52,7 +52,14 @@ impl ExecutableCommand for Create {
             None => unreachable!("Should be caught by validate()"),
         };
 
-        runner
+        if self.help_other_args {
+            // Just print help
+            let ic_admin = ctx.ic_admin().await?;
+            ic_admin.grep_subcommand_arguments("propose-to-create-subnet");
+            return Ok(());
+        }
+
+        if let Some(runner_proposal) = runner
             .subnet_create(
                 SubnetCreateRequest {
                     size: self.size,
@@ -64,9 +71,13 @@ impl ExecutableCommand for Create {
                 ctx.forum_post_link(),
                 self.replica_version.clone(),
                 self.other_args.to_owned(),
-                self.help_other_args,
             )
-            .await
+            .await?
+        {
+            let ic_admin = ctx.ic_admin().await?;
+            ic_admin.propose_run(runner_proposal.cmd, runner_proposal.opts).await?;
+        }
+        Ok(())
     }
 
     fn validate(&self, _args: &crate::commands::Args, cmd: &mut clap::Command) {

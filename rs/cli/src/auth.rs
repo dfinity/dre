@@ -87,8 +87,21 @@ impl Neuron {
         Self::from_opts_and_req_inner(auth_opts, requirement, network, neuron_id).await
     }
 
-    pub async fn dry_run_fake_neuron(network: &Network) -> anyhow::Result<Self> {
-        Self::from_opts_and_req(AuthOpts::none(), AuthRequirement::Anonymous, network, None).await
+    pub fn dry_run_fake_neuron() -> anyhow::Result<Self> {
+        let home_dir = dirs::home_dir().ok_or(anyhow::anyhow!("Home dir not set"))?;
+
+        Ok(Self {
+            auth: Auth::Keyfile {
+                path: home_dir
+                    .join(".config")
+                    .join("dfx")
+                    .join("identity")
+                    .join("test_neuron_1")
+                    .join("identity.pem"),
+            },
+            include_proposer: true,
+            neuron_id: 123,
+        })
     }
 
     async fn from_opts_and_req_inner(

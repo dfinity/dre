@@ -22,7 +22,7 @@ impl ExecutableCommand for UpdateUnassignedNodes {
         let nns_subnet_id = match &self.nns_subnet_id {
             Some(n) => n.to_owned(),
             None => {
-                let canister_agent = ctx.create_ic_agent_canister_client(None)?;
+                let canister_agent = ctx.create_ic_agent_canister_client(None).await?;
                 let registry_client = RegistryCanisterWrapper::new(canister_agent.agent);
                 let subnet_list = registry_client.get_subnets().await?;
                 subnet_list
@@ -34,9 +34,14 @@ impl ExecutableCommand for UpdateUnassignedNodes {
         };
 
         let runner = ctx.runner().await?;
-        runner
+        if let Some(runner_proposal) = runner
             .update_unassigned_nodes(&PrincipalId::from_str(&nns_subnet_id)?, ctx.forum_post_link())
-            .await
+            .await?
+        {
+            let ic_admin = ctx.ic_admin().await?;
+            ic_admin.propose_run(runner_proposal.cmd, runner_proposal.opts).await?;
+        }
+        Ok(())
     }
 
     fn validate(&self, _args: &crate::commands::Args, _cmd: &mut clap::Command) {}

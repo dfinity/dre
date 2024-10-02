@@ -59,7 +59,7 @@ impl ExecutableCommand for UpdateAuthorizedSubnets {
         let mut excluded_subnets = IndexMap::new();
 
         let human_bytes = human_bytes::human_bytes(self.state_size_limit as f64);
-        let agent = ctx.create_ic_agent_canister_client(None)?;
+        let agent = ctx.create_ic_agent_canister_client(None).await?;
 
         for subnet in subnets.values() {
             if subnet.subnet_type.eq(&SubnetType::System) {

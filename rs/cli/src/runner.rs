@@ -37,14 +37,13 @@ use tabled::builder::Builder;
 use tabled::settings::Style;
 
 use crate::artifact_downloader::ArtifactDownloader;
-use crate::ic_admin::{self, IcAdmin};
+use crate::ic_admin;
 use crate::ic_admin::{ProposeCommand, ProposeOptions};
 use crate::operations::hostos_rollout::HostosRollout;
 use crate::operations::hostos_rollout::HostosRolloutResponse;
 use crate::operations::hostos_rollout::NodeGroupUpdate;
 
 pub struct Runner {
-    ic_admin: Arc<dyn IcAdmin>,
     registry: Arc<dyn LazyRegistry>,
     ic_repo: RefCell<Option<Arc<dyn LazyGit>>>,
     network: Network,
@@ -53,9 +52,14 @@ pub struct Runner {
     artifact_downloader: Arc<dyn ArtifactDownloader>,
 }
 
+#[derive(Clone)]
+pub struct RunnerProposal {
+    pub cmd: ProposeCommand,
+    pub opts: ProposeOptions,
+}
+
 impl Runner {
     pub fn new(
-        ic_admin: Arc<dyn IcAdmin>,
         registry: Arc<dyn LazyRegistry>,
         network: Network,
         agent: Arc<dyn ProposalAgent>,
@@ -64,7 +68,6 @@ impl Runner {
         artifact_downloader: Arc<dyn ArtifactDownloader>,
     ) -> Self {
         Self {
-            ic_admin,
             registry,
             ic_repo,
             network,
@@ -99,24 +102,19 @@ impl Runner {
         ic_repo
     }
 
-    pub async fn deploy(&self, subnet: &PrincipalId, version: &str, forum_post_link: Option<String>) -> anyhow::Result<()> {
-        let _ = self
-            .ic_admin
-            .propose_run(
-                ProposeCommand::DeployGuestosToAllSubnetNodes {
-                    subnet: *subnet,
-                    version: version.to_owned(),
-                },
-                ProposeOptions {
-                    title: format!("Update subnet {subnet} to GuestOS version {version}").into(),
-                    summary: format!("Update subnet {subnet} to GuestOS version {version}").into(),
-                    motivation: None,
-                    forum_post_link,
-                },
-            )
-            .await?;
-
-        Ok(())
+    pub async fn deploy(&self, subnet: &PrincipalId, version: &str, forum_post_link: Option<String>) -> anyhow::Result<RunnerProposal> {
+        Ok(RunnerProposal {
+            cmd: ProposeCommand::DeployGuestosToAllSubnetNodes {
+                subnet: *subnet,
+                version: version.to_owned(),
+            },
+            opts: ProposeOptions {
+                title: format!("Update subnet {subnet} to GuestOS version {version}").into(),
+                summary: format!("Update subnet {subnet} to GuestOS version {version}").into(),
+                motivation: None,
+                forum_post_link,
+            },
+        })
     }
 
     pub async fn health_of_nodes(&self) -> anyhow::Result<IndexMap<PrincipalId, HealthStatus>> {
@@ -131,14 +129,7 @@ impl Runner {
         forum_post_link: Option<String>,
         replica_version: Option<String>,
         other_args: Vec<String>,
-        help_other_args: bool,
-    ) -> anyhow::Result<()> {
-        if help_other_args {
-            println!("The following additional arguments are available for the `subnet create` command:");
-            println!("{}", self.ic_admin.grep_subcommand_arguments("propose-to-create-subnet"));
-            return Ok(());
-        }
-
+    ) -> anyhow::Result<Option<RunnerProposal>> {
         let health_of_nodes = self.health_of_nodes().await?;
 
         let subnet_creation_data = self
@@ -167,25 +158,26 @@ impl Runner {
                 .expect("Failed to get a GuestOS version of the NNS subnet"),
         );
 
-        self.ic_admin
-            .propose_run(
-                ProposeCommand::CreateSubnet {
-                    node_ids: subnet_creation_data.added_with_desc.iter().map(|a| a.0).collect::<Vec<_>>(),
-                    replica_version,
-                    other_args,
-                },
-                ProposeOptions {
-                    title: Some("Creating new subnet".into()),
-                    summary: Some("# Creating new subnet with nodes: ".into()),
-                    motivation: Some(motivation.clone()),
-                    forum_post_link,
-                },
-            )
-            .await?;
-        Ok(())
+        Ok(Some(RunnerProposal {
+            cmd: ProposeCommand::CreateSubnet {
+                node_ids: subnet_creation_data.added_with_desc.iter().map(|a| a.0).collect::<Vec<_>>(),
+                replica_version,
+                other_args,
+            },
+            opts: ProposeOptions {
+                title: Some("Creating new subnet".into()),
+                summary: Some("# Creating new subnet with nodes: ".into()),
+                motivation: Some(motivation.clone()),
+                forum_post_link,
+            },
+        }))
     }
 
-    pub async fn propose_subnet_change(&self, change: SubnetChangeResponse, forum_post_link: Option<String>) -> anyhow::Result<()> {
+    pub async fn propose_subnet_change(
+        &self,
+        change: SubnetChangeResponse,
+        forum_post_link: Option<String>,
+    ) -> anyhow::Result<Option<RunnerProposal>> {
         if self.verbose {
             if let Some(run_log) = &change.run_log {
                 println!("{}\n", run_log.join("\n"));
@@ -193,11 +185,11 @@ impl Runner {
         }
 
         if change.added_with_desc.is_empty() && change.removed_with_desc.is_empty() {
-            return Ok(());
+            return Ok(None);
         }
 
         let options = replace_proposal_options(&change, forum_post_link)?;
-        self.run_membership_change(change, options).await
+        self.run_membership_change(change, options).await.map(|prop| Some(prop))
     }
 
     pub async fn prepare_versions_to_retire(&self, release_artifact: &Artifact, edit_summary: bool) -> anyhow::Result<(String, Option<Vec<String>>)> {
@@ -247,7 +239,7 @@ impl Runner {
         ignore_missing_urls: bool,
         forum_post_link: String,
         security_fix: bool,
-    ) -> anyhow::Result<()> {
+    ) -> anyhow::Result<RunnerProposal> {
         let update_version = self
             .prepare_to_propose_to_revise_elected_versions(
                 release_artifact,
@@ -260,21 +252,18 @@ impl Runner {
             )
             .await?;
 
-        self.ic_admin
-            .propose_run(
-                ProposeCommand::ReviseElectedVersions {
-                    release_artifact: update_version.release_artifact.clone(),
-                    args: update_version.get_update_cmd_args(),
-                },
-                ProposeOptions {
-                    title: Some(update_version.title),
-                    summary: Some(update_version.summary.clone()),
-                    motivation: None,
-                    forum_post_link: Some(forum_post_link),
-                },
-            )
-            .await?;
-        Ok(())
+        Ok(RunnerProposal {
+            cmd: ProposeCommand::ReviseElectedVersions {
+                release_artifact: update_version.release_artifact.clone(),
+                args: update_version.get_update_cmd_args(),
+            },
+            opts: ProposeOptions {
+                title: Some(update_version.title),
+                summary: Some(update_version.summary.clone()),
+                motivation: None,
+                forum_post_link: Some(forum_post_link),
+            },
+        })
     }
 
     async fn prepare_to_propose_to_revise_elected_versions(
@@ -419,42 +408,37 @@ impl Runner {
         }
     }
 
-    pub async fn hostos_rollout(
+    pub fn hostos_rollout(
         &self,
         nodes: Vec<PrincipalId>,
         version: &str,
         maybe_summary: Option<String>,
         forum_post_link: Option<String>,
-    ) -> anyhow::Result<()> {
+    ) -> anyhow::Result<RunnerProposal> {
         let title = format!("Set HostOS version: {version} on {} nodes", nodes.clone().len());
-
-        self.ic_admin
-            .propose_run(
-                ProposeCommand::DeployHostosToSomeNodes {
-                    nodes: nodes.clone(),
-                    version: version.to_string(),
-                },
-                ProposeOptions {
-                    title: title.clone().into(),
-                    summary: maybe_summary.unwrap_or(title).into(),
-                    motivation: None,
-                    forum_post_link,
-                },
-            )
-            .await
-            .map_err(|e| anyhow::anyhow!(e))?;
 
         let nodes_short = nodes
             .iter()
             .map(|p| p.to_string().split('-').next().unwrap().to_string())
             .collect::<Vec<_>>();
-        println!("Submitted proposal to update the following nodes: {:?}", nodes_short);
-        println!("You can follow the upgrade progress at https://grafana.mainnet.dfinity.network/explore?orgId=1&left=%7B%22datasource%22:%22PE62C54679EC3C073%22,%22queries%22:%5B%7B%22refId%22:%22A%22,%22datasource%22:%7B%22type%22:%22prometheus%22,%22uid%22:%22PE62C54679EC3C073%22%7D,%22editorMode%22:%22code%22,%22expr%22:%22hostos_version%7Bic_node%3D~%5C%22{}%5C%22%7D%5Cn%22,%22legendFormat%22:%22__auto%22,%22range%22:true,%22instant%22:true%7D%5D,%22range%22:%7B%22from%22:%22now-1h%22,%22to%22:%22now%22%7D%7D", nodes_short.iter().map(|n| n.to_string() + ".%2B").join("%7C"));
+        println!("Will submit proposal to update the following nodes: {:?}", nodes_short);
+        println!("You will be able to follow the upgrade progress at https://grafana.mainnet.dfinity.network/explore?orgId=1&left=%7B%22datasource%22:%22PE62C54679EC3C073%22,%22queries%22:%5B%7B%22refId%22:%22A%22,%22datasource%22:%7B%22type%22:%22prometheus%22,%22uid%22:%22PE62C54679EC3C073%22%7D,%22editorMode%22:%22code%22,%22expr%22:%22hostos_version%7Bic_node%3D~%5C%22{}%5C%22%7D%5Cn%22,%22legendFormat%22:%22__auto%22,%22range%22:true,%22instant%22:true%7D%5D,%22range%22:%7B%22from%22:%22now-1h%22,%22to%22:%22now%22%7D%7D", nodes_short.iter().map(|n| n.to_string() + ".%2B").join("%7C"));
 
-        Ok(())
+        Ok(RunnerProposal {
+            cmd: ProposeCommand::DeployHostosToSomeNodes {
+                nodes: nodes.clone(),
+                version: version.to_string(),
+            },
+            opts: ProposeOptions {
+                title: title.clone().into(),
+                summary: maybe_summary.unwrap_or(title).into(),
+                motivation: None,
+                forum_post_link,
+            },
+        })
     }
 
-    pub async fn remove_nodes(&self, nodes_remover: NodesRemover) -> anyhow::Result<()> {
+    pub async fn remove_nodes(&self, nodes_remover: NodesRemover) -> anyhow::Result<RunnerProposal> {
         let health_client = health::HealthClient::new(self.network.clone());
         let (healths, nodes_with_proposals) = try_join(health_client.nodes(), self.registry.nodes_with_proposals()).await?;
         let (mut node_removals, motivation) = nodes_remover.remove_nodes(healths, nodes_with_proposals);
@@ -491,23 +475,20 @@ impl Runner {
         }
         println!("{}", table);
 
-        self.ic_admin
-            .propose_run(
-                ic_admin::ProposeCommand::RemoveNodes {
-                    nodes: node_removals.iter().map(|n| n.node.principal).collect(),
-                },
-                ProposeOptions {
-                    title: "Remove nodes from the network".to_string().into(),
-                    summary: "Remove nodes from the network".to_string().into(),
-                    motivation: motivation.into(),
-                    forum_post_link: nodes_remover.forum_post_link,
-                },
-            )
-            .await?;
-        Ok(())
+        Ok(RunnerProposal {
+            cmd: ic_admin::ProposeCommand::RemoveNodes {
+                nodes: node_removals.iter().map(|n| n.node.principal).collect(),
+            },
+            opts: ProposeOptions {
+                title: "Remove nodes from the network".to_string().into(),
+                summary: "Remove nodes from the network".to_string().into(),
+                motivation: motivation.into(),
+                forum_post_link: nodes_remover.forum_post_link,
+            },
+        })
     }
 
-    pub async fn network_heal(&self, forum_post_link: Option<String>) -> anyhow::Result<()> {
+    pub async fn network_heal(&self, forum_post_link: Option<String>) -> anyhow::Result<Vec<RunnerProposal>> {
         let health_client = health::HealthClient::new(self.network.clone());
         let mut errors = vec![];
 
@@ -531,20 +512,23 @@ impl Runner {
             .heal_and_optimize(available_nodes, &health_of_nodes)
             .await?;
 
+        let mut changes = vec![];
         for change in &subnets_change_response {
-            let _ = self
+            let current = self
                 .run_membership_change(change.clone(), replace_proposal_options(change, forum_post_link.clone())?)
                 .await
                 .map_err(|e| {
                     println!("{}", e);
                     errors.push(e);
                 });
+            changes.push(current)
         }
         if !errors.is_empty() {
             anyhow::bail!("Errors: {:?}", errors);
         }
 
-        Ok(())
+        // No errors, can be safly unwrapped
+        Ok(changes.into_iter().map(|maybe_change| maybe_change.unwrap()).collect_vec())
     }
 
     pub async fn decentralization_change(
@@ -594,7 +578,12 @@ impl Runner {
         Ok(())
     }
 
-    pub async fn subnet_rescue(&self, subnet: &PrincipalId, keep_nodes: Option<Vec<String>>, forum_post_link: Option<String>) -> anyhow::Result<()> {
+    pub async fn subnet_rescue(
+        &self,
+        subnet: &PrincipalId,
+        keep_nodes: Option<Vec<String>>,
+        forum_post_link: Option<String>,
+    ) -> anyhow::Result<Option<RunnerProposal>> {
         let change_request = self
             .registry
             .modify_subnet_nodes(SubnetQueryBy::SubnetId(*subnet))
@@ -611,11 +600,12 @@ impl Runner {
         let change = SubnetChangeResponse::from(&change_request.rescue(&health_of_nodes)?).with_health_of_nodes(health_of_nodes);
 
         if change.added_with_desc.is_empty() && change.removed_with_desc.is_empty() {
-            return Ok(());
+            return Ok(None);
         }
 
         self.run_membership_change(change.clone(), replace_proposal_options(&change, forum_post_link)?)
             .await
+            .map(|prop| Some(prop))
     }
 
     pub async fn retireable_versions(&self, artifact: &Artifact) -> anyhow::Result<Vec<Release>> {
@@ -681,7 +671,7 @@ impl Runner {
             .collect())
     }
 
-    async fn run_membership_change(&self, change: SubnetChangeResponse, options: ProposeOptions) -> anyhow::Result<()> {
+    async fn run_membership_change(&self, change: SubnetChangeResponse, options: ProposeOptions) -> anyhow::Result<RunnerProposal> {
         let subnet_id = change.subnet_id.ok_or_else(|| anyhow::anyhow!("subnet_id is required"))?;
         let pending_action = self
             .registry
@@ -698,21 +688,21 @@ impl Runner {
             )));
         }
 
-        self.ic_admin
-            .propose_run(
-                ProposeCommand::ChangeSubnetMembership {
-                    subnet_id,
-                    node_ids_add: change.added_with_desc.iter().map(|a| a.0).collect::<Vec<_>>(),
-                    node_ids_remove: change.removed_with_desc.iter().map(|a| a.0).collect::<Vec<_>>(),
-                },
-                options,
-            )
-            .await
-            .map_err(|e| anyhow::anyhow!(e))?;
-        Ok(())
+        Ok(RunnerProposal {
+            cmd: ProposeCommand::ChangeSubnetMembership {
+                subnet_id,
+                node_ids_add: change.added_with_desc.iter().map(|a| a.0).collect::<Vec<_>>(),
+                node_ids_remove: change.removed_with_desc.iter().map(|a| a.0).collect::<Vec<_>>(),
+            },
+            opts: options,
+        })
     }
 
-    pub async fn update_unassigned_nodes(&self, nns_subnet_id: &PrincipalId, forum_post_link: Option<String>) -> anyhow::Result<()> {
+    pub async fn update_unassigned_nodes(
+        &self,
+        nns_subnet_id: &PrincipalId,
+        forum_post_link: Option<String>,
+    ) -> anyhow::Result<Option<RunnerProposal>> {
         let subnets = self.registry.subnets().await?;
 
         let nns = match subnets.get_key_value(nns_subnet_id) {
@@ -727,7 +717,7 @@ impl Runner {
                 "Unassigned nodes and nns are of the same version '{}', skipping proposal submition.",
                 unassigned_version
             );
-            return Ok(());
+            return Ok(None);
         }
 
         info!(
@@ -735,18 +725,17 @@ impl Runner {
             nns.replica_version, unassigned_version
         );
 
-        let command = ProposeCommand::DeployGuestosToAllUnassignedNodes {
-            replica_version: nns.replica_version.clone(),
-        };
-        let options = ProposeOptions {
-            summary: Some("Update the unassigned nodes to the latest rolled-out version".to_string()),
-            motivation: None,
-            title: Some("Update all unassigned nodes".to_string()),
-            forum_post_link,
-        };
-
-        self.ic_admin.propose_run(command, options).await?;
-        Ok(())
+        Ok(Some(RunnerProposal {
+            cmd: ProposeCommand::DeployGuestosToAllUnassignedNodes {
+                replica_version: nns.replica_version.clone(),
+            },
+            opts: ProposeOptions {
+                summary: Some("Update the unassigned nodes to the latest rolled-out version".to_string()),
+                motivation: None,
+                title: Some("Update all unassigned nodes".to_string()),
+                forum_post_link,
+            },
+        }))
     }
 }
 
