@@ -236,9 +236,10 @@ pub fn coumpute_node_provider_rewards(nodes_rewards: &[NodeRewards]) -> (Decimal
         let node_xdr = match &metadata.node_type {
             t if t.starts_with("type3") => {
                 let reward_coefficient_percent: Decimal = Decimal::from(node_rewards.node_rate.reward_coefficient_percent.unwrap_or(80)) / dec!(100);
-                coefficient *= reward_coefficient_percent;
+                let nodes_rewards_xdr = nodes_rewards_xdr_avg * coefficient;
 
-                nodes_rewards_xdr_avg * coefficient
+                coefficient *= reward_coefficient_percent;
+                nodes_rewards_xdr
             }
             _ => node_rewards.node_rate.xdr_permyriad_per_node_per_month.into(),
         };
