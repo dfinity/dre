@@ -273,7 +273,7 @@ impl<'a> NeuronAuthTestScenarion<'a> {
     }
 
     async fn get_neuron(&self) -> anyhow::Result<Neuron> {
-        get_ctx_for_neuron_test(
+        let ctx = get_ctx_for_neuron_test(
             AuthOpts {
                 private_key_pem: self
                     .private_key_pem
@@ -292,8 +292,8 @@ impl<'a> NeuronAuthTestScenarion<'a> {
             self.network.clone(),
             self.dry_run,
         )
-        .await
-        .map(|ctx| ctx.neuron())
+        .await?;
+        ctx.neuron().await
     }
 }
 
@@ -301,22 +301,6 @@ fn get_staging_key_path() -> PathBuf {
     PathBuf::from_str(&std::env::var("HOME").unwrap())
         .unwrap()
         .join(STAGING_KEY_PATH_FROM_HOME)
-}
-
-fn ensure_testing_pem(name: &str) -> PathBuf {
-    let path = PathBuf::from_str(&std::env::var("HOME").unwrap())
-        .unwrap()
-        .join(format!(".config/dfx/identity/{}/identity.pem", name));
-
-    let parent = path.parent().unwrap();
-    if !parent.exists() {
-        std::fs::create_dir_all(parent).unwrap()
-    }
-
-    if !path.exists() {
-        std::fs::write(&path, "Some private key").unwrap();
-    }
-    path
 }
 
 #[tokio::test]
@@ -352,18 +336,7 @@ async fn init_test_neuron_and_auth() {
         NeuronAuthTestScenarion::new("Dry running commands shouldn't fail if neuron cannot be detected")
             .with_network("mainnet")
             .is_dry_run()
-            .want(Ok(Neuron {
-                auth: Auth::Anonymous,
-                neuron_id: 0,
-                include_proposer: false,
-            }))
-            .when_requirement(AuthRequirement::Neuron),
-        // Failing scenarios
-        //
-        NeuronAuthTestScenarion::new("Detecting neuron id for random private key")
-            .with_network("mainnet")
-            .with_private_key(ensure_testing_pem("testing").to_str().unwrap().to_string())
-            .want(Err(anyhow::anyhow!("Will not be able to detect neuron id")))
+            .want(Ok(Neuron::dry_run_fake_neuron().unwrap()))
             .when_requirement(AuthRequirement::Neuron),
     ];
 

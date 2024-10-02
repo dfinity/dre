@@ -87,17 +87,25 @@ impl Neuron {
         Self::from_opts_and_req_inner(auth_opts, requirement, network, neuron_id).await
     }
 
-    pub fn dry_run_fake_neuron() -> anyhow::Result<Self> {
+    fn ensure_fake_pem(name: &str) -> anyhow::Result<PathBuf> {
         let home_dir = dirs::home_dir().ok_or(anyhow::anyhow!("Home dir not set"))?;
+        let path = home_dir.join(format!(".config/dfx/identity/{}/identity.pem", name));
 
+        let parent = path.parent().ok_or(anyhow::anyhow!("Expected parent to exist"))?;
+        if !parent.exists() {
+            std::fs::create_dir_all(parent)?
+        }
+
+        if !path.exists() {
+            std::fs::write(&path, "Some private key")?;
+        }
+        Ok(path)
+    }
+
+    pub fn dry_run_fake_neuron() -> anyhow::Result<Self> {
         Ok(Self {
             auth: Auth::Keyfile {
-                path: home_dir
-                    .join(".config")
-                    .join("dfx")
-                    .join("identity")
-                    .join("test_neuron_1")
-                    .join("identity.pem"),
+                path: Self::ensure_fake_pem("test_neuron_1")?,
             },
             include_proposer: true,
             neuron_id: 123,

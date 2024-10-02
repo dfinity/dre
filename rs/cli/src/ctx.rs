@@ -281,7 +281,7 @@ pub mod tests {
     use crate::{
         artifact_downloader::ArtifactDownloader,
         auth::Neuron,
-        commands::{AuthOpts, AuthRequirement},
+        commands::{AuthOpts, HsmOpts, HsmParams},
         ic_admin::IcAdmin,
     };
 
@@ -308,15 +308,24 @@ pub mod tests {
             forum_post_link: "https://forum.dfinity.org/t/123".to_string().into(),
             dry_run: true,
             artifact_downloader,
-            neuron: RefCell::new(Some(neuron)),
+            neuron: RefCell::new(None),
             proceed_without_confirmation: true,
             version: crate::commands::IcAdminVersion::Strict("Shouldn't reach this because of mock".to_string()),
             neuron_opts: super::NeuronOpts {
-                auth_opts: AuthOpts::none(),
+                auth_opts: AuthOpts {
+                    private_key_pem: None,
+                    hsm_opts: HsmOpts {
+                        hsm_pin: None,
+                        hsm_params: HsmParams {
+                            hsm_slot: None,
+                            hsm_key_id: None,
+                        },
+                    },
+                },
                 requirement: crate::commands::AuthRequirement::Neuron,
                 neuron_id: match neuron.neuron_id {
-                    0 => AuthRequirement::Signer,
-                    _ => AuthRequirement::Neuron,
+                    0 => None,
+                    n => Some(n),
                 },
             },
         }
