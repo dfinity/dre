@@ -52,7 +52,7 @@ impl ExecutableCommand for Replace {
             _ => SubnetTarget::FromNodesIds(self.nodes.clone()),
         };
 
-        let subnet_manager = ctx.subnet_manager().await;
+        let subnet_manager = ctx.subnet_manager().await?;
         let subnet_change_response = subnet_manager
             .with_target(subnet_target)
             .membership_replace(

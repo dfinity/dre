@@ -1,5 +1,5 @@
 {
-  "checksum": "d9bc8b02db59266969caa52b402af82e441437a6119cc3bcb932eae6acb3fc52",
+  "checksum": "abee9a1e183890980b7417228d49c17fa7e3379b15e022a305a18ccf1a343194",
   "crates": {
     "actix-codec 0.5.2": {
       "name": "actix-codec",
@@ -10446,6 +10446,10 @@
             {
               "id": "serde_json 1.0.128",
               "target": "serde_json"
+            },
+            {
+              "id": "serde_yaml 0.9.34+deprecated",
+              "target": "serde_yaml"
             },
             {
               "id": "sha2 0.10.8",
