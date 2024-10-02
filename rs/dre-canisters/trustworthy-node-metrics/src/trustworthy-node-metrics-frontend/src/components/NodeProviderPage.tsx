@@ -63,7 +63,7 @@ export const NodeProviderPage: React.FC<NodeProviderPageProps> = ({ nodeMetadata
                 </Grid>
                 <Grid item xs={12}>
                     <Typography variant="h6" component="div" >
-                        Provider Rewards
+                        Last Rewarding Period
                     </Typography>
                     <Divider/>
                 </Grid>

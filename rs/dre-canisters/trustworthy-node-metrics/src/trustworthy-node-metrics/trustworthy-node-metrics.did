@@ -35,7 +35,7 @@ type OperationExecutorLog = record {
     result: text;
 };
 
-type RewardMultiplierResult = record {
+type RewardsMultiplier = record {
   days_assigned: nat64;
   days_unassigned: nat64;
   rewards_multiplier: float64;
@@ -52,11 +52,11 @@ type NodeRewardRate = record {
   reward_coefficient_percent: opt int32;
 };
 
-type NodeRewards = record {
+type NodeRewardsMultiplier = record {
   node_id: principal;
   daily_node_metrics: vec DailyNodeMetrics;
   node_rate: NodeRewardRate;
-  rewards_computation: RewardMultiplierResult;
+  rewards_multiplier: RewardsMultiplier;
 };
 
 type NodeRewardsArgs = record {
@@ -69,10 +69,11 @@ type NodeProviderRewards = record {
   node_provider_id: principal;
   rewards_xdr: nat64;
   rewards_xdr_no_reduction: nat64;
+  computation_log: vec OperationExecutorLog;
   rewards_xdr_old: opt nat64;
   ts_distribution: nat64;
   xdr_conversion_rate: opt nat64;
-  nodes_rewards: vec NodeRewards;
+  nodes_rewards: vec NodeRewardsMultiplier;
 };
 
 type NodeProviderRewardsArgs = record {
@@ -97,7 +98,7 @@ type NodeMetadata = record {
 
 service : {
     "subnet_node_metrics" : (SubnetNodeMetricsArgs) -> (SubnetNodeMetricsResult) query;
-    "node_rewards" : (NodeRewardsArgs) -> (NodeRewards) query;
+    "node_rewards" : (NodeRewardsArgs) -> (NodeRewardsMultiplier) query;
     "node_provider_rewards" : (NodeProviderRewardsArgs) -> (NodeProviderRewards) query;
     "node_ids" : () -> (vec principal) query;
     "nodes_metadata": () -> (vec NodeMetadata) query;

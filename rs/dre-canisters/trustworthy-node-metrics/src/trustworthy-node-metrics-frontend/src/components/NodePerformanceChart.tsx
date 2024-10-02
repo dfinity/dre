@@ -3,7 +3,7 @@ import { ChartData, formatDateToUTC, generateChartData, LoadingIndicator, NodeMe
 import { PeriodFilter } from './FilterBar';
 import { Box, Grid } from '@mui/material';
 import PerformanceChart from './PerformanceChart';
-import { NodeRewards } from '../../../declarations/trustworthy-node-metrics/trustworthy-node-metrics.did';
+import { NodeRewardsMultiplier } from '../../../declarations/trustworthy-node-metrics/trustworthy-node-metrics.did';
 import { ExportTable } from './ExportTable';
 import { GridColDef, GridRowsProp } from '@mui/x-data-grid';
 import { Principal } from '@dfinity/principal';
@@ -16,7 +16,7 @@ export interface NodePerformanceChartProps {
   }
 
 export const NodePerformanceChart: React.FC<NodePerformanceChartProps> = ({ node, periodFilter }) => {
-    const [performanceData, setPerformanceData] = useState<NodeRewards | null>(null);
+    const [performanceData, setPerformanceData] = useState<NodeRewardsMultiplier | null>(null);
     const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
@@ -36,7 +36,7 @@ export const NodePerformanceChart: React.FC<NodePerformanceChartProps> = ({ node
     }
 
     const performanceDailyData: ChartData[] = generateChartData(periodFilter, performanceData.daily_node_metrics);
-    const failureRateAvg = Math.round(performanceData.rewards_computation.failure_rate * 100);
+    const failureRateAvg = Math.round(performanceData.rewards_multiplier.failure_rate * 100);
 
     const rows: GridRowsProp = performanceData.daily_node_metrics.map((data, index) => {
         return { 
@@ -62,7 +62,7 @@ export const NodePerformanceChart: React.FC<NodePerformanceChartProps> = ({ node
     return (
         <>
             <Grid item xs={12} md={6}>
-                <NodeMetricsStats stats={performanceData.rewards_computation} />
+                <NodeMetricsStats stats={performanceData.rewards_multiplier} />
             </Grid>
             <Grid item xs={12} md={6}>
                 <Box sx={boxStyleWidget('right')}>
