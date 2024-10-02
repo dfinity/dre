@@ -1,11 +1,13 @@
-use std::{path::PathBuf, str::FromStr};
+use std::{path::PathBuf, str::FromStr, sync::Arc};
 
 use crate::{
     auth::{Auth, Neuron, STAGING_KEY_PATH_FROM_HOME, STAGING_NEURON_ID},
     commands::{AuthOpts, AuthRequirement, HsmOpts},
+    cordoned_feature_fetcher::MockCordonedFeatureFetcher,
 };
 use clio::{ClioPath, InputPath};
 use ic_canisters::governance::governance_canister_version;
+use ic_management_backend::health::MockHealthStatusQuerier;
 use ic_management_types::Network;
 use itertools::Itertools;
 
@@ -45,6 +47,8 @@ async fn get_context(network: &Network, version: IcAdminVersion) -> anyhow::Resu
         crate::commands::AuthRequirement::Anonymous,
         None,
         version,
+        Arc::new(MockCordonedFeatureFetcher::new()),
+        Arc::new(MockHealthStatusQuerier::new()),
     )
     .await
 }
@@ -180,6 +184,8 @@ async fn get_ctx_for_neuron_test(
         requirement,
         None,
         IcAdminVersion::Strict("Shouldn't get to here".to_string()),
+        Arc::new(MockCordonedFeatureFetcher::new()),
+        Arc::new(MockHealthStatusQuerier::new()),
     )
     .await
 }

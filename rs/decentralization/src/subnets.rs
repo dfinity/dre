@@ -8,7 +8,7 @@ use indexmap::IndexMap;
 use itertools::Itertools;
 use std::sync::Arc;
 
-pub async fn unhealthy_with_nodes(
+pub fn unhealthy_with_nodes(
     subnets: &IndexMap<PrincipalId, Subnet>,
     nodes_health: &IndexMap<PrincipalId, HealthStatus>,
 ) -> IndexMap<PrincipalId, Vec<ic_management_types::Node>> {
