@@ -83,7 +83,7 @@ impl PartialEq for Node {
 
 impl From<&ic_management_types::Node> for Node {
     fn from(n: &ic_management_types::Node) -> Self {
-        // Work around the current registry configuration in which the EU countries are not properly set.
+        // Work around the current (as of 2024) registry configuration in which the EU countries are not properly marked.
         let eu_countries: HashMap<&str, &str> = HashMap::from_iter([
             ("AT", "Austria"),
             ("BE", "Belgium"),
@@ -382,13 +382,17 @@ impl DecentralizedSubnet {
         };
         match nakamoto_scores.feature_value_counts_max(&NodeFeature::Country) {
             Some((name, value)) => {
-                if value > max_nodes_per_country {
-                    let penalty = (value - max_nodes_per_country) * 10;
-                    checks.push(format!(
-                        "Country {} controls {} of nodes, which is higher than target of {} for the subnet. Applying penalty of {}.",
-                        name, value, max_nodes_per_country, penalty
-                    ));
-                    penalties += penalty;
+                if is_european_subnet && name == "EU" {
+                    // European subnet is expected to be controlled by European countries
+                } else {
+                    if value > max_nodes_per_country {
+                        let penalty = (value - max_nodes_per_country) * 10;
+                        checks.push(format!(
+                            "Country {} controls {} of nodes, which is higher than target of {} for the subnet. Applying penalty of {}.",
+                            name, value, max_nodes_per_country, penalty
+                        ));
+                        penalties += penalty;
+                    }
                 }
             }
             _ => {
@@ -401,10 +405,17 @@ impl DecentralizedSubnet {
 
         if is_european_subnet {
             // European subnet should only take European nodes.
-            let continent_counts = nakamoto_scores.feature_value_counts(&NodeFeature::Continent);
-            let non_european_nodes_count = continent_counts
+            let country_counts = nakamoto_scores.feature_value_counts(&NodeFeature::Country);
+            let non_european_nodes_count = country_counts
                 .iter()
-                .filter_map(|(continent, count)| if continent == &"Europe".to_string() { None } else { Some(*count) })
+                .filter_map(|(country, count)| {
+                    println!("Country: {} Count: {}", country, count);
+                    if country.as_str() == "EU" || country.as_str() == "CH" {
+                        None
+                    } else {
+                        Some(*count)
+                    }
+                })
                 .sum::<usize>();
             if non_european_nodes_count > 0 {
                 checks.push(format!("European subnet has {} non-European node(s)", non_european_nodes_count));
@@ -426,9 +437,9 @@ impl DecentralizedSubnet {
         for feature in &NodeFeature::variants() {
             match (nakamoto_scores.score_feature(feature), nakamoto_scores.controlled_nodes(feature)) {
                 (Some(score), Some(controlled_nodes)) => {
-                    let european_subnet_continent_penalty = is_european_subnet && feature == &NodeFeature::Continent;
+                    let european_subnet_penalty = is_european_subnet && feature == &NodeFeature::Country;
 
-                    if score == 1.0 && controlled_nodes > nodes.len() * 2 / 3 && !european_subnet_continent_penalty {
+                    if score == 1.0 && controlled_nodes > nodes.len() * 2 / 3 && !european_subnet_penalty {
                         checks.push(format!(
                             "NodeFeature {} controls {} of nodes, which is > {} (2/3 of all) nodes",
                             feature,
