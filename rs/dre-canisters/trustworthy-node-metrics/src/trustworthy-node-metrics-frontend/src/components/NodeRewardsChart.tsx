@@ -33,10 +33,10 @@ export const NodeRewardsChart: React.FC<NodeRewardsChartProps> = ({ node }) => {
     }
 
     const rewardsDailyData: ChartData[] = generateChartData(latestRewardRange, latestNodeRewards.daily_node_metrics);
-    const failureRateAvg = Math.round((latestNodeRewards.rewards_computation.failure_rate) * 100)
-    const rewardsMultiplier = Math.round((latestNodeRewards.rewards_computation.rewards_multiplier) * 100);
+    const failureRateAvg = Math.round((latestNodeRewards.rewards_multiplier.failure_rate) * 100)
+    const rewardsMultiplier = Math.round((latestNodeRewards.rewards_multiplier.rewards_multiplier) * 100);
     const rewardsReduction = 100 - rewardsMultiplier;
-    const rows: GridRowsProp = latestNodeRewards.rewards_computation.computation_log.map((data, index) => {
+    const rows: GridRowsProp = latestNodeRewards.rewards_multiplier.computation_log.map((data, index) => {
         return { 
             id: index,
             col0: index,
@@ -55,7 +55,7 @@ export const NodeRewardsChart: React.FC<NodeRewardsChartProps> = ({ node }) => {
     return (
         <>
             <Grid item xs={12} md={6}>
-                <NodeMetricsStats stats={latestNodeRewards.rewards_computation} />
+                <NodeMetricsStats stats={latestNodeRewards.rewards_multiplier} />
             </Grid>
             <Grid item xs={12} md={6}>
                 <NodePerformanceStats 

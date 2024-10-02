@@ -35,7 +35,7 @@ const RewardTable: React.FC<RewardTableProps> = ({ nodeRewards }) => {
                 {nodeMetrics.node_id.toText()}
               </TableCell>
               <TableCell component="th" scope="row">
-                {nodeMetrics.rewards_computation.failure_rate * 100}%
+                {nodeMetrics.rewards_multiplier.failure_rate * 100}%
               </TableCell>
             </TableRow>
           ))}

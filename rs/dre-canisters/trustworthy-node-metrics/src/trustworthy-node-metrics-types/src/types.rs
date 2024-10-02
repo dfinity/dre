@@ -1,4 +1,4 @@
-use std::{borrow::Cow, collections::BTreeMap, fmt, u32};
+use std::{borrow::Cow, fmt};
 
 use candid::{CandidType, Decode, Deserialize, Encode, Principal};
 use dfn_core::api::PrincipalId;
@@ -236,7 +236,7 @@ impl DailyNodeMetrics {
 }
 
 #[derive(Debug, Deserialize, CandidType)]
-pub struct RewardMultiplierResult {
+pub struct RewardsMultiplier {
     pub days_assigned: u64,
     pub days_unassigned: u64,
     pub rewards_multiplier: f64,
@@ -253,7 +253,13 @@ pub struct NodeRewardsMultiplier {
     pub node_id: Principal,
     pub daily_node_metrics: Vec<DailyNodeMetrics>,
     pub node_rate: NodeRewardRate,
-    pub rewards_computation: RewardMultiplierResult,
+    pub rewards_multiplier: RewardsMultiplier,
+}
+
+pub struct NodeProviderRewardsComputation {
+    pub rewards_xdr: u64,
+    pub rewards_xdr_no_reduction: u64,
+    pub computation_log: Vec<OperationExecutorLog>,
 }
 
 #[derive(Debug, Deserialize, CandidType)]
@@ -265,6 +271,7 @@ pub struct NodeProviderRewards {
     pub ts_distribution: u64,
     pub xdr_conversion_rate: Option<u64>,
     pub nodes_rewards: Vec<NodeRewardsMultiplier>,
+    pub computation_log: Vec<OperationExecutorLog>,
 }
 
 #[derive(Debug, Deserialize, CandidType)]
