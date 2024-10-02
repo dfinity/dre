@@ -53,7 +53,7 @@ export const NodeProviderChart: React.FC<NodeProviderChartProps> = ({ provider, 
     const providerNodeMetrics = providerRewards.nodes_rewards;
 
     const highFailureRateChart = providerNodeMetrics
-        .sort((a, b) => b.rewards_computation.failure_rate - a.rewards_computation.failure_rate)
+        .sort((a, b) => b.rewards_multiplier.failure_rate - a.rewards_multiplier.failure_rate)
         .slice(0, 3)
         .flatMap(nodeMetrics => {
             const chartData = generateChartData(periodFilter, nodeMetrics.daily_node_metrics);

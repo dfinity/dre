@@ -37,6 +37,30 @@ impl Storable for MonthlyNodeProviderRewardsStored {
     };
 }
 
+#[derive(Debug, Deserialize, Serialize, CandidType, Clone, PartialEq, Eq, PartialOrd, Ord)]
+pub struct NodeProviderRewardableKey {
+    pub node_provider_id: Principal,
+    pub region: String,
+    pub node_type: String,
+}
+
+const MAX_VALUE_SIZE_REWARDABLE_NODES: u32 = 300;
+
+impl Storable for NodeProviderRewardableKey {
+    fn to_bytes(&self) -> std::borrow::Cow<[u8]> {
+        Cow::Owned(Encode!(self).unwrap())
+    }
+
+    fn from_bytes(bytes: std::borrow::Cow<[u8]>) -> Self {
+        Decode!(bytes.as_ref(), Self).unwrap()
+    }
+
+    const BOUND: Bound = Bound::Bounded {
+        max_size: MAX_VALUE_SIZE_REWARDABLE_NODES,
+        is_fixed_size: false,
+    };
+}
+
 #[derive(Debug, Deserialize, Serialize, CandidType, Clone)]
 pub struct NodeMetricsStored {
     pub subnet_assigned: Principal,
@@ -68,7 +92,7 @@ pub struct NodeRewardRatesStored {
     pub rewards_rates: NodeRewardRates,
 }
 
-const MAX_VALUE_SIZE_BYTES_REWARD_RATES: u32 = 133;
+const MAX_VALUE_SIZE_BYTES_REWARD_RATES: u32 = 200;
 
 impl Storable for NodeRewardRatesStored {
     fn to_bytes(&self) -> std::borrow::Cow<[u8]> {
@@ -116,7 +140,7 @@ pub struct NodeMetadataStoredV2 {
     pub node_type: String,
 }
 
-const MAX_VALUE_SIZE_BYTES_NODE_METADATA: u32 = 204;
+const MAX_VALUE_SIZE_BYTES_NODE_METADATA: u32 = 400;
 
 impl Storable for NodeMetadataStoredV2 {
     fn to_bytes(&self) -> std::borrow::Cow<[u8]> {
@@ -212,7 +236,7 @@ impl DailyNodeMetrics {
 }
 
 #[derive(Debug, Deserialize, CandidType)]
-pub struct RewardMultiplierResult {
+pub struct RewardsMultiplier {
     pub days_assigned: u64,
     pub days_unassigned: u64,
     pub rewards_multiplier: f64,
@@ -225,11 +249,17 @@ pub struct RewardMultiplierResult {
 }
 
 #[derive(Debug, Deserialize, CandidType)]
-pub struct NodeRewards {
+pub struct NodeRewardsMultiplier {
     pub node_id: Principal,
     pub daily_node_metrics: Vec<DailyNodeMetrics>,
     pub node_rate: NodeRewardRate,
-    pub rewards_computation: RewardMultiplierResult,
+    pub rewards_multiplier: RewardsMultiplier,
+}
+
+pub struct NodeProviderRewardsComputation {
+    pub rewards_xdr: u64,
+    pub rewards_xdr_no_reduction: u64,
+    pub computation_log: Vec<OperationExecutorLog>,
 }
 
 #[derive(Debug, Deserialize, CandidType)]
@@ -240,7 +270,8 @@ pub struct NodeProviderRewards {
     pub rewards_xdr_old: Option<u64>,
     pub ts_distribution: u64,
     pub xdr_conversion_rate: Option<u64>,
-    pub nodes_rewards: Vec<NodeRewards>,
+    pub nodes_rewards: Vec<NodeRewardsMultiplier>,
+    pub computation_log: Vec<OperationExecutorLog>,
 }
 
 #[derive(Debug, Deserialize, CandidType)]
