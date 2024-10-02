@@ -4,8 +4,8 @@ use ic_cdk_macros::*;
 use itertools::Itertools;
 use std::collections::{btree_map::Entry, BTreeMap};
 use trustworthy_node_metrics_types::types::{
-    NodeMetadata, NodeMetrics, NodeMetricsStored, NodeMetricsStoredKey, NodeProviderRewards, NodeProviderRewardsArgs, NodeRewards, NodeRewardsArgs,
-    SubnetNodeMetricsArgs, SubnetNodeMetricsResponse,
+    NodeMetadata, NodeMetrics, NodeMetricsStored, NodeMetricsStoredKey, NodeProviderRewards, NodeProviderRewardsArgs, NodeRewardsArgs,
+    NodeRewardsMultiplier, SubnetNodeMetricsArgs, SubnetNodeMetricsResponse,
 };
 mod chrono_utils;
 mod computation_logger;
@@ -109,11 +109,11 @@ fn nodes_metadata() -> Vec<NodeMetadata> {
 }
 
 #[query]
-fn node_rewards(args: NodeRewardsArgs) -> NodeRewards {
+fn node_rewards(args: NodeRewardsArgs) -> NodeRewardsMultiplier {
     let rewarding_period = DateTimeRange::new(args.from_ts, args.to_ts);
     let node_id = args.node_id;
 
-    let rewards = rewards_manager::compute_node_rewards(vec![node_id], rewarding_period);
+    let rewards = rewards_manager::node_rewards_multiplier(vec![node_id], rewarding_period);
     rewards.into_iter().next().unwrap()
 }
 

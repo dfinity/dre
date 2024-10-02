@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { ChartData, generateChartData, getLatestRewardRange, LoadingIndicator, NodeMetricsStats, NodePerformanceStats, setNodeRewardsData } from '../utils/utils';
 import { Grid, Typography } from '@mui/material';
 import PerformanceChart from './PerformanceChart';
-import { NodeRewards } from '../../../declarations/trustworthy-node-metrics/trustworthy-node-metrics.did';
+import { NodeRewardsMultiplier } from '../../../declarations/trustworthy-node-metrics/trustworthy-node-metrics.did';
 import RewardsInfo, { LinearReductionChart } from './RewardsInfo';
 import { Principal } from '@dfinity/principal';
 import { ExportTable } from './ExportTable';
@@ -14,7 +14,7 @@ export interface NodeRewardsChartProps {
 
 export const NodeRewardsChart: React.FC<NodeRewardsChartProps> = ({ node }) => {
     const latestRewardRange = getLatestRewardRange();
-    const [latestNodeRewards, setLatestNodeRewards] = useState<NodeRewards | null>(null);
+    const [latestNodeRewards, setLatestNodeRewards] = useState<NodeRewardsMultiplier | null>(null);
     const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
@@ -33,10 +33,10 @@ export const NodeRewardsChart: React.FC<NodeRewardsChartProps> = ({ node }) => {
     }
 
     const rewardsDailyData: ChartData[] = generateChartData(latestRewardRange, latestNodeRewards.daily_node_metrics);
-    const failureRateAvg = Math.round((latestNodeRewards.rewards_computation.failure_rate) * 100)
-    const rewardsMultiplier = Math.round((latestNodeRewards.rewards_computation.rewards_multiplier) * 100);
+    const failureRateAvg = Math.round((latestNodeRewards.rewards_multiplier.failure_rate) * 100)
+    const rewardsMultiplier = Math.round((latestNodeRewards.rewards_multiplier.rewards_multiplier) * 100);
     const rewardsReduction = 100 - rewardsMultiplier;
-    const rows: GridRowsProp = latestNodeRewards.rewards_computation.computation_log.map((data, index) => {
+    const rows: GridRowsProp = latestNodeRewards.rewards_multiplier.computation_log.map((data, index) => {
         return { 
             id: index,
             col0: index,
@@ -55,7 +55,7 @@ export const NodeRewardsChart: React.FC<NodeRewardsChartProps> = ({ node }) => {
     return (
         <>
             <Grid item xs={12} md={6}>
-                <NodeMetricsStats stats={latestNodeRewards.rewards_computation} />
+                <NodeMetricsStats stats={latestNodeRewards.rewards_multiplier} />
             </Grid>
             <Grid item xs={12} md={6}>
                 <NodePerformanceStats 

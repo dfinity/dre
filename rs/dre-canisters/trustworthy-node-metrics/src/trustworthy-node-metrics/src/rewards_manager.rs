@@ -4,16 +4,18 @@ use ic_nns_governance_api::pb::v1::MonthlyNodeProviderRewards;
 use ic_protobuf::registry::node_rewards::{v2::NodeRewardRate, v2::NodeRewardsTable};
 use ic_registry_keys::NODE_REWARDS_TABLE_KEY;
 use itertools::Itertools;
-use num_traits::{FromPrimitive, ToPrimitive};
+use num_traits::{ToPrimitive, Zero};
 use rust_decimal::Decimal;
 use rust_decimal_macros::dec;
-use std::collections::{self};
-use trustworthy_node_metrics_types::types::{DailyNodeMetrics, NodeProviderRewards, NodeRewards, RewardMultiplierResult};
+use std::collections::{self, HashMap};
+use trustworthy_node_metrics_types::types::{
+    DailyNodeMetrics, NodeProviderRewards, NodeProviderRewardsComputation, NodeRewardsMultiplier, RewardsMultiplier,
+};
 
 use crate::{
     chrono_utils::DateTimeRange,
     computation_logger::{ComputationLogger, Operation, OperationExecutor},
-    stable_memory,
+    stable_memory::{self, RegionNodeTypeCategory},
 };
 
 const MIN_FAILURE_RATE: Decimal = dec!(0.1);
@@ -96,7 +98,7 @@ fn rewards_reduction_percent(failure_rate: &Decimal) -> (Vec<OperationExecutor>,
 /// 2. The `overall_failure_rate` is calculated by dividing the `overall_failed` blocks by the `overall_total` blocks.
 /// 3. The `rewards_reduction` function is applied to `overall_failure_rate`.
 /// 3. Finally, the rewards percentage to be distrubuted to the node is computed.
-fn compute_reward_multiplier(daily_metrics: &[DailyNodeMetrics], total_days: u64) -> RewardMultiplierResult {
+fn compute_rewards_multiplier(daily_metrics: &[DailyNodeMetrics], total_days: u64) -> RewardsMultiplier {
     let mut computation_logger = ComputationLogger::new();
 
     let total_days = computation_logger.execute("Days In Period", Operation::Set(Decimal::from(total_days)));
@@ -132,7 +134,7 @@ fn compute_reward_multiplier(daily_metrics: &[DailyNodeMetrics], total_days: u64
         Operation::Divide(assigned_days_factor + unassigned_days_factor, total_days),
     );
 
-    RewardMultiplierResult {
+    RewardsMultiplier {
         days_assigned: days_assigned.to_u64().unwrap(),
         days_unassigned: days_unassigned.to_u64().unwrap(),
         rewards_multiplier: rewards_multiplier.to_f64().unwrap(),
@@ -145,20 +147,15 @@ fn compute_reward_multiplier(daily_metrics: &[DailyNodeMetrics], total_days: u64
     }
 }
 
-fn get_node_rate(node_id: &Principal) -> NodeRewardRate {
-    let node_metadata = stable_memory::get_node_metadata(node_id).expect("Node should have one node provider");
-
-    match stable_memory::get_rate(&node_metadata.region, &node_metadata.node_type) {
+fn get_node_rate(region: &String, node_type: &String) -> NodeRewardRate {
+    match stable_memory::get_rate(region, node_type) {
         Some(rate) => rate,
         None => {
             ic_cdk::println!(
                 "The Node Rewards Table does not have an entry for \
-                     node type '{}' within region '{}' or parent region, defaulting to 1 xdr per month per node, for \
-                     NodeProvider '{}' on Node Operator '{}'",
-                node_metadata.node_type,
-                node_metadata.region,
-                node_metadata.node_provider_id,
-                node_metadata.node_operator_id
+                     node type '{}' within region '{}' or parent region, defaulting to 1 xdr per month per node",
+                node_type,
+                region
             );
             NodeRewardRate {
                 xdr_permyriad_per_node_per_month: 1,
@@ -168,17 +165,77 @@ fn get_node_rate(node_id: &Principal) -> NodeRewardRate {
     }
 }
 
-/// Update node rewards table
-pub async fn update_node_rewards_table() -> anyhow::Result<()> {
-    let (rewards_table, _): (NodeRewardsTable, _) = ic_nns_common::registry::get_value(NODE_REWARDS_TABLE_KEY.as_bytes(), None).await?;
-    for (region, rewards_rates) in rewards_table.table {
-        stable_memory::insert_rewards_rates(region, rewards_rates)
-    }
+#[allow(unused_variables)]
+fn coumpute_node_provider_rewards(
+    nodes_multiplier: &[NodeRewardsMultiplier],
+    rewardable_nodes: collections::BTreeMap<RegionNodeTypeCategory, u32>,
+) -> NodeProviderRewardsComputation {
+    let rewards_xdr_total = dec!(0);
+    let rewards_xdr_no_reduction_total = dec!(0);
+    let computation_logger = ComputationLogger::new();
 
-    Ok(())
+    // 1 - Compute rewards and coefficients average for all nodes type3 and type3.1 in the same region
+    let mut type3_coefficients: HashMap<String, Vec<Decimal>> = HashMap::new();
+    let mut type3_rewards: HashMap<String, Vec<Decimal>> = HashMap::new();
+
+    for ((region, node_type), count) in rewardable_nodes {
+        if node_type.starts_with("type3") && count > 0 {
+            let rate = get_node_rate(&region, &node_type);
+            let current_coefficients = vec![Decimal::from(rate.reward_coefficient_percent.unwrap_or(80)) / dec!(100); count as usize];
+            let current_rewards = vec![Decimal::from(rate.xdr_permyriad_per_node_per_month); count as usize];
+
+            let region_key = region.splitn(3, ',').take(2).collect::<Vec<&str>>().join(":");
+
+            type3_coefficients
+                .entry(region_key.clone())
+                .and_modify(|c| c.extend(current_coefficients.clone()))
+                .or_insert(current_coefficients);
+            type3_rewards
+                .entry(region_key)
+                .and_modify(|c| c.extend(current_rewards.clone()))
+                .or_insert(current_rewards);
+        }
+    }
+    let type3_coefficients_avg: HashMap<String, Decimal> = type3_coefficients
+        .iter()
+        .map(|(key, coefficients)| {
+            let sum: Decimal = coefficients.iter().cloned().fold(Decimal::zero(), |acc, val| acc + val);
+            let avg = sum / Decimal::from(coefficients.len());
+            (key.clone(), avg)
+        })
+        .collect();
+
+    let type3_rewards_avg: HashMap<String, Decimal> = type3_rewards
+        .iter()
+        .map(|(key, rewards)| {
+            let sum: Decimal = rewards.iter().cloned().fold(Decimal::zero(), |acc, val| acc + val);
+            let avg = sum / Decimal::from(rewards.len());
+            (key.clone(), avg)
+        })
+        .collect();
+
+    let type3_rewards_reduced = type3_rewards.into_iter().map(|(region, individual_rewards)| {
+        let mut coefficient = dec!(1);
+        let mut rewards_reduced_by_coeff = dec!(0);
+        let region_coefficient_avg = type3_coefficients_avg.get(&region).unwrap();
+        let region_rewards_avg = type3_coefficients_avg.get(&region).unwrap();
+
+        for _ in individual_rewards.clone() {
+            rewards_reduced_by_coeff += region_rewards_avg * coefficient;
+            coefficient *= region_coefficient_avg;
+        }
+
+        let rewards_reduced_by_coeff_avg = rewards_reduced_by_coeff / Decimal::from(individual_rewards.len());
+    });
+
+    NodeProviderRewardsComputation {
+        rewards_xdr: rewards_xdr_total.to_u64().unwrap(),
+        rewards_xdr_no_reduction: rewards_xdr_no_reduction_total.to_u64().unwrap(),
+        computation_log: computation_logger.get_log(),
+    }
 }
 
-pub fn compute_node_rewards(node_ids: Vec<Principal>, rewarding_period: DateTimeRange) -> Vec<NodeRewards> {
+pub fn node_rewards_multiplier(node_ids: Vec<Principal>, rewarding_period: DateTimeRange) -> Vec<NodeRewardsMultiplier> {
     let total_days = rewarding_period.days_between();
     let nodes_metrics = stable_memory::get_metrics_range(
         rewarding_period.start_timestamp_nanos(),
@@ -205,67 +262,28 @@ pub fn compute_node_rewards(node_ids: Vec<Principal>, rewarding_period: DateTime
     daily_metrics
         .into_iter()
         .map(|(node_id, daily_node_metrics)| {
-            let rewards_computation = compute_reward_multiplier(&daily_node_metrics, total_days);
-            let node_rate = get_node_rate(&node_id);
+            let rewards_multiplier = compute_rewards_multiplier(&daily_node_metrics, total_days);
+            let node_metadata = stable_memory::get_node_metadata(&node_id).expect("Node should have one node provider");
+            let node_rate = get_node_rate(&node_metadata.region, &node_metadata.node_type);
 
-            NodeRewards {
+            NodeRewardsMultiplier {
                 node_id,
                 daily_node_metrics,
                 node_rate,
-                rewards_computation,
+                rewards_multiplier,
             }
         })
         .collect_vec()
 }
 
-pub fn coumpute_node_provider_rewards(nodes_rewards: &[NodeRewards]) -> (Decimal, Decimal) {
-    let mut rewards_xdr = dec!(0);
-    let mut rewards_xdr_no_reduction = dec!(0);
-    let mut coefficient = dec!(1.0);
-
-    let nodes_rewards_xdr_sum: Decimal = nodes_rewards
-        .iter()
-        .map(|node_rewards| Decimal::from(node_rewards.node_rate.xdr_permyriad_per_node_per_month))
-        .sum();
-    let nodes_rewards_total: Decimal = nodes_rewards.len().into();
-    let nodes_rewards_xdr_avg = nodes_rewards_xdr_sum / nodes_rewards_total;
-
-    for node_rewards in nodes_rewards.iter() {
-        let metadata = stable_memory::get_node_metadata(&node_rewards.node_id).unwrap();
-
-        let node_xdr = match &metadata.node_type {
-            t if t.starts_with("type3") => {
-                let reward_coefficient_percent: Decimal = Decimal::from(node_rewards.node_rate.reward_coefficient_percent.unwrap_or(80)) / dec!(100);
-                let nodes_rewards_xdr = nodes_rewards_xdr_avg * coefficient;
-
-                coefficient *= reward_coefficient_percent;
-                nodes_rewards_xdr
-            }
-            _ => node_rewards.node_rate.xdr_permyriad_per_node_per_month.into(),
-        };
-        rewards_xdr_no_reduction += node_xdr;
-        rewards_xdr += node_xdr * Decimal::from_f64(node_rewards.rewards_computation.rewards_multiplier).unwrap();
-    }
-
-    (rewards_xdr_no_reduction, rewards_xdr)
-}
-
 pub fn node_provider_rewards(node_provider_id: Principal, rewarding_period: DateTimeRange) -> NodeProviderRewards {
     let node_ids = stable_memory::get_node_principals(&node_provider_id);
-    let nodes_rewards = compute_node_rewards(node_ids, rewarding_period)
-        .into_iter()
-        .sorted_by(|a, b| {
-            Ord::cmp(
-                &b.node_rate.xdr_permyriad_per_node_per_month,
-                &a.node_rate.xdr_permyriad_per_node_per_month,
-            )
-        })
-        .collect_vec();
-    let (rewards_xdr_no_reduction, rewards_xdr) = coumpute_node_provider_rewards(&nodes_rewards);
-
+    let rewardable_nodes: collections::BTreeMap<RegionNodeTypeCategory, u32> = stable_memory::get_rewardable_nodes(&node_provider_id);
     let latest_np_rewards = stable_memory::get_latest_node_providers_rewards();
-    let ts_distribution = latest_np_rewards.timestamp;
-    let xdr_conversion_rate = latest_np_rewards.xdr_conversion_rate.and_then(|rate| rate.xdr_permyriad_per_icp);
+
+    let nodes_multiplier = node_rewards_multiplier(node_ids, rewarding_period);
+    let rewards_computation = coumpute_node_provider_rewards(&nodes_multiplier, rewardable_nodes);
+
     let rewards_xdr_old = latest_np_rewards
         .rewards
         .into_iter()
@@ -283,15 +301,27 @@ pub fn node_provider_rewards(node_provider_id: Principal, rewarding_period: Date
 
     NodeProviderRewards {
         node_provider_id,
-        rewards_xdr: rewards_xdr.to_u64().unwrap(),
-        rewards_xdr_no_reduction: rewards_xdr_no_reduction.to_u64().unwrap(),
+        rewards_xdr: rewards_computation.rewards_xdr,
+        rewards_xdr_no_reduction: rewards_computation.rewards_xdr_no_reduction,
+        computation_log: rewards_computation.computation_log,
         rewards_xdr_old,
-        ts_distribution,
-        xdr_conversion_rate,
-        nodes_rewards,
+        ts_distribution: latest_np_rewards.timestamp,
+        xdr_conversion_rate: latest_np_rewards.xdr_conversion_rate.and_then(|rate| rate.xdr_permyriad_per_icp),
+        nodes_rewards: nodes_multiplier,
     }
 }
 
+/// Update node rewards table
+pub async fn update_node_rewards_table() -> anyhow::Result<()> {
+    let (rewards_table, _): (NodeRewardsTable, _) = ic_nns_common::registry::get_value(NODE_REWARDS_TABLE_KEY.as_bytes(), None).await?;
+    for (region, rewards_rates) in rewards_table.table {
+        stable_memory::insert_rewards_rates(region, rewards_rates)
+    }
+
+    Ok(())
+}
+
+/// Update recent node providers rewards
 pub async fn update_recent_provider_rewards() -> anyhow::Result<()> {
     let (maybe_monthly_rewards,): (Option<MonthlyNodeProviderRewards>,) = ic_cdk::api::call::call(
         Principal::from(GOVERNANCE_CANISTER_ID),
@@ -361,7 +391,7 @@ mod tests {
     fn test_rewards_percent() {
         // Overall failed = 130 Overall total = 500 Failure rate = 0.26
         let daily_metrics: Vec<DailyNodeMetrics> = daily_mocked_metrics(vec![MockedMetrics::new(20, 6, 4), MockedMetrics::new(25, 10, 2)]);
-        let result = compute_reward_multiplier(&daily_metrics, daily_metrics.len() as u64);
+        let result = compute_rewards_multiplier(&daily_metrics, daily_metrics.len() as u64);
         assert_eq!(result.rewards_multiplier, 0.744);
 
         // Overall failed = 45 Overall total = 450 Failure rate = 0.1
@@ -370,14 +400,14 @@ mod tests {
             MockedMetrics::new(1, 400, 20),
             MockedMetrics::new(1, 5, 25), // no penalty
         ]);
-        let result = compute_reward_multiplier(&daily_metrics, daily_metrics.len() as u64);
+        let result = compute_rewards_multiplier(&daily_metrics, daily_metrics.len() as u64);
         assert_eq!(result.rewards_multiplier, 1.0);
 
         // Overall failed = 5 Overall total = 10 Failure rate = 0.5
         let daily_metrics: Vec<DailyNodeMetrics> = daily_mocked_metrics(vec![
             MockedMetrics::new(1, 5, 5), // no penalty
         ]);
-        let result = compute_reward_multiplier(&daily_metrics, daily_metrics.len() as u64);
+        let result = compute_rewards_multiplier(&daily_metrics, daily_metrics.len() as u64);
         assert_eq!(result.rewards_multiplier, 0.36);
     }
 
@@ -386,7 +416,7 @@ mod tests {
         let daily_metrics: Vec<DailyNodeMetrics> = daily_mocked_metrics(vec![
             MockedMetrics::new(10, 5, 95), // max failure rate
         ]);
-        let result = compute_reward_multiplier(&daily_metrics, daily_metrics.len() as u64);
+        let result = compute_rewards_multiplier(&daily_metrics, daily_metrics.len() as u64);
         assert_eq!(result.rewards_multiplier, 0.2);
     }
 
@@ -395,7 +425,7 @@ mod tests {
         let daily_metrics: Vec<DailyNodeMetrics> = daily_mocked_metrics(vec![
             MockedMetrics::new(10, 9, 1), // min failure rate
         ]);
-        let result = compute_reward_multiplier(&daily_metrics, daily_metrics.len() as u64);
+        let result = compute_rewards_multiplier(&daily_metrics, daily_metrics.len() as u64);
         assert_eq!(result.rewards_multiplier, 1.0);
     }
 
@@ -413,17 +443,17 @@ mod tests {
             daily_mocked_metrics(vec![gap.clone(), MockedMetrics::new(1, 6, 4), MockedMetrics::new(1, 7, 3)]);
 
         assert_eq!(
-            compute_reward_multiplier(&daily_metrics_mid_gap, daily_metrics_mid_gap.len() as u64).rewards_multiplier,
+            compute_rewards_multiplier(&daily_metrics_mid_gap, daily_metrics_mid_gap.len() as u64).rewards_multiplier,
             0.7866666666666666
         );
 
         assert_eq!(
-            compute_reward_multiplier(&daily_metrics_mid_gap, daily_metrics_mid_gap.len() as u64).rewards_multiplier,
-            compute_reward_multiplier(&daily_metrics_left_gap, daily_metrics_left_gap.len() as u64).rewards_multiplier
+            compute_rewards_multiplier(&daily_metrics_mid_gap, daily_metrics_mid_gap.len() as u64).rewards_multiplier,
+            compute_rewards_multiplier(&daily_metrics_left_gap, daily_metrics_left_gap.len() as u64).rewards_multiplier
         );
         assert_eq!(
-            compute_reward_multiplier(&daily_metrics_right_gap, daily_metrics_right_gap.len() as u64).rewards_multiplier,
-            compute_reward_multiplier(&daily_metrics_left_gap, daily_metrics_left_gap.len() as u64).rewards_multiplier
+            compute_rewards_multiplier(&daily_metrics_right_gap, daily_metrics_right_gap.len() as u64).rewards_multiplier,
+            compute_rewards_multiplier(&daily_metrics_left_gap, daily_metrics_left_gap.len() as u64).rewards_multiplier
         );
     }
 
@@ -436,9 +466,9 @@ mod tests {
         ]);
 
         let mut daily_metrics = daily_metrics.clone();
-        let result = compute_reward_multiplier(&daily_metrics, daily_metrics.len() as u64);
+        let result = compute_rewards_multiplier(&daily_metrics, daily_metrics.len() as u64);
         daily_metrics.reverse();
-        let result_rev = compute_reward_multiplier(&daily_metrics, daily_metrics.len() as u64);
+        let result_rev = compute_rewards_multiplier(&daily_metrics, daily_metrics.len() as u64);
 
         assert_eq!(result.rewards_multiplier, 1.0);
         assert_eq!(result_rev.rewards_multiplier, result.rewards_multiplier);
