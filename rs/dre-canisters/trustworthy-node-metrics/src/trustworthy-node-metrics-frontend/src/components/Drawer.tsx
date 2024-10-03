@@ -14,7 +14,7 @@ import Logo from '../assets/icp_logo.svg';
 import { ExpandLess, ExpandMore } from '@mui/icons-material';
 
 interface DrawerProps {
-  providers: Set<string>;
+  providers: Map<string, string>;
   drawerWidth: number;
   temporary: boolean;
   drawerOpen: boolean;
@@ -23,10 +23,11 @@ interface DrawerProps {
 
 const Drawer: React.FC<DrawerProps> = ({ providers, drawerWidth, temporary, drawerOpen, onClosed }) => {
   const [isNodeProvidersOpen, setIsNodeProvidersOpen] = React.useState(false);
-  
+  const [selectedIndex, setSelectedIndex] = React.useState<number | null>(null);
+
   const renderCollapsibleList = (
     title: string,
-    items: Set<string>,
+    items: Map<string, string>,
     isOpen: boolean,
     toggleOpen: React.Dispatch<React.SetStateAction<boolean>>,
     basePath: string
@@ -42,9 +43,13 @@ const Drawer: React.FC<DrawerProps> = ({ providers, drawerWidth, temporary, draw
         <Collapse in={isOpen} timeout="auto" unmountOnExit>
           <List component="div" disablePadding>
             {itemList.map((item, index) => (
-              <Link key={index} to={`/${basePath}/${item}`} style={{ textDecoration: 'none', color: 'inherit' }}>
-                <ListItemButton>
-                  <ListItemText primary={item.split("-")[0]} />
+              <Link key={index} to={`/${basePath}/${item[0]}`} style={{ textDecoration: 'none', color: 'inherit' }}>
+                <ListItemButton
+                  key={index}
+                  selected={selectedIndex === index}
+                  onClick={() => setSelectedIndex(index)}
+                >
+                  <ListItemText primary={item[1]} />
                 </ListItemButton>
               </Link>
             ))}
