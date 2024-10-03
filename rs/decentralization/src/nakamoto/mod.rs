@@ -214,8 +214,6 @@ impl NakamotoScore {
                                             memoize_hit_rates.borrow_mut().pop_back();
                                         }
                                     }
-                                    println!("Memoize hit rate: {}%", memoize_hit_rate);
-                                    println!("Memoize recent hit rates: {:?}", memoize_hit_rates.borrow());
                                     *memoize_req.borrow_mut() = 0;
                                     *memoize_hit.borrow_mut() = 0;
                                 }
@@ -285,11 +283,6 @@ impl NakamotoScore {
         self.avg_log2
     }
 
-    /// A minimum Nakamoto score over all features
-    pub fn score_min(&self) -> f64 {
-        self.min
-    }
-
     /// Get a Map with all the features and the corresponding Nakamoto score
     pub fn scores_individual(&self) -> IndexMap<NodeFeature, f64> {
         self.coefficients.clone()
@@ -345,29 +338,7 @@ impl NakamotoScore {
 
     pub fn describe_difference_from(&self, other: &NakamotoScore) -> (Option<Ordering>, String) {
         // Prefer higher score across all features
-        let mut cmp = self.score_min().partial_cmp(&other.score_min());
-
-        if cmp != Some(Ordering::Equal) {
-            return (
-                cmp,
-                if cmp == Some(Ordering::Less) {
-                    format!(
-                        "(gets worse) the minimum Nakamoto coefficient across all features decreases from {} to {}",
-                        other.score_min(),
-                        self.score_min()
-                    )
-                } else {
-                    format!(
-                        "(gets better) the minimum Nakamoto coefficient across all features increases from {} to {}",
-                        other.score_min(),
-                        self.score_min()
-                    )
-                },
-            );
-        }
-
-        // Then try to increase the log2 avg
-        cmp = self.score_avg_log2().partial_cmp(&other.score_avg_log2());
+        let mut cmp = self.score_avg_log2().partial_cmp(&other.score_avg_log2());
 
         if cmp != Some(Ordering::Equal) {
             return (
@@ -486,6 +457,10 @@ impl NakamotoScore {
         // If the worst feature is the same for both candidates
         // => prefer candidates that maximizes all features
         for feature in NodeFeature::variants() {
+            if feature == NodeFeature::Continent {
+                // Skip the continent feature as it is not used in the Nakamoto score
+                continue;
+            }
             let c1 = self.coefficients.get(&feature).unwrap_or(&1.0);
             let c2 = other.coefficients.get(&feature).unwrap_or(&1.0);
             if *c1 < 3.0 || *c2 < 3.0 {
@@ -608,21 +583,19 @@ mod tests {
 
         let score_expected = NakamotoScore {
             coefficients: IndexMap::from([
-                (NodeFeature::City, 1.),
-                (NodeFeature::Country, 1.),
-                (NodeFeature::Continent, 1.),
-                (NodeFeature::DataCenterOwner, 1.),
                 (NodeFeature::NodeProvider, 1.),
                 (NodeFeature::DataCenter, 1.),
+                (NodeFeature::DataCenterOwner, 1.),
+                (NodeFeature::Area, 1.),
+                (NodeFeature::Country, 1.),
             ]),
             value_counts: IndexMap::new(),
             controlled_nodes: IndexMap::from([
-                (NodeFeature::City, 1),
-                (NodeFeature::Country, 1),
-                (NodeFeature::Continent, 1),
-                (NodeFeature::DataCenterOwner, 1),
                 (NodeFeature::NodeProvider, 1),
                 (NodeFeature::DataCenter, 1),
+                (NodeFeature::DataCenterOwner, 1),
+                (NodeFeature::Area, 1),
+                (NodeFeature::Country, 1),
             ]),
             avg_linear: 1.,
             avg_log2: Some(0.),
@@ -799,7 +772,6 @@ mod tests {
             .collect::<Vec<_>>();
 
         println!("optimized {} Countries {:?}", optimized_subnet, countries_after);
-        assert_eq!(optimized_subnet.nakamoto_score().score_min(), 1.);
 
         // Two US nodes were removed
         assert_eq!(
@@ -857,7 +829,6 @@ mod tests {
             .collect::<Vec<_>>();
 
         println!("optimized {} NPs {:?}", optimized_subnet, nps_after);
-        assert_eq!(optimized_subnet.nakamoto_score().score_min(), 3.);
 
         // Check that the selected nodes are providing the maximum uniformness (use all
         // NPs)
@@ -917,7 +888,7 @@ mod tests {
             .collect::<Vec<_>>();
 
         println!("optimized {} NPs {:?}", optimized_subnet, nps_after);
-        assert_eq!(optimized_subnet.nakamoto_score().score_min(), 2.);
+
         // There is still only one DFINITY-owned node in the subnet
         assert_eq!(1, optimized_subnet.nodes.iter().map(|n| n.dfinity_owned as u32).sum::<u32>());
     }
@@ -967,7 +938,6 @@ mod tests {
         println!("NakamotoScore after {}", nakamoto_score_after);
 
         // Check against the close-to-optimal values obtained by data analysis
-        assert!(nakamoto_score_after.score_min() >= 1.0);
         assert!(nakamoto_score_after.critical_features_num_nodes()[0] <= 25);
         assert!(nakamoto_score_after.score_avg_linear() >= 3.0);
         assert!(nakamoto_score_after.score_avg_log2() >= Some(1.32));
@@ -990,33 +960,15 @@ mod tests {
 
     #[test]
     fn test_european_subnet_european_nodes_good() {
-        let subnet_initial = new_test_subnet_with_overrides(
-            0,
-            0,
-            7,
-            1,
-            (
-                &NodeFeature::Continent,
-                &["Europe", "Europe", "Europe", "Europe", "Europe", "Europe", "Europe"],
-            ),
-        )
-        .with_subnet_id(PrincipalId::from_str("bkfrj-6k62g-dycql-7h53p-atvkj-zg4to-gaogh-netha-ptybj-ntsgw-rqe").unwrap());
+        let subnet_initial = new_test_subnet_with_overrides(0, 0, 7, 1, (&NodeFeature::Country, &["EU", "EU", "EU", "EU", "EU", "EU", "CH"]))
+            .with_subnet_id(PrincipalId::from_str("bkfrj-6k62g-dycql-7h53p-atvkj-zg4to-gaogh-netha-ptybj-ntsgw-rqe").unwrap());
         assert_eq!(subnet_initial.check_business_rules().unwrap(), (0, vec![]));
     }
 
     #[test]
     fn test_european_subnet_european_nodes_bad_1() {
-        let subnet_mix = new_test_subnet_with_overrides(
-            1,
-            0,
-            7,
-            1,
-            (
-                &NodeFeature::Continent,
-                &["Europe", "Asia", "Europe", "Europe", "Europe", "Europe", "Europe"],
-            ),
-        )
-        .with_subnet_id(PrincipalId::from_str("bkfrj-6k62g-dycql-7h53p-atvkj-zg4to-gaogh-netha-ptybj-ntsgw-rqe").unwrap());
+        let subnet_mix = new_test_subnet_with_overrides(1, 0, 7, 1, (&NodeFeature::Country, &["EU", "China", "CH", "EU", "EU", "EU", "EU"]))
+            .with_subnet_id(PrincipalId::from_str("bkfrj-6k62g-dycql-7h53p-atvkj-zg4to-gaogh-netha-ptybj-ntsgw-rqe").unwrap());
         assert_eq!(
             subnet_mix.check_business_rules().unwrap(),
             (1000, vec!["European subnet has 1 non-European node(s)".to_string()])
@@ -1024,17 +976,8 @@ mod tests {
     }
     #[test]
     fn test_european_subnet_european_nodes_bad_2() {
-        let subnet_mix = new_test_subnet_with_overrides(
-            1,
-            0,
-            7,
-            1,
-            (
-                &NodeFeature::Continent,
-                &["Europe", "Asia", "America", "Australia", "Europe", "Africa", "South America"],
-            ),
-        )
-        .with_subnet_id(PrincipalId::from_str("bkfrj-6k62g-dycql-7h53p-atvkj-zg4to-gaogh-netha-ptybj-ntsgw-rqe").unwrap());
+        let subnet_mix = new_test_subnet_with_overrides(1, 0, 7, 1, (&NodeFeature::Country, &["EU", "China", "US", "AU", "EU", "SA", "AR"]))
+            .with_subnet_id(PrincipalId::from_str("bkfrj-6k62g-dycql-7h53p-atvkj-zg4to-gaogh-netha-ptybj-ntsgw-rqe").unwrap());
         assert_eq!(
             subnet_mix.check_business_rules().unwrap(),
             (5000, vec!["European subnet has 5 non-European node(s)".to_string()])

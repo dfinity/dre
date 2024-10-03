@@ -140,22 +140,19 @@ features:
       value: some-np
     - feature: data_center_owner
       value: some-dco
-    - feature: city
-      value: some-city
-    - feature: city
-      value: another-city
+    - feature: area
+      value: some-area
+    - feature: area
+      value: another-area
     - feature: country
       value: some-country
-    - feature: continent
-      value: some-continent"#;
+      "#;
 
         let fetcher = CordonedFeatureFetcherImpl::new(true, None).unwrap();
 
-        let maybe_parsed = fetcher.parse(contents);
-        assert!(maybe_parsed.is_ok());
-        let parsed = maybe_parsed.unwrap();
+        let parsed = fetcher.parse(contents).unwrap();
 
-        assert_eq!(parsed.len(), 7)
+        assert_eq!(parsed.len(), 6)
     }
 
     #[test]

@@ -14,12 +14,13 @@ use log::{debug, info, warn};
 use rand::{seq::SliceRandom, SeedableRng};
 use serde::{Deserialize, Serialize};
 use std::cmp::Ordering;
+use std::collections::HashMap;
 use std::fmt::{Debug, Display, Formatter};
 use std::hash::Hash;
 
 #[derive(Clone, Serialize, Deserialize, Default)]
 pub struct DataCenterInfo {
-    city: String,
+    area: String,
     country: String,
     continent: String,
 }
@@ -82,25 +83,58 @@ impl PartialEq for Node {
 
 impl From<&ic_management_types::Node> for Node {
     fn from(n: &ic_management_types::Node) -> Self {
+        // Work around the current (as of 2024) registry configuration in which the EU countries are not properly marked.
+        let eu_countries: HashMap<&str, &str> = HashMap::from_iter([
+            ("AT", "Austria"),
+            ("BE", "Belgium"),
+            ("BG", "Bulgaria"),
+            ("CY", "Cyprus"),
+            ("CZ", "Czechia"),
+            ("DE", "Germany"),
+            ("DK", "Denmark"),
+            ("EE", "Estonia"),
+            ("ES", "Spain"),
+            ("FI", "Finland"),
+            ("FR", "France"),
+            ("GR", "Greece"),
+            ("HR", "Croatia"),
+            ("HU", "Hungary"),
+            ("IE", "Ireland"),
+            ("IT", "Italy"),
+            ("LT", "Lithuania"),
+            ("LU", "Luxembourg"),
+            ("LV", "Latvia"),
+            ("MT", "Malta"),
+            ("NL", "Netherlands"),
+            ("PL", "Poland"),
+            ("PT", "Portugal"),
+            ("RO", "Romania"),
+            ("SE", "Sweden"),
+            ("SI", "Slovenia"),
+            ("SK", "Slovakia"),
+        ]);
+        let country = n
+            .operator
+            .datacenter
+            .as_ref()
+            .map(|d| d.country.clone())
+            .unwrap_or_else(|| "unknown".to_string());
+        let area = n
+            .operator
+            .datacenter
+            .as_ref()
+            .map(|d| d.area.clone())
+            .unwrap_or_else(|| "unknown".to_string());
+        let (country, area) = match eu_countries.get(&country.as_str()) {
+            Some(country) => ("EU".to_string(), country.to_string()),
+            None => (country, area),
+        };
+
         Self {
             id: n.principal,
             features: nakamoto::NodeFeatures::from_iter([
-                (
-                    NodeFeature::City,
-                    n.operator
-                        .datacenter
-                        .as_ref()
-                        .map(|d| d.city.clone())
-                        .unwrap_or_else(|| "unknown".to_string()),
-                ),
-                (
-                    NodeFeature::Country,
-                    n.operator
-                        .datacenter
-                        .as_ref()
-                        .map(|d| d.country.clone())
-                        .unwrap_or_else(|| "unknown".to_string()),
-                ),
+                (NodeFeature::Area, area),
+                (NodeFeature::Country, country),
                 (
                     NodeFeature::Continent,
                     n.operator
@@ -348,7 +382,9 @@ impl DecentralizedSubnet {
         };
         match nakamoto_scores.feature_value_counts_max(&NodeFeature::Country) {
             Some((name, value)) => {
-                if value > max_nodes_per_country {
+                if is_european_subnet && name == "EU" {
+                    // European subnet is expected to be controlled by European countries
+                } else if value > max_nodes_per_country {
                     let penalty = (value - max_nodes_per_country) * 10;
                     checks.push(format!(
                         "Country {} controls {} of nodes, which is higher than target of {} for the subnet. Applying penalty of {}.",
@@ -367,10 +403,17 @@ impl DecentralizedSubnet {
 
         if is_european_subnet {
             // European subnet should only take European nodes.
-            let continent_counts = nakamoto_scores.feature_value_counts(&NodeFeature::Continent);
-            let non_european_nodes_count = continent_counts
+            let country_counts = nakamoto_scores.feature_value_counts(&NodeFeature::Country);
+            let non_european_nodes_count = country_counts
                 .iter()
-                .filter_map(|(continent, count)| if continent == &"Europe".to_string() { None } else { Some(*count) })
+                .filter_map(|(country, count)| {
+                    println!("Country: {} Count: {}", country, count);
+                    if country.as_str() == "EU" || country.as_str() == "CH" {
+                        None
+                    } else {
+                        Some(*count)
+                    }
+                })
                 .sum::<usize>();
             if non_european_nodes_count > 0 {
                 checks.push(format!("European subnet has {} non-European node(s)", non_european_nodes_count));
@@ -392,9 +435,9 @@ impl DecentralizedSubnet {
         for feature in &NodeFeature::variants() {
             match (nakamoto_scores.score_feature(feature), nakamoto_scores.controlled_nodes(feature)) {
                 (Some(score), Some(controlled_nodes)) => {
-                    let european_subnet_continent_penalty = is_european_subnet && feature == &NodeFeature::Continent;
+                    let european_subnet_penalty = is_european_subnet && feature == &NodeFeature::Country;
 
-                    if score == 1.0 && controlled_nodes > nodes.len() * 2 / 3 && !european_subnet_continent_penalty {
+                    if score == 1.0 && controlled_nodes > nodes.len() * 2 / 3 && !european_subnet_penalty {
                         checks.push(format!(
                             "NodeFeature {} controls {} of nodes, which is > {} (2/3 of all) nodes",
                             feature,
@@ -1046,7 +1089,6 @@ impl SubnetChangeRequest {
             .filter(|n| health_of_nodes.get(&n.id).unwrap_or(&HealthStatus::Unknown) == &HealthStatus::Healthy)
             .collect::<Vec<_>>();
 
-        let all_healthy_nodes_count = all_healthy_nodes.len();
         let available_nodes = all_healthy_nodes
             .into_iter()
             .filter(|n| {
@@ -1066,16 +1108,12 @@ impl SubnetChangeRequest {
             .collect_vec();
 
         info!(
-            "Resizing subnet {} by removing {} (+{} unhealthy) nodes and adding {} nodes. Available {} healthy nodes{}.",
+            "Resizing subnet {} by adding {} and removing {} (from which {} unhealthy) nodes. Total available {} healthy nodes.",
             self.subnet.id,
             how_many_nodes_to_add,
             how_many_nodes_to_remove,
             how_many_nodes_unhealthy,
             available_nodes.len(),
-            match all_healthy_nodes_count - available_nodes.len() {
-                0 => "".to_string(),
-                cordoned_nodes => format!(" (There are {} cordoned healthy nodes)", cordoned_nodes),
-            },
         );
 
         let resized_subnet = if how_many_nodes_to_remove > 0 {
