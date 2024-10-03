@@ -194,7 +194,7 @@ fn coumpute_node_provider_rewards(
 
             computation_logger.execute(
                 &format!(
-                    "Setting count of nodes in region {} with type {}, with coefficient {}, with rewards {} XDRths\n",
+                    "Setting count of nodes in region {} with type {}, with coefficient {}, with rewards {} XDR * 10'000\n",
                     region, node_type, regional_coeff, regional_rewards
                 ),
                 Operation::Set(Decimal::from(node_count)),
@@ -292,14 +292,14 @@ fn coumpute_node_provider_rewards(
         }
 
         computation_logger.execute(
-            &format!("Rewards contribution XDRths for nodes in region {} with type: {}\n", region, node_type),
+            &format!("Rewards contribution XDR * 10'000 for nodes in region {} with type: {}\n", region, node_type),
             Operation::Set(rewards_xdr),
         );
 
         rewards_xdr_total += rewards_xdr;
     }
 
-    computation_logger.execute("Total rewards XDRths\n", Operation::Set(rewards_xdr_total));
+    computation_logger.execute("Total rewards XDR * 10'000\n", Operation::Set(rewards_xdr_total));
 
     NodeProviderRewardsComputation {
         rewards_xdr: rewards_xdr_total.to_u64().unwrap(),
