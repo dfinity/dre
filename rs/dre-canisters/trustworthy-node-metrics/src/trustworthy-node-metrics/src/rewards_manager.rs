@@ -292,7 +292,10 @@ fn coumpute_node_provider_rewards(
         }
 
         computation_logger.execute(
-            &format!("Rewards contribution XDR * 10'000 for nodes in region {} with type: {}\n", region, node_type),
+            &format!(
+                "Rewards contribution XDR * 10'000 for nodes in region {} with type: {}\n",
+                region, node_type
+            ),
             Operation::Set(rewards_xdr),
         );
 
