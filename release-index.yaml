@@ -2,7 +2,7 @@ releases:
   - rc_name: rc--2024-10-03_01-30
     versions:
       - name: base
-        version: fa2329782561f1b4a5d27052147023e75727e1fa
+        version: d2657773d007e1b4c0b2dd715c628d24c0d7b5fb
   - rc_name: rc--2024-09-26_01-31
     versions:
       # Qualification pipeline:
