@@ -28,7 +28,7 @@ impl ExecutableCommand for GuestOs {
 
     async fn execute(&self, ctx: crate::ctx::DreContext) -> anyhow::Result<()> {
         let runner = ctx.runner().await?;
-        runner
+        let runner_proposal = runner
             .do_revise_elected_replica_versions(
                 &ic_management_types::Artifact::GuestOs,
                 &self.version,
@@ -37,7 +37,10 @@ impl ExecutableCommand for GuestOs {
                 ctx.forum_post_link().unwrap(), // checked in validate()
                 self.security_fix,
             )
-            .await
+            .await?;
+        let ic_admin = ctx.ic_admin().await?;
+        ic_admin.propose_run(runner_proposal.cmd, runner_proposal.opts).await?;
+        Ok(())
     }
 
     fn validate(&self, args: &crate::commands::Args, cmd: &mut clap::Command) {

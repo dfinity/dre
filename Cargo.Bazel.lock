@@ -1,5 +1,5 @@
 {
-  "checksum": "abee9a1e183890980b7417228d49c17fa7e3379b15e022a305a18ccf1a343194",
+  "checksum": "10db02b7b5a4b3b49a7d3b99844faeee16b64591ebfe03927a7701761903d8ac",
   "crates": {
     "actix-codec 0.5.2": {
       "name": "actix-codec",
@@ -3598,6 +3598,52 @@
         "version": "2.1.0"
       },
       "license": "MIT"
+    },
+    "bit-set 0.5.3": {
+      "name": "bit-set",
+      "version": "0.5.3",
+      "repository": {
+        "Http": {
+          "url": "https://static.crates.io/crates/bit-set/0.5.3/download",
+          "sha256": "0700ddab506f33b20a03b13996eccd309a48e5ff77d0d95926aa0210fb4e95f1"
+        }
+      },
+      "targets": [
+        {
+          "Library": {
+            "crate_name": "bit_set",
+            "crate_root": "src/lib.rs",
+            "srcs": [
+              "**/*.rs"
+            ]
+          }
+        }
+      ],
+      "library_target_name": "bit_set",
+      "common_attrs": {
+        "compile_data_glob": [
+          "**"
+        ],
+        "crate_features": {
+          "common": [
+            "default",
+            "std"
+          ],
+          "selects": {}
+        },
+        "deps": {
+          "common": [
+            {
+              "id": "bit-vec 0.6.3",
+              "target": "bit_vec"
+            }
+          ],
+          "selects": {}
+        },
+        "edition": "2015",
+        "version": "0.5.3"
+      },
+      "license": "MIT/Apache-2.0"
     },
     "bit-vec 0.6.3": {
       "name": "bit-vec",
@@ -10340,6 +10386,10 @@
               "target": "ic_canister_client_sender"
             },
             {
+              "id": "ic-icrc1-test-utils 0.9.0",
+              "target": "ic_icrc1_test_utils"
+            },
+            {
               "id": "ic-nervous-system-clients 0.0.1",
               "target": "ic_nervous_system_clients"
             },
@@ -10430,6 +10480,10 @@
             {
               "id": "reqwest 0.12.7",
               "target": "reqwest"
+            },
+            {
+              "id": "rosetta-core 0.9.0",
+              "target": "rosetta_core"
             },
             {
               "id": "secrecy 0.8.0",
@@ -14099,6 +14153,53 @@
       },
       "license": "MIT"
     },
+    "http-body-to-bytes 0.2.0": {
+      "name": "http-body-to-bytes",
+      "version": "0.2.0",
+      "repository": {
+        "Http": {
+          "url": "https://static.crates.io/crates/http-body-to-bytes/0.2.0/download",
+          "sha256": "17a08236c6f51c2ee95d840f45acf8fa9e339390e00b4ef640857b2f2a534d70"
+        }
+      },
+      "targets": [
+        {
+          "Library": {
+            "crate_name": "http_body_to_bytes",
+            "crate_root": "src/lib.rs",
+            "srcs": [
+              "**/*.rs"
+            ]
+          }
+        }
+      ],
+      "library_target_name": "http_body_to_bytes",
+      "common_attrs": {
+        "compile_data_glob": [
+          "**"
+        ],
+        "deps": {
+          "common": [
+            {
+              "id": "bytes 1.7.1",
+              "target": "bytes"
+            },
+            {
+              "id": "http-body 1.0.1",
+              "target": "http_body"
+            },
+            {
+              "id": "http-body-util 0.1.2",
+              "target": "http_body_util"
+            }
+          ],
+          "selects": {}
+        },
+        "edition": "2021",
+        "version": "0.2.0"
+      },
+      "license": "Apache-2.0 OR MIT"
+    },
     "http-body-util 0.1.2": {
       "name": "http-body-util",
       "version": "0.1.2",
@@ -15241,6 +15342,8 @@
         "crate_features": {
           "common": [
             "default",
+            "experimental_sync_call",
+            "hyper",
             "pem",
             "reqwest"
           ],
@@ -15283,6 +15386,10 @@
             {
               "id": "http-body 1.0.1",
               "target": "http_body"
+            },
+            {
+              "id": "hyper 1.4.1",
+              "target": "hyper"
             },
             {
               "id": "ic-certification 2.6.0",
@@ -15372,12 +15479,32 @@
           "selects": {
             "cfg(not(target_family = \"wasm\"))": [
               {
+                "id": "http-body-to-bytes 0.2.0",
+                "target": "http_body_to_bytes"
+              },
+              {
+                "id": "http-body-util 0.1.2",
+                "target": "http_body_util"
+              },
+              {
+                "id": "hyper-rustls 0.27.2",
+                "target": "hyper_rustls"
+              },
+              {
+                "id": "hyper-util 0.1.7",
+                "target": "hyper_util"
+              },
+              {
                 "id": "rustls-webpki 0.102.6",
                 "target": "webpki"
               },
               {
                 "id": "tokio 1.40.0",
                 "target": "tokio"
+              },
+              {
+                "id": "tower 0.4.13",
+                "target": "tower"
               }
             ]
           }
@@ -17260,6 +17387,84 @@
       },
       "license": null
     },
+    "ic-crypto-internal-basic-sig-ecdsa-secp256k1 0.9.0": {
+      "name": "ic-crypto-internal-basic-sig-ecdsa-secp256k1",
+      "version": "0.9.0",
+      "repository": {
+        "Git": {
+          "remote": "https://github.com/dfinity/ic.git",
+          "commitish": {
+            "Rev": "d4ee25b0865e89d3eaac13a60f0016d5e3296b31"
+          },
+          "strip_prefix": "rs/crypto/internal/crypto_lib/basic_sig/ecdsa_secp256k1"
+        }
+      },
+      "targets": [
+        {
+          "Library": {
+            "crate_name": "ic_crypto_internal_basic_sig_ecdsa_secp256k1",
+            "crate_root": "src/lib.rs",
+            "srcs": [
+              "**/*.rs"
+            ]
+          }
+        }
+      ],
+      "library_target_name": "ic_crypto_internal_basic_sig_ecdsa_secp256k1",
+      "common_attrs": {
+        "compile_data_glob": [
+          "**"
+        ],
+        "deps": {
+          "common": [
+            {
+              "id": "base64 0.13.1",
+              "target": "base64"
+            },
+            {
+              "id": "ic-crypto-internal-basic-sig-der-utils 0.9.0",
+              "target": "ic_crypto_internal_basic_sig_der_utils"
+            },
+            {
+              "id": "ic-crypto-internal-types 0.9.0",
+              "target": "ic_crypto_internal_types"
+            },
+            {
+              "id": "ic-crypto-secp256k1 0.9.0",
+              "target": "ic_crypto_secp256k1"
+            },
+            {
+              "id": "ic-crypto-secrets-containers 0.9.0",
+              "target": "ic_crypto_secrets_containers"
+            },
+            {
+              "id": "ic-types 0.9.0",
+              "target": "ic_types"
+            },
+            {
+              "id": "serde 1.0.210",
+              "target": "serde"
+            },
+            {
+              "id": "serde_bytes 0.11.15",
+              "target": "serde_bytes"
+            },
+            {
+              "id": "simple_asn1 0.6.2",
+              "target": "simple_asn1"
+            },
+            {
+              "id": "zeroize 1.8.1",
+              "target": "zeroize"
+            }
+          ],
+          "selects": {}
+        },
+        "edition": "2021",
+        "version": "0.9.0"
+      },
+      "license": null
+    },
     "ic-crypto-internal-basic-sig-ed25519 0.9.0": {
       "name": "ic-crypto-internal-basic-sig-ed25519",
       "version": "0.9.0",
@@ -18258,6 +18463,52 @@
       },
       "license": null
     },
+    "ic-crypto-test-utils-reproducible-rng 0.9.0": {
+      "name": "ic-crypto-test-utils-reproducible-rng",
+      "version": "0.9.0",
+      "repository": {
+        "Git": {
+          "remote": "https://github.com/dfinity/ic.git",
+          "commitish": {
+            "Rev": "d4ee25b0865e89d3eaac13a60f0016d5e3296b31"
+          },
+          "strip_prefix": "rs/crypto/test_utils/reproducible_rng"
+        }
+      },
+      "targets": [
+        {
+          "Library": {
+            "crate_name": "ic_crypto_test_utils_reproducible_rng",
+            "crate_root": "src/lib.rs",
+            "srcs": [
+              "**/*.rs"
+            ]
+          }
+        }
+      ],
+      "library_target_name": "ic_crypto_test_utils_reproducible_rng",
+      "common_attrs": {
+        "compile_data_glob": [
+          "**"
+        ],
+        "deps": {
+          "common": [
+            {
+              "id": "rand 0.8.5",
+              "target": "rand"
+            },
+            {
+              "id": "rand_chacha 0.3.1",
+              "target": "rand_chacha"
+            }
+          ],
+          "selects": {}
+        },
+        "edition": "2021",
+        "version": "0.9.0"
+      },
+      "license": null
+    },
     "ic-crypto-tls-cert-validation 0.9.0": {
       "name": "ic-crypto-tls-cert-validation",
       "version": "0.9.0",
@@ -19148,6 +19399,124 @@
           },
           "selects": {}
         }
+      },
+      "license": null
+    },
+    "ic-icrc1-test-utils 0.9.0": {
+      "name": "ic-icrc1-test-utils",
+      "version": "0.9.0",
+      "repository": {
+        "Git": {
+          "remote": "https://github.com/dfinity/ic.git",
+          "commitish": {
+            "Rev": "d4ee25b0865e89d3eaac13a60f0016d5e3296b31"
+          },
+          "strip_prefix": "rs/rosetta-api/icrc1/test_utils"
+        }
+      },
+      "targets": [
+        {
+          "Library": {
+            "crate_name": "ic_icrc1_test_utils",
+            "crate_root": "src/lib.rs",
+            "srcs": [
+              "**/*.rs"
+            ]
+          }
+        }
+      ],
+      "library_target_name": "ic_icrc1_test_utils",
+      "common_attrs": {
+        "compile_data_glob": [
+          "**"
+        ],
+        "deps": {
+          "common": [
+            {
+              "id": "candid 0.10.10",
+              "target": "candid"
+            },
+            {
+              "id": "ic-agent 0.37.1",
+              "target": "ic_agent"
+            },
+            {
+              "id": "ic-crypto-ed25519 0.9.0",
+              "target": "ic_crypto_ed25519"
+            },
+            {
+              "id": "ic-crypto-secp256k1 0.9.0",
+              "target": "ic_crypto_secp256k1"
+            },
+            {
+              "id": "ic-crypto-test-utils-reproducible-rng 0.9.0",
+              "target": "ic_crypto_test_utils_reproducible_rng"
+            },
+            {
+              "id": "ic-icrc1 0.9.0",
+              "target": "ic_icrc1"
+            },
+            {
+              "id": "ic-ledger-canister-core 0.9.0",
+              "target": "ic_ledger_canister_core"
+            },
+            {
+              "id": "ic-ledger-core 0.9.0",
+              "target": "ic_ledger_core"
+            },
+            {
+              "id": "ic-ledger-hash-of 0.1.0",
+              "target": "ic_ledger_hash_of"
+            },
+            {
+              "id": "ic-limits 0.9.0",
+              "target": "ic_limits"
+            },
+            {
+              "id": "ic-types 0.9.0",
+              "target": "ic_types"
+            },
+            {
+              "id": "icrc-ledger-types 0.1.6",
+              "target": "icrc_ledger_types"
+            },
+            {
+              "id": "num-traits 0.2.19",
+              "target": "num_traits"
+            },
+            {
+              "id": "proptest 1.5.0",
+              "target": "proptest"
+            },
+            {
+              "id": "rand 0.8.5",
+              "target": "rand"
+            },
+            {
+              "id": "rand_chacha 0.3.1",
+              "target": "rand_chacha"
+            },
+            {
+              "id": "ring 0.17.8",
+              "target": "ring"
+            },
+            {
+              "id": "rosetta-core 0.9.0",
+              "target": "rosetta_core"
+            },
+            {
+              "id": "serde_bytes 0.11.15",
+              "target": "serde_bytes"
+            },
+            {
+              "id": "serde_json 1.0.128",
+              "target": "serde_json"
+            }
+          ],
+          "selects": {}
+        },
+        "edition": "2021",
+        "version": "0.9.0"
       },
       "license": null
     },
@@ -33869,6 +34238,103 @@
       },
       "license": "Apache-2.0"
     },
+    "proptest 1.5.0": {
+      "name": "proptest",
+      "version": "1.5.0",
+      "repository": {
+        "Http": {
+          "url": "https://static.crates.io/crates/proptest/1.5.0/download",
+          "sha256": "b4c2511913b88df1637da85cc8d96ec8e43a3f8bb8ccb71ee1ac240d6f3df58d"
+        }
+      },
+      "targets": [
+        {
+          "Library": {
+            "crate_name": "proptest",
+            "crate_root": "src/lib.rs",
+            "srcs": [
+              "**/*.rs"
+            ]
+          }
+        }
+      ],
+      "library_target_name": "proptest",
+      "common_attrs": {
+        "compile_data_glob": [
+          "**"
+        ],
+        "crate_features": {
+          "common": [
+            "bit-set",
+            "default",
+            "fork",
+            "lazy_static",
+            "regex-syntax",
+            "rusty-fork",
+            "std",
+            "tempfile",
+            "timeout"
+          ],
+          "selects": {}
+        },
+        "deps": {
+          "common": [
+            {
+              "id": "bit-set 0.5.3",
+              "target": "bit_set"
+            },
+            {
+              "id": "bit-vec 0.6.3",
+              "target": "bit_vec"
+            },
+            {
+              "id": "bitflags 2.6.0",
+              "target": "bitflags"
+            },
+            {
+              "id": "lazy_static 1.5.0",
+              "target": "lazy_static"
+            },
+            {
+              "id": "num-traits 0.2.19",
+              "target": "num_traits"
+            },
+            {
+              "id": "rand 0.8.5",
+              "target": "rand"
+            },
+            {
+              "id": "rand_chacha 0.3.1",
+              "target": "rand_chacha"
+            },
+            {
+              "id": "rand_xorshift 0.3.0",
+              "target": "rand_xorshift"
+            },
+            {
+              "id": "regex-syntax 0.8.4",
+              "target": "regex_syntax"
+            },
+            {
+              "id": "rusty-fork 0.3.0",
+              "target": "rusty_fork"
+            },
+            {
+              "id": "tempfile 3.12.0",
+              "target": "tempfile"
+            },
+            {
+              "id": "unarray 0.1.4",
+              "target": "unarray"
+            }
+          ],
+          "selects": {}
+        },
+        "edition": "2018",
+        "version": "1.5.0"
+      },
+      "license": "MIT OR Apache-2.0"
+    },
     "prost 0.12.6": {
       "name": "prost",
       "version": "0.12.6",
@@ -34314,6 +34780,36 @@
         "version": "0.1.4"
       },
       "license": "MIT"
+    },
+    "quick-error 1.2.3": {
+      "name": "quick-error",
+      "version": "1.2.3",
+      "repository": {
+        "Http": {
+          "url": "https://static.crates.io/crates/quick-error/1.2.3/download",
+          "sha256": "a1d01941d82fa2ab50be1e79e6714289dd7cde78eba4c074bc5a4374f650dfe0"
+        }
+      },
+      "targets": [
+        {
+          "Library": {
+            "crate_name": "quick_error",
+            "crate_root": "src/lib.rs",
+            "srcs": [
+              "**/*.rs"
+            ]
+          }
+        }
+      ],
+      "library_target_name": "quick_error",
+      "common_attrs": {
+        "compile_data_glob": [
+          "**"
+        ],
+        "edition": "2015",
+        "version": "1.2.3"
+      },
+      "license": "MIT/Apache-2.0"
     },
     "quick-xml 0.23.1": {
       "name": "quick-xml",
@@ -34860,6 +35356,45 @@
           "selects": {}
         },
         "edition": "2015",
+        "version": "0.3.0"
+      },
+      "license": "MIT OR Apache-2.0"
+    },
+    "rand_xorshift 0.3.0": {
+      "name": "rand_xorshift",
+      "version": "0.3.0",
+      "repository": {
+        "Http": {
+          "url": "https://static.crates.io/crates/rand_xorshift/0.3.0/download",
+          "sha256": "d25bf25ec5ae4a3f1b92f929810509a2f53d7dca2f50b794ff57e3face536c8f"
+        }
+      },
+      "targets": [
+        {
+          "Library": {
+            "crate_name": "rand_xorshift",
+            "crate_root": "src/lib.rs",
+            "srcs": [
+              "**/*.rs"
+            ]
+          }
+        }
+      ],
+      "library_target_name": "rand_xorshift",
+      "common_attrs": {
+        "compile_data_glob": [
+          "**"
+        ],
+        "deps": {
+          "common": [
+            {
+              "id": "rand_core 0.6.4",
+              "target": "rand_core"
+            }
+          ],
+          "selects": {}
+        },
+        "edition": "2018",
         "version": "0.3.0"
       },
       "license": "MIT OR Apache-2.0"
@@ -36180,6 +36715,109 @@
       },
       "license": "MIT OR Apache-2.0"
     },
+    "rosetta-core 0.9.0": {
+      "name": "rosetta-core",
+      "version": "0.9.0",
+      "repository": {
+        "Git": {
+          "remote": "https://github.com/dfinity/ic.git",
+          "commitish": {
+            "Rev": "d4ee25b0865e89d3eaac13a60f0016d5e3296b31"
+          },
+          "strip_prefix": "rs/rosetta-api/rosetta_core"
+        }
+      },
+      "targets": [
+        {
+          "Library": {
+            "crate_name": "rosetta_core",
+            "crate_root": "src/lib.rs",
+            "srcs": [
+              "**/*.rs"
+            ]
+          }
+        }
+      ],
+      "library_target_name": "rosetta_core",
+      "common_attrs": {
+        "compile_data_glob": [
+          "**"
+        ],
+        "deps": {
+          "common": [
+            {
+              "id": "anyhow 1.0.89",
+              "target": "anyhow"
+            },
+            {
+              "id": "candid 0.10.10",
+              "target": "candid"
+            },
+            {
+              "id": "hex 0.4.3",
+              "target": "hex"
+            },
+            {
+              "id": "ic-agent 0.37.1",
+              "target": "ic_agent"
+            },
+            {
+              "id": "ic-crypto-ed25519 0.9.0",
+              "target": "ic_crypto_ed25519"
+            },
+            {
+              "id": "ic-crypto-internal-basic-sig-ecdsa-secp256k1 0.9.0",
+              "target": "ic_crypto_internal_basic_sig_ecdsa_secp256k1",
+              "alias": "ecdsa_secp256k1"
+            },
+            {
+              "id": "ic-crypto-secp256k1 0.9.0",
+              "target": "ic_crypto_secp256k1"
+            },
+            {
+              "id": "ic-types 0.9.0",
+              "target": "ic_types"
+            },
+            {
+              "id": "icp-ledger 0.9.0",
+              "target": "icp_ledger"
+            },
+            {
+              "id": "icrc-ledger-types 0.1.6",
+              "target": "icrc_ledger_types"
+            },
+            {
+              "id": "num-bigint 0.4.6",
+              "target": "num_bigint"
+            },
+            {
+              "id": "serde 1.0.210",
+              "target": "serde"
+            },
+            {
+              "id": "serde_bytes 0.11.15",
+              "target": "serde_bytes"
+            },
+            {
+              "id": "serde_cbor 0.11.2",
+              "target": "serde_cbor"
+            },
+            {
+              "id": "serde_json 1.0.128",
+              "target": "serde_json"
+            },
+            {
+              "id": "serde_with 1.14.0",
+              "target": "serde_with"
+            }
+          ],
+          "selects": {}
+        },
+        "edition": "2021",
+        "version": "0.9.0"
+      },
+      "license": null
+    },
     "rust_decimal 1.36.0": {
       "name": "rust_decimal",
       "version": "1.36.0",
@@ -37140,6 +37778,64 @@
         ]
       },
       "license": "MIT OR Apache-2.0"
+    },
+    "rusty-fork 0.3.0": {
+      "name": "rusty-fork",
+      "version": "0.3.0",
+      "repository": {
+        "Http": {
+          "url": "https://static.crates.io/crates/rusty-fork/0.3.0/download",
+          "sha256": "cb3dcc6e454c328bb824492db107ab7c0ae8fcffe4ad210136ef014458c1bc4f"
+        }
+      },
+      "targets": [
+        {
+          "Library": {
+            "crate_name": "rusty_fork",
+            "crate_root": "src/lib.rs",
+            "srcs": [
+              "**/*.rs"
+            ]
+          }
+        }
+      ],
+      "library_target_name": "rusty_fork",
+      "common_attrs": {
+        "compile_data_glob": [
+          "**"
+        ],
+        "crate_features": {
+          "common": [
+            "timeout",
+            "wait-timeout"
+          ],
+          "selects": {}
+        },
+        "deps": {
+          "common": [
+            {
+              "id": "fnv 1.0.7",
+              "target": "fnv"
+            },
+            {
+              "id": "quick-error 1.2.3",
+              "target": "quick_error"
+            },
+            {
+              "id": "tempfile 3.12.0",
+              "target": "tempfile"
+            },
+            {
+              "id": "wait-timeout 0.2.0",
+              "target": "wait_timeout"
+            }
+          ],
+          "selects": {}
+        },
+        "edition": "2018",
+        "version": "0.3.0"
+      },
+      "license": "MIT/Apache-2.0"
     },
     "ryu 1.0.18": {
       "name": "ryu",
@@ -43469,6 +44165,36 @@
         },
         "edition": "2021",
         "version": "0.1.6"
+      },
+      "license": "MIT OR Apache-2.0"
+    },
+    "unarray 0.1.4": {
+      "name": "unarray",
+      "version": "0.1.4",
+      "repository": {
+        "Http": {
+          "url": "https://static.crates.io/crates/unarray/0.1.4/download",
+          "sha256": "eaea85b334db583fe3274d12b4cd1880032beab409c0d774be044d4480ab9a94"
+        }
+      },
+      "targets": [
+        {
+          "Library": {
+            "crate_name": "unarray",
+            "crate_root": "src/lib.rs",
+            "srcs": [
+              "**/*.rs"
+            ]
+          }
+        }
+      ],
+      "library_target_name": "unarray",
+      "common_attrs": {
+        "compile_data_glob": [
+          "**"
+        ],
+        "edition": "2018",
+        "version": "0.1.4"
       },
       "license": "MIT OR Apache-2.0"
     },

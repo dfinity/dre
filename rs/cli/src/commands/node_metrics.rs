@@ -130,7 +130,7 @@ impl ExecutableCommand for NodeMetrics {
 
     async fn execute(&self, ctx: crate::ctx::DreContext) -> anyhow::Result<()> {
         let lock = Mutex::new(());
-        let canister_agent: ic_canisters::IcAgentCanisterClient = ctx.create_ic_agent_canister_client(Some(lock))?;
+        let canister_agent: ic_canisters::IcAgentCanisterClient = ctx.create_ic_agent_canister_client(Some(lock)).await?;
         info!("Started action...");
 
         let metrics_by_subnet = if self.trustworthy {

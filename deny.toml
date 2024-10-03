@@ -744,6 +744,26 @@ crate = "tree-deserializer"
 expression = "LicenseRef-IC-1.0"
 license-files = [{ path = "../../LICENSE", hash = 0xbd0eed23 }]
 
+[[licenses.clarify]]
+crate = "rosetta-core"
+expression = "LicenseRef-IC-1.0"
+license-files = [{ path = "../../../LICENSE", hash = 0xbd0eed23 }]
+
+[[licenses.clarify]]
+crate = "ic-icrc1-test-utils"
+expression = "LicenseRef-IC-1.0"
+license-files = [{ path = "../../../../LICENSE", hash = 0xbd0eed23 }]
+
+[[licenses.clarify]]
+crate = "ic-crypto-test-utils-reproducible-rng"
+expression = "LicenseRef-IC-1.0"
+license-files = [{ path = "../../../../LICENSE", hash = 0xbd0eed23 }]
+
+[[licenses.clarify]]
+crate = "ic-crypto-internal-basic-sig-ecdsa-secp256k1"
+expression = "LicenseRef-IC-1.0"
+license-files = [{ path = "../../../../../../LICENSE", hash = 0xbd0eed23 }]
+
 
 [licenses.private]
 # If true, ignores workspace crates that aren't published, or are only

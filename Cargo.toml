@@ -129,6 +129,8 @@ ic-nervous-system-root = { git = "https://github.com/dfinity/ic.git", rev = "d4e
 ic-nervous-system-clients = { git = "https://github.com/dfinity/ic.git", rev = "d4ee25b0865e89d3eaac13a60f0016d5e3296b31" }
 ic-sns-wasm = { git = "https://github.com/dfinity/ic.git", rev = "d4ee25b0865e89d3eaac13a60f0016d5e3296b31" }
 cycles-minting-canister = { git = "https://github.com/dfinity/ic.git", rev = "d4ee25b0865e89d3eaac13a60f0016d5e3296b31" }
+ic-icrc1-test-utils = { git = "https://github.com/dfinity/ic.git", rev = "d4ee25b0865e89d3eaac13a60f0016d5e3296b31" }
+rosetta-core = { git = "https://github.com/dfinity/ic.git", rev = "d4ee25b0865e89d3eaac13a60f0016d5e3296b31" }
 ic-transport-types = "0.37.1"
 ic-utils = "0.37.0"
 itertools = "0.13.0"

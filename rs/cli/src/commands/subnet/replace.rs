@@ -67,7 +67,11 @@ impl ExecutableCommand for Replace {
 
         let runner = ctx.runner().await?;
 
-        runner.propose_subnet_change(subnet_change_response, ctx.forum_post_link()).await
+        if let Some(runner_proposal) = runner.propose_subnet_change(subnet_change_response, ctx.forum_post_link()).await? {
+            let ic_admin = ctx.ic_admin().await?;
+            ic_admin.propose_run(runner_proposal.cmd, runner_proposal.opts).await?;
+        }
+        Ok(())
     }
 
     fn validate(&self, _args: &crate::commands::Args, cmd: &mut clap::Command) {

@@ -87,9 +87,9 @@ impl ExecutableCommand for RolloutFromNodeGroup {
             .hostos_rollout_nodes(update_group, &self.version, &self.only, &self.exclude)
             .await?
         {
-            return runner
-                .hostos_rollout(nodes_to_update, &self.version, Some(summary), ctx.forum_post_link())
-                .await;
+            let runner_proposal = runner.hostos_rollout(nodes_to_update, &self.version, Some(summary), ctx.forum_post_link())?;
+            let ic_admin = ctx.ic_admin().await?;
+            ic_admin.propose_run(runner_proposal.cmd, runner_proposal.opts).await?;
         }
 
         Ok(())

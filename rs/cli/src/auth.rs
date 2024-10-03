@@ -14,6 +14,7 @@ use cryptoki::{
 use dialoguer::{console::Term, theme::ColorfulTheme, Password, Select};
 use ic_canisters::governance::GovernanceCanisterWrapper;
 use ic_canisters::IcAgentCanisterClient;
+use ic_icrc1_test_utils::KeyPairGenerator;
 use ic_management_types::Network;
 use keyring::{Entry, Error};
 use log::{debug, info, warn};
@@ -87,8 +88,31 @@ impl Neuron {
         Self::from_opts_and_req_inner(auth_opts, requirement, network, neuron_id).await
     }
 
-    pub async fn dry_run_fake_neuron(network: &Network) -> anyhow::Result<Self> {
-        Self::from_opts_and_req(AuthOpts::none(), AuthRequirement::Anonymous, network, None).await
+    fn ensure_fake_pem(name: &str) -> anyhow::Result<PathBuf> {
+        let home_dir = dirs::home_dir().ok_or(anyhow::anyhow!("Home dir not set"))?;
+        let path = home_dir.join(format!(".config/dfx/identity/{}/identity.pem", name));
+
+        let parent = path.parent().ok_or(anyhow::anyhow!("Expected parent to exist"))?;
+        if !parent.exists() {
+            std::fs::create_dir_all(parent)?
+        }
+
+        let key_pair = rosetta_core::models::Ed25519KeyPair::generate(42);
+
+        if !path.exists() {
+            std::fs::write(&path, key_pair.to_pem())?;
+        }
+        Ok(path)
+    }
+
+    pub fn dry_run_fake_neuron() -> anyhow::Result<Self> {
+        Ok(Self {
+            auth: Auth::Keyfile {
+                path: Self::ensure_fake_pem("test_neuron_1")?,
+            },
+            include_proposer: true,
+            neuron_id: 123,
+        })
     }
 
     async fn from_opts_and_req_inner(

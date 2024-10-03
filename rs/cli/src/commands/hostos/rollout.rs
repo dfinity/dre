@@ -21,9 +21,10 @@ impl ExecutableCommand for Rollout {
 
     async fn execute(&self, ctx: crate::ctx::DreContext) -> anyhow::Result<()> {
         let runner = ctx.runner().await?;
-        runner
-            .hostos_rollout(self.nodes.clone(), &self.version, None, ctx.forum_post_link())
-            .await
+        let runner_proposal = runner.hostos_rollout(self.nodes.clone(), &self.version, None, ctx.forum_post_link())?;
+        let ic_admin = ctx.ic_admin().await?;
+        ic_admin.propose_run(runner_proposal.cmd, runner_proposal.opts).await?;
+        Ok(())
     }
 
     fn validate(&self, _args: &crate::commands::Args, _cmd: &mut clap::Command) {}

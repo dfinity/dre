@@ -56,8 +56,8 @@ async fn should_skip_update_same_version_nns_not_provided() {
     );
 
     let cmd = UpdateUnassignedNodes { nns_subnet_id: None };
-
-    assert!(cmd.execute(ctx).await.is_ok())
+    let response = cmd.execute(ctx).await;
+    assert!(response.is_ok(), "Respose was: {:?}", response)
 }
 
 #[tokio::test]
