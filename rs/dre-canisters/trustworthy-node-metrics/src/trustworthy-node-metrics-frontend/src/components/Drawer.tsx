@@ -32,7 +32,9 @@ const Drawer: React.FC<DrawerProps> = ({ providers, drawerWidth, temporary, draw
     toggleOpen: React.Dispatch<React.SetStateAction<boolean>>,
     basePath: string
   ) => {
-    const itemList = items ? Array.from(items) : [];
+    const itemList = items 
+    ? Array.from(items).sort((a, b) => a[1].localeCompare(b[1])) 
+    : [];
 
     return (
       <>
