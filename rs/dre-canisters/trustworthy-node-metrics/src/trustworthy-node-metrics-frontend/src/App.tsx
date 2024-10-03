@@ -25,7 +25,7 @@ const darkTheme = createTheme({
 
 const App: React.FC = () => {
   const [infoBanner, setInfoBanner] = useState<boolean | null>(true);
-  const [providers, setProviders] = useState<Set<string>>(new Set());
+  const [providers, setProviders] = useState<Map<string, string>>(new Map());
   const [nodeMetadata, setNodeMetadata] = useState<NodeMetadata[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -38,7 +38,12 @@ const App: React.FC = () => {
       try {
         setIsLoading(true);
         const nodeMetadata = await trustworthy_node_metrics.nodes_metadata();
-        const providers = new Set(nodeMetadata.flatMap(metadata => metadata.node_metadata_stored.node_provider_id.toText()));
+        const providers = new Map<string, string>(
+          nodeMetadata.map(metadata => [
+            metadata.node_metadata_stored.node_provider_id.toText(),
+            metadata.node_metadata_stored.node_provider_name[0] ? metadata.node_metadata_stored.node_provider_name[0] : ""
+          ])
+        );
 
         setProviders(providers);
         setNodeMetadata(nodeMetadata);
