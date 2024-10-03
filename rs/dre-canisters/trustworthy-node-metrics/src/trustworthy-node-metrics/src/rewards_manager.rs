@@ -165,11 +165,6 @@ fn get_node_rate(region: &String, node_type: &String) -> NodeRewardRate {
     }
 }
 
-fn get_region_node_type_key(region: &str, node_type: &str) -> String {
-    let region_key = region.splitn(3, ',').take(2).collect::<Vec<&str>>().join(":");
-    format!("{}:{}", region_key, if node_type.starts_with("type3") { "type3" } else { node_type })
-}
-
 fn coumpute_node_provider_rewards(
     nodes_multiplier: &[NodeRewardsMultiplier],
     rewardable_nodes: collections::BTreeMap<RegionNodeTypeCategory, u32>,
@@ -284,7 +279,7 @@ fn coumpute_node_provider_rewards(
             if node_type.starts_with("type3") {
                 let region_key = region.splitn(3, ',').take(2).collect::<Vec<&str>>().join(":");
                 let xdr_permyriad_avg_based = type3_rewards.get(&region_key).expect("Type3 rewards should have been filled already");
-                
+
                 rewards_xdr_no_reduction_total += *xdr_permyriad_avg_based;
                 rewards_xdr += *xdr_permyriad_avg_based * *multiplier;
             } else {
