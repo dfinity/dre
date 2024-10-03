@@ -191,6 +191,7 @@ fn coumpute_node_provider_rewards(
             let regional_rewards = Decimal::from(rate.xdr_permyriad_per_node_per_month);
             let coefficients = vec![regional_coeff; node_count as usize];
             let rewards = vec![regional_rewards; node_count as usize];
+            let region_key = region.splitn(3, ',').take(2).collect::<Vec<&str>>().join(":");
 
             computation_logger.execute(
                 &format!(
@@ -201,7 +202,7 @@ fn coumpute_node_provider_rewards(
             );
 
             type3_coefficients_rewards
-                .entry(region)
+                .entry(region_key)
                 .and_modify(|(entry_coefficients, entry_rewards)| {
                     entry_coefficients.extend(&coefficients);
                     entry_rewards.extend(&rewards);
@@ -246,7 +247,7 @@ fn coumpute_node_provider_rewards(
     // 2 - For assigned nodes map to region and node_type the reward multipliers
     for node in nodes_multiplier {
         let metadata = stable_memory::get_node_metadata(&node.node_id).expect("Node should have one node provider");
-        let key = get_region_node_type_key(&metadata.region, &metadata.node_type);
+        let key = format!("{}:{}", metadata.region, metadata.node_type);
 
         let rewards_multiplier = Decimal::from_f64(node.rewards_multiplier.rewards_multiplier).unwrap();
 
@@ -264,10 +265,11 @@ fn coumpute_node_provider_rewards(
     // 3 - Now compute total rewards with reductions
 
     for ((region, node_type), node_count) in rewardable_nodes {
-        // Fetch the key used by all node_types to get the multiplier
-        let key = get_region_node_type_key(&region, &node_type);
-        let rewards_multipliers = multipliers_group.entry(key).or_default();
         let mut rewards_xdr = dec!(0);
+
+        // Fetch the key used by all node_types to get the multiplier
+        let key = format!("{}:{}", region, node_type);
+        let rewards_multipliers = multipliers_group.entry(key).or_default();
         rewards_multipliers.resize(node_count as usize, dec!(1));
 
         computation_logger.execute(
@@ -280,7 +282,9 @@ fn coumpute_node_provider_rewards(
 
         for multiplier in rewards_multipliers {
             if node_type.starts_with("type3") {
-                let xdr_permyriad_avg_based = type3_rewards.get(&region).expect("Type3 rewards should have been filled already");
+                let region_key = region.splitn(3, ',').take(2).collect::<Vec<&str>>().join(":");
+                let xdr_permyriad_avg_based = type3_rewards.get(&region_key).expect("Type3 rewards should have been filled already");
+                
                 rewards_xdr_no_reduction_total += *xdr_permyriad_avg_based;
                 rewards_xdr += *xdr_permyriad_avg_based * *multiplier;
             } else {

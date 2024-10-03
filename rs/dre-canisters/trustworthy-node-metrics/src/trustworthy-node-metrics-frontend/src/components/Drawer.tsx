@@ -33,7 +33,7 @@ const Drawer: React.FC<DrawerProps> = ({ providers, drawerWidth, temporary, draw
     basePath: string
   ) => {
     const itemList = items 
-    ? Array.from(items).sort((a, b) => a[1].localeCompare(b[1])) 
+    ? Array.from(items).sort((a, b) => a[0].localeCompare(b[0])) 
     : [];
 
     return (
