@@ -3,7 +3,7 @@ use crate::subnets::unhealthy_with_nodes;
 use crate::SubnetChangeResponse;
 use actix_web::http::StatusCode;
 use actix_web::{HttpResponse, ResponseError};
-use ahash::{AHashMap, AHashSet, HashSet};
+use ahash::{AHashMap, AHashSet, HashMap, HashSet};
 use anyhow::anyhow;
 use futures::future::BoxFuture;
 use ic_base_types::PrincipalId;
@@ -66,6 +66,40 @@ impl Node {
                 .values()
                 .any(|v| *v.to_lowercase() == *value.to_lowercase())
     }
+
+    pub fn is_country_from_eu(country: &str) -> bool {
+        // (As of 2024) the EU countries are not properly marked in the registry, so we check membership separately.
+        let eu_countries: HashMap<&str, &str> = HashMap::from_iter([
+            ("AT", "Austria"),
+            ("BE", "Belgium"),
+            ("BG", "Bulgaria"),
+            ("CY", "Cyprus"),
+            ("CZ", "Czechia"),
+            ("DE", "Germany"),
+            ("DK", "Denmark"),
+            ("EE", "Estonia"),
+            ("ES", "Spain"),
+            ("FI", "Finland"),
+            ("FR", "France"),
+            ("GR", "Greece"),
+            ("HR", "Croatia"),
+            ("HU", "Hungary"),
+            ("IE", "Ireland"),
+            ("IT", "Italy"),
+            ("LT", "Lithuania"),
+            ("LU", "Luxembourg"),
+            ("LV", "Latvia"),
+            ("MT", "Malta"),
+            ("NL", "Netherlands"),
+            ("PL", "Poland"),
+            ("PT", "Portugal"),
+            ("RO", "Romania"),
+            ("SE", "Sweden"),
+            ("SI", "Slovenia"),
+            ("SK", "Slovakia"),
+        ]);
+        eu_countries.get(country).is_some()
+    }
 }
 
 impl Hash for Node {
@@ -94,40 +128,6 @@ impl From<&ic_management_types::Node> for Node {
             .as_ref()
             .map(|d| d.area.clone())
             .unwrap_or_else(|| "unknown".to_string());
-        // // Work around the current (as of 2024) registry configuration in which the EU countries are not properly marked.
-        // let eu_countries: HashMap<&str, &str> = HashMap::from_iter([
-        //     ("AT", "Austria"),
-        //     ("BE", "Belgium"),
-        //     ("BG", "Bulgaria"),
-        //     ("CY", "Cyprus"),
-        //     ("CZ", "Czechia"),
-        //     ("DE", "Germany"),
-        //     ("DK", "Denmark"),
-        //     ("EE", "Estonia"),
-        //     ("ES", "Spain"),
-        //     ("FI", "Finland"),
-        //     ("FR", "France"),
-        //     ("GR", "Greece"),
-        //     ("HR", "Croatia"),
-        //     ("HU", "Hungary"),
-        //     ("IE", "Ireland"),
-        //     ("IT", "Italy"),
-        //     ("LT", "Lithuania"),
-        //     ("LU", "Luxembourg"),
-        //     ("LV", "Latvia"),
-        //     ("MT", "Malta"),
-        //     ("NL", "Netherlands"),
-        //     ("PL", "Poland"),
-        //     ("PT", "Portugal"),
-        //     ("RO", "Romania"),
-        //     ("SE", "Sweden"),
-        //     ("SI", "Slovenia"),
-        //     ("SK", "Slovakia"),
-        // ]);
-        // let (country, area) = match eu_countries.get(&country.as_str()) {
-        //     Some(country) => ("EU".to_string(), country.to_string()),
-        //     None => (country, area),
-        // };
 
         Self {
             id: n.principal,
@@ -381,7 +381,7 @@ impl DecentralizedSubnet {
         };
         match nakamoto_scores.feature_value_counts_max(&NodeFeature::Country) {
             Some((name, value)) => {
-                if is_european_subnet && name == "EU" {
+                if is_european_subnet && !Node::is_country_from_eu(name.as_str()) {
                     // European subnet is expected to be controlled by European countries
                 } else if value > max_nodes_per_country {
                     let penalty = (value - max_nodes_per_country) * 10;
@@ -406,8 +406,7 @@ impl DecentralizedSubnet {
             let non_european_nodes_count = country_counts
                 .iter()
                 .filter_map(|(country, count)| {
-                    println!("Country: {} Count: {}", country, count);
-                    if country.as_str() == "EU" || country.as_str() == "CH" {
+                    if Node::is_country_from_eu(country.as_str()) || country.as_str() == "CH" {
                         None
                     } else {
                         Some(*count)
