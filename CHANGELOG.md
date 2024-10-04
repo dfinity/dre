@@ -1,6 +1,41 @@
 # dre Changelog
 
 <!-- insertion marker -->
+## [0.5.6](https://github.com/dfinity/dre/releases/tag/0.5.6) - 2024-10-04
+
+<small>[Compare with first commit](https://github.com/dfinity/dre/compare/e410b47d36c46bd6ec8398184777ee2fa40bb4f9...0.5.6)</small>
+
+### Features
+
+- lazy auth (#977) ([c5acf0d](https://github.com/dfinity/dre/commit/c5acf0df757ec3437e29384e34691466be241a40) by Nikola Milosavljevic).
+- cordon features (#966) ([565dfd7](https://github.com/dfinity/dre/commit/565dfd723202e819d3ced23ee1f3ce57b189cf80) by Nikola Milosavljevic).
+- Add support for forum post links for version elect proposals (#942) ([fb3e145](https://github.com/dfinity/dre/commit/fb3e145dd9d05af7fc37dcd202658d0bfd64a65b) by Saša Tomić).
+- Improve dre registry a bit more (#961) ([480ac78](https://github.com/dfinity/dre/commit/480ac7844224da83b8d0a808df12a7fabf995795) by Saša Tomić).
+- filtering of registry (#959) ([7db1938](https://github.com/dfinity/dre/commit/7db19387dffb176d68cd02ee52adc118b2163377) by Nikola Milosavljevic).
+- Only replace additional nodes if this improves business rules (#957) ([b44c7fd](https://github.com/dfinity/dre/commit/b44c7fd1b09c7f62fca8ddd04ebd928194ac9b1e) by Saša Tomić).
+- Prompt to add a forum post link to a proposal, if it's missing (#948) ([9a0cbe2](https://github.com/dfinity/dre/commit/9a0cbe23193439a81414811bac5a5c0f8a5ebbc2) by Saša Tomić).
+- Add support for forum post links for version elect proposals ([f740d4a](https://github.com/dfinity/dre/commit/f740d4ad25d41c6a865c65cc45eb3b8d4f8406d1) by Saša Tomić).
+- Provide an estimate of node types in the `dre registry` (#927) ([2f2a6b8](https://github.com/dfinity/dre/commit/2f2a6b8b7c0729babb4a211b6704a0bd450e2b78) by Saša Tomić).
+- adding option to start with just staging  (#931) ([4baf7d7](https://github.com/dfinity/dre/commit/4baf7d7a4107fdc43862a846a0ceabf4e3fb7180) by Nikola Milosavljevic).
+- Improve the summary of the subnet resize NNS proposals (#924) ([52604c4](https://github.com/dfinity/dre/commit/52604c45f63537d214b1dd140648627ceef26ad9) by Saša Tomić).
+- auto-retry proposal placement (#913) ([a8f486e](https://github.com/dfinity/dre/commit/a8f486e959fe69cbe1cc30c5dbe885e2fa7ff3b3) by Luka Skugor).
+- Use IndexMap instead of BTreeMap where possible, to keep the ordering (#904) ([48da0a6](https://github.com/dfinity/dre/commit/48da0a6b4775d034e4204ebfccbb68095c716fec) by Saša Tomić).
+- adding softhsm2 to docker runner (#903) ([8194404](https://github.com/dfinity/dre/commit/81944049d9c85d2365f83fbcafc4e2baddd663c5) by Nikola Milosavljevic).
+
+### Bug Fixes
+
+- Do not crash the backend if some git revisions cannot be found (#932) ([750186b](https://github.com/dfinity/dre/commit/750186b86a042c59ef6d0686f7d8cdd5af76b963) by Saša Tomić).
+- Allow manual qualifications ([dfee9b0](https://github.com/dfinity/dre/commit/dfee9b0530f5eaa75c645526e2ff18384f80186d) by Saša Tomić).
+- dry run shouldn't fail if no neuron is detected (#925) ([4a2706e](https://github.com/dfinity/dre/commit/4a2706e9d8968b32623945626ae5bdd86cd903d3) by Nikola Milosavljevic).
+- Replace the gitlab-ci/ to ci/ references for the IC repo (#921) ([e485266](https://github.com/dfinity/dre/commit/e485266865172b26023e213d55be82e1dcec4eca) by Saša Tomić).
+- Don't exclude canister_state files (#885) ([ff656c2](https://github.com/dfinity/dre/commit/ff656c289a1bfbb66167888364a5b1f1b1ed14bf) by Luka Skugor).
+- adding opensc and chown on dirs (#914) ([f479140](https://github.com/dfinity/dre/commit/f47914030bbdb5c3d542aa876ba8a11a6b183bff) by Nikola Milosavljevic).
+
+### Code Refactoring
+
+- renaming to `no_sync` to `offline` for clarity (#943) ([739cdbf](https://github.com/dfinity/dre/commit/739cdbf8ae2f0f09852e7309a30ef615c8301516) by Nikola Milosavljevic).
+- `IcAdminRequirement` -> `AuthRequirement` (#895) ([4c857b6](https://github.com/dfinity/dre/commit/4c857b6e6a0e82226f0a91d69735afb8c97cfb8f) by Nikola Milosavljevic).
+
 ## [0.5.5](https://github.com/dfinity/dre/releases/tag/0.5.5) - 2024-09-09
 
 <small>[Compare with first commit](https://github.com/dfinity/dre/compare/d3c9efa02d88bab5454e795c50acb6d1575c5ecf...0.5.5)</small>
