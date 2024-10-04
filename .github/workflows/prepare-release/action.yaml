@@ -12,6 +12,7 @@ runs:
     - name: "🔨 Build binaries for other targets"
       shell: bash
       run: |
+        rustup target add x86_64-apple-darwin
         cargo drecross
     - name: "⚒️ Extract binaries from bazel, so they can be pushed as GitHub artifacts in the next steps"
       shell: bash
