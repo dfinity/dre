@@ -2,20 +2,17 @@ use std::{
     cell::RefCell,
     rc::Rc,
     sync::{Arc, Mutex},
-    time::Duration,
 };
 
 use ic_canisters::{governance::governance_canister_version, IcAgentCanisterClient};
 use ic_management_backend::{
     health::{self, HealthStatusQuerier},
     lazy_git::LazyGit,
-    lazy_registry::{LazyRegistry, LazyRegistryImpl},
+    lazy_registry::LazyRegistry,
     proposal::{ProposalAgent, ProposalAgentImpl},
-    registry::{local_registry_path, sync_local_store},
 };
 use ic_management_types::Network;
-use ic_registry_local_registry::LocalRegistry;
-use log::{debug, info, warn};
+use log::{debug, warn};
 use url::Url;
 
 use crate::{
@@ -25,6 +22,7 @@ use crate::{
     cordoned_feature_fetcher::{CordonedFeatureFetcher, CordonedFeatureFetcherImpl},
     ic_admin::{download_ic_admin, should_update_ic_admin, IcAdmin, IcAdminImpl, FALLBACK_IC_ADMIN_VERSION},
     runner::Runner,
+    store::Store,
     subnet_manager::SubnetManager,
 };
 
@@ -44,7 +42,6 @@ pub struct DreContext {
     ic_repo: RefCell<Option<Arc<dyn LazyGit>>>,
     proposal_agent: Arc<dyn ProposalAgent>,
     verbose_runner: bool,
-    offline: bool,
     forum_post_link: Option<String>,
     dry_run: bool,
     artifact_downloader: Arc<dyn ArtifactDownloader>,
@@ -54,6 +51,7 @@ pub struct DreContext {
     neuron_opts: NeuronOpts,
     cordoned_features_fetcher: Arc<dyn CordonedFeatureFetcher>,
     health_client: Arc<dyn HealthStatusQuerier>,
+    store: Store,
 }
 
 #[allow(clippy::too_many_arguments)]
@@ -87,7 +85,6 @@ impl DreContext {
             ic_admin: RefCell::new(None),
             runner: RefCell::new(None),
             verbose_runner: verbose,
-            offline,
             forum_post_link: forum_post_link.clone(),
             ic_repo: RefCell::new(None),
             dry_run,
@@ -102,6 +99,7 @@ impl DreContext {
             },
             cordoned_features_fetcher,
             health_client,
+            store: Store::new(offline)?,
         })
     }
 
@@ -130,21 +128,7 @@ impl DreContext {
         if let Some(reg) = self.registry.borrow().as_ref() {
             return reg.clone();
         }
-        let network = self.network();
-
-        if !self.offline {
-            sync_local_store(network).await.expect("Should be able to sync registry");
-        }
-        let local_path = local_registry_path(network);
-        info!("Using local registry path for network {}: {}", network.name, local_path.display());
-        let local_registry = LocalRegistry::new(local_path, Duration::from_millis(1000)).expect("Failed to create local registry");
-
-        let registry = Arc::new(LazyRegistryImpl::new(
-            local_registry,
-            network.clone(),
-            self.offline,
-            self.proposals_agent(),
-        ));
+        let registry = self.store.registry(self.network(), self.proposals_agent()).await.unwrap();
         *self.registry.borrow_mut() = Some(registry.clone());
         registry
     }
@@ -326,7 +310,6 @@ pub mod tests {
             ic_repo: RefCell::new(Some(git)),
             proposal_agent,
             verbose_runner: true,
-            offline: false,
             forum_post_link: "https://forum.dfinity.org/t/123".to_string().into(),
             dry_run: true,
             artifact_downloader,
@@ -352,6 +335,7 @@ pub mod tests {
             },
             cordoned_features_fetcher,
             health_client,
+            store: Store::new(false),
         }
     }
 }

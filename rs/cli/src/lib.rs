@@ -9,4 +9,5 @@ pub mod ic_admin;
 mod operations;
 mod qualification;
 mod runner;
+mod store;
 mod subnet_manager;

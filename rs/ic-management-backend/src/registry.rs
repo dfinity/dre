@@ -964,9 +964,12 @@ pub async fn nns_public_key(registry_canister: &RegistryCanister) -> anyhow::Res
     )
 }
 
-/// Sync all versions of the registry, up to the latest one.
 pub async fn sync_local_store(target_network: &Network) -> anyhow::Result<()> {
-    let local_registry_path = local_registry_path(target_network);
+    sync_local_store_with_path(target_network, &local_registry_path(target_network)).await
+}
+
+/// Sync all versions of the registry, up to the latest one.
+pub async fn sync_local_store_with_path(target_network: &Network, local_registry_path: &PathBuf) -> anyhow::Result<()> {
     let local_store = Arc::new(LocalStoreImpl::new(local_registry_path.clone()));
     let nns_urls = target_network.get_nns_urls().clone();
     let agent = IcAgentCanisterClient::from_anonymous(nns_urls.first().unwrap().clone()).unwrap();
