@@ -98,7 +98,7 @@ impl Node {
             ("SI", "Slovenia"),
             ("SK", "Slovakia"),
         ]);
-        eu_countries.get(country).is_some()
+        eu_countries.contains_key(country)
     }
 }
 
