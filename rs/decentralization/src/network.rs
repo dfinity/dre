@@ -3,7 +3,7 @@ use crate::subnets::unhealthy_with_nodes;
 use crate::SubnetChangeResponse;
 use actix_web::http::StatusCode;
 use actix_web::{HttpResponse, ResponseError};
-use ahash::{AHashMap, AHashSet, HashSet};
+use ahash::{AHashMap, AHashSet, HashMap, HashSet};
 use anyhow::anyhow;
 use futures::future::BoxFuture;
 use ic_base_types::PrincipalId;
@@ -14,7 +14,6 @@ use log::{debug, info, warn};
 use rand::{seq::SliceRandom, SeedableRng};
 use serde::{Deserialize, Serialize};
 use std::cmp::Ordering;
-use std::collections::HashMap;
 use std::fmt::{Debug, Display, Formatter};
 use std::hash::Hash;
 
@@ -67,23 +66,9 @@ impl Node {
                 .values()
                 .any(|v| *v.to_lowercase() == *value.to_lowercase())
     }
-}
 
-impl Hash for Node {
-    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
-        self.id.hash(state);
-    }
-}
-
-impl PartialEq for Node {
-    fn eq(&self, other: &Self) -> bool {
-        self.id == other.id
-    }
-}
-
-impl From<&ic_management_types::Node> for Node {
-    fn from(n: &ic_management_types::Node) -> Self {
-        // Work around the current (as of 2024) registry configuration in which the EU countries are not properly marked.
+    pub fn is_country_from_eu(country: &str) -> bool {
+        // (As of 2024) the EU countries are not properly marked in the registry, so we check membership separately.
         let eu_countries: HashMap<&str, &str> = HashMap::from_iter([
             ("AT", "Austria"),
             ("BE", "Belgium"),
@@ -113,6 +98,24 @@ impl From<&ic_management_types::Node> for Node {
             ("SI", "Slovenia"),
             ("SK", "Slovakia"),
         ]);
+        eu_countries.contains_key(country)
+    }
+}
+
+impl Hash for Node {
+    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+        self.id.hash(state);
+    }
+}
+
+impl PartialEq for Node {
+    fn eq(&self, other: &Self) -> bool {
+        self.id == other.id
+    }
+}
+
+impl From<&ic_management_types::Node> for Node {
+    fn from(n: &ic_management_types::Node) -> Self {
         let country = n
             .operator
             .datacenter
@@ -125,10 +128,6 @@ impl From<&ic_management_types::Node> for Node {
             .as_ref()
             .map(|d| d.area.clone())
             .unwrap_or_else(|| "unknown".to_string());
-        let (country, area) = match eu_countries.get(&country.as_str()) {
-            Some(country) => ("EU".to_string(), country.to_string()),
-            None => (country, area),
-        };
 
         Self {
             id: n.principal,
@@ -382,7 +381,7 @@ impl DecentralizedSubnet {
         };
         match nakamoto_scores.feature_value_counts_max(&NodeFeature::Country) {
             Some((name, value)) => {
-                if is_european_subnet && name == "EU" {
+                if is_european_subnet && !Node::is_country_from_eu(name.as_str()) {
                     // European subnet is expected to be controlled by European countries
                 } else if value > max_nodes_per_country {
                     let penalty = (value - max_nodes_per_country) * 10;
@@ -407,8 +406,7 @@ impl DecentralizedSubnet {
             let non_european_nodes_count = country_counts
                 .iter()
                 .filter_map(|(country, count)| {
-                    println!("Country: {} Count: {}", country, count);
-                    if country.as_str() == "EU" || country.as_str() == "CH" {
+                    if Node::is_country_from_eu(country.as_str()) || country.as_str() == "CH" {
                         None
                     } else {
                         Some(*count)
