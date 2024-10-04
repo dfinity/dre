@@ -13,7 +13,7 @@ RUN apt-get update && \
     xz-utils tk-dev libffi-dev liblzma-dev python-openssl protobuf-compiler libdbus-1-dev softhsm2 libsofthsm2 opensc -y
 
 RUN curl -L https://ziglang.org/builds/zig-linux-x86_64-0.14.0-dev.1713+f99097e68.tar.xz | tar -xJ && \
-    mv zig-linux-x86_64-0.14.0-dev.321+888708ec8 /zig
+    mv zig-linux-x86_64-0.14.0-dev.1713+f99097e68 /zig
 ENV PATH="$PATH:/zig"
 
 RUN curl -L https://github.com/roblabla/MacOSX-SDKs/releases/download/13.3/MacOSX13.3.sdk.tar.xz | tar xJ
