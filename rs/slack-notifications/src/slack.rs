@@ -17,6 +17,7 @@ const TRUSTED_NEURONS_TAG: &str = "<!subteam^S0200F4EYLF>";
 const DEVREL_TAG: &str = "<!subteam^S04AHQT37RQ>";
 const RELEASE_TEAM_TAG: &str = ""; // Can be changed to the following to mention @release-engs on each proposal:
                                    // "<!subteam^S02CF4KKZ7U>";
+const DRDRE_TAG: &str = "<!subteam^S05GPUNS7EX>";
 const RELEASE_AUTOMATION_NEURON_ID: u64 = 80;
 const MAX_SUMMARY_LENGTH: usize = 2048;
 const SLACK_CHANNEL_ENV_INTERNAL: &str = "SLACK_CHANNEL_PROPOSALS_INTERNAL";
@@ -115,8 +116,10 @@ fn proposer_mention(proposer: NeuronId) -> Option<String> {
     }
 }
 
-fn alert_mention(proposer: &NeuronId) -> String {
-    if proposer.id == RELEASE_AUTOMATION_NEURON_ID {
+fn alert_mention(proposer: &NeuronId, topic: Topic) -> String {
+    if topic == Topic::IcOsVersionDeployment {
+        DRDRE_TAG.to_string()
+    } else if proposer.id == RELEASE_AUTOMATION_NEURON_ID {
         RELEASE_TEAM_TAG.to_string()
     } else {
         TRUSTED_NEURONS_TAG.to_string()
@@ -221,7 +224,7 @@ impl TryFrom<Vec<ProposalInfo>> for MessageGroups {
             .chunk_by(|p| {
                 (
                     slack_channel_for_proposal(p),
-                    alert_mention(p.proposer.as_ref().expect("No NeuronId in the proposal")),
+                    alert_mention(p.proposer.as_ref().expect("No NeuronId in the proposal"), p.topic()),
                     proposer_mention(p.proposer.expect("proposer not set")),
                     proposal_motivation(p),
                     p.topic(),
