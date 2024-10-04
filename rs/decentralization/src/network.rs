@@ -14,7 +14,6 @@ use log::{debug, info, warn};
 use rand::{seq::SliceRandom, SeedableRng};
 use serde::{Deserialize, Serialize};
 use std::cmp::Ordering;
-use std::collections::HashMap;
 use std::fmt::{Debug, Display, Formatter};
 use std::hash::Hash;
 
@@ -83,36 +82,6 @@ impl PartialEq for Node {
 
 impl From<&ic_management_types::Node> for Node {
     fn from(n: &ic_management_types::Node) -> Self {
-        // Work around the current (as of 2024) registry configuration in which the EU countries are not properly marked.
-        let eu_countries: HashMap<&str, &str> = HashMap::from_iter([
-            ("AT", "Austria"),
-            ("BE", "Belgium"),
-            ("BG", "Bulgaria"),
-            ("CY", "Cyprus"),
-            ("CZ", "Czechia"),
-            ("DE", "Germany"),
-            ("DK", "Denmark"),
-            ("EE", "Estonia"),
-            ("ES", "Spain"),
-            ("FI", "Finland"),
-            ("FR", "France"),
-            ("GR", "Greece"),
-            ("HR", "Croatia"),
-            ("HU", "Hungary"),
-            ("IE", "Ireland"),
-            ("IT", "Italy"),
-            ("LT", "Lithuania"),
-            ("LU", "Luxembourg"),
-            ("LV", "Latvia"),
-            ("MT", "Malta"),
-            ("NL", "Netherlands"),
-            ("PL", "Poland"),
-            ("PT", "Portugal"),
-            ("RO", "Romania"),
-            ("SE", "Sweden"),
-            ("SI", "Slovenia"),
-            ("SK", "Slovakia"),
-        ]);
         let country = n
             .operator
             .datacenter
@@ -125,10 +94,40 @@ impl From<&ic_management_types::Node> for Node {
             .as_ref()
             .map(|d| d.area.clone())
             .unwrap_or_else(|| "unknown".to_string());
-        let (country, area) = match eu_countries.get(&country.as_str()) {
-            Some(country) => ("EU".to_string(), country.to_string()),
-            None => (country, area),
-        };
+        // // Work around the current (as of 2024) registry configuration in which the EU countries are not properly marked.
+        // let eu_countries: HashMap<&str, &str> = HashMap::from_iter([
+        //     ("AT", "Austria"),
+        //     ("BE", "Belgium"),
+        //     ("BG", "Bulgaria"),
+        //     ("CY", "Cyprus"),
+        //     ("CZ", "Czechia"),
+        //     ("DE", "Germany"),
+        //     ("DK", "Denmark"),
+        //     ("EE", "Estonia"),
+        //     ("ES", "Spain"),
+        //     ("FI", "Finland"),
+        //     ("FR", "France"),
+        //     ("GR", "Greece"),
+        //     ("HR", "Croatia"),
+        //     ("HU", "Hungary"),
+        //     ("IE", "Ireland"),
+        //     ("IT", "Italy"),
+        //     ("LT", "Lithuania"),
+        //     ("LU", "Luxembourg"),
+        //     ("LV", "Latvia"),
+        //     ("MT", "Malta"),
+        //     ("NL", "Netherlands"),
+        //     ("PL", "Poland"),
+        //     ("PT", "Portugal"),
+        //     ("RO", "Romania"),
+        //     ("SE", "Sweden"),
+        //     ("SI", "Slovenia"),
+        //     ("SK", "Slovakia"),
+        // ]);
+        // let (country, area) = match eu_countries.get(&country.as_str()) {
+        //     Some(country) => ("EU".to_string(), country.to_string()),
+        //     None => (country, area),
+        // };
 
         Self {
             id: n.principal,
