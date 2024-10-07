@@ -534,7 +534,7 @@ pub struct ProposeOptions {
     pub motivation: Option<String>,
     pub forum_post_link: Option<String>,
 }
-pub const FALLBACK_IC_ADMIN_VERSION: &str = "d4ee25b0865e89d3eaac13a60f0016d5e3296b31";
+pub const FALLBACK_IC_ADMIN_VERSION: &str = "d6957f09abb7be4698dfc0596956fc2ff1f78994";
 
 fn get_ic_admin_revisions_dir() -> anyhow::Result<PathBuf> {
     let dir = dirs::home_dir()
