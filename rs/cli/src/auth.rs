@@ -89,6 +89,11 @@ impl Neuron {
         Self::from_opts_and_req_inner(auth_opts, requirement, network, neuron_id, offline).await
     }
 
+    #[cfg(test)]
+    pub fn ensure_fake_pem_outter(name: &str) -> anyhow::Result<PathBuf> {
+        Self::ensure_fake_pem(name)
+    }
+
     fn ensure_fake_pem(name: &str) -> anyhow::Result<PathBuf> {
         let home_dir = dirs::home_dir().ok_or(anyhow::anyhow!("Home dir not set"))?;
         let path = home_dir.join(format!(".config/dfx/identity/{}/identity.pem", name));

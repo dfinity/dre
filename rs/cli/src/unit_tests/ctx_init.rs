@@ -175,6 +175,7 @@ async fn get_ctx_for_neuron_test(
     requirement: AuthRequirement,
     network: String,
     dry_run: bool,
+    offline: bool,
 ) -> anyhow::Result<DreContext> {
     DreContext::new(
         network,
@@ -182,7 +183,7 @@ async fn get_ctx_for_neuron_test(
         auth,
         neuron_id,
         true,
-        false,
+        offline,
         false,
         dry_run,
         requirement,
@@ -205,6 +206,7 @@ struct NeuronAuthTestScenarion<'a> {
     network: String,
     want: anyhow::Result<Neuron>,
     dry_run: bool,
+    offline: bool,
 }
 
 // Must be left here until we add HSM simulator
@@ -222,14 +224,19 @@ impl<'a> NeuronAuthTestScenarion<'a> {
             network: "".to_string(),
             want: Ok(Neuron::anonymous_neuron()),
             dry_run: false,
+            offline: false,
         }
     }
 
     // It really is self so that we can use
     // `test.is_dry_run().with_neuron_id(...)`
     #[allow(clippy::wrong_self_convention)]
-    fn is_dry_run(self) -> Self {
+    fn dry_run(self) -> Self {
         Self { dry_run: true, ..self }
+    }
+
+    fn offline(self) -> Self {
+        Self { offline: true, ..self }
     }
 
     fn with_neuron_id(self, neuron_id: u64) -> Self {
@@ -301,6 +308,7 @@ impl<'a> NeuronAuthTestScenarion<'a> {
             self.requirement.clone(),
             self.network.clone(),
             self.dry_run,
+            self.offline,
         )
         .await?;
         ctx.neuron().await
@@ -313,8 +321,9 @@ fn get_staging_key_path() -> PathBuf {
         .join(STAGING_KEY_PATH_FROM_HOME)
 }
 
-#[tokio::test]
-async fn init_test_neuron_and_auth() {
+#[test]
+fn init_test_neuron_and_auth() {
+    let runtime = tokio::runtime::Runtime::new().unwrap();
     let scenarios = &[
         // Successful scenarios
         //
@@ -343,16 +352,28 @@ async fn init_test_neuron_and_auth() {
                 include_proposer: true,
             }))
             .when_requirement(AuthRequirement::Neuron),
+        NeuronAuthTestScenarion::new("Mainnet neuron when offline")
+            .with_network("mainnet")
+            .with_private_key(Neuron::ensure_fake_pem_outter("test_neuron_1").unwrap().to_str().unwrap().to_string())
+            .offline()
+            .want(Ok(Neuron {
+                auth: Auth::Keyfile {
+                    path: Neuron::ensure_fake_pem_outter("test_neuron_1").unwrap(),
+                },
+                neuron_id: 0,
+                include_proposer: true,
+            }))
+            .when_requirement(AuthRequirement::Neuron),
         NeuronAuthTestScenarion::new("Dry running commands shouldn't fail if neuron cannot be detected")
             .with_network("mainnet")
-            .is_dry_run()
+            .dry_run()
             .want(Ok(Neuron::dry_run_fake_neuron().unwrap()))
             .when_requirement(AuthRequirement::Neuron),
     ];
 
     let mut outcomes = vec![];
     for test in scenarios {
-        let got = test.get_neuron().await;
+        let got = runtime.block_on(test.get_neuron());
         outcomes.push((
             test.name,
             format!("{:?}", test.want),
