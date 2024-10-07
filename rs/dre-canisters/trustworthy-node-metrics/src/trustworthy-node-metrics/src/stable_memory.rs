@@ -147,7 +147,9 @@ pub fn insert_rewards_rates(region: String, rewards_rates: NodeRewardRates) {
 }
 
 pub fn get_node_rewards_table() -> NodeRewardsTable {
-    REWARDS_TABLE.with_borrow(|rewards_table| NodeRewardsTable { table: rewards_table.iter().map(|(region, rates)| (region, rates.rewards_rates)).collect() })
+    REWARDS_TABLE.with_borrow(|rewards_table| NodeRewardsTable {
+        table: rewards_table.iter().map(|(region, rates)| (region, rates.rewards_rates)).collect(),
+    })
 }
 
 pub fn insert_metadata_v2(

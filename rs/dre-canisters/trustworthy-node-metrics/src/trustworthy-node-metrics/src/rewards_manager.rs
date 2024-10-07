@@ -282,7 +282,7 @@ fn compute_node_provider_rewards(
 
     let results = NodeProviderRewardsComputation {
         rewards_xdr_permyriad: rewards_xdr_total.to_u64().unwrap(),
-        rewards_xdr_permyriad_no_reduction: rewards_xdr_no_reduction_total.to_u64().unwrap()
+        rewards_xdr_permyriad_no_reduction: rewards_xdr_no_reduction_total.to_u64().unwrap(),
     };
 
     (computation_logger, results)
