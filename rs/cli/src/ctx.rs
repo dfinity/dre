@@ -4,7 +4,7 @@ use std::{
     sync::{Arc, Mutex},
 };
 
-use ic_canisters::{governance::governance_canister_version, IcAgentCanisterClient};
+use ic_canisters::IcAgentCanisterClient;
 use ic_management_backend::{
     health::{self, HealthStatusQuerier},
     lazy_git::LazyGit,
@@ -12,7 +12,7 @@ use ic_management_backend::{
     proposal::{ProposalAgent, ProposalAgentImpl},
 };
 use ic_management_types::Network;
-use log::{debug, warn};
+use log::warn;
 use url::Url;
 
 use crate::{
@@ -20,7 +20,7 @@ use crate::{
     auth::Neuron,
     commands::{Args, AuthOpts, AuthRequirement, ExecutableCommand, IcAdminVersion},
     cordoned_feature_fetcher::{CordonedFeatureFetcher, CordonedFeatureFetcherImpl},
-    ic_admin::{download_ic_admin, should_update_ic_admin, IcAdmin, IcAdminImpl, FALLBACK_IC_ADMIN_VERSION},
+    ic_admin::{IcAdmin, IcAdminImpl},
     runner::Runner,
     store::Store,
     subnet_manager::SubnetManager,
@@ -153,45 +153,16 @@ impl DreContext {
             return Ok(a.clone());
         }
 
-        let ic_admin_path = match &self.version {
-            IcAdminVersion::FromGovernance => match should_update_ic_admin()? {
-                (true, _) => {
-                    let govn_canister_version = governance_canister_version(self.network().get_nns_urls()).await?;
-                    debug!(
-                        "Using ic-admin matching the version of governance canister, version: {}",
-                        govn_canister_version.stringified_hash
-                    );
-                    download_ic_admin(match govn_canister_version.stringified_hash.as_str() {
-                        // Some testnets could have this version setup if deployed
-                        // from HEAD of the branch they are created from
-                        "0000000000000000000000000000000000000000" => None,
-                        v => Some(v.to_owned()),
-                    })
-                    .await?
-                }
-                (false, s) => {
-                    debug!("Using cached ic-admin matching the version of governance canister, path: {}", s);
-                    s
-                }
-            },
-            IcAdminVersion::Fallback => {
-                debug!("Using default ic-admin, version: {}", FALLBACK_IC_ADMIN_VERSION);
-                download_ic_admin(None).await?
-            }
-            IcAdminVersion::Strict(ver) => {
-                debug!("Using ic-admin specified via args: {}", ver);
-                download_ic_admin(Some(ver.to_string())).await?
-            }
-        };
-
-        let ic_admin = Arc::new(IcAdminImpl::new(
-            self.network().clone(),
-            Some(ic_admin_path.clone()),
-            self.proceed_without_confirmation,
-            self.neuron().await?,
-            self.dry_run,
-        )) as Arc<dyn IcAdmin>;
-
+        let ic_admin = self
+            .store
+            .ic_admin(
+                &self.version,
+                self.network(),
+                self.proceed_without_confirmation,
+                self.neuron().await?,
+                self.dry_run,
+            )
+            .await?;
         *self.ic_admin.borrow_mut() = Some(ic_admin.clone());
         Ok(ic_admin)
     }

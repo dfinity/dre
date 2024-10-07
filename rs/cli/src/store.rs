@@ -1,5 +1,7 @@
-use std::{path::PathBuf, sync::Arc, time::Duration};
+use std::{io::Read, os::unix::fs::PermissionsExt, path::PathBuf, sync::Arc, time::Duration};
 
+use flate2::bufread::GzDecoder;
+use ic_canisters::governance::governance_canister_version;
 use ic_management_backend::{
     lazy_registry::{LazyRegistry, LazyRegistryImpl},
     proposal::ProposalAgent,
@@ -9,7 +11,11 @@ use ic_management_types::Network;
 use ic_registry_local_registry::LocalRegistry;
 use log::{debug, info, warn};
 
-use crate::{commands::IcAdminVersion, ic_admin::IcAdmin};
+use crate::{
+    auth::Neuron,
+    commands::IcAdminVersion,
+    ic_admin::{IcAdmin, IcAdminImpl},
+};
 
 #[derive(Clone)]
 pub struct Store {
@@ -91,15 +97,128 @@ impl Store {
         Ok(status_file)
     }
 
-    pub async fn ic_admin(&self, version: IcAdminVersion) -> anyhow::Result<Arc<dyn IcAdmin>> {
+    fn ic_admin_path_for_version(&self, version: &str) -> anyhow::Result<PathBuf> {
+        Ok(self.ic_admin_revision_dir()?.join(version).join("ic-admin"))
+    }
+
+    async fn download_ic_admin(&self, version: &str, path: &PathBuf) -> anyhow::Result<()> {
+        let url = if std::env::consts::OS == "macos" {
+            format!("https://download.dfinity.systems/ic/{version}/binaries/x86_64-darwin/ic-admin.gz")
+        } else {
+            format!("https://download.dfinity.systems/ic/{version}/binaries/x86_64-linux/ic-admin.gz")
+        };
+        info!("Downloading ic-admin version: {} from {}", version, url);
+        let body = reqwest::get(url).await?.error_for_status()?.bytes().await?;
+        let mut decoded = GzDecoder::new(body.as_ref());
+
+        let path_parent = path.parent().ok_or(anyhow::anyhow!("Failed to get parent for ic admin revision dir"))?;
+        std::fs::create_dir_all(path_parent).map_err(|_| anyhow::anyhow!("create_dir_all failed for {}", path_parent.display()))?;
+        let mut out = std::fs::File::create(path)?;
+        std::io::copy(&mut decoded, &mut out)?;
+        std::fs::set_permissions(path, std::fs::Permissions::from_mode(0o755))?;
+        Ok(())
+    }
+
+    async fn init_ic_admin(
+        &self,
+        version: &str,
+        network: &Network,
+        proceed_without_confirmation: bool,
+        neuron: Neuron,
+        dry_run: bool,
+    ) -> anyhow::Result<Arc<dyn IcAdmin>> {
+        let path = self.ic_admin_path_for_version(version)?;
+
+        if !path.exists() {
+            self.download_ic_admin(version, &path).await?;
+        }
+
+        info!("Using ic-admin: {}", path.display());
+        Ok(Arc::new(IcAdminImpl::new(
+            network.clone(),
+            Some(
+                path.to_str()
+                    .ok_or(anyhow::anyhow!("Failed to convert ic-admin path to str"))?
+                    .to_string(),
+            ),
+            proceed_without_confirmation,
+            neuron,
+            dry_run,
+        )) as Arc<dyn IcAdmin>)
+    }
+
+    pub async fn ic_admin(
+        &self,
+        version: &IcAdminVersion,
+        network: &Network,
+        proceed_without_confirmation: bool,
+        neuron: Neuron,
+        dry_run: bool,
+    ) -> anyhow::Result<Arc<dyn IcAdmin>> {
+        match version {
+            IcAdminVersion::Fallback => {
+                return self
+                    .init_ic_admin(FALLBACK_IC_ADMIN_VERSION, network, proceed_without_confirmation, neuron, dry_run)
+                    .await
+            }
+            IcAdminVersion::Strict(ver) => return self.init_ic_admin(&ver, network, proceed_without_confirmation, neuron, dry_run).await,
+            // This is the most probable way of running
+            IcAdminVersion::FromGovernance => {}
+        }
+
         let mut status_file = std::fs::File::open(&self.ic_admin_status_file()?)?;
         let elapsed = status_file.metadata()?.modified()?.elapsed().unwrap_or_default();
 
-        let version_from_file = match self.offline {
-            true => {}  // Check if there is any version in file
-            false => {} // Check if the elapsed time passed and then determine if you should update
+        let mut version_from_file = "".to_string();
+        status_file.read_to_string(&mut version_from_file)?;
+
+        let version = match (self.offline, version_from_file) {
+            // Running offline mode, no ic-admin present.
+            (true, version_from_file) if version_from_file.is_empty() => {
+                return Err(anyhow::anyhow!("No ic-admin version found and offline mode is specified"))
+            }
+            // Running offline mode and ic-admin version is present.
+            (true, version_from_file) => {
+                warn!("Offline mode specified! Will use cached ic-admin version: {}", version_from_file);
+                version_from_file
+            }
+            // Running online mode
+            //
+            // There is a cached version of ic-admin
+            // and the cached version is still younger
+            // than `DURATION_BETWEEN_CHECKS_FOR_NEW_IC_ADMIN`
+            (false, version_from_file) if !version_from_file.is_empty() && elapsed <= DURATION_BETWEEN_CHECKS_FOR_NEW_IC_ADMIN => {
+                info!("Using cached ic admin version: {}", version_from_file);
+                version_from_file
+            }
+            // Either there isn't a cached version at all
+            // or the `DURATION_BETWEEN_CHECKS_FOR_NEW_IC_ADMIN`
+            // has passed which means that the cache is invalid.
+            // Check should be performed
+            (false, _) => {
+                info!("Checking for new ic-admin version");
+                let govn_canister_version = governance_canister_version(&network.get_nns_urls()).await?;
+                debug!(
+                    "Using ic-admin matching the version of governance canister, version: {}",
+                    govn_canister_version.stringified_hash
+                );
+                let version = match govn_canister_version.stringified_hash.as_str() {
+                    // This usually happens on testnets deployed
+                    // from the HEAD of branch
+                    "0000000000000000000000000000000000000000" => FALLBACK_IC_ADMIN_VERSION,
+                    v => v,
+                };
+                version.to_string()
+            }
         };
 
-        Ok(())
+        let ic_admin = self
+            .init_ic_admin(&version, network, proceed_without_confirmation, neuron, dry_run)
+            .await?;
+
+        // Only update file when the sync
+        // with governance has been performed
+        std::fs::write(self.ic_admin_status_file()?, version)?;
+        Ok(ic_admin)
     }
 }
