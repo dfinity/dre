@@ -14,7 +14,11 @@ use itertools::Itertools;
 use crate::{commands::IcAdminVersion, ctx::DreContext, ic_admin::FALLBACK_IC_ADMIN_VERSION};
 
 fn status_file_path() -> PathBuf {
-    dirs::home_dir().unwrap().join("bin").join("ic-admin.revisions").join("ic-admin.status")
+    dirs::cache_dir()
+        .unwrap()
+        .join("dre-store")
+        .join("ic-admin.revisions")
+        .join("ic-admin.status")
 }
 
 fn get_deleted_status_file() -> PathBuf {
@@ -41,7 +45,7 @@ async fn get_context(network: &Network, version: IcAdminVersion) -> anyhow::Resu
         },
         None,
         false,
-        true,
+        false,
         false,
         true,
         crate::commands::AuthRequirement::Anonymous,
@@ -89,22 +93,21 @@ impl<'a> AdminVersionTestScenario<'a> {
     }
 }
 
-#[tokio::test]
-async fn init_tests_ic_admin_version() {
+#[test]
+fn init_tests_ic_admin_version() {
+    let runtime = tokio::runtime::Runtime::new().unwrap();
     let version_on_s3 = "e47293c0bd7f39540245913f7f75be3d6863183c";
     let mainnet = Network::mainnet_unchecked().unwrap();
-    let governance_version = governance_canister_version(&mainnet.nns_urls).await.unwrap();
+    let governance_version = runtime.block_on(governance_canister_version(&mainnet.nns_urls)).unwrap();
 
     let tests = &[
         AdminVersionTestScenario::new("match governance canister")
             .delete_status_file()
             .should_contain(&governance_version.stringified_hash),
         AdminVersionTestScenario::new("use default version")
-            .delete_status_file()
             .version(IcAdminVersion::Fallback)
             .should_contain(FALLBACK_IC_ADMIN_VERSION),
         AdminVersionTestScenario::new("existing version on s3")
-            .delete_status_file()
             .version(IcAdminVersion::Strict(version_on_s3.to_string()))
             .should_contain(version_on_s3),
         AdminVersionTestScenario::new("random version not present on s3").version(IcAdminVersion::Strict("random-version".to_string())),
@@ -116,7 +119,7 @@ async fn init_tests_ic_admin_version() {
             deleted_status_file = get_deleted_status_file();
         }
 
-        let maybe_ctx = get_context(&mainnet, test.version.clone()).await;
+        let maybe_ctx = runtime.block_on(get_context(&mainnet, test.version.clone()));
 
         if let Some(ver) = test.should_contain {
             assert!(
@@ -127,8 +130,8 @@ async fn init_tests_ic_admin_version() {
             );
             let ctx = maybe_ctx.unwrap();
 
-            let ic_admin_path = ctx.ic_admin().await;
-            assert!(ic_admin_path.is_ok());
+            let ic_admin_path = runtime.block_on(ctx.ic_admin());
+            assert!(ic_admin_path.is_ok(), "Expected Ok, but was: {:?}", ic_admin_path);
             let ic_admin_path = ic_admin_path.unwrap().ic_admin_path().unwrap_or_default();
             assert!(
                 ic_admin_path.contains(ver),
@@ -146,7 +149,7 @@ async fn init_tests_ic_admin_version() {
             );
 
             let ctx = maybe_ctx.unwrap();
-            let maybe_ic_admin = ctx.ic_admin().await;
+            let maybe_ic_admin = runtime.block_on(ctx.ic_admin());
             assert!(
                 maybe_ic_admin.is_err(),
                 "Test `{}`: expected err for ic-admin but got ok with path: {}",

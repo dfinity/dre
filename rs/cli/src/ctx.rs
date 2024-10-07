@@ -258,6 +258,7 @@ pub mod tests {
         commands::{AuthOpts, HsmOpts, HsmParams},
         cordoned_feature_fetcher::CordonedFeatureFetcher,
         ic_admin::IcAdmin,
+        store::Store,
     };
 
     use super::DreContext;
@@ -306,7 +307,7 @@ pub mod tests {
             },
             cordoned_features_fetcher,
             health_client,
-            store: Store::new(false),
+            store: Store::new(false).unwrap(),
         }
     }
 }

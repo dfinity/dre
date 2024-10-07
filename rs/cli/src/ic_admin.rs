@@ -10,6 +10,7 @@ use log::{error, info};
 use mockall::automock;
 use regex::Regex;
 use shlex::try_quote;
+use std::fmt::Debug;
 use std::io::Read;
 use std::os::unix::fs::PermissionsExt;
 use std::path::PathBuf;
@@ -21,7 +22,7 @@ use strum::Display;
 const MAX_SUMMARY_CHAR_COUNT: usize = 29000;
 
 #[automock]
-pub trait IcAdmin: Send + Sync {
+pub trait IcAdmin: Send + Sync + Debug {
     fn ic_admin_path(&self) -> Option<String>;
 
     fn propose_run(&self, cmd: ProposeCommand, opts: ProposeOptions) -> BoxFuture<'_, anyhow::Result<String>>;
@@ -35,7 +36,7 @@ pub trait IcAdmin: Send + Sync {
     fn run_passthrough_propose<'a>(&'a self, args: &'a [String]) -> BoxFuture<'_, anyhow::Result<String>>;
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct IcAdminImpl {
     network: Network,
     ic_admin_bin_path: Option<String>,
