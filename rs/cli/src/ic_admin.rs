@@ -1,8 +1,7 @@
 use crate::auth::Neuron;
-use anyhow::{anyhow, Result};
+use anyhow::anyhow;
 use colored::Colorize;
 use dialoguer::Confirm;
-use flate2::read::GzDecoder;
 use futures::future::BoxFuture;
 use ic_base_types::PrincipalId;
 use ic_management_types::{Artifact, Network};
@@ -12,11 +11,8 @@ use regex::Regex;
 use shlex::try_quote;
 use std::fmt::Debug;
 use std::io::Read;
-use std::os::unix::fs::PermissionsExt;
-use std::path::PathBuf;
+use std::process::Command;
 use std::process::Stdio;
-use std::time::Duration;
-use std::{path::Path, process::Command};
 use strum::Display;
 
 const MAX_SUMMARY_CHAR_COUNT: usize = 29000;
@@ -534,68 +530,4 @@ pub struct ProposeOptions {
     pub summary: Option<String>,
     pub motivation: Option<String>,
     pub forum_post_link: Option<String>,
-}
-pub const FALLBACK_IC_ADMIN_VERSION: &str = "d4ee25b0865e89d3eaac13a60f0016d5e3296b31";
-
-fn get_ic_admin_revisions_dir() -> anyhow::Result<PathBuf> {
-    let dir = dirs::home_dir()
-        .map(|d| d.join("bin").join("ic-admin.revisions"))
-        .ok_or_else(|| anyhow::format_err!("Cannot find home directory"))?;
-
-    if !dir.exists() {
-        std::fs::create_dir_all(&dir)?;
-    }
-
-    Ok(dir)
-}
-const DURATION_BETWEEN_CHECKS: Duration = Duration::from_secs(60 * 60 * 24);
-pub fn should_update_ic_admin() -> Result<(bool, String)> {
-    let ic_admin_bin_dir = get_ic_admin_revisions_dir()?;
-    let file = ic_admin_bin_dir.join("ic-admin.status");
-
-    if !file.exists() {
-        return Ok((true, "".to_string()));
-    }
-
-    let mut status_file = std::fs::File::open(&file)?;
-    let elapsed = status_file.metadata()?.modified()?.elapsed().unwrap_or_default();
-    if elapsed > DURATION_BETWEEN_CHECKS {
-        info!("Checking if there is a new version of ic-admin");
-
-        return Ok((true, "".to_string()));
-    }
-    let mut version = "".to_string();
-    status_file.read_to_string(&mut version)?;
-    info!("Using ic-admin {version} because lock file was created less than 24 hours ago");
-    let path = ic_admin_bin_dir.join(&version).join("ic-admin");
-    Ok((false, path.display().to_string()))
-}
-
-/// Returns a path to downloaded ic-admin binary
-pub async fn download_ic_admin(version: Option<String>) -> Result<String> {
-    let version = version.unwrap_or_else(|| FALLBACK_IC_ADMIN_VERSION.to_string()).trim().to_string();
-    let ic_admin_bin_dir = get_ic_admin_revisions_dir()?;
-    let path = ic_admin_bin_dir.join(&version).join("ic-admin");
-    let path = Path::new(&path);
-
-    if !path.exists() {
-        let url = if std::env::consts::OS == "macos" {
-            format!("https://download.dfinity.systems/ic/{version}/binaries/x86_64-darwin/ic-admin.gz")
-        } else {
-            format!("https://download.dfinity.systems/ic/{version}/binaries/x86_64-linux/ic-admin.gz")
-        };
-        info!("Downloading ic-admin version: {} from {}", version, url);
-        let body = reqwest::get(url).await?.error_for_status()?.bytes().await?;
-        let mut decoded = GzDecoder::new(body.as_ref());
-
-        let path_parent = path.parent().expect("path parent unwrap failed!");
-        std::fs::create_dir_all(path_parent).unwrap_or_else(|_| panic!("create_dir_all failed for {}", path_parent.display()));
-        let mut out = std::fs::File::create(path)?;
-        std::io::copy(&mut decoded, &mut out)?;
-        std::fs::set_permissions(path, std::fs::Permissions::from_mode(0o755))?;
-    }
-    std::fs::write(ic_admin_bin_dir.join("ic-admin.status"), version)?;
-    info!("Using ic-admin: {}", path.display());
-
-    Ok(path.to_string_lossy().to_string())
 }

@@ -163,62 +163,62 @@ impl Store {
             }
             IcAdminVersion::Strict(ver) => return self.init_ic_admin(&ver, network, proceed_without_confirmation, neuron, dry_run).await,
             // This is the most probable way of running
-            IcAdminVersion::FromGovernance => {}
-        }
+            IcAdminVersion::FromGovernance => {
+                let mut status_file = std::fs::File::open(&self.ic_admin_status_file()?)?;
+                let elapsed = status_file.metadata()?.modified()?.elapsed().unwrap_or_default();
 
-        let mut status_file = std::fs::File::open(&self.ic_admin_status_file()?)?;
-        let elapsed = status_file.metadata()?.modified()?.elapsed().unwrap_or_default();
+                let mut version_from_file = "".to_string();
+                status_file.read_to_string(&mut version_from_file)?;
 
-        let mut version_from_file = "".to_string();
-        status_file.read_to_string(&mut version_from_file)?;
-
-        let version = match (self.offline, version_from_file) {
-            // Running offline mode, no ic-admin present.
-            (true, version_from_file) if version_from_file.is_empty() => {
-                return Err(anyhow::anyhow!("No ic-admin version found and offline mode is specified"))
-            }
-            // Running offline mode and ic-admin version is present.
-            (true, version_from_file) => {
-                warn!("Offline mode specified! Will use cached ic-admin version: {}", version_from_file);
-                version_from_file
-            }
-            // Running online mode
-            //
-            // There is a cached version of ic-admin
-            // and the cached version is still younger
-            // than `DURATION_BETWEEN_CHECKS_FOR_NEW_IC_ADMIN`
-            (false, version_from_file) if !version_from_file.is_empty() && elapsed <= DURATION_BETWEEN_CHECKS_FOR_NEW_IC_ADMIN => {
-                info!("Using cached ic admin version: {}", version_from_file);
-                version_from_file
-            }
-            // Either there isn't a cached version at all
-            // or the `DURATION_BETWEEN_CHECKS_FOR_NEW_IC_ADMIN`
-            // has passed which means that the cache is invalid.
-            // Check should be performed
-            (false, _) => {
-                info!("Checking for new ic-admin version");
-                let govn_canister_version = governance_canister_version(&network.get_nns_urls()).await?;
-                debug!(
-                    "Using ic-admin matching the version of governance canister, version: {}",
-                    govn_canister_version.stringified_hash
-                );
-                let version = match govn_canister_version.stringified_hash.as_str() {
-                    // This usually happens on testnets deployed
-                    // from the HEAD of branch
-                    "0000000000000000000000000000000000000000" => FALLBACK_IC_ADMIN_VERSION,
-                    v => v,
+                let version = match (self.offline, version_from_file) {
+                    // Running offline mode, no ic-admin present.
+                    (true, version_from_file) if version_from_file.is_empty() => {
+                        return Err(anyhow::anyhow!("No ic-admin version found and offline mode is specified"))
+                    }
+                    // Running offline mode and ic-admin version is present.
+                    (true, version_from_file) => {
+                        warn!("Offline mode specified! Will use cached ic-admin version: {}", version_from_file);
+                        version_from_file
+                    }
+                    // Running online mode
+                    //
+                    // There is a cached version of ic-admin
+                    // and the cached version is still younger
+                    // than `DURATION_BETWEEN_CHECKS_FOR_NEW_IC_ADMIN`
+                    (false, version_from_file) if !version_from_file.is_empty() && elapsed <= DURATION_BETWEEN_CHECKS_FOR_NEW_IC_ADMIN => {
+                        info!("Using cached ic admin version: {}", version_from_file);
+                        version_from_file
+                    }
+                    // Either there isn't a cached version at all
+                    // or the `DURATION_BETWEEN_CHECKS_FOR_NEW_IC_ADMIN`
+                    // has passed which means that the cache is invalid.
+                    // Check should be performed
+                    (false, _) => {
+                        info!("Checking for new ic-admin version");
+                        let govn_canister_version = governance_canister_version(&network.get_nns_urls()).await?;
+                        debug!(
+                            "Using ic-admin matching the version of governance canister, version: {}",
+                            govn_canister_version.stringified_hash
+                        );
+                        let version = match govn_canister_version.stringified_hash.as_str() {
+                            // This usually happens on testnets deployed
+                            // from the HEAD of branch
+                            "0000000000000000000000000000000000000000" => FALLBACK_IC_ADMIN_VERSION,
+                            v => v,
+                        };
+                        version.to_string()
+                    }
                 };
-                version.to_string()
+
+                let ic_admin = self
+                    .init_ic_admin(&version, network, proceed_without_confirmation, neuron, dry_run)
+                    .await?;
+
+                // Only update file when the sync
+                // with governance has been performed
+                std::fs::write(self.ic_admin_status_file()?, version)?;
+                Ok(ic_admin)
             }
-        };
-
-        let ic_admin = self
-            .init_ic_admin(&version, network, proceed_without_confirmation, neuron, dry_run)
-            .await?;
-
-        // Only update file when the sync
-        // with governance has been performed
-        std::fs::write(self.ic_admin_status_file()?, version)?;
-        Ok(ic_admin)
+        }
     }
 }
