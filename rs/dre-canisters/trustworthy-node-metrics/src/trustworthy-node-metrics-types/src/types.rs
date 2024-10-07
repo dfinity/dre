@@ -236,10 +236,9 @@ impl DailyNodeMetrics {
 }
 
 #[derive(Debug, Deserialize, CandidType)]
-pub struct RewardsMultiplier {
+pub struct RewardsMultiplierStats {
     pub days_assigned: u64,
     pub days_unassigned: u64,
-    pub rewards_multiplier: f64,
     pub rewards_reduction: f64,
     pub blocks_failed: u64,
     pub blocks_proposed: u64,
@@ -253,24 +252,24 @@ pub struct NodeRewardsMultiplier {
     pub node_id: Principal,
     pub daily_node_metrics: Vec<DailyNodeMetrics>,
     pub node_rate: NodeRewardRate,
-    pub rewards_multiplier: RewardsMultiplier,
+    pub rewards_multiplier: f64,
+    pub rewards_multiplier_stats: RewardsMultiplierStats,
 }
 
 pub struct NodeProviderRewardsComputation {
-    pub rewards_xdr: u64,
-    pub rewards_xdr_no_reduction: u64,
-    pub computation_log: Vec<OperationExecutorLog>,
+    pub rewards_xdr_permyriad: u64,
+    pub rewards_xdr_permyriad_no_reduction: u64,
 }
 
 #[derive(Debug, Deserialize, CandidType)]
 pub struct NodeProviderRewards {
     pub node_provider_id: Principal,
-    pub rewards_xdr: u64,
-    pub rewards_xdr_no_reduction: u64,
+    pub rewards_xdr_permyriad: u64,
+    pub rewards_xdr_permyriad_no_reduction: u64,
     pub rewards_xdr_old: Option<u64>,
     pub ts_distribution: u64,
     pub xdr_conversion_rate: Option<u64>,
-    pub nodes_rewards: Vec<NodeRewardsMultiplier>,
+    pub rewards_multipliers_stats: Vec<RewardsMultiplierStats>,
     pub computation_log: Vec<OperationExecutorLog>,
 }
 
