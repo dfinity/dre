@@ -257,16 +257,15 @@ pub struct NodeRewardsMultiplier {
 }
 
 pub struct NodeProviderRewardsComputation {
-    pub rewards_xdr: u64,
-    pub rewards_xdr_no_reduction: u64,
-    pub computation_log: Vec<OperationExecutorLog>,
+    pub rewards_xdr_permyriad: u64,
+    pub rewards_xdr_permyriad_no_reduction: u64,
 }
 
 #[derive(Debug, Deserialize, CandidType)]
 pub struct NodeProviderRewards {
     pub node_provider_id: Principal,
-    pub rewards_xdr: u64,
-    pub rewards_xdr_no_reduction: u64,
+    pub rewards_xdr_permyriad: u64,
+    pub rewards_xdr_permyriad_no_reduction: u64,
     pub rewards_xdr_old: Option<u64>,
     pub ts_distribution: u64,
     pub xdr_conversion_rate: Option<u64>,

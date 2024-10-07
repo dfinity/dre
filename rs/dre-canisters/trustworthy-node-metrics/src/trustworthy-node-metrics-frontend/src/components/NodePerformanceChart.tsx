@@ -36,7 +36,7 @@ export const NodePerformanceChart: React.FC<NodePerformanceChartProps> = ({ node
     }
 
     const performanceDailyData: ChartData[] = generateChartData(periodFilter, performanceData.daily_node_metrics);
-    const failureRateAvg = Math.round(performanceData.rewards_multiplier.failure_rate * 100);
+    const failureRateAvg = Math.round(performanceData.rewards_multiplier_stats.failure_rate * 100);
 
     const rows: GridRowsProp = performanceData.daily_node_metrics.map((data, index) => {
         return { 
@@ -62,7 +62,7 @@ export const NodePerformanceChart: React.FC<NodePerformanceChartProps> = ({ node
     return (
         <>
             <Grid item xs={12} md={6}>
-                <NodeMetricsStats stats={performanceData.rewards_multiplier} />
+                <NodeMetricsStats stats={performanceData.rewards_multiplier_stats} />
             </Grid>
             <Grid item xs={12} md={6}>
                 <Box sx={boxStyleWidget('right')}>

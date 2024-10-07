@@ -59,14 +59,14 @@ export const NodeProviderRewardsChart: React.FC<NodeProviderRewardsChartProps> =
             <Grid item xs={12} md={6}>
             <Box sx={boxStyleWidget('left')}>
                 <WidgetNumber value={distribution_date.toDateString()} title="Date" sxPaper={{ width: '300px' }}/>
-                <WidgetNumber value={(Number(latestProviderRewards.rewards_xdr_no_reduction) / 10000).toString()} title="Expected Rewards XDR No Reduction" sxPaper={{ width: '300px' }}/>
-                <WidgetNumber value={(Number(latestProviderRewards.rewards_xdr) / 10000).toString()} title="Expected Rewards XDR"/>
+                <WidgetNumber value={(Number(latestProviderRewards.rewards_xdr_permyriad_no_reduction) / 10000).toString()} title="Expected Rewards XDR No Reduction" sxPaper={{ width: '300px' }}/>
+                <WidgetNumber value={(Number(latestProviderRewards.rewards_xdr_permyriad) / 10000).toString()} title="Expected Rewards XDR"/>
                 <WidgetNumber value={(Number(latestProviderRewards.xdr_conversion_rate) / 10000).toString()} title="Conversion rate"/>
             </Box>
             </Grid>
             <Grid item xs={12} md={6}>
             <Box sx={boxStyleWidget('right')}>
-                <WidgetNumber value={Math.round(Number(latestProviderRewards.rewards_xdr) / Number(latestProviderRewards.xdr_conversion_rate)).toString()} title="Expected Rewards ICP"  sxValue={{ color: '#FFCC00' }} />
+                <WidgetNumber value={Math.round(Number(latestProviderRewards.rewards_xdr_permyriad) / Number(latestProviderRewards.xdr_conversion_rate)).toString()} title="Expected Rewards ICP"  sxValue={{ color: '#FFCC00' }} />
                 <WidgetNumber value={Math.round(Number(rewards_xdr_old[0]) / 100000000).toString()} title="Last Rewards ICP Received"  sxValue={{ color: '#FFCC00' }} />
             </Box>
             </Grid>

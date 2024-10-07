@@ -23,10 +23,11 @@ export const NodeProviderPage: React.FC<NodeProviderPageProps> = ({ nodeMetadata
         return <p>No Node provider</p>;
     }
 
-    const nodeIds = nodeProvidersMapping.filter(map => map.node_metadata_stored.node_provider_id.toText() == provider);
-    const providerName = nodeIds[0].node_metadata_stored.node_provider_name[0];
+    const nodes = nodeProvidersMapping.filter(map => map.node_metadata_stored.node_provider_id.toText() == provider);
+    const nodeIds = nodes.map(nodes => nodes.node_id);
+    const providerName = nodes[0].node_metadata_stored.node_provider_name[0];
 
-    if (!nodeIds) {
+    if (!nodes) {
         return <p>No Node Ids found</p>;
     }
 
@@ -52,7 +53,7 @@ export const NodeProviderPage: React.FC<NodeProviderPageProps> = ({ nodeMetadata
                     <Typography gutterBottom variant="subtitle1" component="div">
                         Node Machines
                     </Typography>
-                    {nodeIds.map((map, index) => (
+                    {nodes.map((map, index) => (
                         <Typography key={index} gutterBottom variant="subtitle2" sx={{ color: 'text.disabled' }} component="div">
                         <Link to={`/nodes/${map.node_id.toText()}`} className="custom-link">
                             {map.node_id.toText()}
@@ -77,7 +78,7 @@ export const NodeProviderPage: React.FC<NodeProviderPageProps> = ({ nodeMetadata
                 </Typography>
                 <FilterBar filters={periodFilter} setFilters={setPeriodFilter} />   
                 </Grid>
-                <NodeProviderChart provider={provider} periodFilter={periodFilter}/>
+                <NodeProviderChart nodeIds={nodeIds} periodFilter={periodFilter}/>
             </Grid>
         </Paper>
     </Box>
