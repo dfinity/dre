@@ -4,6 +4,7 @@ use crate::{
     auth::{Auth, Neuron, STAGING_KEY_PATH_FROM_HOME, STAGING_NEURON_ID},
     commands::{AuthOpts, AuthRequirement, HsmOpts},
     cordoned_feature_fetcher::MockCordonedFeatureFetcher,
+    store::FALLBACK_IC_ADMIN_VERSION,
 };
 use clio::{ClioPath, InputPath};
 use ic_canisters::governance::governance_canister_version;
@@ -11,7 +12,7 @@ use ic_management_backend::health::MockHealthStatusQuerier;
 use ic_management_types::Network;
 use itertools::Itertools;
 
-use crate::{commands::IcAdminVersion, ctx::DreContext, ic_admin::FALLBACK_IC_ADMIN_VERSION};
+use crate::{commands::IcAdminVersion, ctx::DreContext};
 
 fn status_file_path() -> PathBuf {
     dirs::cache_dir()

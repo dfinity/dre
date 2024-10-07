@@ -36,6 +36,10 @@ impl Store {
         })
     }
 
+    pub fn is_offline(&self) -> bool {
+        self.offline
+    }
+
     fn path(&self) -> &PathBuf {
         &self.path
     }

@@ -177,6 +177,7 @@ impl DreContext {
             self.neuron_opts.requirement.clone(),
             self.network(),
             self.neuron_opts.neuron_id,
+            self.store.is_offline(),
         )
         .await;
 
