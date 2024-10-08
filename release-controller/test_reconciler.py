@@ -13,7 +13,8 @@ from mock_discourse import DiscourseClientMock
 from mock_google_docs import ReleaseNotesClientMock
 from publish_notes import PublishNotesClient
 from pydantic_yaml import parse_yaml_raw_as
-from reconciler import find_base_release, oldest_active_release
+from reconciler import find_base_release
+from reconciler import oldest_active_release
 from reconciler import Reconciler
 from reconciler import ReconcilerState
 from reconciler import version_package_checksum
@@ -38,7 +39,9 @@ class TestReconcilerState(ReconcilerState):
 def test_e2e_mock_new_release(mocker):
     """Test the workflow when a new release is added to the index."""
     discourse_client = DiscourseClientMock()
-    forum_client = ReleaseCandidateForumClient(discourse_client)
+    forum_client = ReleaseCandidateForumClient(
+        discourse_client, discourse_api_key="", discourse_url="", discourse_username=""
+    )
     notes_client = ReleaseNotesClientMock()
     github_client = Github()
     mocker.patch.object(github_client, "get_repo")

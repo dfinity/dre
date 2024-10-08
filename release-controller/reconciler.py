@@ -9,6 +9,7 @@ import tempfile
 import time
 import traceback
 import typing
+
 import dre_cli
 
 
@@ -62,14 +63,10 @@ class ReconcilerState:
         if self._version_path(version).exists():
             proposal_id = self.version_proposal(version)
             if proposal_id:
-                logging.info(
-                    "version %s: proposal %s already submitted", version, proposal_id
-                )
+                logging.info("version %s: proposal %s already submitted", version, proposal_id)
             else:
                 last_modified = datetime.datetime.fromtimestamp(os.path.getmtime(version_path))
-                remaining_time_until_retry = datetime.timedelta(minutes=10) - (
-                    datetime.datetime.now() - last_modified
-                )
+                remaining_time_until_retry = datetime.timedelta(minutes=10) - (datetime.datetime.now() - last_modified)
                 if remaining_time_until_retry.total_seconds() > 0:
                     logging.warning(
                         "version %s: earlier proposal submission attempted but most likely failed, will retry in %s seconds",
@@ -94,9 +91,7 @@ class ReconcilerState:
             f.write(str(proposal_id))
 
 
-def oldest_active_release(
-    index: release_index.Model, active_versions: list[str]
-) -> release_index.Release:
+def oldest_active_release(index: release_index.Model, active_versions: list[str]) -> release_index.Release:
     for rc in reversed(index.root.releases):
         for v in rc.versions:
             if v.version in active_versions:
@@ -109,36 +104,20 @@ def versions_to_unelect(
     index: release_index.Model, active_versions: list[str], elected_versions: list[str]
 ) -> list[str]:
     active_releases_versions = []
-    for rc in index.root.releases[
-        : index.root.releases.index(oldest_active_release(index, active_versions)) + 1
-    ]:
+    for rc in index.root.releases[: index.root.releases.index(oldest_active_release(index, active_versions)) + 1]:
         for v in rc.versions:
             active_releases_versions.append(v.version)
 
-    return [
-        v
-        for v in elected_versions
-        if v not in active_releases_versions and v not in active_versions
-    ]
+    return [v for v in elected_versions if v not in active_releases_versions and v not in active_versions]
 
 
-def find_base_release(
-    ic_repo: GitRepo, config: release_index.Model, commit: str
-) -> typing.Tuple[str, str]:
-    """
-    Find the parent release commit for the given commit. Optionally return merge base if it's not a direct parent.
-    """
+def find_base_release(ic_repo: GitRepo, config: release_index.Model, commit: str) -> typing.Tuple[str, str]:
+    """Find the parent release commit for the given commit. Optionally return merge base if it's not a direct parent."""
     ic_repo.fetch()
     rc, rc_idx = next(
-        (rc, i)
-        for i, rc in enumerate(config.root.releases)
-        if any(v.version == commit for v in rc.versions)
+        (rc, i) for i, rc in enumerate(config.root.releases) if any(v.version == commit for v in rc.versions)
     )
-    v_idx = next(
-        i
-        for i, v in enumerate(config.root.releases[rc_idx].versions)
-        if v.version == commit
-    )
+    v_idx = next(i for i, v in enumerate(config.root.releases[rc_idx].versions) if v.version == commit)
     return (
         (
             config.root.releases[rc_idx + 1].versions[0].version,
@@ -149,11 +128,7 @@ def find_base_release(
         )  # take first version from the previous rc
         if v_idx == 0
         else min(
-            [
-                (v.version, version_name(rc.rc_name, v.name))
-                for v in rc.versions
-                if v.version != commit
-            ],
+            [(v.version, version_name(rc.rc_name, v.name)) for v in rc.versions if v.version != commit],
             key=lambda v: ic_repo.distance(ic_repo.merge_base(v[0], commit), commit),
         )
     )
@@ -223,9 +198,7 @@ class Reconciler:
         self.nns_url = nns_url
         self.governance_canister = GovernanceCanister()
         self.state = state
-        self.ic_prometheus = ICPrometheus(
-            url="https://victoria.mainnet.dfinity.network/select/0/prometheus"
-        )
+        self.ic_prometheus = ICPrometheus(url="https://victoria.mainnet.dfinity.network/select/0/prometheus")
         self.ic_repo = ic_repo
         self.ignore_releases = ignore_releases or []
 
@@ -244,12 +217,7 @@ class Reconciler:
             )
         )
         for rc_idx, rc in enumerate(
-            config.root.releases[
-                : config.root.releases.index(
-                    oldest_active_release(config, active_versions)
-                )
-                + 1
-            ]
+            config.root.releases[: config.root.releases.index(oldest_active_release(config, active_versions)) + 1]
         ):
             if rc.rc_name in self.ignore_releases:
                 continue
@@ -262,9 +230,7 @@ class Reconciler:
             for v_idx, v in enumerate(rc.versions):
                 logging.info("Updating version %s", v)
                 push_release_tags(self.ic_repo, rc)
-                base_release_commit, base_release_name = find_base_release(
-                    self.ic_repo, config, v.version
-                )
+                base_release_commit, base_release_name = find_base_release(self.ic_repo, config, v.version)
                 self.notes_client.ensure(
                     base_release_commit=base_release_commit,
                     base_release_tag=base_release_name,
@@ -299,9 +265,7 @@ class Reconciler:
                                 versions_to_unelect(
                                     config,
                                     active_versions=active_versions,
-                                    elected_versions=dre.get_blessed_versions()[
-                                        "value"
-                                    ]["blessed_version_ids"],
+                                    elected_versions=dre.get_blessed_versions()["value"]["blessed_version_ids"],
                                 ),
                             )
                         # This is a defensive approach in case the ic-admin exits with failure
@@ -317,13 +281,9 @@ class Reconciler:
                             unelect_versions=unelect_versions,
                         )
 
-                    versions_proposals = (
-                        self.governance_canister.replica_version_proposals()
-                    )
+                    versions_proposals = self.governance_canister.replica_version_proposals()
                     if v.version in versions_proposals:
-                        self.state.save_proposal(
-                            v.version, versions_proposals[v.version]
-                        )
+                        self.state.save_proposal(v.version, versions_proposals[v.version])
 
             # update the forum posts in case the proposal was created
             rc_forum_topic.update(
@@ -373,9 +333,7 @@ def main():
     else:
         load_dotenv()
 
-    watchdog = Watchdog(
-        timeout_seconds=600
-    )  # Reconciler should report healthy every 10 minutes
+    watchdog = Watchdog(timeout_seconds=600)  # Reconciler should report healthy every 10 minutes
     watchdog.start()
 
     discourse_client = DiscourseClient(
@@ -384,9 +342,7 @@ def main():
         api_key=os.environ["DISCOURSE_KEY"],
     )
     config_loader = (
-        GitReleaseLoader(f"https://github.com/{dre_repo}.git")
-        if "dev" not in os.environ
-        else DevReleaseLoader()
+        GitReleaseLoader(f"https://github.com/{dre_repo}.git") if "dev" not in os.environ else DevReleaseLoader()
     )
     state = ReconcilerState(
         pathlib.Path(
@@ -398,6 +354,9 @@ def main():
     )
     forum_client = ReleaseCandidateForumClient(
         discourse_client,
+        discourse_api_key=os.environ["DISCOURSE_KEY"],
+        discourse_url=os.environ["DISCOURSE_URL"],
+        discourse_username=os.environ["DISCOURSE_USER"],
     )
     github_token = os.environ["GITHUB_TOKEN"]
     github_client = Github(auth=Auth.Token(github_token))

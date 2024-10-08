@@ -1,8 +1,8 @@
-import json
 import logging
 import os
 from typing import Callable
 
+import requests
 from dotenv import load_dotenv
 from pydantic_yaml import parse_yaml_raw_as
 from pydiscourse import DiscourseClient
@@ -45,17 +45,19 @@ class ReleaseCandidateForumTopic:
         release: Release,
         client: DiscourseClient,
         nns_proposal_discussions_category,
+        discourse_url: str,
+        discourse_username: str,
+        discourse_api_key: str,
     ):
         """Create a new topic."""
         self.release = release
         self.client = client
         self.nns_proposal_discussions_category = nns_proposal_discussions_category
+        self.discourse_url = discourse_url
+        self.discourse_api_key = discourse_api_key
+        self.discourse_username = discourse_username
         topic = next(
-            (
-                t
-                for t in client.topics_by(self.client.api_username)
-                if self.release.rc_name in t["title"]
-            ),
+            (t for t in client.topics_by(self.client.api_username) if self.release.rc_name in t["title"]),
             None,
         )
         if topic:
@@ -75,12 +77,15 @@ class ReleaseCandidateForumTopic:
     def created_posts(self):
         """Return a list of posts created by the current user."""
         topic_posts = self.client.topic_posts(topic_id=self.topic_id)
+        topic_posts = requests.get(
+            f"{self.discourse_url}/t/{self.topic_id}.json?print=true",
+            headers={"Api-Username": self.discourse_username, "Api-Key": self.discourse_api_key},
+        ).json()
+
         if not topic_posts:
             raise RuntimeError("failed to list topic posts")
 
-        return [
-            p for p in topic_posts.get("post_stream", {}).get("posts", {}) if p["yours"]
-        ]
+        return [p for p in topic_posts.get("post_stream", {}).get("posts", {}) if p["yours"]]
 
     def update(
         self,
@@ -128,9 +133,7 @@ class ReleaseCandidateForumTopic:
 
     def post_url(self, version: str):
         """Return the URL of the post for the given version."""
-        post_index = [
-            i for i, v in enumerate(self.release.versions) if v.version == version
-        ][0]
+        post_index = [i for i, v in enumerate(self.release.versions) if v.version == version][0]
         post = self.client.post_by_id(post_id=self.created_posts()[post_index]["id"])
         if not post:
             raise RuntimeError("failed to find post")
@@ -152,7 +155,9 @@ class ReleaseCandidateForumTopic:
 class ReleaseCandidateForumClient:
     """A client for interacting with release candidate forum topics."""
 
-    def __init__(self, discourse_client: DiscourseClient):
+    def __init__(
+        self, discourse_client: DiscourseClient, discourse_url: str, discourse_username: str, discourse_api_key: str
+    ):
         """Create a new client."""
         self.discourse_client = discourse_client
         self.nns_proposal_discussions_category = next(
@@ -165,6 +170,9 @@ class ReleaseCandidateForumClient:
                 "category"
             ],  # hardcoded category id, seems like "include_subcategories" is not working
         )
+        self.discourse_url = discourse_url
+        self.discourse_username = discourse_username
+        self.discourse_api_key = discourse_api_key
 
     def get_or_create(self, release: Release) -> ReleaseCandidateForumTopic:
         """Get or create a forum topic for the given release."""
@@ -172,6 +180,9 @@ class ReleaseCandidateForumClient:
             release=release,
             client=self.discourse_client,
             nns_proposal_discussions_category=self.nns_proposal_discussions_category,
+            discourse_url=self.discourse_url,
+            discourse_username=self.discourse_username,
+            discourse_api_key=self.discourse_api_key,
         )
 
 
@@ -183,32 +194,31 @@ def main():
         api_username=os.environ["DISCOURSE_USER"],
         api_key=os.environ["DISCOURSE_KEY"],
     )
-    #     index = parse_yaml_raw_as(
-    #         Model,
-    #         """
-    # rollout:
-    #   stages: []
-
-    # releases:
-    #   - rc_name: rc--2024-03-13_23-05
-    #     versions:
-    #       - version: 2e921c9adfc71f3edc96a9eb5d85fc742e7d8a9f
-    #         name: default
-    #       - version: 31e9076fb99dfc36eb27fb3a2edc68885e6163ac
-    #         name: feat
-    #       - version: db583db46f0894d35bcbcfdea452d93abdadd8a6
-    #         name: feat-hotfix1
-    # """,
-    #     )
+    index = parse_yaml_raw_as(
+        Model,
+        """
+    releases:
+        - rc_name: rc--2024-10-03_01-30
+          versions:
+            - name: base
+              version: d2657773d007e1b4c0b2dd715c628d24c0d7b5fb
+            - name: revert-ubuntu-22-04
+              version: 1ff0e709f0d0984a4f9ab06456db177c4b6e48a0
+            - name: canister-overhead-hotfix
+              version: f0c923eba09e9c1444501692b0ab4884882bf5bc
+    """,
+    )
     forum_client = ReleaseCandidateForumClient(
         discourse_client,
+        discourse_url=os.environ["DISCOURSE_URL"],
+        discourse_api_key=os.environ["DISCOURSE_KEY"],
+        discourse_username=os.environ["DISCOURSE_USER"],
     )
 
+    topic = forum_client.get_or_create(index.root.releases[0])
+    # topic.update(lambda _: None, lambda _: None)
 
-#     topic = forum_client.get_or_create(index.root.releases[0])
-#     topic.update(lambda _: None, lambda _: None)
-
-# print(topic.post_url(version="31e9076fb99dfc36eb27fb3a2edc68885e6163ac"))
+    print(topic.post_url(version="f0c923eba09e9c1444501692b0ab4884882bf5bc"))
 
 
 if __name__ == "__main__":

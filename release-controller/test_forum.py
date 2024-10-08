@@ -23,7 +23,9 @@ def test_create_release_notes_on_new_release():
     )
     assert discourse_client.created_posts == []
     assert discourse_client.created_topics == []
-    forum_client = ReleaseCandidateForumClient(discourse_client=discourse_client)
+    forum_client = ReleaseCandidateForumClient(
+        discourse_client=discourse_client, discourse_api_key="", discourse_url="", discourse_username=""
+    )
     post = forum_client.get_or_create(
         Release(
             rc_name="rc--2024-02-21_23-06",
@@ -148,7 +150,9 @@ release notes for version test2...
         "title": "Proposal to elect new release rc--2024-02-21_23-06",
     }
     discourse_client.created_topics = [existing_topic]
-    forum_client = ReleaseCandidateForumClient(discourse_client=discourse_client)
+    forum_client = ReleaseCandidateForumClient(
+        discourse_client=discourse_client, discourse_api_key="", discourse_url="", discourse_username=""
+    )
     post = forum_client.get_or_create(
         Release(
             rc_name="rc--2024-02-21_23-06",
