@@ -7,6 +7,8 @@ releases:
         version: 1ff0e709f0d0984a4f9ab06456db177c4b6e48a0
       - name: canister-overhead-hotfix
         version: f0c923eba09e9c1444501692b0ab4884882bf5bc
+      - name: revert-ubuntu-22-04-canister-overhead-hotfix
+        version: 7c50c0db1e247a25896d77da72c410ff17ef5773
   - rc_name: rc--2024-09-26_01-31
     versions:
       # Qualification pipeline:
