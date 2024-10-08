@@ -24,7 +24,10 @@ def test_create_release_notes_on_new_release():
     assert discourse_client.created_posts == []
     assert discourse_client.created_topics == []
     forum_client = ReleaseCandidateForumClient(
-        discourse_client=discourse_client, discourse_api_key="", discourse_url="", discourse_username=""
+        discourse_client=discourse_client,
+        discourse_api_key="",
+        discourse_url="https://forum.dfinity.org",
+        discourse_username="",
     )
     post = forum_client.get_or_create(
         Release(
@@ -151,7 +154,10 @@ release notes for version test2...
     }
     discourse_client.created_topics = [existing_topic]
     forum_client = ReleaseCandidateForumClient(
-        discourse_client=discourse_client, discourse_api_key="", discourse_url="", discourse_username=""
+        discourse_client=discourse_client,
+        discourse_api_key="",
+        discourse_url="https://forum.dfinity.org",
+        discourse_username="",
     )
     post = forum_client.get_or_create(
         Release(
