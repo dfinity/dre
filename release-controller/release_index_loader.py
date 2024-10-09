@@ -24,7 +24,7 @@ To build and verify the IC-OS disk image, run:
 sudo apt-get install -y curl && curl --proto '=https' --tlsv1.2 -sSLO https://raw.githubusercontent.com/dfinity/ic/{version}/gitlab-ci/tools/repro-check.sh && chmod +x repro-check.sh && ./repro-check.sh -c {version}
 ```
 
-The two SHA256 sums printed above from a) the downloaded CDN image and b) the locally built image, must be identical, and must match the SHA256 from the payload of the NNS proposal.
+The two SHA256 sums printed above from a) the downloaded CDN image and b) the locally built image, must be identical, and must match the SHA256 from the payload of the NNS proposal.  The verification process will also attempt to reproduce HostOS and SetupOS — these results are for advisory purposes only, as this proposal only elects a GuestOS.
 """
 
 
@@ -33,7 +33,10 @@ class ReleaseLoader:
         self.release_index_dir = release_index_dir
 
     def index(self) -> release_index.Model:
-        return parse_yaml_raw_as(release_index.Model, open(self.release_index_dir / RELEASE_INDEX_FILE, "r").read())
+        return parse_yaml_raw_as(
+            release_index.Model,
+            open(self.release_index_dir / RELEASE_INDEX_FILE, "r").read(),
+        )
 
     def changelog_commit(self, _) -> str:
         return ""
@@ -62,7 +65,9 @@ class ReleaseLoader:
 class DevReleaseLoader(ReleaseLoader):
     def __init__(self):
         dev_repo_root = (
-            subprocess.check_output(["git", "rev-parse", "--show-toplevel"], stderr=subprocess.DEVNULL)
+            subprocess.check_output(
+                ["git", "rev-parse", "--show-toplevel"], stderr=subprocess.DEVNULL
+            )
             .decode(sys.stdout.encoding)
             .strip()
         )

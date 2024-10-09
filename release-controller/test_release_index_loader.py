@@ -110,6 +110,6 @@ To build and verify the IC-OS disk image, run:
 sudo apt-get install -y curl && curl --proto \'=https\' --tlsv1.2 -sSLO https://raw.githubusercontent.com/dfinity/ic/35bfcadd0f2a474057e42393917b8b3ac269627a/gitlab-ci/tools/repro-check.sh && chmod +x repro-check.sh && ./repro-check.sh -c 35bfcadd0f2a474057e42393917b8b3ac269627a
 ```
 
-The two SHA256 sums printed above from a) the downloaded CDN image and b) the locally built image, must be identical, and must match the SHA256 from the payload of the NNS proposal.
+The two SHA256 sums printed above from a) the downloaded CDN image and b) the locally built image, must be identical, and must match the SHA256 from the payload of the NNS proposal.  The verification process will also attempt to reproduce HostOS and SetupOS — these results are for advisory purposes only, as this proposal only elects a GuestOS.
 """
         )
