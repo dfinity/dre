@@ -297,7 +297,7 @@ def strip_ansi_sequences(input_text):
 
 def run_bazel_query(query, ic_repo_path):
     p = subprocess.run(
-        ["gitlab-ci/container/container-run.sh"] + query,
+        ["ci/container/container-run.sh"] + query,
         cwd=ic_repo_path,
         text=True,
         stdout=subprocess.PIPE,

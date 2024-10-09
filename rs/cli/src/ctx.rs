@@ -7,6 +7,7 @@ use std::{
 
 use ic_canisters::{governance::governance_canister_version, IcAgentCanisterClient};
 use ic_management_backend::{
+    health::{self, HealthStatusQuerier},
     lazy_git::LazyGit,
     lazy_registry::{LazyRegistry, LazyRegistryImpl},
     proposal::{ProposalAgent, ProposalAgentImpl},
@@ -14,17 +15,25 @@ use ic_management_backend::{
 };
 use ic_management_types::Network;
 use ic_registry_local_registry::LocalRegistry;
-use log::{debug, info};
+use log::{debug, info, warn};
 use url::Url;
 
 use crate::{
     artifact_downloader::{ArtifactDownloader, ArtifactDownloaderImpl},
     auth::Neuron,
     commands::{Args, AuthOpts, AuthRequirement, ExecutableCommand, IcAdminVersion},
+    cordoned_feature_fetcher::{CordonedFeatureFetcher, CordonedFeatureFetcherImpl},
     ic_admin::{download_ic_admin, should_update_ic_admin, IcAdmin, IcAdminImpl, FALLBACK_IC_ADMIN_VERSION},
     runner::Runner,
     subnet_manager::SubnetManager,
 };
+
+#[derive(Clone)]
+struct NeuronOpts {
+    auth_opts: AuthOpts,
+    requirement: AuthRequirement,
+    neuron_id: Option<u64>,
+}
 
 #[derive(Clone)]
 pub struct DreContext {
@@ -35,15 +44,19 @@ pub struct DreContext {
     ic_repo: RefCell<Option<Arc<dyn LazyGit>>>,
     proposal_agent: Arc<dyn ProposalAgent>,
     verbose_runner: bool,
-    skip_sync: bool,
+    offline: bool,
     forum_post_link: Option<String>,
     dry_run: bool,
     artifact_downloader: Arc<dyn ArtifactDownloader>,
-    neuron: Neuron,
+    neuron: RefCell<Option<Neuron>>,
     proceed_without_confirmation: bool,
     version: IcAdminVersion,
+    neuron_opts: NeuronOpts,
+    cordoned_features_fetcher: Arc<dyn CordonedFeatureFetcher>,
+    health_client: Arc<dyn HealthStatusQuerier>,
 }
 
+#[allow(clippy::too_many_arguments)]
 impl DreContext {
     pub async fn new(
         network: String,
@@ -51,21 +64,21 @@ impl DreContext {
         auth: AuthOpts,
         neuron_id: Option<u64>,
         verbose: bool,
-        no_sync: bool,
+        offline: bool,
         yes: bool,
         dry_run: bool,
         auth_requirement: AuthRequirement,
         forum_post_link: Option<String>,
         ic_admin_version: IcAdminVersion,
+        cordoned_features_fetcher: Arc<dyn CordonedFeatureFetcher>,
+        health_client: Arc<dyn HealthStatusQuerier>,
     ) -> anyhow::Result<Self> {
-        let network = match no_sync {
+        let network = match offline {
             false => ic_management_types::Network::new(network.clone(), &nns_urls)
                 .await
                 .map_err(|e| anyhow::anyhow!(e))?,
             true => Network::new_unchecked(network.clone(), &nns_urls)?,
         };
-
-        let neuron = Neuron::from_opts_and_req(auth, auth_requirement, &network, neuron_id).await?;
 
         Ok(Self {
             proposal_agent: Arc::new(ProposalAgentImpl::new(&network.nns_urls)),
@@ -74,14 +87,21 @@ impl DreContext {
             ic_admin: RefCell::new(None),
             runner: RefCell::new(None),
             verbose_runner: verbose,
-            skip_sync: no_sync,
+            offline,
             forum_post_link: forum_post_link.clone(),
             ic_repo: RefCell::new(None),
             dry_run,
             artifact_downloader: Arc::new(ArtifactDownloaderImpl {}) as Arc<dyn ArtifactDownloader>,
-            neuron,
+            neuron: RefCell::new(None),
             proceed_without_confirmation: yes,
             version: ic_admin_version,
+            neuron_opts: NeuronOpts {
+                auth_opts: auth,
+                requirement: auth_requirement,
+                neuron_id,
+            },
+            cordoned_features_fetcher,
+            health_client,
         })
     }
 
@@ -92,12 +112,16 @@ impl DreContext {
             args.auth_opts.clone(),
             args.neuron_id,
             args.verbose,
-            args.no_sync,
+            args.offline,
             args.yes,
             args.dry_run,
             args.subcommands.require_auth(),
             args.forum_post_link.clone(),
             args.ic_admin_version.clone(),
+            Arc::new(CordonedFeatureFetcherImpl::new(args.offline, args.cordon_feature_fallback_file.clone())?) as Arc<dyn CordonedFeatureFetcher>,
+            Arc::new(health::HealthClient::new(
+                ic_management_types::Network::new(args.network.clone(), &args.nns_urls).await?,
+            )),
         )
         .await
     }
@@ -108,7 +132,7 @@ impl DreContext {
         }
         let network = self.network();
 
-        if !self.skip_sync {
+        if !self.offline {
             sync_local_store(network).await.expect("Should be able to sync registry");
         }
         let local_path = local_registry_path(network);
@@ -118,7 +142,7 @@ impl DreContext {
         let registry = Arc::new(LazyRegistryImpl::new(
             local_registry,
             network.clone(),
-            self.skip_sync,
+            self.offline,
             self.proposals_agent(),
         ));
         *self.registry.borrow_mut() = Some(registry.clone());
@@ -134,8 +158,10 @@ impl DreContext {
     }
 
     /// Uses `ic_agent::Agent`
-    pub fn create_ic_agent_canister_client(&self, lock: Option<Mutex<()>>) -> anyhow::Result<IcAgentCanisterClient> {
-        self.neuron.auth.create_canister_client(self.network.get_nns_urls().to_vec(), lock)
+    pub async fn create_ic_agent_canister_client(&self, lock: Option<Mutex<()>>) -> anyhow::Result<IcAgentCanisterClient> {
+        let neuron = self.neuron().await?;
+
+        neuron.auth.create_canister_client(self.network.get_nns_urls().to_vec(), lock)
     }
 
     pub async fn ic_admin(&self) -> anyhow::Result<Arc<dyn IcAdmin>> {
@@ -178,7 +204,7 @@ impl DreContext {
             self.network().clone(),
             Some(ic_admin_path.clone()),
             self.proceed_without_confirmation,
-            self.neuron(),
+            self.neuron().await?,
             self.dry_run,
         )) as Arc<dyn IcAdmin>;
 
@@ -186,8 +212,32 @@ impl DreContext {
         Ok(ic_admin)
     }
 
-    pub fn neuron(&self) -> Neuron {
-        self.neuron.clone()
+    pub async fn neuron(&self) -> anyhow::Result<Neuron> {
+        if let Some(n) = self.neuron.borrow().as_ref() {
+            return Ok(n.clone());
+        }
+
+        let maybe_neuron = Neuron::from_opts_and_req(
+            self.neuron_opts.auth_opts.clone(),
+            self.neuron_opts.requirement.clone(),
+            self.network(),
+            self.neuron_opts.neuron_id,
+        )
+        .await;
+
+        // This code will add a fake neuron if it
+        // cannot detect anything for the command
+        let neuron = match maybe_neuron {
+            Ok(n) => n,
+            Err(e) => {
+                warn!("Couldn't detect neuron due to: {:?}", e);
+                warn!("Falling back to Anonymous for dry-run");
+                Neuron::dry_run_fake_neuron()?
+            }
+        };
+
+        *self.neuron.borrow_mut() = Some(neuron.clone());
+        Ok(neuron)
     }
 
     pub async fn readonly_ic_admin_for_other_network(&self, network: Network) -> anyhow::Result<impl IcAdmin> {
@@ -201,10 +251,14 @@ impl DreContext {
         ))
     }
 
-    pub async fn subnet_manager(&self) -> SubnetManager {
+    pub async fn subnet_manager(&self) -> anyhow::Result<SubnetManager> {
         let registry = self.registry().await;
 
-        SubnetManager::new(registry, self.network().clone())
+        Ok(SubnetManager::new(
+            registry,
+            self.cordoned_features_fetcher.clone(),
+            self.health_client.clone(),
+        ))
     }
 
     pub fn proposals_agent(&self) -> Arc<dyn ProposalAgent> {
@@ -217,13 +271,14 @@ impl DreContext {
         }
 
         let runner = Rc::new(Runner::new(
-            self.ic_admin().await?,
             self.registry().await,
             self.network().clone(),
             self.proposals_agent(),
             self.verbose_runner,
             self.ic_repo.clone(),
             self.artifact_downloader.clone(),
+            self.cordoned_features_fetcher.clone(),
+            self.health_client.clone(),
         ));
         *self.runner.borrow_mut() = Some(runner.clone());
         Ok(runner)
@@ -239,10 +294,16 @@ impl DreContext {
 pub mod tests {
     use std::{cell::RefCell, sync::Arc};
 
-    use ic_management_backend::{lazy_git::LazyGit, lazy_registry::LazyRegistry, proposal::ProposalAgent};
+    use ic_management_backend::{health::HealthStatusQuerier, lazy_git::LazyGit, lazy_registry::LazyRegistry, proposal::ProposalAgent};
     use ic_management_types::Network;
 
-    use crate::{artifact_downloader::ArtifactDownloader, auth::Neuron, ic_admin::IcAdmin};
+    use crate::{
+        artifact_downloader::ArtifactDownloader,
+        auth::Neuron,
+        commands::{AuthOpts, HsmOpts, HsmParams},
+        cordoned_feature_fetcher::CordonedFeatureFetcher,
+        ic_admin::IcAdmin,
+    };
 
     use super::DreContext;
 
@@ -254,6 +315,8 @@ pub mod tests {
         git: Arc<dyn LazyGit>,
         proposal_agent: Arc<dyn ProposalAgent>,
         artifact_downloader: Arc<dyn ArtifactDownloader>,
+        cordoned_features_fetcher: Arc<dyn CordonedFeatureFetcher>,
+        health_client: Arc<dyn HealthStatusQuerier>,
     ) -> DreContext {
         DreContext {
             network,
@@ -263,13 +326,32 @@ pub mod tests {
             ic_repo: RefCell::new(Some(git)),
             proposal_agent,
             verbose_runner: true,
-            skip_sync: false,
-            forum_post_link: None,
+            offline: false,
+            forum_post_link: "https://forum.dfinity.org/t/123".to_string().into(),
             dry_run: true,
             artifact_downloader,
-            neuron,
+            neuron: RefCell::new(None),
             proceed_without_confirmation: true,
             version: crate::commands::IcAdminVersion::Strict("Shouldn't reach this because of mock".to_string()),
+            neuron_opts: super::NeuronOpts {
+                auth_opts: AuthOpts {
+                    private_key_pem: None,
+                    hsm_opts: HsmOpts {
+                        hsm_pin: None,
+                        hsm_params: HsmParams {
+                            hsm_slot: None,
+                            hsm_key_id: None,
+                        },
+                    },
+                },
+                requirement: crate::commands::AuthRequirement::Neuron,
+                neuron_id: match neuron.neuron_id {
+                    0 => None,
+                    n => Some(n),
+                },
+            },
+            cordoned_features_fetcher,
+            health_client,
         }
     }
 }

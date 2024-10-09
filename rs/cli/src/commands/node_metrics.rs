@@ -4,7 +4,6 @@ use std::{
     sync::{Arc, Mutex},
 };
 
-use anyhow::Ok;
 use clap::{error::ErrorKind, Args};
 use ic_canisters::{
     management::{NodeMetricsHistoryResponse, WalletCanisterWrapper},
@@ -131,7 +130,7 @@ impl ExecutableCommand for NodeMetrics {
 
     async fn execute(&self, ctx: crate::ctx::DreContext) -> anyhow::Result<()> {
         let lock = Mutex::new(());
-        let canister_agent: ic_canisters::IcAgentCanisterClient = ctx.create_ic_agent_canister_client(Some(lock))?;
+        let canister_agent: ic_canisters::IcAgentCanisterClient = ctx.create_ic_agent_canister_client(Some(lock)).await?;
         info!("Started action...");
 
         let metrics_by_subnet = if self.trustworthy {
@@ -145,7 +144,7 @@ impl ExecutableCommand for NodeMetrics {
         Ok(())
     }
 
-    fn validate(&self, cmd: &mut clap::Command) {
+    fn validate(&self, _args: &crate::commands::Args, cmd: &mut clap::Command) {
         if self.trustworthy && self.wallet.is_none() {
             cmd.error(ErrorKind::MissingRequiredArgument, "Wallet is required for fetching trustworthy metrics.")
                 .exit();

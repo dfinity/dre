@@ -75,7 +75,7 @@ aspect_bazel_lib_dependencies()
 
 aspect_bazel_lib_register_toolchains()
 
-IC_REPO_VERSION = "f3a6cf88defb92e8b457d2438cb5b086b51e26b2"
+IC_REPO_VERSION = "d4ee25b0865e89d3eaac13a60f0016d5e3296b31"
 
 http_archive(
     name = "ic_repo",
@@ -100,7 +100,7 @@ rust_analyzer_dependencies()
 rust_register_toolchains(
     edition = "2021",
     versions = [
-        "1.79.0",
+        "1.80.0",
     ],
 )
 

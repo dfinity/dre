@@ -1,11 +1,13 @@
-use std::{path::PathBuf, str::FromStr};
+use std::{path::PathBuf, sync::Arc};
 
 use crate::{
     auth::{Auth, Neuron, STAGING_KEY_PATH_FROM_HOME, STAGING_NEURON_ID},
     commands::{AuthOpts, AuthRequirement, HsmOpts},
+    cordoned_feature_fetcher::MockCordonedFeatureFetcher,
 };
 use clio::{ClioPath, InputPath};
 use ic_canisters::governance::governance_canister_version;
+use ic_management_backend::health::MockHealthStatusQuerier;
 use ic_management_types::Network;
 use itertools::Itertools;
 
@@ -45,6 +47,8 @@ async fn get_context(network: &Network, version: IcAdminVersion) -> anyhow::Resu
         crate::commands::AuthRequirement::Anonymous,
         None,
         version,
+        Arc::new(MockCordonedFeatureFetcher::new()),
+        Arc::new(MockHealthStatusQuerier::new()),
     )
     .await
 }
@@ -166,6 +170,7 @@ async fn get_ctx_for_neuron_test(
     neuron_id: Option<u64>,
     requirement: AuthRequirement,
     network: String,
+    dry_run: bool,
 ) -> anyhow::Result<DreContext> {
     DreContext::new(
         network,
@@ -175,10 +180,12 @@ async fn get_ctx_for_neuron_test(
         true,
         false,
         false,
-        true,
+        dry_run,
         requirement,
         None,
         IcAdminVersion::Strict("Shouldn't get to here".to_string()),
+        Arc::new(MockCordonedFeatureFetcher::new()),
+        Arc::new(MockHealthStatusQuerier::new()),
     )
     .await
 }
@@ -193,6 +200,7 @@ struct NeuronAuthTestScenarion<'a> {
     requirement: AuthRequirement,
     network: String,
     want: anyhow::Result<Neuron>,
+    dry_run: bool,
 }
 
 // Must be left here until we add HSM simulator
@@ -209,7 +217,15 @@ impl<'a> NeuronAuthTestScenarion<'a> {
             requirement: AuthRequirement::Anonymous,
             network: "".to_string(),
             want: Ok(Neuron::anonymous_neuron()),
+            dry_run: false,
         }
+    }
+
+    // It really is self so that we can use
+    // `test.is_dry_run().with_neuron_id(...)`
+    #[allow(clippy::wrong_self_convention)]
+    fn is_dry_run(self) -> Self {
+        Self { dry_run: true, ..self }
     }
 
     fn with_neuron_id(self, neuron_id: u64) -> Self {
@@ -263,7 +279,7 @@ impl<'a> NeuronAuthTestScenarion<'a> {
     }
 
     async fn get_neuron(&self) -> anyhow::Result<Neuron> {
-        get_ctx_for_neuron_test(
+        let ctx = get_ctx_for_neuron_test(
             AuthOpts {
                 private_key_pem: self
                     .private_key_pem
@@ -280,32 +296,15 @@ impl<'a> NeuronAuthTestScenarion<'a> {
             self.neuron_id,
             self.requirement.clone(),
             self.network.clone(),
+            self.dry_run,
         )
-        .await
-        .map(|ctx| ctx.neuron())
+        .await?;
+        ctx.neuron().await
     }
 }
 
 fn get_staging_key_path() -> PathBuf {
-    PathBuf::from_str(&std::env::var("HOME").unwrap())
-        .unwrap()
-        .join(STAGING_KEY_PATH_FROM_HOME)
-}
-
-fn ensure_testing_pem(name: &str) -> PathBuf {
-    let path = PathBuf::from_str(&std::env::var("HOME").unwrap())
-        .unwrap()
-        .join(format!(".config/dfx/identity/{}/identity.pem", name));
-
-    let parent = path.parent().unwrap();
-    if !parent.exists() {
-        std::fs::create_dir_all(parent).unwrap()
-    }
-
-    if !path.exists() {
-        std::fs::write(&path, "Some private key").unwrap();
-    }
-    path
+    dirs::home_dir().unwrap().join(STAGING_KEY_PATH_FROM_HOME)
 }
 
 #[tokio::test]
@@ -338,12 +337,10 @@ async fn init_test_neuron_and_auth() {
                 include_proposer: true,
             }))
             .when_requirement(AuthRequirement::Neuron),
-        // Failing scenarios
-        //
-        NeuronAuthTestScenarion::new("Detecting neuron id for random private key")
+        NeuronAuthTestScenarion::new("Dry running commands shouldn't fail if neuron cannot be detected")
             .with_network("mainnet")
-            .with_private_key(ensure_testing_pem("testing").to_str().unwrap().to_string())
-            .want(Err(anyhow::anyhow!("Will not be able to detect neuron id")))
+            .is_dry_run()
+            .want(Ok(Neuron::dry_run_fake_neuron().unwrap()))
             .when_requirement(AuthRequirement::Neuron),
     ];
 

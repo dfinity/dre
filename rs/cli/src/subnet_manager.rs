@@ -8,12 +8,14 @@ use decentralization::{
     network::{DecentralizedSubnet, Node as DecentralizedNode, SubnetQueryBy},
     SubnetChangeResponse,
 };
-use ic_management_backend::health::{self, HealthStatusQuerier};
+use ic_management_backend::health::HealthStatusQuerier;
 use ic_management_backend::lazy_registry::LazyRegistry;
-use ic_management_types::MinNakamotoCoefficients;
-use ic_management_types::Network;
+use ic_management_types::HealthStatus;
 use ic_types::PrincipalId;
+use indexmap::IndexMap;
 use log::{info, warn};
+
+use crate::cordoned_feature_fetcher::CordonedFeatureFetcher;
 
 #[derive(Clone)]
 pub enum SubnetTarget {
@@ -38,15 +40,21 @@ impl fmt::Display for SubnetManagerError {
 pub struct SubnetManager {
     subnet_target: Option<SubnetTarget>,
     registry_instance: Arc<dyn LazyRegistry>,
-    network: Network,
+    cordoned_features_fetcher: Arc<dyn CordonedFeatureFetcher>,
+    health_client: Arc<dyn HealthStatusQuerier>,
 }
 
 impl SubnetManager {
-    pub fn new(registry_instance: Arc<dyn LazyRegistry>, network: Network) -> Self {
+    pub fn new(
+        registry_instance: Arc<dyn LazyRegistry>,
+        cordoned_features_fetcher: Arc<dyn CordonedFeatureFetcher>,
+        health_client: Arc<dyn HealthStatusQuerier>,
+    ) -> Self {
         Self {
             subnet_target: None,
             registry_instance,
-            network,
+            cordoned_features_fetcher,
+            health_client,
         }
     }
 
@@ -64,8 +72,7 @@ impl SubnetManager {
     }
 
     async fn unhealthy_nodes(&self, subnet: DecentralizedSubnet) -> anyhow::Result<Vec<(DecentralizedNode, ic_management_types::HealthStatus)>> {
-        let health_client = health::HealthClient::new(self.network.clone());
-        let subnet_health = health_client.subnet(subnet.id).await?;
+        let subnet_health = self.health_client.subnet(subnet.id).await?;
 
         let unhealthy = subnet
             .nodes
@@ -104,7 +111,7 @@ impl SubnetManager {
     ///    1. Setting `heal` to `true` in the request to replace unhealthy nodes
     ///    2. Replace `optimize` nodes to optimize subnet decentralization.
     ///    3. Explicitly add or remove nodes from the subnet specifying their
-    /// Principals.
+    ///       Principals.
     ///
     /// All nodes in the request must belong to exactly one subnet.
     pub async fn membership_replace(
@@ -115,7 +122,6 @@ impl SubnetManager {
         exclude: Option<Vec<String>>,
         only: Vec<String>,
         include: Option<Vec<PrincipalId>>,
-        min_nakamoto_coefficients: Option<MinNakamotoCoefficients>,
     ) -> anyhow::Result<SubnetChangeResponse> {
         let subnet_query_by = self.get_subnet_query_by(self.target()?).await?;
         let mut motivations = vec![];
@@ -134,8 +140,7 @@ impl SubnetManager {
             .await?
             .excluding_from_available(exclude.clone().unwrap_or_default())
             .including_from_available(only.clone())
-            .including_from_available(include.clone().unwrap_or_default())
-            .with_min_nakamoto_coefficients(min_nakamoto_coefficients.clone());
+            .including_from_available(include.clone().unwrap_or_default());
 
         let mut node_ids_unhealthy = HashSet::new();
         if heal {
@@ -154,10 +159,14 @@ impl SubnetManager {
             to_be_replaced.extend(subnet_unhealthy_without_included);
         }
 
-        let health_client = health::HealthClient::new(self.network.clone());
-        let health_of_nodes = health_client.nodes().await?;
+        let health_of_nodes = self.health_client.nodes().await?;
 
-        let change = subnet_change_request.optimize(optimize.unwrap_or(0), &to_be_replaced, &health_of_nodes)?;
+        let change = subnet_change_request.optimize(
+            optimize.unwrap_or(0),
+            &to_be_replaced,
+            &health_of_nodes,
+            self.cordoned_features_fetcher.fetch().await?,
+        )?;
 
         for (n, _) in change.removed().iter().filter(|(n, _)| !node_ids_unhealthy.contains(&n.id)) {
             motivations.push(format!(
@@ -177,6 +186,50 @@ impl SubnetManager {
 
         let change = SubnetChangeResponse::from(&change)
             .with_health_of_nodes(health_of_nodes)
+            .with_motivation(motivation);
+
+        Ok(change)
+    }
+
+    pub async fn subnet_resize(
+        &self,
+        request: ic_management_types::requests::SubnetResizeRequest,
+        proposal_motivation: String,
+        health_of_nodes: &IndexMap<PrincipalId, HealthStatus>,
+    ) -> anyhow::Result<SubnetChangeResponse> {
+        let registry = self.registry_instance.clone();
+        let mut motivations = vec![];
+
+        let change = registry
+            .modify_subnet_nodes(SubnetQueryBy::SubnetId(request.subnet))
+            .await?
+            .excluding_from_available(request.exclude.clone().unwrap_or_default())
+            .including_from_available(request.only.clone().unwrap_or_default())
+            .including_from_available(request.include.clone().unwrap_or_default())
+            .resize(
+                request.add,
+                request.remove,
+                0,
+                health_of_nodes,
+                self.cordoned_features_fetcher.fetch().await?,
+            )?;
+
+        for (n, _) in change.removed().iter() {
+            motivations.push(format!("removing {} as per user request", n.id));
+        }
+
+        for (n, _) in change.added().iter() {
+            motivations.push(format!("adding {} as per user request", n.id));
+        }
+
+        let motivation = format!(
+                "{}\n{}\n\nNOTE: The information below is provided for your convenience. Please independently verify the decentralization changes rather than relying solely on this summary.\nCode for calculating replacements is at https://github.com/dfinity/dre/blob/79066127f58c852eaf4adda11610e815a426878c/rs/decentralization/src/network.rs#L912",
+                proposal_motivation,
+                motivations.iter().map(|s| format!(" - {}", s)).collect::<Vec<String>>().join("\n")
+            );
+
+        let change = SubnetChangeResponse::from(&change)
+            .with_health_of_nodes(health_of_nodes.clone())
             .with_motivation(motivation);
 
         Ok(change)

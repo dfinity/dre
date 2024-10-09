@@ -1,10 +1,9 @@
 use std::path::PathBuf;
-use std::{collections::BTreeMap, str::FromStr};
 
 use crate::commands::subnet::Subnet;
 use api_boundary_nodes::ApiBoundaryNodes;
+use clap::Args as ClapArgs;
 use clap::Parser;
-use clap::{error::ErrorKind, Args as ClapArgs};
 use clap_num::maybe_hex;
 use clio::*;
 use completions::Completions;
@@ -13,7 +12,6 @@ use firewall::Firewall;
 use get::Get;
 use heal::Heal;
 use hostos::HostOs;
-use ic_management_types::{MinNakamotoCoefficients, NodeFeature};
 use neuron::Neuron;
 use node_metrics::NodeMetrics;
 use nodes::Nodes;
@@ -129,7 +127,7 @@ impl TryFrom<PathBuf> for AuthOpts {
 
 #[derive(Parser, Debug)]
 #[clap(version = env!("CARGO_PKG_VERSION"), about, author)]
-pub(crate) struct Args {
+pub struct Args {
     #[clap(flatten)]
     pub(crate) auth_opts: AuthOpts,
 
@@ -179,15 +177,19 @@ The argument is mandatory for testnets, and is optional for mainnet and staging"
     #[clap(long, env = "VERBOSE", global = true)]
     pub verbose: bool,
 
-    /// Don't sync with the registry
+    /// Run the tool offline when possible, i.e., do not sync registry and public dashboard data before the run
     ///
-    /// Useful for when the NNS is unreachable
+    /// Useful for when the NNS or Public dashboard are unreachable
     #[clap(long)]
-    pub no_sync: bool,
+    pub offline: bool,
 
     /// Link to the related forum post, where proposal details can be discussed
     #[clap(long, global = true, visible_aliases = &["forum-link", "forum"])]
     pub forum_post_link: Option<String>,
+
+    /// Path to file which contains cordoned features
+    #[clap(long, global = true, visible_aliases = &["cf-file", "cfff"])]
+    pub cordon_feature_fallback_file: Option<PathBuf>,
 }
 
 // Do not use outside of DRE CLI.
@@ -201,8 +203,14 @@ impl ExecutableCommand for Args {
         self.subcommands.execute(ctx).await
     }
 
-    fn validate(&self, cmd: &mut Command) {
-        self.subcommands.validate(cmd)
+    /// Validate the command line arguments. You can return an error with something like:
+    /// ```rust
+    /// if args.neuron_id.is_none() {
+    ///    cmd.error(ErrorKind::MissingRequiredArgument, "Neuron ID is required for this command.")).exit();
+    /// }
+    /// ```
+    fn validate(&self, args: &crate::commands::Args, cmd: &mut Command) {
+        self.subcommands.validate(args, cmd)
     }
 }
 
@@ -229,9 +237,9 @@ macro_rules! impl_executable_command_for_enums {
                 }
             }
 
-            fn validate(&self, cmd: &mut Command) {
+            fn validate(&self, args: &crate::commands::Args, cmd: &mut Command) {
                 match &self {
-                    $(Subcommands::$var(variant) => variant.validate(cmd),)*
+                    $(Subcommands::$var(variant) => variant.validate(args, cmd),)*
                 }
             }
         }
@@ -244,77 +252,9 @@ impl_executable_command_for_enums! { DerToPrincipal, Heal, Subnet, Get, Propose,
 pub trait ExecutableCommand {
     fn require_auth(&self) -> AuthRequirement;
 
-    fn validate(&self, cmd: &mut Command);
+    fn validate(&self, args: &crate::commands::Args, cmd: &mut Command);
 
     fn execute(&self, ctx: DreContext) -> impl std::future::Future<Output = anyhow::Result<()>>;
-
-    fn validate_min_nakamoto_coefficients(cmd: &mut clap::Command, min_nakamoto_coefficients: &[String]) {
-        let _ = Self::_parse_min_nakamoto_coefficients_inner(Some(cmd), min_nakamoto_coefficients);
-    }
-
-    fn parse_min_nakamoto_coefficients(min_nakamoto_coefficients: &[String]) -> Option<MinNakamotoCoefficients> {
-        Self::_parse_min_nakamoto_coefficients_inner(None, min_nakamoto_coefficients)
-    }
-
-    fn _parse_min_nakamoto_coefficients_inner(
-        cmd: Option<&mut clap::Command>,
-        min_nakamoto_coefficients: &[String],
-    ) -> Option<MinNakamotoCoefficients> {
-        let min_nakamoto_coefficients: Vec<String> = if min_nakamoto_coefficients.is_empty() {
-            ["node_provider=5", "average=3"].iter().map(|s| String::from(*s)).collect()
-        } else {
-            min_nakamoto_coefficients.to_vec()
-        };
-
-        let mut average = 3.0;
-        let mut coefficients = BTreeMap::new();
-        for entry in min_nakamoto_coefficients {
-            let (key, value) = match entry.split_once('=') {
-                Some(s) => s,
-                None => {
-                    if let Some(cmd) = cmd {
-                        cmd.error(ErrorKind::ValueValidation, "Falied to parse feature from string").exit()
-                    }
-                    continue;
-                }
-            };
-
-            if key.to_lowercase() == "average" {
-                average = match value.parse::<f64>() {
-                    Ok(a) => a,
-                    Err(_) => {
-                        if let Some(cmd) = cmd {
-                            cmd.error(ErrorKind::ValueValidation, "Falied to parse feature from string").exit()
-                        }
-                        continue;
-                    }
-                };
-                continue;
-            } else {
-                let feature = match NodeFeature::from_str(key) {
-                    Ok(v) => v,
-                    Err(_) => {
-                        if let Some(cmd) = cmd {
-                            cmd.error(ErrorKind::ValueValidation, "Falied to parse feature from string").exit()
-                        }
-                        continue;
-                    }
-                };
-                let val = match value.parse::<f64>() {
-                    Ok(v) => v,
-                    Err(_) => {
-                        if let Some(cmd) = cmd {
-                            cmd.error(ErrorKind::ValueValidation, "Falied to parse feature from string").exit()
-                        }
-                        continue;
-                    }
-                };
-                coefficients.insert(feature, val);
-            }
-        }
-
-        Some(MinNakamotoCoefficients { coefficients, average })
-    }
 }
 
 #[derive(Clone)]

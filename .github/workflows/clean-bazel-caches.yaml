@@ -23,7 +23,7 @@ jobs:
           fetch-depth: 1
 
       - name: "☁️ Setup bazelisk"
-        uses: bazelbuild/setup-bazelisk@v2
+        uses: bazelbuild/setup-bazelisk@v3
 
       - name: Clean Bazel Cache
         run: |

@@ -261,6 +261,31 @@ impl IcAdminImpl {
     }
 
     async fn propose_run_inner(&self, cmd: ProposeCommand, opts: ProposeOptions, dry_run: bool) -> anyhow::Result<String> {
+        let opts = if opts.forum_post_link.is_some() || self.proceed_without_confirmation {
+            opts
+        } else {
+            println!(
+                "Proposal title: {}",
+                opts.title.as_deref().unwrap_or(opts.summary.as_deref().unwrap_or(""))
+            );
+            let forum_post_link = Confirm::new()
+                .with_prompt("Link to a forum thread not found. Do you want to add it?")
+                .default(true)
+                .interact()?;
+            if forum_post_link {
+                let forum_post_link = dialoguer::Input::<String>::new()
+                    .with_prompt("Forum post link")
+                    .allow_empty(true)
+                    .interact()?;
+                ProposeOptions {
+                    forum_post_link: Some(forum_post_link),
+                    ..opts
+                }
+            } else {
+                opts
+            }
+        };
+
         // Dry run, or --help executions run immediately and do not proceed.
         if dry_run || cmd.args().contains(&String::from("--help")) || cmd.args().contains(&String::from("--dry-run")) {
             return self._exec(cmd, opts, true, false, false).await;
@@ -509,7 +534,7 @@ pub struct ProposeOptions {
     pub motivation: Option<String>,
     pub forum_post_link: Option<String>,
 }
-pub const FALLBACK_IC_ADMIN_VERSION: &str = "f3a6cf88defb92e8b457d2438cb5b086b51e26b2";
+pub const FALLBACK_IC_ADMIN_VERSION: &str = "d4ee25b0865e89d3eaac13a60f0016d5e3296b31";
 
 fn get_ic_admin_revisions_dir() -> anyhow::Result<PathBuf> {
     let dir = dirs::home_dir()

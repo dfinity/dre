@@ -77,6 +77,9 @@ comfy-table = { workspace = true }
 human_bytes = { workspace = true }
 mockall.workspace = true
 clio = { workspace = true }
+serde_yaml.workspace = true
+ic-icrc1-test-utils.workspace = true
+rosetta-core.workspace = true
 
 [dev-dependencies]
 actix-rt = { workspace = true }

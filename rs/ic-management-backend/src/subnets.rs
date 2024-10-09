@@ -1,4 +1,7 @@
-use decentralization::{network::SubnetChange, SubnetChangeResponse};
+use decentralization::{
+    network::{DecentralizedSubnet, SubnetChange},
+    SubnetChangeResponse,
+};
 use ic_base_types::PrincipalId;
 use ic_management_types::{Node, TopologyChangeProposal};
 use indexmap::IndexMap;
@@ -9,13 +12,17 @@ pub fn get_proposed_subnet_changes(
 ) -> Result<SubnetChangeResponse, anyhow::Error> {
     if let Some(proposal) = &subnet.proposal {
         let proposal: &TopologyChangeProposal = proposal;
+        let subnet_nodes: Vec<_> = subnet.nodes.iter().map(decentralization::network::Node::from).collect();
+        let penalties_after_change = DecentralizedSubnet::check_business_rules_for_subnet_with_nodes(&subnet.principal, &subnet_nodes)
+            .expect("Business rules check should succeed")
+            .0;
         let change = SubnetChange {
             id: subnet.principal,
-            old_nodes: subnet.nodes.iter().map(decentralization::network::Node::from).collect(),
-            new_nodes: subnet.nodes.iter().map(decentralization::network::Node::from).collect(),
+            old_nodes: subnet_nodes.clone(),
+            new_nodes: subnet_nodes,
             removed_nodes_desc: vec![],
             added_nodes_desc: vec![],
-            min_nakamoto_coefficients: None,
+            penalties_after_change,
             comment: None,
             run_log: vec![],
         }
@@ -141,7 +148,7 @@ mod tests {
                         owner: DatacenterOwner {
                             name: format!("datacenter-owner-{}", i),
                         },
-                        city: format!("datacenter-city-{}", i),
+                        area: format!("datacenter-area-{}", i),
                         country: format!("datacenter-country-{}", i),
                         continent: format!("datacenter-continent-{}", i),
                         latitude: None,

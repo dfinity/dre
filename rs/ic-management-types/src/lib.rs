@@ -318,24 +318,24 @@ pub enum NodeFeature {
     NodeProvider,
     DataCenter,
     DataCenterOwner,
-    City,
-    Country,
+    Area,    // Represents smaller geographic entities like cities and states
+    Country, // Covers larger contexts, like countries or broader regions under shared legal jurisdiction
     Continent,
 }
 
 impl NodeFeature {
     pub fn variants() -> Vec<Self> {
+        // Generally skip the continent feature as it is not used in the Nakamoto score calculation
+        NodeFeature::VARIANTS
+            .iter()
+            .filter(|f| **f != "continent")
+            .map(|f| NodeFeature::from_str(f).unwrap())
+            .collect()
+    }
+    pub fn variants_all() -> Vec<Self> {
         NodeFeature::VARIANTS.iter().map(|f| NodeFeature::from_str(f).unwrap()).collect()
     }
 }
-
-#[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
-pub struct MinNakamotoCoefficients {
-    pub coefficients: BTreeMap<NodeFeature, f64>,
-    pub average: f64,
-}
-
-impl Eq for MinNakamotoCoefficients {}
 
 #[derive(Clone, Serialize, Debug, Deserialize)]
 pub struct TopologyProposal {
@@ -407,7 +407,7 @@ pub struct Provider {
 pub struct Datacenter {
     pub name: String,
     pub owner: DatacenterOwner,
-    pub city: String,
+    pub area: String,
     pub country: String,
     pub continent: String,
     #[serde(skip_serializing_if = "Option::is_none")]

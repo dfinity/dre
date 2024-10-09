@@ -3,11 +3,11 @@ use crate::subnets::unhealthy_with_nodes;
 use crate::SubnetChangeResponse;
 use actix_web::http::StatusCode;
 use actix_web::{HttpResponse, ResponseError};
-use ahash::{AHashMap, AHashSet, HashSet};
+use ahash::{AHashMap, AHashSet, HashMap, HashSet};
 use anyhow::anyhow;
 use futures::future::BoxFuture;
 use ic_base_types::PrincipalId;
-use ic_management_types::{HealthStatus, MinNakamotoCoefficients, NetworkError, NodeFeature};
+use ic_management_types::{HealthStatus, NetworkError, NodeFeature};
 use indexmap::IndexMap;
 use itertools::Itertools;
 use log::{debug, info, warn};
@@ -19,7 +19,7 @@ use std::hash::Hash;
 
 #[derive(Clone, Serialize, Deserialize, Default)]
 pub struct DataCenterInfo {
-    city: String,
+    area: String,
     country: String,
     continent: String,
 }
@@ -66,6 +66,40 @@ impl Node {
                 .values()
                 .any(|v| *v.to_lowercase() == *value.to_lowercase())
     }
+
+    pub fn is_country_from_eu(country: &str) -> bool {
+        // (As of 2024) the EU countries are not properly marked in the registry, so we check membership separately.
+        let eu_countries: HashMap<&str, &str> = HashMap::from_iter([
+            ("AT", "Austria"),
+            ("BE", "Belgium"),
+            ("BG", "Bulgaria"),
+            ("CY", "Cyprus"),
+            ("CZ", "Czechia"),
+            ("DE", "Germany"),
+            ("DK", "Denmark"),
+            ("EE", "Estonia"),
+            ("ES", "Spain"),
+            ("FI", "Finland"),
+            ("FR", "France"),
+            ("GR", "Greece"),
+            ("HR", "Croatia"),
+            ("HU", "Hungary"),
+            ("IE", "Ireland"),
+            ("IT", "Italy"),
+            ("LT", "Lithuania"),
+            ("LU", "Luxembourg"),
+            ("LV", "Latvia"),
+            ("MT", "Malta"),
+            ("NL", "Netherlands"),
+            ("PL", "Poland"),
+            ("PT", "Portugal"),
+            ("RO", "Romania"),
+            ("SE", "Sweden"),
+            ("SI", "Slovenia"),
+            ("SK", "Slovakia"),
+        ]);
+        eu_countries.contains_key(country)
+    }
 }
 
 impl Hash for Node {
@@ -82,25 +116,24 @@ impl PartialEq for Node {
 
 impl From<&ic_management_types::Node> for Node {
     fn from(n: &ic_management_types::Node) -> Self {
+        let country = n
+            .operator
+            .datacenter
+            .as_ref()
+            .map(|d| d.country.clone())
+            .unwrap_or_else(|| "unknown".to_string());
+        let area = n
+            .operator
+            .datacenter
+            .as_ref()
+            .map(|d| d.area.clone())
+            .unwrap_or_else(|| "unknown".to_string());
+
         Self {
             id: n.principal,
             features: nakamoto::NodeFeatures::from_iter([
-                (
-                    NodeFeature::City,
-                    n.operator
-                        .datacenter
-                        .as_ref()
-                        .map(|d| d.city.clone())
-                        .unwrap_or_else(|| "unknown".to_string()),
-                ),
-                (
-                    NodeFeature::Country,
-                    n.operator
-                        .datacenter
-                        .as_ref()
-                        .map(|d| d.country.clone())
-                        .unwrap_or_else(|| "unknown".to_string()),
-                ),
+                (NodeFeature::Area, area),
+                (NodeFeature::Country, country),
                 (
                     NodeFeature::Continent,
                     n.operator
@@ -138,7 +171,6 @@ pub struct DecentralizedSubnet {
     pub nodes: Vec<Node>,
     pub added_nodes_desc: Vec<(Node, String)>,
     pub removed_nodes_desc: Vec<(Node, String)>,
-    pub min_nakamoto_coefficients: Option<MinNakamotoCoefficients>,
     pub comment: Option<String>,
     pub run_log: Vec<String>,
 }
@@ -158,7 +190,6 @@ impl DecentralizedSubnet {
             nodes,
             added_nodes_desc: vec![],
             removed_nodes_desc: vec![],
-            min_nakamoto_coefficients: None,
             comment: None,
             run_log: vec![],
         }
@@ -190,7 +221,6 @@ impl DecentralizedSubnet {
             nodes: new_subnet_nodes,
             added_nodes_desc: self.added_nodes_desc.clone(),
             removed_nodes_desc: removed.iter().map(|(n, desc)| (n.clone(), desc.to_string())).collect(),
-            min_nakamoto_coefficients: self.min_nakamoto_coefficients.clone(),
             comment: self.comment.clone(),
             run_log: {
                 if removed_is_empty {
@@ -221,7 +251,6 @@ impl DecentralizedSubnet {
             nodes: new_subnet_nodes,
             added_nodes_desc: nodes_to_add_with_desc.clone(),
             removed_nodes_desc: self.removed_nodes_desc,
-            min_nakamoto_coefficients: self.min_nakamoto_coefficients.clone(),
             comment: self.comment,
             run_log: {
                 if nodes_to_add_with_desc.is_empty() {
@@ -259,26 +288,15 @@ impl DecentralizedSubnet {
             .collect()
     }
 
-    pub fn with_min_nakamoto_coefficients(self, min_nakamoto_coefficients: &Option<MinNakamotoCoefficients>) -> Self {
-        Self {
-            min_nakamoto_coefficients: min_nakamoto_coefficients.clone(),
-            ..self
-        }
-    }
-
-    /// Ensure "business rules" or constraints for the subnet nodes are met.
-    /// For instance, there needs to be at least one DFINITY-owned node in each
-    /// subnet. For the mainnet NNS there needs to be at least 3
-    /// DFINITY-owned nodes.
+    /// Check the "business rules" for the current DecentralizedSubnet.
     pub fn check_business_rules(&self) -> anyhow::Result<(usize, Vec<String>)> {
-        Self::_check_business_rules_for_nodes(&self.id, &self.nodes, &self.min_nakamoto_coefficients)
+        Self::check_business_rules_for_subnet_with_nodes(&self.id, &self.nodes)
     }
 
-    fn _check_business_rules_for_nodes(
-        subnet_id: &PrincipalId,
-        nodes: &[Node],
-        min_nakamoto_coefficients: &Option<MinNakamotoCoefficients>,
-    ) -> anyhow::Result<(usize, Vec<String>)> {
+    /// Ensure "business rules" or constraints are met for the subnet id with provided list of nodes.
+    /// For instance, there needs to be at least one DFINITY-owned node in each subnet.
+    /// For the mainnet NNS there needs to be at least 3 DFINITY-owned nodes.
+    pub fn check_business_rules_for_subnet_with_nodes(subnet_id: &PrincipalId, nodes: &[Node]) -> anyhow::Result<(usize, Vec<String>)> {
         let mut checks = Vec::new();
         let mut penalties = 0;
         if nodes.len() <= 1 {
@@ -363,7 +381,9 @@ impl DecentralizedSubnet {
         };
         match nakamoto_scores.feature_value_counts_max(&NodeFeature::Country) {
             Some((name, value)) => {
-                if value > max_nodes_per_country {
+                if is_european_subnet && !Node::is_country_from_eu(name.as_str()) {
+                    // European subnet is expected to be controlled by European countries
+                } else if value > max_nodes_per_country {
                     let penalty = (value - max_nodes_per_country) * 10;
                     checks.push(format!(
                         "Country {} controls {} of nodes, which is higher than target of {} for the subnet. Applying penalty of {}.",
@@ -382,10 +402,16 @@ impl DecentralizedSubnet {
 
         if is_european_subnet {
             // European subnet should only take European nodes.
-            let continent_counts = nakamoto_scores.feature_value_counts(&NodeFeature::Continent);
-            let non_european_nodes_count = continent_counts
+            let country_counts = nakamoto_scores.feature_value_counts(&NodeFeature::Country);
+            let non_european_nodes_count = country_counts
                 .iter()
-                .filter_map(|(continent, count)| if continent == &"Europe".to_string() { None } else { Some(*count) })
+                .filter_map(|(country, count)| {
+                    if Node::is_country_from_eu(country.as_str()) || country.as_str() == "CH" {
+                        None
+                    } else {
+                        Some(*count)
+                    }
+                })
                 .sum::<usize>();
             if non_european_nodes_count > 0 {
                 checks.push(format!("European subnet has {} non-European node(s)", non_european_nodes_count));
@@ -404,37 +430,12 @@ impl DecentralizedSubnet {
             None => return Err(anyhow::anyhow!("Missing the Nakamoto score for the Node Provider")),
         }
 
-        if let Some(min_nakamoto_coefficients) = min_nakamoto_coefficients {
-            for (feature, min_coeff) in min_nakamoto_coefficients.coefficients.iter() {
-                match nakamoto_scores.score_feature(feature) {
-                    Some(score) => {
-                        if score < *min_coeff {
-                            checks.push(format!(
-                                "Lower than expected Nakamoto Coefficient {} < {} for feature {}",
-                                score, min_coeff, feature
-                            ));
-                            penalties += ((*min_coeff - score) * 100.) as usize;
-                        }
-                    }
-                    None => return Err(anyhow::anyhow!("NodeFeature '{}' not found", feature.to_string())),
-                }
-            }
-            if nakamoto_scores.score_avg_linear() < min_nakamoto_coefficients.average {
-                checks.push(format!(
-                    "Lower than expected average Nakamoto Coefficient {} < {}",
-                    nakamoto_scores.score_avg_linear(),
-                    min_nakamoto_coefficients.average
-                ));
-                penalties += ((min_nakamoto_coefficients.average - nakamoto_scores.score_avg_linear()) * 100.) as usize;
-            }
-        }
-
         for feature in &NodeFeature::variants() {
             match (nakamoto_scores.score_feature(feature), nakamoto_scores.controlled_nodes(feature)) {
                 (Some(score), Some(controlled_nodes)) => {
-                    let european_subnet_continent_penalty = is_european_subnet && feature == &NodeFeature::Continent;
+                    let european_subnet_penalty = is_european_subnet && feature == &NodeFeature::Country;
 
-                    if score == 1.0 && controlled_nodes > nodes.len() * 2 / 3 && !european_subnet_continent_penalty {
+                    if score == 1.0 && controlled_nodes > nodes.len() * 2 / 3 && !european_subnet_penalty {
                         checks.push(format!(
                             "NodeFeature {} controls {} of nodes, which is > {} (2/3 of all) nodes",
                             feature,
@@ -670,7 +671,6 @@ impl DecentralizedSubnet {
             nodes: nodes_after_extension,
             added_nodes_desc: added_nodes,
             removed_nodes_desc: self.removed_nodes_desc,
-            min_nakamoto_coefficients: self.min_nakamoto_coefficients,
             comment,
             run_log,
         })
@@ -762,14 +762,13 @@ impl DecentralizedSubnet {
             nodes: self.nodes.clone(),
             added_nodes_desc: self.added_nodes_desc,
             removed_nodes_desc: self.removed_nodes_desc,
-            min_nakamoto_coefficients: self.min_nakamoto_coefficients,
             comment,
             run_log,
         })
     }
 
     fn _node_to_replacement_candidate(&self, subnet_nodes: &[Node], touched_node: &Node, err_log: &mut Vec<String>) -> Option<ReplacementCandidate> {
-        match Self::_check_business_rules_for_nodes(&self.id, subnet_nodes, &self.min_nakamoto_coefficients) {
+        match Self::check_business_rules_for_subnet_with_nodes(&self.id, subnet_nodes) {
             Ok((penalty, business_rules_log)) => {
                 let new_score = Self::_calc_nakamoto_score(subnet_nodes);
                 Some(ReplacementCandidate {
@@ -812,7 +811,6 @@ impl From<&ic_management_types::Subnet> for DecentralizedSubnet {
             nodes: s.nodes.iter().map(Node::from).collect(),
             added_nodes_desc: Vec::new(),
             removed_nodes_desc: Vec::new(),
-            min_nakamoto_coefficients: None,
             comment: None,
             run_log: Vec::new(),
         }
@@ -876,22 +874,21 @@ pub trait TopologyManager: SubnetQuerier + AvailableNodesQuerier + Sync {
     fn create_subnet<'a>(
         &'a self,
         size: usize,
-        min_nakamoto_coefficients: Option<MinNakamotoCoefficients>,
         include_nodes: Vec<PrincipalId>,
         exclude_nodes: Vec<String>,
         only_nodes: Vec<String>,
         health_of_nodes: &'a IndexMap<PrincipalId, HealthStatus>,
+        cordoned_features: Vec<NodeFeaturePair>,
     ) -> BoxFuture<'a, Result<SubnetChange, NetworkError>> {
         Box::pin(async move {
             SubnetChangeRequest {
                 available_nodes: self.available_nodes().await?,
-                min_nakamoto_coefficients,
                 ..Default::default()
             }
             .including_from_available(include_nodes.clone())
             .excluding_from_available(exclude_nodes.clone())
             .including_from_available(only_nodes.clone())
-            .resize(size, 0, 0, health_of_nodes)
+            .resize(size, 0, 0, health_of_nodes, cordoned_features)
         })
     }
 }
@@ -928,6 +925,12 @@ impl<T: Identifies<Node>> MatchAnyNode<T> for std::slice::Iter<'_, T> {
     }
 }
 
+#[derive(Debug, Clone)]
+pub struct NodeFeaturePair {
+    pub feature: NodeFeature,
+    pub value: String,
+}
+
 #[derive(Default, Clone, Debug)]
 pub struct SubnetChangeRequest {
     subnet: DecentralizedSubnet,
@@ -935,7 +938,6 @@ pub struct SubnetChangeRequest {
     include_nodes: Vec<Node>,
     nodes_to_remove: Vec<Node>,
     nodes_to_keep: Vec<Node>,
-    min_nakamoto_coefficients: Option<MinNakamotoCoefficients>,
 }
 
 impl SubnetChangeRequest {
@@ -945,7 +947,6 @@ impl SubnetChangeRequest {
         include_nodes: Vec<Node>,
         nodes_to_remove: Vec<Node>,
         nodes_to_keep: Vec<Node>,
-        min_nakamoto_coefficients: Option<MinNakamotoCoefficients>,
     ) -> Self {
         SubnetChangeRequest {
             subnet,
@@ -953,7 +954,6 @@ impl SubnetChangeRequest {
             include_nodes,
             nodes_to_remove,
             nodes_to_keep,
-            min_nakamoto_coefficients,
         }
     }
 
@@ -1016,13 +1016,6 @@ impl SubnetChangeRequest {
         }
     }
 
-    pub fn with_min_nakamoto_coefficients(self, min_nakamoto_coefficients: Option<MinNakamotoCoefficients>) -> Self {
-        Self {
-            min_nakamoto_coefficients,
-            ..self
-        }
-    }
-
     /// Optimize is implemented by removing a certain number of nodes and then
     /// adding the same number back.
     pub fn optimize(
@@ -1030,6 +1023,7 @@ impl SubnetChangeRequest {
         optimize_count: usize,
         replacements_unhealthy_with_desc: &[(Node, String)],
         health_of_nodes: &IndexMap<PrincipalId, HealthStatus>,
+        cordoned_features: Vec<NodeFeaturePair>,
     ) -> Result<SubnetChange, NetworkError> {
         let old_nodes = self.subnet.nodes.clone();
         self.subnet = self.subnet.without_nodes(replacements_unhealthy_with_desc.to_owned())?;
@@ -1038,11 +1032,16 @@ impl SubnetChangeRequest {
             optimize_count,
             replacements_unhealthy_with_desc.len(),
             health_of_nodes,
+            cordoned_features,
         )?;
         Ok(SubnetChange { old_nodes, ..result })
     }
 
-    pub fn rescue(mut self, health_of_nodes: &IndexMap<PrincipalId, HealthStatus>) -> Result<SubnetChange, NetworkError> {
+    pub fn rescue(
+        mut self,
+        health_of_nodes: &IndexMap<PrincipalId, HealthStatus>,
+        cordoned_features: Vec<NodeFeaturePair>,
+    ) -> Result<SubnetChange, NetworkError> {
         let old_nodes = self.subnet.nodes.clone();
         let nodes_to_remove = self
             .subnet
@@ -1064,6 +1063,7 @@ impl SubnetChangeRequest {
             0,
             self.subnet.removed_nodes_desc.len(),
             health_of_nodes,
+            cordoned_features,
         )?;
         Ok(SubnetChange { old_nodes, ..result })
     }
@@ -1075,10 +1075,11 @@ impl SubnetChangeRequest {
         how_many_nodes_to_remove: usize,
         how_many_nodes_unhealthy: usize,
         health_of_nodes: &IndexMap<PrincipalId, HealthStatus>,
+        cordoned_features: Vec<NodeFeaturePair>,
     ) -> Result<SubnetChange, NetworkError> {
         let old_nodes = self.subnet.nodes.clone();
 
-        let available_nodes = self
+        let all_healthy_nodes = self
             .available_nodes
             .clone()
             .into_iter()
@@ -1086,13 +1087,31 @@ impl SubnetChangeRequest {
             .filter(|n| health_of_nodes.get(&n.id).unwrap_or(&HealthStatus::Unknown) == &HealthStatus::Healthy)
             .collect::<Vec<_>>();
 
+        let available_nodes = all_healthy_nodes
+            .into_iter()
+            .filter(|n| {
+                for cordoned_feature in &cordoned_features {
+                    if let Some(node_feature) = n.features.get(&cordoned_feature.feature) {
+                        if PartialEq::eq(&node_feature, &cordoned_feature.value) {
+                            // Node contains cordoned feature
+                            // exclude it from available pool
+                            return false;
+                        }
+                    }
+                }
+                // Node doesn't contain any cordoned features
+                // include it the available pool
+                true
+            })
+            .collect_vec();
+
         info!(
-            "Resizing subnet {} by removing {} (+{} unhealthy) nodes and adding {} nodes. Available {} healthy nodes.",
+            "Resizing subnet {} by adding {} and removing {} (from which {} unhealthy) nodes. Total available {} healthy nodes.",
             self.subnet.id,
             how_many_nodes_to_add,
             how_many_nodes_to_remove,
             how_many_nodes_unhealthy,
-            available_nodes.len()
+            available_nodes.len(),
         );
 
         let resized_subnet = if how_many_nodes_to_remove > 0 {
@@ -1109,6 +1128,20 @@ impl SubnetChangeRequest {
             .cloned()
             .chain(resized_subnet.removed_nodes_desc.iter().map(|(n, _)| n.clone()))
             .filter(|n| health_of_nodes.get(&n.id).unwrap_or(&HealthStatus::Unknown) == &HealthStatus::Healthy)
+            .filter(|n| {
+                for cordoned_feature in &cordoned_features {
+                    if let Some(node_feature) = n.features.get(&cordoned_feature.feature) {
+                        if PartialEq::eq(&node_feature, &cordoned_feature.value) {
+                            // Node contains cordoned feature
+                            // exclude it from available pool
+                            return false;
+                        }
+                    }
+                }
+                // Node doesn't contain any cordoned features
+                // include it the available pool
+                true
+            })
             .collect::<Vec<_>>();
         let resized_subnet = resized_subnet
             .with_nodes(
@@ -1117,9 +1150,11 @@ impl SubnetChangeRequest {
                     .map(|n| (n.clone(), "included as per user request".to_string()))
                     .collect(),
             )
-            .with_min_nakamoto_coefficients(&self.min_nakamoto_coefficients)
             .subnet_with_more_nodes(how_many_nodes_to_add, &available_nodes)
             .map_err(|e| NetworkError::ResizeFailed(e.to_string()))?;
+        let penalties_after_change = DecentralizedSubnet::check_business_rules_for_subnet_with_nodes(&self.subnet.id, &resized_subnet.nodes)
+            .map_err(|e| NetworkError::ResizeFailed(e.to_string()))?
+            .0;
 
         let subnet_change = SubnetChange {
             id: self.subnet.id,
@@ -1127,7 +1162,7 @@ impl SubnetChangeRequest {
             new_nodes: resized_subnet.nodes,
             removed_nodes_desc: resized_subnet.removed_nodes_desc,
             added_nodes_desc: resized_subnet.added_nodes_desc,
-            min_nakamoto_coefficients: self.min_nakamoto_coefficients.clone(),
+            penalties_after_change,
             comment: resized_subnet.comment,
             run_log: resized_subnet.run_log,
         };
@@ -1137,8 +1172,12 @@ impl SubnetChangeRequest {
     /// Evaluates the subnet change request to simulate the requested topology
     /// change. Command returns all the information about the subnet before
     /// and after the change.
-    pub fn evaluate(self, health_of_nodes: &IndexMap<PrincipalId, HealthStatus>) -> Result<SubnetChange, NetworkError> {
-        self.resize(0, 0, 0, health_of_nodes)
+    pub fn evaluate(
+        self,
+        health_of_nodes: &IndexMap<PrincipalId, HealthStatus>,
+        cordoned_features: Vec<NodeFeaturePair>,
+    ) -> Result<SubnetChange, NetworkError> {
+        self.resize(0, 0, 0, health_of_nodes, cordoned_features)
     }
 }
 
@@ -1149,7 +1188,7 @@ pub struct SubnetChange {
     pub new_nodes: Vec<Node>,
     pub removed_nodes_desc: Vec<(Node, String)>,
     pub added_nodes_desc: Vec<(Node, String)>,
-    pub min_nakamoto_coefficients: Option<MinNakamotoCoefficients>,
+    pub penalties_after_change: usize,
     pub comment: Option<String>,
     pub run_log: Vec<String>,
 }
@@ -1157,9 +1196,14 @@ pub struct SubnetChange {
 impl SubnetChange {
     pub fn with_nodes(self, nodes_to_add_with_desc: Vec<(Node, String)>) -> Self {
         let nodes_to_add: AHashSet<_> = nodes_to_add_with_desc.iter().map(|(n, _)| n).collect();
+        let new_nodes = [self.new_nodes, nodes_to_add.into_iter().cloned().collect_vec()].concat();
+        let penalties_after_change = DecentralizedSubnet::check_business_rules_for_subnet_with_nodes(&self.id, &new_nodes)
+            .expect("Business rules check should succeed")
+            .0;
         Self {
-            new_nodes: [self.new_nodes, nodes_to_add.into_iter().cloned().collect_vec()].concat(),
+            new_nodes,
             added_nodes_desc: nodes_to_add_with_desc,
+            penalties_after_change,
             ..self
         }
     }
@@ -1168,6 +1212,9 @@ impl SubnetChange {
         let nodes_to_rm: AHashSet<_> = nodes_to_remove_with_desc.iter().map(|(n, _)| n).collect();
         self.removed_nodes_desc.extend(nodes_to_remove_with_desc.clone());
         self.new_nodes.retain(|n| !nodes_to_rm.contains(n));
+        self.penalties_after_change = DecentralizedSubnet::check_business_rules_for_subnet_with_nodes(&self.id, &self.new_nodes)
+            .expect("Business rules check should succeed")
+            .0;
         self
     }
 
@@ -1185,7 +1232,6 @@ impl SubnetChange {
             nodes: self.old_nodes.clone(),
             added_nodes_desc: Vec::new(),
             removed_nodes_desc: Vec::new(),
-            min_nakamoto_coefficients: self.min_nakamoto_coefficients.clone(),
             comment: self.comment.clone(),
             run_log: Vec::new(),
         }
@@ -1197,7 +1243,6 @@ impl SubnetChange {
             nodes: self.new_nodes.clone(),
             added_nodes_desc: self.added_nodes_desc.clone(),
             removed_nodes_desc: self.removed_nodes_desc.clone(),
-            min_nakamoto_coefficients: self.min_nakamoto_coefficients.clone(),
             comment: self.comment.clone(),
             run_log: self.run_log.clone(),
         }
@@ -1247,10 +1292,10 @@ impl NetworkHealRequest {
         &self,
         mut available_nodes: Vec<Node>,
         health_of_nodes: &IndexMap<PrincipalId, HealthStatus>,
+        cordoned_features: Vec<NodeFeaturePair>,
     ) -> Result<Vec<SubnetChangeResponse>, NetworkError> {
         let mut subnets_changed = Vec::new();
         let subnets_to_heal = unhealthy_with_nodes(&self.subnets, health_of_nodes)
-            .await
             .iter()
             .flat_map(|(subnet_id, unhealthy_nodes)| {
                 let unhealthy_nodes = unhealthy_nodes.iter().map(Node::from).collect::<Vec<_>>();
@@ -1319,7 +1364,12 @@ impl NetworkHealRequest {
                 .filter_map(|num_nodes_to_optimize| {
                     change_req
                         .clone()
-                        .optimize(num_nodes_to_optimize, unhealthy_nodes_with_desc, health_of_nodes)
+                        .optimize(
+                            num_nodes_to_optimize,
+                            unhealthy_nodes_with_desc,
+                            health_of_nodes,
+                            cordoned_features.clone(),
+                        )
                         .map_err(|e| warn!("{}", e))
                         .ok()
                 })
@@ -1332,12 +1382,27 @@ impl NetworkHealRequest {
             }
             for change in &changes {
                 info!(
-                    "Replacing {} nodes in subnet {} gives Nakamoto coefficient: {}\n",
+                    "Replacing {} nodes in subnet {} results in subnet with business-rules penalty {} and Nakamoto coefficient: {}\n",
                     change.removed_with_desc.len(),
                     subnet.decentralized_subnet.id,
+                    change.penalties_after_change,
                     change.score_after
                 );
             }
+
+            // Some community members have expressed concern about the business-rules penalty.
+            // https://forum.dfinity.org/t/subnet-management-tdb26-nns/33663/26 and a few comments below.
+            // As a compromise, we will choose the change that has the lowest business-rules penalty,
+            // or if there is no improvement in the business-rules penalty, we will choose the change
+            // that replaces the fewest nodes.
+            let penalty_optimize_min = changes.iter().map(|change| change.penalties_after_change).min().unwrap();
+            info!("Min business-rules penalty: {}", penalty_optimize_min);
+
+            let changes = changes
+                .into_iter()
+                .filter(|change| change.penalties_after_change == penalty_optimize_min)
+                .collect::<Vec<_>>();
+
             let changes_max_score = changes
                 .iter()
                 .max_by_key(|change| change.score_after.clone())
@@ -1349,9 +1414,14 @@ impl NetworkHealRequest {
                 .skip(1)
                 .map(|(num_opt, change)| {
                     format!(
-                        "- {} additional node{}: {}",
+                        "- {} additional node{}{}: {}",
                         num_opt,
                         if num_opt > 1 { "s" } else { "" },
+                        if change.penalties_after_change > 0 {
+                            format!(" (solution penalty: {})", change.penalties_after_change)
+                        } else {
+                            "".to_string()
+                        },
                         change
                             .score_after
                             .describe_difference_from(&changes[num_opt.saturating_sub(1)].score_after)
@@ -1361,10 +1431,15 @@ impl NetworkHealRequest {
                 .collect::<Vec<_>>();
             info!("Max score: {}", changes_max_score.score_after);
 
-            let change = changes
-                .iter()
-                .find(|change: &&SubnetChangeResponse| change.score_after == changes_max_score.score_after)
-                .expect("No suitable changes found");
+            let change = if penalty_optimize_min > 0 && penalty_optimize_min == changes[0].penalties_after_change {
+                info!("No reduction in business-rules penalty, choosing the first change");
+                &changes[0]
+            } else {
+                changes
+                    .iter()
+                    .find(|change: &&SubnetChangeResponse| change.score_after == changes_max_score.score_after)
+                    .expect("No suitable changes found")
+            };
 
             info!(
                 "Replacing {} nodes in subnet {} gives Nakamoto coefficient: {}\n",

@@ -181,7 +181,7 @@ where
     elected_hostos: RwLock<Option<Arc<Vec<String>>>>,
     unassigned_nodes_replica_version: RwLock<Option<Arc<String>>>,
     firewall_rule_set: RwLock<Option<Arc<IndexMap<String, FirewallRuleSet>>>>,
-    no_sync: bool,
+    offline: bool,
     proposal_agent: Arc<dyn ProposalAgent>,
 }
 
@@ -279,7 +279,7 @@ impl LazyRegistryFamilyEntries for LazyRegistryImpl {
 }
 
 impl LazyRegistryImpl {
-    pub fn new(local_registry: LocalRegistry, network: Network, no_sync: bool, proposal_agent: Arc<dyn ProposalAgent>) -> Self {
+    pub fn new(local_registry: LocalRegistry, network: Network, offline: bool, proposal_agent: Arc<dyn ProposalAgent>) -> Self {
         Self {
             local_registry,
             network,
@@ -291,7 +291,7 @@ impl LazyRegistryImpl {
             elected_hostos: RwLock::new(None),
             unassigned_nodes_replica_version: RwLock::new(None),
             firewall_rule_set: RwLock::new(None),
-            no_sync,
+            offline,
             proposal_agent,
         }
     }
@@ -316,7 +316,7 @@ impl LazyRegistry for LazyRegistryImpl {
                 return Ok(guests.to_owned());
             }
 
-            if self.no_sync || (!self.network.is_mainnet() && !self.network.eq(&Network::staging_unchecked().unwrap())) {
+            if self.offline || (!self.network.is_mainnet() && !self.network.eq(&Network::staging_unchecked().unwrap())) {
                 let res = Arc::new(vec![]);
                 *self.node_labels_guests.write().await = Some(res.clone());
                 return Ok(res);
@@ -412,7 +412,7 @@ impl LazyRegistry for LazyRegistryImpl {
             }
 
             // Fetch node providers
-            let node_providers = match self.no_sync {
+            let node_providers = match self.offline {
                 false => query_ic_dashboard_list::<NodeProvidersResponse>(&self.network, "v3/node-providers").await?,
                 true => NodeProvidersResponse { node_providers: vec![] },
             };
@@ -436,7 +436,7 @@ impl LazyRegistry for LazyRegistryImpl {
                                         principal: p,
                                     });
 
-                                    if maybe_provider.is_none() && self.network.is_mainnet() {
+                                    if maybe_provider.is_none() && self.network.is_mainnet() && !self.offline {
                                         panic!("Node provider not found for operator: {}", principal);
                                     }
                                     maybe_provider.unwrap_or_default()
@@ -444,7 +444,7 @@ impl LazyRegistry for LazyRegistryImpl {
                                 .unwrap(),
                             allowance: or.node_allowance,
                             datacenter: data_centers.get(&or.dc_id).map(|dc| {
-                                let (continent, country, city): (_, _, _) = dc
+                                let (continent, country, area): (_, _, _) = dc
                                     .region
                                     .splitn(3, ',')
                                     .map(|s| s.to_string())
@@ -453,7 +453,7 @@ impl LazyRegistry for LazyRegistryImpl {
 
                                 Datacenter {
                                     name: dc.id.clone(),
-                                    city,
+                                    area,
                                     country,
                                     continent,
                                     owner: DatacenterOwner { name: dc.owner.clone() },
@@ -685,7 +685,7 @@ impl LazyRegistry for LazyRegistryImpl {
 
     fn update_proposal_data(&self) -> BoxFuture<'_, anyhow::Result<()>> {
         Box::pin(async {
-            if self.no_sync {
+            if self.offline {
                 return Ok(());
             }
 
@@ -841,7 +841,6 @@ impl SubnetQuerier for LazyRegistryImpl {
                         nodes: s.nodes.iter().map(decentralization::network::Node::from).collect(),
                         added_nodes_desc: vec![],
                         removed_nodes_desc: vec![],
-                        min_nakamoto_coefficients: None,
                         comment: None,
                         run_log: vec![],
                     })
@@ -870,7 +869,6 @@ impl SubnetQuerier for LazyRegistryImpl {
                                 .collect(),
                             added_nodes_desc: vec![],
                             removed_nodes_desc: vec![],
-                            min_nakamoto_coefficients: None,
                             comment: None,
                             run_log: vec![],
                         })

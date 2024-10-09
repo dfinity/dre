@@ -64,7 +64,7 @@ impl ExecutableCommand for List {
     }
 
     async fn execute(&self, ctx: crate::ctx::DreContext) -> anyhow::Result<()> {
-        let client = GovernanceCanisterWrapper::from(ctx.create_ic_agent_canister_client(None)?);
+        let client = GovernanceCanisterWrapper::from(ctx.create_ic_agent_canister_client(None).await?);
         let proposals = client
             .list_proposals(ListProposalInfo {
                 limit: self.limit,
@@ -89,5 +89,5 @@ impl ExecutableCommand for List {
         Ok(())
     }
 
-    fn validate(&self, _cmd: &mut clap::Command) {}
+    fn validate(&self, _args: &crate::commands::Args, _cmd: &mut clap::Command) {}
 }

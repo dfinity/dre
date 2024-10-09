@@ -1,4 +1,56 @@
 releases:
+  - rc_name: rc--2024-10-03_01-30
+    versions:
+      - name: base
+        version: d2657773d007e1b4c0b2dd715c628d24c0d7b5fb
+      - name: revert-ubuntu-22-04
+        version: 1ff0e709f0d0984a4f9ab06456db177c4b6e48a0
+      - # This has three reverts and rides atop the base release
+        # Here is the successful test: https://github.com/dfinity/ic/actions/runs/11241522710
+        name: canister-overhead-hotfix
+        version: f0c923eba09e9c1444501692b0ab4884882bf5bc
+      # This has the same reverts as the prior but rides atop the revert-ubuntu-22-04 release
+      # Here is the test battery: https://github.com/dfinity/ic/actions/runs/11243607016
+      # It is just here as a backup:
+      # - name: revert-ubuntu-22-04-canister-overhead-hotfix
+      #   version: 7c50c0db1e247a25896d77da72c410ff17ef5773
+  - rc_name: rc--2024-09-26_01-31
+    versions:
+      # Qualification pipeline:
+      # https://github.com/dfinity/ic/actions/runs/11043903413
+      # NOTE: failed qualification is due to a failure in
+      # uploading of bep file which is not related to the
+      # qualification test
+      - name: base
+        version: 35153c7cb7b9d1da60472ca7e94c693e418f87bd
+      # Qualification pipeline:
+      # https://github.com/dfinity/ic/actions/runs/11055135437
+      # NOTE: failed qualification is due to a failure in
+      # uploading of bep file which is not related to the
+      # qualification test
+      - name: ubuntu24
+        version: d101161c54df27f514902d22958c77aae9ce8035
+      # Qualification pipeline:
+      # https://github.com/dfinity/ic/actions/runs/11066543182
+      # NOTE: failed qualification is due to a failure in
+      # uploading of bep file which is not related to the
+      # qualification test
+      - name: no-canister-snapshots
+        version: c43a4880199c00135c8415957851e823b3fb769e
+  - rc_name: rc--2024-09-19_01-31
+    versions:
+      # Qualification pipeline:
+      # https://github.com/dfinity/ic/actions/runs/10932825071
+      - name: base
+        version: 0441f40482386397f7c688bf508ddd901ca6c1b7
+      # Qualification pipeline:
+      # https://github.com/dfinity/ic/actions/runs/10946553517
+      - name: canister-snapshots
+        version: 7f6a81f48e2a25a28bf07f83ca99f9ec1356da9d
+      # Qualification pipeline:
+      # https://github.com/dfinity/ic/actions/runs/10946565193
+      - name: ubuntu24
+        version: c87abf70cf6f0f81f7f16d9f517c3ff0db1fab1e
   - rc_name: rc--2024-09-12_01-30
     versions:
       # Qualification pipeline:
@@ -9,6 +61,14 @@ releases:
       # https://github.com/dfinity/ic/actions/runs/10828697477
       - name: canister-snapshots
         version: 179973553248415fc85679d853b48b0e0ec231c6
+      # Qualification pipeline:
+      # https://github.com/dfinity/ic/actions/runs/10902578918
+      - name: base-hotfix-deprecated-assert
+        version: cacf86a2ea7e21150d106e9e4dda5973088f53c5
+      # Qualification pipeline:
+      # https://github.com/dfinity/ic/actions/runs/10902588180
+      - name: canister-snapshots-hotfix-deprecated-assert
+        version: c66489953ed34670667ad81ce42a172948f289f5
   - rc_name: rc--2024-09-06_01-30
     versions:
       # Qualification pipeline:
@@ -25,6 +85,14 @@ releases:
       # https://github.com/dfinity/ic/actions/runs/10792321422
       - name: canister-snapshots-hotfix-https-outcalls
         version: 290fd2ae93a02e1ab579895c806161e42b6acf2b
+      # Qualification pipeline:
+      # https://github.com/dfinity/ic-private/actions/runs/10873147621
+      - name: base-hotfix-https-outcalls-remove-assert
+        version: 5d1beaca74d0bf2ad2e8a37809e1e3ffa5ee9a32
+      # Qualification pipeline:
+      # https://github.com/dfinity/ic-private/actions/runs/10873188297
+      - name: canister-snapshots-hotfix-https-outcalls-remove-assert
+        version: c180069c95739773293599d90c23defc12c3084f
   - rc_name: rc--2024-08-29_01-30
     versions:
       - name: base

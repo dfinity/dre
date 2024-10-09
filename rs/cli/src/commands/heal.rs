@@ -12,8 +12,19 @@ impl ExecutableCommand for Heal {
 
     async fn execute(&self, ctx: crate::ctx::DreContext) -> anyhow::Result<()> {
         let runner = ctx.runner().await?;
-        runner.network_heal(ctx.forum_post_link()).await
+        let proposals = runner.network_heal(ctx.forum_post_link()).await?;
+        let ic_admin = ctx.ic_admin().await?;
+        let mut errors = vec![];
+        for proposal in proposals {
+            if let Err(e) = ic_admin.propose_run(proposal.cmd, proposal.opts).await {
+                errors.push(e);
+            }
+        }
+        match errors.is_empty() {
+            true => Ok(()),
+            false => Err(anyhow::anyhow!("All errors received:\n{:?}", errors)),
+        }
     }
 
-    fn validate(&self, _cmd: &mut clap::Command) {}
+    fn validate(&self, _args: &crate::commands::Args, _cmd: &mut clap::Command) {}
 }

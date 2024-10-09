@@ -1,11 +1,13 @@
 use candid::Principal;
+use chrono_utils::DateTimeRange;
 use ic_cdk_macros::*;
 use itertools::Itertools;
-use std::collections::{self, btree_map::Entry, BTreeMap};
+use std::collections::{btree_map::Entry, BTreeMap};
 use trustworthy_node_metrics_types::types::{
-    DailyNodeMetrics, NodeMetrics, NodeMetricsStored, NodeMetricsStoredKey, NodeRewardsArgs, NodeRewardsResponse, SubnetNodeMetricsArgs,
-    SubnetNodeMetricsResponse,
+    NodeMetadata, NodeMetrics, NodeMetricsStored, NodeMetricsStoredKey, NodeProviderRewards, NodeProviderRewardsArgs, NodeRewardsArgs,
+    NodeRewardsMultiplier, SubnetNodeMetricsArgs, SubnetNodeMetricsResponse,
 };
+mod chrono_utils;
 mod computation_logger;
 mod metrics_manager;
 mod rewards_manager;
@@ -21,6 +23,24 @@ async fn update_metrics_task() {
         }
         Err(e) => {
             ic_cdk::println!("Error updating metrics: {}", e);
+        }
+    }
+
+    match rewards_manager::update_node_rewards_table().await {
+        Ok(_) => {
+            ic_cdk::println!("Successfully updated node_rewards_table");
+        }
+        Err(e) => {
+            ic_cdk::println!("Error updating node_rewards_table: {}", e);
+        }
+    }
+
+    match rewards_manager::update_recent_provider_rewards().await {
+        Ok(_) => {
+            ic_cdk::println!("Successfully updated recent provider rewards");
+        }
+        Err(e) => {
+            ic_cdk::println!("Error updated recent provider rewards: {}", e);
         }
     }
 }
@@ -48,7 +68,7 @@ fn subnet_node_metrics(args: SubnetNodeMetricsArgs) -> Result<Vec<SubnetNodeMetr
     let from_ts = args.ts.unwrap_or_default();
     let mut subnet_node_metrics: BTreeMap<(u64, Principal), Vec<NodeMetrics>> = BTreeMap::new();
 
-    let node_metrics: Vec<(NodeMetricsStoredKey, NodeMetricsStored)> = stable_memory::get_metrics_range(from_ts, None);
+    let node_metrics: Vec<(NodeMetricsStoredKey, NodeMetricsStored)> = stable_memory::get_metrics_range(from_ts, None, None);
 
     for ((ts, node_id), node_metrics_value) in node_metrics {
         if let Some(subnet_id) = args.subnet_id {
@@ -84,43 +104,23 @@ fn subnet_node_metrics(args: SubnetNodeMetricsArgs) -> Result<Vec<SubnetNodeMetr
 }
 
 #[query]
-fn node_rewards(args: NodeRewardsArgs) -> Vec<NodeRewardsResponse> {
-    let period_start = args.from_ts;
-    let period_end = args.to_ts;
-    let node_metrics: Vec<(NodeMetricsStoredKey, NodeMetricsStored)> = stable_memory::get_metrics_range(period_start, Some(period_end));
+fn nodes_metadata() -> Vec<NodeMetadata> {
+    stable_memory::nodes_metadata()
+}
 
-    let mut daily_metrics = collections::BTreeMap::new();
-    for ((ts, node_id), node_metrics_value) in node_metrics {
-        let daily_node_metrics = DailyNodeMetrics::new(
-            ts,
-            node_metrics_value.subnet_assigned,
-            node_metrics_value.num_blocks_proposed,
-            node_metrics_value.num_blocks_failed,
-        );
+#[query]
+fn node_rewards(args: NodeRewardsArgs) -> NodeRewardsMultiplier {
+    let rewarding_period = DateTimeRange::new(args.from_ts, args.to_ts);
+    let node_id = args.node_id;
 
-        match daily_metrics.entry(node_id) {
-            Entry::Occupied(mut entry) => {
-                let v: &mut Vec<DailyNodeMetrics> = entry.get_mut();
-                v.push(daily_node_metrics)
-            }
-            Entry::Vacant(entry) => {
-                entry.insert(vec![daily_node_metrics]);
-            }
-        }
-    }
+    let rewards = rewards_manager::node_rewards_multiplier(vec![node_id], rewarding_period);
+    rewards.into_iter().next().unwrap()
+}
 
-    daily_metrics
-        .into_iter()
-        .map(|(node_id, daily_node_metrics)| {
-            let rewards_computation = rewards_manager::compute_rewards_percent(&daily_node_metrics);
-            let node_provider_id = stable_memory::get_node_provider(&node_id).unwrap_or(Principal::anonymous());
+#[query]
+fn node_provider_rewards(args: NodeProviderRewardsArgs) -> NodeProviderRewards {
+    let rewarding_period = DateTimeRange::new(args.from_ts, args.to_ts);
+    let node_provider_id = args.node_provider_id;
 
-            NodeRewardsResponse {
-                node_id,
-                node_provider_id,
-                daily_node_metrics,
-                rewards_computation,
-            }
-        })
-        .collect_vec()
+    rewards_manager::node_provider_rewards(node_provider_id, rewarding_period)
 }

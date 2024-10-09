@@ -373,7 +373,13 @@ impl RegistryState {
                 releases.extend(
                     blessed_versions
                         .iter()
-                        .map(|version| commit_to_release.get(version).unwrap().clone())
+                        .filter_map(|version| match commit_to_release.get(version) {
+                            Some(release) => Some(release.clone()),
+                            None => {
+                                error!("Failed to find release for version {}", version);
+                                None
+                            }
+                        })
                         .sorted_by_key(|rr| rr.time)
                         .collect::<Vec<Release>>(),
                 );
@@ -405,7 +411,7 @@ impl RegistryState {
                             .expect("provider missing from operator record"),
                         allowance: or.node_allowance,
                         datacenter: data_center_records.get(&or.dc_id).map(|dc| {
-                            let (continent, country, city): (_, _, _) = dc.region.splitn(3, ',').map(|s| s.to_string()).collect_tuple().unwrap_or((
+                            let (continent, country, area): (_, _, _) = dc.region.splitn(3, ',').map(|s| s.to_string()).collect_tuple().unwrap_or((
                                 "Unknown".to_string(),
                                 "Unknown".to_string(),
                                 "Unknown".to_string(),
@@ -413,7 +419,7 @@ impl RegistryState {
 
                             Datacenter {
                                 name: dc.id.clone(),
-                                city,
+                                area,
                                 country,
                                 continent,
                                 owner: DatacenterOwner { name: dc.owner.clone() },
@@ -846,7 +852,6 @@ impl SubnetQuerier for RegistryState {
                         nodes: s.nodes.iter().map(decentralization::network::Node::from).collect(),
                         added_nodes_desc: Vec::new(),
                         removed_nodes_desc: Vec::new(),
-                        min_nakamoto_coefficients: None,
                         comment: None,
                         run_log: Vec::new(),
                     })
@@ -873,7 +878,6 @@ impl SubnetQuerier for RegistryState {
                                 .collect(),
                             added_nodes_desc: Vec::new(),
                             removed_nodes_desc: Vec::new(),
-                            min_nakamoto_coefficients: None,
                             comment: None,
                             run_log: Vec::new(),
                         })

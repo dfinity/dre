@@ -1,4 +1,6 @@
+use futures::future::BoxFuture;
 use indexmap::IndexMap;
+use mockall::automock;
 use std::{collections::HashSet, str::FromStr};
 
 use ic_base_types::PrincipalId;
@@ -24,17 +26,17 @@ impl HealthClient {
 }
 
 impl HealthStatusQuerier for HealthClient {
-    async fn subnet(&self, subnet: PrincipalId) -> anyhow::Result<IndexMap<PrincipalId, HealthStatus>> {
+    fn subnet(&self, subnet: PrincipalId) -> BoxFuture<'_, anyhow::Result<IndexMap<PrincipalId, HealthStatus>>> {
         match &self.implementation {
-            HealthStatusQuerierImplementations::Dashboard(c) => c.subnet(subnet).await,
-            HealthStatusQuerierImplementations::Prometheus(c) => c.subnet(subnet).await,
+            HealthStatusQuerierImplementations::Dashboard(c) => c.subnet(subnet),
+            HealthStatusQuerierImplementations::Prometheus(c) => c.subnet(subnet),
         }
     }
 
-    async fn nodes(&self) -> anyhow::Result<IndexMap<PrincipalId, HealthStatus>> {
+    fn nodes(&self) -> BoxFuture<'_, anyhow::Result<IndexMap<PrincipalId, HealthStatus>>> {
         match &self.implementation {
-            HealthStatusQuerierImplementations::Dashboard(c) => c.nodes().await,
-            HealthStatusQuerierImplementations::Prometheus(c) => c.nodes().await,
+            HealthStatusQuerierImplementations::Dashboard(c) => c.nodes(),
+            HealthStatusQuerierImplementations::Prometheus(c) => c.nodes(),
         }
     }
 }
@@ -54,9 +56,11 @@ impl From<Network> for HealthStatusQuerierImplementations {
     }
 }
 
-pub trait HealthStatusQuerier {
-    fn subnet(&self, subnet: PrincipalId) -> impl std::future::Future<Output = anyhow::Result<IndexMap<PrincipalId, HealthStatus>>> + Send;
-    fn nodes(&self) -> impl std::future::Future<Output = anyhow::Result<IndexMap<PrincipalId, HealthStatus>>> + Send;
+#[automock]
+#[allow(dead_code)]
+pub trait HealthStatusQuerier: Send + Sync {
+    fn subnet(&self, subnet: PrincipalId) -> BoxFuture<'_, anyhow::Result<IndexMap<PrincipalId, HealthStatus>>>;
+    fn nodes(&self) -> BoxFuture<'_, anyhow::Result<IndexMap<PrincipalId, HealthStatus>>>;
 }
 
 pub struct PublicDashboardHealthClient {
@@ -177,6 +181,7 @@ fn get_unquoted(s: &str) -> &str {
     chars.as_str()
 }
 
+#[allow(dead_code)]
 struct ShortNodeInfo {
     node_id: PrincipalId,
     subnet_id: Option<PrincipalId>,
@@ -184,21 +189,23 @@ struct ShortNodeInfo {
 }
 
 impl HealthStatusQuerier for PublicDashboardHealthClient {
-    async fn subnet(&self, subnet: PrincipalId) -> anyhow::Result<IndexMap<PrincipalId, HealthStatus>> {
-        Ok(self
-            .get_all_nodes()
-            .await?
-            .into_iter()
-            .filter(|n| match n.subnet_id {
-                None => false,
-                Some(p) => p.eq(&subnet),
-            })
-            .map(|n| (n.node_id, n.status))
-            .collect())
+    fn subnet(&self, subnet: PrincipalId) -> BoxFuture<'_, anyhow::Result<IndexMap<PrincipalId, HealthStatus>>> {
+        Box::pin(async move {
+            Ok(self
+                .get_all_nodes()
+                .await?
+                .into_iter()
+                .filter(|n| match n.subnet_id {
+                    None => false,
+                    Some(p) => p.eq(&subnet),
+                })
+                .map(|n| (n.node_id, n.status))
+                .collect())
+        })
     }
 
-    async fn nodes(&self) -> anyhow::Result<IndexMap<PrincipalId, HealthStatus>> {
-        Ok(self.get_all_nodes().await?.into_iter().map(|n| (n.node_id, n.status)).collect())
+    fn nodes(&self) -> BoxFuture<'_, anyhow::Result<IndexMap<PrincipalId, HealthStatus>>> {
+        Box::pin(async { Ok(self.get_all_nodes().await?.into_iter().map(|n| (n.node_id, n.status)).collect()) })
     }
 }
 
@@ -217,65 +224,69 @@ impl PrometheusHealthClient {
 }
 
 impl HealthStatusQuerier for PrometheusHealthClient {
-    async fn subnet(&self, subnet: PrincipalId) -> anyhow::Result<IndexMap<PrincipalId, HealthStatus>> {
-        let ic_name = self.network.legacy_name();
-        let subnet_name = subnet.to_string();
-        let query_up = Selector::new()
-            .metric("up")
-            .eq("ic", ic_name.as_str())
-            .eq("job", "replica")
-            .eq("ic_subnet", subnet_name.as_str());
+    fn subnet(&self, subnet: PrincipalId) -> BoxFuture<'_, anyhow::Result<IndexMap<PrincipalId, HealthStatus>>> {
+        Box::pin(async move {
+            let ic_name = self.network.legacy_name();
+            let subnet_name = subnet.to_string();
+            let query_up = Selector::new()
+                .metric("up")
+                .eq("ic", ic_name.as_str())
+                .eq("job", "replica")
+                .eq("ic_subnet", subnet_name.as_str());
 
-        let response_up = self.client.query(query_up).get().await?;
-        let instant_up = response_up.data().as_vector().expect("Expected instant vector");
+            let response_up = self.client.query(query_up).get().await?;
+            let instant_up = response_up.data().as_vector().expect("Expected instant vector");
 
-        // Alerts are synthetic time series and cannot be queries as regular metrics
-        // https://prometheus.io/docs/prometheus/latest/configuration/alerting_rules/#inspecting-alerts-during-runtime
-        let query_alert = format!(
-            "ALERTS{{ic=\"{}\", job=\"replica\", ic_subnet=\"{}\", alertstate=\"firing\"}}",
-            self.network.legacy_name(),
-            subnet
-        );
-        let response_alert = self.client.query(query_alert).get().await?;
-        let instant_alert = response_alert.data().as_vector().expect("Expected instant vector");
-        let node_ids_with_alerts: HashSet<PrincipalId> = instant_alert
-            .iter()
-            .filter_map(|r| r.metric().get("ic_node").and_then(|id| PrincipalId::from_str(id).ok()))
-            .collect();
+            // Alerts are synthetic time series and cannot be queries as regular metrics
+            // https://prometheus.io/docs/prometheus/latest/configuration/alerting_rules/#inspecting-alerts-during-runtime
+            let query_alert = format!(
+                "ALERTS{{ic=\"{}\", job=\"replica\", ic_subnet=\"{}\", alertstate=\"firing\"}}",
+                self.network.legacy_name(),
+                subnet
+            );
+            let response_alert = self.client.query(query_alert).get().await?;
+            let instant_alert = response_alert.data().as_vector().expect("Expected instant vector");
+            let node_ids_with_alerts: HashSet<PrincipalId> = instant_alert
+                .iter()
+                .filter_map(|r| r.metric().get("ic_node").and_then(|id| PrincipalId::from_str(id).ok()))
+                .collect();
 
-        Ok(instant_up
-            .iter()
-            .filter_map(|r| {
-                r.metric().get("ic_node").and_then(|id| PrincipalId::from_str(id).ok()).map(|id| {
-                    let status = if r.sample().value() == 1.0 {
-                        if node_ids_with_alerts.contains(&id) {
-                            HealthStatus::Degraded
+            Ok(instant_up
+                .iter()
+                .filter_map(|r| {
+                    r.metric().get("ic_node").and_then(|id| PrincipalId::from_str(id).ok()).map(|id| {
+                        let status = if r.sample().value() == 1.0 {
+                            if node_ids_with_alerts.contains(&id) {
+                                HealthStatus::Degraded
+                            } else {
+                                HealthStatus::Healthy
+                            }
                         } else {
-                            HealthStatus::Healthy
-                        }
-                    } else {
-                        HealthStatus::Dead
-                    };
-                    (id, status)
+                            HealthStatus::Dead
+                        };
+                        (id, status)
+                    })
                 })
-            })
-            .collect())
+                .collect())
+        })
     }
 
-    async fn nodes(&self) -> anyhow::Result<IndexMap<PrincipalId, HealthStatus>> {
-        let query = format!(
-            r#"ic_replica_orchestrator:health_state:bottomk_1{{ic="{network}"}}"#,
-            network = self.network.legacy_name(),
-        );
-        let response = self.client.query(query).get().await?;
-        let results = response.data().as_vector().expect("Expected instant vector");
-        Ok(results
-            .iter()
-            .filter_map(|r| {
-                let status = HealthStatus::from_str(r.metric().get("state").expect("all vectors should have a state label"))
-                    .expect("all vectors should have a valid label");
-                r.metric().get("ic_node").map(|id| (PrincipalId::from_str(id).unwrap(), status))
-            })
-            .collect())
+    fn nodes(&self) -> BoxFuture<'_, anyhow::Result<IndexMap<PrincipalId, HealthStatus>>> {
+        Box::pin(async {
+            let query = format!(
+                r#"ic_replica_orchestrator:health_state:bottomk_1{{ic="{network}"}}"#,
+                network = self.network.legacy_name(),
+            );
+            let response = self.client.query(query).get().await?;
+            let results = response.data().as_vector().expect("Expected instant vector");
+            Ok(results
+                .iter()
+                .filter_map(|r| {
+                    let status = HealthStatus::from_str(r.metric().get("state").expect("all vectors should have a state label"))
+                        .expect("all vectors should have a valid label");
+                    r.metric().get("ic_node").map(|id| (PrincipalId::from_str(id).unwrap(), status))
+                })
+                .collect())
+        })
     }
 }
