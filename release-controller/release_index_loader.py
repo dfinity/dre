@@ -23,7 +23,7 @@ To build and verify the IC-OS disk image, run:
 sudo apt-get install -y curl && curl --proto '=https' --tlsv1.2 -sSLO https://raw.githubusercontent.com/dfinity/ic/{version}/ci/tools/repro-check.sh && chmod +x repro-check.sh && ./repro-check.sh -c {version}
 ```
 
-The two SHA256 sums printed above from a) the downloaded CDN image and b) the locally built image, must be identical, and must match the SHA256 from the payload of the NNS proposal.
+The two SHA256 sums printed above from a) the downloaded CDN image and b) the locally built image, must be identical, and must match the SHA256 from the payload of the NNS proposal.  The verification process will also attempt to reproduce HostOS and SetupOS — these results are for advisory purposes only, as this proposal only elects a GuestOS.
 """
 
 
@@ -52,8 +52,11 @@ class ReleaseLoader:
     def changelog(self, version: str) -> str | None:
         """Return the changelog for the given version."""
         version_changelog_path = self.release_index_dir / self.changelog_path(version)
-        if version_changelog_path.exists():
-            return open(version_changelog_path, "r").read()
+        return (
+            open(version_changelog_path, "r").read()
+            if version_changelog_path.exists()
+            else None
+        )
 
     def proposal_summary(self, version: str) -> str | None:
         """Return the proposal summary for the given version."""
@@ -75,7 +78,9 @@ class DevReleaseLoader(ReleaseLoader):
     def __init__(self):
         """Create a new DevReleaseLoader."""
         dev_repo_root = (
-            subprocess.check_output(["git", "rev-parse", "--show-toplevel"], stderr=subprocess.DEVNULL)
+            subprocess.check_output(
+                ["git", "rev-parse", "--show-toplevel"], stderr=subprocess.DEVNULL
+            )
             .decode(sys.stdout.encoding)
             .strip()
         )

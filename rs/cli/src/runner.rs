@@ -849,7 +849,9 @@ pub fn format_regular_version_upgrade_summary(
     ```
 
     The two SHA256 sums printed above from a) the downloaded CDN image and b) the locally built image,
-    must be identical, and must match the SHA256 from the payload of the NNS proposal.
+    must be identical, and must match the SHA256 from the payload of the NNS proposal.  The verification
+    process will also attempt to reproduce HostOS and SetupOS — these results are for advisory purposes
+    only, as this proposal only elects a GuestOS.
 
     Forum post link: {forum_post_link}
     "#
