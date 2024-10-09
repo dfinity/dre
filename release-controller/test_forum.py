@@ -1,6 +1,7 @@
 import httpretty.utils
 from forum import ReleaseCandidateForumClient
 from mock_discourse import DiscourseClientMock
+from mock_requests_post_fecher import MockRequestsPostFetcher
 from release_index import Release
 from release_index import Version
 
@@ -155,9 +156,7 @@ release notes for version test2...
     discourse_client.created_topics = [existing_topic]
     forum_client = ReleaseCandidateForumClient(
         discourse_client=discourse_client,
-        discourse_api_key="",
-        discourse_url="https://forum.dfinity.org",
-        discourse_username="",
+        post_fetcher=MockRequestsPostFetcher(created_posts=discourse_client.created_posts),
     )
     post = forum_client.get_or_create(
         Release(

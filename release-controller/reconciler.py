@@ -18,7 +18,7 @@ import __fix_import_paths  # isort:skip  # noqa: F401 # pylint: disable=W0611
 import release_index
 import requests
 from dotenv import load_dotenv
-from forum import ReleaseCandidateForumClient
+from forum import ReleaseCandidateForumClient, RequestsPostFetcher
 from git_repo import GitRepo
 from git_repo import push_release_tags
 from github import Auth
@@ -354,9 +354,11 @@ def main():
     )
     forum_client = ReleaseCandidateForumClient(
         discourse_client,
-        discourse_api_key=os.environ["DISCOURSE_KEY"],
-        discourse_url=os.environ["DISCOURSE_URL"],
-        discourse_username=os.environ["DISCOURSE_USER"],
+        RequestsPostFetcher(
+            discourse_api_key=os.environ["DISCOURSE_KEY"],
+            discourse_url=os.environ["DISCOURSE_URL"],
+            discourse_username=os.environ["DISCOURSE_USER"],
+        ),
     )
     github_token = os.environ["GITHUB_TOKEN"]
     github_client = Github(auth=Auth.Token(github_token))
