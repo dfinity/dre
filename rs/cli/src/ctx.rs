@@ -62,7 +62,6 @@ impl DreContext {
         auth: AuthOpts,
         neuron_id: Option<u64>,
         verbose: bool,
-        offline: bool,
         yes: bool,
         dry_run: bool,
         auth_requirement: AuthRequirement,
@@ -70,8 +69,9 @@ impl DreContext {
         ic_admin_version: IcAdminVersion,
         cordoned_features_fetcher: Arc<dyn CordonedFeatureFetcher>,
         health_client: Arc<dyn HealthStatusQuerier>,
+        store: Store,
     ) -> anyhow::Result<Self> {
-        let network = match offline {
+        let network = match store.is_offline() {
             false => ic_management_types::Network::new(network.clone(), &nns_urls)
                 .await
                 .map_err(|e| anyhow::anyhow!(e))?,
@@ -99,27 +99,28 @@ impl DreContext {
             },
             cordoned_features_fetcher,
             health_client,
-            store: Store::new(offline)?,
+            store,
         })
     }
 
     pub(crate) async fn from_args(args: &Args) -> anyhow::Result<Self> {
+        let store = Store::new(args.offline)?;
         Self::new(
             args.network.clone(),
             args.nns_urls.clone(),
             args.auth_opts.clone(),
             args.neuron_id,
             args.verbose,
-            args.offline,
             args.yes,
             args.dry_run,
             args.subcommands.require_auth(),
             args.forum_post_link.clone(),
             args.ic_admin_version.clone(),
-            Arc::new(CordonedFeatureFetcherImpl::new(args.offline, args.cordon_feature_fallback_file.clone())?) as Arc<dyn CordonedFeatureFetcher>,
+            Arc::new(CordonedFeatureFetcherImpl::new(store.cordoned_features_file()?)?) as Arc<dyn CordonedFeatureFetcher>,
             Arc::new(health::HealthClient::new(
                 ic_management_types::Network::new(args.network.clone(), &args.nns_urls).await?,
             )),
+            store,
         )
         .await
     }

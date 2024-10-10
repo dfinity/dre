@@ -4,7 +4,7 @@ use crate::{
     auth::{Auth, Neuron, STAGING_KEY_PATH_FROM_HOME, STAGING_NEURON_ID},
     commands::{AuthOpts, AuthRequirement, HsmOpts},
     cordoned_feature_fetcher::MockCordonedFeatureFetcher,
-    store::FALLBACK_IC_ADMIN_VERSION,
+    store::{Store, FALLBACK_IC_ADMIN_VERSION},
 };
 use clio::{ClioPath, InputPath};
 use ic_canisters::governance::governance_canister_version;
@@ -47,13 +47,13 @@ async fn get_context(network: &Network, version: IcAdminVersion) -> anyhow::Resu
         None,
         false,
         false,
-        false,
         true,
         crate::commands::AuthRequirement::Anonymous,
         None,
         version,
         Arc::new(MockCordonedFeatureFetcher::new()),
         Arc::new(MockHealthStatusQuerier::new()),
+        Store::new(false)?,
     )
     .await
 }
@@ -183,7 +183,6 @@ async fn get_ctx_for_neuron_test(
         auth,
         neuron_id,
         true,
-        offline,
         false,
         dry_run,
         requirement,
@@ -191,6 +190,7 @@ async fn get_ctx_for_neuron_test(
         IcAdminVersion::Strict("Shouldn't get to here".to_string()),
         Arc::new(MockCordonedFeatureFetcher::new()),
         Arc::new(MockHealthStatusQuerier::new()),
+        Store::new(offline)?,
     )
     .await
 }

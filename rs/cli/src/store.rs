@@ -225,4 +225,18 @@ impl Store {
             }
         }
     }
+
+    pub fn cordoned_features_file(&self) -> anyhow::Result<PathBuf> {
+        let file = self.path().join("cordoned_features.yaml");
+
+        if !file.exists() {
+            info!("Cordoned features file was missing. Creating on path `{}`...", file.display());
+            if let Err(e) = std::fs::write(&file, "") {
+                warn!("Failed to create cordoned features file: {:?}", e);
+                warn!("This is not critical now. If github is offline then it could be");
+            }
+        }
+
+        Ok(file)
+    }
 }
