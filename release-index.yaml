@@ -1,8 +1,12 @@
 releases:
   - rc_name: rc--2024-10-11_14-35
     versions:
+      # Qualification pipeline:
+      # https://github.com/dfinity/ic/actions/runs/11294681027
       - name: base
         version: 6fb2fd1f0512c81578ea0d1984c48851e6c08b0d
+      # Qualification pipeline:
+      # https://github.com/dfinity/ic/actions/runs/11294686690
       - name: overload
         version: aba60ffbc46acfc8990bf4d5685c1360bd7026b9
   - rc_name: rc--2024-10-03_01-30
