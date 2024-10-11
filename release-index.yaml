@@ -1,5 +1,5 @@
 releases:
-  - rc_name: rc-2024-10-11-14_35
+  - rc_name: rc--2024-10-11_14-35
     versions:
       - name: base
         version: 6fb2fd1f0512c81578ea0d1984c48851e6c08b0d
