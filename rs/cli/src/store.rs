@@ -14,6 +14,7 @@ use log::{debug, info, warn};
 use crate::{
     auth::Neuron,
     commands::IcAdminVersion,
+    cordoned_feature_fetcher::{CordonedFeatureFetcher, CordonedFeatureFetcherImpl},
     ic_admin::{IcAdmin, IcAdminImpl},
 };
 
@@ -226,7 +227,7 @@ impl Store {
         }
     }
 
-    pub fn cordoned_features_file(&self) -> anyhow::Result<PathBuf> {
+    fn cordoned_features_file(&self) -> anyhow::Result<PathBuf> {
         let file = self.path().join("cordoned_features.yaml");
 
         if !file.exists() {
@@ -238,5 +239,10 @@ impl Store {
         }
 
         Ok(file)
+    }
+
+    pub fn cordoned_features_fetcher(&self) -> anyhow::Result<Arc<dyn CordonedFeatureFetcher>> {
+        let file = self.cordoned_features_file()?;
+        Ok(Arc::new(CordonedFeatureFetcherImpl::new(file)?))
     }
 }

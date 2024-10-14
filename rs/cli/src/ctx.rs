@@ -19,7 +19,7 @@ use crate::{
     artifact_downloader::{ArtifactDownloader, ArtifactDownloaderImpl},
     auth::Neuron,
     commands::{Args, AuthOpts, AuthRequirement, ExecutableCommand, IcAdminVersion},
-    cordoned_feature_fetcher::{CordonedFeatureFetcher, CordonedFeatureFetcherImpl},
+    cordoned_feature_fetcher::CordonedFeatureFetcher,
     ic_admin::{IcAdmin, IcAdminImpl},
     runner::Runner,
     store::Store,
@@ -116,7 +116,7 @@ impl DreContext {
             args.subcommands.require_auth(),
             args.forum_post_link.clone(),
             args.ic_admin_version.clone(),
-            Arc::new(CordonedFeatureFetcherImpl::new(store.cordoned_features_file()?)?) as Arc<dyn CordonedFeatureFetcher>,
+            store.cordoned_features_fetcher()?,
             Arc::new(health::HealthClient::new(
                 ic_management_types::Network::new(args.network.clone(), &args.nns_urls).await?,
             )),
