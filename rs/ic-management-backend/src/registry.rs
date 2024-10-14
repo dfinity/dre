@@ -999,7 +999,7 @@ pub async fn sync_local_store_with_path(target_network: &Network, local_registry
                         target_network.name,
                         local_registry_path.display()
                     );
-                    std::fs::remove_dir_all(&local_registry_path)?;
+                    std::fs::remove_dir_all(local_registry_path)?;
                     panic!(
                         "Registry version local {} > remote {}, this should never happen",
                         local_latest_version, remote_version

@@ -17,7 +17,7 @@ pub async fn query_guests(network: &String, local_cache: Option<PathBuf>) -> any
 
             parse_data(data).map(|parsed| {
                 if new_cache.exists() {
-                    if let Err(e) = std::fs::rename(&new_cache, &cache) {
+                    if let Err(e) = std::fs::rename(&new_cache, cache) {
                         warn!(
                             "Failed to rename from `{}` to `{}`, due to: {:?}",
                             new_cache.display(),
@@ -38,7 +38,7 @@ pub async fn query_guests(network: &String, local_cache: Option<PathBuf>) -> any
             let contents = std::fs::read_to_string(cache)?;
             parse_data(contents)
         }
-        (Err(e), None) => return Err(e),
+        (Err(e), None) => Err(e),
     }
 }
 

@@ -188,11 +188,10 @@ impl Store {
     ) -> anyhow::Result<Arc<dyn IcAdmin>> {
         match version {
             IcAdminVersion::Fallback => {
-                return self
-                    .init_ic_admin(FALLBACK_IC_ADMIN_VERSION, network, proceed_without_confirmation, neuron, dry_run)
+                self.init_ic_admin(FALLBACK_IC_ADMIN_VERSION, network, proceed_without_confirmation, neuron, dry_run)
                     .await
             }
-            IcAdminVersion::Strict(ver) => return self.init_ic_admin(&ver, network, proceed_without_confirmation, neuron, dry_run).await,
+            IcAdminVersion::Strict(ver) => self.init_ic_admin(ver, network, proceed_without_confirmation, neuron, dry_run).await,
             // This is the most probable way of running
             IcAdminVersion::FromGovernance => {
                 let mut status_file = std::fs::File::open(&self.ic_admin_status_file()?)?;
@@ -226,7 +225,7 @@ impl Store {
                     // Check should be performed
                     (false, _) => {
                         info!("Checking for new ic-admin version");
-                        let govn_canister_version = governance_canister_version(&network.get_nns_urls()).await?;
+                        let govn_canister_version = governance_canister_version(network.get_nns_urls()).await?;
                         debug!(
                             "Using ic-admin matching the version of governance canister, version: {}",
                             govn_canister_version.stringified_hash
