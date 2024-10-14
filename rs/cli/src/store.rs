@@ -46,7 +46,7 @@ impl Store {
     }
 
     fn local_store_for_network(&self, network: &Network) -> anyhow::Result<PathBuf> {
-        let local_store_dir = self.path().join(&network.name).join("local_registry");
+        let local_store_dir = self.path().join("local_registry").join(&network.name);
 
         if !local_store_dir.exists() {
             debug!(
@@ -58,6 +58,31 @@ impl Store {
         }
 
         Ok(local_store_dir)
+    }
+
+    fn guest_labels_cache_dir(&self, network: &Network) -> anyhow::Result<PathBuf> {
+        let dir = self.path().join("labels").join(&network.name);
+
+        if !dir.exists() {
+            debug!(
+                "Directory for labels for network {} doesn't exist. Creating on path `{}`",
+                network.name,
+                dir.display()
+            );
+            std::fs::create_dir_all(&dir)?
+        }
+
+        Ok(dir)
+    }
+
+    fn guest_labels_cache_path(&self, network: &Network) -> anyhow::Result<PathBuf> {
+        let path = self.guest_labels_cache_dir(network)?.join("labels.yaml");
+
+        if !path.exists() {
+            std::fs::write(&path, "")?;
+        }
+
+        Ok(path)
     }
 
     pub async fn registry(&self, network: &Network, proposal_agent: Arc<dyn ProposalAgent>) -> anyhow::Result<Arc<dyn LazyRegistry>> {
@@ -77,6 +102,7 @@ impl Store {
             network.clone(),
             self.offline,
             proposal_agent,
+            self.guest_labels_cache_path(network)?,
         )))
     }
 

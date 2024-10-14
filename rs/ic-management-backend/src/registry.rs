@@ -1106,7 +1106,7 @@ pub async fn poll(registry_state: Arc<RwLock<RegistryState>>, target_network: Ne
 
 // TODO: try to get rid of node_labels data source
 pub async fn fetch_and_add_node_labels_guests_to_registry(target_network: &Network, registry_state: &mut RegistryState) {
-    let guests_result = node_labels::query_guests(&target_network.name).await;
+    let guests_result = node_labels::query_guests(&target_network.name, None).await;
 
     match guests_result {
         Ok(node_labels_guests) => {
