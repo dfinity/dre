@@ -4,7 +4,6 @@ use std::{
     sync::{Arc, Mutex},
 };
 
-use anyhow::Ok;
 use clap::{error::ErrorKind, Args};
 use ic_canisters::{
     management::{NodeMetricsHistoryResponse, WalletCanisterWrapper},
@@ -15,7 +14,7 @@ use ic_types::{CanisterId, PrincipalId};
 use itertools::Itertools;
 use log::{info, warn};
 
-use super::{ExecutableCommand, IcAdminRequirement};
+use super::{AuthRequirement, ExecutableCommand};
 
 type CLINodeMetrics = BTreeMap<PrincipalId, Vec<NodeMetricsHistoryResponse>>;
 
@@ -78,7 +77,7 @@ impl NodeMetrics {
 
     async fn get_untrusted_metrics(&self, canister_agent: ic_canisters::IcAgentCanisterClient) -> anyhow::Result<CLINodeMetrics> {
         let mut metrics_by_subnet = BTreeMap::new();
-        let metrics_client = NodeMetricsCanisterWrapper::new(canister_agent.agent);
+        let metrics_client: NodeMetricsCanisterWrapper = canister_agent.into();
 
         let node_metrics_response = match &self.subnet_ids.is_empty() {
             true => metrics_client.get_node_metrics(None, Some(self.start_at_timestamp)).await?,
@@ -125,13 +124,13 @@ impl NodeMetrics {
 }
 
 impl ExecutableCommand for NodeMetrics {
-    fn require_ic_admin(&self) -> IcAdminRequirement {
-        IcAdminRequirement::Detect
+    fn require_auth(&self) -> AuthRequirement {
+        AuthRequirement::Signer
     }
 
     async fn execute(&self, ctx: crate::ctx::DreContext) -> anyhow::Result<()> {
         let lock = Mutex::new(());
-        let canister_agent: ic_canisters::IcAgentCanisterClient = ctx.create_ic_agent_canister_client(Some(lock))?;
+        let canister_agent: ic_canisters::IcAgentCanisterClient = ctx.create_ic_agent_canister_client(Some(lock)).await?;
         info!("Started action...");
 
         let metrics_by_subnet = if self.trustworthy {
@@ -145,7 +144,7 @@ impl ExecutableCommand for NodeMetrics {
         Ok(())
     }
 
-    fn validate(&self, cmd: &mut clap::Command) {
+    fn validate(&self, _args: &crate::commands::Args, cmd: &mut clap::Command) {
         if self.trustworthy && self.wallet.is_none() {
             cmd.error(ErrorKind::MissingRequiredArgument, "Wallet is required for fetching trustworthy metrics.")
                 .exit();

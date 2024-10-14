@@ -50,14 +50,8 @@ load("@rules_python//python:pip.bzl", "pip_parse")
 
 pip_parse(
     name = "python_deps",
-    experimental_requirement_cycles = {
-        "poetry": [
-            "poetry",
-            "poetry-plugin-export",
-        ],
-    },
     python_interpreter_target = interpreter,
-    requirements_lock = "//:requirements.txt",
+    requirements_lock = "//:requirements.lock",
 )
 
 load("@python_deps//:requirements.bzl", "install_deps")
@@ -81,7 +75,7 @@ aspect_bazel_lib_dependencies()
 
 aspect_bazel_lib_register_toolchains()
 
-IC_REPO_VERSION = "26d5f9d0bdca0a817c236134dc9c7317b32c69a5"
+IC_REPO_VERSION = "ca80a219757f00a5dd234f8d8c58316c902f2f2f"
 
 http_archive(
     name = "ic_repo",
@@ -106,7 +100,7 @@ rust_analyzer_dependencies()
 rust_register_toolchains(
     edition = "2021",
     versions = [
-        "1.79.0",
+        "1.80.0",
     ],
 )
 

@@ -15,7 +15,7 @@
         "owner": {
           "name": "Interxion"
         },
-        "city": "Brussels Capital",
+        "area": "Brussels Capital",
         "country": "BE",
         "continent": "Europe",
         "latitude": 50.838600158691406,
@@ -43,7 +43,7 @@
         "owner": {
           "name": "Interxion"
         },
-        "city": "Provence-Alpes-Cote d'Azur",
+        "area": "Provence-Alpes-Cote d'Azur",
         "country": "FR",
         "continent": "Europe",
         "latitude": 43.29650115966797,
@@ -77,7 +77,7 @@
         "owner": {
           "name": "Nine.Ch"
         },
-        "city": "Zurich",
+        "area": "Zurich",
         "country": "CH",
         "continent": "Europe",
         "latitude": 47.385799407958984,
@@ -105,7 +105,7 @@
         "owner": {
           "name": "Interxion"
         },
-        "city": "Provence-Alpes-Cote d'Azur",
+        "area": "Provence-Alpes-Cote d'Azur",
         "country": "FR",
         "continent": "Europe",
         "latitude": 43.29650115966797,
@@ -139,7 +139,7 @@
         "owner": {
           "name": "Equinix"
         },
-        "city": "Hesse",
+        "area": "Hesse",
         "country": "DE",
         "continent": "Europe",
         "latitude": 50.12229919433594,
@@ -168,7 +168,7 @@
         "owner": {
           "name": "Unknown"
         },
-        "city": "Tokyo",
+        "area": "Tokyo",
         "country": "JP",
         "continent": "Asia",
         "latitude": 35.67620086669922,
@@ -196,7 +196,7 @@
         "owner": {
           "name": "Tierpoint"
         },
-        "city": "Illinois",
+        "area": "Illinois",
         "country": "US",
         "continent": "North America",
         "latitude": 41.97438049316406,
@@ -224,7 +224,7 @@
         "owner": {
           "name": "Flexential"
         },
-        "city": "Florida",
+        "area": "Florida",
         "country": "US",
         "continent": "North America",
         "latitude": 27.950599670410156,
@@ -253,7 +253,7 @@
         "owner": {
           "name": "Posita"
         },
-        "city": "Ljubljana",
+        "area": "Ljubljana",
         "country": "SI",
         "continent": "Europe",
         "latitude": 46.04998016357422,
@@ -281,7 +281,7 @@
         "owner": {
           "name": "Tierpoint"
         },
-        "city": "New York",
+        "area": "New York",
         "country": "US",
         "continent": "North America",
         "latitude": 40.712799072265625,
@@ -309,7 +309,7 @@
         "owner": {
           "name": "INAP"
         },
-        "city": "Massachusetts",
+        "area": "Massachusetts",
         "country": "US",
         "continent": "North America",
         "latitude": 42.36009979248047,
@@ -337,7 +337,7 @@
         "owner": {
           "name": "INAP"
         },
-        "city": "Massachusetts",
+        "area": "Massachusetts",
         "country": "US",
         "continent": "North America",
         "latitude": 42.36009979248047,
@@ -366,7 +366,7 @@
         "owner": {
           "name": "Posita"
         },
-        "city": "Ljubljana",
+        "area": "Ljubljana",
         "country": "SI",
         "continent": "Europe",
         "latitude": 46.04998016357422,
@@ -394,7 +394,7 @@
         "owner": {
           "name": "Flexential"
         },
-        "city": "Oregon",
+        "area": "Oregon",
         "country": "US",
         "continent": "North America",
         "latitude": 45.50510025024414,
@@ -422,7 +422,7 @@
         "owner": {
           "name": "Interxion"
         },
-        "city": "Provence-Alpes-Cote d'Azur",
+        "area": "Provence-Alpes-Cote d'Azur",
         "country": "FR",
         "continent": "Europe",
         "latitude": 43.29650115966797,
@@ -456,7 +456,7 @@
         "owner": {
           "name": "Tierpoint"
         },
-        "city": "Pennsylvania",
+        "area": "Pennsylvania",
         "country": "US",
         "continent": "North America",
         "latitude": 40.60219955444336,
@@ -485,7 +485,7 @@
         "owner": {
           "name": "Posita"
         },
-        "city": "Maribor",
+        "area": "Maribor",
         "country": "SI",
         "continent": "Europe",
         "latitude": 46.55764389038086,
@@ -514,7 +514,7 @@
         "owner": {
           "name": "Posita"
         },
-        "city": "Ljubljana",
+        "area": "Ljubljana",
         "country": "SI",
         "continent": "Europe",
         "latitude": 46.04998016357422,
@@ -543,7 +543,7 @@
         "owner": {
           "name": "Equinix"
         },
-        "city": "Hesse",
+        "area": "Hesse",
         "country": "DE",
         "continent": "Europe",
         "latitude": 50.12229919433594,
@@ -572,7 +572,7 @@
         "owner": {
           "name": "Equinix"
         },
-        "city": "Hesse",
+        "area": "Hesse",
         "country": "DE",
         "continent": "Europe",
         "latitude": 50.12229919433594,
@@ -601,7 +601,7 @@
         "owner": {
           "name": "Posita"
         },
-        "city": "Maribor",
+        "area": "Maribor",
         "country": "SI",
         "continent": "Europe",
         "latitude": 46.55764389038086,
@@ -630,7 +630,7 @@
         "owner": {
           "name": "Posita"
         },
-        "city": "Maribor",
+        "area": "Maribor",
         "country": "SI",
         "continent": "Europe",
         "latitude": 46.55764389038086,
@@ -659,7 +659,7 @@
         "owner": {
           "name": "Tierpoint"
         },
-        "city": "Pennsylvania",
+        "area": "Pennsylvania",
         "country": "US",
         "continent": "North America",
         "latitude": 40.60219955444336,
@@ -687,7 +687,7 @@
         "owner": {
           "name": "INAP"
         },
-        "city": "Massachusetts",
+        "area": "Massachusetts",
         "country": "US",
         "continent": "North America",
         "latitude": 42.36009979248047,
@@ -716,7 +716,7 @@
         "owner": {
           "name": "Equinix"
         },
-        "city": "Hesse",
+        "area": "Hesse",
         "country": "DE",
         "continent": "Europe",
         "latitude": 50.12229919433594,
@@ -745,7 +745,7 @@
         "owner": {
           "name": "Green.Ch"
         },
-        "city": "Zurich",
+        "area": "Zurich",
         "country": "CH",
         "continent": "Europe",
         "latitude": 47.385799407958984,
@@ -774,7 +774,7 @@
         "owner": {
           "name": "Green.Ch"
         },
-        "city": "Zurich",
+        "area": "Zurich",
         "country": "CH",
         "continent": "Europe",
         "latitude": 47.385799407958984,
@@ -803,7 +803,7 @@
         "owner": {
           "name": "Flexential"
         },
-        "city": "Florida",
+        "area": "Florida",
         "country": "US",
         "continent": "North America",
         "latitude": 27.950599670410156,
@@ -832,7 +832,7 @@
         "owner": {
           "name": "Flexential"
         },
-        "city": "Florida",
+        "area": "Florida",
         "country": "US",
         "continent": "North America",
         "latitude": 27.950599670410156,
@@ -861,7 +861,7 @@
         "owner": {
           "name": "Posita"
         },
-        "city": "Maribor",
+        "area": "Maribor",
         "country": "SI",
         "continent": "Europe",
         "latitude": 46.55764389038086,
@@ -889,7 +889,7 @@
         "owner": {
           "name": "Flexential"
         },
-        "city": "Nevada",
+        "area": "Nevada",
         "country": "US",
         "continent": "North America",
         "latitude": 36.08000183105469,
@@ -918,7 +918,7 @@
         "owner": {
           "name": "INAP"
         },
-        "city": "California",
+        "area": "California",
         "country": "US",
         "continent": "North America",
         "latitude": 37.35169982910156,
@@ -947,7 +947,7 @@
         "owner": {
           "name": "Tierpoint"
         },
-        "city": "Pennsylvania",
+        "area": "Pennsylvania",
         "country": "US",
         "continent": "North America",
         "latitude": 40.60219955444336,
@@ -975,7 +975,7 @@
         "owner": {
           "name": "INAP"
         },
-        "city": "Massachusetts",
+        "area": "Massachusetts",
         "country": "US",
         "continent": "North America",
         "latitude": 42.36009979248047,
@@ -1004,7 +1004,7 @@
         "owner": {
           "name": "Posita"
         },
-        "city": "Ljubljana",
+        "area": "Ljubljana",
         "country": "SI",
         "continent": "Europe",
         "latitude": 46.04998016357422,
@@ -1033,7 +1033,7 @@
         "owner": {
           "name": "Nine.Ch"
         },
-        "city": "Zurich",
+        "area": "Zurich",
         "country": "CH",
         "continent": "Europe",
         "latitude": 47.385799407958984,
@@ -1062,7 +1062,7 @@
         "owner": {
           "name": "Posita"
         },
-        "city": "Maribor",
+        "area": "Maribor",
         "country": "SI",
         "continent": "Europe",
         "latitude": 46.55764389038086,
@@ -1091,7 +1091,7 @@
         "owner": {
           "name": "Equinix"
         },
-        "city": "Hesse",
+        "area": "Hesse",
         "country": "DE",
         "continent": "Europe",
         "latitude": 50.12229919433594,
@@ -1124,7 +1124,7 @@
         "owner": {
           "name": "Interxion"
         },
-        "city": "Provence-Alpes-Cote d'Azur",
+        "area": "Provence-Alpes-Cote d'Azur",
         "country": "FR",
         "continent": "Europe",
         "latitude": 43.29650115966797,
@@ -1157,7 +1157,7 @@
         "owner": {
           "name": "Flexential"
         },
-        "city": "Texas",
+        "area": "Texas",
         "country": "US",
         "continent": "North America",
         "latitude": 32.77669906616211,
@@ -1185,7 +1185,7 @@
         "owner": {
           "name": "Tierpoint"
         },
-        "city": "Illinois",
+        "area": "Illinois",
         "country": "US",
         "continent": "North America",
         "latitude": 41.97438049316406,
@@ -1214,7 +1214,7 @@
         "owner": {
           "name": "Posita"
         },
-        "city": "Maribor",
+        "area": "Maribor",
         "country": "SI",
         "continent": "Europe",
         "latitude": 46.55764389038086,
@@ -1242,7 +1242,7 @@
         "owner": {
           "name": "INAP"
         },
-        "city": "Massachusetts",
+        "area": "Massachusetts",
         "country": "US",
         "continent": "North America",
         "latitude": 42.36009979248047,
@@ -1271,7 +1271,7 @@
         "owner": {
           "name": "Equinix"
         },
-        "city": "Hesse",
+        "area": "Hesse",
         "country": "DE",
         "continent": "Europe",
         "latitude": 50.12229919433594,
@@ -1300,7 +1300,7 @@
         "owner": {
           "name": "Posita"
         },
-        "city": "Maribor",
+        "area": "Maribor",
         "country": "SI",
         "continent": "Europe",
         "latitude": 46.55764389038086,
@@ -1329,7 +1329,7 @@
         "owner": {
           "name": "Posita"
         },
-        "city": "Ljubljana",
+        "area": "Ljubljana",
         "country": "SI",
         "continent": "Europe",
         "latitude": 46.04998016357422,
@@ -1358,7 +1358,7 @@
         "owner": {
           "name": "Flexential"
         },
-        "city": "Georgia",
+        "area": "Georgia",
         "country": "US",
         "continent": "North America",
         "latitude": 33.68439865112305,
@@ -1387,7 +1387,7 @@
         "owner": {
           "name": "Unknown"
         },
-        "city": "Tokyo",
+        "area": "Tokyo",
         "country": "JP",
         "continent": "Asia",
         "latitude": 35.67620086669922,
@@ -1416,7 +1416,7 @@
         "owner": {
           "name": "Green.Ch"
         },
-        "city": "Zurich",
+        "area": "Zurich",
         "country": "CH",
         "continent": "Europe",
         "latitude": 47.385799407958984,
@@ -1445,7 +1445,7 @@
         "owner": {
           "name": "Flexential"
         },
-        "city": "Florida",
+        "area": "Florida",
         "country": "US",
         "continent": "North America",
         "latitude": 27.950599670410156,
@@ -1474,7 +1474,7 @@
         "owner": {
           "name": "Tierpoint"
         },
-        "city": "Pennsylvania",
+        "area": "Pennsylvania",
         "country": "US",
         "continent": "North America",
         "latitude": 40.60219955444336,
@@ -1503,7 +1503,7 @@
         "owner": {
           "name": "Equinix"
         },
-        "city": "Hesse",
+        "area": "Hesse",
         "country": "DE",
         "continent": "Europe",
         "latitude": 50.12229919433594,
@@ -1531,7 +1531,7 @@
         "owner": {
           "name": "Interxion"
         },
-        "city": "Provence-Alpes-Cote d'Azur",
+        "area": "Provence-Alpes-Cote d'Azur",
         "country": "FR",
         "continent": "Europe",
         "latitude": 43.29650115966797,
@@ -1565,7 +1565,7 @@
         "owner": {
           "name": "Posita"
         },
-        "city": "Maribor",
+        "area": "Maribor",
         "country": "SI",
         "continent": "Europe",
         "latitude": 46.55764389038086,
@@ -1593,7 +1593,7 @@
         "owner": {
           "name": "Interxion"
         },
-        "city": "Provence-Alpes-Cote d'Azur",
+        "area": "Provence-Alpes-Cote d'Azur",
         "country": "FR",
         "continent": "Europe",
         "latitude": 43.29650115966797,
@@ -1627,7 +1627,7 @@
         "owner": {
           "name": "Posita"
         },
-        "city": "Ljubljana",
+        "area": "Ljubljana",
         "country": "SI",
         "continent": "Europe",
         "latitude": 46.04998016357422,
@@ -1655,7 +1655,7 @@
         "owner": {
           "name": "Tierpoint"
         },
-        "city": "Illinois",
+        "area": "Illinois",
         "country": "US",
         "continent": "North America",
         "latitude": 41.97438049316406,
@@ -1684,7 +1684,7 @@
         "owner": {
           "name": "DataSite"
         },
-        "city": "Georgia",
+        "area": "Georgia",
         "country": "US",
         "continent": "North America",
         "latitude": 33.81800079345703,
@@ -1713,7 +1713,7 @@
         "owner": {
           "name": "Equinix"
         },
-        "city": "Hesse",
+        "area": "Hesse",
         "country": "DE",
         "continent": "Europe",
         "latitude": 50.12229919433594,
@@ -1741,7 +1741,7 @@
         "owner": {
           "name": "INAP"
         },
-        "city": "Massachusetts",
+        "area": "Massachusetts",
         "country": "US",
         "continent": "North America",
         "latitude": 42.36009979248047,
@@ -1770,7 +1770,7 @@
         "owner": {
           "name": "Equinix"
         },
-        "city": "Hesse",
+        "area": "Hesse",
         "country": "DE",
         "continent": "Europe",
         "latitude": 50.12229919433594,
@@ -1799,7 +1799,7 @@
         "owner": {
           "name": "Posita"
         },
-        "city": "Maribor",
+        "area": "Maribor",
         "country": "SI",
         "continent": "Europe",
         "latitude": 46.55764389038086,
@@ -1828,7 +1828,7 @@
         "owner": {
           "name": "Equinix"
         },
-        "city": "Hesse",
+        "area": "Hesse",
         "country": "DE",
         "continent": "Europe",
         "latitude": 50.12229919433594,
@@ -1857,7 +1857,7 @@
         "owner": {
           "name": "Equinix"
         },
-        "city": "Hesse",
+        "area": "Hesse",
         "country": "DE",
         "continent": "Europe",
         "latitude": 50.12229919433594,
@@ -1885,7 +1885,7 @@
         "owner": {
           "name": "Interxion"
         },
-        "city": "Provence-Alpes-Cote d'Azur",
+        "area": "Provence-Alpes-Cote d'Azur",
         "country": "FR",
         "continent": "Europe",
         "latitude": 43.29650115966797,
@@ -1918,7 +1918,7 @@
         "owner": {
           "name": "Interxion"
         },
-        "city": "Provence-Alpes-Cote d'Azur",
+        "area": "Provence-Alpes-Cote d'Azur",
         "country": "FR",
         "continent": "Europe",
         "latitude": 43.29650115966797,
@@ -1952,7 +1952,7 @@
         "owner": {
           "name": "Equinix"
         },
-        "city": "Hesse",
+        "area": "Hesse",
         "country": "DE",
         "continent": "Europe",
         "latitude": 50.12229919433594,
@@ -1981,7 +1981,7 @@
         "owner": {
           "name": "Flexential"
         },
-        "city": "Florida",
+        "area": "Florida",
         "country": "US",
         "continent": "North America",
         "latitude": 27.950599670410156,
@@ -2010,7 +2010,7 @@
         "owner": {
           "name": "Flexential"
         },
-        "city": "Florida",
+        "area": "Florida",
         "country": "US",
         "continent": "North America",
         "latitude": 27.950599670410156,
@@ -2038,7 +2038,7 @@
         "owner": {
           "name": "Flexential"
         },
-        "city": "Texas",
+        "area": "Texas",
         "country": "US",
         "continent": "North America",
         "latitude": 32.77669906616211,
@@ -2066,7 +2066,7 @@
         "owner": {
           "name": "Interxion"
         },
-        "city": "Provence-Alpes-Cote d'Azur",
+        "area": "Provence-Alpes-Cote d'Azur",
         "country": "FR",
         "continent": "Europe",
         "latitude": 43.29650115966797,
@@ -2100,7 +2100,7 @@
         "owner": {
           "name": "Interxion"
         },
-        "city": "Brussels Capital",
+        "area": "Brussels Capital",
         "country": "BE",
         "continent": "Europe",
         "latitude": 50.838600158691406,
@@ -2129,7 +2129,7 @@
         "owner": {
           "name": "Posita"
         },
-        "city": "Maribor",
+        "area": "Maribor",
         "country": "SI",
         "continent": "Europe",
         "latitude": 46.55764389038086,
@@ -2158,7 +2158,7 @@
         "owner": {
           "name": "Posita"
         },
-        "city": "Ljubljana",
+        "area": "Ljubljana",
         "country": "SI",
         "continent": "Europe",
         "latitude": 46.04998016357422,
@@ -2186,7 +2186,7 @@
         "owner": {
           "name": "Interxion"
         },
-        "city": "Provence-Alpes-Cote d'Azur",
+        "area": "Provence-Alpes-Cote d'Azur",
         "country": "FR",
         "continent": "Europe",
         "latitude": 43.29650115966797,
@@ -2219,7 +2219,7 @@
         "owner": {
           "name": "INAP"
         },
-        "city": "Massachusetts",
+        "area": "Massachusetts",
         "country": "US",
         "continent": "North America",
         "latitude": 42.36009979248047,
@@ -2247,7 +2247,7 @@
         "owner": {
           "name": "Tierpoint"
         },
-        "city": "Illinois",
+        "area": "Illinois",
         "country": "US",
         "continent": "North America",
         "latitude": 41.97438049316406,
@@ -2275,7 +2275,7 @@
         "owner": {
           "name": "Interxion"
         },
-        "city": "Provence-Alpes-Cote d'Azur",
+        "area": "Provence-Alpes-Cote d'Azur",
         "country": "FR",
         "continent": "Europe",
         "latitude": 43.29650115966797,
@@ -2308,7 +2308,7 @@
         "owner": {
           "name": "Interxion"
         },
-        "city": "Provence-Alpes-Cote d'Azur",
+        "area": "Provence-Alpes-Cote d'Azur",
         "country": "FR",
         "continent": "Europe",
         "latitude": 43.29650115966797,
@@ -2342,7 +2342,7 @@
         "owner": {
           "name": "Tierpoint"
         },
-        "city": "Pennsylvania",
+        "area": "Pennsylvania",
         "country": "US",
         "continent": "North America",
         "latitude": 40.60219955444336,
@@ -2371,7 +2371,7 @@
         "owner": {
           "name": "High DC"
         },
-        "city": "Geneva",
+        "area": "Geneva",
         "country": "CH",
         "continent": "Europe",
         "latitude": 46.20439910888672,
@@ -2400,7 +2400,7 @@
         "owner": {
           "name": "Tierpoint"
         },
-        "city": "Pennsylvania",
+        "area": "Pennsylvania",
         "country": "US",
         "continent": "North America",
         "latitude": 40.60219955444336,
@@ -2428,7 +2428,7 @@
         "owner": {
           "name": "Flexential"
         },
-        "city": "Nevada",
+        "area": "Nevada",
         "country": "US",
         "continent": "North America",
         "latitude": 36.08000183105469,
@@ -2457,7 +2457,7 @@
         "owner": {
           "name": "Posita"
         },
-        "city": "Ljubljana",
+        "area": "Ljubljana",
         "country": "SI",
         "continent": "Europe",
         "latitude": 46.04998016357422,
@@ -2485,7 +2485,7 @@
         "owner": {
           "name": "Interxion"
         },
-        "city": "Provence-Alpes-Cote d'Azur",
+        "area": "Provence-Alpes-Cote d'Azur",
         "country": "FR",
         "continent": "Europe",
         "latitude": 43.29650115966797,
@@ -2518,7 +2518,7 @@
         "owner": {
           "name": "Flexential"
         },
-        "city": "Nevada",
+        "area": "Nevada",
         "country": "US",
         "continent": "North America",
         "latitude": 36.08000183105469,
@@ -2547,7 +2547,7 @@
         "owner": {
           "name": "Green.Ch"
         },
-        "city": "Zurich",
+        "area": "Zurich",
         "country": "CH",
         "continent": "Europe",
         "latitude": 47.385799407958984,
@@ -2576,7 +2576,7 @@
         "owner": {
           "name": "Equinix"
         },
-        "city": "Hesse",
+        "area": "Hesse",
         "country": "DE",
         "continent": "Europe",
         "latitude": 50.12229919433594,
@@ -2609,7 +2609,7 @@
         "owner": {
           "name": "Interxion"
         },
-        "city": "Provence-Alpes-Cote d'Azur",
+        "area": "Provence-Alpes-Cote d'Azur",
         "country": "FR",
         "continent": "Europe",
         "latitude": 43.29650115966797,
@@ -2642,7 +2642,7 @@
         "owner": {
           "name": "Tierpoint"
         },
-        "city": "New York",
+        "area": "New York",
         "country": "US",
         "continent": "North America",
         "latitude": 40.712799072265625,
@@ -2670,7 +2670,7 @@
         "owner": {
           "name": "Tierpoint"
         },
-        "city": "Florida",
+        "area": "Florida",
         "country": "US",
         "continent": "North America",
         "latitude": 30.33209991455078,
@@ -2699,7 +2699,7 @@
         "owner": {
           "name": "Unknown"
         },
-        "city": "Tokyo",
+        "area": "Tokyo",
         "country": "JP",
         "continent": "Asia",
         "latitude": 35.67620086669922,
@@ -2728,7 +2728,7 @@
         "owner": {
           "name": "DataSite"
         },
-        "city": "Florida",
+        "area": "Florida",
         "country": "US",
         "continent": "North America",
         "latitude": 28.588300704956055,
@@ -2756,7 +2756,7 @@
         "owner": {
           "name": "Tierpoint"
         },
-        "city": "Illinois",
+        "area": "Illinois",
         "country": "US",
         "continent": "North America",
         "latitude": 41.97438049316406,
@@ -2785,7 +2785,7 @@
         "owner": {
           "name": "Tierpoint"
         },
-        "city": "Pennsylvania",
+        "area": "Pennsylvania",
         "country": "US",
         "continent": "North America",
         "latitude": 40.60219955444336,
@@ -2813,7 +2813,7 @@
         "owner": {
           "name": "Interxion"
         },
-        "city": "Provence-Alpes-Cote d'Azur",
+        "area": "Provence-Alpes-Cote d'Azur",
         "country": "FR",
         "continent": "Europe",
         "latitude": 43.29650115966797,
@@ -2847,7 +2847,7 @@
         "owner": {
           "name": "Tierpoint"
         },
-        "city": "Pennsylvania",
+        "area": "Pennsylvania",
         "country": "US",
         "continent": "North America",
         "latitude": 40.60219955444336,
@@ -2876,7 +2876,7 @@
         "owner": {
           "name": "Green.Ch"
         },
-        "city": "Zurich",
+        "area": "Zurich",
         "country": "CH",
         "continent": "Europe",
         "latitude": 47.385799407958984,
@@ -2904,7 +2904,7 @@
         "owner": {
           "name": "Interxion"
         },
-        "city": "Provence-Alpes-Cote d'Azur",
+        "area": "Provence-Alpes-Cote d'Azur",
         "country": "FR",
         "continent": "Europe",
         "latitude": 43.29650115966797,
@@ -2938,7 +2938,7 @@
         "owner": {
           "name": "Tierpoint"
         },
-        "city": "Pennsylvania",
+        "area": "Pennsylvania",
         "country": "US",
         "continent": "North America",
         "latitude": 40.60219955444336,
@@ -2967,7 +2967,7 @@
         "owner": {
           "name": "Antwerp Datacenter"
         },
-        "city": "Flanders",
+        "area": "Flanders",
         "country": "BE",
         "continent": "Europe",
         "latitude": 51.219398498535156,
@@ -2995,7 +2995,7 @@
         "owner": {
           "name": "Interxion"
         },
-        "city": "Provence-Alpes-Cote d'Azur",
+        "area": "Provence-Alpes-Cote d'Azur",
         "country": "FR",
         "continent": "Europe",
         "latitude": 43.29650115966797,
@@ -3029,7 +3029,7 @@
         "owner": {
           "name": "Posita"
         },
-        "city": "Ljubljana",
+        "area": "Ljubljana",
         "country": "SI",
         "continent": "Europe",
         "latitude": 46.04998016357422,
@@ -3058,7 +3058,7 @@
         "owner": {
           "name": "Posita"
         },
-        "city": "Ljubljana",
+        "area": "Ljubljana",
         "country": "SI",
         "continent": "Europe",
         "latitude": 46.04998016357422,
@@ -3086,7 +3086,7 @@
         "owner": {
           "name": "Everyware AG"
         },
-        "city": "Zurich",
+        "area": "Zurich",
         "country": "CH",
         "continent": "Europe",
         "latitude": 47.3744010925293,
@@ -3115,7 +3115,7 @@
         "owner": {
           "name": "Equinix"
         },
-        "city": "Hesse",
+        "area": "Hesse",
         "country": "DE",
         "continent": "Europe",
         "latitude": 50.12229919433594,
@@ -3144,7 +3144,7 @@
         "owner": {
           "name": "Green.Ch"
         },
-        "city": "Zurich",
+        "area": "Zurich",
         "country": "CH",
         "continent": "Europe",
         "latitude": 47.385799407958984,
@@ -3172,7 +3172,7 @@
         "owner": {
           "name": "Flexential"
         },
-        "city": "Texas",
+        "area": "Texas",
         "country": "US",
         "continent": "North America",
         "latitude": 32.77669906616211,
@@ -3201,7 +3201,7 @@
         "owner": {
           "name": "Tierpoint"
         },
-        "city": "Pennsylvania",
+        "area": "Pennsylvania",
         "country": "US",
         "continent": "North America",
         "latitude": 40.60219955444336,
@@ -3230,7 +3230,7 @@
         "owner": {
           "name": "q.beyond"
         },
-        "city": "Bavaria",
+        "area": "Bavaria",
         "country": "DE",
         "continent": "Europe",
         "latitude": 48.135101318359375,
@@ -3259,7 +3259,7 @@
         "owner": {
           "name": "Tierpoint"
         },
-        "city": "Pennsylvania",
+        "area": "Pennsylvania",
         "country": "US",
         "continent": "North America",
         "latitude": 40.60219955444336,
@@ -3287,7 +3287,7 @@
         "owner": {
           "name": "INAP"
         },
-        "city": "Massachusetts",
+        "area": "Massachusetts",
         "country": "US",
         "continent": "North America",
         "latitude": 42.36009979248047,
@@ -3316,7 +3316,7 @@
         "owner": {
           "name": "Green.Ch"
         },
-        "city": "Zurich",
+        "area": "Zurich",
         "country": "CH",
         "continent": "Europe",
         "latitude": 47.385799407958984,
@@ -3345,7 +3345,7 @@
         "owner": {
           "name": "Green.Ch"
         },
-        "city": "Zurich",
+        "area": "Zurich",
         "country": "CH",
         "continent": "Europe",
         "latitude": 47.385799407958984,
@@ -3373,7 +3373,7 @@
         "owner": {
           "name": "Interxion"
         },
-        "city": "Provence-Alpes-Cote d'Azur",
+        "area": "Provence-Alpes-Cote d'Azur",
         "country": "FR",
         "continent": "Europe",
         "latitude": 43.29650115966797,
@@ -3407,7 +3407,7 @@
         "owner": {
           "name": "Green.Ch"
         },
-        "city": "Zurich",
+        "area": "Zurich",
         "country": "CH",
         "continent": "Europe",
         "latitude": 47.385799407958984,
@@ -3436,7 +3436,7 @@
         "owner": {
           "name": "Tierpoint"
         },
-        "city": "Pennsylvania",
+        "area": "Pennsylvania",
         "country": "US",
         "continent": "North America",
         "latitude": 40.60219955444336,
@@ -3465,7 +3465,7 @@
         "owner": {
           "name": "Posita"
         },
-        "city": "Maribor",
+        "area": "Maribor",
         "country": "SI",
         "continent": "Europe",
         "latitude": 46.55764389038086,
@@ -3493,7 +3493,7 @@
         "owner": {
           "name": "Flexential"
         },
-        "city": "Oregon",
+        "area": "Oregon",
         "country": "US",
         "continent": "North America",
         "latitude": 45.50510025024414,
@@ -3522,7 +3522,7 @@
         "owner": {
           "name": "DataSite"
         },
-        "city": "Georgia",
+        "area": "Georgia",
         "country": "US",
         "continent": "North America",
         "latitude": 33.81800079345703,
@@ -3551,7 +3551,7 @@
         "owner": {
           "name": "Equinix"
         },
-        "city": "Hesse",
+        "area": "Hesse",
         "country": "DE",
         "continent": "Europe",
         "latitude": 50.12229919433594,
@@ -3580,7 +3580,7 @@
         "owner": {
           "name": "Nine.Ch"
         },
-        "city": "Zurich",
+        "area": "Zurich",
         "country": "CH",
         "continent": "Europe",
         "latitude": 47.36800003051758,
@@ -3608,7 +3608,7 @@
         "owner": {
           "name": "Interxion"
         },
-        "city": "Provence-Alpes-Cote d'Azur",
+        "area": "Provence-Alpes-Cote d'Azur",
         "country": "FR",
         "continent": "Europe",
         "latitude": 43.29650115966797,
@@ -3642,7 +3642,7 @@
         "owner": {
           "name": "Posita"
         },
-        "city": "Maribor",
+        "area": "Maribor",
         "country": "SI",
         "continent": "Europe",
         "latitude": 46.55764389038086,
@@ -3671,7 +3671,7 @@
         "owner": {
           "name": "Green.Ch"
         },
-        "city": "Zurich",
+        "area": "Zurich",
         "country": "CH",
         "continent": "Europe",
         "latitude": 47.385799407958984,
@@ -3700,7 +3700,7 @@
         "owner": {
           "name": "Posita"
         },
-        "city": "Maribor",
+        "area": "Maribor",
         "country": "SI",
         "continent": "Europe",
         "latitude": 46.55764389038086,
@@ -3729,7 +3729,7 @@
         "owner": {
           "name": "Tierpoint"
         },
-        "city": "Pennsylvania",
+        "area": "Pennsylvania",
         "country": "US",
         "continent": "North America",
         "latitude": 40.60219955444336,
@@ -3757,7 +3757,7 @@
         "owner": {
           "name": "Tierpoint"
         },
-        "city": "Florida",
+        "area": "Florida",
         "country": "US",
         "continent": "North America",
         "latitude": 30.33209991455078,
@@ -3786,7 +3786,7 @@
         "owner": {
           "name": "Tierpoint"
         },
-        "city": "Pennsylvania",
+        "area": "Pennsylvania",
         "country": "US",
         "continent": "North America",
         "latitude": 40.60219955444336,
@@ -3815,7 +3815,7 @@
         "owner": {
           "name": "Posita"
         },
-        "city": "Ljubljana",
+        "area": "Ljubljana",
         "country": "SI",
         "continent": "Europe",
         "latitude": 46.04998016357422,
@@ -3844,7 +3844,7 @@
         "owner": {
           "name": "Tierpoint"
         },
-        "city": "Pennsylvania",
+        "area": "Pennsylvania",
         "country": "US",
         "continent": "North America",
         "latitude": 40.60219955444336,
@@ -3872,7 +3872,7 @@
         "owner": {
           "name": "INAP"
         },
-        "city": "Massachusetts",
+        "area": "Massachusetts",
         "country": "US",
         "continent": "North America",
         "latitude": 42.36009979248047,
@@ -3901,7 +3901,7 @@
         "owner": {
           "name": "Green.Ch"
         },
-        "city": "Zurich",
+        "area": "Zurich",
         "country": "CH",
         "continent": "Europe",
         "latitude": 47.385799407958984,
@@ -3930,7 +3930,7 @@
         "owner": {
           "name": "Nine.Ch"
         },
-        "city": "Zurich",
+        "area": "Zurich",
         "country": "CH",
         "continent": "Europe",
         "latitude": 47.36800003051758,
@@ -3958,7 +3958,7 @@
         "owner": {
           "name": "INAP"
         },
-        "city": "Massachusetts",
+        "area": "Massachusetts",
         "country": "US",
         "continent": "North America",
         "latitude": 42.36009979248047,
@@ -3986,7 +3986,7 @@
         "owner": {
           "name": "Flexential"
         },
-        "city": "Oregon",
+        "area": "Oregon",
         "country": "US",
         "continent": "North America",
         "latitude": 45.50510025024414,
@@ -4014,7 +4014,7 @@
         "owner": {
           "name": "Tierpoint"
         },
-        "city": "Florida",
+        "area": "Florida",
         "country": "US",
         "continent": "North America",
         "latitude": 30.33209991455078,
@@ -4042,7 +4042,7 @@
         "owner": {
           "name": "Interxion"
         },
-        "city": "Provence-Alpes-Cote d'Azur",
+        "area": "Provence-Alpes-Cote d'Azur",
         "country": "FR",
         "continent": "Europe",
         "latitude": 43.29650115966797,
@@ -4076,7 +4076,7 @@
         "owner": {
           "name": "Equinix"
         },
-        "city": "Hesse",
+        "area": "Hesse",
         "country": "DE",
         "continent": "Europe",
         "latitude": 50.12229919433594,
@@ -4105,7 +4105,7 @@
         "owner": {
           "name": "Tierpoint"
         },
-        "city": "Pennsylvania",
+        "area": "Pennsylvania",
         "country": "US",
         "continent": "North America",
         "latitude": 40.60219955444336,
@@ -4134,7 +4134,7 @@
         "owner": {
           "name": "Posita"
         },
-        "city": "Maribor",
+        "area": "Maribor",
         "country": "SI",
         "continent": "Europe",
         "latitude": 46.55764389038086,
@@ -4163,7 +4163,7 @@
         "owner": {
           "name": "Green.Ch"
         },
-        "city": "Zurich",
+        "area": "Zurich",
         "country": "CH",
         "continent": "Europe",
         "latitude": 47.385799407958984,
@@ -4192,7 +4192,7 @@
         "owner": {
           "name": "Green.Ch"
         },
-        "city": "Zurich",
+        "area": "Zurich",
         "country": "CH",
         "continent": "Europe",
         "latitude": 47.385799407958984,
@@ -4220,7 +4220,7 @@
         "owner": {
           "name": "Interxion"
         },
-        "city": "Provence-Alpes-Cote d'Azur",
+        "area": "Provence-Alpes-Cote d'Azur",
         "country": "FR",
         "continent": "Europe",
         "latitude": 43.29650115966797,
@@ -4254,7 +4254,7 @@
         "owner": {
           "name": "Unknown"
         },
-        "city": "Tokyo",
+        "area": "Tokyo",
         "country": "JP",
         "continent": "Asia",
         "latitude": 35.67620086669922,
@@ -4283,7 +4283,7 @@
         "owner": {
           "name": "Tierpoint"
         },
-        "city": "Pennsylvania",
+        "area": "Pennsylvania",
         "country": "US",
         "continent": "North America",
         "latitude": 40.60219955444336,
@@ -4311,7 +4311,7 @@
         "owner": {
           "name": "Interxion"
         },
-        "city": "Provence-Alpes-Cote d'Azur",
+        "area": "Provence-Alpes-Cote d'Azur",
         "country": "FR",
         "continent": "Europe",
         "latitude": 43.29650115966797,
@@ -4344,7 +4344,7 @@
         "owner": {
           "name": "Tierpoint"
         },
-        "city": "Florida",
+        "area": "Florida",
         "country": "US",
         "continent": "North America",
         "latitude": 30.33209991455078,
@@ -4373,7 +4373,7 @@
         "owner": {
           "name": "Equinix"
         },
-        "city": "Hesse",
+        "area": "Hesse",
         "country": "DE",
         "continent": "Europe",
         "latitude": 50.12229919433594,
@@ -4402,7 +4402,7 @@
         "owner": {
           "name": "Tierpoint"
         },
-        "city": "Pennsylvania",
+        "area": "Pennsylvania",
         "country": "US",
         "continent": "North America",
         "latitude": 40.60219955444336,
@@ -4431,7 +4431,7 @@
         "owner": {
           "name": "Tierpoint"
         },
-        "city": "Pennsylvania",
+        "area": "Pennsylvania",
         "country": "US",
         "continent": "North America",
         "latitude": 40.60219955444336,
@@ -4459,7 +4459,7 @@
         "owner": {
           "name": "INAP"
         },
-        "city": "Massachusetts",
+        "area": "Massachusetts",
         "country": "US",
         "continent": "North America",
         "latitude": 42.36009979248047,
@@ -4488,7 +4488,7 @@
         "owner": {
           "name": "Antwerp Datacenter"
         },
-        "city": "Flanders",
+        "area": "Flanders",
         "country": "BE",
         "continent": "Europe",
         "latitude": 51.219398498535156,
@@ -4517,7 +4517,7 @@
         "owner": {
           "name": "Posita"
         },
-        "city": "Maribor",
+        "area": "Maribor",
         "country": "SI",
         "continent": "Europe",
         "latitude": 46.55764389038086,
@@ -4546,7 +4546,7 @@
         "owner": {
           "name": "Posita"
         },
-        "city": "Ljubljana",
+        "area": "Ljubljana",
         "country": "SI",
         "continent": "Europe",
         "latitude": 46.04998016357422,
@@ -4575,7 +4575,7 @@
         "owner": {
           "name": "Green.Ch"
         },
-        "city": "Zurich",
+        "area": "Zurich",
         "country": "CH",
         "continent": "Europe",
         "latitude": 47.385799407958984,
@@ -4603,7 +4603,7 @@
         "owner": {
           "name": "Flexential"
         },
-        "city": "Oregon",
+        "area": "Oregon",
         "country": "US",
         "continent": "North America",
         "latitude": 45.50510025024414,
@@ -4632,7 +4632,7 @@
         "owner": {
           "name": "Tierpoint"
         },
-        "city": "Pennsylvania",
+        "area": "Pennsylvania",
         "country": "US",
         "continent": "North America",
         "latitude": 40.60219955444336,
@@ -4661,7 +4661,7 @@
         "owner": {
           "name": "Equinix"
         },
-        "city": "Hesse",
+        "area": "Hesse",
         "country": "DE",
         "continent": "Europe",
         "latitude": 50.12229919433594,
@@ -4690,7 +4690,7 @@
         "owner": {
           "name": "Posita"
         },
-        "city": "Maribor",
+        "area": "Maribor",
         "country": "SI",
         "continent": "Europe",
         "latitude": 46.55764389038086,
@@ -4719,7 +4719,7 @@
         "owner": {
           "name": "Interxion"
         },
-        "city": "Brussels Capital",
+        "area": "Brussels Capital",
         "country": "BE",
         "continent": "Europe",
         "latitude": 50.838600158691406,
@@ -4748,7 +4748,7 @@
         "owner": {
           "name": "Posita"
         },
-        "city": "Ljubljana",
+        "area": "Ljubljana",
         "country": "SI",
         "continent": "Europe",
         "latitude": 46.04998016357422,
@@ -4777,7 +4777,7 @@
         "owner": {
           "name": "Posita"
         },
-        "city": "Maribor",
+        "area": "Maribor",
         "country": "SI",
         "continent": "Europe",
         "latitude": 46.55764389038086,
@@ -4806,7 +4806,7 @@
         "owner": {
           "name": "Green.Ch"
         },
-        "city": "Zurich",
+        "area": "Zurich",
         "country": "CH",
         "continent": "Europe",
         "latitude": 47.385799407958984,
@@ -4834,7 +4834,7 @@
         "owner": {
           "name": "Tierpoint"
         },
-        "city": "Florida",
+        "area": "Florida",
         "country": "US",
         "continent": "North America",
         "latitude": 30.33209991455078,
@@ -4863,7 +4863,7 @@
         "owner": {
           "name": "Posita"
         },
-        "city": "Maribor",
+        "area": "Maribor",
         "country": "SI",
         "continent": "Europe",
         "latitude": 46.55764389038086,
@@ -4891,7 +4891,7 @@
         "owner": {
           "name": "Tierpoint"
         },
-        "city": "Florida",
+        "area": "Florida",
         "country": "US",
         "continent": "North America",
         "latitude": 30.33209991455078,
@@ -4919,7 +4919,7 @@
         "owner": {
           "name": "Tierpoint"
         },
-        "city": "Florida",
+        "area": "Florida",
         "country": "US",
         "continent": "North America",
         "latitude": 30.33209991455078,
@@ -4948,7 +4948,7 @@
         "owner": {
           "name": "Posita"
         },
-        "city": "Ljubljana",
+        "area": "Ljubljana",
         "country": "SI",
         "continent": "Europe",
         "latitude": 46.04998016357422,
@@ -4976,7 +4976,7 @@
         "owner": {
           "name": "INAP"
         },
-        "city": "Massachusetts",
+        "area": "Massachusetts",
         "country": "US",
         "continent": "North America",
         "latitude": 42.36009979248047,
@@ -5005,7 +5005,7 @@
         "owner": {
           "name": "Tierpoint"
         },
-        "city": "Pennsylvania",
+        "area": "Pennsylvania",
         "country": "US",
         "continent": "North America",
         "latitude": 40.60219955444336,
@@ -5034,7 +5034,7 @@
         "owner": {
           "name": "Tierpoint"
         },
-        "city": "Pennsylvania",
+        "area": "Pennsylvania",
         "country": "US",
         "continent": "North America",
         "latitude": 40.60219955444336,
@@ -5062,7 +5062,7 @@
         "owner": {
           "name": "Interxion"
         },
-        "city": "Provence-Alpes-Cote d'Azur",
+        "area": "Provence-Alpes-Cote d'Azur",
         "country": "FR",
         "continent": "Europe",
         "latitude": 43.29650115966797,
@@ -5096,7 +5096,7 @@
         "owner": {
           "name": "Tierpoint"
         },
-        "city": "Pennsylvania",
+        "area": "Pennsylvania",
         "country": "US",
         "continent": "North America",
         "latitude": 40.60219955444336,
@@ -5125,7 +5125,7 @@
         "owner": {
           "name": "Posita"
         },
-        "city": "Maribor",
+        "area": "Maribor",
         "country": "SI",
         "continent": "Europe",
         "latitude": 46.55764389038086,
@@ -5154,7 +5154,7 @@
         "owner": {
           "name": "Green.Ch"
         },
-        "city": "Zurich",
+        "area": "Zurich",
         "country": "CH",
         "continent": "Europe",
         "latitude": 47.385799407958984,
@@ -5183,7 +5183,7 @@
         "owner": {
           "name": "Green.Ch"
         },
-        "city": "Zurich",
+        "area": "Zurich",
         "country": "CH",
         "continent": "Europe",
         "latitude": 47.385799407958984,
@@ -5212,7 +5212,7 @@
         "owner": {
           "name": "Equinix"
         },
-        "city": "Hesse",
+        "area": "Hesse",
         "country": "DE",
         "continent": "Europe",
         "latitude": 50.12229919433594,
@@ -5241,7 +5241,7 @@
         "owner": {
           "name": "Green.Ch"
         },
-        "city": "Zurich",
+        "area": "Zurich",
         "country": "CH",
         "continent": "Europe",
         "latitude": 47.385799407958984,
@@ -5269,7 +5269,7 @@
         "owner": {
           "name": "Interxion"
         },
-        "city": "Provence-Alpes-Cote d'Azur",
+        "area": "Provence-Alpes-Cote d'Azur",
         "country": "FR",
         "continent": "Europe",
         "latitude": 43.29650115966797,
@@ -5303,7 +5303,7 @@
         "owner": {
           "name": "Posita"
         },
-        "city": "Ljubljana",
+        "area": "Ljubljana",
         "country": "SI",
         "continent": "Europe",
         "latitude": 46.04998016357422,

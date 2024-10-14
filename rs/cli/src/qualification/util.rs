@@ -10,13 +10,9 @@ use std::{
 use chrono::Utc;
 use comfy_table::CellAlignment;
 use flate2::bufread::GzDecoder;
-use headless_chrome::{protocol::cdp::Page, Browser, LaunchOptionsBuilder};
 use ic_registry_subnet_type::SubnetType;
-use ic_types::PrincipalId;
 use itertools::Itertools;
 use reqwest::{Client, ClientBuilder};
-use strum::{EnumIter, IntoEnumIterator};
-use url::Url;
 
 use crate::ctx::DreContext;
 
@@ -27,22 +23,16 @@ const IC_EXECUTABLES_DIR: &str = "ic-executables";
 
 pub struct StepCtx {
     dre_ctx: DreContext,
+    #[allow(dead_code)]
     artifacts: Option<PathBuf>,
     log_path: Option<PathBuf>,
     client: Client,
-    grafana_url: Option<String>,
     from_version: String,
     to_version: String,
 }
 
 impl StepCtx {
-    pub fn new(
-        dre_ctx: DreContext,
-        artifacts: Option<PathBuf>,
-        grafana_url: Option<String>,
-        from_version: String,
-        to_version: String,
-    ) -> anyhow::Result<Self> {
+    pub fn new(dre_ctx: DreContext, artifacts: Option<PathBuf>, from_version: String, to_version: String) -> anyhow::Result<Self> {
         let artifacts_of_run = artifacts.as_ref().map(|t| {
             if let Err(e) = std::fs::create_dir_all(t) {
                 panic!("Couldn't create dir {}: {:?}", t.display(), e)
@@ -60,7 +50,6 @@ impl StepCtx {
             }),
             artifacts: artifacts_of_run,
             client: ClientBuilder::new().timeout(REQWEST_TIMEOUT).build()?,
-            grafana_url,
             from_version: from_version[..6].to_string(),
             to_version: to_version[..6].to_string(),
         })
@@ -155,7 +144,7 @@ impl StepCtx {
         let subnets = registry.subnets().await?;
 
         let subnets = subnets.values();
-        let unassigned = registry.unassigned_nodes_replica_version()?;
+        let unassigned = registry.unassigned_nodes_replica_version().await?;
         let table = Table::new()
             .with_columns(&[
                 ("Subnet type", CellAlignment::Left),
@@ -218,101 +207,5 @@ impl StepCtx {
         }
 
         println!("{}", formatted)
-    }
-
-    pub fn capture_progress_clock(
-        &self,
-        deployment_name: String,
-        subnet: &PrincipalId,
-        from: Option<i64>,
-        to: Option<i64>,
-        path_suffix: &str,
-    ) -> anyhow::Result<()> {
-        let (url, artifacts) = match (self.grafana_url.as_ref(), self.artifacts.as_ref()) {
-            (Some(url), Some(artifacts)) => (url, artifacts),
-            _ => return Ok(()),
-        };
-
-        let timestamp = match from {
-            Some(t) => t.to_string(),
-            None => Utc::now().timestamp().to_string(),
-        };
-
-        let browser = Browser::new(LaunchOptionsBuilder::default().devtools(false).window_size(Some((1920, 1080))).build()?)?;
-        let tab = browser.new_tab()?;
-
-        for panel in Panel::iter() {
-            let mut url = Url::parse(url)?.join(panel.get_dashboard())?;
-            url.set_query(Some(
-                &[
-                    ("var-ic", deployment_name.to_string()),
-                    ("var-ic_subnet", subnet.to_string()),
-                    (
-                        "from",
-                        match from {
-                            Some(f) => (f * 1000).to_string(),
-                            None => "now-1h".to_owned(),
-                        },
-                    ),
-                    (
-                        "to",
-                        match to {
-                            Some(t) => (t * 1000).to_string(),
-                            None => "now".to_owned(),
-                        },
-                    ),
-                    ("orgId", "1".to_owned()),
-                    ("viewPanel", panel.into()),
-                ]
-                .iter()
-                .map(|(k, v)| format!("{}={}", k, v))
-                .join("&"),
-            ));
-
-            let destination = artifacts.join(format!("{}-{}-{}.png", panel.get_name(), path_suffix, timestamp));
-            self.print_text(format!("Capturing screen from link: {}", url));
-
-            tab.navigate_to(url.as_str())?;
-            std::thread::sleep(Duration::from_secs(5));
-            let data = tab.capture_screenshot(Page::CaptureScreenshotFormatOption::Png, None, None, true)?;
-            std::fs::write(&destination, data)?;
-
-            self.print_text(format!("Captured image and saved to: {}", destination.display()))
-        }
-
-        Ok(())
-    }
-}
-
-#[derive(Clone, Copy, EnumIter, Default)]
-enum Panel {
-    #[default]
-    FinalizationRate,
-    RunningReplicas,
-}
-
-impl Panel {
-    fn get_name(&self) -> &str {
-        match self {
-            Panel::FinalizationRate => "FinalizationRate",
-            Panel::RunningReplicas => "RunningReplicas",
-        }
-    }
-
-    fn get_dashboard(&self) -> &str {
-        match self {
-            Panel::FinalizationRate => "/d/ic-progress-clock/ic-progress-clock",
-            Panel::RunningReplicas => "/d/ic-progress-clock/ic-progress-clock",
-        }
-    }
-}
-
-impl From<Panel> for String {
-    fn from(value: Panel) -> Self {
-        match value {
-            Panel::FinalizationRate => "4",
-            Panel::RunningReplicas => "32",
-        }
-        .to_string()
     }
 }

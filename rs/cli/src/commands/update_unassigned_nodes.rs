@@ -2,12 +2,9 @@ use std::str::FromStr;
 
 use clap::Args;
 use ic_canisters::registry::RegistryCanisterWrapper;
-use ic_management_types::Network;
 use ic_types::PrincipalId;
 
-use crate::auth::Neuron;
-
-use super::{ExecutableCommand, IcAdminRequirement};
+use super::{AuthRequirement, ExecutableCommand};
 
 #[derive(Args, Debug)]
 pub struct UpdateUnassignedNodes {
@@ -17,20 +14,15 @@ pub struct UpdateUnassignedNodes {
 }
 
 impl ExecutableCommand for UpdateUnassignedNodes {
-    fn require_ic_admin(&self) -> IcAdminRequirement {
-        IcAdminRequirement::OverridableBy {
-            network: Network::mainnet_unchecked().unwrap(),
-            neuron: Neuron::automation_neuron_unchecked(),
-        }
+    fn require_auth(&self) -> AuthRequirement {
+        AuthRequirement::Neuron
     }
 
     async fn execute(&self, ctx: crate::ctx::DreContext) -> anyhow::Result<()> {
-        let runner = ctx.runner().await;
-        let canister_agent = ctx.create_ic_agent_canister_client(None)?;
-
         let nns_subnet_id = match &self.nns_subnet_id {
             Some(n) => n.to_owned(),
             None => {
+                let canister_agent = ctx.create_ic_agent_canister_client(None).await?;
                 let registry_client = RegistryCanisterWrapper::new(canister_agent.agent);
                 let subnet_list = registry_client.get_subnets().await?;
                 subnet_list
@@ -41,8 +33,16 @@ impl ExecutableCommand for UpdateUnassignedNodes {
             }
         };
 
-        runner.update_unassigned_nodes(&PrincipalId::from_str(&nns_subnet_id)?).await
+        let runner = ctx.runner().await?;
+        if let Some(runner_proposal) = runner
+            .update_unassigned_nodes(&PrincipalId::from_str(&nns_subnet_id)?, ctx.forum_post_link())
+            .await?
+        {
+            let ic_admin = ctx.ic_admin().await?;
+            ic_admin.propose_run(runner_proposal.cmd, runner_proposal.opts).await?;
+        }
+        Ok(())
     }
 
-    fn validate(&self, _cmd: &mut clap::Command) {}
+    fn validate(&self, _args: &crate::commands::Args, _cmd: &mut clap::Command) {}
 }

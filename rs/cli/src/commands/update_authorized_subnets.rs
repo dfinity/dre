@@ -1,4 +1,5 @@
-use std::{collections::BTreeMap, path::PathBuf, sync::Arc};
+use indexmap::IndexMap;
+use std::{path::PathBuf, sync::Arc};
 
 use clap::{error::ErrorKind, Args};
 use ic_management_types::Subnet;
@@ -9,7 +10,7 @@ use log::info;
 
 use crate::ic_admin::{ProposeCommand, ProposeOptions};
 
-use super::ExecutableCommand;
+use super::{AuthRequirement, ExecutableCommand};
 
 const DEFAULT_CANISTER_LIMIT: u64 = 60_000;
 const DEFAULT_STATE_SIZE_BYTES_LIMIT: u64 = 322_122_547_200; // 300GB
@@ -32,18 +33,19 @@ pub struct UpdateAuthorizedSubnets {
 }
 
 impl ExecutableCommand for UpdateAuthorizedSubnets {
-    fn require_ic_admin(&self) -> super::IcAdminRequirement {
-        super::IcAdminRequirement::Detect
+    fn require_auth(&self) -> AuthRequirement {
+        super::AuthRequirement::Neuron
     }
 
-    fn validate(&self, cmd: &mut clap::Command) {
+    fn validate(&self, _args: &crate::commands::Args, cmd: &mut clap::Command) {
         if let Some(path) = &self.path {
             if !path.exists() {
-                cmd.error(ErrorKind::InvalidValue, format!("Path `{}` not found", path.display())).exit();
+                cmd.error(ErrorKind::InvalidValue, format!("Path `{}` not found", path.display())).exit()
             }
 
             if !path.is_file() {
-                cmd.error(ErrorKind::InvalidValue, format!("Path `{}` found, but is not a file", path.display()));
+                cmd.error(ErrorKind::InvalidValue, format!("Path `{}` found, but is not a file", path.display()))
+                    .exit()
             }
         }
     }
@@ -54,10 +56,10 @@ impl ExecutableCommand for UpdateAuthorizedSubnets {
 
         let registry = ctx.registry().await;
         let subnets = registry.subnets().await?;
-        let mut excluded_subnets = BTreeMap::new();
+        let mut excluded_subnets = IndexMap::new();
 
         let human_bytes = human_bytes::human_bytes(self.state_size_limit as f64);
-        let agent = ctx.create_ic_agent_canister_client(None)?;
+        let agent = ctx.create_ic_agent_canister_client(None).await?;
 
         for subnet in subnets.values() {
             if subnet.subnet_type.eq(&SubnetType::System) {
@@ -87,15 +89,15 @@ impl ExecutableCommand for UpdateAuthorizedSubnets {
             }
         }
 
-        let summary = construct_summary(&subnets, &excluded_subnets)?;
+        let summary = construct_summary(&subnets, &excluded_subnets, ctx.forum_post_link())?;
 
         let authorized = subnets
             .keys()
-            .filter(|subnet_id| !excluded_subnets.contains_key(subnet_id))
+            .filter(|subnet_id| !excluded_subnets.contains_key(*subnet_id))
             .cloned()
             .collect();
 
-        let ic_admin = ctx.ic_admin();
+        let ic_admin = ctx.ic_admin().await?;
         ic_admin
             .propose_run(
                 ProposeCommand::SetAuthorizedSubnetworks { subnets: authorized },
@@ -103,6 +105,7 @@ impl ExecutableCommand for UpdateAuthorizedSubnets {
                     title: Some("Update list of public subnets".to_string()),
                     summary: Some(summary),
                     motivation: None,
+                    forum_post_link: ctx.forum_post_link(),
                 },
             )
             .await?;
@@ -135,13 +138,19 @@ impl UpdateAuthorizedSubnets {
     }
 }
 
-fn construct_summary(subnets: &Arc<BTreeMap<PrincipalId, Subnet>>, excluded_subnets: &BTreeMap<PrincipalId, String>) -> anyhow::Result<String> {
+fn construct_summary(
+    subnets: &Arc<IndexMap<PrincipalId, Subnet>>,
+    excluded_subnets: &IndexMap<PrincipalId, String>,
+    forum_post_link: Option<String>,
+) -> anyhow::Result<String> {
     Ok(format!(
         "Updating the list of authorized subnets to:
 
 | Subnet id | Public | Description |
 | --------- | ------ | ----------- |
-{}",
+{}
+{}
+",
         subnets
             .values()
             .map(|s| {
@@ -153,6 +162,10 @@ fn construct_summary(subnets: &Arc<BTreeMap<PrincipalId, Subnet>>, excluded_subn
                     excluded_desc.map(|s| s.to_string()).unwrap_or_default()
                 )
             })
-            .join("\n")
+            .join("\n"),
+        match forum_post_link {
+            Some(link) => format!("\nForum post link: {}", link),
+            None => "".to_string(),
+        }
     ))
 }

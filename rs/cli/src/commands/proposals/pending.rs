@@ -1,18 +1,18 @@
 use clap::Args;
 use ic_canisters::governance::GovernanceCanisterWrapper;
 
-use crate::commands::{ExecutableCommand, IcAdminRequirement};
+use crate::commands::{AuthRequirement, ExecutableCommand};
 
 #[derive(Args, Debug)]
 pub struct Pending {}
 
 impl ExecutableCommand for Pending {
-    fn require_ic_admin(&self) -> IcAdminRequirement {
-        IcAdminRequirement::None
+    fn require_auth(&self) -> AuthRequirement {
+        AuthRequirement::Anonymous
     }
 
     async fn execute(&self, ctx: crate::ctx::DreContext) -> anyhow::Result<()> {
-        let client = GovernanceCanisterWrapper::from(ctx.create_canister_client()?);
+        let client = GovernanceCanisterWrapper::from(ctx.create_ic_agent_canister_client(None).await?);
         let proposals = client.get_pending_proposals().await?;
         let proposals = serde_json::to_string(&proposals).map_err(|e| anyhow::anyhow!("Couldn't serialize to string: {:?}", e))?;
 
@@ -21,5 +21,5 @@ impl ExecutableCommand for Pending {
         Ok(())
     }
 
-    fn validate(&self, _cmd: &mut clap::Command) {}
+    fn validate(&self, _args: &crate::commands::Args, _cmd: &mut clap::Command) {}
 }

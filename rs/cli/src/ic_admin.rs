@@ -3,17 +3,14 @@ use anyhow::{anyhow, Result};
 use colored::Colorize;
 use dialoguer::Confirm;
 use flate2::read::GzDecoder;
-use futures::stream::{self, StreamExt};
+use futures::future::BoxFuture;
 use ic_base_types::PrincipalId;
 use ic_management_types::{Artifact, Network};
-use itertools::Itertools;
-use log::{error, info, warn};
+use log::{error, info};
+use mockall::automock;
 use regex::Regex;
-use reqwest::StatusCode;
-use sha2::{Digest, Sha256};
 use shlex::try_quote;
-use std::fs::File;
-use std::io::{Read, Write};
+use std::io::Read;
 use std::os::unix::fs::PermissionsExt;
 use std::path::PathBuf;
 use std::process::Stdio;
@@ -23,50 +20,138 @@ use strum::Display;
 
 const MAX_SUMMARY_CHAR_COUNT: usize = 29000;
 
-#[derive(Clone)]
-pub struct UpdateVersion {
-    pub release_artifact: Artifact,
-    pub version: String,
-    pub title: String,
-    pub summary: String,
-    pub update_urls: Vec<String>,
-    pub stringified_hash: String,
-    pub versions_to_retire: Option<Vec<String>>,
-}
+#[automock]
+pub trait IcAdmin: Send + Sync {
+    fn ic_admin_path(&self) -> Option<String>;
 
-impl UpdateVersion {
-    pub fn get_update_cmd_args(&self) -> Vec<String> {
-        [
-            [
-                vec![
-                    "--replica-version-to-elect".to_string(),
-                    self.version.to_string(),
-                    "--release-package-sha256-hex".to_string(),
-                    self.stringified_hash.to_string(),
-                    "--release-package-urls".to_string(),
-                ],
-                self.update_urls.clone(),
-            ]
-            .concat(),
-            match self.versions_to_retire.clone() {
-                Some(versions) => [vec!["--replica-versions-to-unelect".to_string()], versions].concat(),
-                None => vec![],
-            },
-        ]
-        .concat()
-    }
+    fn propose_run(&self, cmd: ProposeCommand, opts: ProposeOptions) -> BoxFuture<'_, anyhow::Result<String>>;
+
+    fn run<'a>(&'a self, command: &'a str, args: &'a [String], silent: bool) -> BoxFuture<'_, anyhow::Result<String>>;
+
+    fn grep_subcommand_arguments(&self, subcommand: &str) -> String;
+
+    fn run_passthrough_get<'a>(&'a self, args: &'a [String], silent: bool) -> BoxFuture<'_, anyhow::Result<String>>;
+
+    fn run_passthrough_propose<'a>(&'a self, args: &'a [String]) -> BoxFuture<'_, anyhow::Result<String>>;
 }
 
 #[derive(Clone)]
-pub struct IcAdminWrapper {
+pub struct IcAdminImpl {
     network: Network,
     ic_admin_bin_path: Option<String>,
     proceed_without_confirmation: bool,
-    pub neuron: Neuron,
+    neuron: Neuron,
     dry_run: bool,
 }
 
-impl IcAdminWrapper {
+impl IcAdmin for IcAdminImpl {
+    fn ic_admin_path(&self) -> Option<String> {
+        self.ic_admin_bin_path.clone()
+    }
+
+    fn propose_run(&self, cmd: ProposeCommand, opts: ProposeOptions) -> BoxFuture<'_, anyhow::Result<String>> {
+        Box::pin(async move { self.propose_run_inner(cmd, opts, self.dry_run).await })
+    }
+
+    fn run<'a>(&'a self, command: &'a str, args: &'a [String], silent: bool) -> BoxFuture<'_, anyhow::Result<String>> {
+        let ic_admin_args = [&[command.to_string()], args].concat();
+        Box::pin(async move { self._run_ic_admin_with_args(&ic_admin_args, silent).await })
+    }
+
+    fn grep_subcommand_arguments(&self, subcommand: &str) -> String {
+        let ic_admin_path = self.ic_admin_bin_path.clone().unwrap_or_else(|| "ic-admin".to_string());
+        let cmd_result = Command::new(ic_admin_path).args([subcommand, "--help"]).output();
+        match cmd_result.map_err(|e| e.to_string()) {
+            Ok(output) => {
+                if output.status.success() {
+                    String::from_utf8_lossy(output.stdout.as_ref()).to_string()
+                } else {
+                    error!("Execution of ic-admin failed: {}", String::from_utf8_lossy(output.stderr.as_ref()));
+                    String::new()
+                }
+            }
+            Err(err) => {
+                error!("Error starting ic-admin process: {}", err);
+                String::new()
+            }
+        }
+    }
+
+    /// Run an `ic-admin get-*` command directly, and without an HSM
+    fn run_passthrough_get<'a>(&'a self, args: &'a [String], silent: bool) -> BoxFuture<'_, anyhow::Result<String>> {
+        if args.is_empty() {
+            println!("List of available ic-admin 'get' sub-commands:\n");
+            for subcmd in self.grep_subcommands(r"\s+get-(.+?)\s") {
+                println!("\t{}", subcmd)
+            }
+            std::process::exit(1);
+        }
+
+        // The `get` subcommand of the cli expects that "get-" prefix is not provided as
+        // the ic-admin command
+        let args = if args[0].starts_with("get-") {
+            // The user did provide the "get-" prefix, so let's just keep it and use it.
+            // This provides a convenient backward compatibility with ic-admin commands
+            // i.e., `dre get get-subnet 0` still works, although `dre get
+            // subnet 0` is preferred
+            args.to_vec()
+        } else {
+            // But since ic-admin expects these commands to include the "get-" prefix, we
+            // need to add it back Example:
+            // `dre get subnet 0` becomes
+            // `ic-admin --nns-url "http://[2600:3000:6100:200:5000:b0ff:fe8e:6b7b]:8080" get-subnet 0`
+            let mut args_with_get_prefix = vec![String::from("get-") + args[0].as_str()];
+            args_with_get_prefix.extend_from_slice(args.split_at(1).1);
+            args_with_get_prefix
+        };
+
+        Box::pin(async move { self.run(&args[0], &args.iter().skip(1).cloned().collect::<Vec<_>>(), silent).await })
+    }
+
+    /// Run an `ic-admin propose-to-*` command directly
+    fn run_passthrough_propose<'a>(&'a self, args: &'a [String]) -> BoxFuture<'_, anyhow::Result<String>> {
+        if args.is_empty() {
+            println!("List of available ic-admin 'propose' sub-commands:\n");
+            for subcmd in self.grep_subcommands(r"\s+propose-to-(.+?)\s") {
+                println!("\t{}", subcmd)
+            }
+            std::process::exit(1);
+        }
+
+        // The `propose` subcommand of the cli expects that "propose-to-" prefix is not
+        // provided as the ic-admin command
+        let args = if args[0].starts_with("propose-to-") {
+            // The user did provide the "propose-to-" prefix, so let's just keep it and use
+            // it.
+            args.to_vec()
+        } else {
+            // But since ic-admin expects these commands to include the "propose-to-"
+            // prefix, we need to add it back.
+            let mut args_with_fixed_prefix = vec![String::from("propose-to-") + args[0].as_str()];
+            args_with_fixed_prefix.extend_from_slice(args.split_at(1).1);
+            args_with_fixed_prefix
+        };
+
+        // ic-admin expects --summary and not --motivation
+        // make sure the expected argument is provided
+        let args = if !args.contains(&String::from("--summary")) && args.contains(&String::from("--motivation")) {
+            args.iter()
+                .map(|arg| if arg == "--motivation" { "--summary".to_string() } else { arg.clone() })
+                .collect::<Vec<_>>()
+        } else {
+            args.to_vec()
+        };
+
+        let cmd = ProposeCommand::Raw {
+            command: args[0].clone(),
+            args: args.iter().skip(1).cloned().collect::<Vec<_>>(),
+        };
+        let dry_run = self.dry_run || cmd.args().contains(&String::from("--dry-run"));
+        Box::pin(async move { self.propose_run_inner(cmd, Default::default(), dry_run).await })
+    }
+}
+
+impl IcAdminImpl {
     pub fn new(network: Network, ic_admin_bin_path: Option<String>, proceed_without_confirmation: bool, neuron: Neuron, dry_run: bool) -> Self {
         Self {
             network,
@@ -143,7 +228,19 @@ impl IcAdminWrapper {
                         .map(|s| {
                             vec![
                                 "--summary".to_string(),
-                                format!("{}{}", s, opts.motivation.map(|m| format!("\n\nMotivation: {m}")).unwrap_or_default(),),
+                                format!(
+                                    "{}{}",
+                                    s,
+                                    opts.motivation
+                                        .map(|m| format!(
+                                            "\n\nMotivation: {m}{}",
+                                            match opts.forum_post_link {
+                                                Some(link) => format!("\nForum post link: {}\n", link),
+                                                None => "".to_string(),
+                                            }
+                                        ))
+                                        .unwrap_or_default(),
+                                ),
                             ]
                         })
                         .unwrap_or_default(),
@@ -163,11 +260,32 @@ impl IcAdminWrapper {
         Ok(cmd_out)
     }
 
-    pub async fn propose_run(&self, cmd: ProposeCommand, opts: ProposeOptions) -> anyhow::Result<String> {
-        self.propose_run_inner(cmd, opts, self.dry_run).await
-    }
-
     async fn propose_run_inner(&self, cmd: ProposeCommand, opts: ProposeOptions, dry_run: bool) -> anyhow::Result<String> {
+        let opts = if opts.forum_post_link.is_some() || self.proceed_without_confirmation {
+            opts
+        } else {
+            println!(
+                "Proposal title: {}",
+                opts.title.as_deref().unwrap_or(opts.summary.as_deref().unwrap_or(""))
+            );
+            let forum_post_link = Confirm::new()
+                .with_prompt("Link to a forum thread not found. Do you want to add it?")
+                .default(true)
+                .interact()?;
+            if forum_post_link {
+                let forum_post_link = dialoguer::Input::<String>::new()
+                    .with_prompt("Forum post link")
+                    .allow_empty(true)
+                    .interact()?;
+                ProposeOptions {
+                    forum_post_link: Some(forum_post_link),
+                    ..opts
+                }
+            } else {
+                opts
+            }
+        };
+
         // Dry run, or --help executions run immediately and do not proceed.
         if dry_run || cmd.args().contains(&String::from("--help")) || cmd.args().contains(&String::from("--dry-run")) {
             return self._exec(cmd, opts, true, false, false).await;
@@ -241,11 +359,6 @@ impl IcAdminWrapper {
         }
     }
 
-    pub async fn run(&self, command: &str, args: &[String], silent: bool) -> anyhow::Result<String> {
-        let ic_admin_args = [&[command.to_string()], args].concat();
-        self._run_ic_admin_with_args(&ic_admin_args, silent).await
-    }
-
     /// Run ic-admin and parse sub-commands that it lists with "--help",
     /// extract the ones matching `needle_regex` and return them as a
     /// `Vec<String>`
@@ -269,307 +382,6 @@ impl IcAdminWrapper {
                 error!("Error starting ic-admin process: {}", err);
                 vec![]
             }
-        }
-    }
-
-    pub(crate) fn grep_subcommand_arguments(&self, subcommand: &str) -> String {
-        let ic_admin_path = self.ic_admin_bin_path.clone().unwrap_or_else(|| "ic-admin".to_string());
-        let cmd_result = Command::new(ic_admin_path).args([subcommand, "--help"]).output();
-        match cmd_result.map_err(|e| e.to_string()) {
-            Ok(output) => {
-                if output.status.success() {
-                    String::from_utf8_lossy(output.stdout.as_ref()).to_string()
-                } else {
-                    error!("Execution of ic-admin failed: {}", String::from_utf8_lossy(output.stderr.as_ref()));
-                    String::new()
-                }
-            }
-            Err(err) => {
-                error!("Error starting ic-admin process: {}", err);
-                String::new()
-            }
-        }
-    }
-
-    /// Run an `ic-admin get-*` command directly, and without an HSM
-    pub async fn run_passthrough_get(&self, args: &[String], silent: bool) -> anyhow::Result<String> {
-        if args.is_empty() {
-            println!("List of available ic-admin 'get' sub-commands:\n");
-            for subcmd in self.grep_subcommands(r"\s+get-(.+?)\s") {
-                println!("\t{}", subcmd)
-            }
-            std::process::exit(1);
-        }
-
-        // The `get` subcommand of the cli expects that "get-" prefix is not provided as
-        // the ic-admin command
-        let args = if args[0].starts_with("get-") {
-            // The user did provide the "get-" prefix, so let's just keep it and use it.
-            // This provides a convenient backward compatibility with ic-admin commands
-            // i.e., `dre get get-subnet 0` still works, although `dre get
-            // subnet 0` is preferred
-            args.to_vec()
-        } else {
-            // But since ic-admin expects these commands to include the "get-" prefix, we
-            // need to add it back Example:
-            // `dre get subnet 0` becomes
-            // `ic-admin --nns-url "http://[2600:3000:6100:200:5000:b0ff:fe8e:6b7b]:8080" get-subnet 0`
-            let mut args_with_get_prefix = vec![String::from("get-") + args[0].as_str()];
-            args_with_get_prefix.extend_from_slice(args.split_at(1).1);
-            args_with_get_prefix
-        };
-
-        let stdout = self.run(&args[0], &args.iter().skip(1).cloned().collect::<Vec<_>>(), silent).await?;
-        Ok(stdout)
-    }
-
-    /// Run an `ic-admin propose-to-*` command directly
-    pub async fn run_passthrough_propose(&self, args: &[String]) -> anyhow::Result<()> {
-        if args.is_empty() {
-            println!("List of available ic-admin 'propose' sub-commands:\n");
-            for subcmd in self.grep_subcommands(r"\s+propose-to-(.+?)\s") {
-                println!("\t{}", subcmd)
-            }
-            std::process::exit(1);
-        }
-
-        // The `propose` subcommand of the cli expects that "propose-to-" prefix is not
-        // provided as the ic-admin command
-        let args = if args[0].starts_with("propose-to-") {
-            // The user did provide the "propose-to-" prefix, so let's just keep it and use
-            // it.
-            args.to_vec()
-        } else {
-            // But since ic-admin expects these commands to include the "propose-to-"
-            // prefix, we need to add it back.
-            let mut args_with_fixed_prefix = vec![String::from("propose-to-") + args[0].as_str()];
-            args_with_fixed_prefix.extend_from_slice(args.split_at(1).1);
-            args_with_fixed_prefix
-        };
-
-        // ic-admin expects --summary and not --motivation
-        // make sure the expected argument is provided
-        let args = if !args.contains(&String::from("--summary")) && args.contains(&String::from("--motivation")) {
-            args.iter()
-                .map(|arg| if arg == "--motivation" { "--summary".to_string() } else { arg.clone() })
-                .collect::<Vec<_>>()
-        } else {
-            args.to_vec()
-        };
-
-        let cmd = ProposeCommand::Raw {
-            command: args[0].clone(),
-            args: args.iter().skip(1).cloned().collect::<Vec<_>>(),
-        };
-        let dry_run = self.dry_run || cmd.args().contains(&String::from("--dry-run"));
-        self.propose_run_inner(cmd, Default::default(), dry_run).await?;
-        Ok(())
-    }
-
-    fn get_s3_cdn_image_url(version: &String, s3_subdir: &String) -> String {
-        format!(
-            "https://download.dfinity.systems/ic/{}/{}/update-img/update-img.tar.gz",
-            version, s3_subdir
-        )
-    }
-
-    fn get_r2_cdn_image_url(version: &String, s3_subdir: &String) -> String {
-        format!(
-            "https://download.dfinity.network/ic/{}/{}/update-img/update-img.tar.gz",
-            version, s3_subdir
-        )
-    }
-
-    async fn download_file_and_get_sha256(download_url: &String) -> anyhow::Result<String> {
-        let url = url::Url::parse(download_url)?;
-        let subdir = format!("{}{}", url.domain().expect("url.domain() is None"), url.path().to_owned());
-        // replace special characters in subdir with _
-        let subdir = subdir.replace(|c: char| !c.is_ascii_alphanumeric(), "_");
-        let download_dir = format!("{}/tmp/ic/{}", dirs::home_dir().expect("home_dir is not set").as_path().display(), subdir);
-        let download_dir = Path::new(&download_dir);
-
-        std::fs::create_dir_all(download_dir).unwrap_or_else(|_| panic!("create_dir_all failed for {}", download_dir.display()));
-
-        let download_image = format!("{}/update-img.tar.gz", download_dir.to_str().unwrap());
-        let download_image = Path::new(&download_image);
-
-        let response = reqwest::get(download_url.clone()).await?;
-
-        if response.status() != StatusCode::RANGE_NOT_SATISFIABLE && !response.status().is_success() {
-            return Err(anyhow::anyhow!(
-                "Download failed with http_code {} for {}",
-                response.status(),
-                download_url
-            ));
-        }
-        info!("Download {} succeeded {}", download_url, response.status());
-
-        let mut file = match File::create(download_image) {
-            Ok(file) => file,
-            Err(err) => return Err(anyhow::anyhow!("Couldn't create a file: {}", err)),
-        };
-
-        let content = response.bytes().await?;
-        file.write_all(&content)?;
-
-        let mut hasher = Sha256::new();
-        hasher.update(&content);
-        let hash = hasher.finalize();
-        let stringified_hash = hash[..].iter().map(|byte| format!("{:01$x?}", byte, 2)).collect::<Vec<String>>().join("");
-        info!("File saved at {} has sha256 {}", download_image.display(), stringified_hash);
-        Ok(stringified_hash)
-    }
-
-    async fn download_images_and_validate_sha256(
-        image: &Artifact,
-        version: &String,
-        ignore_missing_urls: bool,
-    ) -> anyhow::Result<(Vec<String>, String)> {
-        let update_urls = vec![
-            Self::get_s3_cdn_image_url(version, &image.s3_folder()),
-            Self::get_r2_cdn_image_url(version, &image.s3_folder()),
-        ];
-
-        // Download images, verify them and compare the SHA256
-        let hash_and_valid_urls: Vec<(String, &String)> = stream::iter(&update_urls)
-            .filter_map(|update_url| async move {
-                match Self::download_file_and_get_sha256(update_url).await {
-                    Ok(hash) => {
-                        info!("SHA256 of {}: {}", update_url, hash);
-                        Some((hash, update_url))
-                    }
-                    Err(err) => {
-                        warn!("Error downloading {}: {}", update_url, err);
-                        None
-                    }
-                }
-            })
-            .collect()
-            .await;
-        let hashes_unique = hash_and_valid_urls.iter().map(|(h, _)| h.clone()).unique().collect::<Vec<String>>();
-        let expected_hash: String = match hashes_unique.len() {
-            0 => {
-                return Err(anyhow::anyhow!(
-                    "Unable to download the update image from none of the following URLs: {}",
-                    update_urls.join(", ")
-                ))
-            }
-            1 => {
-                let hash = hashes_unique.into_iter().next().unwrap();
-                info!("SHA256 of all download images is: {}", hash);
-                hash
-            }
-            _ => {
-                return Err(anyhow::anyhow!(
-                    "Update images do not have the same hash: {:?}",
-                    hash_and_valid_urls.iter().map(|(h, u)| format!("{}  {}", h, u)).join("\n")
-                ))
-            }
-        };
-        let update_urls = hash_and_valid_urls.into_iter().map(|(_, u)| u.clone()).collect::<Vec<String>>();
-
-        if update_urls.is_empty() {
-            return Err(anyhow::anyhow!(
-                "Unable to download the update image from none of the following URLs: {}",
-                update_urls.join(", ")
-            ));
-        } else if update_urls.len() == 1 {
-            if ignore_missing_urls {
-                warn!("Only 1 update image is available. At least 2 should be present in the proposal");
-            } else {
-                return Err(anyhow::anyhow!(
-                    "Only 1 update image is available. At least 2 should be present in the proposal"
-                ));
-            }
-        }
-        Ok((update_urls, expected_hash))
-    }
-
-    pub async fn prepare_to_propose_to_revise_elected_versions(
-        release_artifact: &Artifact,
-        version: &String,
-        release_tag: &String,
-        force: bool,
-        retire_versions: Option<Vec<String>>,
-    ) -> anyhow::Result<UpdateVersion> {
-        let (update_urls, expected_hash) = Self::download_images_and_validate_sha256(release_artifact, version, force).await?;
-
-        let template = format!(
-            r#"Elect new {release_artifact} binary revision [{version}](https://github.com/dfinity/ic/tree/{release_tag})
-
-# Release Notes:
-
-[comment]: <> Remove this block of text from the proposal.
-[comment]: <> Then, add the {release_artifact} binary release notes as bullet points here.
-[comment]: <> Any [commit ID] within square brackets will auto-link to the specific changeset.
-
-# IC-OS Verification
-
-To build and verify the IC-OS disk image, run:
-
-```
-# From https://github.com/dfinity/ic#verifying-releases
-sudo apt-get install -y curl && curl --proto '=https' --tlsv1.2 -sSLO https://raw.githubusercontent.com/dfinity/ic/{version}/gitlab-ci/tools/repro-check.sh && chmod +x repro-check.sh && ./repro-check.sh -c {version}
-```
-
-The two SHA256 sums printed above from a) the downloaded CDN image and b) the locally built image,
-must be identical, and must match the SHA256 from the payload of the NNS proposal.
-"#
-        );
-
-        // Remove <!--...--> from the commit
-        // Leading or trailing spaces are removed as well and replaced with a single space.
-        // Regex can be analyzed and tested at:
-        // https://rregex.dev/?version=1.7&method=replace&regex=%5Cs*%3C%21--.%2B%3F--%3E%5Cs*&replace=+&text=*+%5Babc%5D+%3C%21--+ignored+1+--%3E+line%0A*+%5Babc%5D+%3C%21--+ignored+2+--%3E+comment+1+%3C%21--+ignored+3+--%3E+comment+2%0A
-        let re_comment = Regex::new(r"\s*<!--.+?-->\s*").unwrap();
-        let mut builder = edit::Builder::new();
-        let with_suffix = builder.suffix(".md");
-        let edited = edit::edit_with_builder(template, with_suffix)?
-            .trim()
-            .replace("\r(\n)?", "\n")
-            .split('\n')
-            .map(|f| {
-                let f = re_comment.replace_all(f.trim(), " ");
-
-                if !f.starts_with('*') {
-                    return f.to_string();
-                }
-                match f.split_once(']') {
-                    Some((left, message)) => {
-                        let commit_hash = left.split_once('[').unwrap().1.to_string();
-
-                        format!("* [[{}](https://github.com/dfinity/ic/commit/{})] {}", commit_hash, commit_hash, message)
-                    }
-                    None => f.to_string(),
-                }
-            })
-            .join("\n");
-        if edited.contains(&String::from("Remove this block of text from the proposal.")) {
-            Err(anyhow::anyhow!("The edited proposal text has not been edited to add release notes."))
-        } else {
-            let proposal_title = match &retire_versions {
-                Some(v) => {
-                    let pluralize = if v.len() == 1 { "version" } else { "versions" };
-                    format!(
-                        "Elect new IC/{} revision (commit {}), and retire old replica {} {}",
-                        release_artifact.capitalized(),
-                        &version[..8],
-                        pluralize,
-                        v.iter().map(|v| &v[..8]).join(",")
-                    )
-                }
-                None => format!("Elect new IC/{} revision (commit {})", release_artifact.capitalized(), &version[..8]),
-            };
-
-            Ok(UpdateVersion {
-                release_artifact: release_artifact.clone(),
-                version: version.clone(),
-                title: proposal_title.clone(),
-                stringified_hash: expected_hash,
-                summary: edited,
-                update_urls,
-                versions_to_retire: retire_versions.clone(),
-            })
         }
     }
 }
@@ -720,8 +532,9 @@ pub struct ProposeOptions {
     pub title: Option<String>,
     pub summary: Option<String>,
     pub motivation: Option<String>,
+    pub forum_post_link: Option<String>,
 }
-const DEFAULT_IC_ADMIN_VERSION: &str = "26d5f9d0bdca0a817c236134dc9c7317b32c69a5";
+pub const FALLBACK_IC_ADMIN_VERSION: &str = "d4ee25b0865e89d3eaac13a60f0016d5e3296b31";
 
 fn get_ic_admin_revisions_dir() -> anyhow::Result<PathBuf> {
     let dir = dirs::home_dir()
@@ -759,7 +572,7 @@ pub fn should_update_ic_admin() -> Result<(bool, String)> {
 
 /// Returns a path to downloaded ic-admin binary
 pub async fn download_ic_admin(version: Option<String>) -> Result<String> {
-    let version = version.unwrap_or_else(|| DEFAULT_IC_ADMIN_VERSION.to_string()).trim().to_string();
+    let version = version.unwrap_or_else(|| FALLBACK_IC_ADMIN_VERSION.to_string()).trim().to_string();
     let ic_admin_bin_dir = get_ic_admin_revisions_dir()?;
     let path = ic_admin_bin_dir.join(&version).join("ic-admin");
     let path = Path::new(&path);
@@ -771,7 +584,7 @@ pub async fn download_ic_admin(version: Option<String>) -> Result<String> {
             format!("https://download.dfinity.systems/ic/{version}/binaries/x86_64-linux/ic-admin.gz")
         };
         info!("Downloading ic-admin version: {} from {}", version, url);
-        let body = reqwest::get(url).await?.bytes().await?;
+        let body = reqwest::get(url).await?.error_for_status()?.bytes().await?;
         let mut decoded = GzDecoder::new(body.as_ref());
 
         let path_parent = path.parent().expect("path parent unwrap failed!");

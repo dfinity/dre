@@ -10,7 +10,7 @@ sys.path.append(os.path.join(os.path.dirname(__file__)))
 from git_repo import GitRepo
 from datetime import datetime
 from tenacity import retry, stop_after_attempt
-from util import bazel_binary
+from util import resolve_binary
 
 
 GUESTOS_CHANGED_NOTES_NAMESPACE = "guestos-changed"
@@ -32,16 +32,11 @@ def release_branch_date(branch: str) -> typing.Optional[datetime]:
 @retry(stop=stop_after_attempt(10))
 def target_determinator(ic_repo: GitRepo, object: str) -> bool:
     ic_repo.checkout(object)
-    target_determinator_binary = "target-determinator"
-    target_determinator_binary_local = os.path.join(os.path.dirname(__file__), "target-determinator")
-    if os.path.exists(target_determinator_binary_local):
-        target_determinator_binary = target_determinator_binary_local
-
     p = subprocess.run(
         [
-            target_determinator_binary,
+            resolve_binary("target-determinator"),
             "-before-query-error-behavior=fatal",
-            f"-bazel={bazel_binary()}",
+            f"-bazel={resolve_binary("bazel")}",
             "--targets",
             GUESTOS_BAZEL_TARGETS,
             ic_repo.parent(object),
@@ -53,7 +48,9 @@ def target_determinator(ic_repo: GitRepo, object: str) -> bool:
     )
     output = p.stdout.decode().strip()
     logging.info(f"stdout of target determinator for {object}: '{output}'")
-    logging.info(f"stderr of target determinator for {object}: '{p.stderr.decode().strip()}'")
+    logging.info(
+        f"stderr of target determinator for {object}: '{p.stderr.decode().strip()}'"
+    )
     return output != ""
 
 
@@ -66,7 +63,14 @@ def annotate_object(ic_repo: GitRepo, object: str):
         content="\n".join(
             [
                 l
-                for l in subprocess.check_output(["bazel", "query", f"deps({GUESTOS_BAZEL_TARGETS})"], cwd=ic_repo.dir)
+                for l in subprocess.check_output(
+                    [
+                        resolve_binary("bazel"),
+                        "query",
+                        f"deps({GUESTOS_BAZEL_TARGETS})",
+                    ],
+                    cwd=ic_repo.dir,
+                )
                 .decode()
                 .splitlines()
                 if not l.startswith("@")
@@ -87,7 +91,9 @@ def annotate_branch(ic_repo: GitRepo, branch: str):
     while True:
         if current_commit == CUTOFF_COMMIT:
             break
-        if ic_repo.get_note(namespace=GUESTOS_CHANGED_NOTES_NAMESPACE, object=current_commit):
+        if ic_repo.get_note(
+            namespace=GUESTOS_CHANGED_NOTES_NAMESPACE, object=current_commit
+        ):
             break
 
         logging.info("will annotate {}".format(current_commit))
@@ -106,14 +112,25 @@ def main():
     )
     while True:
         ic_repo.fetch()
-        annotate_branch(ic_repo, branch="master")
+        try:
+            annotate_branch(ic_repo, branch="master")
+        except Exception as e:
+            logging.error("failed to annotate master, retrying", exc_info=e)
+            continue
         for b in ic_repo.branch_list("rc--*"):
-            branch_date = release_branch_date(b)
-            if not branch_date or (datetime.now() - branch_date).days > 20:
-                logging.info("skipping branch {}".format(b))
+            try:
+                branch_date = release_branch_date(b)
+                if not branch_date or (datetime.now() - branch_date).days > 20:
+                    logging.info("skipping branch {}".format(b))
+                    continue
+                logging.info("annotating branch {}".format(b))
+                annotate_branch(ic_repo, branch=b)
+            except Exception as e:
+                logging.error(
+                    "failed to annotate branch {}, will retry later".format(b),
+                    exc_info=e,
+                )
                 continue
-            logging.info("annotating branch {}".format(b))
-            annotate_branch(ic_repo, branch=b)
 
 
 if __name__ == "__main__":

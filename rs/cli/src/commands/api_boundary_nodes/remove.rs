@@ -2,8 +2,8 @@ use clap::Args;
 use ic_types::PrincipalId;
 
 use crate::{
-    commands::{ExecutableCommand, IcAdminRequirement},
-    ic_admin,
+    commands::{AuthRequirement, ExecutableCommand},
+    ic_admin::{self},
 };
 
 #[derive(Args, Debug)]
@@ -18,12 +18,12 @@ pub struct Remove {
 }
 
 impl ExecutableCommand for Remove {
-    fn require_ic_admin(&self) -> IcAdminRequirement {
-        IcAdminRequirement::Detect
+    fn require_auth(&self) -> AuthRequirement {
+        AuthRequirement::Neuron
     }
 
     async fn execute(&self, ctx: crate::ctx::DreContext) -> anyhow::Result<()> {
-        let ic_admin = ctx.ic_admin();
+        let ic_admin = ctx.ic_admin().await?;
         ic_admin
             .propose_run(
                 ic_admin::ProposeCommand::RemoveApiBoundaryNodes { nodes: self.nodes.to_vec() },
@@ -31,6 +31,7 @@ impl ExecutableCommand for Remove {
                     title: Some(format!("Remove {} API boundary node(s)", self.nodes.len())),
                     summary: Some(format!("Remove {} API boundary node(s)", self.nodes.len())),
                     motivation: self.motivation.clone(),
+                    forum_post_link: ctx.forum_post_link(),
                 },
             )
             .await?;
@@ -38,5 +39,5 @@ impl ExecutableCommand for Remove {
         Ok(())
     }
 
-    fn validate(&self, _cmd: &mut clap::Command) {}
+    fn validate(&self, _args: &crate::commands::Args, _cmd: &mut clap::Command) {}
 }

@@ -1,12 +1,15 @@
 use crate::git_ic_repo::IcRepo;
 use crate::health::HealthStatusQuerier;
 use crate::node_labels;
-use crate::proposal::{self, SubnetUpdateProposal, UpdateUnassignedNodesProposal};
+use crate::proposal::{self, ProposalAgent, SubnetUpdateProposal, UpdateUnassignedNodesProposal};
 use crate::public_dashboard::query_ic_dashboard_list;
 use decentralization::network::{AvailableNodesQuerier, NodesConverter, SubnetQuerier, SubnetQueryBy};
+use futures::future::BoxFuture;
 use futures::TryFutureExt;
 use ic_base_types::NodeId;
 use ic_base_types::{RegistryVersion, SubnetId};
+use ic_canisters::registry::RegistryCanisterWrapper;
+use ic_canisters::IcAgentCanisterClient;
 use ic_interfaces_registry::{RegistryClient, RegistryValue, ZERO_REGISTRY_VERSION};
 use ic_management_types::{
     Artifact, ArtifactReleases, Datacenter, DatacenterOwner, Guest, Network, NetworkError, Node, NodeProviderDetails, NodeProvidersResponse,
@@ -33,6 +36,7 @@ use ic_registry_local_store::{Changelog, ChangelogEntry, KeyMutation, LocalStore
 use ic_registry_nns_data_provider::registry::RegistryCanister;
 use ic_registry_subnet_type::SubnetType;
 use ic_types::PrincipalId;
+use indexmap::{IndexMap, IndexSet};
 use itertools::Itertools;
 use lazy_static::lazy_static;
 use log::{debug, error, info, warn};
@@ -40,14 +44,11 @@ use regex::Regex;
 use std::cmp::Ordering;
 use std::collections::{HashMap, HashSet};
 use std::convert::TryFrom;
+use std::net::Ipv6Addr;
 use std::ops::Add;
 use std::path::{Path, PathBuf};
 use std::str::FromStr;
 use std::sync::Arc;
-use std::{
-    collections::{BTreeMap, BTreeSet},
-    net::Ipv6Addr,
-};
 use tokio::sync::RwLock;
 use tokio::time::{sleep, Duration};
 use url::Url;
@@ -65,11 +66,11 @@ pub struct RegistryState {
     pub local_registry: Arc<LocalRegistry>,
 
     version: u64,
-    subnets: BTreeMap<PrincipalId, Subnet>,
-    nodes: BTreeMap<PrincipalId, Node>,
-    operators: BTreeMap<PrincipalId, Operator>,
+    subnets: IndexMap<PrincipalId, Subnet>,
+    nodes: IndexMap<PrincipalId, Node>,
+    operators: IndexMap<PrincipalId, Operator>,
     node_labels_guests: Vec<Guest>,
-    known_subnets: BTreeMap<PrincipalId, String>,
+    known_subnets: IndexMap<PrincipalId, String>,
 
     guestos_releases: ArtifactReleases,
     hostos_releases: ArtifactReleases,
@@ -112,13 +113,13 @@ impl RegistryEntry for ApiBoundaryNodeRecord {
 }
 
 pub trait RegistryFamilyEntries {
-    fn get_family_entries<T: RegistryEntry + Default>(&self) -> Result<BTreeMap<String, T>>;
-    fn get_family_entries_versioned<T: RegistryEntry + Default>(&self) -> Result<BTreeMap<String, (u64, T)>>;
-    fn get_family_entries_of_version<T: RegistryEntry + Default>(&self, version: RegistryVersion) -> Result<BTreeMap<String, (u64, T)>>;
+    fn get_family_entries<T: RegistryEntry + Default>(&self) -> Result<IndexMap<String, T>>;
+    fn get_family_entries_versioned<T: RegistryEntry + Default>(&self) -> Result<IndexMap<String, (u64, T)>>;
+    fn get_family_entries_of_version<T: RegistryEntry + Default>(&self, version: RegistryVersion) -> Result<IndexMap<String, (u64, T)>>;
 }
 
 impl RegistryFamilyEntries for LocalRegistry {
-    fn get_family_entries<T: RegistryEntry + Default>(&self) -> Result<BTreeMap<String, T>> {
+    fn get_family_entries<T: RegistryEntry + Default>(&self) -> Result<IndexMap<String, T>> {
         let prefix_length = T::KEY_PREFIX.len();
         Ok(self
             .get_key_family(T::KEY_PREFIX, self.get_latest_version())?
@@ -128,14 +129,14 @@ impl RegistryFamilyEntries for LocalRegistry {
                     .unwrap_or_else(|_| panic!("failed to get entry {} for type {}", key, std::any::type_name::<T>()))
                     .map(|v| (key[prefix_length..].to_string(), T::decode(v.as_slice()).expect("invalid registry value")))
             })
-            .collect::<BTreeMap<_, _>>())
+            .collect::<IndexMap<_, _>>())
     }
 
-    fn get_family_entries_versioned<T: RegistryEntry + Default>(&self) -> Result<BTreeMap<String, (u64, T)>> {
+    fn get_family_entries_versioned<T: RegistryEntry + Default>(&self) -> Result<IndexMap<String, (u64, T)>> {
         self.get_family_entries_of_version(self.get_latest_version())
     }
 
-    fn get_family_entries_of_version<T: RegistryEntry + Default>(&self, version: RegistryVersion) -> Result<BTreeMap<String, (u64, T)>> {
+    fn get_family_entries_of_version<T: RegistryEntry + Default>(&self, version: RegistryVersion) -> Result<IndexMap<String, (u64, T)>> {
         let prefix_length = T::KEY_PREFIX.len();
         Ok(self
             .get_key_family(T::KEY_PREFIX, version)?
@@ -152,7 +153,7 @@ impl RegistryFamilyEntries for LocalRegistry {
                     })
                     .unwrap_or_else(|_| panic!("failed to get entry {} for type {}", key, std::any::type_name::<T>()))
             })
-            .collect::<BTreeMap<_, _>>())
+            .collect::<IndexMap<_, _>>())
     }
 }
 
@@ -215,9 +216,9 @@ impl RegistryState {
             network: network.clone(),
             local_registry,
             version: 0,
-            subnets: BTreeMap::<PrincipalId, Subnet>::new(),
-            nodes: BTreeMap::new(),
-            operators: BTreeMap::new(),
+            subnets: IndexMap::<PrincipalId, Subnet>::new(),
+            nodes: IndexMap::new(),
+            operators: IndexMap::new(),
             node_labels_guests: Vec::new(),
             guestos_releases: ArtifactReleases::new(Artifact::GuestOs),
             hostos_releases: ArtifactReleases::new(Artifact::HostOs),
@@ -372,7 +373,13 @@ impl RegistryState {
                 releases.extend(
                     blessed_versions
                         .iter()
-                        .map(|version| commit_to_release.get(version).unwrap().clone())
+                        .filter_map(|version| match commit_to_release.get(version) {
+                            Some(release) => Some(release.clone()),
+                            None => {
+                                error!("Failed to find release for version {}", version);
+                                None
+                            }
+                        })
                         .sorted_by_key(|rr| rr.time)
                         .collect::<Vec<Release>>(),
                 );
@@ -383,9 +390,9 @@ impl RegistryState {
     }
 
     fn update_operators(&mut self, providers: &[NodeProviderDetails]) -> Result<()> {
-        let providers = providers.iter().map(|p| (p.principal_id, p)).collect::<BTreeMap<_, _>>();
-        let data_center_records: BTreeMap<String, DataCenterRecord> = self.local_registry.get_family_entries()?;
-        let operator_records: BTreeMap<String, NodeOperatorRecord> = self.local_registry.get_family_entries()?;
+        let providers = providers.iter().map(|p| (p.principal_id, p)).collect::<IndexMap<_, _>>();
+        let data_center_records: IndexMap<String, DataCenterRecord> = self.local_registry.get_family_entries()?;
+        let operator_records: IndexMap<String, NodeOperatorRecord> = self.local_registry.get_family_entries()?;
 
         self.operators = operator_records
             .iter()
@@ -404,7 +411,7 @@ impl RegistryState {
                             .expect("provider missing from operator record"),
                         allowance: or.node_allowance,
                         datacenter: data_center_records.get(&or.dc_id).map(|dc| {
-                            let (continent, country, city): (_, _, _) = dc.region.splitn(3, ',').map(|s| s.to_string()).collect_tuple().unwrap_or((
+                            let (continent, country, area): (_, _, _) = dc.region.splitn(3, ',').map(|s| s.to_string()).collect_tuple().unwrap_or((
                                 "Unknown".to_string(),
                                 "Unknown".to_string(),
                                 "Unknown".to_string(),
@@ -412,14 +419,16 @@ impl RegistryState {
 
                             Datacenter {
                                 name: dc.id.clone(),
-                                city,
+                                area,
                                 country,
                                 continent,
                                 owner: DatacenterOwner { name: dc.owner.clone() },
-                                latitude: dc.gps.clone().map(|l| l.latitude as f64),
-                                longitude: dc.gps.clone().map(|l| l.longitude as f64),
+                                latitude: dc.gps.map(|l| l.latitude as f64),
+                                longitude: dc.gps.map(|l| l.longitude as f64),
                             }
                         }),
+                        rewardable_nodes: or.rewardable_nodes.iter().map(|(k, v)| (k.clone(), *v)).collect(),
+                        ipv6: or.ipv6().to_string(),
                     },
                 )
             })
@@ -438,7 +447,7 @@ impl RegistryState {
     fn update_nodes(&mut self) -> Result<()> {
         let node_entries = self.local_registry.get_family_entries_versioned::<NodeRecord>()?;
         let dfinity_dcs = DFINITY_DCS.split(' ').map(|dc| dc.to_string().to_lowercase()).collect::<HashSet<_>>();
-        let api_boundary_nodes: BTreeMap<String, ApiBoundaryNodeRecord> = self.local_registry.get_family_entries()?;
+        let api_boundary_nodes: IndexMap<String, ApiBoundaryNodeRecord> = self.local_registry.get_family_entries()?;
 
         self.nodes = node_entries
             .iter()
@@ -502,6 +511,8 @@ impl RegistryState {
                                 }
                             }),
                         is_api_boundary_node: api_boundary_nodes.contains_key(p),
+                        chip_id: nr.chip_id.clone(),
+                        public_ipv4_config: nr.public_ipv4_config.clone(),
                     },
                 )
             })
@@ -567,6 +578,22 @@ impl RegistryState {
                             .find(|r| r.commit_hash == sr.replica_version_id)
                             .cloned(),
                         proposal: None,
+                        max_ingress_bytes_per_message: sr.max_ingress_bytes_per_message,
+                        max_ingress_messages_per_block: sr.max_ingress_messages_per_block,
+                        max_block_payload_size: sr.max_block_payload_size,
+                        unit_delay_millis: sr.unit_delay_millis,
+                        initial_notary_delay_millis: sr.initial_notary_delay_millis,
+                        dkg_interval_length: sr.dkg_interval_length,
+                        start_as_nns: sr.start_as_nns,
+                        features: sr.features,
+                        max_number_of_canisters: sr.max_number_of_canisters,
+                        ssh_readonly_access: sr.ssh_readonly_access.clone(),
+                        ssh_backup_access: sr.ssh_backup_access.clone(),
+                        ecdsa_config: sr.ecdsa_config.clone(),
+                        dkg_dealings_per_block: sr.dkg_dealings_per_block,
+                        is_halted: sr.is_halted,
+                        halt_at_cup_height: sr.halt_at_cup_height,
+                        chain_key_config: sr.chain_key_config.clone(),
                     },
                 )
             })
@@ -584,17 +611,17 @@ impl RegistryState {
         self.version
     }
 
-    pub fn subnets(&self) -> BTreeMap<PrincipalId, Subnet> {
+    pub fn subnets(&self) -> IndexMap<PrincipalId, Subnet> {
         self.subnets.clone()
     }
 
-    pub fn nodes(&self) -> BTreeMap<PrincipalId, Node> {
+    pub fn nodes(&self) -> IndexMap<PrincipalId, Node> {
         self.nodes.clone()
     }
 
-    pub async fn nodes_with_proposals(&self) -> Result<BTreeMap<PrincipalId, Node>> {
+    pub async fn nodes_with_proposals(&self) -> Result<IndexMap<PrincipalId, Node>> {
         let nodes = self.nodes.clone();
-        let proposal_agent = proposal::ProposalAgent::new(self.network.get_nns_urls());
+        let proposal_agent = proposal::ProposalAgentImpl::new(self.network.get_nns_urls());
 
         let topology_proposals = proposal_agent.list_open_topology_proposals().await?;
 
@@ -612,18 +639,18 @@ impl RegistryState {
     }
 
     pub async fn open_elect_replica_proposals(&self) -> Result<Vec<UpdateElectedReplicaVersionsProposal>> {
-        let proposal_agent = proposal::ProposalAgent::new(self.network.get_nns_urls());
+        let proposal_agent = proposal::ProposalAgentImpl::new(self.network.get_nns_urls());
         proposal_agent.list_open_elect_replica_proposals().await
     }
 
     pub async fn open_elect_hostos_proposals(&self) -> Result<Vec<UpdateElectedHostosVersionsProposal>> {
-        let proposal_agent = proposal::ProposalAgent::new(self.network.get_nns_urls());
+        let proposal_agent = proposal::ProposalAgentImpl::new(self.network.get_nns_urls());
         proposal_agent.list_open_elect_hostos_proposals().await
     }
 
-    pub async fn subnets_with_proposals(&self) -> Result<BTreeMap<PrincipalId, Subnet>> {
+    pub async fn subnets_with_proposals(&self) -> Result<IndexMap<PrincipalId, Subnet>> {
         let subnets = self.subnets.clone();
-        let proposal_agent = proposal::ProposalAgent::new(self.network.get_nns_urls());
+        let proposal_agent = proposal::ProposalAgentImpl::new(self.network.get_nns_urls());
 
         let topology_proposals = proposal_agent.list_open_topology_proposals().await?;
 
@@ -661,21 +688,21 @@ impl RegistryState {
     }
 
     pub async fn open_subnet_upgrade_proposals(&self) -> Result<Vec<SubnetUpdateProposal>> {
-        let proposal_agent = proposal::ProposalAgent::new(self.get_nns_urls());
+        let proposal_agent = proposal::ProposalAgentImpl::new(self.get_nns_urls());
 
         proposal_agent.list_update_subnet_version_proposals().await
     }
 
     pub async fn open_upgrade_unassigned_nodes_proposals(&self) -> Result<Vec<UpdateUnassignedNodesProposal>> {
-        let proposal_agent = proposal::ProposalAgent::new(self.get_nns_urls());
+        let proposal_agent = proposal::ProposalAgentImpl::new(self.get_nns_urls());
 
         proposal_agent.list_update_unassigned_nodes_version_proposals().await
     }
 
     async fn retireable_hostos_versions(&self) -> Result<Vec<Release>> {
         let active_releases = self.hostos_releases.get_active_branches();
-        let hostos_versions: BTreeSet<String> = self.nodes.values().map(|s| s.hostos_version.clone()).collect();
-        let versions_in_proposals: BTreeSet<String> = self
+        let hostos_versions: IndexSet<String> = self.nodes.values().map(|s| s.hostos_version.clone()).collect();
+        let versions_in_proposals: IndexSet<String> = self
             .open_elect_hostos_proposals()
             .await?
             .iter()
@@ -698,9 +725,9 @@ impl RegistryState {
 
     async fn retireable_guestos_versions(&self) -> Result<Vec<Release>> {
         let active_releases = self.guestos_releases.get_active_branches();
-        let subnet_versions: BTreeSet<String> = self.subnets.values().map(|s| s.replica_version.clone()).collect();
+        let subnet_versions: IndexSet<String> = self.subnets.values().map(|s| s.replica_version.clone()).collect();
         let version_on_unassigned_nodes = self.get_unassigned_nodes_replica_version().await?;
-        let versions_in_proposals: BTreeSet<String> = self
+        let versions_in_proposals: IndexSet<String> = self
             .open_elect_replica_proposals()
             .await?
             .iter()
@@ -731,7 +758,7 @@ impl RegistryState {
         )
     }
 
-    pub fn operators(&self) -> BTreeMap<PrincipalId, Operator> {
+    pub fn operators(&self) -> IndexMap<PrincipalId, Operator> {
         self.operators.clone()
     }
 
@@ -799,95 +826,99 @@ impl RegistryState {
 impl decentralization::network::TopologyManager for RegistryState {}
 
 impl NodesConverter for RegistryState {
-    async fn get_nodes(&self, from: &[PrincipalId]) -> std::result::Result<Vec<decentralization::network::Node>, NetworkError> {
-        from.iter()
-            .map(|n| {
-                self.nodes()
-                    .get(n)
-                    .ok_or(NetworkError::NodeNotFound(*n))
-                    .map(decentralization::network::Node::from)
-            })
-            .collect()
+    fn get_nodes<'a>(&'a self, from: &'a [PrincipalId]) -> BoxFuture<'a, std::result::Result<Vec<decentralization::network::Node>, NetworkError>> {
+        Box::pin(async {
+            from.iter()
+                .map(|n| {
+                    self.nodes()
+                        .get(n)
+                        .ok_or(NetworkError::NodeNotFound(*n))
+                        .map(decentralization::network::Node::from)
+                })
+                .collect()
+        })
     }
 }
 
 impl SubnetQuerier for RegistryState {
-    async fn subnet(&self, by: SubnetQueryBy) -> Result<decentralization::network::DecentralizedSubnet, NetworkError> {
-        match by {
-            SubnetQueryBy::SubnetId(id) => self
-                .subnets
-                .get(&id)
-                .map(|s| decentralization::network::DecentralizedSubnet {
-                    id: s.principal,
-                    nodes: s.nodes.iter().map(decentralization::network::Node::from).collect(),
-                    added_nodes_desc: Vec::new(),
-                    removed_nodes_desc: Vec::new(),
-                    min_nakamoto_coefficients: None,
-                    comment: None,
-                    run_log: Vec::new(),
-                })
-                .ok_or(NetworkError::SubnetNotFound(id)),
-            SubnetQueryBy::NodeList(nodes) => {
-                let subnets = nodes
-                    .to_vec()
-                    .iter()
-                    .map(|n| self.nodes.get(&n.id).and_then(|n| n.subnet_id))
-                    .collect::<BTreeSet<_>>();
-                if subnets.len() > 1 {
-                    return Err(NetworkError::IllegalRequest("nodes don't belong to the same subnet".to_string()));
-                }
-                if let Some(Some(subnet)) = subnets.into_iter().next() {
-                    Ok(decentralization::network::DecentralizedSubnet {
-                        id: subnet,
-                        nodes: self
-                            .subnets
-                            .get(&subnet)
-                            .ok_or(NetworkError::SubnetNotFound(subnet))?
-                            .nodes
-                            .iter()
-                            .map(decentralization::network::Node::from)
-                            .collect(),
+    fn subnet(&self, by: SubnetQueryBy) -> BoxFuture<'_, Result<decentralization::network::DecentralizedSubnet, NetworkError>> {
+        Box::pin(async {
+            match by {
+                SubnetQueryBy::SubnetId(id) => self
+                    .subnets
+                    .get(&id)
+                    .map(|s| decentralization::network::DecentralizedSubnet {
+                        id: s.principal,
+                        nodes: s.nodes.iter().map(decentralization::network::Node::from).collect(),
                         added_nodes_desc: Vec::new(),
                         removed_nodes_desc: Vec::new(),
-                        min_nakamoto_coefficients: None,
                         comment: None,
                         run_log: Vec::new(),
                     })
-                } else {
-                    Err(NetworkError::IllegalRequest("no subnet found".to_string()))
+                    .ok_or(NetworkError::SubnetNotFound(id)),
+                SubnetQueryBy::NodeList(nodes) => {
+                    let subnets = nodes
+                        .to_vec()
+                        .iter()
+                        .map(|n| self.nodes.get(&n.id).and_then(|n| n.subnet_id))
+                        .collect::<IndexSet<_>>();
+                    if subnets.len() > 1 {
+                        return Err(NetworkError::IllegalRequest("nodes don't belong to the same subnet".to_string()));
+                    }
+                    if let Some(Some(subnet)) = subnets.into_iter().next() {
+                        Ok(decentralization::network::DecentralizedSubnet {
+                            id: subnet,
+                            nodes: self
+                                .subnets
+                                .get(&subnet)
+                                .ok_or(NetworkError::SubnetNotFound(subnet))?
+                                .nodes
+                                .iter()
+                                .map(decentralization::network::Node::from)
+                                .collect(),
+                            added_nodes_desc: Vec::new(),
+                            removed_nodes_desc: Vec::new(),
+                            comment: None,
+                            run_log: Vec::new(),
+                        })
+                    } else {
+                        Err(NetworkError::IllegalRequest("no subnet found".to_string()))
+                    }
                 }
             }
-        }
+        })
     }
 }
 
 impl AvailableNodesQuerier for RegistryState {
-    async fn available_nodes(&self) -> Result<Vec<decentralization::network::Node>, NetworkError> {
-        let nodes = self
-            .nodes_with_proposals()
-            .await
-            .map_err(|err| NetworkError::DataRequestError(err.to_string()))?
-            .into_values()
-            .filter(|n| n.subnet_id.is_none() && n.proposal.is_none() && n.duplicates.is_none() && !n.is_api_boundary_node)
-            .collect::<Vec<_>>();
+    fn available_nodes(&self) -> BoxFuture<'_, Result<Vec<decentralization::network::Node>, NetworkError>> {
+        Box::pin(async {
+            let nodes = self
+                .nodes_with_proposals()
+                .await
+                .map_err(|err| NetworkError::DataRequestError(err.to_string()))?
+                .into_values()
+                .filter(|n| n.subnet_id.is_none() && n.proposal.is_none() && n.duplicates.is_none() && !n.is_api_boundary_node)
+                .collect::<Vec<_>>();
 
-        let health_client = crate::health::HealthClient::new(self.network());
-        let healths = health_client
-            .nodes()
-            .await
-            .map_err(|err| NetworkError::DataRequestError(err.to_string()))?;
-        Ok(nodes
-            .iter()
-            .filter(|n| {
-                // Keep only healthy nodes.
-                healths
-                    .get(&n.principal)
-                    .map(|s| matches!(*s, ic_management_types::HealthStatus::Healthy))
-                    .unwrap_or(false)
-            })
-            .map(decentralization::network::Node::from)
-            .sorted_by(|n1, n2| n1.id.cmp(&n2.id))
-            .collect())
+            let health_client = crate::health::HealthClient::new(self.network());
+            let healths = health_client
+                .nodes()
+                .await
+                .map_err(|err| NetworkError::DataRequestError(err.to_string()))?;
+            Ok(nodes
+                .iter()
+                .filter(|n| {
+                    // Keep only healthy nodes.
+                    healths
+                        .get(&n.principal)
+                        .map(|s| matches!(*s, ic_management_types::HealthStatus::Healthy))
+                        .unwrap_or(false)
+                })
+                .map(decentralization::network::Node::from)
+                .sorted_by(|n1, n2| n1.id.cmp(&n2.id))
+                .collect())
+        })
     }
 }
 
@@ -910,6 +941,8 @@ pub fn local_registry_path(network: &Network) -> PathBuf {
     local_cache_path().join(Path::new(network.name.as_str())).join("local_registry")
 }
 
+#[allow(dead_code)]
+// Probably will not be used anymore
 pub async fn nns_public_key(registry_canister: &RegistryCanister) -> anyhow::Result<ThresholdSigPublicKey> {
     let (nns_subnet_id_vec, _) = registry_canister
         .get_value(ROOT_SUBNET_ID_KEY.as_bytes().to_vec(), None)
@@ -936,7 +969,8 @@ pub async fn sync_local_store(target_network: &Network) -> anyhow::Result<()> {
     let local_registry_path = local_registry_path(target_network);
     let local_store = Arc::new(LocalStoreImpl::new(local_registry_path.clone()));
     let nns_urls = target_network.get_nns_urls().clone();
-    let registry_canister = RegistryCanister::new(nns_urls);
+    let agent = IcAgentCanisterClient::from_anonymous(nns_urls.first().unwrap().clone()).unwrap();
+    let registry_canister: RegistryCanisterWrapper = agent.into();
     let mut local_latest_version = if !Path::new(&local_registry_path).exists() {
         ZERO_REGISTRY_VERSION
     } else {
@@ -945,7 +979,6 @@ pub async fn sync_local_store(target_network: &Network) -> anyhow::Result<()> {
         registry_cache.get_latest_version()
     };
     let mut updates = vec![];
-    let nns_public_key = nns_public_key(&registry_canister).await?;
 
     loop {
         match registry_canister.get_latest_version().await {
@@ -971,13 +1004,10 @@ pub async fn sync_local_store(target_network: &Network) -> anyhow::Result<()> {
                 }
             },
             Err(e) => {
-                error!("Failed to get latest registry version: {}", e);
+                error!("Failed to get latest registry version: {:?}", e);
             }
         }
-        if let Ok((mut initial_records, _, _)) = registry_canister
-            .get_certified_changes_since(local_latest_version.get(), &nns_public_key)
-            .await
-        {
+        if let Ok(mut initial_records) = registry_canister.get_certified_changes_since(local_latest_version.get()).await {
             initial_records.sort_by_key(|tr| tr.version);
             let changelog = initial_records.iter().fold(Changelog::default(), |mut cl, r| {
                 let rel_version = (r.version - local_latest_version).get();

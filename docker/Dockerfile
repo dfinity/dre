@@ -1,45 +1,3 @@
-# Start the Python build.
-FROM ubuntu:20.04 as pythonbuilder
-
-ENV TZ=UTC
-
-# The Python build dependencies section in this install command
-# should be updated both here and in the README.md file.
-# The Python runtime dependencies are installed below.
-# (see "Python runtime dependencies").
-RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone && \
-    apt -yq update && \
-    apt -yqq install --no-install-recommends \
-    git openssh-client curl xz-utils time apt-transport-https ca-certificates lsb-release gnupg2 && \
-    apt -yq update && \
-    echo Installing Python build dependencies >&2 && \
-    apt -yq install --no-install-recommends \
-    build-essential libncurses-dev libbz2-dev libreadline-dev \
-    libssl-dev make build-essential libssl-dev zlib1g-dev \
-    libbz2-dev libreadline-dev libsqlite3-dev wget curl llvm \
-    libncursesw5-dev xz-utils tk-dev libxml2-dev libxmlsec1-dev \
-    libffi-dev liblzma-dev
-
-# Set Python up in /opt/pyenv.
-RUN mkdir -p /opt/pyenv
-COPY pyproject.toml poetry.lock /opt/pyenv/
-RUN echo Installing the correct Python and requisite modules >&2 && \
-    set -ex && \
-    cd /opt/pyenv && \
-    export PYENV_ROOT=$PWD/install && \
-    curl https://pyenv.run > pyenv.sh && \
-    bash pyenv.sh && \
-    export PYTHON_VERSION=$(sed -nr 's/^python = "[^0-9\.]*([0-9\.]*).*"/\1/p' < pyproject.toml) && \
-    $PYENV_ROOT/bin/pyenv install $PYTHON_VERSION || { ret=$? ; cat /tmp/python-build.*.log ; exit $ret ; } && rm -rf /tmp/python-build* && \
-    export PYTHON_ROOT=$PYENV_ROOT/versions/$PYTHON_VERSION && \
-    export PATH=$PYTHON_ROOT/bin:$PATH && \
-    pip install poetry && \
-    echo Installing Python dependencies into $PYTHON_ROOT >&2 && poetry config virtualenvs.create false && \
-    poetry install && \
-    ln -sf $PYTHON_ROOT $PWD/active
-
-
-# Start the final container build.
 FROM ubuntu:20.04
 
 ARG protobuf_version=3.18.1
@@ -51,13 +9,6 @@ ARG protobuf_version=3.18.1
 
 ENV TZ=UTC
 
-# The Python build dependencies section in this install command
-# should be updated both here and in the README.md file.  When
-# a build dependency is added (above / README.md file), the
-# runtime dependencies should be updated to contain the runtime
-# (not the -dev) package corresponding to it.  Don't worry,
-# if dependencies are missing in the runtime section, the build
-# will alert you.
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone && \
     apt -yq update && \
     apt -yqq install --no-install-recommends \
@@ -71,22 +22,17 @@ RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone &
     liblmdb0 libsqlite3-dev sqlite3 vim nano jq zip unzip shellcheck \
     iputils-ping sudo gosu podman tini && \
     chmod +s /usr/sbin/gosu && \
-    echo Installing Python runtime dependencies for the Python built before >&2 && \
-    apt -yqq install --no-install-recommends \
-    libtk8.6 && \
     echo Cleaning out APT cache for smaller images as per 'http://docs.projectatomic.io/container-best-practices/#_clearing_packaging_caches_and_temporary_package_downloads' >&2 && \
     apt-get clean
 
-# Copy the Python built in the pythonbuilder container to the final container.
-COPY --from=pythonbuilder /opt/pyenv /opt/pyenv/
-# Verify all shared libraries are available.  If this step fails, you must add
-# the package for that shared library above in the Python runtime dependencies.
-# Note: the libopenblas exception listed below exists because that library
-# links to a libgfortran library within the same directory (not part of the
-# system library path) and therefore is not an error if `ldd` can't "find" it.
-RUN echo Verifying all shared libraries are available for Python >&2 && \
-    if find /opt/pyenv/active/ -name "*.so" -a ! -name "libopenblas*" | xargs -n1 ldd | grep ' not found' >&2 ; then echo The libraries listed above are missing >&2 ; exit 4 ; fi
-ENV PATH=/opt/pyenv/active/bin:$PATH
+ENV RYE_HOME="/opt/rye"
+ENV PATH="$RYE_HOME/shims:$PATH"
+
+RUN curl -sSf https://rye.astral.sh/get | RYE_NO_AUTO_INSTALL=1 RYE_INSTALL_OPTION="--yes" bash
+
+COPY pyproject.toml requirements.lock requirements-dev.lock .python-version README.md ./
+
+RUN rye sync --no-dev --no-lock
 
 # Install the "mold" linker for fast linking of Rust executables
 ARG mold_version=1.11.0
@@ -101,7 +47,7 @@ RUN useradd -ms /bin/bash -u 1000 ubuntu && \
     mkdir -p /cargo /cargo_target /builds /builds/dfinity-lab && \
     chown -R 1000.1000 /cargo /cargo_target /builds
 
-# Allow passworless sudo. entrypoint.sh relies on sudo
+# Allow passwordless sudo. entrypoint.sh relies on sudo
 RUN usermod -a -G sudo ubuntu && echo "ubuntu ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
 
 # Install Rust and Cargo in /opt
@@ -113,9 +59,10 @@ ENV RUSTUP_HOME=/opt/rustup \
     PROTOC_INCLUDE=/opt/protoc/include \
     PATH=/opt/cargo/bin:$PATH
 
-# Make sure /rust-toolchain.toml has the same version
-ARG rust_version=1.66.1
-RUN curl --fail https://sh.rustup.rs -sSf \
+COPY rust-toolchain.toml /usr/src/rust-toolchain.toml
+
+RUN rust_version=$(grep -oP '(?<=channel = ")[^"]+' /usr/src/rust-toolchain.toml) && \
+    curl --fail https://sh.rustup.rs -sSf \
     | sh -s -- -y --default-toolchain ${rust_version}-x86_64-unknown-linux-gnu --no-modify-path && \
     rustup default ${rust_version}-x86_64-unknown-linux-gnu && \
     rustup component add rls && \
@@ -129,7 +76,7 @@ ENV CARGO_HOME=/cargo
 COPY docker /docker
 
 # Download ic-admin
-ARG ic_git_revision=26d5f9d0bdca0a817c236134dc9c7317b32c69a5
+ARG ic_git_revision=ca80a219757f00a5dd234f8d8c58316c902f2f2f
 RUN  curl --fail https://download.dfinity.systems/ic/${ic_git_revision}/release/ic-admin.gz -o - | gunzip -c >| /usr/bin/ic-admin && \
     chmod +x /usr/bin/ic-admin
 

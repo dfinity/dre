@@ -7,10 +7,10 @@ import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
 import Paper from '@mui/material/Paper';
 import { SxProps, Theme } from '@mui/material';
-import { NodeRewardsResponse } from '../../../declarations/trustworthy-node-metrics/trustworthy-node-metrics.did';
+import { NodeRewardsMultiplier } from '../../../declarations/trustworthy-node-metrics/trustworthy-node-metrics.did';
 
 interface RewardTableProps {
-    nodeRewards: NodeRewardsResponse[],
+    nodeRewards: NodeRewardsMultiplier[],
     sx?: SxProps<Theme>;
   }
 
@@ -35,7 +35,7 @@ const RewardTable: React.FC<RewardTableProps> = ({ nodeRewards }) => {
                 {nodeMetrics.node_id.toText()}
               </TableCell>
               <TableCell component="th" scope="row">
-                {Math.round(nodeMetrics.rewards_stats.failure_rate * 100)}%
+                {nodeMetrics.rewards_multiplier_stats.failure_rate * 100}%
               </TableCell>
             </TableRow>
           ))}

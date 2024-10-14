@@ -1,7 +1,7 @@
 use clap::Args;
 use ic_types::PrincipalId;
 
-use crate::commands::{ExecutableCommand, IcAdminRequirement};
+use crate::commands::{AuthRequirement, ExecutableCommand};
 
 #[derive(Args, Debug)]
 pub struct Rescue {
@@ -15,15 +15,20 @@ pub struct Rescue {
 }
 
 impl ExecutableCommand for Rescue {
-    fn require_ic_admin(&self) -> IcAdminRequirement {
-        IcAdminRequirement::Detect
+    fn require_auth(&self) -> AuthRequirement {
+        AuthRequirement::Neuron
     }
 
     async fn execute(&self, ctx: crate::ctx::DreContext) -> anyhow::Result<()> {
-        let runner = ctx.runner().await;
+        let runner = ctx.runner().await?;
 
-        runner.subnet_rescue(&self.id, self.keep_nodes.clone()).await
+        if let Some(runner_proposal) = runner.subnet_rescue(&self.id, self.keep_nodes.clone(), ctx.forum_post_link()).await? {
+            let ic_admin = ctx.ic_admin().await?;
+            ic_admin.propose_run(runner_proposal.cmd, runner_proposal.opts).await?;
+        }
+
+        Ok(())
     }
 
-    fn validate(&self, _cmd: &mut clap::Command) {}
+    fn validate(&self, _args: &crate::commands::Args, _cmd: &mut clap::Command) {}
 }

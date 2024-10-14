@@ -7,8 +7,10 @@ use ctx::DreContext;
 use dotenv::dotenv;
 use log::{info, warn};
 
+mod artifact_downloader;
 mod auth;
 mod commands;
+mod cordoned_feature_fetcher;
 mod ctx;
 mod desktop_notify;
 mod ic_admin;
@@ -16,6 +18,8 @@ mod operations;
 mod qualification;
 mod runner;
 mod subnet_manager;
+#[cfg(test)]
+mod unit_tests;
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
@@ -26,8 +30,9 @@ async fn main() -> anyhow::Result<()> {
     dotenv().ok();
 
     let args = Args::parse();
+
     let mut cmd = Args::command();
-    args.validate(&mut cmd);
+    args.validate(&args, &mut cmd);
 
     if let commands::Subcommands::Upgrade(upgrade) = args.subcommands {
         let response = upgrade.run().await?;

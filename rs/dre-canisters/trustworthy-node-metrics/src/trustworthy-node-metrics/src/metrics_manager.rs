@@ -1,14 +1,15 @@
 use std::collections::BTreeMap;
 
-use anyhow::{anyhow, Ok};
+use candid::Principal;
 use dfn_core::api::PrincipalId;
 use futures::FutureExt;
 use ic_base_types::NodeId;
 use ic_management_canister_types::{NodeMetricsHistoryArgs, NodeMetricsHistoryResponse};
+use ic_protobuf::registry::dc::v1::DataCenterRecord;
 use ic_protobuf::registry::node::v1::NodeRecord;
 use ic_protobuf::registry::node_operator::v1::NodeOperatorRecord;
 use ic_protobuf::registry::subnet::v1::SubnetListRecord;
-use ic_registry_keys::{make_node_operator_record_key, make_node_record_key};
+use ic_registry_keys::{make_data_center_record_key, make_node_operator_record_key, make_node_record_key};
 
 use crate::stable_memory;
 use itertools::Itertools;
@@ -83,7 +84,14 @@ async fn fetch_metrics(subnets: Vec<PrincipalId>, refresh_ts: TimestampNanos) ->
         )
         .map(move |result| {
             result
-                .map_err(|(code, msg)| anyhow::anyhow!("Error when calling management canister:\n Code:{:?}\nMsg:{}", code, msg))
+                .map_err(|(code, msg)| {
+                    anyhow::anyhow!(
+                        "Error when calling management canister for subnet {}:\n Code:{:?}\nMsg:{}",
+                        subnet_id,
+                        code,
+                        msg
+                    )
+                })
                 .map(|(node_metrics,)| (subnet_id, node_metrics))
         });
 
@@ -113,34 +121,6 @@ async fn fetch_subnets() -> anyhow::Result<Vec<PrincipalId>> {
     Ok(subnets)
 }
 
-/// Fetch node provider
-///
-/// Fetch node provider from the registry canister given node_id
-async fn fetch_node_provider(node_id: &PrincipalId) -> anyhow::Result<PrincipalId> {
-    let node_id = NodeId::from(*node_id);
-
-    let node_record_key = make_node_record_key(node_id);
-    let (node_record, _) = ic_nns_common::registry::get_value::<NodeRecord>(node_record_key.as_bytes(), None)
-        .await
-        .map_err(|e| anyhow!("Error getting the node_record from the registry for node {}. Error: {:?}", node_id, e))?;
-
-    let node_operator_id: PrincipalId = node_record.node_operator_id.try_into()?;
-    let node_operator_key = make_node_operator_record_key(node_operator_id);
-    let (node_operator_record, _) = ic_nns_common::registry::get_value::<NodeOperatorRecord>(node_operator_key.as_bytes(), None)
-        .await
-        .map_err(|e| {
-            anyhow!(
-                "Error getting the node_operator_record from the registry for node  {}. Error: {:?}",
-                node_id,
-                e
-            )
-        })?;
-
-    let node_provider_id: PrincipalId = node_operator_record.node_provider_principal_id.try_into()?;
-
-    Ok(node_provider_id)
-}
-
 // Calculates the daily proposed and failed blocks
 fn calculate_daily_metrics(last_proposed_total: u64, last_failed_total: u64, current_proposed_total: u64, current_failed_total: u64) -> (u64, u64) {
     if last_failed_total > current_failed_total || last_proposed_total > current_proposed_total {
@@ -167,20 +147,117 @@ fn grouped_by_node(subnet_metrics: Vec<(PrincipalId, Vec<NodeMetricsHistoryRespo
     grouped_by_node
 }
 
-async fn update_node_providers(nodes_principal: Vec<&PrincipalId>) -> anyhow::Result<()> {
-    for node_principal in nodes_principal {
-        let maybe_node_provider = stable_memory::get_node_provider(&node_principal.0);
-
-        if maybe_node_provider.is_none() {
-            let node_provider_id = fetch_node_provider(node_principal).await?;
-
-            stable_memory::insert_node_provider(node_principal.0, node_provider_id.0)
+fn generate_node_type(node_types_count: Option<BTreeMap<String, i32>>, mut rewardable_nodes: BTreeMap<String, u32>) -> String {
+    if let Some(node_types) = &node_types_count {
+        for (node_type, decrement_value) in node_types.iter() {
+            if let Some(reward_count) = rewardable_nodes.get_mut(node_type) {
+                *reward_count = reward_count.saturating_sub(*decrement_value as u32);
+            }
         }
     }
-    Ok(())
+
+    if rewardable_nodes.is_empty() {
+        "unknown:no_rewardable_nodes_found".to_string()
+    } else {
+        rewardable_nodes
+            .into_iter()
+            .find(|(_, v)| *v != 0)
+            .map(|(k, _)| k)
+            .unwrap_or_else(|| "unknown:rewardable_nodes_used_up".to_string())
+    }
 }
 
-fn update_node_metrics(metrics_by_node: BTreeMap<PrincipalId, Vec<NodeMetricsGrouped>>) {
+fn insert_metadata_with_unknown(node_id: Principal, node_operator_id: Principal, node_provider_id: Principal) {
+    stable_memory::insert_metadata_v2(
+        node_id,
+        node_operator_id,
+        node_provider_id,
+        "unknown".to_string(),
+        "unknown".to_string(),
+        "unknown".to_string(),
+    );
+}
+
+async fn update_nodes_metadata(nodes_principal: Vec<&PrincipalId>) {
+    for node_principal in nodes_principal {
+        if stable_memory::get_node_provider(&node_principal.0).is_some() {
+            continue;
+        }
+
+        ic_cdk::println!("Fetching metadata for node: {}", node_principal);
+
+        let node_record =
+            match ic_nns_common::registry::get_value::<NodeRecord>(make_node_record_key(NodeId::from(*node_principal)).as_bytes(), None).await {
+                Ok((node_record, _)) => node_record,
+                Err(e) => {
+                    ic_cdk::println!("Error fetching node record for {}: {:?}", node_principal, e);
+                    insert_metadata_with_unknown(node_principal.0, Principal::anonymous(), Principal::anonymous());
+                    continue;
+                }
+            };
+
+        let node_operator_id = match node_record.node_operator_id.try_into() {
+            Ok(id) => id,
+            Err(e) => {
+                ic_cdk::println!("Error converting node operator ID for {}: {:?}", node_principal, e);
+                insert_metadata_with_unknown(node_principal.0, Principal::anonymous(), Principal::anonymous());
+                continue;
+            }
+        };
+
+        let node_operator_record =
+            match ic_nns_common::registry::get_value::<NodeOperatorRecord>(make_node_operator_record_key(node_operator_id).as_bytes(), None).await {
+                Ok((record, _)) => record,
+                Err(e) => {
+                    ic_cdk::println!("Error fetching node operator record for {}: {:?}", node_principal, e);
+                    insert_metadata_with_unknown(node_principal.0, node_operator_id.0, Principal::anonymous());
+                    continue;
+                }
+            };
+
+        let dc_id = node_operator_record.dc_id;
+        let node_types_count: Option<BTreeMap<String, i32>> = stable_memory::node_types_count(node_operator_id.0);
+        let node_type = generate_node_type(node_types_count, node_operator_record.rewardable_nodes);
+
+        let node_provider_id: PrincipalId = match node_operator_record.node_provider_principal_id.try_into() {
+            Ok(id) => id,
+            Err(e) => {
+                ic_cdk::println!("Error converting node provider ID for {}: {:?}", node_principal, e);
+                stable_memory::insert_metadata_v2(
+                    node_principal.0,
+                    node_operator_id.0,
+                    Principal::anonymous(),
+                    dc_id,
+                    "unknown".to_string(),
+                    node_type,
+                );
+                continue;
+            }
+        };
+
+        let data_center_record =
+            match ic_nns_common::registry::get_value::<DataCenterRecord>(make_data_center_record_key(&dc_id).as_bytes(), None).await {
+                Ok((record, _)) => record,
+                Err(e) => {
+                    ic_cdk::println!("Error fetching data center record for {}: {:?}", node_principal, e);
+                    stable_memory::insert_metadata_v2(
+                        node_principal.0,
+                        node_operator_id.0,
+                        node_provider_id.0,
+                        dc_id,
+                        "unknown".to_string(),
+                        node_type,
+                    );
+                    continue;
+                }
+            };
+
+        let region = data_center_record.region;
+        stable_memory::insert_metadata_v2(node_principal.0, node_operator_id.0, node_provider_id.0, dc_id, region, node_type);
+    }
+}
+
+fn update_nodes_metrics(metrics_by_node: BTreeMap<PrincipalId, Vec<NodeMetricsGrouped>>) {
     let principals = metrics_by_node.keys().map(|p| p.0).collect_vec();
     let latest_metrics = stable_memory::latest_metrics(&principals);
 
@@ -213,8 +290,58 @@ pub async fn update_metrics() -> anyhow::Result<()> {
     let metrics_by_node: BTreeMap<PrincipalId, Vec<NodeMetricsGrouped>> = grouped_by_node(subnet_metrics);
     let nodes_principal: Vec<&PrincipalId> = metrics_by_node.keys().collect_vec();
 
-    update_node_providers(nodes_principal).await?;
-    update_node_metrics(metrics_by_node);
+    update_nodes_metadata(nodes_principal).await;
+    update_nodes_metrics(metrics_by_node);
 
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::collections::BTreeMap;
+
+    #[test]
+    fn test_generate_node_type() {
+        let mut node_types_count = BTreeMap::new();
+        node_types_count.insert("type1".to_string(), 1);
+        node_types_count.insert("type2".to_string(), 2);
+
+        // Test Case 1: Normal case with both node types and rewardable nodes
+        let mut rewardable_nodes = BTreeMap::new();
+        rewardable_nodes.insert("type1".to_string(), 3);
+        rewardable_nodes.insert("type2".to_string(), 5);
+
+        let result = generate_node_type(Some(node_types_count.clone()), rewardable_nodes.clone());
+        assert_eq!(result, "type1");
+
+        // Test Case 2: Node types that don't match rewardable nodes
+        let mut rewardable_nodes = BTreeMap::new();
+        rewardable_nodes.insert("type3".to_string(), 4);
+
+        let result = generate_node_type(Some(node_types_count.clone()), rewardable_nodes.clone());
+        assert_eq!(result, "type3");
+
+        // Test Case 3: All rewardable nodes are used up
+        let mut rewardable_nodes = BTreeMap::new();
+        rewardable_nodes.insert("type1".to_string(), 1);
+        rewardable_nodes.insert("type2".to_string(), 2);
+
+        let result = generate_node_type(Some(node_types_count.clone()), rewardable_nodes.clone());
+        assert_eq!(result, "unknown:rewardable_nodes_used_up");
+
+        // Test Case 4: No rewardable nodes
+        let rewardable_nodes = BTreeMap::new();
+
+        let result = generate_node_type(Some(node_types_count.clone()), rewardable_nodes);
+        assert_eq!(result, "unknown:no_rewardable_nodes_found");
+
+        // Test Case 3: Normal case with both node types and rewardable nodes
+        let mut rewardable_nodes = BTreeMap::new();
+        rewardable_nodes.insert("type1".to_string(), 1);
+        rewardable_nodes.insert("type2".to_string(), 3);
+
+        let result = generate_node_type(Some(node_types_count), rewardable_nodes.clone());
+        assert_eq!(result, "type2");
+    }
 }

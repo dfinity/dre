@@ -10,7 +10,7 @@ import time
 import typing
 from dataclasses import dataclass
 from git_repo import GitRepo
-from util import bazel_binary
+from commit_annotator import GUESTOS_CHANGED_NOTES_NAMESPACE
 
 import markdown
 
@@ -130,15 +130,25 @@ TEAM_PRETTY_MAP = {
 
 
 EXCLUDE_CHANGES_FILTERS = [
-    r".+\/sns\/.+",
-    r".+\/ckbtc\/.+",
-    r".+\/cketh\/.+",
+    r"sns",
+    r"ckbtc",
+    r"cketh",
     r"rs\/nns.+",
-    r".+test.+",
-    r"^bazel$",
-    r".*boundary.*",
-    r".*rosetta.*",
-    r".*pocket[_-]ic.*",
+    r"test",
+    r"^bazel",
+    r"boundary",
+    r"rosetta",
+    r"pocket[_-]ic",
+    r"^Cargo.lock$",
+    r"registry\/admin",
+    r"canister(?!_state)",
+]
+
+EXCLUDED_SCOPES = [
+    "ic-admin",
+    "nns",
+    "sns",
+    "PocketIC",
 ]
 
 INCLUDE_CHANGES = ["bazel/external_crates.bzl"]
@@ -309,19 +319,21 @@ def get_change_description_for_commit(
     commiter = ic_repo.get_commit_info("%an", commit_hash)
 
     ic_repo.checkout(commit_hash)
-    guestos_targets_all = get_guestos_targets_with_bazel(ic_repo) + INCLUDE_CHANGES
-    guestos_targets_filtered = [
-        t
-        for t in guestos_targets_all
-        if t in INCLUDE_CHANGES or not any(re.match(f, t) for f in EXCLUDE_CHANGES_FILTERS)
-    ]
-
     file_changes = ic_repo.file_changes_for_commit(commit_hash)
-
-    exclusion_reasons = []
-    guestos_change = any(f["file_path"] in guestos_targets_all for f in file_changes)
-    if guestos_change and not any(f["file_path"] in guestos_targets_filtered for f in file_changes):
-        exclusion_reasons.append("filtered out by package filters")
+    exclusion_reason = None
+    guestos_change = is_guestos_change(ic_repo, commit_hash)
+    if (
+        guestos_change
+        and not exclusion_reason
+        and not any(
+            f
+            for f in file_changes
+            if not any(
+                f not in INCLUDE_CHANGES and re.search(filter, f["file_path"]) for filter in EXCLUDE_CHANGES_FILTERS
+            )
+        )
+    ):
+        exclusion_reason = "Changed files are excluded by file path filter"
 
     ownership = {}
     stripped_message = re.sub(jira_ticket_regex, "", commit_message)
@@ -369,8 +381,12 @@ def get_change_description_for_commit(
     commit_type = conventional["type"].lower()
     commit_type = commit_type if commit_type in TYPE_PRETTY_MAP else "other"
 
-    if guestos_change and not REPLICA_TEAMS.intersection(teams):
-        exclusion_reasons.append("not a replica team change")
+    if guestos_change and not exclusion_reason and not REPLICA_TEAMS.intersection(teams):
+        exclusion_reason = "The change is not owned by any replica team"
+
+    scope = conventional["scope"] if conventional["scope"] else ""
+    if guestos_change and not exclusion_reason and scope in EXCLUDED_SCOPES:
+        exclusion_reason = f"Scope of the change ({scope}) is not related to GuestOS"
 
     teams = sorted(list(teams))
 
@@ -384,10 +400,10 @@ def get_change_description_for_commit(
         commit=commit_hash,
         teams=list(teams),
         type=commit_type,
-        scope=conventional["scope"] if conventional["scope"] else "",
+        scope=scope,
         message=conventional["message"],
         commiter=commiter,
-        exclusion_reason=",".join(exclusion_reasons) if exclusion_reasons else None,
+        exclusion_reason=exclusion_reason,
         guestos_change=guestos_change,
     )
 
@@ -442,7 +458,7 @@ To see a full list of commits added since last release, compare the revisions on
     )
     if merge_base != base_release_commit:
         notes += """
-This release diverges from latest release. Merge base is [{merge_base}](https://github.com/dfinity/ic/tree/{merge_base}).
+This release diverges from the latest release. Merge base is [{merge_base}](https://github.com/dfinity/ic/tree/{merge_base}).
 Changes [were removed](https://github.com/dfinity/ic/compare/{release_tag}...{base_release_tag}) from this release.
 """.format(
             merge_base=merge_base,
@@ -465,7 +481,7 @@ Changes [were removed](https://github.com/dfinity/ic/compare/{release_tag}...{ba
         text = "{4} | {0} {1}{2} {3}".format(commit_part, team_part, scope_part, message_part, commiter_part)
         if change["exclusion_reason"] or not change["guestos_change"]:
             text = "~~{} [AUTO-EXCLUDED:{}]~~".format(
-                text, "not a GuestOS change" if not change["guestos_change"] else change["exclusion_reason"]
+                text, "Not modifying GuestOS" if not change["guestos_change"] else change["exclusion_reason"]
             )
         return "* " + text + "\n"
 
@@ -489,46 +505,18 @@ Changes [were removed](https://github.com/dfinity/ic/compare/{release_tag}...{ba
     return notes
 
 
-def bazel_query(ic_repo: GitRepo, query):
-    """Bazel query package for GuestOS."""
-    bazel_query = [
-        bazel_binary(),
-        "query",
-        query,
-    ]
-    p = subprocess.run(
-        ["gitlab-ci/container/container-run.sh"] + bazel_query,
-        cwd=ic_repo.dir,
-        text=True,
-        stdout=subprocess.PIPE,
-        check=False,
-    )
-    if p.returncode != 0:
-        print("Failure running Bazel through container. Attempting direct run.", file=sys.stderr)
-        try:
-            p = subprocess.run(
-                bazel_query,
-                cwd=ic_repo.dir,
-                text=True,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
-                check=True,
-            )
-        except subprocess.CalledProcessError as e:
-            print(p.stdout)
-            print(p.stderr)
-            raise e
-    return [l[::-1].replace(":", "/", 1)[::-1].removeprefix("//") for l in p.stdout.splitlines()]
-
-
-def get_guestos_targets_with_bazel(ic_repo: GitRepo):
-    """Get the packages that are related to the GuestOS image using Bazel."""
-    guestos_packages_all = bazel_query(
-        ic_repo,
-        "deps(//ic-os/guestos/envs/prod:update-img.tar.zst) union deps(//ic-os/setupos/envs/prod:disk-img.tar.zst)",
-    )
-
-    return guestos_packages_all
+def is_guestos_change(ic_repo: GitRepo, commit: str) -> bool:
+    """Check if GuestOS changed for the commit by querying git notes populated by commit annotator."""
+    changed = ic_repo.get_note(GUESTOS_CHANGED_NOTES_NAMESPACE, commit)
+    if not changed:
+        raise ValueError(f"Could not find targets for commit {commit}")
+    changed = changed.strip()
+    if changed == "True":
+        return True
+    elif changed == "False":
+        return False
+    else:
+        raise ValueError(f"Invalid value for changed note {changed}")
 
 
 def main():

@@ -90,6 +90,7 @@ impl Step for UpgradeSubnets {
                 let place_proposal = || async {
                     ctx.dre_ctx()
                         .ic_admin()
+                        .await?
                         .propose_run(
                             ProposeCommand::DeployGuestosToAllSubnetNodes {
                                 subnet: subnet.principal,
@@ -99,6 +100,7 @@ impl Step for UpgradeSubnets {
                                 title: Some(format!("Propose to upgrade subnet {} to {}", subnet.principal, &self.to_version)),
                                 summary: Some("Qualification testing".to_string()),
                                 motivation: Some("Qualification testing".to_string()),
+                                forum_post_link: None,
                             },
                         )
                         .await
@@ -119,7 +121,7 @@ impl Step for UpgradeSubnets {
             }
         } else {
             let registry = ctx.dre_ctx().registry().await;
-            let unassigned_nodes_version = registry.unassigned_nodes_replica_version()?;
+            let unassigned_nodes_version = registry.unassigned_nodes_replica_version().await?;
             if unassigned_nodes_version.to_string() == self.to_version {
                 ctx.print_text(format!("Unassigned nodes are already on {}, skipping", self.to_version));
                 return Ok(());
@@ -132,6 +134,7 @@ impl Step for UpgradeSubnets {
             let place_proposal = || async {
                 ctx.dre_ctx()
                     .ic_admin()
+                    .await?
                     .propose_run(
                         ProposeCommand::DeployGuestosToAllUnassignedNodes {
                             replica_version: self.to_version.clone(),
@@ -140,6 +143,7 @@ impl Step for UpgradeSubnets {
                             title: Some("Upgrading unassigned nodes".to_string()),
                             summary: Some("Upgrading unassigned nodes".to_string()),
                             motivation: Some("Upgrading unassigned nodes".to_string()),
+                            forum_post_link: None,
                         },
                     )
                     .await

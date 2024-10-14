@@ -5,6 +5,7 @@ authors.workspace = true
 edition.workspace = true
 description.workspace = true
 documentation.workspace = true
+license.workspace = true
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
@@ -27,3 +28,9 @@ dfn_core = { workspace = true }
 trustworthy-node-metrics-types = { workspace = true }
 ic-base-types = { workspace = true }
 ic-registry-keys = { workspace = true }
+rust_decimal = { workspace = true }
+rust_decimal_macros = { workspace = true }
+num-traits = { workspace = true }
+ic-nns-constants = { workspace = true }
+ic-nns-governance-api = { workspace = true }
+chrono = { version = "0.4", default-features = false, features = ["std"] }

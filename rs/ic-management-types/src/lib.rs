@@ -9,6 +9,10 @@ use ic_nns_governance::pb::v1::proposal::Action;
 use ic_nns_governance::pb::v1::NnsFunction;
 use ic_nns_governance::pb::v1::ProposalInfo;
 use ic_nns_governance::pb::v1::ProposalStatus;
+use ic_protobuf::registry::node::v1::IPv4InterfaceConfig;
+use ic_protobuf::registry::subnet::v1::ChainKeyConfig;
+use ic_protobuf::registry::subnet::v1::EcdsaConfig;
+use ic_protobuf::registry::subnet::v1::SubnetFeatures;
 use ic_registry_subnet_type::SubnetType;
 use ic_types::PrincipalId;
 use registry_canister::mutations::do_add_nodes_to_subnet::AddNodesToSubnetPayload;
@@ -239,6 +243,38 @@ pub struct Subnet {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub proposal: Option<TopologyChangeProposal>,
     pub replica_release: Option<Release>,
+    #[serde(default)]
+    pub max_ingress_bytes_per_message: u64,
+    #[serde(default)]
+    pub max_ingress_messages_per_block: u64,
+    #[serde(default)]
+    pub max_block_payload_size: u64,
+    #[serde(default)]
+    pub unit_delay_millis: u64,
+    #[serde(default)]
+    pub initial_notary_delay_millis: u64,
+    #[serde(default)]
+    pub dkg_interval_length: u64,
+    #[serde(default)]
+    pub start_as_nns: bool,
+    #[serde(skip_serializing_if = "Option::is_none", default)]
+    pub features: Option<SubnetFeatures>,
+    #[serde(default)]
+    pub max_number_of_canisters: u64,
+    #[serde(default)]
+    pub ssh_readonly_access: Vec<String>,
+    #[serde(default)]
+    pub ssh_backup_access: Vec<String>,
+    #[serde(skip_serializing_if = "Option::is_none", default)]
+    pub ecdsa_config: Option<EcdsaConfig>,
+    #[serde(default)]
+    pub dkg_dealings_per_block: u64,
+    #[serde(default)]
+    pub is_halted: bool,
+    #[serde(default)]
+    pub halt_at_cup_height: bool,
+    #[serde(skip_serializing_if = "Option::is_none", default)]
+    pub chain_key_config: Option<ChainKeyConfig>,
 }
 
 type Application = String;
@@ -271,6 +307,8 @@ pub struct Node {
     #[serde(default)]
     pub duplicates: Option<PrincipalId>,
     pub is_api_boundary_node: bool,
+    pub chip_id: Option<Vec<u8>>,
+    pub public_ipv4_config: Option<IPv4InterfaceConfig>,
 }
 
 #[derive(strum_macros::Display, EnumString, VariantNames, Hash, Eq, PartialEq, Ord, PartialOrd, Clone, Serialize, Deserialize, Debug)]
@@ -280,24 +318,24 @@ pub enum NodeFeature {
     NodeProvider,
     DataCenter,
     DataCenterOwner,
-    City,
-    Country,
+    Area,    // Represents smaller geographic entities like cities and states
+    Country, // Covers larger contexts, like countries or broader regions under shared legal jurisdiction
     Continent,
 }
 
 impl NodeFeature {
     pub fn variants() -> Vec<Self> {
+        // Generally skip the continent feature as it is not used in the Nakamoto score calculation
+        NodeFeature::VARIANTS
+            .iter()
+            .filter(|f| **f != "continent")
+            .map(|f| NodeFeature::from_str(f).unwrap())
+            .collect()
+    }
+    pub fn variants_all() -> Vec<Self> {
         NodeFeature::VARIANTS.iter().map(|f| NodeFeature::from_str(f).unwrap()).collect()
     }
 }
-
-#[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
-pub struct MinNakamotoCoefficients {
-    pub coefficients: BTreeMap<NodeFeature, f64>,
-    pub average: f64,
-}
-
-impl Eq for MinNakamotoCoefficients {}
 
 #[derive(Clone, Serialize, Debug, Deserialize)]
 pub struct TopologyProposal {
@@ -351,6 +389,10 @@ pub struct Operator {
 
     #[serde(skip_serializing_if = "Option::is_none")]
     pub datacenter: Option<Datacenter>,
+    #[serde(default)]
+    pub rewardable_nodes: BTreeMap<String, u32>,
+    #[serde(default)]
+    pub ipv6: String,
 }
 
 #[derive(Clone, Serialize, Default, Debug, Deserialize, PartialEq, Eq, PartialOrd, Ord)]
@@ -365,7 +407,7 @@ pub struct Provider {
 pub struct Datacenter {
     pub name: String,
     pub owner: DatacenterOwner,
-    pub city: String,
+    pub area: String,
     pub country: String,
     pub continent: String,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -565,7 +607,7 @@ impl ArtifactReleases {
     }
 }
 
-#[derive(strum_macros::Display, Serialize, Deserialize, PartialEq, Eq, Hash, Clone)]
+#[derive(strum_macros::Display, Serialize, Deserialize, PartialEq, Eq, Hash, Clone, Debug)]
 #[strum(serialize_all = "lowercase")]
 #[serde(rename_all = "lowercase")]
 pub enum Artifact {

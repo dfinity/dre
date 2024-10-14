@@ -13,9 +13,9 @@ use log::{info, warn};
 use serde::Serialize;
 use tempfile::NamedTempFile;
 
-use crate::ic_admin::{IcAdminWrapper, ProposeCommand, ProposeOptions};
+use crate::ic_admin::{IcAdmin, ProposeCommand, ProposeOptions};
 
-use super::{ExecutableCommand, IcAdminRequirement};
+use super::{AuthRequirement, ExecutableCommand};
 
 #[derive(Args, Debug)]
 pub struct Firewall {
@@ -31,13 +31,13 @@ pub struct Firewall {
 }
 
 impl ExecutableCommand for Firewall {
-    fn require_ic_admin(&self) -> IcAdminRequirement {
-        IcAdminRequirement::Detect
+    fn require_auth(&self) -> AuthRequirement {
+        AuthRequirement::Neuron
     }
 
     async fn execute(&self, ctx: crate::ctx::DreContext) -> anyhow::Result<()> {
         let registry = ctx.registry().await;
-        let firewall_ruleset = registry.firewall_rule_set(self.rules_scope.clone())?;
+        let firewall_ruleset = registry.firewall_rule_set(self.rules_scope.clone()).await?;
 
         let rules: BTreeMap<usize, &FirewallRule> = firewall_ruleset.entries.iter().enumerate().sorted_by(|a, b| a.0.cmp(&b.0)).collect();
 
@@ -99,7 +99,7 @@ impl ExecutableCommand for Firewall {
         match reverse_sorted.into_iter().last() {
             Some((_, mods)) => {
                 Self::submit_proposal(
-                    ctx.ic_admin(),
+                    ctx.ic_admin().await?,
                     mods,
                     ProposeOptions {
                         title: self.title.clone(),
@@ -114,12 +114,12 @@ impl ExecutableCommand for Firewall {
         }
     }
 
-    fn validate(&self, _cmd: &mut clap::Command) {}
+    fn validate(&self, _args: &crate::commands::Args, _cmd: &mut clap::Command) {}
 }
 
 impl Firewall {
     async fn submit_proposal(
-        admin_wrapper: Arc<IcAdminWrapper>,
+        admin: Arc<dyn IcAdmin>,
         modifications: Vec<FirewallRuleModification>,
         propose_options: ProposeOptions,
         firewall_rules_scope: &FirewallRulesScope,
@@ -156,7 +156,7 @@ impl Firewall {
             args: test_args.clone(),
         };
 
-        let output = admin_wrapper
+        let output = admin
             .propose_run(cmd, propose_options.clone())
             .await
             .map_err(|e| anyhow::anyhow!("Couldn't execute test for {}-firewall-rules: {:?}", change_type, e))?;
@@ -185,7 +185,7 @@ impl Firewall {
             command: format!("{}-firewall-rules", change_type),
             args: final_args,
         };
-        let _ = admin_wrapper.propose_run(cmd, propose_options.clone()).await?;
+        let _ = admin.propose_run(cmd, propose_options.clone()).await?;
         Ok(())
     }
 }

@@ -1,3 +1,4 @@
+import re
 from pydiscourse import DiscourseClient
 
 
@@ -13,7 +14,19 @@ class DiscourseClientMock(DiscourseClient):
         self.api_key = "test_api_key"
         self.timeout = 10
 
-    def categories(self):
+    def _get(self, path, **kwargs):
+        if not re.search(r"/t/(\d+).json", path):
+            return super()._get(path, **kwargs)
+        id = re.search(r"/t/(\d+).json", path).group(1)  # type: ignore
+
+        return {
+            "raw": "bogus text",
+            "can_edit": True,
+            "posts_count": 1,
+            "id": id,
+        } | self.topic_posts(topic_id=id)
+
+    def categories(self, **kwargs):  # pylint: disable=unused-argument
         """Return a list of categories."""
         return [
             {"id": i} | t
@@ -22,14 +35,21 @@ class DiscourseClientMock(DiscourseClient):
                     {
                         "id": 5,
                         "name": "Governance",
-                    }
+                    },
+                    {
+                        "id": 6,
+                        "name": "NNS proposal discussions",
+                    },
                 ]
             )
         ]
 
     def topics_by(self, _: str):
         """Return a list of topics."""
-        return [{"id": i + 1} | t for i, t in enumerate(self.created_topics)]
+        return [
+            {"id": i + 1, "posts_count": 1} | t
+            for i, t in enumerate(self.created_topics)
+        ]
 
     def topic_posts(self, topic_id: str):
         """Return a list of posts in a topic."""
@@ -37,8 +57,10 @@ class DiscourseClientMock(DiscourseClient):
             "post_stream": {
                 "posts": [
                     p
-                    for p in [{"id": i + 1} | p for i, p in enumerate(self.created_posts)]
-                    if p["topic_id"] == topic_id
+                    for p in [
+                        {"id": i + 1} | p for i, p in enumerate(self.created_posts)
+                    ]
+                    if str(p["topic_id"]) == str(topic_id)
                 ]
             }
         }
@@ -54,7 +76,9 @@ class DiscourseClientMock(DiscourseClient):
     ):
         """Create a new post. If topic_id is not provided, a new topic is created."""
         if not topic_id:
-            self.created_topics.append({"title": title, "category_id": category_id, "tags": tags or []})
+            self.created_topics.append(
+                {"title": title, "category_id": category_id, "tags": tags or []}
+            )
             topic_id = self.topics_by("")[-1]["id"]
         self.created_posts.append(
             {

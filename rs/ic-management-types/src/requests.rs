@@ -1,11 +1,10 @@
-use crate::{HealthStatus, MinNakamotoCoefficients, Node};
+use crate::{HealthStatus, Node};
 use ic_base_types::PrincipalId;
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize)]
 pub struct SubnetCreateRequest {
     pub size: usize,
-    pub min_nakamoto_coefficients: Option<MinNakamotoCoefficients>,
     pub exclude: Option<Vec<String>>,
     pub only: Option<Vec<String>>,
     pub include: Option<Vec<PrincipalId>>,

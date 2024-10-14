@@ -3,7 +3,7 @@ use clap::Args;
 use remove::Remove;
 use update::Update;
 
-use super::{impl_executable_command_for_enums, ExecutableCommand, IcAdminRequirement};
+use super::{impl_executable_command_for_enums, AuthRequirement, ExecutableCommand};
 
 mod add;
 mod remove;
@@ -18,15 +18,15 @@ pub struct ApiBoundaryNodes {
 impl_executable_command_for_enums! { Add, Update, Remove }
 
 impl ExecutableCommand for ApiBoundaryNodes {
-    fn require_ic_admin(&self) -> IcAdminRequirement {
-        self.subcommand.require_ic_admin()
+    fn require_auth(&self) -> AuthRequirement {
+        self.subcommand.require_auth()
     }
 
     async fn execute(&self, ctx: crate::ctx::DreContext) -> anyhow::Result<()> {
         self.subcommand.execute(ctx).await
     }
 
-    fn validate(&self, cmd: &mut clap::Command) {
-        self.subcommand.validate(cmd)
+    fn validate(&self, args: &crate::commands::Args, cmd: &mut clap::Command) {
+        self.subcommand.validate(args, cmd)
     }
 }

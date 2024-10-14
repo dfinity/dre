@@ -2,12 +2,13 @@ use anyhow::anyhow;
 use async_recursion::async_recursion;
 use futures_util::future::try_join;
 use ic_base_types::{NodeId, PrincipalId};
-use ic_management_backend::health::{self, HealthStatusQuerier};
+use ic_management_backend::health::HealthStatusQuerier;
 use ic_management_backend::proposal::ProposalAgent;
-use ic_management_types::{HealthStatus, Network, Node, Subnet, UpdateNodesHostosVersionsProposal};
+use ic_management_types::{HealthStatus, Node, Subnet, UpdateNodesHostosVersionsProposal};
+use indexmap::IndexMap;
 use log::{debug, info, warn};
 use std::sync::Arc;
-use std::{collections::BTreeMap, fmt::Display, str::FromStr};
+use std::{fmt::Display, str::FromStr};
 
 use crate::commands::hostos::rollout_from_node_group::{NodeAssignment, NodeOwner};
 
@@ -39,7 +40,7 @@ impl Display for HostosRolloutReason {
     }
 }
 
-#[derive(Copy, Clone, Debug, Ord, Eq, PartialEq, PartialOrd)]
+#[derive(Copy, Clone, Debug, Ord, Eq, PartialEq, PartialOrd, Hash)]
 pub struct NodeGroup {
     pub assignment: NodeAssignment,
     pub owner: NodeOwner,
@@ -129,25 +130,25 @@ enum CandidatesSelection {
 #[derive(Clone)]
 pub struct HostosRollout {
     nodes_all: Vec<Node>,
-    pub grouped_nodes: BTreeMap<NodeGroup, Vec<Node>>,
-    pub subnets: Arc<BTreeMap<PrincipalId, Subnet>>,
-    pub network: Network,
-    pub proposal_agent: ProposalAgent,
+    pub grouped_nodes: IndexMap<NodeGroup, Vec<Node>>,
+    pub subnets: Arc<IndexMap<PrincipalId, Subnet>>,
+    pub proposal_agent: Arc<dyn ProposalAgent>,
     pub only_filter: Vec<String>,
     pub exclude_filter: Vec<String>,
     pub version: String,
+    health_client: Arc<dyn HealthStatusQuerier>,
 }
 impl HostosRollout {
     pub fn new(
-        nodes: Arc<BTreeMap<PrincipalId, Node>>,
-        subnets: Arc<BTreeMap<PrincipalId, Subnet>>,
-        network: &Network,
-        proposal_agent: ProposalAgent,
+        nodes: Arc<IndexMap<PrincipalId, Node>>,
+        subnets: Arc<IndexMap<PrincipalId, Subnet>>,
+        proposal_agent: Arc<dyn ProposalAgent>,
         rollout_version: &str,
         only_filter: &[String],
         exclude_filter: &[String],
+        health_client: Arc<dyn HealthStatusQuerier>,
     ) -> Self {
-        let grouped_nodes: BTreeMap<NodeGroup, Vec<Node>> = nodes
+        let grouped_nodes: IndexMap<NodeGroup, Vec<Node>> = nodes
             .values()
             .cloned()
             .map(|node| {
@@ -169,7 +170,7 @@ impl HostosRollout {
                 );
                 (NodeGroup::new(assignment, owner), node)
             })
-            .fold(BTreeMap::new(), |mut acc, (node_group, node)| {
+            .fold(IndexMap::new(), |mut acc, (node_group, node)| {
                 acc.entry(node_group).or_default().push(node);
                 acc
             });
@@ -178,11 +179,11 @@ impl HostosRollout {
             nodes_all: nodes.values().cloned().collect(),
             grouped_nodes,
             subnets,
-            network: network.clone(),
             proposal_agent,
             only_filter: only_filter.to_vec(),
             exclude_filter: exclude_filter.to_vec(),
             version: rollout_version.to_string(),
+            health_client,
         }
     }
 
@@ -219,12 +220,12 @@ impl HostosRollout {
             .collect()
     }
 
-    async fn nodes_by_status(&self, nodes: Vec<Node>, nodes_health: BTreeMap<PrincipalId, HealthStatus>) -> BTreeMap<HealthStatus, Vec<Node>> {
+    async fn nodes_by_status(&self, nodes: Vec<Node>, nodes_health: IndexMap<PrincipalId, HealthStatus>) -> IndexMap<HealthStatus, Vec<Node>> {
         let nodes_by_status = nodes
             .iter()
             .cloned()
             .map(|node| (nodes_health.get(&node.principal).cloned().unwrap_or(HealthStatus::Unknown), node))
-            .fold(BTreeMap::new(), |mut acc: BTreeMap<HealthStatus, Vec<Node>>, (status, node)| {
+            .fold(IndexMap::new(), |mut acc: IndexMap<HealthStatus, Vec<Node>>, (status, node)| {
                 acc.entry(status).or_default().push(node);
                 acc
             });
@@ -325,7 +326,7 @@ impl HostosRollout {
 
     async fn candidates_selection(
         &self,
-        nodes_health: BTreeMap<PrincipalId, HealthStatus>,
+        nodes_health: IndexMap<PrincipalId, HealthStatus>,
         nodes_with_open_proposals: Vec<UpdateNodesHostosVersionsProposal>,
         nodes_in_group: Vec<Node>,
     ) -> anyhow::Result<CandidatesSelection> {
@@ -363,7 +364,7 @@ impl HostosRollout {
     #[async_recursion]
     async fn with_nodes_health_and_open_proposals(
         &self,
-        nodes_health: BTreeMap<PrincipalId, HealthStatus>,
+        nodes_health: IndexMap<PrincipalId, HealthStatus>,
         nodes_with_open_proposals: Vec<UpdateNodesHostosVersionsProposal>,
         update_group: NodeGroupUpdate,
     ) -> anyhow::Result<HostosRolloutResponse> {
@@ -489,7 +490,7 @@ impl HostosRollout {
     /// Execute the host-os rollout operation, on the provided group of nodes.
     pub async fn execute(&self, update_group: NodeGroupUpdate) -> anyhow::Result<HostosRolloutResponse> {
         let (nodes_health, nodes_with_open_proposals) = try_join(
-            health::HealthClient::new(self.network.clone()).nodes(),
+            self.health_client.nodes(),
             self.proposal_agent.list_open_update_nodes_hostos_versions_proposals(),
         )
         .await?;
@@ -533,7 +534,10 @@ impl HostosRollout {
 pub mod test {
     use crate::operations::hostos_rollout::NodeAssignment::{Assigned, Unassigned};
     use crate::operations::hostos_rollout::NodeOwner::{Dfinity, Others};
+    use ic_management_backend::health::MockHealthStatusQuerier;
+    use ic_management_backend::proposal::ProposalAgentImpl;
     use ic_management_types::{Network, Node, Operator, Provider, Subnet};
+    use std::collections::BTreeMap;
     use std::net::Ipv6Addr;
 
     use super::*;
@@ -547,7 +551,7 @@ pub mod test {
         let assigned_dfinity = gen_test_nodes(Some(subnet_id), 10, 0, version_one.clone(), true, false);
         let unassigned_dfinity_nodes = gen_test_nodes(None, 10, 10, version_one.clone(), true, false);
         let assigned_others_nodes = gen_test_nodes(Some(subnet_id), 10, 20, version_two.clone(), false, false);
-        let union: BTreeMap<PrincipalId, Node> = {
+        let union: IndexMap<PrincipalId, Node> = {
             assigned_dfinity
                 .clone()
                 .into_iter()
@@ -558,7 +562,7 @@ pub mod test {
         let union_nodes = union.values().cloned().collect::<Vec<_>>();
 
         let subnet = {
-            let mut sub = BTreeMap::new();
+            let mut sub = IndexMap::new();
             sub.insert(
                 subnet_id,
                 Subnet {
@@ -574,7 +578,7 @@ pub mod test {
             .keys()
             .cloned()
             .map(|principal| (principal, HealthStatus::Healthy))
-            .collect::<BTreeMap<PrincipalId, HealthStatus>>();
+            .collect::<IndexMap<PrincipalId, HealthStatus>>();
 
         let open_proposals: Vec<UpdateNodesHostosVersionsProposal> = vec![];
 
@@ -583,11 +587,11 @@ pub mod test {
         let hostos_rollout = HostosRollout::new(
             Arc::new(union.clone()),
             Arc::new(subnet.clone()),
-            &network,
-            ProposalAgent::new(nns_urls),
+            Arc::new(ProposalAgentImpl::new(nns_urls)) as Arc<dyn ProposalAgent>,
             version_one.clone().as_str(),
             &[],
             &[],
+            Arc::new(MockHealthStatusQuerier::new()),
         );
 
         let results = hostos_rollout
@@ -622,11 +626,11 @@ pub mod test {
         let hostos_rollout = HostosRollout::new(
             Arc::new(union.clone()),
             Arc::new(subnet.clone()),
-            &network,
-            ProposalAgent::new(nns_urls),
+            Arc::new(ProposalAgentImpl::new(nns_urls)) as Arc<dyn ProposalAgent>,
             version_one.clone().as_str(),
             &[],
             &nodes_to_exclude,
+            Arc::new(MockHealthStatusQuerier::new()),
         );
 
         let results = hostos_rollout
@@ -650,11 +654,11 @@ pub mod test {
         let hostos_rollout = HostosRollout::new(
             Arc::new(union.clone()),
             Arc::new(subnet.clone()),
-            &network,
-            ProposalAgent::new(nns_urls),
+            Arc::new(ProposalAgentImpl::new(nns_urls)) as Arc<dyn ProposalAgent>,
             version_two.clone().as_str(),
             &[],
             &[],
+            Arc::new(MockHealthStatusQuerier::new()),
         );
 
         let results = hostos_rollout
@@ -684,8 +688,8 @@ pub mod test {
         hostos_version: String,
         dfinity_owned: bool,
         is_api_boundary_node: bool,
-    ) -> BTreeMap<PrincipalId, Node> {
-        let mut n = BTreeMap::new();
+    ) -> IndexMap<PrincipalId, Node> {
+        let mut n = IndexMap::new();
         for i in start_at_number..start_at_number + num_nodes {
             let node = Node {
                 principal: PrincipalId::new_node_test_id(i),
@@ -699,6 +703,8 @@ pub mod test {
                     },
                     allowance: 23933,
                     datacenter: None,
+                    rewardable_nodes: BTreeMap::new(),
+                    ipv6: "".to_string(),
                 },
                 hostname: None,
                 hostos_release: None,
@@ -709,6 +715,8 @@ pub mod test {
                 hostos_version: hostos_version.clone(),
                 dfinity_owned: Some(dfinity_owned),
                 is_api_boundary_node,
+                chip_id: None,
+                public_ipv4_config: None,
             };
             n.insert(node.principal, node);
         }

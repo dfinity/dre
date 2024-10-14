@@ -1,10 +1,11 @@
 use crate::network::Node;
 use ahash::{AHashMap, AHasher};
+use indexmap::IndexMap;
 use itertools::Itertools;
 use serde::{Deserialize, Serialize};
 use std::cell::RefCell;
 use std::cmp::Ordering;
-use std::collections::{BTreeMap, VecDeque};
+use std::collections::VecDeque;
 use std::fmt::{self, Debug, Display, Formatter};
 use std::hash::Hasher;
 use std::iter::{FromIterator, IntoIterator};
@@ -13,7 +14,7 @@ use ic_management_types::NodeFeature;
 
 #[derive(Eq, PartialEq, Clone, Serialize, Deserialize, Debug)]
 pub struct NodeFeatures {
-    pub feature_map: BTreeMap<NodeFeature, String>,
+    pub feature_map: IndexMap<NodeFeature, String>,
 }
 
 impl fmt::Display for NodeFeatures {
@@ -32,7 +33,7 @@ impl NodeFeatures {
 
     #[cfg(test)]
     fn new_test_feature_set(value: &str) -> Self {
-        let mut result = BTreeMap::new();
+        let mut result = IndexMap::new();
         for feature in NodeFeature::variants() {
             result.insert(feature, value.to_string());
         }
@@ -50,7 +51,7 @@ impl NodeFeatures {
 impl FromIterator<(NodeFeature, &'static str)> for NodeFeatures {
     fn from_iter<I: IntoIterator<Item = (NodeFeature, &'static str)>>(iter: I) -> Self {
         Self {
-            feature_map: BTreeMap::from_iter(iter.into_iter().map(|x| (x.0, String::from(x.1)))),
+            feature_map: IndexMap::from_iter(iter.into_iter().map(|x| (x.0, String::from(x.1)))),
         }
     }
 }
@@ -58,7 +59,7 @@ impl FromIterator<(NodeFeature, &'static str)> for NodeFeatures {
 impl FromIterator<(NodeFeature, std::string::String)> for NodeFeatures {
     fn from_iter<I: IntoIterator<Item = (NodeFeature, std::string::String)>>(iter: I) -> Self {
         Self {
-            feature_map: BTreeMap::from_iter(iter),
+            feature_map: IndexMap::from_iter(iter),
         }
     }
 }
@@ -77,9 +78,9 @@ thread_local! {
 /// For instance: [NodeFeature::NodeProvider], [NodeFeature::DataCenter], etc...
 /// For a complete reference check [NodeFeature]
 pub struct NakamotoScore {
-    coefficients: BTreeMap<NodeFeature, f64>,
-    value_counts: BTreeMap<NodeFeature, Vec<(String, usize)>>,
-    controlled_nodes: BTreeMap<NodeFeature, usize>,
+    coefficients: IndexMap<NodeFeature, f64>,
+    value_counts: IndexMap<NodeFeature, Vec<(String, usize)>>,
+    controlled_nodes: IndexMap<NodeFeature, usize>,
     avg_linear: f64,
 
     /// This field needs to be optional in case we get a -inf result because of
@@ -101,13 +102,13 @@ pub struct NakamotoScore {
 impl NakamotoScore {
     /// Build a new NakamotoScore object from a slice of [NodeFeatures].
     pub fn new_from_slice_node_features(slice_node_features: &[NodeFeatures]) -> Self {
-        let mut features_to_nodes_map = BTreeMap::new();
+        let mut features_to_nodes_map = IndexMap::new();
 
         for feature in NodeFeature::variants() {
             features_to_nodes_map.insert(feature, Vec::new());
         }
 
-        // Convert a Vec<BTreeMap<NodeFeature, Value>> into a Vec<BTreeMap<NodeFeature,
+        // Convert a Vec<IndexMap<NodeFeature, Value>> into a Vec<IndexMap<NodeFeature,
         // Vec<Values>>
         for node_features in slice_node_features.iter() {
             for feature in NodeFeature::variants() {
@@ -140,7 +141,17 @@ impl NakamotoScore {
             let only_counter = counters.iter().map(|(_feat, cnt)| *cnt).collect::<Vec<_>>();
             // But for deeper understanding (logging and debugging) we also keep track of
             // all strings and their counts
-            let value_counts = counters.into_iter().sorted_by_key(|(_feat, cnt)| -(*cnt as isize)).collect::<Vec<_>>();
+            let value_counts = counters
+                .into_iter()
+                .sorted_unstable_by(|(feat1, cnt1), (feat2, cnt2)| {
+                    let cmp1 = cnt2.partial_cmp(cnt1).unwrap();
+                    if cmp1 == Ordering::Equal {
+                        feat1.partial_cmp(feat2).unwrap_or(Ordering::Equal)
+                    } else {
+                        cmp1
+                    }
+                })
+                .collect::<Vec<_>>();
 
             (value.0.clone(), Self::nakamoto(&only_counter), value_counts)
         });
@@ -148,9 +159,9 @@ impl NakamotoScore {
         let scores = nakamoto_calc
             .clone()
             .map(|(f, n, _)| (f, n.0 as f64))
-            .collect::<BTreeMap<NodeFeature, f64>>();
+            .collect::<IndexMap<NodeFeature, f64>>();
 
-        let controlled_nodes = nakamoto_calc.clone().map(|(f, n, _)| (f, n.1)).collect::<BTreeMap<NodeFeature, usize>>();
+        let controlled_nodes = nakamoto_calc.clone().map(|(f, n, _)| (f, n.1)).collect::<IndexMap<NodeFeature, usize>>();
 
         let value_counts = nakamoto_calc.map(|(f, _, value_counts)| (f, value_counts)).collect();
 
@@ -203,8 +214,6 @@ impl NakamotoScore {
                                             memoize_hit_rates.borrow_mut().pop_back();
                                         }
                                     }
-                                    println!("Memoize hit rate: {}%", memoize_hit_rate);
-                                    println!("Memoize recent hit rates: {:?}", memoize_hit_rates.borrow());
                                     *memoize_req.borrow_mut() = 0;
                                     *memoize_hit.borrow_mut() = 0;
                                 }
@@ -274,13 +283,8 @@ impl NakamotoScore {
         self.avg_log2
     }
 
-    /// A minimum Nakamoto score over all features
-    pub fn score_min(&self) -> f64 {
-        self.min
-    }
-
     /// Get a Map with all the features and the corresponding Nakamoto score
-    pub fn scores_individual(&self) -> BTreeMap<NodeFeature, f64> {
+    pub fn scores_individual(&self) -> IndexMap<NodeFeature, f64> {
         self.coefficients.clone()
     }
 
@@ -309,6 +313,7 @@ impl NakamotoScore {
     /// in each of these features.
     /// - Top Node Providers control 5 nodes
     /// - Top Countries control 7 nodes
+    ///
     /// In that case we would return (5, 7)
     pub fn critical_features_num_nodes(&self) -> Vec<usize> {
         [NodeFeature::NodeProvider, NodeFeature::Country]
@@ -333,30 +338,24 @@ impl NakamotoScore {
 
     pub fn describe_difference_from(&self, other: &NakamotoScore) -> (Option<Ordering>, String) {
         // Prefer higher score across all features
-        let mut cmp = self.score_min().partial_cmp(&other.score_min());
+        let mut cmp = self.score_avg_log2().partial_cmp(&other.score_avg_log2());
 
         if cmp != Some(Ordering::Equal) {
             return (
                 cmp,
-                format!(
-                    "the minimum Nakamoto coefficient across all features changes from {} to {}",
-                    other.score_min(),
-                    self.score_min()
-                ),
-            );
-        }
-
-        // Then try to increase the log2 avg
-        cmp = self.score_avg_log2().partial_cmp(&other.score_avg_log2());
-
-        if cmp != Some(Ordering::Equal) {
-            return (
-                cmp,
-                format!(
-                    "the average log2 of Nakamoto Coefficients across all features changes from {:.4} to {:.4}",
-                    other.score_avg_log2().unwrap_or(0.0),
-                    self.score_avg_log2().unwrap_or(0.0)
-                ),
+                if cmp == Some(Ordering::Less) {
+                    format!(
+                        "(gets worse) the average log2 of Nakamoto Coefficients across all features decreases from {:.4} to {:.4}",
+                        other.score_avg_log2().unwrap_or(0.0),
+                        self.score_avg_log2().unwrap_or(0.0)
+                    )
+                } else {
+                    format!(
+                        "(gets better) the average log2 of Nakamoto Coefficients across all features increases from {:.4} to {:.4}",
+                        other.score_avg_log2().unwrap_or(0.0),
+                        self.score_avg_log2().unwrap_or(0.0)
+                    )
+                },
             );
         }
 
@@ -370,13 +369,25 @@ impl NakamotoScore {
             return (
                 cmp,
                 if val_self[0] != val_other[0] {
+                    if val_other[0] > val_self[0] {
+                        format!(
+                            "(gets better) the number of nodes controlled by dominant NPs decreases from {} to {}",
+                            val_other[0], val_self[0]
+                        )
+                    } else {
+                        format!(
+                            "(gets worse) the number of nodes controlled by dominant NPs increases from {} to {}",
+                            val_other[0], val_self[0]
+                        )
+                    }
+                } else if val_other[1] > val_self[1] {
                     format!(
-                        "the number of nodes controlled by dominant NPs changes from {} to {}",
-                        val_other[0], val_self[0]
+                        "(gets better) the number of nodes controlled by dominant Country actors decreases from {} to {}",
+                        val_other[1], val_self[1]
                     )
                 } else {
                     format!(
-                        "the number of nodes controlled by dominant Country actors changes from {} to {}",
+                        "(gets worse) the number of nodes controlled by dominant Country actors increases from {} to {}",
                         val_other[1], val_self[1]
                     )
                 },
@@ -395,9 +406,27 @@ impl NakamotoScore {
             return (
                 cmp,
                 if val_self[0] != val_other[0] {
-                    format!("the number of different NP actors changes from {} to {}", val_other[0], val_self[0])
+                    if val_other[0] < val_self[0] {
+                        format!(
+                            "(gets better) the number of different NP actors increases from {} to {}",
+                            val_other[0], val_self[0]
+                        )
+                    } else {
+                        format!(
+                            "(gets worse) the number of different NP actors decreases from {} to {}",
+                            val_other[0], val_self[0]
+                        )
+                    }
+                } else if val_other[1] < val_self[1] {
+                    format!(
+                        "(gets better) the number of different Country actors increases from {} to {}",
+                        val_other[1], val_self[1]
+                    )
                 } else {
-                    format!("the number of different Country actors changes from {} to {}", val_other[1], val_self[1])
+                    format!(
+                        "(gets worse) the number of different Country actors decreases from {} to {}",
+                        val_other[1], val_self[1]
+                    )
                 },
             );
         }
@@ -411,16 +440,27 @@ impl NakamotoScore {
         if cmp != Some(Ordering::Equal) {
             return (
                 cmp,
-                format!(
-                    "the number of Nakamoto coefficients with extremely low values changes from {} to {}",
-                    c2, c1
-                ),
+                if cmp == Some(Ordering::Less) {
+                    format!(
+                        "(gets better) the number of Nakamoto coefficients with extremely low values decreases from {} to {}",
+                        c2, c1
+                    )
+                } else {
+                    format!(
+                        "(gets worse) the number of Nakamoto coefficients with extremely low values increases from {} to {}",
+                        c2, c1
+                    )
+                },
             );
         }
 
         // If the worst feature is the same for both candidates
         // => prefer candidates that maximizes all features
         for feature in NodeFeature::variants() {
+            if feature == NodeFeature::Continent {
+                // Skip the continent feature as it is not used in the Nakamoto score
+                continue;
+            }
             let c1 = self.coefficients.get(&feature).unwrap_or(&1.0);
             let c2 = other.coefficients.get(&feature).unwrap_or(&1.0);
             if *c1 < 3.0 || *c2 < 3.0 {
@@ -481,12 +521,12 @@ impl Eq for NakamotoScore {}
 impl Display for NakamotoScore {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         let avg_log2_str = match self.avg_log2 {
-            Some(v) => format!("{:0.2}", v),
+            Some(v) => format!("{:0.4}", v),
             None => "undefined".to_string(),
         };
         write!(
             f,
-            "NakamotoScore: min {:0.2} avg log2 {} #crit nodes {:?} # crit uniq {:?} #crit coeff {} avg linear {:0.2}",
+            "NakamotoScore: min {:0.2} avg log2 {} #crit nodes {:?} # crit uniq {:?} #crit coeff {} avg linear {:0.4}",
             self.min,
             avg_log2_str,
             self.critical_features_num_nodes(),
@@ -505,6 +545,7 @@ mod tests {
     use ahash::HashSet;
     use ic_base_types::PrincipalId;
     use ic_management_types::HealthStatus;
+    use indexmap::IndexMap;
     use itertools::Itertools;
     use regex::Regex;
 
@@ -541,22 +582,20 @@ mod tests {
         let score = NakamotoScore::new_from_slice_node_features(&features);
 
         let score_expected = NakamotoScore {
-            coefficients: BTreeMap::from([
-                (NodeFeature::City, 1.),
-                (NodeFeature::Country, 1.),
-                (NodeFeature::Continent, 1.),
-                (NodeFeature::DataCenterOwner, 1.),
+            coefficients: IndexMap::from([
                 (NodeFeature::NodeProvider, 1.),
                 (NodeFeature::DataCenter, 1.),
+                (NodeFeature::DataCenterOwner, 1.),
+                (NodeFeature::Area, 1.),
+                (NodeFeature::Country, 1.),
             ]),
-            value_counts: BTreeMap::new(),
-            controlled_nodes: BTreeMap::from([
-                (NodeFeature::City, 1),
-                (NodeFeature::Country, 1),
-                (NodeFeature::Continent, 1),
-                (NodeFeature::DataCenterOwner, 1),
+            value_counts: IndexMap::new(),
+            controlled_nodes: IndexMap::from([
                 (NodeFeature::NodeProvider, 1),
                 (NodeFeature::DataCenter, 1),
+                (NodeFeature::DataCenterOwner, 1),
+                (NodeFeature::Area, 1),
+                (NodeFeature::Country, 1),
             ]),
             avg_linear: 1.,
             avg_log2: Some(0.),
@@ -610,7 +649,6 @@ mod tests {
             nodes: new_test_nodes("feat", num_nodes, num_dfinity_nodes),
             added_nodes_desc: Vec::new(),
             removed_nodes_desc: Vec::new(),
-            min_nakamoto_coefficients: None,
             comment: None,
             run_log: Vec::new(),
         }
@@ -629,7 +667,6 @@ mod tests {
             nodes: new_test_nodes_with_overrides("feat", node_number_start, num_nodes, num_dfinity_nodes, feature_to_override),
             added_nodes_desc: Vec::new(),
             removed_nodes_desc: Vec::new(),
-            min_nakamoto_coefficients: None,
             comment: None,
             run_log: Vec::new(),
         }
@@ -696,8 +733,11 @@ mod tests {
         assert_eq!(
             subnet_initial.check_business_rules().unwrap(),
             (
-                1000,
-                vec!["NodeFeature 'country' controls 9 of nodes, which is > 8 (2/3 of all) nodes".to_string()]
+                1070,
+                vec![
+                    "Country US controls 9 of nodes, which is higher than target of 2 for the subnet. Applying penalty of 70.".to_string(),
+                    "NodeFeature country controls 9 of nodes, which is > 8 (2/3 of all) nodes".to_string()
+                ]
             )
         );
         let nodes_available = new_test_nodes_with_overrides("spare", 13, 3, 0, (&NodeFeature::Country, &["US", "RO", "JP"]));
@@ -705,7 +745,7 @@ mod tests {
             .iter()
             .chain(subnet_initial.nodes.iter())
             .map(|n| (n.id, HealthStatus::Healthy))
-            .collect::<BTreeMap<_, _>>();
+            .collect::<IndexMap<_, _>>();
 
         println!(
             "initial {} Countries {:?}",
@@ -717,8 +757,8 @@ mod tests {
                 .collect::<Vec<_>>()
         );
 
-        let subnet_change_req = SubnetChangeRequest::new(subnet_initial, nodes_available, Vec::new(), Vec::new(), Vec::new(), None);
-        let subnet_change = subnet_change_req.optimize(2, &[], &health_of_nodes).unwrap();
+        let subnet_change_req = SubnetChangeRequest::new(subnet_initial, nodes_available, Vec::new(), Vec::new(), Vec::new());
+        let subnet_change = subnet_change_req.optimize(2, &[], &health_of_nodes, vec![]).unwrap();
         for log in subnet_change.after().run_log.iter() {
             println!("{}", log);
         }
@@ -732,7 +772,6 @@ mod tests {
             .collect::<Vec<_>>();
 
         println!("optimized {} Countries {:?}", optimized_subnet, countries_after);
-        assert_eq!(optimized_subnet.nakamoto_score().score_min(), 1.);
 
         // Two US nodes were removed
         assert_eq!(
@@ -753,10 +792,16 @@ mod tests {
         );
         assert_eq!(
             subnet_initial.check_business_rules().unwrap(),
-            (10000, vec!["A single Node Provider can halt the subnet".to_string()])
+            (
+                10020,
+                vec![
+                    "node_provider NP2 controls 3 of nodes, which is higher than target of 1 for the subnet. Applying penalty of 20.".to_string(),
+                    "A single Node Provider can halt the subnet".to_string()
+                ]
+            )
         );
         let nodes_available = new_test_nodes_with_overrides("spare", 7, 2, 0, (&NodeFeature::NodeProvider, &["NP6", "NP7"]));
-        let health_of_nodes = nodes_available.iter().map(|n| (n.id, HealthStatus::Healthy)).collect::<BTreeMap<_, _>>();
+        let health_of_nodes = nodes_available.iter().map(|n| (n.id, HealthStatus::Healthy)).collect::<IndexMap<_, _>>();
 
         println!(
             "initial {} NPs {:?}",
@@ -768,8 +813,8 @@ mod tests {
                 .collect::<Vec<_>>()
         );
 
-        let subnet_change_req = SubnetChangeRequest::new(subnet_initial, nodes_available, Vec::new(), Vec::new(), Vec::new(), None);
-        let subnet_change = subnet_change_req.optimize(2, &[], &health_of_nodes).unwrap();
+        let subnet_change_req = SubnetChangeRequest::new(subnet_initial, nodes_available, Vec::new(), Vec::new(), Vec::new());
+        let subnet_change = subnet_change_req.optimize(2, &[], &health_of_nodes, vec![]).unwrap();
         println!("Replacement run log:");
         for line in subnet_change.after().run_log.iter() {
             println!("{}", line);
@@ -784,7 +829,6 @@ mod tests {
             .collect::<Vec<_>>();
 
         println!("optimized {} NPs {:?}", optimized_subnet, nps_after);
-        assert_eq!(optimized_subnet.nakamoto_score().score_min(), 3.);
 
         // Check that the selected nodes are providing the maximum uniformness (use all
         // NPs)
@@ -800,7 +844,13 @@ mod tests {
             1,
             (&NodeFeature::NodeProvider, &["NP1", "NP2", "NP2", "NP3", "NP4", "NP4", "NP5"]),
         );
-        assert_eq!(subnet_initial.check_business_rules().unwrap(), (0, vec![]));
+        assert_eq!(
+            subnet_initial.check_business_rules().unwrap(),
+            (
+                10,
+                vec!["node_provider NP2 controls 2 of nodes, which is higher than target of 1 for the subnet. Applying penalty of 10.".to_string()]
+            )
+        );
 
         // There are 2 spare nodes, but both are DFINITY
         let nodes_available = new_test_nodes_with_overrides("spare", 7, 2, 2, (&NodeFeature::NodeProvider, &["NP6", "NP7"]));
@@ -808,7 +858,7 @@ mod tests {
             .iter()
             .chain(subnet_initial.nodes.iter())
             .map(|n| (n.id, HealthStatus::Healthy))
-            .collect::<BTreeMap<_, _>>();
+            .collect::<IndexMap<_, _>>();
 
         println!(
             "initial {} NPs {:?}",
@@ -820,8 +870,8 @@ mod tests {
                 .collect::<Vec<_>>()
         );
 
-        let subnet_change_req = SubnetChangeRequest::new(subnet_initial, nodes_available, Vec::new(), Vec::new(), Vec::new(), None);
-        let subnet_change = subnet_change_req.optimize(2, &[], &health_of_nodes).unwrap();
+        let subnet_change_req = SubnetChangeRequest::new(subnet_initial, nodes_available, Vec::new(), Vec::new(), Vec::new());
+        let subnet_change = subnet_change_req.optimize(2, &[], &health_of_nodes, vec![]).unwrap();
 
         println!("Replacement run log:");
         for line in subnet_change.after().run_log.iter() {
@@ -838,7 +888,7 @@ mod tests {
             .collect::<Vec<_>>();
 
         println!("optimized {} NPs {:?}", optimized_subnet, nps_after);
-        assert_eq!(optimized_subnet.nakamoto_score().score_min(), 2.);
+
         // There is still only one DFINITY-owned node in the subnet
         assert_eq!(1, optimized_subnet.nodes.iter().map(|n| n.dfinity_owned as u32).sum::<u32>());
     }
@@ -861,7 +911,6 @@ mod tests {
                 .collect(),
             added_nodes_desc: Vec::new(),
             removed_nodes_desc: Vec::new(),
-            min_nakamoto_coefficients: None,
             comment: None,
             run_log: Vec::new(),
         };
@@ -889,7 +938,6 @@ mod tests {
         println!("NakamotoScore after {}", nakamoto_score_after);
 
         // Check against the close-to-optimal values obtained by data analysis
-        assert!(nakamoto_score_after.score_min() >= 1.0);
         assert!(nakamoto_score_after.critical_features_num_nodes()[0] <= 25);
         assert!(nakamoto_score_after.score_avg_linear() >= 3.0);
         assert!(nakamoto_score_after.score_avg_log2() >= Some(1.32));
@@ -912,33 +960,15 @@ mod tests {
 
     #[test]
     fn test_european_subnet_european_nodes_good() {
-        let subnet_initial = new_test_subnet_with_overrides(
-            0,
-            0,
-            7,
-            1,
-            (
-                &NodeFeature::Continent,
-                &["Europe", "Europe", "Europe", "Europe", "Europe", "Europe", "Europe"],
-            ),
-        )
-        .with_subnet_id(PrincipalId::from_str("bkfrj-6k62g-dycql-7h53p-atvkj-zg4to-gaogh-netha-ptybj-ntsgw-rqe").unwrap());
+        let subnet_initial = new_test_subnet_with_overrides(0, 0, 7, 1, (&NodeFeature::Country, &["AT", "BE", "DE", "ES", "FR", "IT", "CH"]))
+            .with_subnet_id(PrincipalId::from_str("bkfrj-6k62g-dycql-7h53p-atvkj-zg4to-gaogh-netha-ptybj-ntsgw-rqe").unwrap());
         assert_eq!(subnet_initial.check_business_rules().unwrap(), (0, vec![]));
     }
 
     #[test]
     fn test_european_subnet_european_nodes_bad_1() {
-        let subnet_mix = new_test_subnet_with_overrides(
-            1,
-            0,
-            7,
-            1,
-            (
-                &NodeFeature::Continent,
-                &["Europe", "Asia", "Europe", "Europe", "Europe", "Europe", "Europe"],
-            ),
-        )
-        .with_subnet_id(PrincipalId::from_str("bkfrj-6k62g-dycql-7h53p-atvkj-zg4to-gaogh-netha-ptybj-ntsgw-rqe").unwrap());
+        let subnet_mix = new_test_subnet_with_overrides(1, 0, 7, 1, (&NodeFeature::Country, &["AT", "BE", "DE", "ES", "FR", "IT", "IN"]))
+            .with_subnet_id(PrincipalId::from_str("bkfrj-6k62g-dycql-7h53p-atvkj-zg4to-gaogh-netha-ptybj-ntsgw-rqe").unwrap());
         assert_eq!(
             subnet_mix.check_business_rules().unwrap(),
             (1000, vec!["European subnet has 1 non-European node(s)".to_string()])
@@ -946,20 +976,11 @@ mod tests {
     }
     #[test]
     fn test_european_subnet_european_nodes_bad_2() {
-        let subnet_mix = new_test_subnet_with_overrides(
-            1,
-            0,
-            7,
-            1,
-            (
-                &NodeFeature::Continent,
-                &["Europe", "Asia", "America", "Australia", "Europe", "Africa", "South America"],
-            ),
-        )
-        .with_subnet_id(PrincipalId::from_str("bkfrj-6k62g-dycql-7h53p-atvkj-zg4to-gaogh-netha-ptybj-ntsgw-rqe").unwrap());
+        let subnet_mix = new_test_subnet_with_overrides(1, 0, 7, 1, (&NodeFeature::Country, &["AT", "BE", "DE", "ES", "US", "IN", "AR"]))
+            .with_subnet_id(PrincipalId::from_str("bkfrj-6k62g-dycql-7h53p-atvkj-zg4to-gaogh-netha-ptybj-ntsgw-rqe").unwrap());
         assert_eq!(
             subnet_mix.check_business_rules().unwrap(),
-            (5000, vec!["European subnet has 5 non-European node(s)".to_string()])
+            (3000, vec!["European subnet has 3 non-European node(s)".to_string()])
         );
     }
 
@@ -1021,13 +1042,13 @@ mod tests {
                     (n, HealthStatus::Healthy)
                 }
             })
-            .collect::<BTreeMap<_, _>>();
-        let mut important = BTreeMap::new();
+            .collect::<IndexMap<_, _>>();
+        let mut important = IndexMap::new();
 
         important.insert(subnet.principal, subnet);
 
         let network_heal_response = NetworkHealRequest::new(important.clone())
-            .heal_and_optimize(nodes_available.clone(), &health_of_nodes)
+            .heal_and_optimize(nodes_available.clone(), &health_of_nodes, vec![])
             .await
             .unwrap();
         let result = network_heal_response.first().unwrap().clone();
@@ -1046,14 +1067,14 @@ mod tests {
             .iter()
             .chain(subnet_initial.nodes.iter())
             .map(|n| (n.id, HealthStatus::Healthy))
-            .collect::<BTreeMap<_, _>>();
+            .collect::<IndexMap<_, _>>();
 
-        let change_initial = SubnetChangeRequest::new(subnet_initial.clone(), nodes_available, Vec::new(), Vec::new(), Vec::new(), None);
+        let change_initial = SubnetChangeRequest::new(subnet_initial.clone(), nodes_available, Vec::new(), Vec::new(), Vec::new());
 
         let with_keeping_features = change_initial
             .clone()
             .keeping_from_used(vec!["CH".to_string()])
-            .rescue(&health_of_nodes)
+            .rescue(&health_of_nodes, vec![])
             .unwrap();
 
         assert_eq!(with_keeping_features.added().len(), 6);
@@ -1071,7 +1092,7 @@ mod tests {
         let with_keeping_principals = change_initial
             .clone()
             .keeping_from_used(vec!["CH".to_string()])
-            .rescue(&health_of_nodes)
+            .rescue(&health_of_nodes, vec![])
             .unwrap();
 
         assert_eq!(with_keeping_principals.added().len(), 6);
@@ -1085,7 +1106,7 @@ mod tests {
             1
         );
 
-        let rescue_all = change_initial.clone().rescue(&health_of_nodes).unwrap();
+        let rescue_all = change_initial.clone().rescue(&health_of_nodes, vec![]).unwrap();
 
         assert_eq!(rescue_all.added().len(), 7);
         assert_eq!(rescue_all.removed().len(), 7);

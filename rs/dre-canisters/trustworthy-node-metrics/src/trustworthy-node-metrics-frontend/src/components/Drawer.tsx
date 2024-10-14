@@ -8,34 +8,33 @@ import {
   IconButton,
   ListItem,
   Toolbar,
-  useMediaQuery,
-  useTheme,
 } from '@mui/material';
 import { Link } from 'react-router-dom';
 import Logo from '../assets/icp_logo.svg'; 
 import { ExpandLess, ExpandMore } from '@mui/icons-material';
 
 interface DrawerProps {
-  subnets: Set<string>;
-  nodeProviders: Set<string>;
+  providers: Map<string, string>;
   drawerWidth: number;
   temporary: boolean;
   drawerOpen: boolean;
   onClosed: () => void;
 }
 
-const Drawer: React.FC<DrawerProps> = ({ subnets, nodeProviders, drawerWidth, temporary, drawerOpen, onClosed }) => {
-  const [isSubnetsOpen, setIsSubnetsOpen] = React.useState(false);
+const Drawer: React.FC<DrawerProps> = ({ providers, drawerWidth, temporary, drawerOpen, onClosed }) => {
   const [isNodeProvidersOpen, setIsNodeProvidersOpen] = React.useState(false);
-  
+  const [selectedIndex, setSelectedIndex] = React.useState<number | null>(null);
+
   const renderCollapsibleList = (
     title: string,
-    items: Set<string>,
+    items: Map<string, string>,
     isOpen: boolean,
     toggleOpen: React.Dispatch<React.SetStateAction<boolean>>,
     basePath: string
   ) => {
-    const itemList = items ? Array.from(items) : [];
+    const itemList = items 
+    ? Array.from(items).sort((a, b) => a[0].localeCompare(b[0])) 
+    : [];
 
     return (
       <>
@@ -46,9 +45,13 @@ const Drawer: React.FC<DrawerProps> = ({ subnets, nodeProviders, drawerWidth, te
         <Collapse in={isOpen} timeout="auto" unmountOnExit>
           <List component="div" disablePadding>
             {itemList.map((item, index) => (
-              <Link key={index} to={`/${basePath}/${item}`} style={{ textDecoration: 'none', color: 'inherit' }}>
-                <ListItemButton>
-                  <ListItemText primary={item.split("-")[0]} />
+              <Link key={index} to={`/${basePath}/${item[0]}`} style={{ textDecoration: 'none', color: 'inherit' }}>
+                <ListItemButton
+                  key={index}
+                  selected={selectedIndex === index}
+                  onClick={() => setSelectedIndex(index)}
+                >
+                  <ListItemText primary={item[1]} />
                 </ListItemButton>
               </Link>
             ))}
@@ -84,8 +87,7 @@ const Drawer: React.FC<DrawerProps> = ({ subnets, nodeProviders, drawerWidth, te
               <ListItemText primary="Nodes" />
             </ListItemButton>
           </Link>
-          {renderCollapsibleList("Subnets", subnets, isSubnetsOpen, setIsSubnetsOpen, "subnets")}
-          {renderCollapsibleList("Node Providers", nodeProviders, isNodeProvidersOpen, setIsNodeProvidersOpen, "node-providers")}
+          {renderCollapsibleList("Node Providers", providers, isNodeProvidersOpen, setIsNodeProvidersOpen, "providers")}
         </List>
       </MUIDrawer>
   );

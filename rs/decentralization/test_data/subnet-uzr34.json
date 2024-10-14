@@ -16,7 +16,7 @@
           "owner": {
             "name": "Flexential"
           },
-          "city": "Nevada",
+          "area": "Nevada",
           "country": "US",
           "continent": "North America",
           "latitude": 36.08000183105469,
@@ -45,7 +45,7 @@
           "owner": {
             "name": "Interxion"
           },
-          "city": "Provence-Alpes-Cote d'Azur",
+          "area": "Provence-Alpes-Cote d'Azur",
           "country": "FR",
           "continent": "Europe",
           "latitude": 43.29650115966797,
@@ -75,7 +75,7 @@
           "owner": {
             "name": "Unknown"
           },
-          "city": "Tokyo",
+          "area": "Tokyo",
           "country": "JP",
           "continent": "Asia",
           "latitude": 35.67620086669922,
@@ -105,7 +105,7 @@
           "owner": {
             "name": "Equinix"
           },
-          "city": "Hesse",
+          "area": "Hesse",
           "country": "DE",
           "continent": "Europe",
           "latitude": 50.12229919433594,
@@ -135,7 +135,7 @@
           "owner": {
             "name": "Telin"
           },
-          "city": "Singapore",
+          "area": "Singapore",
           "country": "SG",
           "continent": "Asia",
           "latitude": 1.3521000146865845,
@@ -165,7 +165,7 @@
           "owner": {
             "name": "Green.Ch"
           },
-          "city": "Zurich",
+          "area": "Zurich",
           "country": "CH",
           "continent": "Europe",
           "latitude": 47.385799407958984,
@@ -195,7 +195,7 @@
           "owner": {
             "name": "Nine.Ch"
           },
-          "city": "Zurich",
+          "area": "Zurich",
           "country": "CH",
           "continent": "Europe",
           "latitude": 47.36800003051758,
@@ -225,7 +225,7 @@
           "owner": {
             "name": "Posita"
           },
-          "city": "Maribor",
+          "area": "Maribor",
           "country": "SI",
           "continent": "Europe",
           "latitude": 46.55764389038086,
@@ -255,7 +255,7 @@
           "owner": {
             "name": "Tierpoint"
           },
-          "city": "Pennsylvania",
+          "area": "Pennsylvania",
           "country": "US",
           "continent": "North America",
           "latitude": 40.60219955444336,
@@ -285,7 +285,7 @@
           "owner": {
             "name": "Green.Ch"
           },
-          "city": "Zurich",
+          "area": "Zurich",
           "country": "CH",
           "continent": "Europe",
           "latitude": 47.385799407958984,
@@ -315,7 +315,7 @@
           "owner": {
             "name": "Unknown"
           },
-          "city": "Tokyo",
+          "area": "Tokyo",
           "country": "JP",
           "continent": "Asia",
           "latitude": 35.67620086669922,
@@ -345,7 +345,7 @@
           "owner": {
             "name": "Hurricane Electric"
           },
-          "city": "California",
+          "area": "California",
           "country": "US",
           "continent": "North America",
           "latitude": 37.548500061035156,
@@ -375,7 +375,7 @@
           "owner": {
             "name": "Equinix"
           },
-          "city": "Hesse",
+          "area": "Hesse",
           "country": "DE",
           "continent": "Europe",
           "latitude": 50.12229919433594,
@@ -404,7 +404,7 @@
           "owner": {
             "name": "Flexential"
           },
-          "city": "Oregon",
+          "area": "Oregon",
           "country": "US",
           "continent": "North America",
           "latitude": 45.50510025024414,
@@ -434,7 +434,7 @@
           "owner": {
             "name": "DataSite"
           },
-          "city": "Georgia",
+          "area": "Georgia",
           "country": "US",
           "continent": "North America",
           "latitude": 33.81800079345703,
@@ -464,7 +464,7 @@
           "owner": {
             "name": "Telin"
           },
-          "city": "Singapore",
+          "area": "Singapore",
           "country": "SG",
           "continent": "Asia",
           "latitude": 1.3521000146865845,
@@ -494,7 +494,7 @@
           "owner": {
             "name": "Flexential"
           },
-          "city": "Georgia",
+          "area": "Georgia",
           "country": "US",
           "continent": "North America",
           "latitude": 33.68439865112305,
@@ -524,7 +524,7 @@
           "owner": {
             "name": "Antwerp Datacenter"
           },
-          "city": "Flanders",
+          "area": "Flanders",
           "country": "BE",
           "continent": "Europe",
           "latitude": 51.219398498535156,
@@ -554,7 +554,7 @@
           "owner": {
             "name": "Posita"
           },
-          "city": "Ljubljana",
+          "area": "Ljubljana",
           "country": "SI",
           "continent": "Europe",
           "latitude": 46.04998016357422,
@@ -584,7 +584,7 @@
           "owner": {
             "name": "High DC"
           },
-          "city": "Geneva",
+          "area": "Geneva",
           "country": "CH",
           "continent": "Europe",
           "latitude": 46.20439910888672,
@@ -613,7 +613,7 @@
           "owner": {
             "name": "M247"
           },
-          "city": "Bucuresti",
+          "area": "Bucuresti",
           "country": "RO",
           "continent": "Europe",
           "latitude": 44.42679977416992,
@@ -643,7 +643,7 @@
           "owner": {
             "name": "Tierpoint"
           },
-          "city": "Pennsylvania",
+          "area": "Pennsylvania",
           "country": "US",
           "continent": "North America",
           "latitude": 40.60219955444336,
@@ -673,7 +673,7 @@
           "owner": {
             "name": "Rack Central"
           },
-          "city": "Singapore",
+          "area": "Singapore",
           "country": "SG",
           "continent": "Asia",
           "latitude": 1.3321000337600708,
@@ -703,7 +703,7 @@
           "owner": {
             "name": "Posita"
           },
-          "city": "Ljubljana",
+          "area": "Ljubljana",
           "country": "SI",
           "continent": "Europe",
           "latitude": 46.04998016357422,
@@ -733,7 +733,7 @@
           "owner": {
             "name": "DataSite"
           },
-          "city": "Florida",
+          "area": "Florida",
           "country": "US",
           "continent": "North America",
           "latitude": 28.588300704956055,
@@ -763,7 +763,7 @@
           "owner": {
             "name": "Safe Host SA"
           },
-          "city": "Geneva",
+          "area": "Geneva",
           "country": "CH",
           "continent": "Europe",
           "latitude": 46.20220184326172,
@@ -793,7 +793,7 @@
           "owner": {
             "name": "Tierpoint"
           },
-          "city": "Pennsylvania",
+          "area": "Pennsylvania",
           "country": "US",
           "continent": "North America",
           "latitude": 40.60219955444336,
@@ -823,7 +823,7 @@
           "owner": {
             "name": "High DC"
           },
-          "city": "Geneva",
+          "area": "Geneva",
           "country": "CH",
           "continent": "Europe",
           "latitude": 46.20439910888672,

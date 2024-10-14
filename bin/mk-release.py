@@ -1,4 +1,4 @@
-#!/usr/bin/env -S poetry run
+#!/usr/bin/env python3
 """
 Utility script to create a new release of the project.
 
@@ -62,10 +62,10 @@ def add_git_tag(tag_name):
 
 
 def update_change_log(current_version, new_version):
-    # call poetry run pychangelog generate to update CHANGELOG.md
+    # call rye run pychangelog generate to update CHANGELOG.md
     subprocess.check_call(
         [
-            "poetry",
+            "rye",
             "run",
             "git-changelog",
             "--filter-commits",
@@ -112,7 +112,7 @@ def main():
         subprocess.check_call(["git", "branch", "-d", f"release-{new_version}"])
     subprocess.check_call(["git", "checkout", "-b", f"release-{new_version}"])
     # Commit the changes
-    subprocess.check_call(["git", "commit", "-m", f"Release {new_version}"])
+    subprocess.check_call(["git", "commit", "-m", f"Release {new_version}", "--no-verify"])
     # Push the new branch
     subprocess.check_call(["git", "push", "origin", "--force", f"release-{new_version}"])
     # git branch --set-upstream-to=origin/<branch> release-0.3.2

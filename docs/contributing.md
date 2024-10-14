@@ -1,118 +1,69 @@
 # Pre-requisites
 
-## 1. Install dependencies
+## Rye installation
 
-### pixi
-
-[Pixi](https://pixi.sh/) is a package management tool for developers. It allows the developer to install libraries and applications in a reproducible way. Use pixi cross-platform, on Windows, Mac and Linux.
-
-Installation:
-```
-curl -fsSL https://pixi.sh/install.sh | bash
-```
-
-Then logout and login and you can then install Python with:
-```
-pixi global install python==3.11
-```
-
-### pyenv
-
-pyenv is a more conventional alternative to pixi. It installs slower but it's more tested. Use it if pixi doesn't work for you.
-
-#### On Linux
-
-In order to manage python versions, you can use the [pyenv
-installer](https://github.com/pyenv/pyenv-installer).
-
-Installing pyenv would be something like:
-
-``` bash
-curl https://pyenv.run | bash
-```
-
-Then log off and log back on, in order to ensure that the
-`~/.local/bin` directory (used by `pip`) is
-available in your session's `$PATH`, as well as the pyenv
-shims directory.
-
-#### On Mac OS
-
-On Mac, pyenv can be installed with Brew https://brew.sh/
-```bash
-brew install pyenv
-```
-
-If you get an error `configure: error: C compiler cannot create executables`,
-you may not have recent development tools. Run the following:
-```bash
-sudo rm -rf /Library/Developer/CommandLineTools
-sudo xcode-select --install
-```
-
-You should verify that a new terminal session has added
-the pyenv shims directory to your `$PATH`, then continue
-in that new terminal session from now on.
-
-### 2. Install the Python packages needed by the repo
-
-
-#### Linux dependencies
-
-pyenv will install a clean Python for you.   This installation will
-insist on a few important libraries which you should have on your
-system before it installs our chosen Python development version.
-
-```bash
-sudo apt install -y libncurses-dev libbz2-dev libreadline-dev \
-  libssl-dev make build-essential libssl-dev zlib1g-dev \
-  libbz2-dev libreadline-dev libsqlite3-dev wget curl llvm \
-  libncursesw5-dev xz-utils tk-dev libxml2-dev libxmlsec1-dev \
-  libffi-dev liblzma-dev
-```
-
-Note: if the list of dependencies above changes, update the
-[docker/Dockerfile] file accordingly, so CI stays in sync
-with local development environments.
-
-#### poetry installation
+Rye is a comprehensive project and package management solution for Python.
+Rye provides a unified experience to install and manages Python installations,
+pyproject.toml based projects, dependencies and virtualenvs seamlessly.
 
 Run the following from the repo root:
 
 ```bash
-# change into the directory of the repo
-# cd ~/src/release
-pyenv install # installs Python from .python-version
-pip3 install poetry   # installs poetry to your Python
-poetry env use $(which python)  # instructs poetry to use pyenv's Python
-poetry install        # installs all our dependencies
+curl -sSf https://rye.astral.sh/get | bash
 ```
 
-Follow the instructions onscreen.  Once the install is done,
-close and open your shell window, or run `bash` again.
-When you change into the `release` directory (this repo),
-typing `poetry env info` should show that the current
-folder is associated with a 3.11-based virtualenv.
+Follow the instructions on screen. Once the install is done,
+reopen your shell or run `source "$HOME/.rye/env"`.
 
-You can see the full path to your virtualenv's Python interpreter
-with the command `poetry env info -p`.  This is the interpreter
-you should use in your IDE and in day-to-day commands with regards
-to the Python programs in this repo.  To activate the use of
-this interpreter on the shell:
+You can make sure all dependencies are installed by running
 
 ```bash
-source "$(poetry env info -p)/bin/activate"
+rye sync
 ```
+
+And you can enter the `venv` manually if needed by running `. .venv/bin/activate`.
+This is typically not needed.
+
+It's sufficient to prefix any command with the following:
+
+```bash
+rye run <command>
+```
+
+to run the `<command>` with all expected dependencies.
+
+### Troubleshooting rye
+
+If you face problems in `rye sync`, such as `unknown version cpython@...`, you can try to
+
+* List all available toolchains
+```
+rye toolchain list --include-downloadable
+```
+
+* Upgrade rye itself
+```
+rye self update
+```
+
+* Ensure rye python is in path
+```
+which python3
+```
+
+* Show the actively used rye environment in the project
+```
+rye show
+```
+
 
 ### 3. Install pre-commit
 
 Install and enable pre-commit. It's highly recommended in order to prevent pushing code to github that will surely cause failures.
 
 ```
-# cd ~/src/release
-# source "$(poetry env info -p)/bin/activate"
-pip3 install --user pre-commit
-pre-commit install
+# cd ~/src/dre
+rye run pre-commit install
 ```
 
 More detailed instructions at https://pre-commit.com/#installation .
@@ -208,5 +159,5 @@ To use the `dre` CLI tool with the local dashboard instance run it with `--dev` 
 E.g.
 
 ```sh
-dre --dev subnet --id <id> replace -o1
+dre --dev subnet replace --id <subnet-id> -o1
 ```

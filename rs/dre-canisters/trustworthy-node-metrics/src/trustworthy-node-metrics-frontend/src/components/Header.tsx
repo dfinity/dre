@@ -1,4 +1,4 @@
-import { IconButton, Toolbar, Typography, styled, useMediaQuery, useTheme } from '@mui/material';
+import { IconButton, Toolbar, Typography, styled} from '@mui/material';
 import React from 'react';
 import { Menu as MenuIcon } from '@mui/icons-material';
 

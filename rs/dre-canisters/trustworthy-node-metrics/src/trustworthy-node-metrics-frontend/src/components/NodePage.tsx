@@ -1,47 +1,36 @@
-import React from 'react';
-import { ChartData, generateChartData } from '../utils/utils';
-import { WidgetGauge, WidgetNumber } from './Widgets';
-import { PeriodFilter } from './FilterBar';
+import React, { useEffect, useMemo, useState } from 'react';
+import { getDateRange } from '../utils/utils';
+import FilterBar, { PeriodFilter } from './FilterBar';
 import { Box, Divider, Grid, Paper, Typography } from '@mui/material';
-import { useParams } from 'react-router-dom';
-import DailyPerformanceChart from './DailyPerformanceChart';
-import NodeInfo from './NodeInfo';
-import { paperStyle, boxStyleWidget } from '../Styles';
-import { NodeRewardsResponse } from '../../../declarations/trustworthy-node-metrics/trustworthy-node-metrics.did';
-import RewardsInfo, { LinearReductionChart } from './RewardsInfo';
-import { ExportCustomToolbar } from './NodeDailyData';
+import { Link, useParams } from 'react-router-dom';
+import { paperStyle } from '../Styles';
+import { NodeMetadata } from '../../../declarations/trustworthy-node-metrics/trustworthy-node-metrics.did';
+import InfoFormatter from './NodeInfo';
+import NodeRewardsChart from './NodeRewardsChart';
+import NodePerformanceChart from './NodePerformanceChart';
 
-export interface NodeChartProps {
-    nodeRewards: NodeRewardsResponse[];
-    periodFilter: PeriodFilter;
-}
+export interface NodeProviderPageProps {
+    nodeProvidersMapping: NodeMetadata[]
+  }
+  
+export const NodePage: React.FC<NodeProviderPageProps> = ({ nodeProvidersMapping }) => {
+    const { dateStart, dateEnd } = useMemo(() => getDateRange(), []);
+    const [periodFilter, setPeriodFilter] = useState<PeriodFilter>({ dateStart, dateEnd });
 
-const NodeMetricsStats: React.FC<{ stats: NodeRewardsResponse['rewards_stats'] }> = ({ stats }) => (
-    <Box sx={boxStyleWidget('left')}>
-        <WidgetNumber value={stats.blocks_proposed.toString()} title="Blocks Proposed Total" />
-        <WidgetNumber value={stats.blocks_failed.toString()} title="Blocks Failed Total" />
-    </Box>
-);
-
-const NodePerformanceStats: React.FC<{ rewardsReduction: string }> = ({ rewardsReduction }) => (
-    <Box sx={boxStyleWidget('right')}>
-        <WidgetNumber value={rewardsReduction} title="Rewards Reduction Assigned" />
-        <WidgetNumber value={"0%"} title="Rewards Reduction Unassigned" />
-    </Box>
-);
-
-export const NodeChart: React.FC<NodeChartProps> = ({ nodeRewards, periodFilter }) => {
     const { node } = useParams();
-    
-    const nodeMetrics = nodeRewards.find((metrics) => metrics.node_id.toText() === node);
-    if (!nodeMetrics) {
-        return <p>Node metrics not found</p>;
+    if (!node) {
+        return <p>No node found</p>;
     }
 
-    const chartDailyData: ChartData[] = generateChartData(periodFilter, nodeMetrics.daily_node_metrics);
-    const failureRateAvg = Math.round(nodeMetrics.rewards_stats.failure_rate * 100);
-    const rewardsPercent = Math.round(nodeMetrics.rewards_percent * 100);
-    const rewardsReduction = 100 - rewardsPercent;
+    const mapping = nodeProvidersMapping.find(map => map.node_id.toText() == node);
+
+    if (!mapping) {
+        return <p>No mapping found</p>;
+    }
+
+    useEffect(() => {
+        window.scrollTo(0, 0);
+    }, []);
 
     return (
         <Box sx={{ p: 3 }}>
@@ -54,30 +43,38 @@ export const NodeChart: React.FC<NodeChartProps> = ({ nodeRewards, periodFilter 
                         <Divider/>
                     </Grid>
                     <Grid item xs={12} md={4}>
-                        <NodeInfo nodeId={nodeMetrics.node_id.toText()} nodeProviderId={nodeMetrics.node_provider_id.toText()} />
-                    </Grid>
-                    <Grid item xs={12} md={8}>
-                        <WidgetGauge value={rewardsPercent} title={"Rewards Total"} />
-                    </Grid>
-                    <Grid item xs={12} md={4}>
-                        <NodeMetricsStats stats={nodeMetrics.rewards_stats} />
-                    </Grid>
-                    <Grid item xs={12} md={8}>
-                        <NodePerformanceStats rewardsReduction={rewardsReduction.toString().concat("%")} />
+                        <InfoFormatter name={"Node ID"} value={node} />
+                        <InfoFormatter name={"Node Type"} value={mapping.node_metadata_stored.node_type} />
+                        <InfoFormatter name={"Datacenter ID"} value={mapping.node_metadata_stored.dc_id} />
+                        <InfoFormatter name={"Region"} value={mapping.node_metadata_stored.region} />
+                        <Typography gutterBottom variant="subtitle1" component="div">
+                            Node Provider ID
+                        </Typography>
+                        <Typography gutterBottom variant="subtitle2" sx={{ color: 'text.disabled' }} component="div">
+                        <Link to={`/providers/${mapping.node_metadata_stored.node_provider_id.toText()}`} className="custom-link">
+                            {mapping.node_metadata_stored.node_provider_id.toText()}
+                        </Link>
+                        </Typography>
                     </Grid>
                     <Grid item xs={12}>
-                        <DailyPerformanceChart chartDailyData={chartDailyData} />
+                    <Typography variant="h6" component="div" >
+                        Last Reward Metrics
+                    </Typography>
+                    <Divider/>
                     </Grid>
-                    <Grid item xs={12}>
-                        <RewardsInfo failureRate={failureRateAvg} rewardReduction={rewardsReduction}/>
-                    </Grid>
+                    <NodeRewardsChart node={node}/>
                     <Grid item xs={12} md={12}>
-                        <ExportCustomToolbar chartDailyData={chartDailyData}/>
+                        <Typography variant="h6" component="div" >
+                            Daily Node Performance
+                        </Typography>
+                        <Divider/>
+                        <FilterBar filters={periodFilter} setFilters={setPeriodFilter} />     
                     </Grid>
+                    <NodePerformanceChart node={node} periodFilter={periodFilter}/>
                 </Grid>
             </Paper>
         </Box>
     );
 };
 
-export default NodeChart;
+export default NodePage;

@@ -1,14 +1,14 @@
-use std::{path::PathBuf, time::Duration};
-
 use backon::{ExponentialBuilder, Retryable};
 use comfy_table::CellAlignment;
 use comfy_table_util::Table;
 use ensure_blessed_versions::EnsureBlessedRevisions;
 use ic_registry_subnet_type::SubnetType;
 use itertools::Itertools;
+
 use retire_blessed_versions::RetireBlessedVersions;
 use run_workload_test::Workload;
 use run_xnet_test::RunXnetTest;
+use std::{path::PathBuf, time::Duration};
 use step::{OrderedStep, Step, Steps};
 use upgrade_deployment_canister::UpgradeDeploymentCanisters;
 use upgrade_subnets::{Action, UpgradeSubnets};
@@ -41,7 +41,6 @@ pub struct QualificationExecutorBuilder {
     deployment_name: String,
     prometheus_endpoint: String,
     artifacts: Option<PathBuf>,
-    grafana_endpoint: Option<String>,
 }
 
 impl QualificationExecutorBuilder {
@@ -54,7 +53,6 @@ impl QualificationExecutorBuilder {
             deployment_name: "<network-name>".to_string(),
             prometheus_endpoint: "".to_string(),
             artifacts: None,
-            grafana_endpoint: None,
         }
     }
 
@@ -70,7 +68,7 @@ impl QualificationExecutorBuilder {
         Self { step_range, ..self }
     }
 
-    pub fn with_deployment_namge(self, deployment_name: String) -> Self {
+    pub fn with_deployment_name(self, deployment_name: String) -> Self {
         Self { deployment_name, ..self }
     }
 
@@ -81,13 +79,6 @@ impl QualificationExecutorBuilder {
     pub fn with_artifacts(self, path: PathBuf) -> Self {
         Self {
             artifacts: Some(path),
-            ..self
-        }
-    }
-
-    pub fn with_grafana_endpoint(self, grafana_endpoint: String) -> Self {
-        Self {
-            grafana_endpoint: Some(grafana_endpoint),
             ..self
         }
     }
@@ -245,13 +236,7 @@ impl QualificationExecutor {
                     step: s,
                 })
                 .collect_vec(),
-            step_ctx: StepCtx::new(
-                ctx.dre_ctx,
-                ctx.artifacts,
-                ctx.grafana_endpoint,
-                ctx.from_version.clone(),
-                ctx.to_version.clone(),
-            )?,
+            step_ctx: StepCtx::new(ctx.dre_ctx, ctx.artifacts, ctx.from_version.clone(), ctx.to_version.clone())?,
             from_version: ctx.from_version,
             to_version: ctx.to_version,
         })
@@ -284,7 +269,7 @@ impl QualificationExecutor {
     }
 
     pub async fn execute(&self) -> anyhow::Result<()> {
-        self.print_text("This qualification run will execute the following steps:".to_string());
+        self.print_text("This qualification run for will execute the following steps:".to_string());
         self.list();
 
         self.print_text(format!("Running qualification from version {} to {}", self.from_version, self.to_version));
