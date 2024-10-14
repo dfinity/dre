@@ -75,7 +75,7 @@ class PublishNotesClient:
         """Publish the release notes for the given version."""
         branch_name = f"replica-release-notes-{version}"
         pull_head = f"dfinity:{branch_name}"
-        published_releases = self.repo.get_contents("f/{REPLICA_RELEASES_DIR}")
+        published_releases = self.repo.get_contents(f"/{REPLICA_RELEASES_DIR}")
         if not isinstance(published_releases, list):
             return
         if any(version in f.path for f in published_releases):
