@@ -145,7 +145,11 @@ impl Runner {
                 request.exclude.clone().unwrap_or_default(),
                 request.only.clone().unwrap_or_default(),
                 &health_of_nodes,
-                self.cordoned_features_fetcher.fetch().await?,
+                self.cordoned_features_fetcher.fetch().await.unwrap_or_else(|e| {
+                    warn!("Failed to fetch cordoned features with error: {:?}", e);
+                    warn!("Will continue running as if no features were cordoned");
+                    vec![]
+                }),
             )
             .await?;
         let subnet_creation_data = SubnetChangeResponse::from(&subnet_creation_data).with_health_of_nodes(health_of_nodes.clone());
@@ -513,7 +517,15 @@ impl Runner {
             try_join(self.registry.available_nodes().map_err(anyhow::Error::from), self.health_client.nodes()).await?;
 
         let subnets_change_response = NetworkHealRequest::new(subnets_without_proposals)
-            .heal_and_optimize(available_nodes, &health_of_nodes, self.cordoned_features_fetcher.fetch().await?)
+            .heal_and_optimize(
+                available_nodes,
+                &health_of_nodes,
+                self.cordoned_features_fetcher.fetch().await.unwrap_or_else(|e| {
+                    warn!("Failed to fetch cordoned features with error: {:?}", e);
+                    warn!("Will continue running as if no features were cordoned");
+                    vec![]
+                }),
+            )
             .await?;
 
         let mut changes = vec![];
