@@ -73,7 +73,7 @@ class PublishNotesClient:
 
     def ensure_published(self, version: str, changelog: str):
         """Publish the release notes for the given version."""
-        branch_name = f"replica-release-notes-{version}"
+        published_releases = self.repo.get_contents(f"/{REPLICA_RELEASES_DIR}")
         if not isinstance(published_releases, list):
             return
         if any(version in f.path for f in published_releases):
