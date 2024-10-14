@@ -228,7 +228,7 @@ async fn get_subnets_and_nodes(
             dkg_interval_length: record.dkg_interval_length,
             start_as_nns: record.start_as_nns,
             subnet_type: record.subnet_type,
-            features: record.features.clone().unwrap_or_default(),
+            features: record.features.unwrap_or_default(),
             max_number_of_canisters: record.max_number_of_canisters,
             ssh_readonly_access: record.ssh_readonly_access.clone(),
             ssh_backup_access: record.ssh_backup_access.clone(),
