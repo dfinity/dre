@@ -98,6 +98,14 @@ fn test_node_labels() {
             .offline()
             .no_cache()
             .should_fail(),
+        TestScenario::new("[Online] Should update empty cache")
+            .with_network("mainnet")
+            .online()
+            .no_cache(),
+        TestScenario::new("[Online] Should update empty cache staging")
+            .with_network("staging")
+            .online()
+            .no_cache(),
         TestScenario::new("[Offline] Should read from cache")
             .offline()
             .with_network("mainnet")
@@ -108,10 +116,6 @@ fn test_node_labels() {
                 dfinity_owned: false,
             }])
             .should_succeed(),
-        TestScenario::new("[Online] Should update empty cache")
-            .with_network("mainnet")
-            .online()
-            .no_cache(),
     ];
 
     let mut failed_scenarios = vec![];
