@@ -14,7 +14,7 @@ pub trait CordonedFeatureFetcher: Sync + Send {
     fn fetch(&self) -> BoxFuture<'_, anyhow::Result<Vec<NodeFeaturePair>>>;
 
     #[cfg(test)]
-    fn parse_outter(&self, contents: &[u8]) -> anyhow::Result<Vec<NodeFeaturePair>>;
+    fn parse_outer(&self, contents: &[u8]) -> anyhow::Result<Vec<NodeFeaturePair>>;
 }
 
 pub struct CordonedFeatureFetcherImpl {
@@ -125,7 +125,7 @@ impl CordonedFeatureFetcher for CordonedFeatureFetcherImpl {
     }
 
     #[cfg(test)]
-    fn parse_outter(&self, contents: &[u8]) -> anyhow::Result<Vec<NodeFeaturePair>> {
+    fn parse_outer(&self, contents: &[u8]) -> anyhow::Result<Vec<NodeFeaturePair>> {
         self.parse(contents)
     }
 }

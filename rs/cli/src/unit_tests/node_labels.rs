@@ -123,7 +123,7 @@ fn test_node_labels() {
     for scenario in &scenarios {
         let network = Network::new_unchecked(scenario.network.clone(), &[]).unwrap();
         let store = Store::new(scenario.offline).unwrap();
-        let labels_path = store.guest_labels_cache_path_outter(&network).unwrap();
+        let labels_path = store.guest_labels_cache_path_outer(&network).unwrap();
 
         match &scenario.local_cache {
             Some(guests) => write_cache(guests, labels_path.clone()),

@@ -89,7 +89,7 @@ impl Store {
     }
 
     #[cfg(test)]
-    pub fn guest_labels_cache_path_outter(&self, network: &Network) -> anyhow::Result<PathBuf> {
+    pub fn guest_labels_cache_path_outer(&self, network: &Network) -> anyhow::Result<PathBuf> {
         self.guest_labels_cache_path(network)
     }
 
@@ -136,7 +136,7 @@ impl Store {
     }
 
     #[cfg(test)]
-    pub fn ic_admin_status_file_outter(&self) -> anyhow::Result<PathBuf> {
+    pub fn ic_admin_status_file_outer(&self) -> anyhow::Result<PathBuf> {
         self.ic_admin_status_file()
     }
 
@@ -276,7 +276,7 @@ impl Store {
     }
 
     #[cfg(test)]
-    pub fn cordoned_features_file_outter(&self) -> anyhow::Result<PathBuf> {
+    pub fn cordoned_features_file_outer(&self) -> anyhow::Result<PathBuf> {
         self.cordoned_features_file()
     }
 

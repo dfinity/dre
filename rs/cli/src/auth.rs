@@ -87,7 +87,7 @@ impl Neuron {
     }
 
     #[cfg(test)]
-    pub fn ensure_fake_pem_outter(name: &str) -> anyhow::Result<PathBuf> {
+    pub fn ensure_fake_pem_outer(name: &str) -> anyhow::Result<PathBuf> {
         Self::ensure_fake_pem(name)
     }
 

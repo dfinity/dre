@@ -102,8 +102,8 @@ fn cordoned_feature_fetcher_tests() {
         let store = Store::new(scenario.offline).unwrap();
 
         match &scenario.cache_contents {
-            Some(cache) => write_to_cache(cache, store.cordoned_features_file_outter().unwrap()),
-            None => ensure_empty(store.cordoned_features_file_outter().unwrap()),
+            Some(cache) => write_to_cache(cache, store.cordoned_features_file_outer().unwrap()),
+            None => ensure_empty(store.cordoned_features_file_outer().unwrap()),
         }
 
         let cordoned_feature_fetcher = store.cordoned_features_fetcher().unwrap();
@@ -118,8 +118,8 @@ fn cordoned_feature_fetcher_tests() {
         }
 
         let cordoned_features = maybe_cordoned_features.unwrap();
-        let cache_contents = std::fs::read_to_string(store.cordoned_features_file_outter().unwrap()).unwrap();
-        let cordoned_features_from_cache = cordoned_feature_fetcher.parse_outter(cache_contents.as_bytes()).unwrap();
+        let cache_contents = std::fs::read_to_string(store.cordoned_features_file_outer().unwrap()).unwrap();
+        let cordoned_features_from_cache = cordoned_feature_fetcher.parse_outer(cache_contents.as_bytes()).unwrap();
 
         if !cordoned_features.eq(&cordoned_features_from_cache) {
             failed_scenarios.push((cordoned_features, scenario));

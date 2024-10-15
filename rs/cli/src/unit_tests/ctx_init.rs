@@ -15,7 +15,7 @@ use itertools::Itertools;
 use crate::{commands::IcAdminVersion, ctx::DreContext};
 
 fn status_file_path() -> PathBuf {
-    Store::new(true).unwrap().ic_admin_status_file_outter().unwrap()
+    Store::new(true).unwrap().ic_admin_status_file_outer().unwrap()
 }
 
 fn get_deleted_status_file() -> PathBuf {
@@ -348,11 +348,11 @@ fn init_test_neuron_and_auth() {
             .when_requirement(AuthRequirement::Neuron),
         NeuronAuthTestScenarion::new("Mainnet neuron when offline")
             .with_network("mainnet")
-            .with_private_key(Neuron::ensure_fake_pem_outter("test_neuron_1").unwrap().to_str().unwrap().to_string())
+            .with_private_key(Neuron::ensure_fake_pem_outer("test_neuron_1").unwrap().to_str().unwrap().to_string())
             .offline()
             .want(Ok(Neuron {
                 auth: Auth::Keyfile {
-                    path: Neuron::ensure_fake_pem_outter("test_neuron_1").unwrap(),
+                    path: Neuron::ensure_fake_pem_outer("test_neuron_1").unwrap(),
                 },
                 neuron_id: 0,
                 include_proposer: true,
