@@ -325,13 +325,13 @@ impl LazyRegistry for LazyRegistryImpl {
                 return Ok(guests.to_owned());
             }
 
-            if self.offline || (!self.network.is_mainnet() && !self.network.eq(&Network::staging_unchecked().unwrap())) {
+            if !self.network.is_mainnet() && !self.network.eq(&Network::staging_unchecked().unwrap()) {
                 let res = Arc::new(vec![]);
                 *self.node_labels_guests.write().await = Some(res.clone());
                 return Ok(res);
             }
 
-            let guests = match node_labels::query_guests(&self.network.name, Some(self.guest_labels_cache_path.clone())).await {
+            let guests = match node_labels::query_guests(&self.network.name, Some(self.guest_labels_cache_path.clone()), self.offline).await {
                 Ok(g) => g,
                 Err(e) => {
                     warn!("Failed to query node labels: {}", e);

@@ -1,44 +1,27 @@
 use std::path::PathBuf;
 
 use ic_management_types::Guest;
-use log::warn;
+use log::info;
 
 use crate::registry::DFINITY_DCS;
 
-pub async fn query_guests(network: &String, local_cache: Option<PathBuf>) -> anyhow::Result<Vec<Guest>> {
-    match (fetch_data(network).await, local_cache.as_ref()) {
-        (Ok(data), Some(cache)) => {
-            // Persist in a temp new location in case the
-            // downloaded file is corrupt yaml
-            let new_cache = cache.parent().unwrap().join("new_labels.yaml");
-            if let Err(e) = std::fs::write(&new_cache, &data) {
-                warn!("Failed writing temp new data to `{}` due to: {:?}", new_cache.display(), e);
+pub async fn query_guests(network: &String, local_cache: Option<PathBuf>, offline: bool) -> anyhow::Result<Vec<Guest>> {
+    if offline {
+        match local_cache {
+            None => return Err(anyhow::anyhow!("No local cache file provided for offline mode.")),
+            Some(path) => {
+                info!("Loading labels from cache `{}`", path.display());
+
+                let contents = std::fs::read_to_string(path)?;
+                parse_data(contents)
             }
-
-            parse_data(data).map(|parsed| {
-                if new_cache.exists() {
-                    if let Err(e) = std::fs::rename(&new_cache, cache) {
-                        warn!(
-                            "Failed to rename from `{}` to `{}`, due to: {:?}",
-                            new_cache.display(),
-                            cache.display(),
-                            e
-                        )
-                    }
-                }
-
-                parsed
-            })
         }
-        (Ok(data), None) => parse_data(data),
-        (Err(e), Some(cache)) => {
-            warn!("Failed to fetch labels for network {} due to: {:?}", network, e);
-            warn!("Trying to load from cache `{}`", cache.display());
-
-            let contents = std::fs::read_to_string(cache)?;
-            parse_data(contents)
+    } else {
+        let data = fetch_data(network).await?;
+        if let Some(path) = local_cache {
+            std::fs::write(path, &data)?;
         }
-        (Err(e), None) => Err(e),
+        parse_data(data)
     }
 }
 
