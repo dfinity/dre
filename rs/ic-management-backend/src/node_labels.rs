@@ -46,7 +46,7 @@ async fn fetch_data(network: &String) -> anyhow::Result<String> {
     }
 }
 
-fn parse_data(contents: String) -> anyhow::Result<Vec<Guest>> {
+pub fn parse_data(contents: String) -> anyhow::Result<Vec<Guest>> {
     let data = match serde_yaml::from_str::<serde_yaml::Value>(&contents)? {
         serde_yaml::Value::Mapping(c) => c,
         _ => return Err(anyhow::anyhow!("Failed to parse node labels file")),

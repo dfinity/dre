@@ -88,6 +88,11 @@ impl Store {
         Ok(dir)
     }
 
+    #[cfg(test)]
+    pub fn guest_labels_cache_path_outter(&self, network: &Network) -> anyhow::Result<PathBuf> {
+        self.guest_labels_cache_path(network)
+    }
+
     fn guest_labels_cache_path(&self, network: &Network) -> anyhow::Result<PathBuf> {
         let path = self.guest_labels_cache_dir(network)?.join("labels.yaml");
 

@@ -421,7 +421,7 @@ pub struct DatacenterOwner {
     pub name: String,
 }
 
-#[derive(Clone, Serialize, Deserialize, PartialEq, Hash, Eq)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Hash, Eq)]
 pub struct Guest {
     pub datacenter: String,
     pub ipv6: Ipv6Addr,
