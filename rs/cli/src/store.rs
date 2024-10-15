@@ -268,6 +268,6 @@ impl Store {
 
     pub fn cordoned_features_fetcher(&self) -> anyhow::Result<Arc<dyn CordonedFeatureFetcher>> {
         let file = self.cordoned_features_file()?;
-        Ok(Arc::new(CordonedFeatureFetcherImpl::new(file)?))
+        Ok(Arc::new(CordonedFeatureFetcherImpl::new(file, self.is_offline())?))
     }
 }

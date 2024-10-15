@@ -4,7 +4,7 @@ use decentralization::network::NodeFeaturePair;
 use futures::future::BoxFuture;
 use ic_management_types::NodeFeature;
 use itertools::Itertools;
-use log::warn;
+use log::{info, warn};
 use mockall::automock;
 use reqwest::{Client, ClientBuilder};
 use strum::VariantNames;
@@ -21,15 +21,16 @@ pub struct CordonedFeatureFetcherImpl {
     // fetch from github. If github is
     // unreachable, this cache will be used
     local_copy: PathBuf,
+    offline: bool,
 }
 
 const CORDONED_FEATURES_FILE_URL: &str = "https://raw.githubusercontent.com/dfinity/dre/refs/heads/main/cordoned_features.yaml";
 
 impl CordonedFeatureFetcherImpl {
-    pub fn new(local_copy: PathBuf) -> anyhow::Result<Self> {
+    pub fn new(local_copy: PathBuf, offline: bool) -> anyhow::Result<Self> {
         let client = ClientBuilder::new().timeout(Duration::from_secs(10)).build()?;
 
-        Ok(Self { client, local_copy })
+        Ok(Self { client, local_copy, offline })
     }
 
     async fn fetch_from_git(&self) -> anyhow::Result<Vec<NodeFeaturePair>> {
@@ -56,7 +57,6 @@ impl CordonedFeatureFetcherImpl {
         self.parse(&contents)
     }
 
-    // Write tests for this
     fn parse(&self, contents: &[u8]) -> anyhow::Result<Vec<NodeFeaturePair>> {
         let valid_yaml = serde_yaml::from_slice::<serde_yaml::Value>(contents)?;
 
@@ -106,15 +106,14 @@ impl CordonedFeatureFetcherImpl {
 impl CordonedFeatureFetcher for CordonedFeatureFetcherImpl {
     fn fetch(&self) -> BoxFuture<'_, anyhow::Result<Vec<NodeFeaturePair>>> {
         Box::pin(async {
-            let cordoned_features = match self.fetch_from_git().await {
-                Ok(cf) => cf,
-                Err(e_from_git) => {
-                    warn!("Failed to fetch cordoned features from git: {:?}", e_from_git);
-                    warn!("Falling back to fetching from file");
-                    self.fetch_from_file()?
-                }
-            };
-            Ok(cordoned_features)
+            if self.offline {
+                // Offline mode specified, use cache
+                info!("In offline mode, cordoned features will be loaded from cache");
+                info!("Cache path for cordoned features: {}", self.local_copy.display());
+                self.fetch_from_file()
+            } else {
+                self.fetch_from_git().await
+            }
         })
     }
 }
