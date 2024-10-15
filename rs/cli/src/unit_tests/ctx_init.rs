@@ -1,4 +1,4 @@
-use std::{path::PathBuf, str::FromStr, sync::Arc};
+use std::{path::PathBuf, sync::Arc};
 
 use crate::{
     auth::{Auth, Neuron, STAGING_KEY_PATH_FROM_HOME, STAGING_NEURON_ID},
@@ -316,9 +316,7 @@ impl<'a> NeuronAuthTestScenarion<'a> {
 }
 
 fn get_staging_key_path() -> PathBuf {
-    PathBuf::from_str(&std::env::var("HOME").unwrap())
-        .unwrap()
-        .join(STAGING_KEY_PATH_FROM_HOME)
+    dirs::home_dir().unwrap().join(STAGING_KEY_PATH_FROM_HOME)
 }
 
 #[test]

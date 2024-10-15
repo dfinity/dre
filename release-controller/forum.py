@@ -47,6 +47,7 @@ class ReleaseCandidateForumTopic:
         nns_proposal_discussions_category,
     ):
         """Create a new topic."""
+        self.posts_count = 1
         self.release = release
         self.client = client
         self.nns_proposal_discussions_category = nns_proposal_discussions_category
@@ -60,6 +61,7 @@ class ReleaseCandidateForumTopic:
         )
         if topic:
             self.topic_id = topic["id"]
+            self.posts_count = topic["posts_count"]
         else:
             post = client.create_post(
                 category_id=nns_proposal_discussions_category["id"],
@@ -74,13 +76,19 @@ class ReleaseCandidateForumTopic:
 
     def created_posts(self):
         """Return a list of posts created by the current user."""
-        topic_posts = self.client.topic_posts(topic_id=self.topic_id)
-        if not topic_posts:
-            raise RuntimeError("failed to list topic posts")
-
-        return [
-            p for p in topic_posts.get("post_stream", {}).get("posts", {}) if p["yours"]
-        ]
+        results = []
+        for p in range((self.posts_count - 1) // 20 + 1):
+            topic_posts = self.client._get(f"/t/{self.topic_id}.json", page=p + 1)
+            if not topic_posts:
+                raise RuntimeError("failed to list topic posts")
+            results.extend(
+                [
+                    p
+                    for p in topic_posts.get("post_stream", {}).get("posts", {})
+                    if p["yours"]
+                ]
+            )
+        return results
 
     def update(
         self,

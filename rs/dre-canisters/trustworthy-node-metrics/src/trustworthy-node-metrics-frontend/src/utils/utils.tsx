@@ -186,7 +186,7 @@ export const LoadingIndicator: React.FC = () => (
   </Box>
 );
 
-export const NodeMetricsStats: React.FC<{ stats: NodeRewardsMultiplier['rewards_multiplier'] | null }> = ({ stats }) => (
+export const NodeMetricsStats: React.FC<{ stats: NodeRewardsMultiplier['rewards_multiplier_stats'] | null }> = ({ stats }) => (
   <Box sx={boxStyleWidget('left')}>
       <WidgetNumber value={stats ? stats.days_assigned.toString() : "0"} title="Days Assigned" />
       <WidgetNumber value={stats ? stats.days_unassigned.toString() : "0"} title="Days Unassigned" />

@@ -960,14 +960,14 @@ mod tests {
 
     #[test]
     fn test_european_subnet_european_nodes_good() {
-        let subnet_initial = new_test_subnet_with_overrides(0, 0, 7, 1, (&NodeFeature::Country, &["EU", "EU", "EU", "EU", "EU", "EU", "CH"]))
+        let subnet_initial = new_test_subnet_with_overrides(0, 0, 7, 1, (&NodeFeature::Country, &["AT", "BE", "DE", "ES", "FR", "IT", "CH"]))
             .with_subnet_id(PrincipalId::from_str("bkfrj-6k62g-dycql-7h53p-atvkj-zg4to-gaogh-netha-ptybj-ntsgw-rqe").unwrap());
         assert_eq!(subnet_initial.check_business_rules().unwrap(), (0, vec![]));
     }
 
     #[test]
     fn test_european_subnet_european_nodes_bad_1() {
-        let subnet_mix = new_test_subnet_with_overrides(1, 0, 7, 1, (&NodeFeature::Country, &["EU", "China", "CH", "EU", "EU", "EU", "EU"]))
+        let subnet_mix = new_test_subnet_with_overrides(1, 0, 7, 1, (&NodeFeature::Country, &["AT", "BE", "DE", "ES", "FR", "IT", "IN"]))
             .with_subnet_id(PrincipalId::from_str("bkfrj-6k62g-dycql-7h53p-atvkj-zg4to-gaogh-netha-ptybj-ntsgw-rqe").unwrap());
         assert_eq!(
             subnet_mix.check_business_rules().unwrap(),
@@ -976,11 +976,11 @@ mod tests {
     }
     #[test]
     fn test_european_subnet_european_nodes_bad_2() {
-        let subnet_mix = new_test_subnet_with_overrides(1, 0, 7, 1, (&NodeFeature::Country, &["EU", "China", "US", "AU", "EU", "SA", "AR"]))
+        let subnet_mix = new_test_subnet_with_overrides(1, 0, 7, 1, (&NodeFeature::Country, &["AT", "BE", "DE", "ES", "US", "IN", "AR"]))
             .with_subnet_id(PrincipalId::from_str("bkfrj-6k62g-dycql-7h53p-atvkj-zg4to-gaogh-netha-ptybj-ntsgw-rqe").unwrap());
         assert_eq!(
             subnet_mix.check_business_rules().unwrap(),
-            (5000, vec!["European subnet has 5 non-European node(s)".to_string()])
+            (3000, vec!["European subnet has 3 non-European node(s)".to_string()])
         );
     }
 

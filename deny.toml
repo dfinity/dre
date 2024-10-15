@@ -412,12 +412,12 @@ license-files = [{ path = "../../../LICENSE", hash = 0xbd0eed23 }]
 [[licenses.clarify]]
 crate = "ic-ledger-canister-core"
 expression = "LicenseRef-IC-1.0"
-license-files = [{ path = "../../../LICENSE", hash = 0xbd0eed23 }]
+license-files = [{ path = "../../../../LICENSE", hash = 0xbd0eed23 }]
 
 [[licenses.clarify]]
 crate = "ic-ledger-core"
 expression = "LicenseRef-IC-1.0"
-license-files = [{ path = "../../../LICENSE", hash = 0xbd0eed23 }]
+license-files = [{ path = "../../../../LICENSE", hash = 0xbd0eed23 }]
 
 [[licenses.clarify]]
 crate = "ic-logger"
@@ -747,7 +747,7 @@ license-files = [{ path = "../../LICENSE", hash = 0xbd0eed23 }]
 [[licenses.clarify]]
 crate = "rosetta-core"
 expression = "LicenseRef-IC-1.0"
-license-files = [{ path = "../../../LICENSE", hash = 0xbd0eed23 }]
+license-files = [{ path = "../../../../LICENSE", hash = 0xbd0eed23 }]
 
 [[licenses.clarify]]
 crate = "ic-icrc1-test-utils"
@@ -763,6 +763,16 @@ license-files = [{ path = "../../../../LICENSE", hash = 0xbd0eed23 }]
 crate = "ic-crypto-internal-basic-sig-ecdsa-secp256k1"
 expression = "LicenseRef-IC-1.0"
 license-files = [{ path = "../../../../../../LICENSE", hash = 0xbd0eed23 }]
+
+[[licenses.clarify]]
+crate = "ic-nervous-system-initial-supply"
+expression = "LicenseRef-IC-1.0"
+license-files = [{ path = "../../../LICENSE", hash = 0xbd0eed23 }]
+
+[[licenses.clarify]]
+crate = "ic-nervous-system-common-validation"
+expression = "LicenseRef-IC-1.0"
+license-files = [{ path = "../../../../LICENSE", hash = 0xbd0eed23 }]
 
 
 [licenses.private]

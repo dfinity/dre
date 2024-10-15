@@ -15,6 +15,7 @@ SKIP = [
     "release-index.yaml",
     "__pycache__/.*",
     "release-controller/test_reconciler.py",
+    ".venv/.*",
 ]
 
 SKIP_REGEX = [re.compile(f".*/{pattern}") for pattern in SKIP]

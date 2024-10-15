@@ -52,10 +52,7 @@ impl Neuron {
         offline: bool,
     ) -> anyhow::Result<Self> {
         let (neuron_id, auth_opts) = if network.name == "staging" {
-            let staging_known_path = PathBuf::from_str(&std::env::var("HOME").unwrap())
-                // Must be a valid path
-                .unwrap()
-                .join(STAGING_KEY_PATH_FROM_HOME);
+            let staging_known_path = dirs::home_dir().expect("Home dir should be set").join(STAGING_KEY_PATH_FROM_HOME);
 
             match neuron_id {
                 Some(n) => (Some(n), auth_opts),

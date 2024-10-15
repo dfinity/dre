@@ -71,7 +71,7 @@ impl OperationExecutor {
 
 // Modify ComputationLogger to use NumberEnum
 pub struct ComputationLogger {
-    operations_executed: Vec<OperationExecutor>,
+    pub operations_executed: Vec<OperationExecutor>,
 }
 
 impl ComputationLogger {
