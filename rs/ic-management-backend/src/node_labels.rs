@@ -8,7 +8,7 @@ use crate::registry::DFINITY_DCS;
 pub async fn query_guests(network: &String, local_cache: Option<PathBuf>, offline: bool) -> anyhow::Result<Vec<Guest>> {
     if offline {
         match local_cache {
-            None => return Err(anyhow::anyhow!("No local cache file provided for offline mode.")),
+            None => Err(anyhow::anyhow!("No local cache file provided for offline mode.")),
             Some(path) => {
                 info!("Loading labels from cache `{}`", path.display());
 
