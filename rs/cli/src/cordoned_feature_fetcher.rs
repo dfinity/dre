@@ -44,7 +44,11 @@ impl CordonedFeatureFetcherImpl {
             .await?;
 
         if let Err(e) = std::fs::write(&self.local_copy, &bytes) {
-            warn!("Failed to update cordoned features cache: {:?}", e);
+            warn!(
+                "Failed to update cordoned features cache on path `{}` due to: {:?}",
+                self.local_copy.display(),
+                e
+            );
             warn!("This is not critical since the cordoned features are fetched from github");
         }
 

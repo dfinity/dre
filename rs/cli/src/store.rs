@@ -257,10 +257,7 @@ impl Store {
 
         if !file.exists() {
             info!("Cordoned features file was missing. Creating on path `{}`...", file.display());
-            if let Err(e) = std::fs::write(&file, "") {
-                warn!("Failed to create cordoned features file: {:?}", e);
-                warn!("This is not critical now. If github is offline then it could be");
-            }
+            std::fs::write(&file, "")?;
         }
 
         Ok(file)
