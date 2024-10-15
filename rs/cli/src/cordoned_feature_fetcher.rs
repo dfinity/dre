@@ -4,7 +4,7 @@ use decentralization::network::NodeFeaturePair;
 use futures::future::BoxFuture;
 use ic_management_types::NodeFeature;
 use itertools::Itertools;
-use log::warn;
+use log::{info, warn};
 use mockall::automock;
 use reqwest::{Client, ClientBuilder};
 use strum::VariantNames;
@@ -12,25 +12,28 @@ use strum::VariantNames;
 #[automock]
 pub trait CordonedFeatureFetcher: Sync + Send {
     fn fetch(&self) -> BoxFuture<'_, anyhow::Result<Vec<NodeFeaturePair>>>;
+
+    #[cfg(test)]
+    fn parse_outer(&self, contents: &[u8]) -> anyhow::Result<Vec<NodeFeaturePair>>;
 }
 
 pub struct CordonedFeatureFetcherImpl {
     client: Client,
-    fallback_file: Option<PathBuf>,
+    // Represents a local store which will
+    // be overwritten with every successful
+    // fetch from github. If github is
+    // unreachable, this cache will be used
+    local_copy: PathBuf,
     offline: bool,
 }
 
 const CORDONED_FEATURES_FILE_URL: &str = "https://raw.githubusercontent.com/dfinity/dre/refs/heads/main/cordoned_features.yaml";
 
 impl CordonedFeatureFetcherImpl {
-    pub fn new(offline: bool, fallback_file: Option<PathBuf>) -> anyhow::Result<Self> {
+    pub fn new(local_copy: PathBuf, offline: bool) -> anyhow::Result<Self> {
         let client = ClientBuilder::new().timeout(Duration::from_secs(10)).build()?;
 
-        Ok(Self {
-            client,
-            fallback_file,
-            offline,
-        })
+        Ok(Self { client, local_copy, offline })
     }
 
     async fn fetch_from_git(&self) -> anyhow::Result<Vec<NodeFeaturePair>> {
@@ -43,16 +46,24 @@ impl CordonedFeatureFetcherImpl {
             .bytes()
             .await?;
 
+        if let Err(e) = std::fs::write(&self.local_copy, &bytes) {
+            warn!(
+                "Failed to update cordoned features cache on path `{}` due to: {:?}",
+                self.local_copy.display(),
+                e
+            );
+            warn!("This is not critical since the cordoned features are fetched from github");
+        }
+
         self.parse(&bytes)
     }
 
     fn fetch_from_file(&self) -> anyhow::Result<Vec<NodeFeaturePair>> {
-        let contents = std::fs::read(self.fallback_file.as_ref().unwrap())?;
+        let contents = std::fs::read(&self.local_copy)?;
 
         self.parse(&contents)
     }
 
-    // Write tests for this
     fn parse(&self, contents: &[u8]) -> anyhow::Result<Vec<NodeFeaturePair>> {
         let valid_yaml = serde_yaml::from_slice::<serde_yaml::Value>(contents)?;
 
@@ -102,27 +113,20 @@ impl CordonedFeatureFetcherImpl {
 impl CordonedFeatureFetcher for CordonedFeatureFetcherImpl {
     fn fetch(&self) -> BoxFuture<'_, anyhow::Result<Vec<NodeFeaturePair>>> {
         Box::pin(async {
-            match (self.offline, self.fallback_file.is_some()) {
-                (true, true) => self.fetch_from_file(),
-                (true, false) => Err(anyhow::anyhow!("Cannot fetch cordoned features offline without a fallback file")),
-                (false, true) => match self.fetch_from_git().await {
-                    Ok(from_git) => Ok(from_git),
-                    Err(e_from_git) => {
-                        warn!("Failed to fetch cordoned features from git: {:?}", e_from_git);
-                        warn!("Falling back to fetching from file");
-                        match self.fetch_from_file() {
-                            Ok(from_file) => Ok(from_file),
-                            Err(e_from_file) => Err(anyhow::anyhow!(
-                                "Failed to fetch cordoned features both from file and from git.\nError from git: {:?}\nError from file: {:?}",
-                                e_from_git,
-                                e_from_file
-                            )),
-                        }
-                    }
-                },
-                (false, false) => self.fetch_from_git().await,
+            if self.offline {
+                // Offline mode specified, use cache
+                info!("In offline mode, cordoned features will be loaded from cache");
+                info!("Cache path for cordoned features: {}", self.local_copy.display());
+                self.fetch_from_file()
+            } else {
+                self.fetch_from_git().await
             }
         })
+    }
+
+    #[cfg(test)]
+    fn parse_outer(&self, contents: &[u8]) -> anyhow::Result<Vec<NodeFeaturePair>> {
+        self.parse(contents)
     }
 }
 
@@ -148,7 +152,7 @@ features:
       value: some-country
       "#;
 
-        let fetcher = CordonedFeatureFetcherImpl::new(true, None).unwrap();
+        let fetcher = CordonedFeatureFetcherImpl::new(PathBuf::new(), true).unwrap();
 
         let parsed = fetcher.parse(contents).unwrap();
 
@@ -160,7 +164,7 @@ features:
         let contents = br#"
 features:"#;
 
-        let fetcher = CordonedFeatureFetcherImpl::new(true, None).unwrap();
+        let fetcher = CordonedFeatureFetcherImpl::new(PathBuf::new(), true).unwrap();
 
         let maybe_parsed = fetcher.parse(contents);
         assert!(maybe_parsed.is_ok());

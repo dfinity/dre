@@ -2,29 +2,27 @@ use std::{
     cell::RefCell,
     rc::Rc,
     sync::{Arc, Mutex},
-    time::Duration,
 };
 
-use ic_canisters::{governance::governance_canister_version, IcAgentCanisterClient};
+use ic_canisters::IcAgentCanisterClient;
 use ic_management_backend::{
     health::{self, HealthStatusQuerier},
     lazy_git::LazyGit,
-    lazy_registry::{LazyRegistry, LazyRegistryImpl},
+    lazy_registry::LazyRegistry,
     proposal::{ProposalAgent, ProposalAgentImpl},
-    registry::{local_registry_path, sync_local_store},
 };
 use ic_management_types::Network;
-use ic_registry_local_registry::LocalRegistry;
-use log::{debug, info, warn};
+use log::warn;
 use url::Url;
 
 use crate::{
     artifact_downloader::{ArtifactDownloader, ArtifactDownloaderImpl},
     auth::Neuron,
     commands::{Args, AuthOpts, AuthRequirement, ExecutableCommand, IcAdminVersion},
-    cordoned_feature_fetcher::{CordonedFeatureFetcher, CordonedFeatureFetcherImpl},
-    ic_admin::{download_ic_admin, should_update_ic_admin, IcAdmin, IcAdminImpl, FALLBACK_IC_ADMIN_VERSION},
+    cordoned_feature_fetcher::CordonedFeatureFetcher,
+    ic_admin::{IcAdmin, IcAdminImpl},
     runner::Runner,
+    store::Store,
     subnet_manager::SubnetManager,
 };
 
@@ -44,7 +42,6 @@ pub struct DreContext {
     ic_repo: RefCell<Option<Arc<dyn LazyGit>>>,
     proposal_agent: Arc<dyn ProposalAgent>,
     verbose_runner: bool,
-    offline: bool,
     forum_post_link: Option<String>,
     dry_run: bool,
     artifact_downloader: Arc<dyn ArtifactDownloader>,
@@ -54,6 +51,7 @@ pub struct DreContext {
     neuron_opts: NeuronOpts,
     cordoned_features_fetcher: Arc<dyn CordonedFeatureFetcher>,
     health_client: Arc<dyn HealthStatusQuerier>,
+    store: Store,
 }
 
 #[allow(clippy::too_many_arguments)]
@@ -64,7 +62,6 @@ impl DreContext {
         auth: AuthOpts,
         neuron_id: Option<u64>,
         verbose: bool,
-        offline: bool,
         yes: bool,
         dry_run: bool,
         auth_requirement: AuthRequirement,
@@ -72,8 +69,9 @@ impl DreContext {
         ic_admin_version: IcAdminVersion,
         cordoned_features_fetcher: Arc<dyn CordonedFeatureFetcher>,
         health_client: Arc<dyn HealthStatusQuerier>,
+        store: Store,
     ) -> anyhow::Result<Self> {
-        let network = match offline {
+        let network = match store.is_offline() {
             false => ic_management_types::Network::new(network.clone(), &nns_urls)
                 .await
                 .map_err(|e| anyhow::anyhow!(e))?,
@@ -87,7 +85,6 @@ impl DreContext {
             ic_admin: RefCell::new(None),
             runner: RefCell::new(None),
             verbose_runner: verbose,
-            offline,
             forum_post_link: forum_post_link.clone(),
             ic_repo: RefCell::new(None),
             dry_run,
@@ -102,26 +99,28 @@ impl DreContext {
             },
             cordoned_features_fetcher,
             health_client,
+            store,
         })
     }
 
     pub(crate) async fn from_args(args: &Args) -> anyhow::Result<Self> {
+        let store = Store::new(args.offline)?;
         Self::new(
             args.network.clone(),
             args.nns_urls.clone(),
             args.auth_opts.clone(),
             args.neuron_id,
             args.verbose,
-            args.offline,
             args.yes,
             args.dry_run,
             args.subcommands.require_auth(),
             args.forum_post_link.clone(),
             args.ic_admin_version.clone(),
-            Arc::new(CordonedFeatureFetcherImpl::new(args.offline, args.cordon_feature_fallback_file.clone())?) as Arc<dyn CordonedFeatureFetcher>,
+            store.cordoned_features_fetcher()?,
             Arc::new(health::HealthClient::new(
                 ic_management_types::Network::new(args.network.clone(), &args.nns_urls).await?,
             )),
+            store,
         )
         .await
     }
@@ -130,21 +129,7 @@ impl DreContext {
         if let Some(reg) = self.registry.borrow().as_ref() {
             return reg.clone();
         }
-        let network = self.network();
-
-        if !self.offline {
-            sync_local_store(network).await.expect("Should be able to sync registry");
-        }
-        let local_path = local_registry_path(network);
-        info!("Using local registry path for network {}: {}", network.name, local_path.display());
-        let local_registry = LocalRegistry::new(local_path, Duration::from_millis(1000)).expect("Failed to create local registry");
-
-        let registry = Arc::new(LazyRegistryImpl::new(
-            local_registry,
-            network.clone(),
-            self.offline,
-            self.proposals_agent(),
-        ));
+        let registry = self.store.registry(self.network(), self.proposals_agent()).await.unwrap();
         *self.registry.borrow_mut() = Some(registry.clone());
         registry
     }
@@ -169,45 +154,16 @@ impl DreContext {
             return Ok(a.clone());
         }
 
-        let ic_admin_path = match &self.version {
-            IcAdminVersion::FromGovernance => match should_update_ic_admin()? {
-                (true, _) => {
-                    let govn_canister_version = governance_canister_version(self.network().get_nns_urls()).await?;
-                    debug!(
-                        "Using ic-admin matching the version of governance canister, version: {}",
-                        govn_canister_version.stringified_hash
-                    );
-                    download_ic_admin(match govn_canister_version.stringified_hash.as_str() {
-                        // Some testnets could have this version setup if deployed
-                        // from HEAD of the branch they are created from
-                        "0000000000000000000000000000000000000000" => None,
-                        v => Some(v.to_owned()),
-                    })
-                    .await?
-                }
-                (false, s) => {
-                    debug!("Using cached ic-admin matching the version of governance canister, path: {}", s);
-                    s
-                }
-            },
-            IcAdminVersion::Fallback => {
-                debug!("Using default ic-admin, version: {}", FALLBACK_IC_ADMIN_VERSION);
-                download_ic_admin(None).await?
-            }
-            IcAdminVersion::Strict(ver) => {
-                debug!("Using ic-admin specified via args: {}", ver);
-                download_ic_admin(Some(ver.to_string())).await?
-            }
-        };
-
-        let ic_admin = Arc::new(IcAdminImpl::new(
-            self.network().clone(),
-            Some(ic_admin_path.clone()),
-            self.proceed_without_confirmation,
-            self.neuron().await?,
-            self.dry_run,
-        )) as Arc<dyn IcAdmin>;
-
+        let ic_admin = self
+            .store
+            .ic_admin(
+                &self.version,
+                self.network(),
+                self.proceed_without_confirmation,
+                self.neuron().await?,
+                self.dry_run,
+            )
+            .await?;
         *self.ic_admin.borrow_mut() = Some(ic_admin.clone());
         Ok(ic_admin)
     }
@@ -222,6 +178,7 @@ impl DreContext {
             self.neuron_opts.requirement.clone(),
             self.network(),
             self.neuron_opts.neuron_id,
+            self.store.is_offline(),
         )
         .await;
 
@@ -303,6 +260,7 @@ pub mod tests {
         commands::{AuthOpts, HsmOpts, HsmParams},
         cordoned_feature_fetcher::CordonedFeatureFetcher,
         ic_admin::IcAdmin,
+        store::Store,
     };
 
     use super::DreContext;
@@ -326,7 +284,6 @@ pub mod tests {
             ic_repo: RefCell::new(Some(git)),
             proposal_agent,
             verbose_runner: true,
-            offline: false,
             forum_post_link: "https://forum.dfinity.org/t/123".to_string().into(),
             dry_run: true,
             artifact_downloader,
@@ -352,6 +309,7 @@ pub mod tests {
             },
             cordoned_features_fetcher,
             health_client,
+            store: Store::new(false).unwrap(),
         }
     }
 }

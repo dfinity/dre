@@ -49,6 +49,7 @@ impl Neuron {
         requirement: AuthRequirement,
         network: &Network,
         neuron_id: Option<u64>,
+        offline: bool,
     ) -> anyhow::Result<Self> {
         let (neuron_id, auth_opts) = if network.name == "staging" {
             let staging_known_path = dirs::home_dir().expect("Home dir should be set").join(STAGING_KEY_PATH_FROM_HOME);
@@ -82,7 +83,12 @@ impl Neuron {
             (neuron_id, auth_opts)
         };
 
-        Self::from_opts_and_req_inner(auth_opts, requirement, network, neuron_id).await
+        Self::from_opts_and_req_inner(auth_opts, requirement, network, neuron_id, offline).await
+    }
+
+    #[cfg(test)]
+    pub fn ensure_fake_pem_outer(name: &str) -> anyhow::Result<PathBuf> {
+        Self::ensure_fake_pem(name)
     }
 
     fn ensure_fake_pem(name: &str) -> anyhow::Result<PathBuf> {
@@ -117,6 +123,7 @@ impl Neuron {
         requirement: AuthRequirement,
         network: &Network,
         neuron_id: Option<u64>,
+        offline: bool,
     ) -> anyhow::Result<Self> {
         match requirement {
             AuthRequirement::Anonymous => Ok(Self {
@@ -132,29 +139,22 @@ impl Neuron {
             AuthRequirement::Neuron => Ok({
                 let auth = Auth::from_auth_opts(auth_opts).await?;
                 Self {
-                    neuron_id: match neuron_id {
-                        Some(n) => n,
-                        None => auth.auto_detect_neuron_id(network.nns_urls.clone()).await?,
+                    neuron_id: match (neuron_id, offline) {
+                        (Some(n), _) => n,
+                        // This is just a placeholder since
+                        // the tool is instructed to run in
+                        // offline mode.
+                        (None, true) => {
+                            warn!("Required full neuron but offline mode instructed! Will not attempt to auto-detect neuron id");
+                            0
+                        }
+                        (None, false) => auth.auto_detect_neuron_id(network.nns_urls.clone()).await?,
                     },
                     auth,
                     include_proposer: true,
                 }
             }),
         }
-    }
-
-    #[allow(dead_code)]
-    pub async fn new(auth: Auth, neuron_id: Option<u64>, network: &Network, include_proposer: bool) -> anyhow::Result<Self> {
-        let neuron_id = match neuron_id {
-            Some(n) => n,
-            None => auth.auto_detect_neuron_id(network.get_nns_urls().to_vec()).await?,
-        };
-        debug!("Identifying as neuron ID {}", neuron_id);
-        Ok(Self {
-            auth,
-            neuron_id,
-            include_proposer,
-        })
     }
 
     pub fn as_arg_vec(&self) -> Vec<String> {

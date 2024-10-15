@@ -4,6 +4,7 @@ use crate::{
     auth::{Auth, Neuron, STAGING_KEY_PATH_FROM_HOME, STAGING_NEURON_ID},
     commands::{AuthOpts, AuthRequirement, HsmOpts},
     cordoned_feature_fetcher::MockCordonedFeatureFetcher,
+    store::{Store, FALLBACK_IC_ADMIN_VERSION},
 };
 use clio::{ClioPath, InputPath};
 use ic_canisters::governance::governance_canister_version;
@@ -11,10 +12,10 @@ use ic_management_backend::health::MockHealthStatusQuerier;
 use ic_management_types::Network;
 use itertools::Itertools;
 
-use crate::{commands::IcAdminVersion, ctx::DreContext, ic_admin::FALLBACK_IC_ADMIN_VERSION};
+use crate::{commands::IcAdminVersion, ctx::DreContext};
 
 fn status_file_path() -> PathBuf {
-    dirs::home_dir().unwrap().join("bin").join("ic-admin.revisions").join("ic-admin.status")
+    Store::new(true).unwrap().ic_admin_status_file_outer().unwrap()
 }
 
 fn get_deleted_status_file() -> PathBuf {
@@ -41,7 +42,6 @@ async fn get_context(network: &Network, version: IcAdminVersion) -> anyhow::Resu
         },
         None,
         false,
-        true,
         false,
         true,
         crate::commands::AuthRequirement::Anonymous,
@@ -49,6 +49,7 @@ async fn get_context(network: &Network, version: IcAdminVersion) -> anyhow::Resu
         version,
         Arc::new(MockCordonedFeatureFetcher::new()),
         Arc::new(MockHealthStatusQuerier::new()),
+        Store::new(false)?,
     )
     .await
 }
@@ -89,22 +90,21 @@ impl<'a> AdminVersionTestScenario<'a> {
     }
 }
 
-#[tokio::test]
-async fn init_tests_ic_admin_version() {
+#[test]
+fn init_tests_ic_admin_version() {
+    let runtime = tokio::runtime::Runtime::new().unwrap();
     let version_on_s3 = "e47293c0bd7f39540245913f7f75be3d6863183c";
     let mainnet = Network::mainnet_unchecked().unwrap();
-    let governance_version = governance_canister_version(&mainnet.nns_urls).await.unwrap();
+    let governance_version = runtime.block_on(governance_canister_version(&mainnet.nns_urls)).unwrap();
 
     let tests = &[
         AdminVersionTestScenario::new("match governance canister")
             .delete_status_file()
             .should_contain(&governance_version.stringified_hash),
         AdminVersionTestScenario::new("use default version")
-            .delete_status_file()
             .version(IcAdminVersion::Fallback)
             .should_contain(FALLBACK_IC_ADMIN_VERSION),
         AdminVersionTestScenario::new("existing version on s3")
-            .delete_status_file()
             .version(IcAdminVersion::Strict(version_on_s3.to_string()))
             .should_contain(version_on_s3),
         AdminVersionTestScenario::new("random version not present on s3").version(IcAdminVersion::Strict("random-version".to_string())),
@@ -116,7 +116,7 @@ async fn init_tests_ic_admin_version() {
             deleted_status_file = get_deleted_status_file();
         }
 
-        let maybe_ctx = get_context(&mainnet, test.version.clone()).await;
+        let maybe_ctx = runtime.block_on(get_context(&mainnet, test.version.clone()));
 
         if let Some(ver) = test.should_contain {
             assert!(
@@ -127,8 +127,8 @@ async fn init_tests_ic_admin_version() {
             );
             let ctx = maybe_ctx.unwrap();
 
-            let ic_admin_path = ctx.ic_admin().await;
-            assert!(ic_admin_path.is_ok());
+            let ic_admin_path = runtime.block_on(ctx.ic_admin());
+            assert!(ic_admin_path.is_ok(), "Expected Ok, but was: {:?}", ic_admin_path);
             let ic_admin_path = ic_admin_path.unwrap().ic_admin_path().unwrap_or_default();
             assert!(
                 ic_admin_path.contains(ver),
@@ -146,7 +146,7 @@ async fn init_tests_ic_admin_version() {
             );
 
             let ctx = maybe_ctx.unwrap();
-            let maybe_ic_admin = ctx.ic_admin().await;
+            let maybe_ic_admin = runtime.block_on(ctx.ic_admin());
             assert!(
                 maybe_ic_admin.is_err(),
                 "Test `{}`: expected err for ic-admin but got ok with path: {}",
@@ -171,6 +171,7 @@ async fn get_ctx_for_neuron_test(
     requirement: AuthRequirement,
     network: String,
     dry_run: bool,
+    offline: bool,
 ) -> anyhow::Result<DreContext> {
     DreContext::new(
         network,
@@ -179,13 +180,13 @@ async fn get_ctx_for_neuron_test(
         neuron_id,
         true,
         false,
-        false,
         dry_run,
         requirement,
         None,
         IcAdminVersion::Strict("Shouldn't get to here".to_string()),
         Arc::new(MockCordonedFeatureFetcher::new()),
         Arc::new(MockHealthStatusQuerier::new()),
+        Store::new(offline)?,
     )
     .await
 }
@@ -201,6 +202,7 @@ struct NeuronAuthTestScenarion<'a> {
     network: String,
     want: anyhow::Result<Neuron>,
     dry_run: bool,
+    offline: bool,
 }
 
 // Must be left here until we add HSM simulator
@@ -218,14 +220,19 @@ impl<'a> NeuronAuthTestScenarion<'a> {
             network: "".to_string(),
             want: Ok(Neuron::anonymous_neuron()),
             dry_run: false,
+            offline: false,
         }
     }
 
     // It really is self so that we can use
     // `test.is_dry_run().with_neuron_id(...)`
     #[allow(clippy::wrong_self_convention)]
-    fn is_dry_run(self) -> Self {
+    fn dry_run(self) -> Self {
         Self { dry_run: true, ..self }
+    }
+
+    fn offline(self) -> Self {
+        Self { offline: true, ..self }
     }
 
     fn with_neuron_id(self, neuron_id: u64) -> Self {
@@ -297,6 +304,7 @@ impl<'a> NeuronAuthTestScenarion<'a> {
             self.requirement.clone(),
             self.network.clone(),
             self.dry_run,
+            self.offline,
         )
         .await?;
         ctx.neuron().await
@@ -307,8 +315,9 @@ fn get_staging_key_path() -> PathBuf {
     dirs::home_dir().unwrap().join(STAGING_KEY_PATH_FROM_HOME)
 }
 
-#[tokio::test]
-async fn init_test_neuron_and_auth() {
+#[test]
+fn init_test_neuron_and_auth() {
+    let runtime = tokio::runtime::Runtime::new().unwrap();
     let scenarios = &[
         // Successful scenarios
         //
@@ -337,16 +346,28 @@ async fn init_test_neuron_and_auth() {
                 include_proposer: true,
             }))
             .when_requirement(AuthRequirement::Neuron),
+        NeuronAuthTestScenarion::new("Mainnet neuron when offline")
+            .with_network("mainnet")
+            .with_private_key(Neuron::ensure_fake_pem_outer("test_neuron_1").unwrap().to_str().unwrap().to_string())
+            .offline()
+            .want(Ok(Neuron {
+                auth: Auth::Keyfile {
+                    path: Neuron::ensure_fake_pem_outer("test_neuron_1").unwrap(),
+                },
+                neuron_id: 0,
+                include_proposer: true,
+            }))
+            .when_requirement(AuthRequirement::Neuron),
         NeuronAuthTestScenarion::new("Dry running commands shouldn't fail if neuron cannot be detected")
             .with_network("mainnet")
-            .is_dry_run()
+            .dry_run()
             .want(Ok(Neuron::dry_run_fake_neuron().unwrap()))
             .when_requirement(AuthRequirement::Neuron),
     ];
 
     let mut outcomes = vec![];
     for test in scenarios {
-        let got = test.get_neuron().await;
+        let got = runtime.block_on(test.get_neuron());
         outcomes.push((
             test.name,
             format!("{:?}", test.want),

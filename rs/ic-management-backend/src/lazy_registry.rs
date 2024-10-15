@@ -1,5 +1,6 @@
 use indexmap::{IndexMap, IndexSet};
 use std::net::Ipv6Addr;
+use std::path::PathBuf;
 use std::str::FromStr;
 use std::sync::Arc;
 
@@ -183,6 +184,7 @@ where
     firewall_rule_set: RwLock<Option<Arc<IndexMap<String, FirewallRuleSet>>>>,
     offline: bool,
     proposal_agent: Arc<dyn ProposalAgent>,
+    guest_labels_cache_path: PathBuf,
 }
 
 pub trait LazyRegistryEntry: RegistryValue {
@@ -279,7 +281,13 @@ impl LazyRegistryFamilyEntries for LazyRegistryImpl {
 }
 
 impl LazyRegistryImpl {
-    pub fn new(local_registry: LocalRegistry, network: Network, offline: bool, proposal_agent: Arc<dyn ProposalAgent>) -> Self {
+    pub fn new(
+        local_registry: LocalRegistry,
+        network: Network,
+        offline: bool,
+        proposal_agent: Arc<dyn ProposalAgent>,
+        guest_labels_cache_path: PathBuf,
+    ) -> Self {
         Self {
             local_registry,
             network,
@@ -293,6 +301,7 @@ impl LazyRegistryImpl {
             firewall_rule_set: RwLock::new(None),
             offline,
             proposal_agent,
+            guest_labels_cache_path,
         }
     }
 
@@ -316,13 +325,13 @@ impl LazyRegistry for LazyRegistryImpl {
                 return Ok(guests.to_owned());
             }
 
-            if self.offline || (!self.network.is_mainnet() && !self.network.eq(&Network::staging_unchecked().unwrap())) {
+            if !self.network.is_mainnet() && !self.network.eq(&Network::staging_unchecked().unwrap()) {
                 let res = Arc::new(vec![]);
                 *self.node_labels_guests.write().await = Some(res.clone());
                 return Ok(res);
             }
 
-            let guests = match node_labels::query_guests(&self.network.name).await {
+            let guests = match node_labels::query_guests(&self.network.name, Some(self.guest_labels_cache_path.clone()), self.offline).await {
                 Ok(g) => g,
                 Err(e) => {
                     warn!("Failed to query node labels: {}", e);

@@ -925,7 +925,7 @@ impl<T: Identifies<Node>> MatchAnyNode<T> for std::slice::Iter<'_, T> {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 pub struct NodeFeaturePair {
     pub feature: NodeFeature,
     pub value: String,

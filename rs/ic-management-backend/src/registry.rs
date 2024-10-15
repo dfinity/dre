@@ -964,9 +964,12 @@ pub async fn nns_public_key(registry_canister: &RegistryCanister) -> anyhow::Res
     )
 }
 
-/// Sync all versions of the registry, up to the latest one.
 pub async fn sync_local_store(target_network: &Network) -> anyhow::Result<()> {
-    let local_registry_path = local_registry_path(target_network);
+    sync_local_store_with_path(target_network, &local_registry_path(target_network)).await
+}
+
+/// Sync all versions of the registry, up to the latest one.
+pub async fn sync_local_store_with_path(target_network: &Network, local_registry_path: &PathBuf) -> anyhow::Result<()> {
     let local_store = Arc::new(LocalStoreImpl::new(local_registry_path.clone()));
     let nns_urls = target_network.get_nns_urls().clone();
     let agent = IcAgentCanisterClient::from_anonymous(nns_urls.first().unwrap().clone()).unwrap();
@@ -996,7 +999,7 @@ pub async fn sync_local_store(target_network: &Network) -> anyhow::Result<()> {
                         target_network.name,
                         local_registry_path.display()
                     );
-                    std::fs::remove_dir_all(&local_registry_path)?;
+                    std::fs::remove_dir_all(local_registry_path)?;
                     panic!(
                         "Registry version local {} > remote {}, this should never happen",
                         local_latest_version, remote_version
@@ -1103,7 +1106,7 @@ pub async fn poll(registry_state: Arc<RwLock<RegistryState>>, target_network: Ne
 
 // TODO: try to get rid of node_labels data source
 pub async fn fetch_and_add_node_labels_guests_to_registry(target_network: &Network, registry_state: &mut RegistryState) {
-    let guests_result = node_labels::query_guests(&target_network.name).await;
+    let guests_result = node_labels::query_guests(&target_network.name, None, false).await;
 
     match guests_result {
         Ok(node_labels_guests) => {
