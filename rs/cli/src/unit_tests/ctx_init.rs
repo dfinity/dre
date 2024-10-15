@@ -15,11 +15,7 @@ use itertools::Itertools;
 use crate::{commands::IcAdminVersion, ctx::DreContext};
 
 fn status_file_path() -> PathBuf {
-    dirs::cache_dir()
-        .unwrap()
-        .join("dre-store")
-        .join("ic-admin.revisions")
-        .join("ic-admin.status")
+    Store::new(true).unwrap().ic_admin_status_file_outter().unwrap()
 }
 
 fn get_deleted_status_file() -> PathBuf {

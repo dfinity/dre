@@ -28,11 +28,24 @@ const DURATION_BETWEEN_CHECKS_FOR_NEW_IC_ADMIN: Duration = Duration::from_secs(6
 pub const FALLBACK_IC_ADMIN_VERSION: &str = "d4ee25b0865e89d3eaac13a60f0016d5e3296b31";
 
 impl Store {
+    #[cfg(not(test))]
     pub fn new(offline: bool) -> anyhow::Result<Self> {
+        Self::new_inner(offline, "dre-store")
+    }
+
+    // Really important to distinguish from test and
+    // real store because test store, if not handled
+    // correctly, can leave an invalid state
+    #[cfg(test)]
+    pub fn new(offline: bool) -> anyhow::Result<Self> {
+        Self::new_inner(offline, "dre-test-store")
+    }
+
+    fn new_inner(offline: bool, store_name: &str) -> anyhow::Result<Self> {
         Ok(Self {
             path: dirs::cache_dir()
                 .ok_or(anyhow::anyhow!("Couldn't find cache dir for dre store"))?
-                .join("dre-store"),
+                .join(store_name),
             offline,
         })
     }
@@ -115,6 +128,11 @@ impl Store {
         }
 
         Ok(path)
+    }
+
+    #[cfg(test)]
+    pub fn ic_admin_status_file_outter(&self) -> anyhow::Result<PathBuf> {
+        self.ic_admin_status_file()
     }
 
     fn ic_admin_status_file(&self) -> anyhow::Result<PathBuf> {
@@ -250,6 +268,11 @@ impl Store {
                 Ok(ic_admin)
             }
         }
+    }
+
+    #[cfg(test)]
+    pub fn cordoned_features_file_outter(&self) -> anyhow::Result<PathBuf> {
+        self.cordoned_features_file()
     }
 
     fn cordoned_features_file(&self) -> anyhow::Result<PathBuf> {

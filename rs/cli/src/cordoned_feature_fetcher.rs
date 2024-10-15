@@ -12,6 +12,9 @@ use strum::VariantNames;
 #[automock]
 pub trait CordonedFeatureFetcher: Sync + Send {
     fn fetch(&self) -> BoxFuture<'_, anyhow::Result<Vec<NodeFeaturePair>>>;
+
+    #[cfg(test)]
+    fn parse_outter(&self, contents: &[u8]) -> anyhow::Result<Vec<NodeFeaturePair>>;
 }
 
 pub struct CordonedFeatureFetcherImpl {
@@ -120,6 +123,11 @@ impl CordonedFeatureFetcher for CordonedFeatureFetcherImpl {
             }
         })
     }
+
+    #[cfg(test)]
+    fn parse_outter(&self, contents: &[u8]) -> anyhow::Result<Vec<NodeFeaturePair>> {
+        self.parse(contents)
+    }
 }
 
 #[cfg(test)]
@@ -144,7 +152,7 @@ features:
       value: some-country
       "#;
 
-        let fetcher = CordonedFeatureFetcherImpl::new(PathBuf::new()).unwrap();
+        let fetcher = CordonedFeatureFetcherImpl::new(PathBuf::new(), true).unwrap();
 
         let parsed = fetcher.parse(contents).unwrap();
 
@@ -156,7 +164,7 @@ features:
         let contents = br#"
 features:"#;
 
-        let fetcher = CordonedFeatureFetcherImpl::new(PathBuf::new()).unwrap();
+        let fetcher = CordonedFeatureFetcherImpl::new(PathBuf::new(), true).unwrap();
 
         let maybe_parsed = fetcher.parse(contents);
         assert!(maybe_parsed.is_ok());
