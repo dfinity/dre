@@ -163,12 +163,3 @@ fn test_node_labels() {
             .join("\n")
     )
 }
-
-#[test]
-fn testing_cargo() {
-    println!("This is a testing println!");
-    println!("This is a testing println!");
-    println!("This is a testing println!");
-
-    panic!("This is a fail");
-}
