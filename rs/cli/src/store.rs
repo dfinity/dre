@@ -30,7 +30,12 @@ pub const FALLBACK_IC_ADMIN_VERSION: &str = "d4ee25b0865e89d3eaac13a60f0016d5e32
 impl Store {
     #[cfg(not(test))]
     pub fn new(offline: bool) -> anyhow::Result<Self> {
-        Self::new_inner(offline, "dre-store")
+        Self::new_inner(
+            offline,
+            dirs::cache_dir()
+                .ok_or(anyhow::anyhow!("Couldn't find cache dir for dre store"))?
+                .join("dre-store"),
+        )
     }
 
     // Really important to distinguish from test and
@@ -38,16 +43,16 @@ impl Store {
     // correctly, can leave an invalid state
     #[cfg(test)]
     pub fn new(offline: bool) -> anyhow::Result<Self> {
-        Self::new_inner(offline, "dre-test-store")
+        use std::str::FromStr;
+
+        Self::new_inner(offline, PathBuf::from_str("/tmp").unwrap().join("dre-test-store"))
     }
 
-    fn new_inner(offline: bool, store_name: &str) -> anyhow::Result<Self> {
-        Ok(Self {
-            path: dirs::cache_dir()
-                .ok_or(anyhow::anyhow!("Couldn't find cache dir for dre store"))?
-                .join(store_name),
-            offline,
-        })
+    fn new_inner(offline: bool, path: PathBuf) -> anyhow::Result<Self> {
+        if !path.exists() {
+            std::fs::create_dir_all(&path)?;
+        }
+        Ok(Self { path, offline })
     }
 
     pub fn is_offline(&self) -> bool {
