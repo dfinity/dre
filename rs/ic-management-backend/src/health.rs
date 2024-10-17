@@ -52,7 +52,7 @@ impl HealthStatusQuerier for HealthClient {
                     };
 
                     if let Some(path) = local_cache {
-                        let contents = serde_json::to_string(&nodes)?;
+                        let contents = serde_json::to_string_pretty(&nodes)?;
                         std::fs::write(&path, &contents)
                             .map_err(|e| anyhow::anyhow!("Failed to update local cache on path `{}` due to: {:?}", path.display(), e))?;
                     }
@@ -228,7 +228,7 @@ fn get_unquoted(s: &str) -> &str {
 
 #[allow(dead_code)]
 #[derive(Debug, Clone, Serialize, Deserialize)]
-struct ShortNodeInfo {
+pub struct ShortNodeInfo {
     node_id: PrincipalId,
     subnet_id: Option<PrincipalId>,
     status: HealthStatus,

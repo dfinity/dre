@@ -3,6 +3,7 @@ use std::{io::Read, os::unix::fs::PermissionsExt, path::PathBuf, sync::Arc, time
 use flate2::bufread::GzDecoder;
 use ic_canisters::governance::governance_canister_version;
 use ic_management_backend::{
+    health::{HealthClient, HealthStatusQuerier},
     lazy_registry::{LazyRegistry, LazyRegistryImpl},
     proposal::ProposalAgent,
     registry::sync_local_store_with_path,
@@ -126,6 +127,7 @@ impl Store {
             self.offline,
             proposal_agent,
             self.guest_labels_cache_path(network)?,
+            self.health_client(network)?,
         )))
     }
 
@@ -299,5 +301,28 @@ impl Store {
     pub fn cordoned_features_fetcher(&self) -> anyhow::Result<Arc<dyn CordonedFeatureFetcher>> {
         let file = self.cordoned_features_file()?;
         Ok(Arc::new(CordonedFeatureFetcherImpl::new(file, self.is_offline())?))
+    }
+
+    #[cfg(test)]
+    pub fn node_health_file_outer(&self, network: &Network) -> anyhow::Result<PathBuf> {
+        self.node_health_file(network)
+    }
+
+    fn node_health_file(&self, network: &Network) -> anyhow::Result<PathBuf> {
+        let file = self.path().join("node_healths").join(&network.name).join("node_healths.json");
+
+        if !file.exists() {
+            info!("Node health file was missing. Creating on path `{}`...", file.display());
+            std::fs::create_dir_all(file.parent().unwrap())?;
+            std::fs::write(&file, "")?;
+        }
+
+        Ok(file)
+    }
+
+    pub fn health_client(&self, network: &Network) -> anyhow::Result<Arc<dyn HealthStatusQuerier>> {
+        let file = self.node_health_file(network)?;
+
+        Ok(Arc::new(HealthClient::new(network.clone(), Some(file), self.is_offline())))
     }
 }
