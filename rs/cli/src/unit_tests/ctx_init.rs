@@ -173,7 +173,7 @@ async fn get_ctx_for_neuron_test(
     offline: bool,
 ) -> anyhow::Result<DreContext> {
     DreContext::new(
-        ic_management_types::Network::new_unchecked(network, &vec![]).unwrap(),
+        ic_management_types::Network::new_unchecked(network, &[]).unwrap(),
         auth,
         neuron_id,
         true,
