@@ -1,4 +1,10 @@
 releases:
+  - rc_name: rc--2024-10-17_03-07
+    versions:
+      # Qualification pipeline:
+      # https://github.com/dfinity/ic/actions/runs/11377607783
+      - name: base
+        version: e54d3fa34ded227c885d04e64505fa4b5d564743
   - rc_name: rc--2024-10-11_14-35
     versions:
       # Qualification pipeline:
