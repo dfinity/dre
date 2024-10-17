@@ -224,11 +224,11 @@ fn get_unquoted(s: &str) -> &str {
 }
 
 #[allow(dead_code)]
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct ShortNodeInfo {
-    node_id: PrincipalId,
-    subnet_id: Option<PrincipalId>,
-    status: HealthStatus,
+    pub node_id: PrincipalId,
+    pub subnet_id: Option<PrincipalId>,
+    pub status: HealthStatus,
 }
 
 pub struct PrometheusHealthClient {
