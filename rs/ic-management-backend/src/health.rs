@@ -88,10 +88,7 @@ pub trait HealthStatusQuerier: Send + Sync {
                 .nodes_short_info()
                 .await?
                 .into_iter()
-                .filter(|node| match node.subnet_id {
-                    Some(s) if PartialEq::eq(&s, &subnet) => true,
-                    _ => false,
-                })
+                .filter(|node| matches!(node.subnet_id, Some(s) if PartialEq::eq(&s, &subnet)))
                 .map(|node_info| (node_info.node_id, node_info.status))
                 .collect())
         })
