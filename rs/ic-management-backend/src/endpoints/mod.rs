@@ -216,7 +216,7 @@ async fn available_nodes(registry: web::Data<Arc<RwLock<registry::RegistryState>
 #[get("/nodes/healths")]
 async fn nodes_healths(registry: web::Data<Arc<RwLock<registry::RegistryState>>>) -> Result<HttpResponse, Error> {
     let registry = registry.read().await;
-    let health_client = health::HealthClient::new(registry.network());
+    let health_client = health::HealthClient::new(registry.network(), None, false);
     response_from_result(health_client.nodes().await.map(|mut healths| {
         registry
             .nodes()

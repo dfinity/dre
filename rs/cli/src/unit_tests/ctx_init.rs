@@ -28,8 +28,7 @@ fn get_deleted_status_file() -> PathBuf {
 
 async fn get_context(network: &Network, version: IcAdminVersion) -> anyhow::Result<DreContext> {
     DreContext::new(
-        network.name.clone(),
-        network.nns_urls.clone(),
+        network.clone(),
         AuthOpts {
             private_key_pem: None,
             hsm_opts: crate::commands::HsmOpts {
@@ -174,8 +173,7 @@ async fn get_ctx_for_neuron_test(
     offline: bool,
 ) -> anyhow::Result<DreContext> {
     DreContext::new(
-        network,
-        vec![],
+        ic_management_types::Network::new_unchecked(network, &[]).unwrap(),
         auth,
         neuron_id,
         true,

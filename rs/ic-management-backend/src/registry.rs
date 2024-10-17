@@ -901,7 +901,7 @@ impl AvailableNodesQuerier for RegistryState {
                 .filter(|n| n.subnet_id.is_none() && n.proposal.is_none() && n.duplicates.is_none() && !n.is_api_boundary_node)
                 .collect::<Vec<_>>();
 
-            let health_client = crate::health::HealthClient::new(self.network());
+            let health_client = crate::health::HealthClient::new(self.network(), None, false);
             let healths = health_client
                 .nodes()
                 .await
