@@ -1,0 +1,17 @@
+{
+  "canisters": {
+    "node-provider-rewards": {
+      "candid": "src/node-provider-rewards.did",
+      "package": "node-provider-rewards",
+      "type": "rust"
+    }
+  },
+  "defaults": {
+    "build": {
+      "args": "",
+      "packtool": ""
+    }
+  },
+  "output_env_file": ".env",
+  "version": 1
+}
