@@ -185,6 +185,7 @@ where
     offline: bool,
     proposal_agent: Arc<dyn ProposalAgent>,
     guest_labels_cache_path: PathBuf,
+    health_client: Arc<dyn HealthStatusQuerier>,
 }
 
 pub trait LazyRegistryEntry: RegistryValue {
@@ -287,6 +288,7 @@ impl LazyRegistryImpl {
         offline: bool,
         proposal_agent: Arc<dyn ProposalAgent>,
         guest_labels_cache_path: PathBuf,
+        health_client: Arc<dyn HealthStatusQuerier>,
     ) -> Self {
         Self {
             local_registry,
@@ -302,6 +304,7 @@ impl LazyRegistryImpl {
             offline,
             proposal_agent,
             guest_labels_cache_path,
+            health_client,
         }
     }
 
@@ -894,8 +897,7 @@ impl decentralization::network::TopologyManager for LazyRegistryImpl {}
 impl AvailableNodesQuerier for LazyRegistryImpl {
     fn available_nodes(&self) -> BoxFuture<'_, Result<Vec<decentralization::network::Node>, ic_management_types::NetworkError>> {
         Box::pin(async {
-            let health_client = crate::health::HealthClient::new(self.network.clone());
-            let (nodes, healths) = try_join!(self.nodes_with_proposals(), health_client.nodes())
+            let (nodes, healths) = try_join!(self.nodes_with_proposals(), self.health_client.nodes())
                 .map_err(|e| ic_management_types::NetworkError::DataRequestError(e.to_string()))?;
             let nodes = nodes
                 .values()
