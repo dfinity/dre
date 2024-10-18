@@ -1,4 +1,9 @@
-use std::{collections::BTreeMap, path::PathBuf, str::FromStr, sync::Arc};
+use std::{
+    collections::{BTreeMap, HashMap},
+    path::PathBuf,
+    str::FromStr,
+    sync::Arc,
+};
 
 use clap::Args;
 use ic_management_backend::{
@@ -157,6 +162,7 @@ impl Registry {
             node_operators: node_operators.values().cloned().collect_vec(),
             node_rewards_table,
             api_bns,
+            node_providers: get_node_providers(&local_registry).await?,
         })
     }
 }
@@ -186,6 +192,10 @@ async fn get_node_operators(local_registry: &Arc<dyn LazyRegistry>, network: &Ne
             });
             // Find the number of nodes registered by this operator
             let operator_registered_nodes_num = all_nodes.iter().filter(|(nk, _)| nk == &k).count() as u64;
+            let nodes_in_subnets = all_nodes
+                .iter()
+                .filter(|(_, value)| value.operator.principal == record.principal && value.subnet_id.is_some())
+                .count() as u64;
             (
                 record.principal,
                 NodeOperator {
@@ -200,6 +210,7 @@ async fn get_node_operators(local_registry: &Arc<dyn LazyRegistry>, network: &Ne
                     total_up_nodes: 0,
                     nodes_health: Default::default(),
                     rewards_correct: false,
+                    nodes_in_subnets,
                 },
             )
         })
@@ -407,6 +418,37 @@ fn get_api_boundary_nodes(local_registry: &Arc<dyn LazyRegistry>) -> anyhow::Res
     Ok(api_bns)
 }
 
+async fn get_node_providers(local_registry: &Arc<dyn LazyRegistry>) -> anyhow::Result<Vec<NodeProvider>> {
+    let all_nodes = local_registry.nodes().await?;
+    let node_providers = local_registry
+        .operators()
+        .await?
+        .values()
+        .map(|operator| operator.provider.clone())
+        .dedup_by(|x, y| x.principal == y.principal)
+        .collect_vec();
+
+    Ok(node_providers
+        .iter()
+        .map(|provider| {
+            let provider_nodes = all_nodes.values().filter(|node| node.operator.provider.principal == provider.principal);
+
+            NodeProvider {
+                principal: provider.principal,
+                total_nodes: provider_nodes.clone().count(),
+                nodes_in_subnet: provider_nodes.clone().filter(|node| node.subnet_id.is_some()).count(),
+                nodes_per_dc: provider_nodes
+                    .map(|node| match &node.operator.datacenter {
+                        Some(dc) => dc.name.clone(),
+                        None => "Unknown".to_string(),
+                    })
+                    .counts_by(|dc_name| dc_name),
+                name: provider.name.clone().unwrap_or("Unknown".to_string()),
+            }
+        })
+        .collect())
+}
+
 #[derive(Debug, Serialize)]
 struct RegistryDump {
     subnets: Vec<SubnetRecord>,
@@ -418,6 +460,7 @@ struct RegistryDump {
     api_bns: Vec<ApiBoundaryNodeDetails>,
     elected_guest_os_versions: Vec<ReplicaVersionRecord>,
     elected_host_os_versions: Vec<HostosVersionRecord>,
+    node_providers: Vec<NodeProvider>,
 }
 
 #[derive(Clone, Debug, Serialize)]
@@ -482,6 +525,7 @@ struct NodeOperator {
     total_up_nodes: u32,
     nodes_health: IndexMap<String, Vec<PrincipalId>>,
     rewards_correct: bool,
+    nodes_in_subnets: u64,
 }
 
 // We re-create the rewards structs here in order to convert the output of get-rewards-table into the format
@@ -511,6 +555,15 @@ pub struct NodeRewardsTableFlattened {
     #[prost(btree_map = "string, message", tag = "1")]
     #[serde(flatten)]
     pub table: BTreeMap<String, NodeRewardRatesFlattened>,
+}
+
+#[derive(serde::Serialize, Debug)]
+struct NodeProvider {
+    name: String,
+    principal: PrincipalId,
+    total_nodes: usize,
+    nodes_in_subnet: usize,
+    nodes_per_dc: HashMap<String, usize>,
 }
 
 #[derive(Debug, Clone)]
