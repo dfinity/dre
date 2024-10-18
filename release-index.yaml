@@ -9,6 +9,10 @@ releases:
       # https://github.com/dfinity/ic/actions/runs/11387683038
       - name: scheduler-changes
         version: 33aa325148fafc77492010a9b3da54f214c9b602
+      # Qualification pipeline:
+      # https://github.com/dfinity/ic/actions/runs/11402213242
+      - name: scheduler-changes-guestos-revert
+        version: 3c76b9142f67da01393d9280c705f88b6e522a93
   - rc_name: rc--2024-10-11_14-35
     versions:
       # Qualification pipeline:
