@@ -5,6 +5,10 @@ releases:
       # https://github.com/dfinity/ic/actions/runs/11377607783
       - name: base
         version: e54d3fa34ded227c885d04e64505fa4b5d564743
+      # Qualification pipeline:
+      # https://github.com/dfinity/ic/actions/runs/11387683038
+      - name: scheduler-changes
+        version: 33aa325148fafc77492010a9b3da54f214c9b602
   - rc_name: rc--2024-10-11_14-35
     versions:
       # Qualification pipeline:
