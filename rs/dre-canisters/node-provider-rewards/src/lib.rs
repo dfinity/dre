@@ -42,7 +42,6 @@ async fn update_rewardable_nodes_task() {
 }
 
 fn setup_timers() {
-    stable_memory::wipe();
 
     ic_cdk_timers::set_timer_interval(std::time::Duration::from_secs(TIMER_INTERVAL_SEC), || ic_cdk::spawn(sync_node_metrics_task()));
     

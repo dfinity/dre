@@ -222,7 +222,7 @@ pub async fn get_node_operators_rewardables(rewarding_period: &DateTimeRange) ->
     let mut node_operators = Vec::new();
     let latest_registry_version = ic_nns_common::registry::get_latest_version().await;
 
-    for (index, node_id) in node_ids.iter().take(10).enumerate() {
+    for (index, node_id) in node_ids.iter().enumerate() {
         ic_cdk::println!("Fetching NodeRecord from registry canister for node: {} {}", node_id, index);
 
         let node_record = get_most_recent_registry_value::<NodeRecord>(
@@ -309,7 +309,7 @@ pub async fn get_assigned_nodes_performance(
     rewarding_period: &DateTimeRange,
 ) -> anyhow::Result<BTreeMap<Principal, (NodeMetadata, Vec<DailyNodeMetrics>)>> {
     let mut nodes_metadata: BTreeMap<Principal, (NodeMetadata, Vec<DailyNodeMetrics>)> = BTreeMap::new();
-    let daily_metrics: BTreeMap<Principal, Vec<DailyNodeMetrics>> = get_daily_metrics(rewarding_period).into_iter().take(n).collect();
+    let daily_metrics: BTreeMap<Principal, Vec<DailyNodeMetrics>> = get_daily_metrics(rewarding_period);
     let latest_registry_version = ic_nns_common::registry::get_latest_version().await;
 
     for (node_principal, daily_metrics) in daily_metrics {

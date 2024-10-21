@@ -5997,6 +5997,37 @@ dependencies = [
 ]
 
 [[package]]
+name = "node-provider-rewards"
+version = "0.5.6"
+dependencies = [
+ "anyhow",
+ "candid",
+ "chrono",
+ "dfn_core",
+ "futures",
+ "ic-base-types",
+ "ic-cdk 0.16.0 (git+https://github.com/dfinity/cdk-rs.git?rev=882fa28116c84887be626a44ce031b739e45e3d5)",
+ "ic-cdk-macros 0.16.0 (git+https://github.com/dfinity/cdk-rs.git?rev=882fa28116c84887be626a44ce031b739e45e3d5)",
+ "ic-cdk-timers 0.10.0",
+ "ic-management-canister-types",
+ "ic-nns-common",
+ "ic-nns-constants",
+ "ic-nns-governance-api",
+ "ic-protobuf",
+ "ic-registry-keys",
+ "ic-stable-structures",
+ "itertools 0.13.0",
+ "lazy_static",
+ "num-traits",
+ "prost",
+ "rust_decimal",
+ "rust_decimal_macros",
+ "serde",
+ "serde_json",
+ "trustworthy-node-metrics-types",
+]
+
+[[package]]
 name = "node-status-updater"
 version = "0.5.6"
 dependencies = [
