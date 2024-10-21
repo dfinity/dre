@@ -767,6 +767,47 @@ impl DecentralizedSubnet {
         })
     }
 
+    pub fn without_duplicate_added_removed(self) -> DecentralizedSubnet {
+        let common_nodes: Vec<PrincipalId> = self
+            .removed_nodes_desc
+            .iter()
+            .filter_map(|(node_removed, _)| {
+                if self.added_nodes_desc.iter().any(|(node_added, _)| node_removed.id == node_added.id) {
+                    Some(node_removed.id)
+                } else {
+                    None
+                }
+            })
+            .collect();
+        
+        if !common_nodes.is_empty() {
+            info!("Removing nodes which have been removed and then added back: {:?}", common_nodes);
+
+            let added_nodes_desc = self
+                .added_nodes_desc
+                .into_iter()
+                .filter(|(node_added, _)| !common_nodes.iter().any(|common_node| common_node == &node_added.id))
+                .collect();
+
+            let removed_nodes_desc = self
+                .removed_nodes_desc
+                .into_iter()
+                .filter(|(node_removed, _)| !common_nodes.iter().any(|common_node| common_node == &node_removed.id))
+                .collect();
+
+            Self {
+                id: self.id,
+                nodes: self.nodes.clone(),
+                added_nodes_desc,
+                removed_nodes_desc,
+                comment: self.comment.clone(),
+                run_log: self.run_log.clone(),
+            }
+        } else {
+            self
+        }
+    }
+
     fn _node_to_replacement_candidate(&self, subnet_nodes: &[Node], touched_node: &Node, err_log: &mut Vec<String>) -> Option<ReplacementCandidate> {
         match Self::check_business_rules_for_subnet_with_nodes(&self.id, subnet_nodes) {
             Ok((penalty, business_rules_log)) => {
@@ -1151,7 +1192,9 @@ impl SubnetChangeRequest {
                     .collect(),
             )
             .subnet_with_more_nodes(how_many_nodes_to_add, &available_nodes)
-            .map_err(|e| NetworkError::ResizeFailed(e.to_string()))?;
+            .map_err(|e| NetworkError::ResizeFailed(e.to_string()))?
+            .without_duplicate_added_removed();
+
         let penalties_after_change = DecentralizedSubnet::check_business_rules_for_subnet_with_nodes(&self.subnet.id, &resized_subnet.nodes)
             .map_err(|e| NetworkError::ResizeFailed(e.to_string()))?
             .0;

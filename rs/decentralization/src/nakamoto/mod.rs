@@ -1077,7 +1077,7 @@ mod tests {
             .rescue(&health_of_nodes, vec![])
             .unwrap();
 
-        assert_eq!(with_keeping_features.added().len(), 6);
+        assert_eq!(with_keeping_features.added().len(), 4);
         assert_eq!(
             with_keeping_features
                 .new_nodes
@@ -1095,7 +1095,8 @@ mod tests {
             .rescue(&health_of_nodes, vec![])
             .unwrap();
 
-        assert_eq!(with_keeping_principals.added().len(), 6);
+
+        assert_eq!(with_keeping_principals.added().len(), 4);
         assert_eq!(
             with_keeping_principals
                 .new_nodes
@@ -1108,7 +1109,26 @@ mod tests {
 
         let rescue_all = change_initial.clone().rescue(&health_of_nodes, vec![]).unwrap();
 
-        assert_eq!(rescue_all.added().len(), 7);
-        assert_eq!(rescue_all.removed().len(), 7);
+        assert_eq!(rescue_all.added().len(), 5);
+        assert_eq!(rescue_all.removed().len(), 5);
+    }
+
+    #[test]
+    fn test_resize() {
+        let subnet_initial = new_test_subnet(0, 24, 0);
+        let health_of_nodes = subnet_initial
+            .nodes
+            .iter()
+            .map(|n| (n.id, HealthStatus::Healthy))
+            .collect::<IndexMap<_, _>>();
+        let change_initial = SubnetChangeRequest::new(subnet_initial.clone(), Vec::new(), Vec::new(), Vec::new(), Vec::new());
+
+        let after_resize = change_initial
+            .resize(2, 2, 0, &health_of_nodes, vec![]).unwrap();
+
+        assert_eq!(subnet_initial.nodes.len(), after_resize.new_nodes.len());
+        
+        assert_eq!(after_resize.added_nodes_desc.len(), 0);
+        assert_eq!(after_resize.removed_nodes_desc.len(), 0);
     }
 }
