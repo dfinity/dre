@@ -779,7 +779,7 @@ impl DecentralizedSubnet {
                 }
             })
             .collect();
-        
+
         if !common_nodes.is_empty() {
             info!("Removing nodes which have been removed and then added back: {:?}", common_nodes);
 
