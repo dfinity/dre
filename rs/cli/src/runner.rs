@@ -32,6 +32,7 @@ use log::warn;
 
 use regex::Regex;
 use registry_canister::mutations::do_change_subnet_membership::ChangeSubnetMembershipPayload;
+use reqwest::get;
 use tabled::builder::Builder;
 use tabled::settings::Style;
 
@@ -198,7 +199,7 @@ impl Runner {
             return Ok(None);
         }
 
-        let options = replace_proposal_options(&change, forum_post_link)?;
+        let options = replace_proposal_options(&change, forum_post_link).await?;
         self.run_membership_change(change, options).await.map(Some)
     }
 
@@ -531,7 +532,7 @@ impl Runner {
         let mut changes = vec![];
         for change in &subnets_change_response {
             let current = self
-                .run_membership_change(change.clone(), replace_proposal_options(change, forum_post_link.clone())?)
+                .run_membership_change(change.clone(), replace_proposal_options(change, forum_post_link.clone()).await?)
                 .await
                 .map_err(|e| {
                     println!("{}", e);
@@ -620,7 +621,7 @@ impl Runner {
             return Ok(None);
         }
 
-        self.run_membership_change(change.clone(), replace_proposal_options(&change, forum_post_link)?)
+        self.run_membership_change(change.clone(), replace_proposal_options(&change, forum_post_link).await?)
             .await
             .map(Some)
     }
@@ -756,7 +757,7 @@ impl Runner {
     }
 }
 
-pub fn replace_proposal_options(change: &SubnetChangeResponse, forum_post_link: Option<String>) -> anyhow::Result<ic_admin::ProposeOptions> {
+pub async fn replace_proposal_options(change: &SubnetChangeResponse, forum_post_link: Option<String>) -> anyhow::Result<ic_admin::ProposeOptions> {
     let subnet_id = change.subnet_id.ok_or_else(|| anyhow::anyhow!("subnet_id is required"))?.to_string();
 
     let replace_target = if change.added_with_desc.len() > 1 || change.removed_with_desc.len() > 1 {
@@ -770,6 +771,19 @@ pub fn replace_proposal_options(change: &SubnetChangeResponse, forum_post_link: 
         format!("Replace {} in subnet {}", replace_target, subnet_id_short)
     } else {
         format!("Resize subnet {}", subnet_id_short)
+    };
+
+    let forum_post_link = match forum_post_link {
+        Some(_) => forum_post_link,
+        None => {
+            let test_forum_post_link = format!("https://forum.dfinity.org/t/subnet-management-{}-application", subnet_id_short);
+
+            if get(&test_forum_post_link).await?.status().is_success() {
+                Some(test_forum_post_link)
+            } else {
+                None
+            }
+        }
     };
 
     Ok(ic_admin::ProposeOptions {
