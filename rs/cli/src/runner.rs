@@ -776,13 +776,21 @@ pub async fn replace_proposal_options(change: &SubnetChangeResponse, forum_post_
     let forum_post_link = match forum_post_link {
         Some(_) => forum_post_link,
         None => {
-            let test_forum_post_link = format!("https://forum.dfinity.org/t/subnet-management-{}-application", subnet_id_short);
-
-            if get(&test_forum_post_link).await?.status().is_success() {
-                Some(test_forum_post_link)
-            } else {
-                None
+            let base_forum_post_link = format!("https://forum.dfinity.org/t/subnet-management-{}", subnet_id_short);
+            let links_to_check = vec![
+                format!("{}-nns", base_forum_post_link),
+                format!("{}-ii", base_forum_post_link),
+                format!("{}-application", base_forum_post_link),
+                format!("{}-fiduciary", base_forum_post_link),
+            ];
+            let mut found_forum_post_link = None;
+            for link in links_to_check {
+                if get(&link).await?.status().is_success() {
+                    found_forum_post_link = Some(link);
+                    break;
+                }
             }
+            found_forum_post_link
         }
     };
 
