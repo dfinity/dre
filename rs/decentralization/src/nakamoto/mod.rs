@@ -1095,7 +1095,6 @@ mod tests {
             .rescue(&health_of_nodes, vec![])
             .unwrap();
 
-
         assert_eq!(with_keeping_principals.added().len(), 4);
         assert_eq!(
             with_keeping_principals
@@ -1123,11 +1122,10 @@ mod tests {
             .collect::<IndexMap<_, _>>();
         let change_initial = SubnetChangeRequest::new(subnet_initial.clone(), Vec::new(), Vec::new(), Vec::new(), Vec::new());
 
-        let after_resize = change_initial
-            .resize(2, 2, 0, &health_of_nodes, vec![]).unwrap();
+        let after_resize = change_initial.resize(2, 2, 0, &health_of_nodes, vec![]).unwrap();
 
         assert_eq!(subnet_initial.nodes.len(), after_resize.new_nodes.len());
-        
+
         assert_eq!(after_resize.added_nodes_desc.len(), 0);
         assert_eq!(after_resize.removed_nodes_desc.len(), 0);
     }
