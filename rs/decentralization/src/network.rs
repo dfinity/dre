@@ -1353,6 +1353,10 @@ impl NetworkHealRequest {
             .sorted_by(|a, b| a.cmp(b).reverse())
             .collect_vec();
 
+        if subnets_to_heal.is_empty() {
+            info!("Nothing to do! All subnets are healthy.")
+        }
+        
         for subnet in subnets_to_heal {
             // If more than 1/3 nodes do not have the latest subnet state, subnet will stall.
             // From those 1/2 are added and 1/2 removed -> nodes_in_subnet/3 * 1/2 = nodes_in_subnet/6
