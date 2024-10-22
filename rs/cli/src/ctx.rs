@@ -287,7 +287,7 @@ pub mod tests {
             forum_post_link: "https://forum.dfinity.org/t/123".to_string().into(),
             dry_run: true,
             artifact_downloader,
-            neuron: RefCell::new(None),
+            neuron: RefCell::new(Some(neuron.clone())),
             proceed_without_confirmation: true,
             version: crate::commands::IcAdminVersion::Strict("Shouldn't reach this because of mock".to_string()),
             neuron_opts: super::NeuronOpts {
