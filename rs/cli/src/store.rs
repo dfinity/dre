@@ -51,7 +51,7 @@ impl Store {
 
     fn new_inner(offline: bool, path: PathBuf) -> anyhow::Result<Self> {
         if !path.exists() {
-            std::fs::create_dir_all(&path)?;
+            fs_err::create_dir_all(&path)?;
         }
         Ok(Self { path, offline })
     }
@@ -73,7 +73,7 @@ impl Store {
                 network.name,
                 local_store_dir.display()
             );
-            std::fs::create_dir_all(&local_store_dir)?
+            fs_err::create_dir_all(&local_store_dir)?
         }
 
         Ok(local_store_dir)
@@ -88,7 +88,7 @@ impl Store {
                 network.name,
                 dir.display()
             );
-            std::fs::create_dir_all(&dir)?
+            fs_err::create_dir_all(&dir)?
         }
 
         Ok(dir)
@@ -103,7 +103,7 @@ impl Store {
         let path = self.guest_labels_cache_dir(network)?.join("labels.yaml");
 
         if !path.exists() {
-            std::fs::write(&path, "")?;
+            fs_err::write(&path, "")?;
         }
 
         Ok(path)
@@ -136,7 +136,7 @@ impl Store {
 
         if !path.exists() {
             info!("ic-admin.revisions dir was missing. Creating on path `{}`...", path.display());
-            std::fs::create_dir_all(&path)?;
+            fs_err::create_dir_all(&path)?;
         }
 
         Ok(path)
@@ -152,7 +152,7 @@ impl Store {
 
         if !status_file.exists() {
             info!("ic-admin.status file was missing. Creating on path `{}`...", status_file.display());
-            std::fs::write(&status_file, "")?
+            fs_err::write(&status_file, "")?
         }
 
         Ok(status_file)
@@ -173,10 +173,10 @@ impl Store {
         let mut decoded = GzDecoder::new(body.as_ref());
 
         let path_parent = path.parent().ok_or(anyhow::anyhow!("Failed to get parent for ic admin revision dir"))?;
-        std::fs::create_dir_all(path_parent).map_err(|_| anyhow::anyhow!("create_dir_all failed for {}", path_parent.display()))?;
-        let mut out = std::fs::File::create(path)?;
+        fs_err::create_dir_all(path_parent).map_err(|_| anyhow::anyhow!("create_dir_all failed for {}", path_parent.display()))?;
+        let mut out = fs_err::File::create(path)?;
         std::io::copy(&mut decoded, &mut out)?;
-        std::fs::set_permissions(path, std::fs::Permissions::from_mode(0o755))?;
+        fs_err::set_permissions(path, std::fs::Permissions::from_mode(0o755))?;
         Ok(())
     }
 
@@ -224,7 +224,7 @@ impl Store {
             IcAdminVersion::Strict(ver) => self.init_ic_admin(ver, network, proceed_without_confirmation, neuron, dry_run).await,
             // This is the most probable way of running
             IcAdminVersion::FromGovernance => {
-                let mut status_file = std::fs::File::open(&self.ic_admin_status_file()?)?;
+                let mut status_file = fs_err::File::open(&self.ic_admin_status_file()?)?;
                 let elapsed = status_file.metadata()?.modified()?.elapsed().unwrap_or_default();
 
                 let mut version_from_file = "".to_string();
@@ -276,7 +276,7 @@ impl Store {
 
                 // Only update file when the sync
                 // with governance has been performed
-                std::fs::write(self.ic_admin_status_file()?, version)?;
+                fs_err::write(self.ic_admin_status_file()?, version)?;
                 Ok(ic_admin)
             }
         }
@@ -292,7 +292,7 @@ impl Store {
 
         if !file.exists() {
             info!("Cordoned features file was missing. Creating on path `{}`...", file.display());
-            std::fs::write(&file, "")?;
+            fs_err::write(&file, "")?;
         }
 
         Ok(file)
@@ -313,8 +313,8 @@ impl Store {
 
         if !file.exists() {
             info!("Node health file was missing. Creating on path `{}`...", file.display());
-            std::fs::create_dir_all(file.parent().unwrap())?;
-            std::fs::write(&file, "")?;
+            fs_err::create_dir_all(file.parent().unwrap())?;
+            fs_err::write(&file, "")?;
         }
 
         Ok(file)
