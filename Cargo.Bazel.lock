@@ -1,5 +1,5 @@
 {
-  "checksum": "67d524a177ed51e1fbd1fd76a0c8571d6a6c4897167ecc5aab1cc0827acee8f2",
+  "checksum": "92baf40d569cef45776b4fc5053c0fea0e0db1c5db12d79efb762fc8a6d2ff53",
   "crates": {
     "actix-codec 0.5.2": {
       "name": "actix-codec",
@@ -10261,6 +10261,14 @@
             {
               "id": "actix-rt 2.10.0",
               "target": "actix_rt"
+            },
+            {
+              "id": "ic-interfaces-registry 0.9.0",
+              "target": "ic_interfaces_registry"
+            },
+            {
+              "id": "ic-registry-transport 0.9.0",
+              "target": "ic_registry_transport"
             }
           ],
           "selects": {}
