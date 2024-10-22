@@ -366,7 +366,6 @@ impl RewardsManager {
             ic_cdk::println!("Storing logs for node provider {}", node_provider);
             stable_memory::store_node_provider_logs(rewards_ts, node_provider.0, self.logger.get_log());
 
-            ic_cdk::println!("Performance counter after np rewarding algo: {}, {}",node_provider, ic_cdk::api::performance_counter(1));
             self.logger.flush_log_entries();
         }
     }

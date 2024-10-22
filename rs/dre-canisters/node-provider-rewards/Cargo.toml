@@ -32,6 +32,8 @@ serde = { workspace = true }
 serde_json = { workspace = true }
 lazy_static = { workspace = true }
 prost = { workspace = true }
+ic-registry-transport = { workspace = true }
+on_wire = { workspace = true }
 
 [lib]
 crate-type = ["cdylib"]

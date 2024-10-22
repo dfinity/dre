@@ -11,6 +11,7 @@ mod nodes_manager;
 mod rewards_manager;
 mod stable_memory;
 mod types;
+mod registry_client;
 
 // Management canisters updates node metrics every day
 const TIMER_INTERVAL_SEC: u64 = 60 * 60 * 24;

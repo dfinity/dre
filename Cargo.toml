@@ -198,6 +198,7 @@ mockall = "0.13.0"
 # dre-canisters dependencies
 ic-cdk-timers = { git = "https://github.com/dfinity/cdk-rs.git", rev = "882fa28116c84887be626a44ce031b739e45e3d5" }
 ic-cdk-macros = { git = "https://github.com/dfinity/cdk-rs.git", rev = "882fa28116c84887be626a44ce031b739e45e3d5" }
+on_wire = { git = "https://github.com/dfinity/ic.git", rev = "ca80a219757f00a5dd234f8d8c58316c902f2f2f" }
 ic-stable-structures = "0.6.5"
 dfn_core = { git = "https://github.com/dfinity/ic.git", rev = "ca80a219757f00a5dd234f8d8c58316c902f2f2f" }
 
