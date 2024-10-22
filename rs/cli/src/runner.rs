@@ -781,7 +781,10 @@ pub async fn replace_proposal_options(change: &SubnetChangeResponse, forum_post_
                 format!("{}-nns", base_forum_post_link),
                 format!("{}-ii", base_forum_post_link),
                 format!("{}-application", base_forum_post_link),
+                format!("{}-application-sns", base_forum_post_link),
                 format!("{}-fiduciary", base_forum_post_link),
+                format!("{}-system-bitcoin", base_forum_post_link),
+                format!("{}-european", base_forum_post_link),
             ];
             let mut found_forum_post_link = None;
             for link in links_to_check {
