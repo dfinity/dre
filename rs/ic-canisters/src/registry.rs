@@ -9,7 +9,8 @@ use ic_protobuf::{
 use ic_registry_keys::make_crypto_threshold_signing_pubkey_key;
 use ic_registry_nns_data_provider::certification::decode_certified_deltas;
 use ic_registry_transport::pb::v1::{
-    RegistryGetChangesSinceRequest, RegistryGetLatestVersionResponse, RegistryGetValueRequest, RegistryGetValueResponse,
+    RegistryGetChangesSinceRequest, RegistryGetChangesSinceResponse, RegistryGetLatestVersionResponse, RegistryGetValueRequest,
+    RegistryGetValueResponse,
 };
 use ic_types::crypto::threshold_sig::ThresholdSigPublicKey;
 use prost::Message;
@@ -65,20 +66,30 @@ impl RegistryCanisterWrapper {
     }
 
     pub async fn get_certified_changes_since(&self, version: u64) -> anyhow::Result<Vec<RegistryTransportRecord>> {
-        let request = RegistryGetChangesSinceRequest { version };
-        let mut buf = vec![];
-        request.encode(&mut buf)?;
-
-        let response = self
-            .agent
-            .query(&REGISTRY_CANISTER_ID.into(), "get_certified_changes_since")
-            .with_arg(buf)
-            .call()
-            .await?;
+        let response = self.get_changes_since_inner(version, "get_certified_changes_since").await?;
 
         decode_certified_deltas(version, &REGISTRY_CANISTER_ID, &self.nns_public_key().await?, response.as_slice())
             .map_err(|e| anyhow::anyhow!("Error decoding certificed deltas: {:?}", e))
             .map(|(res, _, _)| res)
+    }
+
+    pub async fn get_changes_since(&self, version: u64) -> anyhow::Result<RegistryGetChangesSinceResponse> {
+        let response = self.get_changes_since_inner(version, "get_changes_since").await?;
+
+        RegistryGetChangesSinceResponse::decode(&response[..]).map_err(anyhow::Error::from)
+    }
+
+    async fn get_changes_since_inner(&self, version: u64, endpoint: &str) -> anyhow::Result<Vec<u8>> {
+        let request = RegistryGetChangesSinceRequest { version };
+        let mut buf = vec![];
+        request.encode(&mut buf)?;
+
+        self.agent
+            .query(&REGISTRY_CANISTER_ID.into(), endpoint)
+            .with_arg(buf)
+            .call()
+            .await
+            .map_err(anyhow::Error::from)
     }
 
     async fn get_value(&self, request: String) -> anyhow::Result<Vec<u8>> {

@@ -83,6 +83,8 @@ rosetta-core.workspace = true
 
 [dev-dependencies]
 actix-rt = { workspace = true }
+ic-registry-transport.workspace = true
+ic-interfaces-registry.workspace = true
 
 [build-dependencies]
 clap = { workspace = true }
