@@ -6,10 +6,7 @@ use std::{
 };
 
 use clap::Args;
-use ic_management_backend::{
-    health::{HealthClient, HealthStatusQuerier},
-    lazy_registry::LazyRegistry,
-};
+use ic_management_backend::{health::HealthStatusQuerier, lazy_registry::LazyRegistry};
 use ic_management_types::{HealthStatus, Network};
 use ic_protobuf::registry::{
     dc::v1::DataCenterRecord,
@@ -122,7 +119,7 @@ impl Registry {
 
         let dcs = local_registry.get_datacenters()?;
 
-        let (subnets, nodes) = get_subnets_and_nodes(&local_registry, &node_operators, ctx.network()).await?;
+        let (subnets, nodes) = get_subnets_and_nodes(&local_registry, &node_operators, ctx.health_client()).await?;
 
         let unassigned_nodes_config = local_registry.get_unassigned_nodes()?;
 
@@ -221,7 +218,7 @@ async fn get_node_operators(local_registry: &Arc<dyn LazyRegistry>, network: &Ne
 async fn get_subnets_and_nodes(
     local_registry: &Arc<dyn LazyRegistry>,
     node_operators: &IndexMap<PrincipalId, NodeOperator>,
-    network: &Network,
+    health_client: Arc<dyn HealthStatusQuerier>,
 ) -> anyhow::Result<(Vec<SubnetRecord>, Vec<NodeDetails>)> {
     let subnets = local_registry.subnets().await?;
     let subnets = subnets
@@ -250,7 +247,7 @@ async fn get_subnets_and_nodes(
             chain_key_config: record.chain_key_config.clone(),
         })
         .collect::<Vec<_>>();
-    let nodes = _get_nodes(local_registry, node_operators, &subnets, network).await?;
+    let nodes = _get_nodes(local_registry, node_operators, &subnets, health_client).await?;
     let subnets = subnets
         .into_iter()
         .map(|subnet| {
@@ -270,9 +267,8 @@ async fn _get_nodes(
     local_registry: &Arc<dyn LazyRegistry>,
     node_operators: &IndexMap<PrincipalId, NodeOperator>,
     subnets: &[SubnetRecord],
-    network: &Network,
+    health_client: Arc<dyn HealthStatusQuerier>,
 ) -> anyhow::Result<Vec<NodeDetails>> {
-    let health_client = HealthClient::new(network.clone());
     let nodes_health = health_client.nodes().await?;
 
     // Rewardable nodes for all node operators

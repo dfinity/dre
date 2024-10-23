@@ -6,14 +6,13 @@ use std::{
 
 use ic_canisters::IcAgentCanisterClient;
 use ic_management_backend::{
-    health::{self, HealthStatusQuerier},
+    health::HealthStatusQuerier,
     lazy_git::LazyGit,
     lazy_registry::LazyRegistry,
     proposal::{ProposalAgent, ProposalAgentImpl},
 };
 use ic_management_types::Network;
 use log::warn;
-use url::Url;
 
 use crate::{
     artifact_downloader::{ArtifactDownloader, ArtifactDownloaderImpl},
@@ -57,8 +56,7 @@ pub struct DreContext {
 #[allow(clippy::too_many_arguments)]
 impl DreContext {
     pub async fn new(
-        network: String,
-        nns_urls: Vec<Url>,
+        network: Network,
         auth: AuthOpts,
         neuron_id: Option<u64>,
         verbose: bool,
@@ -71,13 +69,6 @@ impl DreContext {
         health_client: Arc<dyn HealthStatusQuerier>,
         store: Store,
     ) -> anyhow::Result<Self> {
-        let network = match store.is_offline() {
-            false => ic_management_types::Network::new(network.clone(), &nns_urls)
-                .await
-                .map_err(|e| anyhow::anyhow!(e))?,
-            true => Network::new_unchecked(network.clone(), &nns_urls)?,
-        };
-
         Ok(Self {
             proposal_agent: Arc::new(ProposalAgentImpl::new(&network.nns_urls)),
             network,
@@ -103,11 +94,18 @@ impl DreContext {
         })
     }
 
+    // Method that will be called from `main.rs` and
+    // will return real implementations of services
     pub(crate) async fn from_args(args: &Args) -> anyhow::Result<Self> {
         let store = Store::new(args.offline)?;
+        let network = match store.is_offline() {
+            false => ic_management_types::Network::new(args.network.clone(), &args.nns_urls)
+                .await
+                .map_err(|e| anyhow::anyhow!(e))?,
+            true => Network::new_unchecked(args.network.clone(), &args.nns_urls)?,
+        };
         Self::new(
-            args.network.clone(),
-            args.nns_urls.clone(),
+            network.clone(),
             args.auth_opts.clone(),
             args.neuron_id,
             args.verbose,
@@ -117,9 +115,7 @@ impl DreContext {
             args.forum_post_link.clone(),
             args.ic_admin_version.clone(),
             store.cordoned_features_fetcher()?,
-            Arc::new(health::HealthClient::new(
-                ic_management_types::Network::new(args.network.clone(), &args.nns_urls).await?,
-            )),
+            store.health_client(&network)?,
             store,
         )
         .await
@@ -244,6 +240,10 @@ impl DreContext {
     pub fn forum_post_link(&self) -> Option<String> {
         self.forum_post_link.clone()
     }
+
+    pub fn health_client(&self) -> Arc<dyn HealthStatusQuerier> {
+        self.health_client.clone()
+    }
 }
 
 #[cfg(test)]
@@ -287,7 +287,7 @@ pub mod tests {
             forum_post_link: "https://forum.dfinity.org/t/123".to_string().into(),
             dry_run: true,
             artifact_downloader,
-            neuron: RefCell::new(None),
+            neuron: RefCell::new(Some(neuron.clone())),
             proceed_without_confirmation: true,
             version: crate::commands::IcAdminVersion::Strict("Shouldn't reach this because of mock".to_string()),
             neuron_opts: super::NeuronOpts {
