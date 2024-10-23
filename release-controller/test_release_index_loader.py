@@ -111,5 +111,7 @@ sudo apt-get install -y curl && curl --proto \'=https\' --tlsv1.2 -sSLO https://
 ```
 
 The two SHA256 sums printed above from a) the downloaded CDN image and b) the locally built image, must be identical, and must match the SHA256 from the payload of the NNS proposal.
+
+While not required for this NNS proposal, as we are only electing a new GuestOS version here, you have the option to verify the build reproducibility of the HostOS by passing `--hostos` to the script above instead of `--guestos`, or the SetupOS by passing `--setupos`.
 """
         )
