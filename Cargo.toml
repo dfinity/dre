@@ -40,7 +40,7 @@ actix-web = { version = "4.9.0", default-features = false, features = [
 ] }
 actix-rt = "2.10.0"
 ahash = "0.8.11"
-anyhow = "1.0.89"
+anyhow = "1.0.90"
 async-recursion = "1.1.1"
 axum-otel-metrics = "0.8.1"
 axum = "0.7.5"
@@ -61,7 +61,7 @@ clap = { version = "4.5", features = [
     "string",
     "cargo",
 ] }
-clap_complete = "4.5.26"
+clap_complete = "4.5.33"
 clio = { version = "0.3.5", features = ["clap", "clap-parse"] }
 colored = "2.1.0"
 comfy-table = "7.1.1"
@@ -78,10 +78,10 @@ base64 = "0.22.1"
 edit = "0.1.5"
 env_logger = "0.11.5"
 erased-serde = "0.4.5"
-flate2 = "1.0.33"
+flate2 = "1.0.34"
 fs-err = "2.11.0"
 fs2 = "0.4.3"
-futures = "0.3.30"
+futures = "0.3.31"
 futures-util = "0.3.31"
 hex = "0.4.3"
 humantime = "2.1.0"
@@ -134,7 +134,7 @@ rosetta-core = { git = "https://github.com/dfinity/ic.git", rev = "ca80a219757f0
 ic-transport-types = "0.37.1"
 ic-utils = "0.37.0"
 itertools = "0.13.0"
-keyring = { version = "3.2.1", features = [
+keyring = { version = "3.5.0", features = [
     "apple-native",
     "sync-secret-service",
 ] }
@@ -153,7 +153,7 @@ prometheus = { version = "0.13.4", features = ["process"] }
 prost = "0.13"
 rand = { version = "0.8.5", features = ["std_rng"] }
 rand_seeder = "0.3.0"
-regex = "1.10.6"
+regex = "1.11.0"
 registry-canister = { git = "https://github.com/dfinity/ic.git", rev = "ca80a219757f00a5dd234f8d8c58316c902f2f2f" }
 reqwest = { version = "0.12", default-features = false, features = [
     "rustls-tls-webpki-roots",
@@ -165,7 +165,7 @@ rust_decimal = "1.36.0"
 rust_decimal_macros = "1.36.0"
 secrecy = { version = "0.8.0" }
 serde = { version = "1.0", features = ["derive"] }
-serde_json = { version = "1.0.128", default-features = false, features = [
+serde_json = { version = "1.0.132", default-features = false, features = [
     "preserve_order",
 ] }
 serde_yaml = "0.9.34"
@@ -185,8 +185,8 @@ strum = { version = "0.26.3", features = ["derive"] }
 strum_macros = "0.26.4"
 tabled = "0.16.0"
 tabular = "0.2"
-tempfile = "3.12.0"
-thiserror = "1.0.63"
+tempfile = "3.13.0"
+thiserror = "1.0.64"
 tokio = { version = "1.40.0", features = ["full"] }
 tokio-util = "0.7.12"
 url = "2.5.2"
@@ -201,7 +201,7 @@ ic-stable-structures = "0.6.5"
 dfn_core = { git = "https://github.com/dfinity/ic.git", rev = "ca80a219757f00a5dd234f8d8c58316c902f2f2f" }
 
 # dre-airflow deps, should be replaced with dre-airflow once
-indexmap = { version = "2.5.0", features = ["serde"] }
+indexmap = { version = "2.6.0", features = ["serde"] }
 
 [profile.release]
 # Add debug information to the release build (does NOT reduce the level of optimization!)
