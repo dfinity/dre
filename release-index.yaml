@@ -6,9 +6,9 @@ releases:
       - name: base
         version: 75dd48c38f296fc907c269263f96633fa8a29d0e
       # Qualification pipeline:
-      # https://github.com/dfinity/ic/actions/runs/11502808806
+      # https://github.com/dfinity/ic/actions/runs/11503249225
       - name: hashes-in-blocks
-        version: c61f916e120cec56ace9a4912cc5c416e9d608d9
+        version: 8ac632c8e45181ac8e7ce04fbfe1e01e6cbd239b
       # Qualification pipeline:
       # https://github.com/dfinity/ic/actions/runs/11502752516
       - name: ubuntu20.04
