@@ -1,15 +1,12 @@
 use std::collections::{BTreeMap, HashSet};
 
 use candid::Principal;
-use dfn_core::api::PrincipalId;
-use dfn_core::call;
 use futures::FutureExt;
 use ic_base_types::NodeId;
 use ic_management_canister_types::{NodeMetricsHistoryArgs, NodeMetricsHistoryResponse};
 use ic_nns_constants::REGISTRY_CANISTER_ID;
 use ic_protobuf::registry::dc::v1::DataCenterRecord;
 use ic_protobuf::registry::node::v1::NodeRecord;
-use ic_protobuf::registry::node_operator;
 use ic_protobuf::registry::node_operator::v1::NodeOperatorRecord;
 use ic_protobuf::registry::node_rewards::v2::NodeRewardsTable;
 use ic_protobuf::registry::subnet::v1::SubnetListRecord;
@@ -17,9 +14,7 @@ use ic_registry_keys::{
     make_data_center_record_key, make_node_operator_record_key, make_node_record_key, make_subnet_list_record_key, NODE_REWARDS_TABLE_KEY,
 };
 use ic_registry_transport::{deserialize_get_value_response, serialize_get_value_request};
-use ic_stable_structures::Storable;
-use on_wire::bytes;
-use prost::Message;
+use ic_types::PrincipalId;
 
 use crate::chrono_utils::DateTimeRange;
 use crate::stable_memory::{self, RegionNodeTypeCategory};
@@ -191,45 +186,33 @@ pub async fn sync_node_metrics() -> anyhow::Result<()> {
     Ok(())
 }
 
-async fn get_most_recent_registry_values<T: prost::Message + Default>(
-    keys: Vec<String>,
-) -> anyhow::Result<BTreeMap<String, T>> {
+async fn get_most_recent_registry_values<T: prost::Message + Default>(keys: Vec<String>) -> anyhow::Result<BTreeMap<String, T>> {
     let latest_registry_version = ic_nns_common::registry::get_latest_version().await;
     let mut buffer = Vec::new();
     let mut keys_to_retry = Vec::new();
     let mut registry_values = BTreeMap::new();
 
     for (index, key) in keys.iter().enumerate() {
-        let fut_value = call(
-            REGISTRY_CANISTER_ID,
-            "get_value",
-            bytes,
-            serialize_get_value_request(key.as_bytes().to_vec(), Some(latest_registry_version)).unwrap(),
-        ).map(|res| res.map(|result| (key.clone(), result)));
+        let get_value_request = serialize_get_value_request(key.as_bytes().to_vec(), Some(latest_registry_version)).unwrap();
+        let fut_value = ic_cdk::api::call::call_raw(Principal::from(REGISTRY_CANISTER_ID), "get_value", get_value_request, 0)
+        .map(|res| res.map(|result| (key.clone(), result)));
 
         buffer.push(fut_value);
-
 
         if buffer.len() > 100 || index == keys.len() - 1 {
             let buffer_batch = std::mem::take(&mut buffer);
             let batch_results = futures::future::try_join_all(buffer_batch)
                 .await
-                .map_err(|(code, msg)| {
-                    anyhow::anyhow!(
-                        "Error when calling registry canister:\n Code:{:?}\nMsg:{}",
-                        code,
-                        msg
-                    )
-                })?;
+                .map_err(|(code, msg)| anyhow::anyhow!("Error when calling registry canister:\n Code:{:?}\nMsg:{}", code, msg))?;
 
             for (key, result_ok) in batch_results {
-                let deserialized_registry_value = deserialize_get_value_response(result_ok)
-                            .map(|(response, _)| T::decode(response.as_slice()).unwrap());
+                let deserialized_registry_value =
+                    deserialize_get_value_response(result_ok).map(|(response, _)| T::decode(response.as_slice()).unwrap());
                 match deserialized_registry_value {
                     Ok(registry_value) => {
                         ic_cdk::println!("Fetched key from registry: {}", key);
                         registry_values.insert(key, registry_value);
-                    },
+                    }
                     Err(_) => keys_to_retry.push(key),
                 }
             }
@@ -239,16 +222,13 @@ async fn get_most_recent_registry_values<T: prost::Message + Default>(
     for key in keys_to_retry {
         for registry_version in (0..=latest_registry_version).rev() {
             ic_cdk::println!("Trying registry version: {}", registry_version);
-    
-            match ic_nns_common::registry::get_value::<T>(
-                key.as_bytes(),
-                Some(registry_version)
-            ).await {
+
+            match ic_nns_common::registry::get_value::<T>(key.as_bytes(), Some(registry_version)).await {
                 Ok((registry_value, _)) => {
                     ic_cdk::println!("Fetched key from registry: {}", key);
                     registry_values.insert(key, registry_value);
                     break;
-                },
+                }
                 Err(e) => {
                     ic_cdk::println!("{}", e);
                 }
@@ -270,20 +250,25 @@ pub async fn get_node_operators_rewardables(rewarding_period: &DateTimeRange) ->
 
     let mut rewardables = BTreeMap::new();
 
-    let node_id_keys = get_daily_metrics(rewarding_period).into_keys().map(|principal| make_node_record_key(NodeId::from(PrincipalId::from(principal))))
+    let node_id_keys = get_daily_metrics(rewarding_period)
+        .into_keys()
+        .map(|principal| make_node_record_key(NodeId::from(PrincipalId::from(principal))))
         .collect_vec();
 
     let node_operators_keys = get_most_recent_registry_values::<NodeRecord>(node_id_keys)
         .await?
         .into_iter()
-        .flat_map(|(_ , node_record)| node_record.node_operator_id.try_into())
+        .flat_map(|(_, node_record)| node_record.node_operator_id.try_into())
         .map(make_node_operator_record_key)
         .collect_vec();
 
-    let node_operator_records  = get_most_recent_registry_values::<NodeOperatorRecord>(node_operators_keys).await?;
+    let node_operator_records = get_most_recent_registry_values::<NodeOperatorRecord>(node_operators_keys).await?;
 
-    let dcs_keys: HashSet<String> = node_operator_records.values().map(|node_operator_record| make_data_center_record_key(node_operator_record.dc_id.as_str())).collect();
-    let dcs_records  = get_most_recent_registry_values::<DataCenterRecord>(dcs_keys.into_iter().collect()).await?;
+    let dcs_keys: HashSet<String> = node_operator_records
+        .values()
+        .map(|node_operator_record| make_data_center_record_key(node_operator_record.dc_id.as_str()))
+        .collect();
+    let dcs_records = get_most_recent_registry_values::<DataCenterRecord>(dcs_keys.into_iter().collect()).await?;
 
     for (_, node_operator_record) in node_operator_records {
         let dc_key = make_data_center_record_key(node_operator_record.dc_id.as_str());
@@ -355,7 +340,7 @@ pub async fn get_assigned_nodes_performance(
     let node_operators_ids: BTreeMap<String, PrincipalId> = get_most_recent_registry_values::<NodeRecord>(node_id_keys)
         .await?
         .into_iter()
-        .map(|(node_id_key , node_record)| (node_id_key, node_record.node_operator_id.try_into().unwrap()))
+        .map(|(node_id_key, node_record)| (node_id_key, node_record.node_operator_id.try_into().unwrap()))
         .collect();
 
     for (node_principal, daily_metrics) in daily_metrics {

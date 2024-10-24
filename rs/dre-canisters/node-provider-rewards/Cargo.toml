@@ -34,6 +34,7 @@ lazy_static = { workspace = true }
 prost = { workspace = true }
 ic-registry-transport = { workspace = true }
 on_wire = { workspace = true }
+ic-types = { workspace = true }
 
 [lib]
 crate-type = ["cdylib"]
