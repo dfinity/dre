@@ -510,7 +510,9 @@ def is_guestos_change(ic_repo: GitRepo, commit: str) -> bool:
     """Check if GuestOS changed for the commit by querying git notes populated by commit annotator."""
     changed = ic_repo.get_note(GUESTOS_CHANGED_NOTES_NAMESPACE, commit)
     if not changed:
-        raise ValueError(f"Could not find targets for commit {commit}")
+        raise ValueError(
+            f"Could not find GuestOS label for commit {commit}. Check out commit annotator logs and runbook: https://dfinity.github.io/dre/release.html#missing-guestos-label."
+        )
     changed = changed.strip()
     if changed == "True":
         return True
