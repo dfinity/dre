@@ -15,6 +15,18 @@ Automates parts of the process of proposing new releases for
 
 2. Once the Google Doc is finished (all teams crossed out), PR will be created with release notes. Once it's merged, the proposal will be placed and forum post updated.
 
+## Recreating notes
+
+Sometimes you'd want to recreate notes, either because a bug occured on the first generation, or you just want to have updated version of the notes submitted.
+
+### Recreate Google Doc
+
+To recreate Google Doc, remove the document from [Google Drive directory](https://drive.google.com/drive/folders/1y-nuH29Gd5Err3pazYH6-LzcDShcOIFf) or rename it such that it doesn't include any release details.
+
+### Recreate GitHub PR with release notes
+
+To recreate GitHub PR, close the outstanding PR and make sure to **delete the branch of the PR**.
+
 ## Contributing
 
 The project is split into two parts - commit annotator and reconciler.
