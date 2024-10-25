@@ -5,14 +5,13 @@ Automates parts of the process of proposing new releases for
 ## Usage
 
 1. Register new release / version
-
-```yaml
-releases:
-  - rc_name: rc--2024-02-21_23-01
-    versions:
-      - name: baseline
-        version: 2e921c9adfc71f3edc96a9eb5d85fc742e7d8a9f
-```
+  ```yaml
+  releases:
+    - rc_name: rc--2024-02-21_23-01
+      versions:
+        - name: baseline
+          version: 2e921c9adfc71f3edc96a9eb5d85fc742e7d8a9f
+  ```
 
 2. Once the Google Doc is finished (all teams crossed out), PR will be created with release notes. Once it's merged, the proposal will be placed and forum post updated.
 
@@ -31,26 +30,21 @@ This simple service checks out each commit on `master` and `rc-*` branches of IC
 Reconciler is responsible for generating release notes (1), publishing them as google docs and sending a notification to #eng-release Slack channel (2), creating a GitHub PR to publish notes (3), placing the proposal for electing a version (4) and creating and updating forum post (5).
 
 1. generating release notes
-
-Done by release_notes.py. You can manually run the script for debugging purposes.
+  Done by release_notes.py. You can manually run the script for debugging purposes.
 
 2. google docs publish
-
-Done by google_docs.py. You can run the program manually to debug issues. Change the `main()` function to your needs.
+  Done by google_docs.py. You can run the program manually to debug issues. Change the `main()` function to your needs.
 
 3. creating a GitHub PR to publish notes
-
-Done by publish_notes.py. It's not recommended to run this manually. Instead, if you have an issue, try to create a unit test to resolve the issue. You can download the Google Doc you're having problems with to use it in your test. See tests that use `release-controller/test_data/b0ade55f7e8999e2842fe3f49df163ba224b71a2.docx`.
+  Done by publish_notes.py. It's not recommended to run this manually. Instead, if you have an issue, try to create a unit test to resolve the issue. You can download the Google Doc you're having problems with to use it in your test. See tests that use `release-controller/test_data/b0ade55f7e8999e2842fe3f49df163ba224b71a2.docx`.
 
 4. placing the proposal for electing a version
-
-Done by dre_cli.py / reconciler.py. There should be a logs for the command that was run if you want to debug any issues with it.
+  Done by dre_cli.py / reconciler.py. There should be a logs for the command that was run if you want to debug any issues with it.
 
 5. forum post update
+  Done by forum.py. You can run the program manually to debug issues. Change the `main()` function to your needs.
 
-Done by forum.py. You can run the program manually to debug issues. Change the `main()` function to your needs.
-
-It's important to note that forum logic depends on finding alredy created blog posts by querying posts from authenticated user (@DRETeam). For those reasons, it won't be able to find manually created posts by other users.
+  It's important to note that forum logic depends on finding alredy created blog posts by querying posts from authenticated user (@DRETeam). For those reasons, it won't be able to find manually created posts by other users.
 
 
 ## Resolving issues
@@ -88,25 +82,21 @@ ERROR: ...
 #### Resolution
 
 1. Fetch git notes
-
   ```
   git fetch origin 'refs/notes/*:refs/notes/*' -f --prune
   ```
 
 2. Display notes for a commit. This should normally output `True` or `False`.
-
   ```
   git notes --ref guestos-changed show <commit>
   ```
 
 3. If you get an error, you can manually label the commit.
-
   ```
   git notes --ref guestos-changed add -m "<True|False>" <commit>
   ```
 
 4. Finally, push the labels. If you get a conflict at this point, just start over instead of force pushing.
-
   ```
   git push origin refs/notes/guestos-changed
   ```
