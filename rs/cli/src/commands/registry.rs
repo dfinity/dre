@@ -421,6 +421,7 @@ async fn get_node_providers(local_registry: &Arc<dyn LazyRegistry>) -> anyhow::R
         .await?
         .values()
         .map(|operator| operator.provider.clone())
+        .sorted_by_key(|provider| provider.principal)
         .dedup_by(|x, y| x.principal == y.principal)
         .collect_vec();
 
