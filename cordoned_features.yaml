@@ -5,6 +5,7 @@
 features:
   # Background:
   # As per the NP's forum post and notification, 87M is going to keep LV1 and PL1, which means that DL1 is going to be offboarded (and sold to someone else to onboard the nodes somewhere.
-  # His end date is Nov 30! 
+  # His end date is Nov 30!
+  # https://dfinity.slack.com/archives/C05LD0CEAHY/p1730385735765399
   - feature: data_center
     value: dl1
