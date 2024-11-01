@@ -3,6 +3,8 @@
 # The full list of features can be found here:
 # https://github.com/dfinity/dre/blob/main/rs/ic-management-types/src/lib.rs#L317-L324
 features:
-  # Example entry
-  # - feature: data_center
-  #   value: mu1
+  # Background:
+  # As per the NP's forum post and notification, 87M is going to keep LV1 and PL1, which means that DL1 is going to be offboarded (and sold to someone else to onboard the nodes somewhere.
+  # His end date is Nov 30! 
+  - feature: data_center
+    value: dl1
