@@ -1,5 +1,5 @@
 {
-  "checksum": "67d524a177ed51e1fbd1fd76a0c8571d6a6c4897167ecc5aab1cc0827acee8f2",
+  "checksum": "b9a098cf38a25d6eabe74b8d704b6ddcb5aebfdf40cb01dd1a81b2376028b32e",
   "crates": {
     "actix-codec 0.5.2": {
       "name": "actix-codec",
@@ -15610,6 +15610,10 @@
             {
               "id": "ic-utils 0.37.0",
               "target": "ic_utils"
+            },
+            {
+              "id": "icrc-ledger-types 0.1.6",
+              "target": "icrc_ledger_types"
             },
             {
               "id": "log 0.4.22",
@@ -34455,7 +34459,7 @@
               "target": "pin_project_lite"
             },
             {
-              "id": "quinn-proto 0.11.6",
+              "id": "quinn-proto 0.11.8",
               "target": "quinn_proto",
               "alias": "proto"
             },
@@ -34496,13 +34500,13 @@
       },
       "license": "MIT OR Apache-2.0"
     },
-    "quinn-proto 0.11.6": {
+    "quinn-proto 0.11.8": {
       "name": "quinn-proto",
-      "version": "0.11.6",
+      "version": "0.11.8",
       "repository": {
         "Http": {
-          "url": "https://static.crates.io/crates/quinn-proto/0.11.6/download",
-          "sha256": "ba92fb39ec7ad06ca2582c0ca834dfeadcaf06ddfc8e635c80aa7e1c05315fdd"
+          "url": "https://static.crates.io/crates/quinn-proto/0.11.8/download",
+          "sha256": "fadfaed2cd7f389d0161bb73eeb07b7b78f8691047a6f3e73caaeae55310a4a6"
         }
       },
       "targets": [
@@ -34563,7 +34567,7 @@
           "selects": {}
         },
         "edition": "2021",
-        "version": "0.11.6"
+        "version": "0.11.8"
       },
       "license": "MIT OR Apache-2.0"
     },
