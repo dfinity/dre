@@ -15,6 +15,22 @@ releases:
       # https://github.com/dfinity/ic/actions/runs/11612372216
       - name: 6.11-kernel
         version: f910b32efbd32183962b74464b1044b900a58a5b
+      # Qualification pipeline:
+      # https://github.com/dfinity/ic/actions/runs/11667261155
+      - name: base-hotfix-snapshots
+        version: 72a6598aaa193edc965e0860da731cc5af7c89e0
+      # Qualification pipeline:
+      # https://github.com/dfinity/ic/actions/runs/11667291298
+      - name: hashes-in-blocks-hotfix-snapshots
+        version: c6847128f3a872e0e084b2920bfcd21f881c69fa
+      # Qualification pipeline:
+      # https://github.com/dfinity/ic/actions/runs/11667305182
+      - name: ubuntu20.04-hotfix-snapshots
+        version: 0111c20983290bd4a338ad22855e176803e21842
+      # Qualification pipeline:
+      # https://github.com/dfinity/ic/actions/runs/11667282352
+      - name: 6.11-kernel-hotfix-snapshots
+        version: 1eeb4d74deb00bd52739cbd6f37ce1dc72e0c76e
   - rc_name: rc--2024-10-23_03-07
     versions:
       # Qualification pipeline:
