@@ -131,6 +131,7 @@ ic-sns-wasm = { git = "https://github.com/dfinity/ic.git", rev = "ca80a219757f00
 cycles-minting-canister = { git = "https://github.com/dfinity/ic.git", rev = "ca80a219757f00a5dd234f8d8c58316c902f2f2f" }
 ic-icrc1-test-utils = { git = "https://github.com/dfinity/ic.git", rev = "ca80a219757f00a5dd234f8d8c58316c902f2f2f" }
 rosetta-core = { git = "https://github.com/dfinity/ic.git", rev = "ca80a219757f00a5dd234f8d8c58316c902f2f2f" }
+icrc-ledger-types = { git = "https://github.com/dfinity/ic.git", rev = "ca80a219757f00a5dd234f8d8c58316c902f2f2f" }
 ic-transport-types = "0.37.1"
 ic-utils = "0.37.0"
 itertools = "0.13.0"

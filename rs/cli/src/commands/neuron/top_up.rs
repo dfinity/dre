@@ -1,5 +1,5 @@
 use clap::Args;
-use ic_canisters::governance::GovernanceCanisterWrapper;
+use ic_canisters::{governance::GovernanceCanisterWrapper, ledger::LedgerCanisterWrapper};
 use itertools::Itertools;
 
 use crate::commands::ExecutableCommand;
@@ -17,7 +17,16 @@ impl ExecutableCommand for TopUp {
     async fn execute(&self, ctx: crate::ctx::DreContext) -> anyhow::Result<()> {
         let governance = GovernanceCanisterWrapper::from(ctx.create_ic_agent_canister_client(None).await?);
         let full_neuron = governance.get_full_neuron(ctx.neuron().await?.neuron_id).await?;
-        let account_hex = full_neuron.account.iter().map(|byte| format!("{:02x}", byte)).join("");
+        let ledger = LedgerCanisterWrapper::from(ctx.create_ic_agent_canister_client(None).await?);
+        let account = ledger
+            .get_account_id(Some(
+                full_neuron
+                    .account
+                    .try_into()
+                    .map_err(|e| anyhow::anyhow!("Expected sub account to be exactly 32 bytes. Full error: {:?}", e))?,
+            ))
+            .await?;
+        let account_hex = account.iter().map(|byte| format!("{:02x}", byte)).join("");
 
         println!("Please request ICP in the #icp-to-go slack channel:");
         println!(

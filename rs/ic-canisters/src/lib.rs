@@ -19,6 +19,7 @@ use std::time::Duration;
 use url::Url;
 
 pub mod governance;
+pub mod ledger;
 pub mod management;
 pub mod node_metrics;
 pub mod parallel_hardware_identity;
