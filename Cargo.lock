@@ -3109,6 +3109,7 @@ dependencies = [
  "ic-transport-types",
  "ic-types",
  "ic-utils 0.37.0",
+ "icrc-ledger-types",
  "log",
  "pkcs11",
  "prost",

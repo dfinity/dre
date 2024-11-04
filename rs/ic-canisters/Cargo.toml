@@ -37,3 +37,4 @@ ic-registry-keys.workspace = true
 ic-types.workspace = true
 ic-interfaces-registry.workspace = true
 ic-registry-nns-data-provider.workspace = true
+icrc-ledger-types.workspace = true
