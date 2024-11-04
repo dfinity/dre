@@ -3979,7 +3979,7 @@ dependencies = [
  "ic-nns-constants",
  "ic-nns-governance",
  "ic-protobuf",
- "ic-registry-client",
+ "ic-registry-client 0.9.0",
  "ic-registry-client-fake",
  "ic-registry-client-helpers",
  "ic-registry-common-proto",
@@ -4480,9 +4480,48 @@ dependencies = [
 ]
 
 [[package]]
+name = "ic-registry-canister-client"
+version = "0.5.6"
+dependencies = [
+ "ic-cdk 0.16.0 (git+https://github.com/dfinity/cdk-rs.git?rev=882fa28116c84887be626a44ce031b739e45e3d5)",
+ "ic-interfaces-registry",
+ "ic-registry-keys",
+ "ic-types",
+]
+
+[[package]]
+name = "ic-registry-client"
+version = "0.5.6"
+dependencies = [
+ "crossbeam-channel",
+ "ic-interfaces-registry",
+ "ic-metrics",
+ "ic-registry-client-common",
+ "ic-registry-client-helpers",
+ "ic-registry-common-proto",
+ "ic-registry-proto-data-provider",
+ "ic-test-utilities-metrics",
+ "ic-types",
+ "ic-utils-thread",
+ "prometheus",
+]
+
+[[package]]
 name = "ic-registry-client"
 version = "0.9.0"
 source = "git+https://github.com/dfinity/ic.git?rev=ca80a219757f00a5dd234f8d8c58316c902f2f2f#ca80a219757f00a5dd234f8d8c58316c902f2f2f"
+dependencies = [
+ "crossbeam-channel",
+ "ic-interfaces-registry",
+ "ic-metrics",
+ "ic-types",
+ "ic-utils-thread",
+ "prometheus",
+]
+
+[[package]]
+name = "ic-registry-client-common"
+version = "0.5.6"
 dependencies = [
  "crossbeam-channel",
  "ic-interfaces-registry",
@@ -4602,6 +4641,20 @@ source = "git+https://github.com/dfinity/ic.git?rev=ca80a219757f00a5dd234f8d8c58
 dependencies = [
  "ic-base-types",
  "ic-protobuf",
+]
+
+[[package]]
+name = "ic-registry-proto-data-provider"
+version = "0.9.0"
+source = "git+https://github.com/dfinity/ic.git?rev=ca80a219757f00a5dd234f8d8c58316c902f2f2f#ca80a219757f00a5dd234f8d8c58316c902f2f2f"
+dependencies = [
+ "bytes",
+ "ic-interfaces-registry",
+ "ic-registry-common-proto",
+ "ic-registry-transport",
+ "ic-sys",
+ "ic-types",
+ "thiserror",
 ]
 
 [[package]]
@@ -4985,6 +5038,15 @@ dependencies = [
  "thiserror",
  "tokio",
  "wsl",
+]
+
+[[package]]
+name = "ic-test-utilities-metrics"
+version = "0.9.0"
+source = "git+https://github.com/dfinity/ic.git?rev=ca80a219757f00a5dd234f8d8c58316c902f2f2f#ca80a219757f00a5dd234f8d8c58316c902f2f2f"
+dependencies = [
+ "ic-metrics",
+ "prometheus",
 ]
 
 [[package]]
@@ -5933,7 +5995,7 @@ dependencies = [
  "ic-async-utils",
  "ic-crypto-utils-threshold-sig-der",
  "ic-management-types",
- "ic-registry-client",
+ "ic-registry-client 0.9.0",
  "ic-types",
  "multiservice-discovery-shared",
  "opentelemetry",
@@ -6009,11 +6071,13 @@ dependencies = [
  "ic-cdk 0.16.0 (git+https://github.com/dfinity/cdk-rs.git?rev=882fa28116c84887be626a44ce031b739e45e3d5)",
  "ic-cdk-macros 0.16.0 (git+https://github.com/dfinity/cdk-rs.git?rev=882fa28116c84887be626a44ce031b739e45e3d5)",
  "ic-cdk-timers 0.10.0",
+ "ic-interfaces-registry",
  "ic-management-canister-types",
  "ic-nns-common",
  "ic-nns-constants",
  "ic-nns-governance-api",
  "ic-protobuf",
+ "ic-registry-common-proto",
  "ic-registry-keys",
  "ic-registry-transport",
  "ic-stable-structures",
@@ -7815,7 +7879,7 @@ dependencies = [
  "ic-interfaces-registry",
  "ic-metrics",
  "ic-protobuf",
- "ic-registry-client",
+ "ic-registry-client 0.9.0",
  "ic-registry-client-fake",
  "ic-registry-client-helpers",
  "ic-registry-common-proto",

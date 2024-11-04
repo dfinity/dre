@@ -35,6 +35,8 @@ prost = { workspace = true }
 ic-registry-transport = { workspace = true }
 on_wire = { workspace = true }
 ic-types = { workspace = true }
+ic-interfaces-registry = { workspace = true }
+ic-registry-common-proto = { workspace = true }
 
 [lib]
 crate-type = ["cdylib"]

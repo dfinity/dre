@@ -7,7 +7,8 @@ use std::cell::RefCell;
 use std::collections::BTreeMap;
 
 use crate::types::{
-    NodeMetricsStored, NodeMetricsStoredKey, NodeProviderRewards, NodeProviderRewardsKey, NodeRewardsMultiplierKey, RewardsMultiplierStats, TimestampNanos,
+    NodeMetricsStored, NodeMetricsStoredKey, NodeProviderRewards, NodeProviderRewardsKey, NodeRewardsMultiplierKey, RegistryKey,
+    RewardsMultiplierStats, TimestampNanos,
 };
 
 type Memory = VirtualMemory<DefaultMemoryImpl>;
@@ -36,9 +37,21 @@ thread_local! {
         RefCell::new(StableBTreeMap::init(
         MEMORY_MANAGER.with(|m| m.borrow().get(MemoryId::new(3)))
     ));
+
+    pub static REGISTRY_STORED: RefCell<StableBTreeMap<RegistryKey, Option<Vec<u8>>, Memory>> =
+        RefCell::new(StableBTreeMap::init(
+        MEMORY_MANAGER.with(|m| m.borrow().get(MemoryId::new(4)))
+    ));
+
+    pub static TS_REGISTRY_VERSIONS: RefCell<StableBTreeMap<TimestampNanos, u64, Memory>> =
+        RefCell::new(StableBTreeMap::init(
+        MEMORY_MANAGER.with(|m| m.borrow().get(MemoryId::new(5)))
+    ));
 }
 
 lazy_static! {
+    pub static ref MIN_STRING: String = String::from("");
+    pub static ref MAX_STRING: String = String::from("\u{10FFFF}");
     static ref MIN_PRINCIPAL_ID: Principal = Principal::try_from(vec![]).expect("Unable to construct MIN_PRINCIPAL_ID.");
     static ref MAX_PRINCIPAL_ID: Principal =
         Principal::try_from(vec![0xFF_u8; Principal::MAX_LENGTH_IN_BYTES]).expect("Unable to construct MAX_PRINCIPAL_ID.");

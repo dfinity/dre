@@ -1,7 +1,7 @@
 use std::fmt;
 
-use chrono::{Datelike, Duration, NaiveDate, NaiveDateTime, TimeZone, Utc};
 use crate::types::TimestampNanos;
+use chrono::{Datelike, Duration, NaiveDate, NaiveDateTime, TimeZone, Utc};
 
 #[derive(Clone)]
 pub struct DateTimeRange {
@@ -11,11 +11,7 @@ pub struct DateTimeRange {
 
 impl fmt::Display for DateTimeRange {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(
-            f,
-            "DateTimeRange: start={}, end={}",
-            self.start_dt, self.end_dt
-        )
+        write!(f, "DateTimeRange: start={}, end={}", self.start_dt, self.end_dt)
     }
 }
 
@@ -33,7 +29,6 @@ impl DateTimeRange {
     pub fn last_reward_period(current_ts: TimestampNanos) -> Self {
         let current_date = Utc.timestamp_nanos(current_ts as i64).date_naive().and_hms_opt(0, 0, 0).unwrap();
         let (start_date, end_date);
-
 
         if current_date.day() >= 14 {
             end_date = NaiveDate::from_ymd_opt(current_date.year(), current_date.month(), 14).unwrap();
@@ -63,4 +58,14 @@ impl DateTimeRange {
     pub fn end_timestamp_nanos(&self) -> TimestampNanos {
         self.end_dt.and_utc().timestamp_nanos_opt().unwrap() as u64
     }
+}
+
+pub fn duration_until_midnight(current_ts: TimestampNanos) -> std::time::Duration {
+    let current_dt: NaiveDateTime = Utc.timestamp_nanos(current_ts as i64).naive_utc();
+    let mut target_dt: NaiveDateTime = current_dt.date().and_hms_opt(0, 10, 0).unwrap() + Duration::days(1);
+    if current_dt >= target_dt {
+        target_dt = target_dt + Duration::days(1);
+    }
+
+    target_dt.signed_duration_since(current_dt).to_std().expect("Failed to convert duration")
 }

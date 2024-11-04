@@ -1,1 +1,3 @@
-service : {}
+service : {
+    "increase_int" : () -> ();
+}
