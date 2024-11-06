@@ -1,5 +1,5 @@
 {
-  "checksum": "3799cff98dde0d30c14cdff202327ee9438081ac25593f99168d4fadc1dad52b",
+  "checksum": "214cdfa061629de6bcf634f9d0bbc33eeadc273fdc83736aa3864d2e6943dde3",
   "crates": {
     "actix-codec 0.5.2": {
       "name": "actix-codec",
@@ -28084,35 +28084,29 @@
         ],
         "crate_features": {
           "common": [
+            "elf",
+            "errno",
             "general",
             "ioctl",
             "no_std"
           ],
           "selects": {
             "aarch64-unknown-linux-gnu": [
-              "elf",
-              "errno",
               "prctl",
               "std",
               "system"
             ],
             "arm-unknown-linux-gnueabi": [
-              "elf",
-              "errno",
               "prctl",
               "std",
               "system"
             ],
             "armv7-unknown-linux-gnueabi": [
-              "elf",
-              "errno",
               "prctl",
               "std",
               "system"
             ],
             "i686-unknown-linux-gnu": [
-              "elf",
-              "errno",
               "prctl",
               "std",
               "system"
@@ -28128,8 +28122,6 @@
               "system"
             ],
             "x86_64-unknown-linux-gnu": [
-              "elf",
-              "errno",
               "prctl",
               "std",
               "system"
@@ -29644,7 +29636,7 @@
         },
         "version": "0.5.6"
       },
-      "license": null
+      "license": "Apache-2.0"
     },
     "node-status-updater 0.5.6": {
       "name": "node-status-updater",
