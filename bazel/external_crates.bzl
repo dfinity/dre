@@ -54,6 +54,7 @@ def external_crates_repository():
             "//rs/ic-observability/sns-downloader:Cargo.toml",
             "//rs/log-fetcher:Cargo.toml",
             "//rs/slack-notifications:Cargo.toml",
+            "//rs/dre-canisters/node-provider-rewards-lib:Cargo.toml",
             "//rs/dre-canisters/trustworthy-node-metrics/src/trustworthy-node-metrics:Cargo.toml",
             "//rs/dre-canisters/trustworthy-node-metrics/src/trustworthy-node-metrics-types:Cargo.toml",
         ],
