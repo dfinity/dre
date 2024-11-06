@@ -55,7 +55,7 @@ pub async fn sync_local_registry(
     let mut latest_version = if !Path::new(&local_path).exists() {
         ZERO_REGISTRY_VERSION
     } else {
-        let registry_cache = FakeRegistryClient::new(local_store.clone());
+        let registry_cache = FakeRegistryClient::new(Arc::clone(&local_store));
         registry_cache.update_to_latest_version();
         registry_cache.get_latest_version()
     };

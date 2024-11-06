@@ -15,7 +15,7 @@ type Memory = VirtualMemory<DefaultMemoryImpl>;
 pub type RegionNodeTypeCategory = (String, String);
 
 thread_local! {
-    static MEMORY_MANAGER: RefCell<MemoryManager<DefaultMemoryImpl>> =
+    pub static MEMORY_MANAGER: RefCell<MemoryManager<DefaultMemoryImpl>> =
     RefCell::new(MemoryManager::init(DefaultMemoryImpl::default()));
 
     static NODES_METRICS: RefCell<StableBTreeMap<NodeMetricsStoredKey, NodeMetricsStored, Memory>> =
@@ -125,6 +125,6 @@ pub fn store_node_provider_logs(rewards_ts: u64, node_provider: Principal, log: 
 }
 
 pub(crate) fn wipe() {
-    NODES_REWARDS_MULTIPLIER.with_borrow_mut(|m| m.clear_new());
-    NODE_PROVIDERS_REWARDS.with_borrow_mut(|m| m.clear_new());
+    REGISTRY_STORED.with_borrow_mut(|mem| mem.clear_new());
+    TS_REGISTRY_VERSIONS.with_borrow_mut(|mem| mem.clear_new());
 }

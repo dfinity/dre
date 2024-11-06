@@ -6,6 +6,8 @@ use ic_management_canister_types::NodeMetricsHistoryResponse;
 use ic_stable_structures::{storable::Bound, Storable};
 use serde::Serialize;
 
+use crate::stable_memory::RegionNodeTypeCategory;
+
 pub type SubnetNodeMetricsHistory = (PrincipalId, Vec<NodeMetricsHistoryResponse>);
 pub type NodeMetricsGrouped = (u64, PrincipalId, ic_management_canister_types::NodeMetrics);
 
@@ -15,14 +17,13 @@ pub type NodeMetricsStoredKey = (TimestampNanos, Principal);
 pub type NodeRewardsMultiplierKey = (TimestampNanos, Principal, Principal);
 pub type NodeProviderRewardsKey = (TimestampNanos, Principal);
 
-
 #[derive(Debug, Deserialize, Serialize, CandidType, Clone, PartialEq, Eq, PartialOrd, Ord)]
 pub struct RegistryKey {
     pub version: u64,
-    pub key: String
+    pub key: String,
 }
 
-const MAX_VALUE_SIZE_BYTES_REGISTRY_KEY: u32 = 102;
+const MAX_VALUE_SIZE_BYTES_REGISTRY_KEY: u32 = 200;
 
 impl Storable for RegistryKey {
     fn to_bytes(&self) -> std::borrow::Cow<[u8]> {
@@ -65,64 +66,10 @@ impl Storable for NodeMetricsStored {
     };
 }
 
-#[derive(Debug, Deserialize, Serialize, CandidType, Clone, PartialEq, Eq, PartialOrd, Ord)]
-pub struct RewardableNodes {
-    pub node_provider_id: Principal,
-    pub region: String,
-    pub rewardables: BTreeMap<String, u32>,
-}
-
-const MAX_VALUE_SIZE_BYTES_REWARDABLES: u32 = 102;
-
-impl Storable for RewardableNodes {
-    fn to_bytes(&self) -> std::borrow::Cow<[u8]> {
-        Cow::Owned(Encode!(self).unwrap())
-    }
-
-    fn from_bytes(bytes: std::borrow::Cow<[u8]>) -> Self {
-        Decode!(bytes.as_ref(), Self).unwrap()
-    }
-
-    const BOUND: Bound = Bound::Bounded {
-        max_size: MAX_VALUE_SIZE_BYTES_REWARDABLES,
-        is_fixed_size: false,
-    };
-}
-
-// subnet_node_metrics query call
 #[derive(Deserialize, CandidType)]
-pub struct SubnetNodeMetricsArgs {
-    pub ts: Option<u64>,
-    pub subnet_id: Option<Principal>,
-}
-
-#[derive(Debug, Deserialize, Serialize, CandidType, Clone)]
-pub struct NodeMetrics {
-    pub node_id: Principal,
-    pub num_blocks_proposed_total: u64,
-    pub num_blocks_failures_total: u64,
-}
-
-#[derive(Debug, Deserialize, CandidType)]
-pub struct SubnetNodeMetricsResponse {
-    pub ts: u64,
-    pub subnet_id: Principal,
-    pub node_metrics: Vec<NodeMetrics>,
-}
-
-// node_rewards query call
-#[derive(Deserialize, CandidType)]
-pub struct NodeRewardsArgs {
+pub struct NodeProviderXDRRewardsArgs {
     pub from_ts: u64,
     pub to_ts: u64,
-    pub node_id: Principal,
-}
-
-#[derive(Deserialize, CandidType)]
-pub struct NodeProviderRewardsArgs {
-    pub from_ts: u64,
-    pub to_ts: u64,
-    pub node_provider_id: Principal,
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize, CandidType)]
@@ -195,7 +142,7 @@ impl Storable for RewardsMultiplierStats {
     };
 }
 
-#[derive(Debug, Deserialize, CandidType)]
+#[derive(Debug, Deserialize, CandidType, Clone)]
 pub struct NodeProviderRewards {
     pub rewards_xdr_permyriad: u64,
     pub rewards_xdr_permyriad_no_reduction: u64,
@@ -218,9 +165,17 @@ impl Storable for NodeProviderRewards {
     };
 }
 
-#[derive(Debug)]
-pub struct NodeMetadata {
-    pub node_provider_id: Principal,
+#[derive(Default)]
+pub struct NodeProviderRewardables {
+    pub node_provider_id: PrincipalId,
+    pub rewardable_nodes: BTreeMap<RegionNodeTypeCategory, u32>,
+    pub assigned_nodes_metrics: BTreeMap<Node, Vec<DailyNodeMetrics>>,
+}
+
+#[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Clone)]
+pub struct Node {
+    pub node_id: PrincipalId,
+    pub node_provider_id: PrincipalId,
     pub region: String,
     pub node_type: String,
 }

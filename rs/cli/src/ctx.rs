@@ -126,6 +126,7 @@ impl DreContext {
     }
 
     pub async fn registry(&self) -> Arc<dyn LazyRegistry> {
+        let 
         if let Some(reg) = self.registry.borrow().as_ref() {
             return reg.clone();
         }

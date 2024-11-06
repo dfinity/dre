@@ -1,21 +1,27 @@
 use crate::{
     computation_logger::Entry,
-    types::{NodeProviderRewards, RewardsMultiplierStats},
+    computation_logger::RewardsComputationLogger,
+    metrics::MetricsQuerier,
+    registry_querier::RegistryQuerier,
+    types::{Node, NodeProviderRewardables, NodeProviderRewards, RewardsMultiplierStats},
 };
-use candid::Principal;
 use ic_base_types::PrincipalId;
 use ic_protobuf::registry::node_rewards::v2::{NodeRewardRate, NodeRewardsTable};
 use itertools::Itertools;
 use num_traits::ToPrimitive;
 use rust_decimal::Decimal;
 use rust_decimal_macros::dec;
-use std::collections::{self, BTreeMap, HashMap};
+use std::{
+    cell::RefCell,
+    collections::{self, BTreeMap, HashMap},
+    rc::Rc,
+};
 
 use crate::{
     chrono_utils::DateTimeRange,
-    computation_logger::{Operation, RewardsComputationLogger},
+    computation_logger::Operation,
     stable_memory::{self, RegionNodeTypeCategory},
-    types::{DailyNodeMetrics, NodeMetadata},
+    types::DailyNodeMetrics,
 };
 
 const MIN_FAILURE_RATE: Decimal = dec!(0.1);
@@ -24,14 +30,24 @@ const MAX_FAILURE_RATE: Decimal = dec!(0.6);
 const RF: &str = "Linear Reduction factor";
 
 pub struct RewardsManager {
-    logger: RewardsComputationLogger,
+    registry_querier: RegistryQuerier,
+    metrics_querier: MetricsQuerier,
+    rewarding_period: DateTimeRange,
+    logger: Rc<RefCell<RewardsComputationLogger>>,
 }
 
 impl RewardsManager {
-    pub fn new() -> Self {
+    pub fn new(nodes_manager: RegistryQuerier, rewarding_period: DateTimeRange) -> Self {
         Self {
-            logger: RewardsComputationLogger::new(),
+            registry_querier: nodes_manager,
+            metrics_querier: MetricsQuerier {},
+            rewarding_period,
+            logger: Rc::new(RefCell::new(RewardsComputationLogger::new())),
         }
+    }
+
+    fn logger(&self) -> std::cell::RefMut<'_, RewardsComputationLogger> {
+        self.logger.borrow_mut()
     }
 
     /// Calculates the rewards reduction based on the failure rate.
@@ -55,9 +71,9 @@ impl RewardsManager {
     ///
     /// 3. If the `failure_rate` is within the defined range (`MIN_FAILURE_RATE` to `MAX_FAILURE_RATE`),
     ///    the function calculates the reduction proportionally.
-    fn rewards_reduction_percent(&mut self, failure_rate: &Decimal) -> Decimal {
+    fn rewards_reduction_percent(&self, failure_rate: &Decimal) -> Decimal {
         if failure_rate < &MIN_FAILURE_RATE {
-            self.logger.execute(
+            self.logger().execute(
                 &format!(
                     "No Reduction applied because {} is less than {} failure rate.\n{}",
                     failure_rate.round_dp(4),
@@ -67,7 +83,7 @@ impl RewardsManager {
                 Operation::Set(dec!(0)),
             )
         } else if failure_rate > &MAX_FAILURE_RATE {
-            self.logger.execute(
+            self.logger().execute(
                 &format!(
                     "Max reduction applied because {} is over {} failure rate.\n{}",
                     failure_rate.round_dp(4),
@@ -78,15 +94,15 @@ impl RewardsManager {
             )
         } else {
             let y_change = self
-                .logger
+                .logger()
                 .execute("Linear Reduction Y change", Operation::Subtract(*failure_rate, MIN_FAILURE_RATE));
             let x_change = self
-                .logger
+                .logger()
                 .execute("Linear Reduction X change", Operation::Subtract(MAX_FAILURE_RATE, MIN_FAILURE_RATE));
 
-            let m = self.logger.execute("Compute m", Operation::Divide(y_change, x_change));
+            let m = self.logger().execute("Compute m", Operation::Divide(y_change, x_change));
 
-            self.logger.execute(RF, Operation::Multiply(m, dec!(0.8)))
+            self.logger().execute(RF, Operation::Multiply(m, dec!(0.8)))
         }
     }
 
@@ -108,25 +124,25 @@ impl RewardsManager {
     /// 2. The `overall_failure_rate` is calculated by dividing the `overall_failed` blocks by the `overall_total` blocks.
     /// 3. The `rewards_reduction` function is applied to `overall_failure_rate`.
     /// 3. Finally, the rewards percentage to be distrubuted to the node is computed.
-    fn node_rewards_multiplier(&mut self, daily_metrics: &[DailyNodeMetrics], total_days: u64) -> (Decimal, RewardsMultiplierStats) {
+    fn node_rewards_multiplier(&self, daily_metrics: &[DailyNodeMetrics], total_days: u64) -> (Decimal, RewardsMultiplierStats) {
         let total_days = Decimal::from(total_days);
 
         let days_assigned = self
-            .logger
+            .logger()
             .execute("Assigned Days In Period", Operation::Set(Decimal::from(daily_metrics.len())));
         let days_unassigned = self
-            .logger
+            .logger()
             .execute("Unassigned Days In Period", Operation::Subtract(total_days, days_assigned));
 
         let daily_failed = daily_metrics.iter().map(|metrics| metrics.num_blocks_failed.into()).collect_vec();
         let daily_proposed = daily_metrics.iter().map(|metrics| metrics.num_blocks_proposed.into()).collect_vec();
 
-        let overall_failed = self.logger.execute("Computing Total Failed Blocks", Operation::Sum(daily_failed));
-        let overall_proposed = self.logger.execute("Computing Total Proposed Blocks", Operation::Sum(daily_proposed));
+        let overall_failed = self.logger().execute("Computing Total Failed Blocks", Operation::Sum(daily_failed));
+        let overall_proposed = self.logger().execute("Computing Total Proposed Blocks", Operation::Sum(daily_proposed));
         let overall_total = self
-            .logger
+            .logger()
             .execute("Computing Total Blocks", Operation::Sum(vec![overall_failed, overall_proposed]));
-        let overall_failure_rate = self.logger.execute(
+        let overall_failure_rate = self.logger().execute(
             "Computing Total Failure Rate",
             if overall_total > dec!(0) {
                 Operation::Divide(overall_failed, overall_total)
@@ -136,18 +152,18 @@ impl RewardsManager {
         );
 
         let rewards_reduction = self.rewards_reduction_percent(&overall_failure_rate);
-        let rewards_multiplier_unassigned = self.logger.execute("Reward Multiplier Unassigned Days", Operation::Set(dec!(1)));
+        let rewards_multiplier_unassigned = self.logger().execute("Reward Multiplier Unassigned Days", Operation::Set(dec!(1)));
         let rewards_multiplier_assigned = self
-            .logger
+            .logger()
             .execute("Reward Multiplier Assigned Days", Operation::Subtract(dec!(1), rewards_reduction));
         let assigned_days_factor = self
-            .logger
+            .logger()
             .execute("Assigned Days Factor", Operation::Multiply(days_assigned, rewards_multiplier_assigned));
-        let unassigned_days_factor = self.logger.execute(
+        let unassigned_days_factor = self.logger().execute(
             "Unassigned Days Factor",
             Operation::Multiply(days_unassigned, rewards_multiplier_unassigned),
         );
-        let rewards_multiplier = self.logger.execute(
+        let rewards_multiplier = self.logger().execute(
             "Average reward multiplier",
             Operation::Divide(assigned_days_factor + unassigned_days_factor, total_days),
         );
@@ -166,7 +182,7 @@ impl RewardsManager {
     }
 
     fn node_provider_rewards(
-        &mut self,
+        &self,
         assigned_multipliers: &collections::BTreeMap<RegionNodeTypeCategory, Vec<Decimal>>,
         rewardable_nodes: &collections::BTreeMap<RegionNodeTypeCategory, u32>,
         rewards_table: &NodeRewardsTable,
@@ -182,7 +198,7 @@ impl RewardsManager {
             let rate = match rewards_table.get_rate(region, node_type) {
                 Some(rate) => rate,
                 None => {
-                    self.logger.add_entry(Entry::RateNotFoundInRewardTable {
+                    self.logger().add_entry(Entry::RateNotFoundInRewardTable {
                         node_type: node_type.clone(),
                         region: region.clone(),
                     });
@@ -201,7 +217,7 @@ impl RewardsManager {
                 let rewards = vec![base_rewards; *node_count as usize];
                 let region_key = region.splitn(3, ',').take(2).collect::<Vec<&str>>().join(":");
 
-                self.logger.add_entry(Entry::Type3NodesCoefficientsRewards {
+                self.logger().add_entry(Entry::Type3NodesCoefficientsRewards {
                     node_type: node_type.clone(),
                     region: region.clone(),
                     coeff,
@@ -216,7 +232,7 @@ impl RewardsManager {
                     })
                     .or_insert((coefficients, rewards));
             } else {
-                self.logger.add_entry(Entry::OtherNodesRewards {
+                self.logger().add_entry(Entry::OtherNodesRewards {
                     node_type: node_type.clone(),
                     region: region.clone(),
                     base_rewards,
@@ -233,20 +249,20 @@ impl RewardsManager {
                 let mut running_coefficient = dec!(1);
                 let mut region_rewards = dec!(0);
 
-                let coefficients_sum = self.logger.execute(
+                let coefficients_sum = self.logger().execute(
                     &format!("Coefficients sum in region {} for type3* nodes", region),
                     Operation::Sum(coefficients.clone()),
                 );
-                let coefficients_avg = self.logger.execute(
+                let coefficients_avg = self.logger().execute(
                     &format!("Coefficients avg in region {} for type3* nodes", region),
                     Operation::Divide(coefficients_sum, Decimal::from(coefficients.len())),
                 );
 
-                let rewards_sum = self.logger.execute(
+                let rewards_sum = self.logger().execute(
                     &format!("Rewards sum in region {} for type3* nodes", region),
                     Operation::Sum(rewards.clone()),
                 );
-                let rewards_avg = self.logger.execute(
+                let rewards_avg = self.logger().execute(
                     &format!("Rewards avg in region {} for type3* nodes", region),
                     Operation::Divide(rewards_sum, Decimal::from(rewards.len())),
                 );
@@ -255,7 +271,7 @@ impl RewardsManager {
                     region_rewards += rewards_avg * running_coefficient;
                     running_coefficient *= coefficients_avg;
                 }
-                let region_rewards_avg = self.logger.execute(
+                let region_rewards_avg = self.logger().execute(
                     &format!(
                         "Computing rewards average after coefficient reduction in region {} for type3* nodes",
                         region
@@ -273,7 +289,7 @@ impl RewardsManager {
             let mut rewards_multipliers = assigned_multipliers.get(&(region.clone(), node_type.clone())).unwrap_or(&vec![]).clone();
             rewards_multipliers.resize(*node_count as usize, dec!(1));
 
-            self.logger.execute(
+            self.logger().execute(
                 &format!(
                     "Rewards multipliers len for nodes in region {} with type {}: {:?}\n",
                     &region, &node_type, rewards_multipliers
@@ -295,7 +311,7 @@ impl RewardsManager {
                 }
             }
 
-            self.logger.execute(
+            self.logger().execute(
                 &format!(
                     "Rewards contribution XDR * 10'000 for nodes in region {} with type: {}\n",
                     region, node_type
@@ -306,7 +322,7 @@ impl RewardsManager {
             rewards_xdr_total += rewards_xdr;
         }
 
-        self.logger.execute("Total rewards XDR * 10'000\n", Operation::Set(rewards_xdr_total));
+        self.logger().execute("Total rewards XDR * 10'000\n", Operation::Set(rewards_xdr_total));
 
         NodeProviderRewards {
             rewards_xdr_permyriad: rewards_xdr_total.to_u64().unwrap(),
@@ -314,59 +330,76 @@ impl RewardsManager {
         }
     }
 
-    pub fn compute_node_providers_rewards(
-        &mut self,
-        node_providers_rewardables: BTreeMap<(Principal, RegionNodeTypeCategory), u32>,
-        assigned_nodes_performance: BTreeMap<Principal, (NodeMetadata, Vec<DailyNodeMetrics>)>,
-        rewarding_period: DateTimeRange,
-        rewards_table: NodeRewardsTable,
-    ) {
-        let total_days = rewarding_period.days_between();
-        let rewards_ts = rewarding_period.end_timestamp_nanos();
-        let node_providers = node_providers_rewardables
-            .keys()
-            .map(|(node_provider_principal, _)| PrincipalId::from(*node_provider_principal))
-            .unique()
-            .collect_vec();
+    fn get_node_providers_rewardables(
+        &self,
+        nodes: &[Node],
+        nodes_assigned_metrics: &BTreeMap<PrincipalId, Vec<DailyNodeMetrics>>,
+    ) -> BTreeMap<PrincipalId, NodeProviderRewardables> {
+        let mut node_provider_rewardables: BTreeMap<PrincipalId, NodeProviderRewardables> = BTreeMap::new();
 
-        for node_provider in node_providers {
-            self.logger.add_entry(Entry::RewardsForNodeProvider(node_provider));
+        nodes.iter().cloned().for_each(|node| {
+            let NodeProviderRewardables {
+                node_provider_id: _,
+                rewardable_nodes,
+                assigned_nodes_metrics,
+            } = node_provider_rewardables.entry(node.node_provider_id).or_default();
 
-            let mut assigned_multipliers: BTreeMap<RegionNodeTypeCategory, Vec<Decimal>> = BTreeMap::new();
+            let nodes_count: &mut u32 = rewardable_nodes.entry((node.region.clone(), node.node_type.clone())).or_default();
+            *nodes_count += 1;
 
-            for (node_id, (metadata, daily_metrics)) in &assigned_nodes_performance {
-                if metadata.node_provider_id == node_provider.0 {
-                    self.logger.add_entry(Entry::RewardsMultiplier(PrincipalId::from(*node_id)));
+            if let Some(daily_metrics) = nodes_assigned_metrics.get(&node.node_id).cloned() {
+                assigned_nodes_metrics.insert(node, daily_metrics);
+            }
+        });
 
-                    let (multiplier, multiplier_stats) = self.node_rewards_multiplier(daily_metrics, total_days);
-                    let region_node_type = (metadata.region.clone(), metadata.node_type.clone());
+        node_provider_rewardables
+    }
+
+    pub async fn compute_node_providers_rewards(&self) {
+        let total_days = self.rewarding_period.days_between();
+        let rewards_ts = self.rewarding_period.end_timestamp_nanos();
+
+        let nodes = self.registry_querier.nodes_in_period(&self.rewarding_period);
+        let nodes_assigned_metrics: BTreeMap<PrincipalId, Vec<DailyNodeMetrics>> = self.metrics_querier.get_daily_metrics(&self.rewarding_period);
+        let rewards_table: NodeRewardsTable = self.registry_querier.get_rewards_table().await.unwrap();
+
+        let node_provider_rewardables = self.get_node_providers_rewardables(&nodes, &nodes_assigned_metrics);
+
+        let node_provider_rewards: BTreeMap<PrincipalId, NodeProviderRewards> = node_provider_rewardables
+            .into_iter()
+            .map(|(node_provider_id, rewardables)| {
+                self.logger().add_entry(Entry::RewardsForNodeProvider(node_provider_id));
+
+                let mut assigned_multipliers: BTreeMap<RegionNodeTypeCategory, Vec<Decimal>> = BTreeMap::new();
+
+                for (node, daily_metrics) in rewardables.assigned_nodes_metrics {
+                    self.logger().add_entry(Entry::RewardsMultiplier(node.node_id));
+                    let (multiplier, multiplier_stats) = self.node_rewards_multiplier(&daily_metrics, total_days);
 
                     stable_memory::store_node_rewards_multiplier(
                         rewards_ts,
-                        node_provider.0,
-                        *node_id,
+                        node_provider_id.0,
+                        node.node_id.0,
                         multiplier.to_u64().unwrap(),
                         multiplier_stats,
                     );
-                    assigned_multipliers.entry(region_node_type).or_default().push(multiplier);
+                    assigned_multipliers
+                        .entry((node.region.clone(), node.node_type.clone()))
+                        .or_default()
+                        .push(multiplier);
                 }
-            }
 
-            let rewardables = node_providers_rewardables
-                .iter()
-                .filter(|((node_provider_principal, _), _)| node_provider_principal == &node_provider.0)
-                .map(|((_, region_node_type), count)| (region_node_type.clone(), *count))
-                .collect();
+                let node_provider_rewards = self.node_provider_rewards(&assigned_multipliers, &rewardables.rewardable_nodes, &rewards_table);
+                stable_memory::store_node_provider_rewards(rewards_ts, node_provider_id.0, node_provider_rewards.clone());
+                stable_memory::store_node_provider_logs(rewards_ts, node_provider_id.0, self.logger().get_log());
 
-            let node_provider_rewards = self.node_provider_rewards(&assigned_multipliers, &rewardables, &rewards_table);
+                self.logger().flush_log_entries();
+                (node_provider_id, node_provider_rewards)
+            })
+            .collect();
 
-            ic_cdk::println!("Storing rewards for node provider {}", node_provider);
-            stable_memory::store_node_provider_rewards(rewards_ts, node_provider.0, node_provider_rewards);
-            
-            ic_cdk::println!("Storing logs for node provider {}", node_provider);
-            stable_memory::store_node_provider_logs(rewards_ts, node_provider.0, self.logger.get_log());
-
-            self.logger.flush_log_entries();
+        for (principal, rewards) in node_provider_rewards {
+            ic_cdk::println!("rewards for {}: {:?}", principal, rewards);
         }
     }
 }
