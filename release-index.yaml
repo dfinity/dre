@@ -1,4 +1,22 @@
 releases:
+  - rc_name: rc--2024-11-07_03-07
+    versions:
+      # Qualification pipeline:
+      # https://github.com/dfinity/ic/actions/runs/11715859480
+      - name: base
+        version: f88938214b16584075196e13d0af7c50f671131a
+      # Qualification pipeline:
+      # https://github.com/dfinity/ic/actions/runs/11720864758
+      - name: hashes-in-blocks
+        version: cd26db8c93f887e76baae202aab150390e41983f
+      # Qualification pipeline:
+      # https://github.com/dfinity/ic/actions/runs/11720911383
+      - name: 6.11-kernel
+        version: c47e172dfd13d07e864742fea93188c3e9dc81fd
+      # Qualification pipeline:
+      # https://github.com/dfinity/ic/actions/runs/11723743699
+      - name: ubuntu20.04
+        version: a62848817cec7ae50618a87a526c85d020283fd9
   - rc_name: rc--2024-10-31_03-09
     versions:
       # Qualification pipeline:
