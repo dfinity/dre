@@ -1,11 +1,13 @@
 default_language_version:
   python: python3
+default_stages: [pre-push]
+exclude: '^Cargo\.lock$'
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v2.3.0
     hooks:
       - id: no-commit-to-branch
-        stages: [commit]
+        stages: [pre-commit]
   # The following repo is maintained by us at
   # https://gitlab.com/dfinity-lab/open/pre-commit-tools.
   - repo: https://gitlab.com/dfinity-lab/open/pre-commit-tools.git
@@ -79,3 +81,4 @@ repos:
         name: Cargo deny checks
         verbose: true
         entry: bin/cargo-deny-checks.sh
+
