@@ -13,6 +13,10 @@ releases:
       # https://github.com/dfinity/ic/actions/runs/11720911383
       - name: 6.11-kernel
         version: c47e172dfd13d07e864742fea93188c3e9dc81fd
+      # Qualification pipeline:
+      # https://github.com/dfinity/ic/actions/runs/11723743699
+      - name: ubuntu20.04
+        version: a62848817cec7ae50618a87a526c85d020283fd9
   - rc_name: rc--2024-10-31_03-09
     versions:
       # Qualification pipeline:
