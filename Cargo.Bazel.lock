@@ -1,5 +1,5 @@
 {
-  "checksum": "214cdfa061629de6bcf634f9d0bbc33eeadc273fdc83736aa3864d2e6943dde3",
+  "checksum": "df217df5f6f7e1af36a9d81c17a555407a0014f1a48576b81501e93432133c5f",
   "crates": {
     "actix-codec 0.5.2": {
       "name": "actix-codec",
@@ -29597,6 +29597,10 @@
         ],
         "deps": {
           "common": [
+            {
+              "id": "ahash 0.8.11",
+              "target": "ahash"
+            },
             {
               "id": "ic-base-types 0.9.0",
               "target": "ic_base_types"
