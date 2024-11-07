@@ -1,3 +1,4 @@
+use ahash::AHashMap;
 use ic_base_types::PrincipalId;
 use ic_protobuf::registry::node_rewards::v2::{NodeRewardRate, NodeRewardsTable};
 use itertools::Itertools;
@@ -6,7 +7,6 @@ use num_traits::ToPrimitive;
 use rust_decimal::Decimal;
 use rust_decimal_macros::dec;
 use std::{
-    collections::{self, BTreeMap, HashMap},
     mem,
     sync::{Arc, RwLock},
 };
@@ -27,34 +27,20 @@ lazy_static! {
     static ref LOGGER: Arc<RwLock<RewardsPerNodeProviderLog>> = Arc::new(RwLock::new(RewardsPerNodeProviderLog::default()));
 }
 
-fn logger_write() -> std::sync::RwLockWriteGuard<'static, RewardsPerNodeProviderLog> {
+fn logger() -> std::sync::RwLockWriteGuard<'static, RewardsPerNodeProviderLog> {
     LOGGER.write().unwrap()
 }
 
 /// Calculates the rewards reduction based on the failure rate.
 ///
-/// # Arguments
-///
-/// * `failure_rate` - A reference to a `Decimal` value representing the failure rate.
-///
-/// # Returns
-///
-/// * A `Decimal` value representing the rewards reduction, where:
-///   - `0` indicates no reduction (failure rate below the minimum threshold),
-///   - `1` indicates maximum reduction (failure rate above the maximum threshold),
-///   - A value between `0` and `1` represents a proportional reduction based on the failure rate.
-///
-/// # Explanation
-///
-/// 1. The function checks if the provided `failure_rate` is below the `MIN_FAILURE_RATE` -> no reduction in rewards.
-///
-/// 2. It then checks if the `failure_rate` is above the `MAX_FAILURE_RATE` -> maximum reduction in rewards.
-///
-/// 3. If the `failure_rate` is within the defined range (`MIN_FAILURE_RATE` to `MAX_FAILURE_RATE`),
-///    the function calculates the reduction proportionally.
+/// if `failure_rate` is:
+/// 1. below the `MIN_FAILURE_RATE` -> no reduction in rewards.
+/// 2. above the `MAX_FAILURE_RATE` -> maximum reduction in rewards.
+/// 3. within the defined range (`MIN_FAILURE_RATE` to `MAX_FAILURE_RATE`),
+///    the function calculates the reduction based on the linear reduction.
 fn rewards_reduction_percent(failure_rate: &Decimal) -> Decimal {
     if failure_rate < &MIN_FAILURE_RATE {
-        logger_write().execute(
+        logger().execute(
             &format!(
                 "No Reduction applied because {} is less than {} failure rate.\n{}",
                 failure_rate.round_dp(4),
@@ -64,7 +50,7 @@ fn rewards_reduction_percent(failure_rate: &Decimal) -> Decimal {
             Operation::Set(dec!(0)),
         )
     } else if failure_rate > &MAX_FAILURE_RATE {
-        logger_write().execute(
+        logger().execute(
             &format!(
                 "Max reduction applied because {} is over {} failure rate.\n{}",
                 failure_rate.round_dp(4),
@@ -74,46 +60,36 @@ fn rewards_reduction_percent(failure_rate: &Decimal) -> Decimal {
             Operation::Set(dec!(0.8)),
         )
     } else {
-        let y_change = logger_write().execute("Linear Reduction Y change", Operation::Subtract(*failure_rate, MIN_FAILURE_RATE));
-        let x_change = logger_write().execute("Linear Reduction X change", Operation::Subtract(MAX_FAILURE_RATE, MIN_FAILURE_RATE));
+        let y_change = logger().execute("Linear Reduction Y change", Operation::Subtract(*failure_rate, MIN_FAILURE_RATE));
+        let x_change = logger().execute("Linear Reduction X change", Operation::Subtract(MAX_FAILURE_RATE, MIN_FAILURE_RATE));
 
-        let m = logger_write().execute("Compute m", Operation::Divide(y_change, x_change));
+        let m = logger().execute("Compute m", Operation::Divide(y_change, x_change));
 
-        logger_write().execute(RF, Operation::Multiply(m, dec!(0.8)))
+        logger().execute(RF, Operation::Multiply(m, dec!(0.8)))
     }
 }
 
-/// Compute rewards percent
+/// Assigned nodes multiplier
 ///
-/// Computes the rewards percentage based on the overall failure rate in the period.
-///
-/// # Arguments
-///
-/// * `daily_metrics` - A slice of `DailyNodeMetrics` structs, where each struct represents the metrics for a single day.
-///
-/// # Returns
-///
-/// * A `RewardsComputationResult`.
-///
-/// # Explanation
+/// Computes the rewards multiplier for a single assigned node based on the overall failure rate in the period.
 ///
 /// 1. The function iterates through each day's metrics, summing up the `daily_failed` and `daily_total` blocks across all days.
-/// 2. The `overall_failure_rate` is calculated by dividing the `overall_failed` blocks by the `overall_total` blocks.
+/// 2. The `overall_failure_rate` for the period is calculated by dividing the `overall_failed` blocks by the `overall_total` blocks.
 /// 3. The `rewards_reduction` function is applied to `overall_failure_rate`.
-/// 3. Finally, the rewards percentage to be distrubuted to the node is computed.
-fn node_rewards_multiplier(daily_metrics: &[DailyNodeMetrics], total_days: u64) -> (Decimal, MultiplierStats) {
+/// 3. Finally, the rewards multiplier to be distributed to the node is computed.
+fn assigned_nodes_multiplier(daily_metrics: &[DailyNodeMetrics], total_days: u64) -> (Decimal, MultiplierStats) {
     let total_days = Decimal::from(total_days);
 
-    let days_assigned = logger_write().execute("Assigned Days In Period", Operation::Set(Decimal::from(daily_metrics.len())));
-    let days_unassigned = logger_write().execute("Unassigned Days In Period", Operation::Subtract(total_days, days_assigned));
+    let days_assigned = logger().execute("Assigned Days In Period", Operation::Set(Decimal::from(daily_metrics.len())));
+    let days_unassigned = logger().execute("Unassigned Days In Period", Operation::Subtract(total_days, days_assigned));
 
     let daily_failed = daily_metrics.iter().map(|metrics| metrics.num_blocks_failed.into()).collect_vec();
     let daily_proposed = daily_metrics.iter().map(|metrics| metrics.num_blocks_proposed.into()).collect_vec();
 
-    let overall_failed = logger_write().execute("Computing Total Failed Blocks", Operation::Sum(daily_failed));
-    let overall_proposed = logger_write().execute("Computing Total Proposed Blocks", Operation::Sum(daily_proposed));
-    let overall_total = logger_write().execute("Computing Total Blocks", Operation::Sum(vec![overall_failed, overall_proposed]));
-    let overall_failure_rate = logger_write().execute(
+    let overall_failed = logger().execute("Computing Total Failed Blocks", Operation::Sum(daily_failed));
+    let overall_proposed = logger().execute("Computing Total Proposed Blocks", Operation::Sum(daily_proposed));
+    let overall_total = logger().execute("Computing Total Blocks", Operation::Sum(vec![overall_failed, overall_proposed]));
+    let overall_failure_rate = logger().execute(
         "Computing Total Failure Rate",
         if overall_total > dec!(0) {
             Operation::Divide(overall_failed, overall_total)
@@ -123,14 +99,16 @@ fn node_rewards_multiplier(daily_metrics: &[DailyNodeMetrics], total_days: u64) 
     );
 
     let rewards_reduction = rewards_reduction_percent(&overall_failure_rate);
-    let rewards_multiplier_unassigned = logger_write().execute("Reward Multiplier Unassigned Days", Operation::Set(dec!(1)));
-    let rewards_multiplier_assigned = logger_write().execute("Reward Multiplier Assigned Days", Operation::Subtract(dec!(1), rewards_reduction));
-    let assigned_days_factor = logger_write().execute("Assigned Days Factor", Operation::Multiply(days_assigned, rewards_multiplier_assigned));
-    let unassigned_days_factor = logger_write().execute(
-        "Unassigned Days Factor",
+    let rewards_multiplier_assigned = logger().execute("Reward Multiplier Assigned Days", Operation::Subtract(dec!(1), rewards_reduction));
+
+    // On days when the node is not assigned to a subnet, it will receive the same `Reward Multiplier` as computed for the days it was assigned.
+    let rewards_multiplier_unassigned = logger().execute("Reward Multiplier Unassigned Days", Operation::Set(rewards_multiplier_assigned));
+    let assigned_days_factor = logger().execute("Assigned Days Factor", Operation::Multiply(days_assigned, rewards_multiplier_assigned));
+    let unassigned_days_factor = logger().execute(
+        "Unassigned Days Factor (currently equal to Assigned Days Factor)",
         Operation::Multiply(days_unassigned, rewards_multiplier_unassigned),
     );
-    let rewards_multiplier = logger_write().execute(
+    let rewards_multiplier = logger().execute(
         "Average reward multiplier",
         Operation::Divide(assigned_days_factor + unassigned_days_factor, total_days),
     );
@@ -148,23 +126,26 @@ fn node_rewards_multiplier(daily_metrics: &[DailyNodeMetrics], total_days: u64) 
     (rewards_multiplier, rewards_multiplier_stats)
 }
 
-fn node_provider_rewards(
-    assigned_multipliers: &collections::BTreeMap<RegionNodeTypeCategory, Vec<Decimal>>,
-    rewardable_nodes: &collections::BTreeMap<RegionNodeTypeCategory, u32>,
+fn region_type3_key(region: String) -> RegionNodeTypeCategory {
+    let region_key = region.splitn(3, ',').take(2).collect::<Vec<&str>>().join(":");
+    (region_key,"type3*".to_string())
+}
+
+fn base_rewards_region_nodetype(
+    rewardable_nodes: &AHashMap<RegionNodeTypeCategory, u32>,
     rewards_table: &NodeRewardsTable,
-) -> Rewards {
-    let mut rewards_xdr_total = dec!(0);
-    let mut rewards_xdr_no_reduction_total = dec!(0);
+) -> AHashMap<RegionNodeTypeCategory, Decimal> {
+    let mut type3_coefficients_rewards: AHashMap<RegionNodeTypeCategory, (Vec<Decimal>, Vec<Decimal>)> = AHashMap::new();
+    let mut region_nodetype_rewards: AHashMap<RegionNodeTypeCategory, Decimal> = AHashMap::new();
 
-    let mut type3_coefficients_rewards: HashMap<String, (Vec<Decimal>, Vec<Decimal>)> = HashMap::new();
-    let mut other_rewards: HashMap<RegionNodeTypeCategory, Decimal> = HashMap::new();
-
-    // Extract coefficients and rewards for type3* nodes in all regions
+    // For nodes which are not type3* insert the base rewards for the specific region and node type
+    // For nodes which are not type3* we need to compute avg. reduction coefficient and 
+    // avg. base rewards on Country level
     for ((region, node_type), node_count) in rewardable_nodes {
         let rate = match rewards_table.get_rate(region, node_type) {
             Some(rate) => rate,
             None => {
-                logger_write().add_entry(LogEntry::RateNotFoundInRewardTable {
+                logger().add_entry(LogEntry::RateNotFoundInRewardTable {
                     node_type: node_type.clone(),
                     region: region.clone(),
                 });
@@ -176,119 +157,106 @@ fn node_provider_rewards(
             }
         };
         let base_rewards = Decimal::from(rate.xdr_permyriad_per_node_per_month);
+        let mut coeff = dec!(1);
 
         if node_type.starts_with("type3") && *node_count > 0 {
-            let coeff = Decimal::from(rate.reward_coefficient_percent.unwrap_or(80)) / dec!(100);
+            coeff = Decimal::from(rate.reward_coefficient_percent.unwrap_or(80)) / dec!(100);
             let coefficients = vec![coeff; *node_count as usize];
-            let rewards = vec![base_rewards; *node_count as usize];
-            let region_key = region.splitn(3, ',').take(2).collect::<Vec<&str>>().join(":");
-
-            logger_write().add_entry(LogEntry::Type3NodesCoefficientsRewards {
-                node_type: node_type.clone(),
-                region: region.clone(),
-                coeff,
-                base_rewards,
-            });
+            let base_rewards = vec![base_rewards; *node_count as usize];
+            let region_key = region_type3_key(region.clone());
 
             type3_coefficients_rewards
                 .entry(region_key)
                 .and_modify(|(entry_coefficients, entry_rewards)| {
                     entry_coefficients.extend(&coefficients);
-                    entry_rewards.extend(&rewards);
+                    entry_rewards.extend(&base_rewards);
                 })
-                .or_insert((coefficients, rewards));
+                .or_insert((coefficients, base_rewards));
         } else {
-            logger_write().add_entry(LogEntry::OtherNodesRewards {
-                node_type: node_type.clone(),
-                region: region.clone(),
-                base_rewards,
-            });
-            other_rewards.insert((region.clone(), node_type.clone()), base_rewards);
+            region_nodetype_rewards.insert((region.clone(), node_type.clone()), base_rewards);
         }
+
+        logger().add_entry(LogEntry::RewardTableEntry {
+            node_type: node_type.clone(),
+            region: region.clone(),
+            coeff,
+            base_rewards,
+        });
     }
 
-    // Compute node rewards for type3* nodes in all regions
-    let type3_rewards: HashMap<String, Decimal> = type3_coefficients_rewards
-        .clone()
-        .into_iter()
-        .map(|(region, (coefficients, rewards))| {
-            let mut running_coefficient = dec!(1);
-            let mut region_rewards = dec!(0);
+    // Compute node rewards for type3* nodes in all regions and add it to base rewards
+    for (region_key, (coefficients, rewards)) in type3_coefficients_rewards {
+        let rewards_len = rewards.len();
+        let mut running_coefficient = dec!(1);
+        let mut region_rewards = Vec::new();
 
-            let coefficients_sum = logger_write().execute(
-                &format!("Coefficients sum in region {} for type3* nodes", region),
-                Operation::Sum(coefficients.clone()),
-            );
-            let coefficients_avg = logger_write().execute(
-                &format!("Coefficients avg in region {} for type3* nodes", region),
-                Operation::Divide(coefficients_sum, Decimal::from(coefficients.len())),
-            );
+        let coefficients_avg = logger().execute("Coefficients avg.", Operation::Avg(coefficients));
+        let rewards_avg = logger().execute("Rewards avg.", Operation::Avg(rewards));
+        for _ in 0..rewards_len {
+            region_rewards.push(Operation::Multiply(rewards_avg, running_coefficient));
+            running_coefficient *= coefficients_avg;
+        }
+        let region_rewards = logger().execute("Total rewards after coefficient reduction", Operation::SumOps(region_rewards));
+        let region_rewards_avg = logger().execute("Rewards average after coefficient reduction", Operation::Divide(region_rewards, Decimal::from(rewards_len)));
 
-            let rewards_sum = logger_write().execute(
-                &format!("Rewards sum in region {} for type3* nodes", region),
-                Operation::Sum(rewards.clone()),
-            );
-            let rewards_avg = logger_write().execute(
-                &format!("Rewards avg in region {} for type3* nodes", region),
-                Operation::Divide(rewards_sum, Decimal::from(rewards.len())),
-            );
+        logger().add_entry(LogEntry::AvgType3Rewards(region_key.0.clone(), region_rewards_avg));
 
-            for _ in 0..rewards.len() {
-                region_rewards += rewards_avg * running_coefficient;
-                running_coefficient *= coefficients_avg;
-            }
-            let region_rewards_avg = logger_write().execute(
-                &format!(
-                    "Computing rewards average after coefficient reduction in region {} for type3* nodes",
-                    region
-                ),
-                Operation::Divide(region_rewards, Decimal::from(rewards.len())),
-            );
+        region_nodetype_rewards.insert(region_key, region_rewards_avg);
+    }
 
-            (region, region_rewards_avg)
-        })
-        .collect();
+    region_nodetype_rewards
+}
 
-    // Compute total rewards with reductions
+
+fn node_provider_rewards(
+    assigned_multipliers: &AHashMap<RegionNodeTypeCategory, Vec<Decimal>>,
+    rewardable_nodes: &AHashMap<RegionNodeTypeCategory, u32>,
+    rewards_table: &NodeRewardsTable,
+) -> Rewards {
+    let mut rewards_xdr_total = Vec::new();
+    let mut rewards_xdr_no_penalty_total = Vec::new();
+    let region_nodetype_rewards: AHashMap<RegionNodeTypeCategory, Decimal> = base_rewards_region_nodetype(rewardable_nodes, rewards_table);
+
+    // Computes the rewards multiplier for unassigned nodes as the average of the multipliers of the assigned nodes.
+    let assigned_multipliers_v = assigned_multipliers.values().flatten().cloned().collect_vec();
+    let unassigned_multiplier = logger().execute("Unassigned Nodes Multiplier", Operation::Avg(assigned_multipliers_v));
+
+    // Compute total rewards with/without penalties
     for ((region, node_type), node_count) in rewardable_nodes {
-        let mut rewards_xdr = dec!(0);
-        let mut rewards_multipliers = assigned_multipliers.get(&(region.clone(), node_type.clone())).unwrap_or(&vec![]).clone();
-        rewards_multipliers.resize(*node_count as usize, dec!(1));
+        let mut rewards_multipliers = assigned_multipliers
+            .get(&(region.clone(), node_type.clone()))
+            .cloned()
+            .unwrap_or_default();
+        let assigned_len = rewards_multipliers.len();
+        rewards_multipliers.resize(*node_count as usize, unassigned_multiplier);
 
-        logger_write().execute(
-            &format!(
-                "Rewards multipliers len for nodes in region {} with type {}: {:?}\n",
-                &region, &node_type, rewards_multipliers
-            ),
-            Operation::Set(Decimal::from(rewards_multipliers.len())),
-        );
+        logger().add_entry(LogEntry::RewardablesInRegionNodeType {
+            node_type: node_type.clone(),
+            region: region.clone(),
+            count: rewards_multipliers.len(),
+            assigned_multipliers: rewards_multipliers[..assigned_len].to_vec(),
+            unassigned_multipliers: rewards_multipliers[assigned_len..].to_vec(),
+        });
 
         for multiplier in rewards_multipliers {
             if node_type.starts_with("type3") {
-                let region_key = region.as_str().splitn(3, ',').take(2).collect::<Vec<&str>>().join(":");
-                let xdr_permyriad_avg_based = type3_rewards.get(&region_key).expect("Type3 rewards should have been filled already");
+                let region_key = region_type3_key(region.clone());
+                let xdr_permyriad_avg_based = region_nodetype_rewards.get(&region_key).expect("Type3 rewards should have been filled already");
 
-                rewards_xdr_no_reduction_total += *xdr_permyriad_avg_based;
-                rewards_xdr += *xdr_permyriad_avg_based * multiplier;
+                rewards_xdr_no_penalty_total.push(*xdr_permyriad_avg_based);
+                rewards_xdr_total.push(Operation::Multiply(*xdr_permyriad_avg_based, multiplier));
             } else {
-                let xdr_permyriad = other_rewards.get(&(region.clone(), node_type.clone())).expect("Rewards already filled");
-                rewards_xdr_no_reduction_total += xdr_permyriad;
-                rewards_xdr += xdr_permyriad * multiplier;
+                let xdr_permyriad = region_nodetype_rewards.get(&(region.clone(), node_type.clone())).expect("Rewards already filled");
+
+                rewards_xdr_no_penalty_total.push(*xdr_permyriad);
+                rewards_xdr_total.push(Operation::Multiply(*xdr_permyriad, multiplier));
             }
         }
-
-        logger_write().execute(
-            &format!(
-                "Rewards contribution XDR permyriad for nodes in region {} with type: {}\n",
-                region, node_type
-            ),
-            Operation::Set(rewards_xdr),
-        );
-
-        rewards_xdr_total += rewards_xdr;
     }
 
-    logger_write().execute("Total rewards XDR permyriad\n", Operation::Set(rewards_xdr_total));
+    let rewards_xdr_total = logger().execute("Compute total XDR", Operation::SumOps(rewards_xdr_total));
+    let rewards_xdr_no_reduction_total = logger().execute("Compute total XDR no penalties", Operation::Sum(rewards_xdr_no_penalty_total));
+    logger().add_entry(LogEntry::RewardsXDRTotal(rewards_xdr_total));
 
     Rewards {
         xdr_permyriad: rewards_xdr_total.to_u64().unwrap(),
@@ -298,9 +266,9 @@ fn node_provider_rewards(
 
 fn node_providers_rewardables(
     nodes: &[Node],
-    nodes_assigned_metrics: &BTreeMap<PrincipalId, Vec<DailyNodeMetrics>>,
-) -> BTreeMap<PrincipalId, RewardablesWithMetrics> {
-    let mut node_provider_rewardables: BTreeMap<PrincipalId, RewardablesWithMetrics> = BTreeMap::new();
+    nodes_assigned_metrics: &AHashMap<PrincipalId, Vec<DailyNodeMetrics>>,
+) -> AHashMap<PrincipalId, RewardablesWithMetrics> {
+    let mut node_provider_rewardables: AHashMap<PrincipalId, RewardablesWithMetrics> = AHashMap::new();
 
     nodes.iter().for_each(|node| {
         let (rewardable_nodes, assigned_nodes_metrics) = node_provider_rewardables.entry(node.node_provider_id).or_default();
@@ -320,21 +288,21 @@ pub fn calculate_rewards(
     rewards_table: &NodeRewardsTable,
     days_in_period: u64,
     nodes_in_period: &[Node],
-    assigned_nodes_metrics: &BTreeMap<PrincipalId, Vec<DailyNodeMetrics>>,
+    assigned_nodes_metrics: &AHashMap<PrincipalId, Vec<DailyNodeMetrics>>,
 ) -> Result<RewardsPerNodeProvider, String> {
-    let mut rewards_per_node_provider = BTreeMap::new();
-    let mut computation_log = BTreeMap::new();
+    let mut rewards_per_node_provider = AHashMap::new();
+    let mut computation_log = AHashMap::new();
     let node_provider_rewardables = node_providers_rewardables(nodes_in_period, assigned_nodes_metrics);
 
     for (node_provider_id, (rewardable_nodes, assigned_nodes_metrics)) in node_provider_rewardables {
-        let mut assigned_multipliers: BTreeMap<RegionNodeTypeCategory, Vec<Decimal>> = BTreeMap::new();
+        let mut assigned_multipliers: AHashMap<RegionNodeTypeCategory, Vec<Decimal>> = AHashMap::new();
         let mut nodes_multiplier_stats: Vec<NodeMultiplierStats> = Vec::new();
 
-        logger_write().add_entry(LogEntry::RewardsForNodeProvider(node_provider_id));
+        logger().add_entry(LogEntry::RewardsForNodeProvider(node_provider_id));
 
         for (node, daily_metrics) in assigned_nodes_metrics {
-            logger_write().add_entry(LogEntry::RewardsMultiplier(node.node_id));
-            let (multiplier, multiplier_stats) = node_rewards_multiplier(&daily_metrics, days_in_period);
+            logger().add_entry(LogEntry::ComputeRewardMultiplierForNode(node.node_id));
+            let (multiplier, multiplier_stats) = assigned_nodes_multiplier(&daily_metrics, days_in_period);
 
             nodes_multiplier_stats.push((node.node_id, multiplier_stats));
             assigned_multipliers
@@ -342,8 +310,9 @@ pub fn calculate_rewards(
                 .or_default()
                 .push(multiplier);
         }
+
         let rewards = node_provider_rewards(&assigned_multipliers, &rewardable_nodes, rewards_table);
-        let node_provider_log = mem::take(&mut *logger_write());
+        let node_provider_log = mem::take(&mut *logger());
 
         computation_log.insert(node_provider_id, node_provider_log);
         rewards_per_node_provider.insert(node_provider_id, (rewards, nodes_multiplier_stats));
@@ -357,6 +326,8 @@ pub fn calculate_rewards(
 
 #[cfg(test)]
 mod tests {
+    use std::collections::BTreeMap;
+
     use ic_protobuf::registry::node_rewards::v2::NodeRewardRates;
     use itertools::Itertools;
 
@@ -425,7 +396,7 @@ mod tests {
     fn test_rewards_percent() {
         // Overall failed = 130 Overall total = 500 Failure rate = 0.26
         let daily_metrics: Vec<DailyNodeMetrics> = daily_mocked_metrics(vec![MockedMetrics::new(20, 6, 4), MockedMetrics::new(25, 10, 2)]);
-        let (result, _) = node_rewards_multiplier(&daily_metrics, daily_metrics.len() as u64);
+        let (result, _) = assigned_nodes_multiplier(&daily_metrics, daily_metrics.len() as u64);
         assert_eq!(result, dec!(0.744));
 
         // Overall failed = 45 Overall total = 450 Failure rate = 0.1
@@ -434,14 +405,14 @@ mod tests {
             MockedMetrics::new(1, 400, 20),
             MockedMetrics::new(1, 5, 25), // no penalty
         ]);
-        let (result, _) = node_rewards_multiplier(&daily_metrics, daily_metrics.len() as u64);
+        let (result, _) = assigned_nodes_multiplier(&daily_metrics, daily_metrics.len() as u64);
         assert_eq!(result, dec!(1.0));
 
         // Overall failed = 5 Overall total = 10 Failure rate = 0.5
         let daily_metrics: Vec<DailyNodeMetrics> = daily_mocked_metrics(vec![
             MockedMetrics::new(1, 5, 5), // no penalty
         ]);
-        let (result, _) = node_rewards_multiplier(&daily_metrics, daily_metrics.len() as u64);
+        let (result, _) = assigned_nodes_multiplier(&daily_metrics, daily_metrics.len() as u64);
         assert_eq!(result, dec!(0.36));
     }
 
@@ -450,7 +421,7 @@ mod tests {
         let daily_metrics: Vec<DailyNodeMetrics> = daily_mocked_metrics(vec![
             MockedMetrics::new(10, 5, 95), // max failure rate
         ]);
-        let (result, _) = node_rewards_multiplier(&daily_metrics, daily_metrics.len() as u64);
+        let (result, _) = assigned_nodes_multiplier(&daily_metrics, daily_metrics.len() as u64);
         assert_eq!(result, dec!(0.2));
     }
 
@@ -459,7 +430,7 @@ mod tests {
         let daily_metrics: Vec<DailyNodeMetrics> = daily_mocked_metrics(vec![
             MockedMetrics::new(10, 9, 1), // min failure rate
         ]);
-        let (result, _) = node_rewards_multiplier(&daily_metrics, daily_metrics.len() as u64);
+        let (result, _) = assigned_nodes_multiplier(&daily_metrics, daily_metrics.len() as u64);
         assert_eq!(result, dec!(1.0));
     }
 
@@ -474,17 +445,17 @@ mod tests {
             daily_mocked_metrics(vec![gap.clone(), MockedMetrics::new(1, 6, 4), MockedMetrics::new(1, 7, 3)]);
 
         assert_eq!(
-            node_rewards_multiplier(&daily_metrics_mid_gap, daily_metrics_mid_gap.len() as u64).0,
+            assigned_nodes_multiplier(&daily_metrics_mid_gap, daily_metrics_mid_gap.len() as u64).0,
             dec!(0.7866666666666666666666666667)
         );
 
         assert_eq!(
-            node_rewards_multiplier(&daily_metrics_mid_gap, daily_metrics_mid_gap.len() as u64).0,
-            node_rewards_multiplier(&daily_metrics_left_gap, daily_metrics_left_gap.len() as u64).0
+            assigned_nodes_multiplier(&daily_metrics_mid_gap, daily_metrics_mid_gap.len() as u64).0,
+            assigned_nodes_multiplier(&daily_metrics_left_gap, daily_metrics_left_gap.len() as u64).0
         );
         assert_eq!(
-            node_rewards_multiplier(&daily_metrics_right_gap, daily_metrics_right_gap.len() as u64).0,
-            node_rewards_multiplier(&daily_metrics_left_gap, daily_metrics_left_gap.len() as u64).0
+            assigned_nodes_multiplier(&daily_metrics_right_gap, daily_metrics_right_gap.len() as u64).0,
+            assigned_nodes_multiplier(&daily_metrics_left_gap, daily_metrics_left_gap.len() as u64).0
         );
     }
 
@@ -497,9 +468,9 @@ mod tests {
         ]);
 
         let mut daily_metrics = daily_metrics.clone();
-        let result = node_rewards_multiplier(&daily_metrics, daily_metrics.len() as u64);
+        let result = assigned_nodes_multiplier(&daily_metrics, daily_metrics.len() as u64);
         daily_metrics.reverse();
-        let result_rev = node_rewards_multiplier(&daily_metrics, daily_metrics.len() as u64);
+        let result_rev = assigned_nodes_multiplier(&daily_metrics, daily_metrics.len() as u64);
 
         assert_eq!(result.0, dec!(1.0));
         assert_eq!(result_rev.0, result.0);
@@ -507,48 +478,59 @@ mod tests {
 
     #[test]
     fn test_np_rewards_other_type() {
-        let mut assigned_multipliers: collections::BTreeMap<RegionNodeTypeCategory, Vec<Decimal>> = BTreeMap::new();
-        let mut rewardable_nodes: collections::BTreeMap<RegionNodeTypeCategory, u32> = BTreeMap::new();
+        let mut assigned_multipliers: AHashMap<RegionNodeTypeCategory, Vec<Decimal>> = AHashMap::new();
+        let mut rewardable_nodes: AHashMap<RegionNodeTypeCategory, u32> = AHashMap::new();
 
-        assigned_multipliers.insert(("A,B,C".to_string(), "type0".to_string()), vec![dec!(0.5), dec!(0.5)]);
-        rewardable_nodes.insert(("A,B,C".to_string(), "type0".to_string()), 4);
+        let region_node_type = ("A,B,C".to_string(), "type0".to_string());
+
+        // 4 nodes in period: 2 assigned, 2 unassigned
+        rewardable_nodes.insert(region_node_type.clone(), 4);
+        assigned_multipliers.insert(region_node_type.clone(), vec![dec!(0.5), dec!(0.5)]);
+
         let node_rewards_table: NodeRewardsTable = mocked_rewards_table();
         let rewards = node_provider_rewards(&assigned_multipliers, &rewardable_nodes, &node_rewards_table);
 
-        // 4 nodes type0 1000 * 4 = 4000
+        // Total XDR no penalties, operation=sum(1000,1000,1000,1000), result=4000
         assert_eq!(rewards.xdr_permyriad_no_reduction, 4000);
-        // 4 nodes type0 1000 * 1 + 1000 * 1 + 1000 * 0.5 + 1000 * 0.5 * 4 = 3000
-        assert_eq!(rewards.xdr_permyriad, 3000);
+
+        // Total XDR, operation=sum(1000 * 0.5,1000 * 0.5,1000 * 0.5,1000 * 0.5), result=2000
+        assert_eq!(rewards.xdr_permyriad, 2000);
     }
 
     #[test]
     fn test_np_rewards_type3_coeff() {
-        let mut assigned_multipliers: collections::BTreeMap<RegionNodeTypeCategory, Vec<Decimal>> = BTreeMap::new();
-        let mut rewardable_nodes: collections::BTreeMap<RegionNodeTypeCategory, u32> = BTreeMap::new();
+        let mut assigned_multipliers: AHashMap<RegionNodeTypeCategory, Vec<Decimal>> = AHashMap::new();
+        let mut rewardable_nodes: AHashMap<RegionNodeTypeCategory, u32> = AHashMap::new();
+        let region_node_type = ("A,B,C".to_string(), "type3.1".to_string());
 
-        assigned_multipliers.insert(("A,B,C".to_string(), "type3.1".to_string()), vec![dec!(0.5)]);
-        rewardable_nodes.insert(("A,B,C".to_string(), "type3.1".to_string()), 4);
+        // 4 nodes in period: 1 assigned, 3 unassigned
+        rewardable_nodes.insert(region_node_type.clone(), 4);
+        assigned_multipliers.insert(region_node_type, vec![dec!(0.5)]);
         let node_rewards_table: NodeRewardsTable = mocked_rewards_table();
         let rewards = node_provider_rewards(&assigned_multipliers, &rewardable_nodes, &node_rewards_table);
 
-        // 4 nodes type3.1 avg rewards 1500 avg coefficient 0.95
-        // 1500 * 1 + 1500 * 0.95 + 1500 * 0.95 * 0.95 + 1500 * 0.95 * 0.95 * 0.95
+        // Coefficients avg., operation=avg(0.95,0.95,0.95,0.95), result=0.95 
+        // Rewards avg., operation=avg(1500,1500,1500,1500), result=1500 
+        // Total rewards after coefficient reduction, operation=sum(1500 * 1,1500 * 0.95,1500 * 0.9025,1500 * 0.8574), result=5564
+
+        // Rewards average after coefficient reduction, operation=5564 / 4, result=1391 
+        // Total XDR no penalties, operation=sum(1391,1391,1391,1391), result=5564 
         assert_eq!(rewards.xdr_permyriad_no_reduction, 5564);
 
-        // rewards coeff avg 5564/4=1391
-        // 1391 * 0.5 + 1391 * 3 = 4868
-        assert_eq!(rewards.xdr_permyriad, 4869);
+        // Total XDR, operation=sum(1391 * 0.5,1391 * 0.5,1391 * 0.5,1391 * 0.5), result=2782 
+        assert_eq!(rewards.xdr_permyriad, 2782);
     }
-
+ 
     #[test]
     fn test_np_rewards_type3_mix() {
-        let mut assigned_multipliers: collections::BTreeMap<RegionNodeTypeCategory, Vec<Decimal>> = BTreeMap::new();
-        let mut rewardable_nodes: collections::BTreeMap<RegionNodeTypeCategory, u32> = BTreeMap::new();
+        let mut assigned_multipliers: AHashMap<RegionNodeTypeCategory, Vec<Decimal>> = AHashMap::new();
+        let mut rewardable_nodes: AHashMap<RegionNodeTypeCategory, u32> = AHashMap::new();
 
-        assigned_multipliers.insert(("A,B,D".to_string(), "type3".to_string()), vec![dec!(0.5)]);
+        // 5 nodes in period: 2 assigned, 3 unassigned
+        assigned_multipliers.insert(("A,B,D".to_string(), "type3".to_string()), vec![dec!(0.5), dec!(0.4)]);
 
         // This will take rates from outer
-        rewardable_nodes.insert(("A,B,D".to_string(), "type3".to_string()), 2);
+        rewardable_nodes.insert(("A,B,D".to_string(), "type3".to_string()), 3);
 
         // This will take rates from inner
         rewardable_nodes.insert(("A,B,C".to_string(), "type3.1".to_string()), 2);
@@ -556,12 +538,14 @@ mod tests {
         let node_rewards_table: NodeRewardsTable = mocked_rewards_table();
         let rewards = node_provider_rewards(&assigned_multipliers, &rewardable_nodes, &node_rewards_table);
 
-        // 4 nodes type3* avg rewards 1250 avg coefficient 0.96
-        // 1250 * 1 + 1250 * 0.96 + 1250 * 0.96^2 + 1250 * 0.96^3
-        assert_eq!(rewards.xdr_permyriad_no_reduction, 4707);
+        // Coefficients avg(0.95,0.95,0.97,0.97,0.97) = 0.9620
+        // Rewards avg., operation=avg(1500,1500,1000,1000,1000), result=1200
+        // Rewards average sum(1200 * 1,1200 * 0.9620,1200 * 0.9254,1200 * 0.8903,1200 * 0.8564) / 5, result=1112
+        // Unassigned Nodes Multiplier, operation=avg(0.5,0.4), result=0.450
 
-        // rewards coeff avg 4707/4 = 1176.75
-        // 1176.75 * 0.5 + 1176.75 * 3
-        assert_eq!(rewards.xdr_permyriad, 4119);
+        // Total XDR, operation=sum(1112 * 0.450,1112 * 0.450,1112 * 0.5,1112 * 0.4,1112 * 0.450), result=2502
+        assert_eq!(rewards.xdr_permyriad, 2502);
+        // Total XDR no penalties, operation=1112 * 5, result=5561
+        assert_eq!(rewards.xdr_permyriad_no_reduction, 5561);
     }
 }

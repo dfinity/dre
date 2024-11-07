@@ -1,15 +1,14 @@
-use std::collections::BTreeMap;
-
+use ahash::AHashMap;
 use ic_base_types::PrincipalId;
 
 use crate::v1_logs::RewardsPerNodeProviderLog;
 
 pub type NodeMultiplierStats = (PrincipalId, MultiplierStats);
-pub type RewardablesWithMetrics = (BTreeMap<RegionNodeTypeCategory, u32>, BTreeMap<Node, Vec<DailyNodeMetrics>>);
+pub type RewardablesWithMetrics = (AHashMap<RegionNodeTypeCategory, u32>, AHashMap<Node, Vec<DailyNodeMetrics>>);
 pub type RegionNodeTypeCategory = (String, String);
 pub type TimestampNanos = u64;
 
-#[derive(Clone, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(Clone, Hash, Eq, PartialEq)]
 pub struct Node {
     pub node_id: PrincipalId,
     pub node_provider_id: PrincipalId,
@@ -60,8 +59,8 @@ pub struct MultiplierStats {
 }
 
 pub struct RewardsPerNodeProvider {
-    pub rewards_per_node_provider: BTreeMap<PrincipalId, (Rewards, Vec<NodeMultiplierStats>)>,
-    pub computation_log: BTreeMap<PrincipalId, RewardsPerNodeProviderLog>,
+    pub rewards_per_node_provider: AHashMap<PrincipalId, (Rewards, Vec<NodeMultiplierStats>)>,
+    pub computation_log: AHashMap<PrincipalId, RewardsPerNodeProviderLog>,
 }
 
 pub struct Rewards {
