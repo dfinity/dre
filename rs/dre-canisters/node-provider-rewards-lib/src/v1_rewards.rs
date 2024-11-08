@@ -1,5 +1,6 @@
 use ahash::AHashMap;
 use ic_base_types::PrincipalId;
+use ic_management_canister_types::NodeMetricsHistoryResponse;
 use ic_protobuf::registry::node_rewards::v2::{NodeRewardRate, NodeRewardsTable};
 use itertools::Itertools;
 use lazy_static::lazy_static;
@@ -14,8 +15,8 @@ use std::{
 use crate::{
     v1_logs::{LogEntry, Operation, RewardsLog},
     v1_types::{
-        DailyPerformanceMetrics, MultiplierStats, Node, NodeMultiplierStats, RegionNodeTypeCategory, RewardablesWithNodesMetrics, Rewards,
-        RewardsPerNodeProvider,
+        DailyNodeMetrics, MultiplierStats, Node, NodeMultiplierStats, NodesMetricsInPeriod, RegionNodeTypeCategory, RewardablesWithNodesMetrics,
+        Rewards, RewardsPerNodeProvider,
     },
 };
 
@@ -78,7 +79,7 @@ fn rewards_reduction_percent(failure_rate: &Decimal) -> Decimal {
 /// 2. The `overall_failure_rate` for the period is calculated by dividing the `overall_failed` blocks by the `overall_total` blocks.
 /// 3. The `rewards_reduction` function is applied to `overall_failure_rate`.
 /// 3. Finally, the rewards multiplier to be distributed to the node is computed.
-fn assigned_nodes_multiplier(daily_metrics: &[DailyPerformanceMetrics], total_days: u64) -> (Decimal, MultiplierStats) {
+fn assigned_nodes_multiplier(daily_metrics: &[DailyNodeMetrics], total_days: u64) -> (Decimal, MultiplierStats) {
     let total_days = Decimal::from(total_days);
 
     let days_assigned = logger().execute("Assigned Days In Period", Operation::Set(Decimal::from(daily_metrics.len())));
@@ -283,7 +284,7 @@ fn node_provider_rewards(
 
 fn node_providers_rewardables(
     nodes: &[Node],
-    performance_metrics_per_node: &AHashMap<PrincipalId, Vec<DailyPerformanceMetrics>>,
+    performance_metrics_per_node: &AHashMap<PrincipalId, Vec<DailyNodeMetrics>>,
 ) -> AHashMap<PrincipalId, RewardablesWithNodesMetrics> {
     let mut node_provider_rewardables: AHashMap<PrincipalId, RewardablesWithNodesMetrics> = AHashMap::new();
 
@@ -305,11 +306,11 @@ pub fn calculate_rewards(
     days_in_period: u64,
     rewards_table: &NodeRewardsTable,
     nodes_in_period: &[Node],
-    performance_metrics_per_node: &AHashMap<PrincipalId, Vec<DailyPerformanceMetrics>>,
+    nodes_metrics_in_period: &AHashMap<PrincipalId, Vec<DailyNodeMetrics>>,
 ) -> RewardsPerNodeProvider {
     let mut rewards_per_node_provider = AHashMap::new();
     let mut rewards_log_per_node_provider = AHashMap::new();
-    let node_provider_rewardables = node_providers_rewardables(nodes_in_period, performance_metrics_per_node);
+    let node_provider_rewardables = node_providers_rewardables(nodes_in_period, &nodes_metrics_in_period);
 
     for (node_provider_id, (rewardable_nodes, assigned_nodes_metrics)) in node_provider_rewardables {
         let mut assigned_multipliers: AHashMap<RegionNodeTypeCategory, Vec<Decimal>> = AHashMap::new();
@@ -367,21 +368,13 @@ mod tests {
         }
     }
 
-    fn daily_mocked_metrics(metrics: Vec<MockedMetrics>) -> Vec<DailyPerformanceMetrics> {
-        let subnet = PrincipalId::new_anonymous();
-        let mut i = 0;
-
+    fn daily_mocked_metrics(metrics: Vec<MockedMetrics>) -> Vec<DailyNodeMetrics> {
         metrics
             .into_iter()
             .flat_map(|mocked_metrics: MockedMetrics| {
-                (0..mocked_metrics.days).map(move |_| {
-                    i += 1;
-                    DailyPerformanceMetrics {
-                        ts: i,
-                        subnet_assigned: subnet,
-                        num_blocks_proposed: mocked_metrics.proposed_blocks,
-                        num_blocks_failed: mocked_metrics.failed_blocks,
-                    }
+                (0..mocked_metrics.days).map(move |_| DailyNodeMetrics {
+                    num_blocks_proposed: mocked_metrics.proposed_blocks,
+                    num_blocks_failed: mocked_metrics.failed_blocks,
                 })
             })
             .collect_vec()
@@ -417,13 +410,13 @@ mod tests {
     #[test]
     fn test_rewards_percent() {
         // Overall failed = 130 Overall total = 500 Failure rate = 0.26
-        let daily_metrics: Vec<DailyPerformanceMetrics> = daily_mocked_metrics(vec![MockedMetrics::new(20, 6, 4), MockedMetrics::new(25, 10, 2)]);
+        let daily_metrics: Vec<DailyNodeMetrics> = daily_mocked_metrics(vec![MockedMetrics::new(20, 6, 4), MockedMetrics::new(25, 10, 2)]);
         let (result, _) = assigned_nodes_multiplier(&daily_metrics, daily_metrics.len() as u64);
         assert_eq!(result, dec!(0.744));
 
         // Overall failed = 45 Overall total = 450 Failure rate = 0.1
         // rewards_reduction = 0.0
-        let daily_metrics: Vec<DailyPerformanceMetrics> = daily_mocked_metrics(vec![
+        let daily_metrics: Vec<DailyNodeMetrics> = daily_mocked_metrics(vec![
             MockedMetrics::new(1, 400, 20),
             MockedMetrics::new(1, 5, 25), // no penalty
         ]);
@@ -431,7 +424,7 @@ mod tests {
         assert_eq!(result, dec!(1.0));
 
         // Overall failed = 5 Overall total = 10 Failure rate = 0.5
-        let daily_metrics: Vec<DailyPerformanceMetrics> = daily_mocked_metrics(vec![
+        let daily_metrics: Vec<DailyNodeMetrics> = daily_mocked_metrics(vec![
             MockedMetrics::new(1, 5, 5), // no penalty
         ]);
         let (result, _) = assigned_nodes_multiplier(&daily_metrics, daily_metrics.len() as u64);
@@ -440,7 +433,7 @@ mod tests {
 
     #[test]
     fn test_rewards_percent_max_reduction() {
-        let daily_metrics: Vec<DailyPerformanceMetrics> = daily_mocked_metrics(vec![
+        let daily_metrics: Vec<DailyNodeMetrics> = daily_mocked_metrics(vec![
             MockedMetrics::new(10, 5, 95), // max failure rate
         ]);
         let (result, _) = assigned_nodes_multiplier(&daily_metrics, daily_metrics.len() as u64);
@@ -449,7 +442,7 @@ mod tests {
 
     #[test]
     fn test_rewards_percent_min_reduction() {
-        let daily_metrics: Vec<DailyPerformanceMetrics> = daily_mocked_metrics(vec![
+        let daily_metrics: Vec<DailyNodeMetrics> = daily_mocked_metrics(vec![
             MockedMetrics::new(10, 9, 1), // min failure rate
         ]);
         let (result, _) = assigned_nodes_multiplier(&daily_metrics, daily_metrics.len() as u64);
@@ -459,11 +452,11 @@ mod tests {
     #[test]
     fn test_same_rewards_percent_if_gaps_no_penalty() {
         let gap = MockedMetrics::new(1, 10, 0);
-        let daily_metrics_mid_gap: Vec<DailyPerformanceMetrics> =
+        let daily_metrics_mid_gap: Vec<DailyNodeMetrics> =
             daily_mocked_metrics(vec![MockedMetrics::new(1, 6, 4), gap.clone(), MockedMetrics::new(1, 7, 3)]);
-        let daily_metrics_left_gap: Vec<DailyPerformanceMetrics> =
+        let daily_metrics_left_gap: Vec<DailyNodeMetrics> =
             daily_mocked_metrics(vec![gap.clone(), MockedMetrics::new(1, 6, 4), MockedMetrics::new(1, 7, 3)]);
-        let daily_metrics_right_gap: Vec<DailyPerformanceMetrics> =
+        let daily_metrics_right_gap: Vec<DailyNodeMetrics> =
             daily_mocked_metrics(vec![gap.clone(), MockedMetrics::new(1, 6, 4), MockedMetrics::new(1, 7, 3)]);
 
         assert_eq!(
@@ -483,7 +476,7 @@ mod tests {
 
     #[test]
     fn test_same_rewards_if_reversed() {
-        let daily_metrics: Vec<DailyPerformanceMetrics> = daily_mocked_metrics(vec![
+        let daily_metrics: Vec<DailyNodeMetrics> = daily_mocked_metrics(vec![
             MockedMetrics::new(1, 5, 5),
             MockedMetrics::new(5, 6, 4),
             MockedMetrics::new(25, 10, 0),

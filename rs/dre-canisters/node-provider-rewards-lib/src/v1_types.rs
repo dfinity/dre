@@ -1,10 +1,11 @@
 use ahash::AHashMap;
 use ic_base_types::PrincipalId;
+use ic_management_canister_types::{NodeMetrics, NodeMetricsHistoryResponse};
 
 use crate::v1_logs::RewardsLog;
 
 pub type NodeMultiplierStats = (PrincipalId, MultiplierStats);
-pub type RewardablesWithNodesMetrics = (AHashMap<RegionNodeTypeCategory, u32>, AHashMap<Node, Vec<DailyPerformanceMetrics>>);
+pub type RewardablesWithNodesMetrics = (AHashMap<RegionNodeTypeCategory, u32>, AHashMap<Node, Vec<DailyNodeMetrics>>);
 pub type RegionNodeTypeCategory = (String, String);
 pub type TimestampNanos = u64;
 
@@ -17,11 +18,65 @@ pub struct Node {
 }
 
 #[derive(Clone)]
-pub struct DailyPerformanceMetrics {
-    pub ts: u64,
-    pub subnet_assigned: PrincipalId,
+pub struct DailyNodeMetrics {
     pub num_blocks_proposed: u64,
     pub num_blocks_failed: u64,
+}
+
+pub struct NodesMetricsInPeriod(Vec<NodeMetricsHistoryResponse>);
+
+impl NodesMetricsInPeriod {
+    pub fn from_node_metrics_history(metrics: Vec<NodeMetricsHistoryResponse>) -> Self {
+        NodesMetricsInPeriod(metrics)
+    }
+}
+
+impl From<NodesMetricsInPeriod> for AHashMap<PrincipalId, Vec<DailyNodeMetrics>> {
+    fn from(nodes_metrics: NodesMetricsInPeriod) -> Self {
+        let mut sorted_metrics = nodes_metrics.0;
+        sorted_metrics.sort_by_key(|metrics| metrics.timestamp_nanos);
+        let mut sorted_metrics_per_node: AHashMap<PrincipalId, Vec<NodeMetrics>> = AHashMap::new();
+
+        for metrics in sorted_metrics {
+            for node_metrics in metrics.node_metrics {
+                sorted_metrics_per_node.entry(node_metrics.node_id).or_default().push(node_metrics);
+            }
+        }
+
+        sorted_metrics_per_node
+            .into_iter()
+            .map(|(node_id, metrics)| {
+                let mut daily_node_metrics = Vec::new();
+                let mut previous_proposed_total = 0;
+                let mut previous_failed_total = 0;
+
+                for node_metrics in metrics {
+                    let current_proposed_total = node_metrics.num_blocks_proposed_total;
+                    let current_failed_total = node_metrics.num_block_failures_total;
+
+                    let (num_blocks_proposed, num_blocks_failed) =
+                        if previous_failed_total > current_failed_total || previous_proposed_total > current_proposed_total {
+                            // This is the case when node is deployed again
+                            (current_proposed_total, current_failed_total)
+                        } else {
+                            (
+                                current_proposed_total - previous_proposed_total,
+                                current_failed_total - previous_failed_total,
+                            )
+                        };
+
+                    daily_node_metrics.push(DailyNodeMetrics {
+                        num_blocks_proposed,
+                        num_blocks_failed,
+                    });
+
+                    previous_proposed_total = num_blocks_proposed;
+                    previous_failed_total = num_blocks_failed;
+                }
+                (node_id, daily_node_metrics)
+            })
+            .collect()
+    }
 }
 
 pub struct MultiplierStats {
