@@ -56,16 +56,16 @@ async fn get_decentralization_analysis(
             Some(subnet) => DecentralizedSubnet {
                 id: subnet_id,
                 nodes: subnet.nodes.iter().map(decentralization::network::Node::from).collect(),
-                added_nodes_desc: Vec::new(),
-                removed_nodes_desc: Vec::new(),
+                added_nodes: Vec::new(),
+                removed_nodes: Vec::new(),
                 comment: None,
                 run_log: Vec::new(),
             },
             None => DecentralizedSubnet {
                 id: PrincipalId::new_subnet_test_id(0),
                 nodes: Vec::new(),
-                added_nodes_desc: Vec::new(),
-                removed_nodes_desc: Vec::new(),
+                added_nodes: Vec::new(),
+                removed_nodes: Vec::new(),
                 comment: None,
                 run_log: Vec::new(),
             },
@@ -73,8 +73,8 @@ async fn get_decentralization_analysis(
         .unwrap_or_else(|| DecentralizedSubnet {
             id: PrincipalId::new_subnet_test_id(0),
             nodes: Vec::new(),
-            added_nodes_desc: Vec::new(),
-            removed_nodes_desc: Vec::new(),
+            added_nodes: Vec::new(),
+            removed_nodes: Vec::new(),
             comment: None,
             run_log: Vec::new(),
         });
@@ -83,34 +83,38 @@ async fn get_decentralization_analysis(
         node_ids_to_remove
             .iter()
             .filter_map(|n| registry_nodes.get(n))
-            .map(|n| (decentralization::network::Node::from(n), "".to_string()))
+            .map(|n| (decentralization::network::Node::from(n)))
             .collect::<Vec<_>>()
     });
     let updated_subnet = match &nodes_to_remove {
-        Some(nodes_to_remove) => original_subnet.without_nodes(nodes_to_remove.clone())?,
+        Some(nodes_to_remove) => original_subnet.without_nodes(nodes_to_remove)?,
         None => original_subnet.clone(),
     };
 
     let updated_subnet = match &node_ids_to_add {
-        Some(nodes_to_add) => {
-            let nodes_to_add = nodes_to_add
+        Some(node_ids_to_add) => {
+            let nodes_to_add = node_ids_to_add
                 .iter()
-                .map(|n| (decentralization::network::Node::from(&registry_nodes[n]), "added".to_string()))
+                .map(|n| decentralization::network::Node::from(&registry_nodes[n]))
                 .collect();
-            updated_subnet.with_nodes(nodes_to_add)
+            updated_subnet.with_nodes(&nodes_to_add)
         }
         None => updated_subnet,
     };
+    let penalties_before_change = DecentralizedSubnet::check_business_rules_for_subnet_with_nodes(&original_subnet.id, &original_subnet.nodes)
+        .expect("Business rules check before should succeed")
+        .0;
     let penalties_after_change = DecentralizedSubnet::check_business_rules_for_subnet_with_nodes(&original_subnet.id, &updated_subnet.nodes)
-        .expect("Business rules check should succeed")
+        .expect("Business rules check after should succeed")
         .0;
 
     let subnet_change = SubnetChange {
-        id: original_subnet.id,
+        subnet_id: original_subnet.id,
         old_nodes: original_subnet.nodes,
         new_nodes: updated_subnet.nodes.clone(),
-        removed_nodes_desc: updated_subnet.removed_nodes_desc.clone(),
-        added_nodes_desc: updated_subnet.added_nodes_desc.clone(),
+        removed_nodes: updated_subnet.removed_nodes.clone(),
+        added_nodes: updated_subnet.added_nodes.clone(),
+        penalties_before_change,
         penalties_after_change,
         comment: updated_subnet.comment.clone(),
         run_log: updated_subnet.run_log.clone(),
@@ -118,7 +122,7 @@ async fn get_decentralization_analysis(
 
     let response = DecentralizedSubnetResponse {
         id: subnet.unwrap_or_else(|| PrincipalId::new_subnet_test_id(0)),
-        message: format!("{}", SubnetChangeResponse::from(&subnet_change)),
+        message: format!("{}", SubnetChangeResponse::new(&subnet_change, &IndexMap::new(), None)),
         nakamoto: updated_subnet.nakamoto_score(),
         run_log: subnet_change.run_log.join("\n"),
     };

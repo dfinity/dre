@@ -125,11 +125,8 @@ impl SubnetManager {
     ) -> anyhow::Result<SubnetChangeResponse> {
         let subnet_query_by = self.get_subnet_query_by(self.target()?).await?;
         let mut motivations = vec![];
-        let mut to_be_replaced: Vec<(DecentralizedNode, String)> = if let SubnetQueryBy::NodeList(nodes) = &subnet_query_by {
-            nodes
-                .iter()
-                .map(|n| (n.clone(), motivation.clone().unwrap_or("as per user request".to_string())))
-                .collect()
+        let mut to_be_replaced: Vec<DecentralizedNode> = if let SubnetQueryBy::NodeList(nodes) = &subnet_query_by {
+            nodes.clone()
         } else {
             vec![]
         };
@@ -144,19 +141,11 @@ impl SubnetManager {
 
         let mut node_ids_unhealthy = HashSet::new();
         if heal {
-            let subnet_unhealthy = self.unhealthy_nodes(subnet_change_request.subnet()).await?;
-            let subnet_unhealthy_without_included = subnet_unhealthy
-                .into_iter()
-                .filter(|(n, _)| !include.as_ref().unwrap_or(&vec![]).contains(&n.id))
-                .map(|(n, s)| (n, format!("health: {}", s.to_string().to_lowercase())))
-                .collect::<Vec<_>>();
-
-            for (n, reason) in subnet_unhealthy_without_included.iter() {
-                motivations.push(format!("replacing node {} due to {reason}", n.id));
-                node_ids_unhealthy.insert(n.id);
+            for (node, health_status) in self.unhealthy_nodes(subnet_change_request.subnet()).await? {
+                node_ids_unhealthy.insert(node.id);
+                motivations.push(format!("replacing {} as it is unhealthy: {:?}", node.id, health_status));
+                to_be_replaced.push(node);
             }
-
-            to_be_replaced.extend(subnet_unhealthy_without_included);
         }
 
         let health_of_nodes = self.health_client.nodes().await?;
@@ -168,7 +157,7 @@ impl SubnetManager {
             self.cordoned_features_fetcher.fetch().await?,
         )?;
 
-        for (n, _) in change.removed().iter().filter(|(n, _)| !node_ids_unhealthy.contains(&n.id)) {
+        for n in change.removed().iter().filter(|n| !node_ids_unhealthy.contains(&n.id)) {
             motivations.push(format!(
                 "replacing {} as per user request{}",
                 n.id,
@@ -184,9 +173,7 @@ impl SubnetManager {
                 motivations.iter().map(|s| format!(" - {}", s)).collect::<Vec<String>>().join("\n")
             );
 
-        let change = SubnetChangeResponse::from(&change)
-            .with_health_of_nodes(health_of_nodes)
-            .with_motivation(motivation);
+        let change = SubnetChangeResponse::new(&change, &health_of_nodes, Some(motivation));
 
         Ok(change)
     }
@@ -214,12 +201,12 @@ impl SubnetManager {
                 self.cordoned_features_fetcher.fetch().await?,
             )?;
 
-        for (n, _) in change.removed().iter() {
-            motivations.push(format!("removing {} as per user request", n.id));
+        for n in change.removed().iter() {
+            motivations.push(format!("removing {} for subnet resize", n.id));
         }
 
-        for (n, _) in change.added().iter() {
-            motivations.push(format!("adding {} as per user request", n.id));
+        for n in change.added().iter() {
+            motivations.push(format!("adding {} for subnet resize", n.id));
         }
 
         let motivation = format!(
@@ -228,9 +215,7 @@ impl SubnetManager {
                 motivations.iter().map(|s| format!(" - {}", s)).collect::<Vec<String>>().join("\n")
             );
 
-        let change = SubnetChangeResponse::from(&change)
-            .with_health_of_nodes(health_of_nodes.clone())
-            .with_motivation(motivation);
+        let change = SubnetChangeResponse::new(&change, &health_of_nodes, Some(motivation));
 
         Ok(change)
     }

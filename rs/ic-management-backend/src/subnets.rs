@@ -9,48 +9,44 @@ use indexmap::IndexMap;
 pub fn get_proposed_subnet_changes(
     all_nodes: &IndexMap<PrincipalId, Node>,
     subnet: &ic_management_types::Subnet,
+    health_of_nodes: &IndexMap<PrincipalId, ic_management_types::HealthStatus>,
 ) -> Result<SubnetChangeResponse, anyhow::Error> {
     if let Some(proposal) = &subnet.proposal {
         let proposal: &TopologyChangeProposal = proposal;
         let subnet_nodes: Vec<_> = subnet.nodes.iter().map(decentralization::network::Node::from).collect();
+
+        let penalties_before_change = DecentralizedSubnet::check_business_rules_for_subnet_with_nodes(&subnet.principal, &subnet_nodes)
+            .expect("Business rules check should succeed")
+            .0;
         let penalties_after_change = DecentralizedSubnet::check_business_rules_for_subnet_with_nodes(&subnet.principal, &subnet_nodes)
             .expect("Business rules check should succeed")
             .0;
         let change = SubnetChange {
-            id: subnet.principal,
+            subnet_id: subnet.principal,
             old_nodes: subnet_nodes.clone(),
             new_nodes: subnet_nodes,
-            removed_nodes_desc: vec![],
-            added_nodes_desc: vec![],
+            removed_nodes: vec![],
+            added_nodes: vec![],
+            penalties_before_change,
             penalties_after_change,
             comment: None,
             run_log: vec![],
         }
         .with_nodes(
-            proposal
+            &proposal
                 .node_ids_added
                 .iter()
-                .map(|p| {
-                    (
-                        decentralization::network::Node::from(all_nodes.get(p).unwrap()),
-                        "added in proposal".to_string(),
-                    )
-                })
+                .map(|p| (decentralization::network::Node::from(all_nodes.get(p).unwrap())))
                 .collect::<Vec<_>>(),
         )
         .without_nodes(
-            proposal
+            &proposal
                 .node_ids_removed
                 .iter()
-                .map(|p| {
-                    (
-                        decentralization::network::Node::from(all_nodes.get(p).unwrap()),
-                        "removed in proposal".to_string(),
-                    )
-                })
+                .map(|p| (decentralization::network::Node::from(all_nodes.get(p).unwrap())))
                 .collect::<Vec<_>>(),
         );
-        let mut response = SubnetChangeResponse::from(&change);
+        let mut response = SubnetChangeResponse::new(&change, &health_of_nodes, None);
         response.proposal_id = Some(proposal.id);
         Ok(response)
     } else {
@@ -80,7 +76,9 @@ mod tests {
             nodes: all_nodes.values().take(13).cloned().collect(),
             ..Default::default()
         };
-        let err = get_proposed_subnet_changes(&all_nodes, &subnet).unwrap_err().to_string();
+        let err = get_proposed_subnet_changes(&all_nodes, &subnet, &IndexMap::new())
+            .unwrap_err()
+            .to_string();
         assert_eq!(err, "subnet fscpm-uiaaa-aaaaa-aaaap-yai does not have open membership change proposals");
     }
 
@@ -102,9 +100,9 @@ mod tests {
             proposal: Some(proposal_replace),
             ..Default::default()
         };
-        let change = get_proposed_subnet_changes(&all_nodes, &subnet).unwrap();
-        assert_eq!(change.added_with_desc.iter().map(|a| a.0).collect::<Vec<_>>(), node_ids_added);
-        assert_eq!(change.removed_with_desc, vec![]);
+        let change = get_proposed_subnet_changes(&all_nodes, &subnet, &IndexMap::new()).unwrap();
+        assert_eq!(change.node_ids_added, node_ids_added);
+        assert_eq!(change.node_ids_removed, vec![]);
     }
 
     #[test]
@@ -126,9 +124,9 @@ mod tests {
             proposal: Some(proposal_replace),
             ..Default::default()
         };
-        let change = get_proposed_subnet_changes(&all_nodes, &subnet).unwrap();
-        assert_eq!(change.added_with_desc.iter().map(|a| a.0).collect::<Vec<_>>(), node_ids_added);
-        assert_eq!(change.removed_with_desc.iter().map(|x| x.0).collect::<Vec<_>>(), node_ids_removed);
+        let change = get_proposed_subnet_changes(&all_nodes, &subnet, &IndexMap::new()).unwrap();
+        assert_eq!(change.node_ids_added, node_ids_added);
+        assert_eq!(change.node_ids_removed, node_ids_removed);
     }
 
     fn gen_test_nodes(subnet_id: PrincipalId, num_nodes: u64, start_at_number: u64) -> IndexMap<PrincipalId, Node> {

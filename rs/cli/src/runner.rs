@@ -1,11 +1,12 @@
 use std::cell::RefCell;
 use std::sync::Arc;
 
+use ahash::AHashMap;
 use decentralization::network::DecentralizedSubnet;
 use decentralization::network::NetworkHealRequest;
 use decentralization::network::SubnetChange;
+use decentralization::network::SubnetChangeRequest;
 use decentralization::network::SubnetQueryBy;
-use decentralization::network::{generate_added_node_description, generate_removed_nodes_description};
 use decentralization::subnets::NodesRemover;
 use decentralization::SubnetChangeResponse;
 use futures::TryFutureExt;
@@ -55,7 +56,7 @@ pub struct Runner {
     health_client: Arc<dyn HealthStatusQuerier>,
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct RunnerProposal {
     pub cmd: ProposeCommand,
     pub opts: ProposeOptions,
@@ -153,7 +154,7 @@ impl Runner {
                 }),
             )
             .await?;
-        let subnet_creation_data = SubnetChangeResponse::from(&subnet_creation_data).with_health_of_nodes(health_of_nodes.clone());
+        let subnet_creation_data = SubnetChangeResponse::new(&subnet_creation_data, &health_of_nodes, Some(motivation.clone()));
 
         if self.verbose {
             if let Some(run_log) = &subnet_creation_data.run_log {
@@ -171,14 +172,14 @@ impl Runner {
 
         Ok(Some(RunnerProposal {
             cmd: ProposeCommand::CreateSubnet {
-                node_ids: subnet_creation_data.added_with_desc.iter().map(|a| a.0).collect::<Vec<_>>(),
+                node_ids: subnet_creation_data.node_ids_added,
                 replica_version,
                 other_args,
             },
             opts: ProposeOptions {
                 title: Some("Creating new subnet".into()),
                 summary: Some("# Creating new subnet with nodes: ".into()),
-                motivation: Some(motivation.clone()),
+                motivation: Some(motivation),
                 forum_post_link,
             },
         }))
@@ -195,7 +196,7 @@ impl Runner {
             }
         }
 
-        if change.added_with_desc.is_empty() && change.removed_with_desc.is_empty() {
+        if change.node_ids_added.is_empty() && change.node_ids_removed.is_empty() {
             return Ok(None);
         }
 
@@ -498,12 +499,153 @@ impl Runner {
         })
     }
 
-    pub async fn network_heal(&self, forum_post_link: Option<String>) -> anyhow::Result<Vec<RunnerProposal>> {
+    pub async fn network_ensure_operator_nodes_assigned(
+        &self,
+        forum_post_link: Option<String>,
+        skip_subnets: &Vec<String>,
+    ) -> anyhow::Result<Vec<RunnerProposal>> {
+        // Get the list of subnets, and the list of open proposal for each subnet, if any
+        let subnets = self.registry.subnets_and_proposals().await?;
+        let subnets_not_skipped = subnets
+            .iter()
+            .filter(|(subnet_id, _)| !skip_subnets.iter().any(|s| subnet_id.to_string().contains(s)))
+            .map(|(subnet_id, subnet)| (*subnet_id, subnet.clone()))
+            .collect::<IndexMap<_, _>>();
+        let mut subnets_without_proposals = subnets_not_skipped
+            .iter()
+            .filter(|(subnet_id, subnet)| match &subnet.proposal {
+                Some(p) => {
+                    info!("Skipping subnet {} as it has a pending proposal {}", subnet_id, p.id);
+                    false
+                }
+                None => true,
+            })
+            .map(|(id, subnet)| (*id, subnet.clone()))
+            .collect::<IndexMap<_, _>>();
+        let (mut available_nodes, health_of_nodes) =
+            try_join(self.registry.available_nodes().map_err(anyhow::Error::from), self.health_client.nodes()).await?;
+
+        let node_operators = self.registry.operators().await?;
+        // Filter out nodes that are not healthy
+        let nodes_all = self.registry.nodes().await?;
+        let healthy_nodes = nodes_all
+            .iter()
+            .filter(|(node_id, _node)| health_of_nodes.get(*node_id) == Some(&HealthStatus::Healthy))
+            .collect::<Vec<_>>();
+        // Build a hashmap {node_id -> node} of all nodes that are in some (any) subnet
+        let nodes_in_subnets = subnets
+            .values()
+            .flat_map(|s| s.nodes.iter().map(|n| (n.principal, n)))
+            .collect::<AHashMap<_, _>>();
+        // Build a hashmap of healthy nodes, grouped by node operator {operator -> Vec<Node>}
+        let healthy_nodes_by_operator = healthy_nodes.iter().into_group_map_by(|(_node_id, node)| node.operator.principal);
+        // Finally, prepare a list of operators that have at least 1 node, but NONE of their nodes are in a subnet
+        let operators_without_nodes_in_subnets = node_operators
+            .iter()
+            .filter_map(|(operator_id, operator)| {
+                if let Some(operator_nodes) = healthy_nodes_by_operator.get(operator_id) {
+                    if operator_nodes.into_iter().all(|(node_id, _node)| !nodes_in_subnets.contains_key(node_id)) {
+                        Some((
+                            operator_id,
+                            operator.datacenter.as_ref().map(|dc| dc.name.clone()).unwrap_or_default(),
+                            operator_nodes.into_iter().map(|(_, node)| (*node).clone()).collect::<Vec<_>>(),
+                        ))
+                    } else {
+                        None
+                    }
+                } else {
+                    None
+                }
+            })
+            .collect::<Vec<_>>();
+
+        // For each operator without nodes in subnets, we will create a proposal to add one of their nodes to a subnet, if it does not make decentralization worse
+        let mut changes = vec![];
+        for (operator_id, dc, healthy_operator_nodes) in operators_without_nodes_in_subnets {
+            // All nodes of the operator have the same health and effect on decentralization, so we can pick any node
+            let node = healthy_operator_nodes.first().expect("At least one node should be present");
+            let best_change = subnets_without_proposals
+                .values()
+                .filter_map(|subnet| {
+                    // Try to replace one of the nodes in the subnet with the node from the operator and see if it makes decentralization better or at least not worse
+                    let node = decentralization::network::Node::from(node);
+                    let subnet = DecentralizedSubnet::from(subnet);
+                    let operator_id_short = operator_id.to_string().split_once('-').expect("Operator ID should have dashes").0.to_string();
+                    let subnet_id_short = subnet.id.to_string().split_once('-').expect("Subnet ID should have dashes").0.to_string();
+                    SubnetChangeRequest::new(subnet, available_nodes.clone(), vec![node], vec![], vec![])
+                        .resize(0, 1, 0, &health_of_nodes, vec![])
+                        .map(|c| {
+                            SubnetChangeResponse::new(
+                                &c,
+                                &health_of_nodes,
+                                Some(format!("The a node operator {} currently does not have nodes in any subnet. To get insights into the stability of the nodes of this node operator, we propose to add one of the operator's nodes to subnet {}.", operator_id_short, subnet_id_short)),
+                            )
+                        })
+                        .ok()
+                })
+                .filter(|c| c.penalties_after_change <= c.penalties_before_change && c.score_after >= c.score_before)
+                .max_by(|a, b| {
+                    // lower penalties are better
+                    let penalties_cmp = b.penalties_after_change.cmp(&a.penalties_after_change);
+                    if penalties_cmp == std::cmp::Ordering::Equal {
+                        // higher score is better
+                        a.score_after.partial_cmp(&b.score_after).unwrap_or(std::cmp::Ordering::Equal)
+                    } else {
+                        penalties_cmp
+                    }
+                });
+            let node_id_short = node
+                .principal
+                .to_string()
+                .split_once('-')
+                .expect("Node ID should have dashes")
+                .0
+                .to_string();
+            match best_change {
+                Some(change) => {
+                    changes.push(
+                        self.run_membership_change(change.clone(), replace_proposal_options(&change, forum_post_link.clone()).await?)
+                            .await?,
+                    );
+                    info!(
+                        "Operator {} in DC {} proposing to add a probe node {} to subnet {}",
+                        operator_id,
+                        dc,
+                        node_id_short,
+                        change.subnet_id.expect("Subnet ID should be present")
+                    );
+                    subnets_without_proposals.shift_remove(&change.subnet_id.expect("Subnet ID should be present"));
+                    // Remove the selected node from the list of available nodes
+                    available_nodes
+                        .iter()
+                        .position(|n| n.id == node.principal)
+                        .map(|i| available_nodes.remove(i));
+                    continue;
+                }
+                None => {
+                    warn!(
+                        "Adding node {} of the operator {} in DC {} would worsen decentralization in all subnets!",
+                        node_id_short,
+                        operator_id.to_string().split_once('-').unwrap().0,
+                        dc,
+                    );
+                }
+            }
+        }
+        Ok(changes)
+    }
+
+    pub async fn network_heal(&self, forum_post_link: Option<String>, skip_subnets: &Vec<String>) -> anyhow::Result<Vec<RunnerProposal>> {
         let mut errors = vec![];
 
         // Get the list of subnets, and the list of open proposal for each subnet, if any
         let subnets = self.registry.subnets_and_proposals().await?;
-        let subnets_without_proposals = subnets
+        let subnets_not_skipped = subnets
+            .iter()
+            .filter(|(subnet_id, _)| !skip_subnets.iter().any(|s| subnet_id.to_string().contains(s)))
+            .map(|(subnet_id, subnet)| (*subnet_id, subnet.clone()))
+            .collect::<IndexMap<_, _>>();
+        let subnets_without_proposals = subnets_not_skipped
             .iter()
             .filter(|(subnet_id, subnet)| match &subnet.proposal {
                 Some(p) => {
@@ -517,7 +659,7 @@ impl Runner {
         let (available_nodes, health_of_nodes) =
             try_join(self.registry.available_nodes().map_err(anyhow::Error::from), self.health_client.nodes()).await?;
 
-        let subnets_change_response = NetworkHealRequest::new(subnets_without_proposals)
+        let subnets_change_responses = NetworkHealRequest::new(subnets_without_proposals)
             .heal_and_optimize(
                 available_nodes,
                 &health_of_nodes,
@@ -530,7 +672,7 @@ impl Runner {
             .await?;
 
         let mut changes = vec![];
-        for change in &subnets_change_response {
+        for change in &subnets_change_responses {
             let current = self
                 .run_membership_change(change.clone(), replace_proposal_options(change, forum_post_link.clone()).await?)
                 .await
@@ -544,7 +686,7 @@ impl Runner {
             anyhow::bail!("Errors: {:?}", errors);
         }
 
-        // No errors, can be safly unwrapped
+        // No errors, can be safely unwrapped
         Ok(changes.into_iter().map(|maybe_change| maybe_change.unwrap()).collect_vec())
     }
 
@@ -552,6 +694,7 @@ impl Runner {
         &self,
         change: &ChangeSubnetMembershipPayload,
         override_subnet_nodes: Option<Vec<PrincipalId>>,
+        summary: Option<String>,
     ) -> anyhow::Result<()> {
         let subnet_before = match override_subnet_nodes {
             Some(nodes) => {
@@ -569,29 +712,22 @@ impl Runner {
 
         // Simulate node removal
         let removed_nodes = self.registry.get_decentralized_nodes(&change.get_removed_node_ids()).await?;
-        let removed_nodes_with_desc = generate_removed_nodes_description(&subnet_before.nodes, &removed_nodes);
-        let subnet_mid = subnet_before
-            .without_nodes(removed_nodes_with_desc.clone())
-            .map_err(|e| anyhow::anyhow!(e))?;
+        let subnet_mid = subnet_before.without_nodes(&removed_nodes).map_err(|e| anyhow::anyhow!(e))?;
 
         // Now simulate node addition
         let added_nodes = self.registry.get_decentralized_nodes(&change.get_added_node_ids()).await?;
-        let added_nodes_with_desc = generate_added_node_description(&subnet_mid.nodes, &added_nodes);
 
-        let subnet_after = subnet_mid.with_nodes(added_nodes_with_desc.clone());
+        let subnet_after = subnet_mid.with_nodes(&added_nodes);
 
         let subnet_change = SubnetChange {
-            id: subnet_after.id,
+            subnet_id: subnet_after.id,
             old_nodes: nodes_before,
             new_nodes: subnet_after.nodes,
-            added_nodes_desc: added_nodes_with_desc.clone(),
-            removed_nodes_desc: removed_nodes_with_desc.clone(),
+            added_nodes: added_nodes.clone(),
+            removed_nodes: removed_nodes.clone(),
             ..Default::default()
         };
-        println!(
-            "{}",
-            SubnetChangeResponse::from(&subnet_change).with_health_of_nodes(health_of_nodes.clone())
-        );
+        println!("{}", SubnetChangeResponse::new(&subnet_change, &health_of_nodes, summary));
         Ok(())
     }
 
@@ -614,10 +750,10 @@ impl Runner {
 
         let health_of_nodes = self.health_of_nodes().await?;
 
-        let change = SubnetChangeResponse::from(&change_request.rescue(&health_of_nodes, self.cordoned_features_fetcher.fetch().await?)?)
-            .with_health_of_nodes(health_of_nodes);
+        let change = &change_request.rescue(&health_of_nodes, self.cordoned_features_fetcher.fetch().await?)?;
+        let change = SubnetChangeResponse::new(change, &health_of_nodes, Some("Recovering subnet".to_string()));
 
-        if change.added_with_desc.is_empty() && change.removed_with_desc.is_empty() {
+        if change.node_ids_added.is_empty() && change.node_ids_removed.is_empty() {
             return Ok(None);
         }
 
@@ -709,8 +845,8 @@ impl Runner {
         Ok(RunnerProposal {
             cmd: ProposeCommand::ChangeSubnetMembership {
                 subnet_id,
-                node_ids_add: change.added_with_desc.iter().map(|a| a.0).collect::<Vec<_>>(),
-                node_ids_remove: change.removed_with_desc.iter().map(|a| a.0).collect::<Vec<_>>(),
+                node_ids_add: change.node_ids_added,
+                node_ids_remove: change.node_ids_removed,
             },
             opts: options,
         })
@@ -760,14 +896,14 @@ impl Runner {
 pub async fn replace_proposal_options(change: &SubnetChangeResponse, forum_post_link: Option<String>) -> anyhow::Result<ic_admin::ProposeOptions> {
     let subnet_id = change.subnet_id.ok_or_else(|| anyhow::anyhow!("subnet_id is required"))?.to_string();
 
-    let replace_target = if change.added_with_desc.len() > 1 || change.removed_with_desc.len() > 1 {
+    let replace_target = if change.node_ids_added.len() > 1 || change.node_ids_removed.len() > 1 {
         "nodes"
     } else {
         "a node"
     };
     let subnet_id_short = subnet_id.split('-').next().unwrap();
 
-    let change_desc = if change.added_with_desc.len() == change.removed_with_desc.len() {
+    let change_desc = if change.node_ids_added.len() == change.node_ids_removed.len() {
         format!("Replace {} in subnet {}", replace_target, subnet_id_short)
     } else {
         format!("Resize subnet {}", subnet_id_short)
