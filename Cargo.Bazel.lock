@@ -1,5 +1,5 @@
 {
-  "checksum": "b9a098cf38a25d6eabe74b8d704b6ddcb5aebfdf40cb01dd1a81b2376028b32e",
+  "checksum": "7ea7a35de8b6493825ab6fe949a472115132c928f34a5084ca4d283a254ed4d3",
   "crates": {
     "actix-codec 0.5.2": {
       "name": "actix-codec",
@@ -29575,6 +29575,77 @@
       },
       "license": "MIT"
     },
+    "node-provider-rewards-lib 0.5.6": {
+      "name": "node-provider-rewards-lib",
+      "version": "0.5.6",
+      "repository": null,
+      "targets": [
+        {
+          "Library": {
+            "crate_name": "node_provider_rewards_lib",
+            "crate_root": "src/lib.rs",
+            "srcs": [
+              "**/*.rs"
+            ]
+          }
+        }
+      ],
+      "library_target_name": "node_provider_rewards_lib",
+      "common_attrs": {
+        "compile_data_glob": [
+          "**"
+        ],
+        "deps": {
+          "common": [
+            {
+              "id": "ahash 0.8.11",
+              "target": "ahash"
+            },
+            {
+              "id": "ic-base-types 0.9.0",
+              "target": "ic_base_types"
+            },
+            {
+              "id": "ic-management-canister-types 0.9.0",
+              "target": "ic_management_canister_types"
+            },
+            {
+              "id": "ic-protobuf 0.9.0",
+              "target": "ic_protobuf"
+            },
+            {
+              "id": "itertools 0.13.0",
+              "target": "itertools"
+            },
+            {
+              "id": "lazy_static 1.5.0",
+              "target": "lazy_static"
+            },
+            {
+              "id": "num-traits 0.2.19",
+              "target": "num_traits"
+            },
+            {
+              "id": "rust_decimal 1.36.0",
+              "target": "rust_decimal"
+            }
+          ],
+          "selects": {}
+        },
+        "edition": "2021",
+        "proc_macro_deps": {
+          "common": [
+            {
+              "id": "rust_decimal_macros 1.36.0",
+              "target": "rust_decimal_macros"
+            }
+          ],
+          "selects": {}
+        },
+        "version": "0.5.6"
+      },
+      "license": "Apache-2.0"
+    },
     "node-status-updater 0.5.6": {
       "name": "node-status-updater",
       "version": "0.5.6",
@@ -48600,6 +48671,7 @@
     "multiservice-discovery 0.5.6": "rs/ic-observability/multiservice-discovery",
     "multiservice-discovery-downloader 0.5.6": "rs/ic-observability/multiservice-discovery-downloader",
     "multiservice-discovery-shared 0.5.6": "rs/ic-observability/multiservice-discovery-shared",
+    "node-provider-rewards-lib 0.5.6": "rs/dre-canisters/node-provider-rewards-lib",
     "node-status-updater 0.5.6": "rs/ic-observability/node-status-updater",
     "obs-canister-clients 0.5.6": "rs/ic-observability/obs-canister-clients",
     "prometheus-config-updater 0.5.6": "rs/ic-observability/prometheus-config-updater",
