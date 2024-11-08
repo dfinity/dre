@@ -406,7 +406,7 @@ impl DecentralizedSubnet {
             let non_european_nodes_count = country_counts
                 .iter()
                 .filter_map(|(country, count)| {
-                    if Node::is_country_from_eu(country.as_str()) || country.as_str() == "CH" {
+                    if Node::is_country_from_eu(country.as_str()) || country.as_str() == "CH" || country.as_str() == "UK" {
                         None
                     } else {
                         Some(*count)
