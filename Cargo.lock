@@ -8720,6 +8720,7 @@ dependencies = [
 name = "trustworthy-node-metrics"
 version = "0.5.6"
 dependencies = [
+ "ahash 0.8.11",
  "anyhow",
  "candid",
  "chrono",
@@ -8737,6 +8738,7 @@ dependencies = [
  "ic-registry-keys",
  "ic-stable-structures",
  "itertools 0.13.0",
+ "node-provider-rewards-lib",
  "num-traits",
  "rust_decimal",
  "rust_decimal_macros",
@@ -8753,6 +8755,7 @@ dependencies = [
  "ic-nns-governance-api",
  "ic-protobuf",
  "ic-stable-structures",
+ "node-provider-rewards-lib",
  "serde",
  "serde_json",
 ]

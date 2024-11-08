@@ -78,7 +78,7 @@ fn rewards_reduction_percent(failure_rate: &Decimal) -> Decimal {
 /// 2. The `overall_failure_rate` for the period is calculated by dividing the `overall_failed` blocks by the `overall_total` blocks.
 /// 3. The `rewards_reduction` function is applied to `overall_failure_rate`.
 /// 3. Finally, the rewards multiplier to be distributed to the node is computed.
-fn assigned_nodes_multiplier(daily_metrics: &[DailyNodeMetrics], total_days: u64) -> (Decimal, MultiplierStats) {
+pub fn assigned_nodes_multiplier(daily_metrics: &[DailyNodeMetrics], total_days: u64) -> (Decimal, MultiplierStats) {
     let total_days = Decimal::from(total_days);
 
     let days_assigned = logger().execute("Assigned Days In Period", Operation::Set(Decimal::from(daily_metrics.len())));
