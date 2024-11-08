@@ -129,13 +129,15 @@ impl Display for SubnetChangeResponse {
 
         let total_before = self.score_before.score_avg_linear();
         let total_after = self.score_after.score_avg_linear();
-        let output = format!(
-            "\n**Mean Nakamoto comparison:** {:.2} -> {:.2}  ({:+.0}%)\n\nOverall replacement impact: {}",
+        writeln!(
+            f,
+            "```\n\n**Mean Nakamoto comparison:** {:.2} -> {:.2}  ({:+.0}%)\n\nOverall replacement impact: {}",
             total_before,
             total_after,
             ((total_after - total_before) / total_before) * 100.,
             self.score_after.describe_difference_from(&self.score_before).1
-        );
+        )?;
+
         if self.penalties_before_change != self.penalties_after_change || self.penalties_after_change > 0 {
             writeln!(
                 f,
@@ -144,9 +146,7 @@ impl Display for SubnetChangeResponse {
             )?;
         }
 
-        writeln!(f, "```\n{}\n\n# Details\n\n", output)?;
-
-        writeln!(f, "Nodes removed:")?;
+        writeln!(f, "\n\n# Details\n\nNodes removed:")?;
         for node_id in &self.node_ids_removed {
             let health = self
                 .health_of_nodes
