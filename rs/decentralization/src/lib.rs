@@ -38,16 +38,16 @@ impl SubnetChangeResponse {
         // Calculate decentralization impact for each removed node
         let mut nodes = change.old_nodes.iter().map(|n| (n.id, n.clone())).collect::<IndexMap<_, _>>();
         for node in change.removed().iter() {
-            let subnet_before = DecentralizedSubnet::new_with_subnet_id_and_nodes(change.subnet_id, nodes.values().into_iter().cloned().collect());
+            let subnet_before = DecentralizedSubnet::new_with_subnet_id_and_nodes(change.subnet_id, nodes.values().cloned().collect());
             nodes.shift_remove(&node.id);
-            let subnet_after = DecentralizedSubnet::new_with_subnet_id_and_nodes(change.subnet_id, nodes.values().into_iter().cloned().collect());
+            let subnet_after = DecentralizedSubnet::new_with_subnet_id_and_nodes(change.subnet_id, nodes.values().cloned().collect());
             let impact = subnet_after.nakamoto_score().describe_difference_from(&subnet_before.nakamoto_score()).1;
             decentralization_impact.insert(node.id, impact);
         }
         for node in change.added().iter() {
-            let subnet_before = DecentralizedSubnet::new_with_subnet_id_and_nodes(change.subnet_id, nodes.values().into_iter().cloned().collect());
+            let subnet_before = DecentralizedSubnet::new_with_subnet_id_and_nodes(change.subnet_id, nodes.values().cloned().collect());
             nodes.insert(node.id, node.clone());
-            let subnet_after = DecentralizedSubnet::new_with_subnet_id_and_nodes(change.subnet_id, nodes.values().into_iter().cloned().collect());
+            let subnet_after = DecentralizedSubnet::new_with_subnet_id_and_nodes(change.subnet_id, nodes.values().cloned().collect());
             let impact = subnet_after.nakamoto_score().describe_difference_from(&subnet_before.nakamoto_score()).1;
             decentralization_impact.insert(node.id, impact);
         }

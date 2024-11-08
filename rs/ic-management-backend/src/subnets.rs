@@ -46,7 +46,7 @@ pub fn get_proposed_subnet_changes(
                 .map(|p| (decentralization::network::Node::from(all_nodes.get(p).unwrap())))
                 .collect::<Vec<_>>(),
         );
-        let mut response = SubnetChangeResponse::new(&change, &health_of_nodes, None);
+        let mut response = SubnetChangeResponse::new(&change, health_of_nodes, None);
         response.proposal_id = Some(proposal.id);
         Ok(response)
     } else {

@@ -502,8 +502,8 @@ mod tests {
             reward_coefficient_percent: Some(95),
         };
 
-        rates_outer.insert("type0".to_string(), rate_outer.clone());
-        rates_outer.insert("type1".to_string(), rate_outer.clone());
+        rates_outer.insert("type0".to_string(), rate_outer);
+        rates_outer.insert("type1".to_string(), rate_outer);
         rates_outer.insert("type3".to_string(), rate_outer);
 
         rates_inner.insert("type3.1".to_string(), rate_inner);

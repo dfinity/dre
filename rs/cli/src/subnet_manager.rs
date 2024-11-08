@@ -215,7 +215,7 @@ impl SubnetManager {
                 motivations.iter().map(|s| format!(" - {}", s)).collect::<Vec<String>>().join("\n")
             );
 
-        let change = SubnetChangeResponse::new(&change, &health_of_nodes, Some(motivation));
+        let change = SubnetChangeResponse::new(&change, health_of_nodes, Some(motivation));
 
         Ok(change)
     }

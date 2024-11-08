@@ -502,7 +502,7 @@ impl Runner {
     pub async fn network_ensure_operator_nodes_assigned(
         &self,
         forum_post_link: Option<String>,
-        skip_subnets: &Vec<String>,
+        skip_subnets: &[String],
     ) -> anyhow::Result<Vec<RunnerProposal>> {
         // Get the list of subnets, and the list of open proposal for each subnet, if any
         let subnets = self.registry.subnets_and_proposals().await?;
@@ -544,11 +544,11 @@ impl Runner {
             .iter()
             .filter_map(|(operator_id, operator)| {
                 if let Some(operator_nodes) = healthy_nodes_by_operator.get(operator_id) {
-                    if operator_nodes.into_iter().all(|(node_id, _node)| !nodes_in_subnets.contains_key(node_id)) {
+                    if operator_nodes.iter().all(|(node_id, _node)| !nodes_in_subnets.contains_key(node_id)) {
                         Some((
                             operator_id,
                             operator.datacenter.as_ref().map(|dc| dc.name.clone()).unwrap_or_default(),
-                            operator_nodes.into_iter().map(|(_, node)| (*node).clone()).collect::<Vec<_>>(),
+                            operator_nodes.iter().map(|(_, node)| (*node).clone()).collect::<Vec<_>>(),
                         ))
                     } else {
                         None
@@ -635,7 +635,7 @@ impl Runner {
         Ok(changes)
     }
 
-    pub async fn network_heal(&self, forum_post_link: Option<String>, skip_subnets: &Vec<String>) -> anyhow::Result<Vec<RunnerProposal>> {
+    pub async fn network_heal(&self, forum_post_link: Option<String>, skip_subnets: &[String]) -> anyhow::Result<Vec<RunnerProposal>> {
         let mut errors = vec![];
 
         // Get the list of subnets, and the list of open proposal for each subnet, if any

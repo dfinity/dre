@@ -236,9 +236,9 @@ impl DecentralizedSubnet {
 
     /// Return a new instance of a DecentralizedSubnet that contains the
     /// provided nodes.
-    pub fn with_nodes(self, nodes_to_add: &Vec<Node>) -> Self {
-        let subnet_nodes_after_adding: Vec<Node> = self.nodes.clone().into_iter().chain(nodes_to_add.clone()).collect();
-        let added_nodes = [self.added_nodes, nodes_to_add.clone()].concat();
+    pub fn with_nodes(self, nodes_to_add: &[Node]) -> Self {
+        let subnet_nodes_after_adding: Vec<Node> = self.nodes.clone().into_iter().chain(nodes_to_add.to_vec()).collect();
+        let added_nodes = [self.added_nodes, nodes_to_add.to_vec()].concat();
         if !nodes_to_add.is_empty() {
             assert!(subnet_nodes_after_adding.len() > self.nodes.len());
         }
