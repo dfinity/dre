@@ -1,6 +1,5 @@
 use ahash::AHashMap;
 use ic_base_types::PrincipalId;
-use ic_management_canister_types::NodeMetricsHistoryResponse;
 use ic_protobuf::registry::node_rewards::v2::{NodeRewardRate, NodeRewardsTable};
 use itertools::Itertools;
 use lazy_static::lazy_static;
@@ -15,7 +14,7 @@ use std::{
 use crate::{
     v1_logs::{LogEntry, Operation, RewardsLog},
     v1_types::{
-        DailyNodeMetrics, MultiplierStats, Node, NodeMultiplierStats, NodesMetricsInPeriod, RegionNodeTypeCategory, RewardablesWithNodesMetrics,
+        DailyNodeMetrics, MultiplierStats, Node, NodeMultiplierStats, RegionNodeTypeCategory, RewardablesWithNodesMetrics,
         Rewards, RewardsPerNodeProvider,
     },
 };
@@ -310,7 +309,7 @@ pub fn calculate_rewards(
 ) -> RewardsPerNodeProvider {
     let mut rewards_per_node_provider = AHashMap::new();
     let mut rewards_log_per_node_provider = AHashMap::new();
-    let node_provider_rewardables = node_providers_rewardables(nodes_in_period, &nodes_metrics_in_period);
+    let node_provider_rewardables = node_providers_rewardables(nodes_in_period, nodes_metrics_in_period);
 
     for (node_provider_id, (rewardable_nodes, assigned_nodes_metrics)) in node_provider_rewardables {
         let mut assigned_multipliers: AHashMap<RegionNodeTypeCategory, Vec<Decimal>> = AHashMap::new();
@@ -536,6 +535,9 @@ mod tests {
         assert_eq!(rewards.xdr_permyriad, 2782);
     }
 
+
+
+    
     #[test]
     fn test_np_rewards_type3_mix() {
         let mut assigned_multipliers: AHashMap<RegionNodeTypeCategory, Vec<Decimal>> = AHashMap::new();
