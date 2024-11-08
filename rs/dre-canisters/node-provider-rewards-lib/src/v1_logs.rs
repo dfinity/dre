@@ -58,7 +58,7 @@ pub enum LogEntry {
     RewardsForNodeProvider(PrincipalId),
     ComputeRewardMultiplierForNode(PrincipalId),
     RewardsXDRTotal(Decimal),
-    ExecuteOperation {
+    Execute {
         reason: String,
         operation: Operation,
         result: Decimal,
@@ -86,7 +86,7 @@ pub enum LogEntry {
 impl fmt::Display for LogEntry {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            LogEntry::ExecuteOperation { reason, operation, result } => {
+            LogEntry::Execute { reason, operation, result } => {
                 write!(f, "ExecuteOperation: reason={}, operation={}, result={}", reason, operation, result)
             }
             LogEntry::RewardsForNodeProvider(principal) => {
@@ -143,7 +143,7 @@ impl RewardsPerNodeProviderLog {
 
     pub fn execute(&mut self, reason: &str, operation: Operation) -> Decimal {
         let result = operation.execute();
-        let entry = LogEntry::ExecuteOperation {
+        let entry = LogEntry::Execute {
             reason: reason.to_string(),
             operation,
             result,
