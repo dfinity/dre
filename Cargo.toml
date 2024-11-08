@@ -19,6 +19,7 @@ members = [
     "rs/log-fetcher",
     "rs/canister-log-fetcher",
     "rs/slack-notifications",
+    "rs/dre-canisters/node-provider-rewards-lib",
     "rs/dre-canisters/trustworthy-node-metrics/src/trustworthy-node-metrics",
     "rs/dre-canisters/trustworthy-node-metrics/src/trustworthy-node-metrics-types",
 ]
