@@ -126,17 +126,19 @@ impl fmt::Display for LogEntry {
                     node_type, region, count, assigned_multiplier, unassigned_multiplier
                 )
             }
-            LogEntry::AvgType3Rewards(region, avg_rewards) => write!(f, "Avg. rewards for nodes with type: type3* in region: {} is {}", region, avg_rewards),
+            LogEntry::AvgType3Rewards(region, avg_rewards) => {
+                write!(f, "Avg. rewards for nodes with type: type3* in region: {} is {}", region, avg_rewards)
+            }
         }
     }
 }
 
 #[derive(Default)]
-pub struct RewardsPerNodeProviderLog {
+pub struct RewardsLog {
     entries: Vec<LogEntry>,
 }
 
-impl RewardsPerNodeProviderLog {
+impl RewardsLog {
     pub fn add_entry(&mut self, entry: LogEntry) {
         self.entries.push(entry);
     }
