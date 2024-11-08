@@ -14,8 +14,8 @@ use std::{
 use crate::{
     v1_logs::{LogEntry, Operation, RewardsLog},
     v1_types::{
-        DailyNodeMetrics, MultiplierStats, Node, NodeMultiplierStats, RegionNodeTypeCategory, RewardablesWithNodesMetrics,
-        Rewards, RewardsPerNodeProvider,
+        DailyNodeMetrics, MultiplierStats, Node, NodeMultiplierStats, RegionNodeTypeCategory, RewardablesWithNodesMetrics, Rewards,
+        RewardsPerNodeProvider,
     },
 };
 
@@ -535,9 +535,6 @@ mod tests {
         assert_eq!(rewards.xdr_permyriad, 2782);
     }
 
-
-
-    
     #[test]
     fn test_np_rewards_type3_mix() {
         let mut assigned_multipliers: AHashMap<RegionNodeTypeCategory, Vec<Decimal>> = AHashMap::new();
