@@ -564,13 +564,18 @@ impl Runner {
         for (operator_id, dc, healthy_operator_nodes) in operators_without_nodes_in_subnets {
             // All nodes of the operator have the same health and effect on decentralization, so we can pick any node
             let node = healthy_operator_nodes.first().expect("At least one node should be present");
+            let operator_id_short = operator_id
+                .to_string()
+                .split_once('-')
+                .expect("Operator ID should have dashes")
+                .0
+                .to_string();
             let best_change = subnets_without_proposals
                 .values()
                 .filter_map(|subnet| {
                     // Try to replace one of the nodes in the subnet with the node from the operator and see if it makes decentralization better or at least not worse
                     let node = decentralization::network::Node::from(node);
                     let subnet = DecentralizedSubnet::from(subnet);
-                    let operator_id_short = operator_id.to_string().split_once('-').expect("Operator ID should have dashes").0.to_string();
                     let subnet_id_short = subnet.id.to_string().split_once('-').expect("Subnet ID should have dashes").0.to_string();
                     SubnetChangeRequest::new(subnet, available_nodes.clone(), vec![node], vec![], vec![])
                         .resize(0, 1, 0, &health_of_nodes, vec![])
@@ -609,10 +614,16 @@ impl Runner {
                     );
                     info!(
                         "Operator {} in DC {} proposing to add a probe node {} to subnet {}",
-                        operator_id,
+                        operator_id_short,
                         dc,
                         node_id_short,
-                        change.subnet_id.expect("Subnet ID should be present")
+                        change
+                            .subnet_id
+                            .expect("Subnet ID should be present")
+                            .to_string()
+                            .split_once('-')
+                            .expect("Subnet ID should have dashes")
+                            .0
                     );
                     subnets_without_proposals.shift_remove(&change.subnet_id.expect("Subnet ID should be present"));
                     // Remove the selected node from the list of available nodes
