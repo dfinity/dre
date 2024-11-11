@@ -3,7 +3,7 @@ pub mod network;
 pub mod subnets;
 use indexmap::IndexMap;
 use itertools::Itertools;
-use network::{DecentralizedSubnet, Node, SubnetChange};
+use network::{Node, SubnetChange};
 use std::fmt::{Display, Formatter};
 
 use ic_base_types::PrincipalId;
@@ -18,7 +18,6 @@ pub struct SubnetChangeResponse {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub subnet_id: Option<PrincipalId>,
     pub health_of_nodes: IndexMap<PrincipalId, HealthStatus>,
-    pub decentralization_impact: IndexMap<PrincipalId, String>,
     pub score_before: nakamoto::NakamotoScore,
     pub score_after: nakamoto::NakamotoScore,
     pub penalties_before_change: usize,
@@ -34,24 +33,6 @@ pub type FeatureDiff = IndexMap<String, (usize, usize)>;
 
 impl SubnetChangeResponse {
     pub fn new(change: &SubnetChange, node_health: &IndexMap<PrincipalId, HealthStatus>, motivation: Option<String>) -> Self {
-        let mut decentralization_impact = IndexMap::new();
-        // Calculate decentralization impact for each removed node
-        let mut nodes = change.old_nodes.iter().map(|n| (n.id, n.clone())).collect::<IndexMap<_, _>>();
-        for node in change.removed().iter() {
-            let subnet_before = DecentralizedSubnet::new_with_subnet_id_and_nodes(change.subnet_id, nodes.values().cloned().collect());
-            nodes.shift_remove(&node.id);
-            let subnet_after = DecentralizedSubnet::new_with_subnet_id_and_nodes(change.subnet_id, nodes.values().cloned().collect());
-            let impact = subnet_after.nakamoto_score().describe_difference_from(&subnet_before.nakamoto_score()).1;
-            decentralization_impact.insert(node.id, impact);
-        }
-        for node in change.added().iter() {
-            let subnet_before = DecentralizedSubnet::new_with_subnet_id_and_nodes(change.subnet_id, nodes.values().cloned().collect());
-            nodes.insert(node.id, node.clone());
-            let subnet_after = DecentralizedSubnet::new_with_subnet_id_and_nodes(change.subnet_id, nodes.values().cloned().collect());
-            let impact = subnet_after.nakamoto_score().describe_difference_from(&subnet_before.nakamoto_score()).1;
-            decentralization_impact.insert(node.id, impact);
-        }
-
         Self {
             nodes_old: change.old_nodes.clone(),
             node_ids_added: change.added().iter().map(|n| n.id).collect(),
@@ -62,7 +43,6 @@ impl SubnetChangeResponse {
                 Some(change.subnet_id)
             },
             health_of_nodes: node_health.clone(),
-            decentralization_impact,
             score_before: nakamoto::NakamotoScore::new_from_nodes(&change.old_nodes),
             score_after: nakamoto::NakamotoScore::new_from_nodes(&change.new_nodes),
             penalties_before_change: change.penalties_before_change,
@@ -153,8 +133,7 @@ impl Display for SubnetChangeResponse {
                 .get(node_id)
                 .map(|h| h.to_string().to_lowercase())
                 .unwrap_or("unknown".to_string());
-            let desc = self.decentralization_impact.get(node_id).cloned().unwrap_or("unknown".to_string());
-            writeln!(f, "- `{}` [health: {}, impact on decentralization: {}]", node_id, health, desc).expect("write failed");
+            writeln!(f, "- `{}` [health: {}]", node_id, health).expect("write failed");
         }
         writeln!(f, "\nNodes added:")?;
         for node_id in &self.node_ids_added {
@@ -163,8 +142,7 @@ impl Display for SubnetChangeResponse {
                 .get(node_id)
                 .map(|h| h.to_string().to_lowercase())
                 .unwrap_or("unknown".to_string());
-            let desc = self.decentralization_impact.get(node_id).cloned().unwrap_or("unknown".to_string());
-            writeln!(f, "- `{}` [health: {}, impact on decentralization: {}]", node_id, health, desc).expect("write failed");
+            writeln!(f, "- `{}` [health: {}]", node_id, health).expect("write failed");
         }
 
         let rows = self.feature_diff.values().map(|diff| diff.len()).max().unwrap_or(0);
