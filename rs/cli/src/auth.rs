@@ -18,7 +18,6 @@ use ic_icrc1_test_utils::KeyPairGenerator;
 use ic_management_types::Network;
 use keyring::{Entry, Error};
 use log::{debug, info, warn};
-use secrecy::SecretString;
 use std::sync::Mutex;
 
 use crate::commands::{AuthOpts, AuthRequirement, HsmOpts, HsmParams};
@@ -372,26 +371,22 @@ impl Auth {
         }
         let ret = Ok(match maybe_pin {
             Some(pin) => {
-                let sekrit = SecretString::from_str(pin.as_str()).unwrap();
-                session.login(UserType::User, Some(&sekrit))?;
+                let auth_pin = cryptoki::types::AuthPin::from_str(pin.as_str()).expect("Parsin pin as AuthPin should succeed");
+                session.login(UserType::User, Some(&auth_pin))?;
                 pin
             }
             None => {
                 let pin_entry = Entry::new("dre-tool-hsm-pin", memo_key)?;
                 let tentative_pin = match pin_entry.get_password() {
-                    // TODO: Remove the old keyring entry search ("release-cli") after August 1st, 2024
-                    Err(Error::NoEntry) => match Entry::new("release-cli", memo_key) {
-                        Err(Error::NoEntry) => Password::new()
-                            .with_prompt("Please enter the hardware security module PIN: ")
-                            .interact()?,
-                        Ok(pin_entry) => pin_entry.get_password()?,
-                        Err(e) => return Err(anyhow::anyhow!("Problem getting PIN from keyring: {}", e)),
-                    },
+                    Err(Error::NoEntry) => Password::new()
+                        .with_prompt("Please enter the hardware security module PIN: ")
+                        .interact()?,
                     Ok(pin) => pin,
                     Err(e) => return Err(anyhow::anyhow!("Problem getting from keyring: {}", e)),
                 };
-                let sekrit = SecretString::from_str(tentative_pin.as_str()).unwrap();
-                match session.login(UserType::User, Some(&sekrit)) {
+                let auth_pin = cryptoki::types::AuthPin::from_str(tentative_pin.as_str()).expect("Parsin pin as AuthPin should succeed");
+
+                match session.login(UserType::User, Some(&auth_pin)) {
                     Ok(_) => {
                         pin_entry.set_password(&tentative_pin)?;
                         tentative_pin

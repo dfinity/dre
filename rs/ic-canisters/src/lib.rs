@@ -1,7 +1,6 @@
 use candid::CandidType;
 use candid::Decode;
 use candid::Principal;
-use ic_agent::agent::http_transport::ReqwestTransport;
 use ic_agent::identity::AnonymousIdentity;
 use ic_agent::identity::BasicIdentity;
 use ic_agent::identity::Secp256k1Identity;
@@ -59,7 +58,8 @@ impl IcAgentCanisterClient {
             .expect("Could not create HTTP client.");
         let agent = Agent::builder()
             .with_identity(identity)
-            .with_transport(ReqwestTransport::create_with_client(url, client)?)
+            .with_http_client(client)
+            .with_url(url)
             .with_verify_query_signatures(false)
             .build()?;
         Ok(Self { agent })

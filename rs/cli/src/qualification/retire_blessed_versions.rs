@@ -55,7 +55,7 @@ impl Step for RetireBlessedVersions {
                 )
                 .await
         };
-        place_proposal.retry(&ExponentialBuilder::default()).await?;
+        place_proposal.retry(ExponentialBuilder::default()).await?;
 
         registry.sync_with_nns().await?;
         let blessed_versions = registry.elected_guestos().await?;

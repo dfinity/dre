@@ -6,7 +6,6 @@ use backon::Retryable;
 use candid::{Decode, Encode};
 use futures::future::BoxFuture;
 use futures_util::future::try_join_all;
-use ic_agent::agent::http_transport::ReqwestTransport;
 use ic_agent::Agent;
 use ic_management_types::filter_map_nns_function_proposals;
 use ic_management_types::UpdateElectedHostosVersionsProposal;
@@ -80,6 +79,7 @@ impl From<ProposalInfo> for ProposalInfoInternal {
             reward_status: _,
             deadline_timestamp_seconds: _,
             derived_proposal_information: _,
+            total_potential_voting_power: _,
         } = p;
         ProposalInfoInternal {
             id: id.expect("missing proposal id").id,
@@ -223,7 +223,8 @@ impl ProposalAgentImpl {
             .build()
             .expect("Could not create HTTP client.");
         let agent = Agent::builder()
-            .with_transport(ReqwestTransport::create_with_client(nns_urls[0].clone(), client).expect("Failed to create transport"))
+            .with_http_client(client)
+            .with_url(nns_urls[0].clone())
             .with_verify_query_signatures(false)
             .build()
             .expect("failed to build the agent");
@@ -280,7 +281,7 @@ impl ProposalAgentImpl {
                     .map(|lp| lp.proposal_info)
                     .map_err(|e| anyhow::format_err!("failed to decode list proposals: {}", e))
             };
-            let partial_result = fetch_partial_results.retry(&ExponentialBuilder::default()).await?;
+            let partial_result = fetch_partial_results.retry(ExponentialBuilder::default()).await?;
             if partial_result.is_empty() {
                 break;
             } else {
@@ -306,7 +307,7 @@ impl ProposalAgentImpl {
                     .call();
                 Decode!(f.await?.as_slice(), Option<ProposalInfo>).map_err(|e| anyhow::format_err!("failed to decode list proposals: {}", e))
             };
-            fetch_partial_results.retry(&ExponentialBuilder::default()).await
+            fetch_partial_results.retry(ExponentialBuilder::default()).await
         }))
         .await
         .map(|proposals| {

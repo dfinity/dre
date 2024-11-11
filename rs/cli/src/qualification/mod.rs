@@ -286,7 +286,7 @@ impl QualificationExecutor {
             self.print_text(format!("Executing step {}: `{}`", ordered_step.index, ordered_step.step.name()));
 
             let step_future = || async { ordered_step.step.execute(&self.step_ctx).await };
-            if let Err(e) = step_future.retry(&ExponentialBuilder::default()).await {
+            if let Err(e) = step_future.retry(ExponentialBuilder::default()).await {
                 self.print_text(format!("Failed to execute step {}: {:?}", ordered_step.step.name(), e));
                 anyhow::bail!(e)
             }
@@ -299,7 +299,7 @@ impl QualificationExecutor {
             // If the system subnet downgraded it could be some time until it boots up
             if let Err(e) = sync_registry
                 .retry(
-                    &ExponentialBuilder::default()
+                    ExponentialBuilder::default()
                         .with_max_times(10)
                         .with_max_delay(Duration::from_secs(5 * 60)),
                 )

@@ -46,7 +46,7 @@ async-recursion = "1.1.1"
 axum-otel-metrics = "0.8.1"
 axum = "0.7.7"
 backoff = { version = "0.4.0", features = ["tokio"] }
-backon = "0.4.4"
+backon = "1.2.0"
 candid = "0.10.10"
 chrono = { version = "0.4.38", features = ["serde"] }
 clap-num = "1.1"
@@ -80,15 +80,15 @@ edit = "0.1.5"
 env_logger = "0.11.5"
 erased-serde = "0.4.5"
 flate2 = "1.0.34"
-fs-err = "2.11.0"
+fs-err = "3.0.0"
 fs2 = "0.4.3"
 futures = "0.3.31"
 futures-util = "0.3.31"
 hex = "0.4.3"
 humantime = "2.1.0"
 humantime-serde = "1.1.1"
-ic-agent = "0.37.1"
-octocrab = "0.39.0"
+ic-agent = "0.39.1"
+octocrab = "0.41.2"
 self_update = { version = "0.41.0", default-features = false, features = [
     "archive-tar",
     "rustls",
@@ -133,8 +133,8 @@ cycles-minting-canister = { git = "https://github.com/dfinity/ic.git", rev = "3c
 ic-icrc1-test-utils = { git = "https://github.com/dfinity/ic.git", rev = "3c3d9cd3600c744a44405749eff7cf187ef8d75d" }
 rosetta-core = { git = "https://github.com/dfinity/ic.git", rev = "3c3d9cd3600c744a44405749eff7cf187ef8d75d" }
 icrc-ledger-types = { git = "https://github.com/dfinity/ic.git", rev = "3c3d9cd3600c744a44405749eff7cf187ef8d75d" }
-ic-transport-types = "0.37.1"
-ic-utils = "0.37.0"
+ic-transport-types = "0.39.1"
+ic-utils = "0.39.0"
 itertools = "0.13.0"
 keyring = { version = "3.6.1", features = [
     "apple-native",
@@ -162,10 +162,9 @@ reqwest = { version = "0.12", default-features = false, features = [
     "blocking",
 ] }
 retry = "2.0.0"
-rstest = { version = "0.22.0", default-features = false }
+rstest = { version = "0.23.0", default-features = false }
 rust_decimal = "1.36.0"
 rust_decimal_macros = "1.36.0"
-secrecy = { version = "0.8.0" }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = { version = "1.0.132", default-features = false, features = [
     "preserve_order",
