@@ -8,7 +8,9 @@ edition.workspace = true
 license.workspace = true
 
 [dependencies]
-ahash = { workspace = true }
+ahash = { version = "0.8.11", default-features = false, features = [
+"compile-time-rng",
+] }
 ic-base-types = { workspace = true }
 ic-protobuf = { workspace = true }
 itertools = { workspace = true }
@@ -17,6 +19,8 @@ num-traits = { workspace = true }
 rust_decimal = { workspace = true }
 rust_decimal_macros = { workspace = true }
 ic-management-canister-types = { workspace = true }
+serde = { workspace = true }
+candid = { workspace = true }
 
 [lib]
 name = "node_provider_rewards_lib"

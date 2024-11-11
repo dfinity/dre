@@ -1,4 +1,3 @@
-use ahash::AHashMap;
 use ic_base_types::PrincipalId;
 use ic_protobuf::registry::node_rewards::v2::{NodeRewardRate, NodeRewardsTable};
 use itertools::Itertools;
@@ -14,7 +13,7 @@ use std::{
 use crate::{
     v1_logs::{LogEntry, Operation, RewardsLog},
     v1_types::{
-        DailyNodeMetrics, MultiplierStats, Node, NodeMultiplierStats, RegionNodeTypeCategory, RewardablesWithNodesMetrics, Rewards,
+        AHashMap, DailyNodeMetrics, MultiplierStats, Node, NodeMultiplierStats, RegionNodeTypeCategory, RewardablesWithNodesMetrics, Rewards,
         RewardsPerNodeProvider,
     },
 };
@@ -78,7 +77,7 @@ fn rewards_reduction_percent(failure_rate: &Decimal) -> Decimal {
 /// 2. The `overall_failure_rate` for the period is calculated by dividing the `overall_failed` blocks by the `overall_total` blocks.
 /// 3. The `rewards_reduction` function is applied to `overall_failure_rate`.
 /// 3. Finally, the rewards multiplier to be distributed to the node is computed.
-fn assigned_nodes_multiplier(daily_metrics: &[DailyNodeMetrics], total_days: u64) -> (Decimal, MultiplierStats) {
+pub fn assigned_nodes_multiplier(daily_metrics: &[DailyNodeMetrics], total_days: u64) -> (Decimal, MultiplierStats) {
     let total_days = Decimal::from(total_days);
 
     let days_assigned = logger().execute("Assigned Days In Period", Operation::Set(Decimal::from(daily_metrics.len())));
@@ -140,8 +139,8 @@ fn base_rewards_region_nodetype(
     rewardable_nodes: &AHashMap<RegionNodeTypeCategory, u32>,
     rewards_table: &NodeRewardsTable,
 ) -> AHashMap<RegionNodeTypeCategory, Decimal> {
-    let mut type3_coefficients_rewards: AHashMap<RegionNodeTypeCategory, (Vec<Decimal>, Vec<Decimal>)> = AHashMap::new();
-    let mut region_nodetype_rewards: AHashMap<RegionNodeTypeCategory, Decimal> = AHashMap::new();
+    let mut type3_coefficients_rewards: AHashMap<RegionNodeTypeCategory, (Vec<Decimal>, Vec<Decimal>)> = AHashMap::default();
+    let mut region_nodetype_rewards: AHashMap<RegionNodeTypeCategory, Decimal> = AHashMap::default();
 
     for ((region, node_type), node_count) in rewardable_nodes {
         let rate = match rewards_table.get_rate(region, node_type) {
@@ -285,7 +284,7 @@ fn node_providers_rewardables(
     nodes: &[Node],
     performance_metrics_per_node: &AHashMap<PrincipalId, Vec<DailyNodeMetrics>>,
 ) -> AHashMap<PrincipalId, RewardablesWithNodesMetrics> {
-    let mut node_provider_rewardables: AHashMap<PrincipalId, RewardablesWithNodesMetrics> = AHashMap::new();
+    let mut node_provider_rewardables: AHashMap<PrincipalId, RewardablesWithNodesMetrics> = AHashMap::default();
 
     nodes.iter().for_each(|node| {
         let (rewardable_nodes, perfomance_metrics) = node_provider_rewardables.entry(node.node_provider_id).or_default();
@@ -307,20 +306,20 @@ pub fn calculate_rewards(
     nodes_in_period: &[Node],
     nodes_metrics_in_period: &AHashMap<PrincipalId, Vec<DailyNodeMetrics>>,
 ) -> RewardsPerNodeProvider {
-    let mut rewards_per_node_provider = AHashMap::new();
-    let mut rewards_log_per_node_provider = AHashMap::new();
+    let mut rewards_per_node_provider = AHashMap::default();
+    let mut rewards_log_per_node_provider = AHashMap::default();
     let node_provider_rewardables = node_providers_rewardables(nodes_in_period, nodes_metrics_in_period);
 
     for (node_provider_id, (rewardable_nodes, assigned_nodes_metrics)) in node_provider_rewardables {
-        let mut assigned_multipliers: AHashMap<RegionNodeTypeCategory, Vec<Decimal>> = AHashMap::new();
+        let mut assigned_multipliers: AHashMap<RegionNodeTypeCategory, Vec<Decimal>> = AHashMap::default();
         let mut nodes_multiplier_stats: Vec<NodeMultiplierStats> = Vec::new();
+        let total_rewardable_nodes: u32 = rewardable_nodes.values().sum();
 
-        logger().add_entry(LogEntry::RewardsForNodeProvider(node_provider_id));
+        logger().add_entry(LogEntry::RewardsForNodeProvider(node_provider_id, total_rewardable_nodes));
 
         for (node, daily_metrics) in assigned_nodes_metrics {
-            logger().add_entry(LogEntry::ComputeRewardMultiplierForNode(node.node_id));
             let (multiplier, multiplier_stats) = assigned_nodes_multiplier(&daily_metrics, days_in_period);
-
+            logger().add_entry(LogEntry::RewardMultiplierForNode(node.node_id, multiplier));
             nodes_multiplier_stats.push((node.node_id, multiplier_stats));
             assigned_multipliers
                 .entry((node.region.clone(), node.node_type.clone()))
@@ -492,8 +491,8 @@ mod tests {
 
     #[test]
     fn test_np_rewards_other_type() {
-        let mut assigned_multipliers: AHashMap<RegionNodeTypeCategory, Vec<Decimal>> = AHashMap::new();
-        let mut rewardable_nodes: AHashMap<RegionNodeTypeCategory, u32> = AHashMap::new();
+        let mut assigned_multipliers: AHashMap<RegionNodeTypeCategory, Vec<Decimal>> = AHashMap::default();
+        let mut rewardable_nodes: AHashMap<RegionNodeTypeCategory, u32> = AHashMap::default();
 
         let region_node_type = ("A,B,C".to_string(), "type0".to_string());
 
@@ -513,8 +512,8 @@ mod tests {
 
     #[test]
     fn test_np_rewards_type3_coeff() {
-        let mut assigned_multipliers: AHashMap<RegionNodeTypeCategory, Vec<Decimal>> = AHashMap::new();
-        let mut rewardable_nodes: AHashMap<RegionNodeTypeCategory, u32> = AHashMap::new();
+        let mut assigned_multipliers: AHashMap<RegionNodeTypeCategory, Vec<Decimal>> = AHashMap::default();
+        let mut rewardable_nodes: AHashMap<RegionNodeTypeCategory, u32> = AHashMap::default();
         let region_node_type = ("A,B,C".to_string(), "type3.1".to_string());
 
         // 4 nodes in period: 1 assigned, 3 unassigned
@@ -537,8 +536,8 @@ mod tests {
 
     #[test]
     fn test_np_rewards_type3_mix() {
-        let mut assigned_multipliers: AHashMap<RegionNodeTypeCategory, Vec<Decimal>> = AHashMap::new();
-        let mut rewardable_nodes: AHashMap<RegionNodeTypeCategory, u32> = AHashMap::new();
+        let mut assigned_multipliers: AHashMap<RegionNodeTypeCategory, Vec<Decimal>> = AHashMap::default();
+        let mut rewardable_nodes: AHashMap<RegionNodeTypeCategory, u32> = AHashMap::default();
 
         // 5 nodes in period: 2 assigned, 3 unassigned
         assigned_multipliers.insert(("A,B,D".to_string(), "type3".to_string()), vec![dec!(0.5), dec!(0.4)]);

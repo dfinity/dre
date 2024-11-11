@@ -42,16 +42,12 @@ export const NodeProviderRewardsChart: React.FC<NodeProviderRewardsChartProps> =
         return { 
             id: index,
             col0: index,
-            col1: data.reason, 
-            col2: data.operation,
-            col3: data.result
+            col1: data,
             };
     });
     const colDef: GridColDef[] = [
         { field: 'col0', headerName: 'Step', width: 100},
         { field: 'col1', headerName: 'Description', width: 1500},
-        { field: 'col2', headerName: 'Operation', width: 500 },
-        { field: 'col3', headerName: 'Result', width: 200 },
         ];
 
     return (

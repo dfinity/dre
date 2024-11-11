@@ -1,6 +1,12 @@
-use ahash::AHashMap;
+use std::{
+    collections::{HashMap, HashSet},
+    hash::BuildHasherDefault,
+};
+
+use candid::CandidType;
 use ic_base_types::PrincipalId;
 use ic_management_canister_types::{NodeMetrics, NodeMetricsHistoryResponse};
+use serde::Deserialize;
 
 use crate::v1_logs::RewardsLog;
 
@@ -8,6 +14,8 @@ pub type NodeMultiplierStats = (PrincipalId, MultiplierStats);
 pub type RewardablesWithNodesMetrics = (AHashMap<RegionNodeTypeCategory, u32>, AHashMap<Node, Vec<DailyNodeMetrics>>);
 pub type RegionNodeTypeCategory = (String, String);
 pub type TimestampNanos = u64;
+pub type AHashSet<K> = HashSet<K, BuildHasherDefault<ahash::AHasher>>;
+pub type AHashMap<K, V> = HashMap<K, V, BuildHasherDefault<ahash::AHasher>>;
 
 #[derive(Clone, Hash, Eq, PartialEq)]
 pub struct Node {
@@ -35,7 +43,7 @@ impl From<NodesMetricsInPeriod> for AHashMap<PrincipalId, Vec<DailyNodeMetrics>>
     fn from(nodes_metrics: NodesMetricsInPeriod) -> Self {
         let mut sorted_metrics = nodes_metrics.0;
         sorted_metrics.sort_by_key(|metrics| metrics.timestamp_nanos);
-        let mut sorted_metrics_per_node: AHashMap<PrincipalId, Vec<NodeMetrics>> = AHashMap::new();
+        let mut sorted_metrics_per_node: AHashMap<PrincipalId, Vec<NodeMetrics>> = AHashMap::default();
 
         for metrics in sorted_metrics {
             for node_metrics in metrics.node_metrics {
@@ -79,6 +87,7 @@ impl From<NodesMetricsInPeriod> for AHashMap<PrincipalId, Vec<DailyNodeMetrics>>
     }
 }
 
+#[derive(Debug, Clone, Deserialize, CandidType)]
 pub struct MultiplierStats {
     pub days_assigned: u64,
     pub days_unassigned: u64,
@@ -94,6 +103,7 @@ pub struct RewardsPerNodeProvider {
     pub rewards_log_per_node_provider: AHashMap<PrincipalId, RewardsLog>,
 }
 
+#[derive(Debug, Clone)]
 pub struct Rewards {
     pub xdr_permyriad: u64,
     pub xdr_permyriad_no_reduction: u64,

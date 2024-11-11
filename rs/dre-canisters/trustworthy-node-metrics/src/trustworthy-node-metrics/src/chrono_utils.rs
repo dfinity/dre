@@ -1,6 +1,7 @@
 use chrono::{Duration, NaiveDateTime, TimeZone, Utc};
 use trustworthy_node_metrics_types::types::TimestampNanos;
 
+#[derive(Clone)]
 pub struct DateTimeRange {
     start_dt: NaiveDateTime,
     end_dt: NaiveDateTime,
