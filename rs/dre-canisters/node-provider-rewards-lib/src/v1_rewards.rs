@@ -313,7 +313,7 @@ pub fn calculate_rewards(
     for (node_provider_id, (rewardable_nodes, assigned_nodes_metrics)) in node_provider_rewardables {
         let mut assigned_multipliers: AHashMap<RegionNodeTypeCategory, Vec<Decimal>> = AHashMap::default();
         let mut nodes_multiplier_stats: Vec<NodeMultiplierStats> = Vec::new();
-        let total_rewardable_nodes: u32 = rewardable_nodes.iter().map(|(_, count)| count).sum();
+        let total_rewardable_nodes: u32 = rewardable_nodes.values().sum();
 
         logger().add_entry(LogEntry::RewardsForNodeProvider(node_provider_id, total_rewardable_nodes));
 
