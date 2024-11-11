@@ -2,11 +2,10 @@ use candid::Deserialize;
 use ic_nns_common::pb::v1::NeuronId;
 use ic_nns_common::pb::v1::ProposalId;
 use ic_nns_governance::pb::v1::ProposalStatus;
-use ic_nns_governance::pb::v1::{proposal, ProposalInfo, Topic};
+use ic_nns_governance::pb::v1::{ProposalInfo, Topic};
 use itertools::Itertools;
 use log::info;
 use regex::Regex;
-use registry_canister::mutations::do_change_subnet_membership::ChangeSubnetMembershipPayload;
 use reqwest::IntoUrl;
 use serde::Serialize;
 use serde_json::{json, Value};
@@ -64,7 +63,7 @@ fn proposal_motivation(proposal_info: &ProposalInfo) -> String {
         .map(|p| p.summary.as_ref())
         .unwrap_or("no proposal summary");
 
-    let mut result = RE
+    let result = RE
         .captures(summary)
         .and_then(|c| c.name(&MOTIVATION_GROUP_NAME).map(|m| m.as_str()))
         .unwrap_or(summary)
