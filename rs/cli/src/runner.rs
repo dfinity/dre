@@ -451,7 +451,7 @@ impl Runner {
     }
 
     pub async fn remove_nodes(&self, nodes_remover: NodesRemover) -> anyhow::Result<RunnerProposal> {
-        let (healths, nodes_with_proposals) = try_join(self.health_client.nodes(), self.registry.nodes_with_proposals()).await?;
+        let (healths, nodes_with_proposals) = try_join(self.health_client.nodes(), self.registry.nodes_and_proposals()).await?;
         let (mut node_removals, motivation) = nodes_remover.remove_nodes(healths, nodes_with_proposals);
         node_removals.sort_by_key(|nr| nr.reason.message());
 
@@ -528,9 +528,9 @@ impl Runner {
         let node_operators = self.registry.operators().await?;
         // Filter out nodes that are not healthy
         let nodes_all = self.registry.nodes().await?;
-        let healthy_nodes = nodes_all
+        let healthy_nodes = available_nodes
             .iter()
-            .filter(|(node_id, _node)| health_of_nodes.get(*node_id) == Some(&HealthStatus::Healthy))
+            .filter(|node| health_of_nodes.get(&node.id) == Some(&HealthStatus::Healthy))
             .collect::<Vec<_>>();
         // Build a hashmap {node_id -> node} of all nodes that are in some (any) subnet
         let nodes_in_subnets = subnets
@@ -538,17 +538,22 @@ impl Runner {
             .flat_map(|s| s.nodes.iter().map(|n| (n.principal, n)))
             .collect::<AHashMap<_, _>>();
         // Build a hashmap of healthy nodes, grouped by node operator {operator -> Vec<Node>}
-        let healthy_nodes_by_operator = healthy_nodes.iter().into_group_map_by(|(_node_id, node)| node.operator.principal);
+        let healthy_nodes_by_operator = healthy_nodes
+            .iter()
+            .into_group_map_by(|node| nodes_all.get(&node.id).expect("Node should exist").operator.principal);
         // Finally, prepare a list of operators that have at least 1 node, but NONE of their nodes are in a subnet
         let operators_without_nodes_in_subnets = node_operators
             .iter()
             .filter_map(|(operator_id, operator)| {
                 if let Some(operator_nodes) = healthy_nodes_by_operator.get(operator_id) {
-                    if operator_nodes.iter().all(|(node_id, _node)| !nodes_in_subnets.contains_key(node_id)) {
+                    if operator_nodes.iter().all(|node| !nodes_in_subnets.contains_key(&node.id)) {
                         Some((
                             operator_id,
                             operator.datacenter.as_ref().map(|dc| dc.name.clone()).unwrap_or_default(),
-                            operator_nodes.iter().map(|(_, node)| (*node).clone()).collect::<Vec<_>>(),
+                            operator_nodes
+                                .iter()
+                                .map(|node| nodes_all.get(&node.id).expect("Node should exist").clone())
+                                .collect::<Vec<_>>(),
                         ))
                     } else {
                         None
