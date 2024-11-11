@@ -5,8 +5,6 @@ import PerformanceChart from './PerformanceChart';
 import { NodeRewardsMultiplier } from '../../../declarations/trustworthy-node-metrics/trustworthy-node-metrics.did';
 import RewardsInfo, { LinearReductionChart } from './RewardsInfo';
 import { Principal } from '@dfinity/principal';
-import { ExportTable } from './ExportTable';
-import { GridColDef, GridRowsProp } from '@mui/x-data-grid';
 
 export interface NodeRewardsChartProps {
     node: string;
@@ -36,21 +34,6 @@ export const NodeRewardsChart: React.FC<NodeRewardsChartProps> = ({ node }) => {
     const failureRateAvg = Math.round((latestNodeRewards.rewards_multiplier_stats.failure_rate) * 100)
     const rewardsMultiplier = Math.round((latestNodeRewards.rewards_multiplier) * 100);
     const rewardsReduction = 100 - rewardsMultiplier;
-    const rows: GridRowsProp = latestNodeRewards.rewards_multiplier_stats.computation_log.map((data, index) => {
-        return { 
-            id: index,
-            col0: index,
-            col1: data.reason, 
-            col2: data.operation,
-            col3: data.result
-            };
-    });
-    const colDef: GridColDef[] = [
-        { field: 'col0', headerName: 'Step', width: 100},
-        { field: 'col1', headerName: 'Description', width: 300},
-        { field: 'col2', headerName: 'Operation', width: 500 },
-        { field: 'col3', headerName: 'Result', width: 200 },
-        ];
 
     return (
         <>
@@ -70,12 +53,6 @@ export const NodeRewardsChart: React.FC<NodeRewardsChartProps> = ({ node }) => {
             </Grid>
             <Grid item xs={12} md={12}>
                 <RewardsInfo/>
-            </Grid>
-            <Grid item xs={12} md={12}>
-                <Typography variant="body1" gutterBottom>
-                    Computation Log
-                </Typography>
-                <ExportTable colDef={colDef} rows={rows}/>
             </Grid>
         </>
     );

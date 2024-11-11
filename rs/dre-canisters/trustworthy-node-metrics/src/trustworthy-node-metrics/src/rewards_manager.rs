@@ -5,22 +5,17 @@ use ic_nns_governance_api::pb::v1::MonthlyNodeProviderRewards;
 use ic_protobuf::registry::node_rewards::{v2::NodeRewardRate, v2::NodeRewardsTable};
 use ic_registry_keys::NODE_REWARDS_TABLE_KEY;
 use itertools::Itertools;
-use node_provider_rewards_lib::{v1_rewards::{assigned_nodes_multiplier, calculate_rewards}, v1_types::{DailyNodeMetrics as NPRDailyNodeMetrics, Node}};
-use num_traits::{ToPrimitive, Zero};
-use rust_decimal::Decimal;
-use rust_decimal_macros::dec;
-use std::collections::{self, BTreeMap, HashMap};
-use trustworthy_node_metrics_types::types::{DailyNodeMetrics, NodeProviderRewards, NodeProviderRewardsComputation, NodeRewardsMultiplier, RewardsMultiplierStats
+use node_provider_rewards_lib::{
+    v1_rewards::{assigned_nodes_multiplier, calculate_rewards},
+    v1_types::{AHashMap, DailyNodeMetrics as NPRDailyNodeMetrics, Node},
 };
+use num_traits::ToPrimitive;
+use trustworthy_node_metrics_types::types::{DailyNodeMetrics, NodeProviderRewards, NodeRewardsMultiplier};
 
-use crate::{
-    chrono_utils::DateTimeRange,
-    computation_logger::{ComputationLogger, Operation, OperationExecutor},
-    stable_memory::{self, RegionNodeTypeCategory},
-};
+use crate::{chrono_utils::DateTimeRange, stable_memory};
 
-fn get_daily_metrics(node_ids: Vec<Principal>, rewarding_period: DateTimeRange) -> collections::BTreeMap<Principal, Vec<DailyNodeMetrics>> {
-    let mut daily_metrics: collections::BTreeMap<Principal, Vec<DailyNodeMetrics>> = collections::BTreeMap::new();
+fn get_daily_metrics(node_ids: Vec<Principal>, rewarding_period: DateTimeRange) -> AHashMap<Principal, Vec<DailyNodeMetrics>> {
+    let mut daily_metrics: AHashMap<Principal, Vec<DailyNodeMetrics>> = AHashMap::default();
     let nodes_metrics = stable_memory::get_metrics_range(
         rewarding_period.start_timestamp_nanos(),
         Some(rewarding_period.end_timestamp_nanos()),
@@ -52,10 +47,13 @@ pub fn node_rewards_multiplier(node_ids: Vec<Principal>, rewarding_period: DateT
     daily_metrics
         .into_iter()
         .map(|(node_id, daily_node_metrics)| {
-            let npr_daily_metrics = daily_node_metrics.into_iter().map(|metrics| NPRDailyNodeMetrics {
-                num_blocks_proposed: metrics.num_blocks_proposed,
-                num_blocks_failed: metrics.num_blocks_failed,
-            }).collect_vec();
+            let npr_daily_metrics = daily_node_metrics
+                .iter()
+                .map(|metrics| NPRDailyNodeMetrics {
+                    num_blocks_proposed: metrics.num_blocks_proposed,
+                    num_blocks_failed: metrics.num_blocks_failed,
+                })
+                .collect_vec();
 
             let (rewards_multiplier, rewards_multiplier_stats) = assigned_nodes_multiplier(&npr_daily_metrics, total_days);
             let node_metadata = stable_memory::get_node_metadata(&node_id).expect("Node should have one node provider");
@@ -88,8 +86,8 @@ pub fn node_rewards_multiplier(node_ids: Vec<Principal>, rewarding_period: DateT
 
 pub fn node_provider_rewards(node_provider_id: Principal, rewarding_period: DateTimeRange) -> NodeProviderRewards {
     let total_days = rewarding_period.days_between();
-    let rewardable_nodes: collections::BTreeMap<RegionNodeTypeCategory, u32> = stable_memory::get_rewardable_nodes(&node_provider_id);
     let rewards_table = stable_memory::get_node_rewards_table();
+    let np_id = PrincipalId::from(node_provider_id);
 
     let latest_np_rewards = stable_memory::get_latest_node_providers_rewards();
     let nodes_in_period = stable_memory::get_node_principals(&node_provider_id)
@@ -98,28 +96,35 @@ pub fn node_provider_rewards(node_provider_id: Principal, rewarding_period: Date
             let meta = stable_memory::get_node_metadata(&node).unwrap();
             Node {
                 node_id: PrincipalId::from(node),
-                node_provider_id: meta.node_provider_id,
+                node_provider_id: np_id,
                 region: meta.region,
-                node_type: meta.node_type
+                node_type: meta.node_type,
             }
-        }).collect_vec();
+        })
+        .collect_vec();
 
-    let node_metrics_in_period = get_daily_metrics(node_ids, rewarding_period)
+    let node_metrics_in_period = get_daily_metrics(nodes_in_period.iter().map(|node| node.node_id.0).collect(), rewarding_period)
         .into_iter()
-        .map(|(np, metrics)|{
-            (np, metrics.into_iter().map(|m| NPRDailyNodeMetrics{
-                num_blocks_proposed: m.num_blocks_proposed,
-                num_blocks_failed: m.num_blocks_failed
-            }).collect_vec())
+        .map(|(np, metrics)| {
+            (
+                PrincipalId::from(np),
+                metrics
+                    .into_iter()
+                    .map(|m| NPRDailyNodeMetrics {
+                        num_blocks_proposed: m.num_blocks_proposed,
+                        num_blocks_failed: m.num_blocks_failed,
+                    })
+                    .collect_vec(),
+            )
         })
         .collect();
 
-    let rewards = calculate_rewards(total_days,&rewards_table, &nodes_in_period, &node_metrics_in_period);
+    let rewards = calculate_rewards(total_days, &rewards_table, &nodes_in_period, &node_metrics_in_period);
 
-    let rewards_per_np = rewards.rewards_per_node_provider.get(node_provider_id).unwrap();
+    let rewards_per_np = rewards.rewards_per_node_provider.get(&np_id).unwrap();
 
-    let rewards_multipliers_stats = rewards_per_np.1.into_iter().map(|(_, stats)| stats).collect_vec();
-    let rewards_ammount = rewards.rewards_per_node_provider.get(node_provider_id).unwrap().0;
+    let rewards_multipliers_stats = rewards_per_np.1.clone().into_iter().map(|(_, stats)| stats).collect_vec();
+    let rewards_ammount = &rewards.rewards_per_node_provider.get(&np_id).unwrap().0;
 
     let rewards_xdr_old = latest_np_rewards
         .rewards
@@ -136,12 +141,11 @@ pub fn node_provider_rewards(node_provider_id: Principal, rewarding_period: Date
         })
         .next();
 
-    logger.operations_executed.extend(np_rewards_log.operations_executed);
     NodeProviderRewards {
         node_provider_id,
         rewards_xdr_permyriad: rewards_ammount.xdr_permyriad,
         rewards_xdr_permyriad_no_reduction: rewards_ammount.xdr_permyriad_no_reduction,
-        computation_log: rewards.rewards_log_per_node_provider.get(node_provider_id).unwrap(),
+        computation_log: rewards.rewards_log_per_node_provider.get(&np_id).unwrap().get_log(),
         rewards_xdr_old,
         ts_distribution: latest_np_rewards.timestamp,
         xdr_conversion_rate: latest_np_rewards.xdr_conversion_rate.and_then(|rate| rate.xdr_permyriad_per_icp),

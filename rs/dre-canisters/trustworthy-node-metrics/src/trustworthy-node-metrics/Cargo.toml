@@ -35,4 +35,6 @@ ic-nns-constants = { workspace = true }
 ic-nns-governance-api = { workspace = true }
 node-provider-rewards-lib = { workspace = true }
 chrono = { version = "0.4", default-features = false, features = ["std"] }
-ahash = { workspace = true }
+ahash = { version = "0.8.11", default-features = false, features = [
+"compile-time-rng",
+] }

@@ -55,8 +55,8 @@ impl fmt::Display for Operation {
 }
 
 pub enum LogEntry {
-    RewardsForNodeProvider(PrincipalId),
-    ComputeRewardMultiplierForNode(PrincipalId),
+    RewardsForNodeProvider(PrincipalId, u32),
+    RewardMultiplierForNode(PrincipalId, Decimal),
     RewardsXDRTotal(Decimal),
     Execute {
         reason: String,
@@ -87,19 +87,23 @@ impl fmt::Display for LogEntry {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             LogEntry::Execute { reason, operation, result } => {
-                write!(f, "ExecuteOperation: reason={}, operation={}, result={}", reason, operation, result)
+                write!(f, "ExecuteOperation | reason={}, operation={}, result={}", reason, operation, result)
             }
-            LogEntry::RewardsForNodeProvider(principal) => {
-                write!(f, "RewardsForNodeProvider: principal={}", principal)
+            LogEntry::RewardsForNodeProvider(principal, node_count) => {
+                write!(
+                    f,
+                    "RewardsForNodeProvider | node_provider_principal: {} rewardable nodes in period: {}",
+                    principal, node_count
+                )
             }
-            LogEntry::ComputeRewardMultiplierForNode(principal) => {
-                write!(f, "RewardsMultiplier: principal={}", principal)
+            LogEntry::RewardMultiplierForNode(principal, multiplier) => {
+                write!(f, "Rewards Multiplier for node: {} is {}", principal, multiplier)
             }
             LogEntry::RewardsXDRTotal(rewards_xdr_total) => {
                 write!(f, "Total rewards XDR permyriad: {}", rewards_xdr_total)
             }
             LogEntry::RateNotFoundInRewardTable { node_type, region } => {
-                write!(f, "RateNotFoundInRewardTable: node_type={}, region={}", node_type, region)
+                write!(f, "RateNotFoundInRewardTable | node_type={}, region={}", node_type, region)
             }
             LogEntry::RewardTableEntry {
                 node_type,
@@ -109,7 +113,7 @@ impl fmt::Display for LogEntry {
             } => {
                 write!(
                     f,
-                    "RewardTableEntry: node_type={}, region={}, coeff={}, base_rewards={}",
+                    "RewardTableEntry | node_type={}, region={}, coeff={}, base_rewards={}",
                     node_type, region, coeff, base_rewards
                 )
             }
@@ -123,7 +127,7 @@ impl fmt::Display for LogEntry {
                 write!(
                     f,
                     "Region {} with type: {} | Rewardable Nodes: {} Assigned Multipliers: {:?} Unassigned Multipliers: {:?}",
-                    node_type, region, count, assigned_multiplier, unassigned_multiplier
+                    region, node_type, count, assigned_multiplier, unassigned_multiplier
                 )
             }
             LogEntry::AvgType3Rewards(region, avg_rewards) => {
@@ -133,14 +137,28 @@ impl fmt::Display for LogEntry {
     }
 }
 
+pub enum LogLevel {
+    Info,
+    Debug,
+}
+
+impl fmt::Display for LogLevel {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            LogLevel::Info => write!(f, "INFO"),
+            LogLevel::Debug => write!(f, "DEBUG"),
+        }
+    }
+}
+
 #[derive(Default)]
 pub struct RewardsLog {
-    entries: Vec<LogEntry>,
+    entries: Vec<(LogLevel, LogEntry)>,
 }
 
 impl RewardsLog {
     pub fn add_entry(&mut self, entry: LogEntry) {
-        self.entries.push(entry);
+        self.entries.push((LogLevel::Info, entry));
     }
 
     pub fn execute(&mut self, reason: &str, operation: Operation) -> Decimal {
@@ -150,16 +168,19 @@ impl RewardsLog {
             operation,
             result,
         };
-        self.entries.push(entry);
+        self.entries.push((LogLevel::Debug, entry));
         result
     }
 
-    pub fn get_log(&self) -> String {
+    pub fn get_log(&self) -> Vec<String> {
         let mut log = Vec::new();
 
-        for (index, entry) in self.entries.iter().enumerate() {
-            log.push(format!("Entry {}: {} ", index, entry));
+        for (level, entry) in self.entries.iter() {
+            match level {
+                LogLevel::Info => log.push(format!("{}: {} ", level, entry)),
+                _ => continue,
+            }
         }
-        log.join("\n")
+        log
     }
 }
