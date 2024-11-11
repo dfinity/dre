@@ -1,5 +1,5 @@
 {
-  "checksum": "7ea7a35de8b6493825ab6fe949a472115132c928f34a5084ca4d283a254ed4d3",
+  "checksum": "5808defd7f9c6be1d143a5ea8a53f6c33f0b47a6b1b95f16e0ade249061332c8",
   "crates": {
     "actix-codec 0.5.2": {
       "name": "actix-codec",
@@ -1040,6 +1040,8 @@
         ],
         "crate_features": {
           "common": [
+            "compile-time-rng",
+            "const-random",
             "default",
             "getrandom",
             "runtime-rng",
@@ -1056,6 +1058,10 @@
             {
               "id": "cfg-if 1.0.0",
               "target": "cfg_if"
+            },
+            {
+              "id": "const-random 0.1.18",
+              "target": "const_random"
             },
             {
               "id": "getrandom 0.2.15",
@@ -6190,6 +6196,92 @@
       },
       "license": "Apache-2.0 OR MIT"
     },
+    "const-random 0.1.18": {
+      "name": "const-random",
+      "version": "0.1.18",
+      "repository": {
+        "Http": {
+          "url": "https://static.crates.io/crates/const-random/0.1.18/download",
+          "sha256": "87e00182fe74b066627d63b85fd550ac2998d4b0bd86bfed477a0ae4c7c71359"
+        }
+      },
+      "targets": [
+        {
+          "Library": {
+            "crate_name": "const_random",
+            "crate_root": "src/lib.rs",
+            "srcs": [
+              "**/*.rs"
+            ]
+          }
+        }
+      ],
+      "library_target_name": "const_random",
+      "common_attrs": {
+        "compile_data_glob": [
+          "**"
+        ],
+        "edition": "2018",
+        "proc_macro_deps": {
+          "common": [
+            {
+              "id": "const-random-macro 0.1.16",
+              "target": "const_random_macro"
+            }
+          ],
+          "selects": {}
+        },
+        "version": "0.1.18"
+      },
+      "license": "MIT OR Apache-2.0"
+    },
+    "const-random-macro 0.1.16": {
+      "name": "const-random-macro",
+      "version": "0.1.16",
+      "repository": {
+        "Http": {
+          "url": "https://static.crates.io/crates/const-random-macro/0.1.16/download",
+          "sha256": "f9d839f2a20b0aee515dc581a6172f2321f96cab76c1a38a4c584a194955390e"
+        }
+      },
+      "targets": [
+        {
+          "ProcMacro": {
+            "crate_name": "const_random_macro",
+            "crate_root": "src/lib.rs",
+            "srcs": [
+              "**/*.rs"
+            ]
+          }
+        }
+      ],
+      "library_target_name": "const_random_macro",
+      "common_attrs": {
+        "compile_data_glob": [
+          "**"
+        ],
+        "deps": {
+          "common": [
+            {
+              "id": "getrandom 0.2.15",
+              "target": "getrandom"
+            },
+            {
+              "id": "once_cell 1.19.0",
+              "target": "once_cell"
+            },
+            {
+              "id": "tiny-keccak 2.0.2",
+              "target": "tiny_keccak"
+            }
+          ],
+          "selects": {}
+        },
+        "edition": "2018",
+        "version": "0.1.16"
+      },
+      "license": "MIT OR Apache-2.0"
+    },
     "convert_case 0.4.0": {
       "name": "convert_case",
       "version": "0.4.0",
@@ -7011,6 +7103,13 @@
         "compile_data_glob": [
           "**"
         ],
+        "crate_features": {
+          "common": [
+            "default",
+            "limit_128"
+          ],
+          "selects": {}
+        },
         "deps": {
           "common": [
             {
@@ -28067,29 +28166,35 @@
         ],
         "crate_features": {
           "common": [
-            "elf",
-            "errno",
             "general",
             "ioctl",
             "no_std"
           ],
           "selects": {
             "aarch64-unknown-linux-gnu": [
+              "elf",
+              "errno",
               "prctl",
               "std",
               "system"
             ],
             "arm-unknown-linux-gnueabi": [
+              "elf",
+              "errno",
               "prctl",
               "std",
               "system"
             ],
             "armv7-unknown-linux-gnueabi": [
+              "elf",
+              "errno",
               "prctl",
               "std",
               "system"
             ],
             "i686-unknown-linux-gnu": [
+              "elf",
+              "errno",
               "prctl",
               "std",
               "system"
@@ -28105,6 +28210,8 @@
               "system"
             ],
             "x86_64-unknown-linux-gnu": [
+              "elf",
+              "errno",
               "prctl",
               "std",
               "system"
@@ -29585,6 +29692,10 @@
               "target": "ahash"
             },
             {
+              "id": "candid 0.10.10",
+              "target": "candid"
+            },
+            {
               "id": "ic-base-types 0.9.0",
               "target": "ic_base_types"
             },
@@ -29611,6 +29722,10 @@
             {
               "id": "rust_decimal 1.36.0",
               "target": "rust_decimal"
+            },
+            {
+              "id": "serde 1.0.210",
+              "target": "serde"
             }
           ],
           "selects": {}
@@ -42074,6 +42189,70 @@
       },
       "license": "MIT OR Apache-2.0"
     },
+    "tiny-keccak 2.0.2": {
+      "name": "tiny-keccak",
+      "version": "2.0.2",
+      "repository": {
+        "Http": {
+          "url": "https://static.crates.io/crates/tiny-keccak/2.0.2/download",
+          "sha256": "2c9d3793400a45f954c52e73d068316d76b6f4e36977e3fcebb13a2721e80237"
+        }
+      },
+      "targets": [
+        {
+          "Library": {
+            "crate_name": "tiny_keccak",
+            "crate_root": "src/lib.rs",
+            "srcs": [
+              "**/*.rs"
+            ]
+          }
+        },
+        {
+          "BuildScript": {
+            "crate_name": "build_script_build",
+            "crate_root": "build.rs",
+            "srcs": [
+              "**/*.rs"
+            ]
+          }
+        }
+      ],
+      "library_target_name": "tiny_keccak",
+      "common_attrs": {
+        "compile_data_glob": [
+          "**"
+        ],
+        "crate_features": {
+          "common": [
+            "default",
+            "shake"
+          ],
+          "selects": {}
+        },
+        "deps": {
+          "common": [
+            {
+              "id": "crunchy 0.2.2",
+              "target": "crunchy"
+            },
+            {
+              "id": "tiny-keccak 2.0.2",
+              "target": "build_script_build"
+            }
+          ],
+          "selects": {}
+        },
+        "edition": "2018",
+        "version": "2.0.2"
+      },
+      "build_script_attrs": {
+        "data_glob": [
+          "**"
+        ]
+      },
+      "license": "CC0-1.0"
+    },
     "tinystr 0.7.6": {
       "name": "tinystr",
       "version": "0.7.6",
@@ -43529,6 +43708,10 @@
         ],
         "deps": {
           "common": [
+            {
+              "id": "ahash 0.8.11",
+              "target": "ahash"
+            },
             {
               "id": "anyhow 1.0.93",
               "target": "anyhow"
