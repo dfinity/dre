@@ -2,7 +2,6 @@ use std::path::PathBuf;
 use std::str::FromStr;
 
 use anyhow::anyhow;
-use clio::{ClioPath, InputPath};
 use cryptoki::object::AttributeInfo;
 use cryptoki::session::Session;
 use cryptoki::{
@@ -59,7 +58,7 @@ impl Neuron {
                     Some(STAGING_NEURON_ID),
                     match Auth::pem(staging_known_path.clone()).await {
                         Ok(_) => AuthOpts {
-                            private_key_pem: Some(InputPath::new(ClioPath::new(staging_known_path).unwrap()).unwrap()),
+                            private_key_pem: Some(staging_known_path.display().to_string()),
                             hsm_opts: HsmOpts {
                                 hsm_pin: None,
                                 hsm_params: HsmParams {
@@ -411,16 +410,11 @@ impl Auth {
     }
 
     pub async fn pem(private_key_pem: PathBuf) -> anyhow::Result<Self> {
-        // Check path exists.  This blocks.
-        let t = tokio::task::spawn_blocking(move || {
-            let inp = InputPath::new(&private_key_pem);
-            match inp {
-                Ok(inp) => Ok(inp.path().to_path_buf()),
-                Err(e) => Err(e),
-            }
-        })
-        .await?;
-        Ok(Self::Keyfile { path: t? })
+        // Check path exists.
+        if !private_key_pem.exists() {
+            return Err(anyhow::anyhow!("Private key file not found: {:?}", private_key_pem));
+        }
+        Ok(Self::Keyfile { path: private_key_pem })
     }
 
     pub(crate) async fn from_auth_opts(auth_opts: AuthOpts) -> Result<Self, anyhow::Error> {
@@ -430,8 +424,8 @@ impl Auth {
                 private_key_pem: Some(private_key_pem),
                 hsm_opts: _,
             } => {
-                info!("Using requested private key file {}", private_key_pem.path());
-                Auth::pem(private_key_pem.path().to_path_buf()).await
+                info!("Using requested private key file {}", private_key_pem);
+                Auth::pem(PathBuf::from(private_key_pem)).await
             }
             // Slot and key case.
             // Also autodetect case.

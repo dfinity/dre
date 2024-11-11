@@ -5,7 +5,6 @@ use api_boundary_nodes::ApiBoundaryNodes;
 use clap::Args as ClapArgs;
 use clap::Parser;
 use clap_num::maybe_hex;
-use clio::*;
 use completions::Completions;
 use der_to_principal::DerToPrincipal;
 use firewall::Firewall;
@@ -103,17 +102,17 @@ pub struct AuthOpts {
         global = true,
         conflicts_with_all = ["hsm_pin", "hsm_slot", "hsm_key_id"],
         env = "PRIVATE_KEY_PEM")]
-    pub(crate) private_key_pem: Option<InputPath>,
+    pub(crate) private_key_pem: Option<String>,
     #[clap(flatten)]
     pub(crate) hsm_opts: HsmOpts,
 }
 
-impl TryFrom<PathBuf> for AuthOpts {
+impl TryFrom<String> for AuthOpts {
     type Error = anyhow::Error;
 
-    fn try_from(value: PathBuf) -> std::result::Result<Self, Self::Error> {
+    fn try_from(value: String) -> std::result::Result<Self, Self::Error> {
         Ok(AuthOpts {
-            private_key_pem: Some(InputPath::new(ClioPath::new(value)?)?),
+            private_key_pem: Some(value),
             hsm_opts: HsmOpts {
                 hsm_pin: None,
                 hsm_params: HsmParams {

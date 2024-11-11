@@ -6,7 +6,6 @@ use crate::{
     cordoned_feature_fetcher::MockCordonedFeatureFetcher,
     store::{Store, FALLBACK_IC_ADMIN_VERSION},
 };
-use clio::{ClioPath, InputPath};
 use ic_canisters::governance::governance_canister_version;
 use ic_management_backend::health::MockHealthStatusQuerier;
 use ic_management_types::Network;
@@ -286,10 +285,7 @@ impl<'a> NeuronAuthTestScenarion<'a> {
     async fn get_neuron(&self) -> anyhow::Result<Neuron> {
         let ctx = get_ctx_for_neuron_test(
             AuthOpts {
-                private_key_pem: self
-                    .private_key_pem
-                    .as_ref()
-                    .map(|path| InputPath::new(ClioPath::new(path).unwrap()).unwrap()),
+                private_key_pem: self.private_key_pem.clone(),
                 hsm_opts: HsmOpts {
                     hsm_pin: self.hsm_pin.clone(),
                     hsm_params: crate::commands::HsmParams {
