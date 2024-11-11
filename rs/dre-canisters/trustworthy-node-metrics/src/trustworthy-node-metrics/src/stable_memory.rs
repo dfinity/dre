@@ -210,18 +210,3 @@ pub fn insert_node_provider_rewards(timestamp: u64, monthly_node_provider_reward
 pub fn get_latest_node_providers_rewards() -> MonthlyNodeProviderRewards {
     MONTHLY_NP_REWARDS.with_borrow(|p| p.last_key_value().map(|(_, v)| v.monthly_node_provider_rewards).unwrap())
 }
-
-pub fn get_rewardable_nodes(node_provider_id: &Principal) -> BTreeMap<RegionNodeTypeCategory, u32> {
-    NP_REWARDABLE_NODES.with_borrow(|rewardable| {
-        rewardable
-            .iter()
-            .filter_map(|(key, value)| {
-                if &key.node_provider_id == node_provider_id {
-                    Some(((key.region, key.node_type), value))
-                } else {
-                    None
-                }
-            })
-            .collect()
-    })
-}
