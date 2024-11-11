@@ -105,14 +105,14 @@ class PublishNotesClient:
     def publish_if_ready(self, google_doc_markdownified, version: str):
         """Publish the release notes if they are ready."""
         if not isinstance(google_doc_markdownified, str):
-            logging.info("didn't get markdown notes for %s, skipping", version)
+            logging.warning("didn't get markdown notes for %s, skipping", version)
             return
 
         changelog = post_process_release_notes(google_doc_markdownified)
 
         release_notes_start = changelog.find("Release Notes")
         if release_notes_start == -1:
-            logging.warning("could not find release notes section for version %s", version)
+            logging.error("could not find release notes section for version %s", version)
             return
 
         if not re.match(
@@ -124,7 +124,7 @@ class PublishNotesClient:
 
         changelog = changelog[release_notes_start:]
         if check_number_of_changes(changelog) == 0:
-            logging.warning("release notes for version %s contain no commits that would be published.")
+            logging.error("release notes for version %s contain no commits that would be published.")
             return
         # TODO: parse markdown to check formatting is correct
         self.ensure_published(version=version, changelog=changelog)
