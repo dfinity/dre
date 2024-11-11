@@ -13,7 +13,6 @@ use trustworthy_node_metrics_types::types::{
 };
 
 type Memory = VirtualMemory<DefaultMemoryImpl>;
-pub type RegionNodeTypeCategory = (String, String);
 
 thread_local! {
     static MEMORY_MANAGER: RefCell<MemoryManager<DefaultMemoryImpl>> =

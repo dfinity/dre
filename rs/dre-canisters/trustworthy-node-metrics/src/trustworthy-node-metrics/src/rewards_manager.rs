@@ -9,7 +9,6 @@ use node_provider_rewards_lib::{
     v1_rewards::{assigned_nodes_multiplier, calculate_rewards},
     v1_types::{AHashMap, DailyNodeMetrics as NPRDailyNodeMetrics, Node},
 };
-use num_traits::ToPrimitive;
 use trustworthy_node_metrics_types::types::{DailyNodeMetrics, NodeProviderRewards, NodeRewardsMultiplier};
 
 use crate::{chrono_utils::DateTimeRange, stable_memory};
