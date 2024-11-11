@@ -74,9 +74,7 @@ ignore = [
     { id = "RUSTSEC-2022-0034", reason = "our use of pkcs11 does not involve pointer magic" },
     { id = "RUSTSEC-2021-0127", reason = "migration to ciborium / minicbor pending" },
     { id = "RUSTSEC-2021-0141", reason = "migration away from dotenv pending" },
-    { id = "RUSTSEC-2021-0145", reason = "the potential security issue only affects Windows, which we do not target" },
     { id = "RUSTSEC-2024-0370", reason = "alternative not yet available" },
-    { id = "RUSTSEC-2024-0375", reason = "migration away from atty pending" },
     { id = "RUSTSEC-2024-0384", reason = "instant is a transitive dependency" },
     #"a-crate-that-is-yanked@0.1.1", # you can also ignore yanked crate versions if you wish
     #{ crate = "a-crate-that-is-yanked@0.1.1", reason = "you can specify why you are ignoring the yanked crate" },
@@ -775,6 +773,16 @@ crate = "ic-nervous-system-common-validation"
 expression = "LicenseRef-IC-1.0"
 license-files = [{ path = "../../../../LICENSE", hash = 0xbd0eed23 }]
 
+[[licenses.clarify]]
+crate = "ic-crypto-internal-threshold-sig-canister-threshold-sig"
+expression = "LicenseRef-IC-1.0"
+license-files = [{ path = "../../../../../../LICENSE", hash = 0xbd0eed23 }]
+
+[[licenses.clarify]]
+crate = "ic-nervous-system-linear-map"
+expression = "LicenseRef-IC-1.0"
+license-files = [{ path = "../../../LICENSE", hash = 0xbd0eed23 }]
+
 
 [licenses.private]
 # If true, ignores workspace crates that aren't published, or are only
@@ -877,6 +885,7 @@ skip-tree = [
     { crate = "erased-serde", reason = "ic-protobuf and others pull in an old version of erased-serde" },
     { crate = "fastrand", reason = "self_update pulls in self-replace which pulls old version of fastrand" },
     { crate = "half", reason = "unmaintained serde_cbor which should be replaced (search in this file) pulls in old half" },
+    { crate = "ic-agent", reason = "transitive dependency" },
     { crate = "ic-cdk", reason = "various IC packages require an older ic-cdk which pulls in these macros" },
     { crate = "ic-cdk-macros", reason = "various IC packages require an older ic-cdk which pulls in these macros" },
     { crate = "ic-cdk-timers", reason = "various IC packages require an older ic-cdk which pulls in these macros" },
@@ -885,6 +894,14 @@ skip-tree = [
     { crate = "libloading", reason = "the workspace pulls in old version of pkcs11 (v0.5.0) which pulls in an old libloading" },
     { crate = "pem", reason = "ic-crypto-ed25519 v0.9.0 depended by a lot of packages pulls in an old pem" },
     { crate = "procfs", reason = "ic-metrics crate pulls in an old version of procfs" },
+    { crate = "ic-transport-types", reason = "version in the ic repo not yet updated" },
+    { crate = "secrecy", reason = "transitive dependency" },
+    { crate = "windows-sys", reason = "transitive dependency" },
+    { crate = "windows_i686_msvc", reason = "transitive dependency" },
+    { crate = "windows_i686_gnu", reason = "transitive dependency" },
+    { crate = "windows_x86_64_msvc", reason = "transitive dependency" },
+    { crate = "windows_x86_64_gnullvm", reason = "transitive dependency" },
+    { crate = "windows_x86_64_gnu", reason = "transitive dependency" },
 ]
 
 # This section is considered when running `cargo deny check sources`.

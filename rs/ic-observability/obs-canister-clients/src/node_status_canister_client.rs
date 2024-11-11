@@ -1,7 +1,6 @@
 use std::time::Duration;
 
 use candid::{CandidType, Decode, Encode};
-use ic_agent::agent::http_transport::ReqwestTransport;
 use ic_agent::agent::CallResponse;
 use ic_agent::{export::Principal, identity::AnonymousIdentity, Agent};
 use rand::seq::SliceRandom;
@@ -55,7 +54,8 @@ impl NodeStatusCanister {
                         .build()
                         .expect("Could not create HTTP client.");
                     Agent::builder()
-                        .with_transport(ReqwestTransport::create_with_client(url.as_str(), client).expect("Failed to create transport"))
+                        .with_http_client(client)
+                        .with_url(url.clone())
                         .with_identity(AnonymousIdentity)
                         .with_verify_query_signatures(false)
                         .build()
@@ -125,7 +125,7 @@ impl NodeStatusCanister {
             Err(err) => return Err(NodeStatusCanisterError::Unknown(format!("Error on update_node_status request: {}", err))),
         };
 
-        match Decode!(response.as_slice(), bool) {
+        match Decode!(response.0.as_slice(), bool) {
             Ok(response) => Ok(response),
             Err(e) => Err(NodeStatusCanisterError::Decoding(format!(
                 "Error decoding response for update_node_status: {}",

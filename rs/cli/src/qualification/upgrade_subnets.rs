@@ -105,7 +105,7 @@ impl Step for UpgradeSubnets {
                         )
                         .await
                 };
-                place_proposal.retry(&ExponentialBuilder::default()).await?;
+                place_proposal.retry(ExponentialBuilder::default()).await?;
 
                 ctx.print_text(format!("Placed proposal for subnet {}", subnet.principal));
 
@@ -149,7 +149,7 @@ impl Step for UpgradeSubnets {
                     .await
             };
 
-            place_proposal.retry(&ExponentialBuilder::default()).await?;
+            place_proposal.retry(ExponentialBuilder::default()).await?;
 
             wait_for_subnet_revision(ctx, None, &self.to_version).await?;
 

@@ -1,5 +1,4 @@
 use candid::Decode;
-use ic_agent::agent::http_transport::ReqwestTransport;
 use ic_agent::Agent;
 use ic_nns_common::pb::v1::NeuronId;
 use ic_nns_common::pb::v1::ProposalId;
@@ -38,7 +37,8 @@ pub async fn governance_canister_version(nns_urls: &[Url]) -> Result<GovernanceC
         .build()
         .expect("Could not create HTTP client.");
     let canister_agent = Agent::builder()
-        .with_transport(ReqwestTransport::create_with_client(nns_urls[0].clone(), client)?)
+        .with_http_client(client)
+        .with_url(nns_urls[0].clone())
         .with_verify_query_signatures(false)
         .build()?;
 
