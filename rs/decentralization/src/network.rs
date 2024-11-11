@@ -1140,8 +1140,8 @@ impl SubnetChangeRequest {
             .collect_vec();
 
         info!(
-            "Resizing subnet {} by removing {} healthy and {} unhealthy nodes, and adding {}. Total available {} healthy nodes.",
-            self.subnet.id,
+            "Evaluating change in subnet {} membership: removing ({} healthy + {} unhealthy) and adding {} node. Total available {} healthy nodes.",
+            self.subnet.id.to_string().split_once('-').expect("subnet id is expected to have a -").0,
             how_many_nodes_to_remove,
             how_many_nodes_unhealthy,
             how_many_nodes_to_add + self.include_nodes.len(),
