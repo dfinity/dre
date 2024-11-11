@@ -3130,7 +3130,7 @@ checksum = "dd8ecacd682fa05a985253592963306cb9799622d7b1cce4b1edb89c6ec85be1"
 dependencies = [
  "candid",
  "ic-cdk-macros 0.16.0",
- "ic0 0.23.0",
+ "ic0 0.23.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde",
  "serde_bytes",
 ]
@@ -3142,7 +3142,7 @@ source = "git+https://github.com/dfinity/cdk-rs.git?rev=8f57d6d26b1d142b5be4b39e
 dependencies = [
  "candid",
  "ic-cdk-macros 0.17.0",
- "ic0 0.23.0",
+ "ic0 0.23.0 (git+https://github.com/dfinity/cdk-rs.git?rev=8f57d6d26b1d142b5be4b39ea8ade59d7c848cde)",
  "serde",
  "serde_bytes",
 ]
@@ -3223,7 +3223,7 @@ source = "git+https://github.com/dfinity/cdk-rs.git?rev=8f57d6d26b1d142b5be4b39e
 dependencies = [
  "futures",
  "ic-cdk 0.17.0",
- "ic0 0.23.0",
+ "ic0 0.23.0 (git+https://github.com/dfinity/cdk-rs.git?rev=8f57d6d26b1d142b5be4b39ea8ade59d7c848cde)",
  "serde",
  "serde_bytes",
  "slotmap",
@@ -7175,9 +7175,9 @@ dependencies = [
 
 [[package]]
 name = "reqwest"
-version = "0.12.7"
+version = "0.12.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f8f4955649ef5c38cc7f9e8aa41761d48fb9677197daea9984dc54f56aad5e63"
+checksum = "a77c62af46e79de0a562e1a9849205ffcb7fc1238876e9bd743357570e04046f"
 dependencies = [
  "base64 0.22.1",
  "bytes",
@@ -7598,9 +7598,9 @@ dependencies = [
 
 [[package]]
 name = "serde"
-version = "1.0.210"
+version = "1.0.214"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c8e3592472072e6e22e0a54d5904d9febf8508f65fb8552499a1abc7d1078c3a"
+checksum = "f55c3193aca71c12ad7890f1785d2b73e1b9f63a0bbc353c08ef26fe03fc56b5"
 dependencies = [
  "serde_derive",
 ]
@@ -7626,9 +7626,9 @@ dependencies = [
 
 [[package]]
 name = "serde_derive"
-version = "1.0.210"
+version = "1.0.214"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "243902eda00fad750862fc144cea25caca5e20d615af0a81bee94ca738f1df1f"
+checksum = "de523f781f095e28fa605cdce0f8307e451cc0fd14e2eb4cd2e98a355b147766"
 dependencies = [
  "proc-macro2",
  "quote",
