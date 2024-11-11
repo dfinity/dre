@@ -38,7 +38,7 @@ impl ExecutableCommand for WhatifDecentralization {
         };
 
         runner
-            .decentralization_change(&change_membership, self.subnet_nodes_initial.clone())
+            .decentralization_change(&change_membership, self.subnet_nodes_initial.clone(), None)
             .await
     }
 
