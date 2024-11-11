@@ -263,18 +263,6 @@ pub struct NodeProviderRewards {
 }
 
 #[derive(Debug, Deserialize, CandidType)]
-pub struct NodeProviderRewardsLight {
-    pub node_provider_id: Principal,
-    pub rewards_xdr_permyriad: u64,
-    pub rewards_xdr_permyriad_no_reduction: u64,
-    pub rewards_xdr_old: Option<u64>,
-    pub ts_distribution: u64,
-    pub xdr_conversion_rate: Option<u64>,
-    pub rewards_multipliers_stats: Vec<MultiplierStats>,
-    pub computation_log: Vec<String>,
-}
-
-#[derive(Debug, Deserialize, CandidType)]
 pub struct NodeProviderMapping {
     pub node_id: Principal,
     pub node_provider_id: Principal,
