@@ -3146,7 +3146,7 @@ checksum = "dd8ecacd682fa05a985253592963306cb9799622d7b1cce4b1edb89c6ec85be1"
 dependencies = [
  "candid",
  "ic-cdk-macros 0.16.0",
- "ic0 0.23.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "ic0 0.23.0",
  "serde",
  "serde_bytes",
 ]
@@ -3158,7 +3158,7 @@ source = "git+https://github.com/dfinity/cdk-rs.git?rev=8f57d6d26b1d142b5be4b39e
 dependencies = [
  "candid",
  "ic-cdk-macros 0.17.0",
- "ic0 0.23.0 (git+https://github.com/dfinity/cdk-rs.git?rev=8f57d6d26b1d142b5be4b39ea8ade59d7c848cde)",
+ "ic0 0.23.0",
  "serde",
  "serde_bytes",
 ]
@@ -3239,7 +3239,7 @@ source = "git+https://github.com/dfinity/cdk-rs.git?rev=8f57d6d26b1d142b5be4b39e
 dependencies = [
  "futures",
  "ic-cdk 0.17.0",
- "ic0 0.23.0 (git+https://github.com/dfinity/cdk-rs.git?rev=8f57d6d26b1d142b5be4b39ea8ade59d7c848cde)",
+ "ic0 0.23.0",
  "serde",
  "serde_bytes",
  "slotmap",

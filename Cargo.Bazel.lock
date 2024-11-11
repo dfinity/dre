@@ -1,5 +1,5 @@
 {
-  "checksum": "7bc061500c5732798e3f592eef21cb850a575beab433daa18b671609c06f52fa",
+  "checksum": "e90af0fe39069503f65edcd3608fd1e752400c4e6b9eea039381b6440016632a",
   "crates": {
     "actix-codec 0.5.2": {
       "name": "actix-codec",
@@ -15440,7 +15440,7 @@
               "target": "simple_asn1"
             },
             {
-              "id": "thiserror 1.0.69",
+              "id": "thiserror 2.0.3",
               "target": "thiserror"
             },
             {
@@ -39005,7 +39005,7 @@
               "target": "tempfile"
             },
             {
-              "id": "thiserror 1.0.69",
+              "id": "thiserror 2.0.3",
               "target": "thiserror"
             },
             {
@@ -41797,6 +41797,75 @@
       },
       "license": "MIT OR Apache-2.0"
     },
+    "thiserror 2.0.3": {
+      "name": "thiserror",
+      "version": "2.0.3",
+      "repository": {
+        "Http": {
+          "url": "https://static.crates.io/crates/thiserror/2.0.3/download",
+          "sha256": "c006c85c7651b3cf2ada4584faa36773bd07bac24acfb39f3c431b36d7e667aa"
+        }
+      },
+      "targets": [
+        {
+          "Library": {
+            "crate_name": "thiserror",
+            "crate_root": "src/lib.rs",
+            "srcs": [
+              "**/*.rs"
+            ]
+          }
+        },
+        {
+          "BuildScript": {
+            "crate_name": "build_script_build",
+            "crate_root": "build.rs",
+            "srcs": [
+              "**/*.rs"
+            ]
+          }
+        }
+      ],
+      "library_target_name": "thiserror",
+      "common_attrs": {
+        "compile_data_glob": [
+          "**"
+        ],
+        "crate_features": {
+          "common": [
+            "default",
+            "std"
+          ],
+          "selects": {}
+        },
+        "deps": {
+          "common": [
+            {
+              "id": "thiserror 2.0.3",
+              "target": "build_script_build"
+            }
+          ],
+          "selects": {}
+        },
+        "edition": "2021",
+        "proc_macro_deps": {
+          "common": [
+            {
+              "id": "thiserror-impl 2.0.3",
+              "target": "thiserror_impl"
+            }
+          ],
+          "selects": {}
+        },
+        "version": "2.0.3"
+      },
+      "build_script_attrs": {
+        "data_glob": [
+          "**"
+        ]
+      },
+      "license": "MIT OR Apache-2.0"
+    },
     "thiserror-impl 1.0.69": {
       "name": "thiserror-impl",
       "version": "1.0.69",
@@ -41841,6 +41910,53 @@
         },
         "edition": "2021",
         "version": "1.0.69"
+      },
+      "license": "MIT OR Apache-2.0"
+    },
+    "thiserror-impl 2.0.3": {
+      "name": "thiserror-impl",
+      "version": "2.0.3",
+      "repository": {
+        "Http": {
+          "url": "https://static.crates.io/crates/thiserror-impl/2.0.3/download",
+          "sha256": "f077553d607adc1caf65430528a576c757a71ed73944b66ebb58ef2bbd243568"
+        }
+      },
+      "targets": [
+        {
+          "ProcMacro": {
+            "crate_name": "thiserror_impl",
+            "crate_root": "src/lib.rs",
+            "srcs": [
+              "**/*.rs"
+            ]
+          }
+        }
+      ],
+      "library_target_name": "thiserror_impl",
+      "common_attrs": {
+        "compile_data_glob": [
+          "**"
+        ],
+        "deps": {
+          "common": [
+            {
+              "id": "proc-macro2 1.0.89",
+              "target": "proc_macro2"
+            },
+            {
+              "id": "quote 1.0.37",
+              "target": "quote"
+            },
+            {
+              "id": "syn 2.0.87",
+              "target": "syn"
+            }
+          ],
+          "selects": {}
+        },
+        "edition": "2021",
+        "version": "2.0.3"
       },
       "license": "MIT OR Apache-2.0"
     },
