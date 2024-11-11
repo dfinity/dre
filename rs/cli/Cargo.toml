@@ -18,8 +18,11 @@ backon = { workspace = true }
 candid = { workspace = true }
 chrono = { workspace = true }
 clap = { workspace = true }
+clap_complete = { workspace = true }
 clap-num = { workspace = true }
 colored = { workspace = true }
+comfy-table = { workspace = true }
+cryptoki = { workspace = true }
 cycles-minting-canister = { workspace = true }
 decentralization = { workspace = true }
 dialoguer = { workspace = true }
@@ -30,17 +33,19 @@ flate2 = { workspace = true }
 fs-err = { workspace = true }
 futures = { workspace = true }
 futures-util = { workspace = true }
-shlex = { workspace = true }
+human_bytes = { workspace = true }
+humantime = { workspace = true }
 ic-base-types = { workspace = true }
 ic-canister-client = { workspace = true }
 ic-canister-client-sender = { workspace = true }
 ic-canisters = { workspace = true }
+ic-icrc1-test-utils.workspace = true
 ic-management-backend = { workspace = true }
 ic-management-types = { workspace = true }
 ic-nervous-system-clients = { workspace = true }
-ic-nns-constants = { workspace = true }
 ic-nervous-system-root = { workspace = true }
 ic-nns-common = { workspace = true }
+ic-nns-constants = { workspace = true }
 ic-nns-governance = { workspace = true }
 ic-nns-governance-api = { workspace = true }
 ic-protobuf = { workspace = true }
@@ -52,16 +57,21 @@ ic-sys = { workspace = true }
 ic-types = { workspace = true }
 indexmap = { workspace = true }
 itertools = { workspace = true }
+keyring = { workspace = true }
 log = { workspace = true }
+mockall.workspace = true
 pretty_env_logger = { workspace = true }
 prost = { workspace = true }
 regex = { workspace = true }
 registry-canister = { workspace = true }
 reqwest = { workspace = true }
+rosetta-core.workspace = true
 self_update = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
+serde_yaml.workspace = true
 sha2 = { workspace = true }
+shlex = { workspace = true }
 spinners = { workspace = true }
 strum = { workspace = true }
 tabled = { workspace = true }
@@ -69,17 +79,6 @@ tabular = { workspace = true }
 tempfile = { workspace = true }
 tokio = { workspace = true }
 url = { workspace = true }
-humantime = { workspace = true }
-clap_complete = { workspace = true }
-cryptoki = { workspace = true }
-keyring = { workspace = true }
-comfy-table = { workspace = true }
-human_bytes = { workspace = true }
-mockall.workspace = true
-clio = { workspace = true }
-serde_yaml.workspace = true
-ic-icrc1-test-utils.workspace = true
-rosetta-core.workspace = true
 
 [dev-dependencies]
 actix-rt = { workspace = true }
