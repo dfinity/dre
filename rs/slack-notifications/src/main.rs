@@ -3,7 +3,6 @@ use ic_nns_governance::pb::v1::{ListProposalInfo, ListProposalInfoResponse, Prop
 
 use anyhow::Result;
 use candid::Decode;
-use ic_agent::agent::http_transport::reqwest_transport::ReqwestTransport;
 use ic_agent::Agent;
 use log::{info, warn};
 use serde::{Deserialize, Serialize};
@@ -26,7 +25,10 @@ const SLACK_URL_ENV: &str = "SLACK_URL";
 
 #[tokio::main]
 async fn main() {
-    std::env::set_var("RUST_LOG", "info");
+    unsafe {
+        // set_var is safe in single-threaded context
+        std::env::set_var("RUST_LOG", "info");
+    }
     env_logger::init();
     dotenv::dotenv().ok();
 
@@ -115,7 +117,8 @@ impl ProposalPoller {
             .build()
             .expect("Could not create HTTP client.");
         let agent = Agent::builder()
-            .with_transport(ReqwestTransport::create_with_client(nns_url, client).expect("failed to create transport"))
+            .with_http_client(client)
+            .with_url(nns_url)
             .build()
             .expect("failed to build the agent");
         Self { agent }

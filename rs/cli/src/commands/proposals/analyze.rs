@@ -29,11 +29,12 @@ impl ExecutableCommand for Analyze {
                 ProposalStatus::Open.as_str_name()
             ));
         }
+        let proposal_summary = proposal.clone().proposal.map(|p| p.summary);
 
         let runner = ctx.runner().await?;
 
         match filter_map_nns_function_proposals::<ChangeSubnetMembershipPayload>(&[proposal]).first() {
-            Some((_, change_membership)) => runner.decentralization_change(change_membership, None).await,
+            Some((_, change_membership)) => runner.decentralization_change(change_membership, None, proposal_summary).await,
             _ => Err(anyhow::anyhow!(
                 "Proposal {} must have {} type",
                 self.proposal_id,

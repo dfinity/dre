@@ -220,6 +220,7 @@ impl IcAdminImpl {
                     } else {
                         Default::default()
                     },
+                    vec!["--silence-notices".to_string()], // Do not print notices since we are running from the automation
                     opts.title.map(|t| vec!["--proposal-title".to_string(), t]).unwrap_or_default(),
                     opts.summary
                         .map(|s| {
@@ -383,7 +384,7 @@ impl IcAdminImpl {
     }
 }
 
-#[derive(Display, Clone)]
+#[derive(Display, Clone, Debug)]
 #[strum(serialize_all = "kebab-case")]
 pub enum ProposeCommand {
     ChangeSubnetMembership {
@@ -524,7 +525,7 @@ impl ProposeCommand {
     }
 }
 
-#[derive(Default, Clone)]
+#[derive(Default, Clone, Debug)]
 pub struct ProposeOptions {
     pub title: Option<String>,
     pub summary: Option<String>,

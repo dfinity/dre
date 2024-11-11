@@ -671,7 +671,7 @@ pub async fn list_subnets_release_statuses(
             .await
         };
         retryable
-            .retry(&ExponentialBuilder::default())
+            .retry(ExponentialBuilder::default())
             .await
             .map(|updates| (r.commit_hash, updates))
     }))

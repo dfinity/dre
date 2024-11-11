@@ -71,7 +71,7 @@ pub trait LazyRegistry:
 
     fn subnets(&self) -> BoxFuture<'_, anyhow::Result<Arc<IndexMap<PrincipalId, Subnet>>>>;
 
-    fn nodes_with_proposals(&self) -> BoxFuture<'_, anyhow::Result<Arc<IndexMap<PrincipalId, Node>>>>;
+    fn nodes_and_proposals(&self) -> BoxFuture<'_, anyhow::Result<Arc<IndexMap<PrincipalId, Node>>>>;
 
     fn nns_replica_version(&self) -> BoxFuture<'_, anyhow::Result<Option<String>>> {
         Box::pin(async {
@@ -683,7 +683,7 @@ impl LazyRegistry for LazyRegistryImpl {
         })
     }
 
-    fn nodes_with_proposals(&self) -> BoxFuture<'_, anyhow::Result<Arc<IndexMap<PrincipalId, Node>>>> {
+    fn nodes_and_proposals(&self) -> BoxFuture<'_, anyhow::Result<Arc<IndexMap<PrincipalId, Node>>>> {
         Box::pin(async {
             let nodes = self.nodes().await?;
             if nodes.iter().any(|(_, n)| n.proposal.is_some()) {
@@ -851,8 +851,8 @@ impl SubnetQuerier for LazyRegistryImpl {
                     .map(|s| DecentralizedSubnet {
                         id: s.principal,
                         nodes: s.nodes.iter().map(decentralization::network::Node::from).collect(),
-                        added_nodes_desc: vec![],
-                        removed_nodes_desc: vec![],
+                        added_nodes: vec![],
+                        removed_nodes: vec![],
                         comment: None,
                         run_log: vec![],
                     })
@@ -879,8 +879,8 @@ impl SubnetQuerier for LazyRegistryImpl {
                                 .iter()
                                 .map(decentralization::network::Node::from)
                                 .collect(),
-                            added_nodes_desc: vec![],
-                            removed_nodes_desc: vec![],
+                            added_nodes: vec![],
+                            removed_nodes: vec![],
                             comment: None,
                             run_log: vec![],
                         })
@@ -897,15 +897,15 @@ impl decentralization::network::TopologyManager for LazyRegistryImpl {}
 impl AvailableNodesQuerier for LazyRegistryImpl {
     fn available_nodes(&self) -> BoxFuture<'_, Result<Vec<decentralization::network::Node>, ic_management_types::NetworkError>> {
         Box::pin(async {
-            let (nodes, healths) = try_join!(self.nodes_with_proposals(), self.health_client.nodes())
+            let (nodes_and_proposals, healths) = try_join!(self.nodes_and_proposals(), self.health_client.nodes())
                 .map_err(|e| ic_management_types::NetworkError::DataRequestError(e.to_string()))?;
-            let nodes = nodes
+            let available_nodes = nodes_and_proposals
                 .values()
                 .filter(|n| n.subnet_id.is_none() && n.proposal.is_none() && n.duplicates.is_none() && !n.is_api_boundary_node)
                 .cloned()
                 .collect_vec();
 
-            Ok(nodes
+            Ok(available_nodes
                 .iter()
                 .filter(|n| {
                     // Keep only healthy nodes.
@@ -940,7 +940,7 @@ mock! {
 
         fn subnets(&self) -> BoxFuture<'_, anyhow::Result<Arc<IndexMap<PrincipalId, Subnet>>>>;
 
-        fn nodes_with_proposals(&self) -> BoxFuture<'_, anyhow::Result<Arc<IndexMap<PrincipalId, Node>>>>;
+        fn nodes_and_proposals(&self) -> BoxFuture<'_, anyhow::Result<Arc<IndexMap<PrincipalId, Node>>>>;
 
         fn unassigned_nodes_replica_version(&self) -> BoxFuture<'_, anyhow::Result<Arc<String>>>;
 

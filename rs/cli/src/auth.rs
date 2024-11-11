@@ -2,7 +2,6 @@ use std::path::PathBuf;
 use std::str::FromStr;
 
 use anyhow::anyhow;
-use clio::{ClioPath, InputPath};
 use cryptoki::object::AttributeInfo;
 use cryptoki::session::Session;
 use cryptoki::{
@@ -18,7 +17,6 @@ use ic_icrc1_test_utils::KeyPairGenerator;
 use ic_management_types::Network;
 use keyring::{Entry, Error};
 use log::{debug, info, warn};
-use secrecy::SecretString;
 use std::sync::Mutex;
 
 use crate::commands::{AuthOpts, AuthRequirement, HsmOpts, HsmParams};
@@ -60,7 +58,7 @@ impl Neuron {
                     Some(STAGING_NEURON_ID),
                     match Auth::pem(staging_known_path.clone()).await {
                         Ok(_) => AuthOpts {
-                            private_key_pem: Some(InputPath::new(ClioPath::new(staging_known_path).unwrap()).unwrap()),
+                            private_key_pem: Some(staging_known_path.display().to_string()),
                             hsm_opts: HsmOpts {
                                 hsm_pin: None,
                                 hsm_params: HsmParams {
@@ -372,26 +370,22 @@ impl Auth {
         }
         let ret = Ok(match maybe_pin {
             Some(pin) => {
-                let sekrit = SecretString::from_str(pin.as_str()).unwrap();
-                session.login(UserType::User, Some(&sekrit))?;
+                let auth_pin = cryptoki::types::AuthPin::from_str(pin.as_str()).expect("Parsin pin as AuthPin should succeed");
+                session.login(UserType::User, Some(&auth_pin))?;
                 pin
             }
             None => {
                 let pin_entry = Entry::new("dre-tool-hsm-pin", memo_key)?;
                 let tentative_pin = match pin_entry.get_password() {
-                    // TODO: Remove the old keyring entry search ("release-cli") after August 1st, 2024
-                    Err(Error::NoEntry) => match Entry::new("release-cli", memo_key) {
-                        Err(Error::NoEntry) => Password::new()
-                            .with_prompt("Please enter the hardware security module PIN: ")
-                            .interact()?,
-                        Ok(pin_entry) => pin_entry.get_password()?,
-                        Err(e) => return Err(anyhow::anyhow!("Problem getting PIN from keyring: {}", e)),
-                    },
+                    Err(Error::NoEntry) => Password::new()
+                        .with_prompt("Please enter the hardware security module PIN: ")
+                        .interact()?,
                     Ok(pin) => pin,
                     Err(e) => return Err(anyhow::anyhow!("Problem getting from keyring: {}", e)),
                 };
-                let sekrit = SecretString::from_str(tentative_pin.as_str()).unwrap();
-                match session.login(UserType::User, Some(&sekrit)) {
+                let auth_pin = cryptoki::types::AuthPin::from_str(tentative_pin.as_str()).expect("Parsin pin as AuthPin should succeed");
+
+                match session.login(UserType::User, Some(&auth_pin)) {
                     Ok(_) => {
                         pin_entry.set_password(&tentative_pin)?;
                         tentative_pin
@@ -416,16 +410,11 @@ impl Auth {
     }
 
     pub async fn pem(private_key_pem: PathBuf) -> anyhow::Result<Self> {
-        // Check path exists.  This blocks.
-        let t = tokio::task::spawn_blocking(move || {
-            let inp = InputPath::new(&private_key_pem);
-            match inp {
-                Ok(inp) => Ok(inp.path().to_path_buf()),
-                Err(e) => Err(e),
-            }
-        })
-        .await?;
-        Ok(Self::Keyfile { path: t? })
+        // Check path exists.
+        if !private_key_pem.exists() {
+            return Err(anyhow::anyhow!("Private key file not found: {:?}", private_key_pem));
+        }
+        Ok(Self::Keyfile { path: private_key_pem })
     }
 
     pub(crate) async fn from_auth_opts(auth_opts: AuthOpts) -> Result<Self, anyhow::Error> {
@@ -435,8 +424,8 @@ impl Auth {
                 private_key_pem: Some(private_key_pem),
                 hsm_opts: _,
             } => {
-                info!("Using requested private key file {}", private_key_pem.path());
-                Auth::pem(private_key_pem.path().to_path_buf()).await
+                info!("Using requested private key file {}", private_key_pem);
+                Auth::pem(PathBuf::from(private_key_pem)).await
             }
             // Slot and key case.
             // Also autodetect case.

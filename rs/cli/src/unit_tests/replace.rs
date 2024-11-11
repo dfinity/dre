@@ -55,8 +55,8 @@ fn subnet(id: u64, nodes: &[Node]) -> DecentralizedSubnet {
     DecentralizedSubnet {
         id: PrincipalId::new_subnet_test_id(id),
         nodes: nodes.to_vec(),
-        added_nodes_desc: vec![],
-        removed_nodes_desc: vec![],
+        added_nodes: vec![],
+        removed_nodes: vec![],
         comment: None,
         run_log: vec![],
     }
@@ -80,14 +80,8 @@ fn test_pretty_format_response(response: &Result<SubnetChangeResponse, anyhow::E
     Feature diff:
 {}
             "#,
-            r.added_with_desc
-                .iter()
-                .map(|(id, desc)| format!("\t\t- principal: {}\n\t\t  desc: {}", id, desc))
-                .join("\n"),
-            r.removed_with_desc
-                .iter()
-                .map(|(id, desc)| format!("\t\t- principal: {}\n\t\t  desc: {}", id, desc))
-                .join("\n"),
+            r.node_ids_added.iter().map(|id| format!("\t\t- principal: {}", id)).join("\n"),
+            r.node_ids_removed.iter().map(|id| format!("\t\t- principal: {}", id)).join("\n"),
             r.feature_diff
                 .iter()
                 .map(|(feature, diff)| format!(
@@ -294,12 +288,12 @@ fn should_skip_cordoned_nodes() {
         }
 
         let response = response.unwrap();
-        if response.removed_with_desc.is_empty() {
+        if response.node_ids_removed.is_empty() {
             failed_scenarios.push((Ok(response), cordoned_features, "Expected nodes to be removed".to_string()));
             continue;
         }
 
-        if response.added_with_desc.is_empty() {
+        if response.node_ids_added.is_empty() {
             failed_scenarios.push((Ok(response), cordoned_features, "Expected nodes to be added".to_string()));
             continue;
         }
