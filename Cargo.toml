@@ -198,7 +198,7 @@ mockall = "0.13.0"
 ic-cdk-timers = { git = "https://github.com/dfinity/cdk-rs.git", rev = "8f57d6d26b1d142b5be4b39ea8ade59d7c848cde" }
 ic-cdk-macros = { git = "https://github.com/dfinity/cdk-rs.git", rev = "8f57d6d26b1d142b5be4b39ea8ade59d7c848cde" }
 ic-stable-structures = "0.6.5"
-dfn_core = { git = "https://github.com/dfinity/ic.git", rev = "ca80a219757f00a5dd234f8d8c58316c902f2f2f" }
+dfn_core = { git = "https://github.com/dfinity/ic.git", rev = "3c3d9cd3600c744a44405749eff7cf187ef8d75d" }
 node-provider-rewards-lib = { path = "rs/dre-canisters/node-provider-rewards-lib" }
 
 # dre-airflow deps, should be replaced with dre-airflow once
