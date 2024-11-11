@@ -70,22 +70,6 @@ fn proposal_motivation(proposal_info: &ProposalInfo) -> String {
         .unwrap_or(summary)
         .to_string();
 
-    // For subnet membership changes (node replacements), add a link to the internal
-    // dashboard where the decentralization data can be reviewed before voting.
-    if proposal_info.topic == Topic::SubnetManagement as i32 {
-        if let Some(proposal) = proposal_info.proposal.as_ref() {
-            if let Some(proposal::Action::ExecuteNnsFunction(action)) = &proposal.action {
-                if let Ok(change_membership_proposal) = candid::decode_one::<ChangeSubnetMembershipPayload>(&action.payload) {
-                    let subnet_id = change_membership_proposal.subnet_id;
-                    result.push_str(&format!(
-                            "\nDecentralization changes from this proposal can be reviewed on the <https://dashboard.internal.dfinity.network/network/mainnet/subnet/{}/change|internal release dashboard>",
-                            subnet_id
-                        ));
-                }
-            }
-        }
-    }
-
     let result_len = result.chars().count();
     if result_len > MAX_SUMMARY_LENGTH {
         let end = result.chars().map(|c| c.len_utf8()).take(MAX_SUMMARY_LENGTH).sum();
