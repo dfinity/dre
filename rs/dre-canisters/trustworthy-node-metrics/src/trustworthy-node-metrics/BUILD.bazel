@@ -4,7 +4,8 @@ load("@rules_rust//rust:defs.bzl", "rust_library")
 package(default_visibility = ["//visibility:public"])
 
 DEPS = [
-    "//rs/dre-canisters/trustworthy-node-metrics/src/trustworthy-node-metrics-types:trustworthy_node_metrics_types"
+    "//rs/dre-canisters/trustworthy-node-metrics/src/trustworthy-node-metrics-types:trustworthy_node_metrics_types",
+    "//rs/dre-canisters/node-provider-rewards-lib"
 ]
 
 rust_library(
