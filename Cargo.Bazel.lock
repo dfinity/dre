@@ -1,5 +1,5 @@
 {
-  "checksum": "7ea7a35de8b6493825ab6fe949a472115132c928f34a5084ca4d283a254ed4d3",
+  "checksum": "755d8350cd5a1033ffeba172c4818c3598aad39af9cb6e73275aee5764e32c12",
   "crates": {
     "actix-codec 0.5.2": {
       "name": "actix-codec",
@@ -9993,6 +9993,10 @@
         ],
         "deps": {
           "common": [
+            {
+              "id": "ahash 0.8.11",
+              "target": "ahash"
+            },
             {
               "id": "anyhow 1.0.89",
               "target": "anyhow"

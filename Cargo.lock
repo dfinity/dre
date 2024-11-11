@@ -1987,6 +1987,7 @@ name = "dre"
 version = "0.5.6"
 dependencies = [
  "actix-rt",
+ "ahash 0.8.11",
  "anyhow",
  "async-recursion",
  "backon",

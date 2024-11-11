@@ -10,8 +10,8 @@ use completions::Completions;
 use der_to_principal::DerToPrincipal;
 use firewall::Firewall;
 use get::Get;
-use heal::Heal;
 use hostos::HostOs;
+use network::Network;
 use neuron::Neuron;
 use node_metrics::NodeMetrics;
 use nodes::Nodes;
@@ -32,8 +32,8 @@ pub(crate) mod completions;
 pub(crate) mod der_to_principal;
 pub(crate) mod firewall;
 pub mod get;
-pub(crate) mod heal;
 pub mod hostos;
+pub(crate) mod network;
 pub(crate) mod neuron;
 pub(crate) mod node_metrics;
 pub(crate) mod nodes;
@@ -247,7 +247,7 @@ macro_rules! impl_executable_command_for_enums {
 }
 pub(crate) use impl_executable_command_for_enums;
 
-impl_executable_command_for_enums! { DerToPrincipal, Heal, Subnet, Get, Propose, UpdateUnassignedNodes, Version, NodeMetrics, HostOs, Nodes, ApiBoundaryNodes, Vote, Registry, Firewall, Upgrade, Proposals, Completions, Qualify, UpdateAuthorizedSubnets, Neuron }
+impl_executable_command_for_enums! { DerToPrincipal, Network, Subnet, Get, Propose, UpdateUnassignedNodes, Version, NodeMetrics, HostOs, Nodes, ApiBoundaryNodes, Vote, Registry, Firewall, Upgrade, Proposals, Completions, Qualify, UpdateAuthorizedSubnets, Neuron }
 
 pub trait ExecutableCommand {
     fn require_auth(&self) -> AuthRequirement;

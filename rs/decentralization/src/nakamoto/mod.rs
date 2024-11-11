@@ -542,7 +542,6 @@ mod tests {
     use std::str::FromStr;
 
     use crate::network::{DecentralizedSubnet, NetworkHealRequest, NetworkHealSubnets, SubnetChangeRequest};
-    use ahash::HashSet;
     use ic_base_types::PrincipalId;
     use ic_management_types::HealthStatus;
     use indexmap::IndexMap;
@@ -647,8 +646,8 @@ mod tests {
         DecentralizedSubnet {
             id: PrincipalId::new_subnet_test_id(subnet_num),
             nodes: new_test_nodes("feat", num_nodes, num_dfinity_nodes),
-            added_nodes_desc: Vec::new(),
-            removed_nodes_desc: Vec::new(),
+            added_nodes: Vec::new(),
+            removed_nodes: Vec::new(),
             comment: None,
             run_log: Vec::new(),
         }
@@ -665,8 +664,8 @@ mod tests {
         DecentralizedSubnet {
             id: PrincipalId::new_subnet_test_id(subnet_num),
             nodes: new_test_nodes_with_overrides("feat", node_number_start, num_nodes, num_dfinity_nodes, feature_to_override),
-            added_nodes_desc: Vec::new(),
-            removed_nodes_desc: Vec::new(),
+            added_nodes: Vec::new(),
+            removed_nodes: Vec::new(),
             comment: None,
             run_log: Vec::new(),
         }
@@ -909,8 +908,8 @@ mod tests {
                 .filter(|n| !re_unhealthy_nodes.is_match(&n.id.to_string()))
                 .cloned()
                 .collect(),
-            added_nodes_desc: Vec::new(),
-            removed_nodes_desc: Vec::new(),
+            added_nodes: Vec::new(),
+            removed_nodes: Vec::new(),
             comment: None,
             run_log: Vec::new(),
         };
@@ -1053,9 +1052,8 @@ mod tests {
             .unwrap();
         let result = network_heal_response.first().unwrap().clone();
 
-        let nodes_removed = result.removed_with_desc.iter().map(|(n, _)| n).collect::<HashSet<_>>();
         for unhealthy in unhealthy_principals.to_vec().iter() {
-            assert!(nodes_removed.contains(unhealthy));
+            assert!(result.node_ids_removed.contains(unhealthy));
         }
     }
 
@@ -1126,7 +1124,7 @@ mod tests {
 
         assert_eq!(subnet_initial.nodes.len(), after_resize.new_nodes.len());
 
-        assert_eq!(after_resize.added_nodes_desc.len(), 0);
-        assert_eq!(after_resize.removed_nodes_desc.len(), 0);
+        assert_eq!(after_resize.added_nodes.len(), 0);
+        assert_eq!(after_resize.removed_nodes.len(), 0);
     }
 }
