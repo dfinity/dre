@@ -13,7 +13,7 @@ const NodeRewardExplanation = () => {
           How are rewards computed?
         </Typography>
       </Grid>
-      <Grid item xs={12} md={4}>
+      <Grid item xs={12} md={6}>
         <Typography variant="body2" gutterBottom>
           Node Unassigned:
         </Typography>
@@ -62,7 +62,7 @@ const NodeRewardExplanation = () => {
           </ListItem>
         </List>
         </Grid>
-        <Grid item xs={12} md={4}>
+        <Grid item xs={12} md={6}>
 
         {/* Linear Reduction Function */}
         <List sx={{ listStyle: 'circle', ml: 4 }}>
@@ -89,24 +89,59 @@ const NodeRewardExplanation = () => {
             </List>
 
             <Typography variant="body2" color="textSecondary" gutterBottom>
-              The reward multiplier for the assigned period is computed by subtracting the rewards reduction from 100%.
+              The reward multiplier for the rewarding period is then computed by subtracting the rewards reduction from 100%.
             </Typography>
           </ListItem>
         </List>
       </Grid>
-        <Grid item xs={12} md={4}>
-          <List sx={{ listStyle: 'circle', ml: 4 }}>
-          {/* Total Rewards Calculation Placeholder */}
-          <ListItem sx={{ display: 'list-item' }}>
-            <Typography variant="body2" gutterBottom>
-              Compute Reward Multiplier:
-            </Typography>
-            <Typography variant="body2" color="textSecondary" gutterBottom>
-              The final reward multiplier is then the weighted average between the multiplier for days in which the node is assigned to a subnet and 100% for the days in which the node is unassigned. 
-            </Typography>
-          </ListItem>
-        </List>
+    </Grid>
+  );
+};
+
+export const NodeProvidersRewardExplanation = () => {
+  return (
+    <Grid container>
+      {/* Title Section */}
+      <Grid item xs={12}>
+        <Typography variant="body1" gutterBottom>
+          How are rewards computed?
+        </Typography>
+      </Grid>
+      <Grid item xs={12} md={6}>
+        <Typography variant="body2" gutterBottom>
+          Nodes not registered:
+        </Typography>
+        <Typography variant="body2" color="textSecondary" gutterBottom>
+          Nodes which are not registered in the period get no rewards (0%).
+        </Typography>
+
+        <Typography variant="body2" gutterBottom>
+          Nodes Assigned:
+        </Typography>
+        <Typography variant="body2" color="textSecondary" gutterBottom>
+          When assigned to a subnet, the reward calculation for a single node follows these steps:
+        </Typography>            
+        <Typography variant="body2" gutterBottom>
+          <InlineMath math="Node \, Rewards = {\text{Rewards Multiplier}} * {\text{monthly permyriad XDRs (from Rewards Table)}}" />
+        </Typography>
+        <Typography variant="body2" gutterBottom>
+          Nodes Unassigned:
+        </Typography>
+        <Typography variant="body2" color="textSecondary" gutterBottom>
+          When unassigned to a subnet, the reward calculation for a single node follows these steps:
+        </Typography>            
+        <Typography variant="body2" gutterBottom>
+          <InlineMath math="Node \, Rewards = {\text{Avg. Rewards Multiplier Assigned}} * {\text{monthly permyriad XDRs (from Rewards Table)}}" />
+        </Typography>
         </Grid>
+      <Grid item xs={12} md={6}>
+        <Typography variant="body2" gutterBottom>
+          Final Node Provider rewards:
+        </Typography>
+        <Typography variant="body2" color="textSecondary" gutterBottom>
+          The final node provider rewards is computed as the sum of the rewards of the individual machines
+        </Typography>  
+      </Grid>
     </Grid>
   );
 };
