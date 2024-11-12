@@ -124,11 +124,25 @@ impl TryFrom<String> for AuthOpts {
     }
 }
 
+#[derive(ClapArgs, Debug, Clone)]
+pub struct DiscourseOpts {
+    /// Api key used to interact with the forum
+    #[clap(long, env = "DISCOURSE_API_KEY")]
+    pub(crate) discourse_api_key: Option<String>,
+
+    /// Api url used to interact with the forum
+    #[clap(long, env = "DISCOURSE_API_URL")]
+    pub(crate) discourse_api_url: Option<String>,
+}
+
 #[derive(Parser, Debug)]
 #[clap(version = env!("CARGO_PKG_VERSION"), about, author)]
 pub struct Args {
     #[clap(flatten)]
     pub(crate) auth_opts: AuthOpts,
+
+    #[clap(flatten)]
+    pub(crate) discourse_opts: DiscourseOpts,
 
     /// Neuron ID
     #[clap(long, global = true, env = "NEURON_ID")]
