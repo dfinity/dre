@@ -3,6 +3,7 @@ use std::time::Duration;
 use futures::{future::BoxFuture, TryFutureExt};
 use ic_types::PrincipalId;
 use mockall::automock;
+use regex::Regex;
 use reqwest::{Client, Method};
 use serde::de::DeserializeOwned;
 use serde_json::json;
@@ -159,6 +160,22 @@ Proposal id [{1}](https://dashboard.internetcomputer.org/proposal/{1})"#,
     }
 }
 
+pub fn parse_proposal_id_from_governance_response(response: String) -> anyhow::Result<u64> {
+    let re = Regex::new(r"proposal\s+(\d+)")?;
+
+    re.captures(&response.to_lowercase())
+        .ok_or(anyhow::anyhow!("Expected some captures while parsing id from governance canister"))?
+        .iter()
+        .last()
+        .ok_or(anyhow::anyhow!(
+            "Expected at least one captures while parsing id from governance canister"
+        ))?
+        .ok_or(anyhow::anyhow!("Expected last element to be of type `Some()`"))?
+        .as_str()
+        .parse()
+        .map_err(anyhow::Error::from)
+}
+
 #[derive(Debug)]
 pub struct DiscourseResponse {
     pub url: String,
@@ -178,16 +195,29 @@ mod tests {
         .unwrap()
     }
 
-    #[tokio::test]
+    // #[tokio::test]
     async fn discourse_test() {
         let client = get_client();
 
-        // let response = client
-        //     .create_replace_nodes_forum_post(PrincipalId::new_subnet_test_id(0), "testing".to_string())
-        //     .await
-        //     .unwrap();
-        client.add_proposal_url_to_post(17, 132225).await.unwrap();
+        let response = client
+            .create_replace_nodes_forum_post(PrincipalId::new_subnet_test_id(0), "testing".to_string())
+            .await
+            .unwrap();
+        client.add_proposal_url_to_post(response.id, 132225).await.unwrap();
+    }
 
-        // println!("{:?}", response)
+    #[test]
+    fn parse_proposal_id_test() {
+        let text = "propoSAL 123456".to_string();
+        let parsed = parse_proposal_id_from_governance_response(text).unwrap();
+        assert_eq!(parsed, 123456);
+
+        let text = "Proposal 222222".to_string();
+        let parsed = parse_proposal_id_from_governance_response(text).unwrap();
+        assert_eq!(parsed, 222222);
+
+        let text = "Proposal id 123456".to_string();
+        let parsed = parse_proposal_id_from_governance_response(text);
+        assert!(parsed.is_err())
     }
 }
