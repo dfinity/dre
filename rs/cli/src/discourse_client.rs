@@ -1,9 +1,10 @@
 use std::time::Duration;
 
-use futures::future::BoxFuture;
+use futures::{future::BoxFuture, TryFutureExt};
 use ic_protobuf::types::v1::PrincipalId;
 use mockall::automock;
-use reqwest::Client;
+use reqwest::{Client, Method};
+use serde::de::DeserializeOwned;
 
 #[automock]
 pub trait DiscourseClient: Sync + Send {
@@ -29,8 +30,46 @@ impl DiscourseClientImp {
         })
     }
 
-    async fn get_category_id(&self, category: String) -> anyhow::Result<u8> {
-        Ok(0)
+    async fn request<T: DeserializeOwned>(&self, url: String, method: Method) -> anyhow::Result<T> {
+        self.client
+            .request(method, format!("{}/{}", self.forum_url, url))
+            .header("Api-Key", &self.api_key)
+            .header("Content-Type", "application/json")
+            .send()
+            .await?
+            .error_for_status()?
+            .json()
+            .map_err(anyhow::Error::from)
+            .await
+    }
+
+    async fn get_category_id(&self, category_name: String) -> anyhow::Result<u64> {
+        let response: serde_json::Value = self.request("categories.json".to_string(), Method::GET).await?;
+
+        let categories = response
+            .get("category_list")
+            .ok_or(anyhow::anyhow!("Expected `category_list` to be in the response"))?
+            .as_object()
+            .ok_or(anyhow::anyhow!("Expected `category_list` to be an object"))?
+            .get("categories")
+            .ok_or(anyhow::anyhow!("Expected `categories` to be in the response"))?
+            .as_array()
+            .ok_or(anyhow::anyhow!("Expected `categories` to be an array"))?;
+
+        categories
+            .iter()
+            .find_map(|category| match (category.get("id"), category.get("name")) {
+                (Some(id), Some(name)) => {
+                    let name = name.as_str().unwrap();
+                    let id = id.as_u64().unwrap();
+                    if name == category_name {
+                        return Some(id);
+                    }
+                    return None;
+                }
+                _ => None,
+            })
+            .ok_or(anyhow::anyhow!("Failed to find category with name `{}`", category_name))
     }
 
     async fn create_post(&self, title: String, summary: String, category: String, tags: Vec<String>) -> anyhow::Result<DiscourseResponse> {
@@ -75,10 +114,10 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn get_categories() {
+    async fn discourse_test() {
         let client = get_client();
 
-        let category = client.get_category_id("governance".to_string()).await.unwrap();
+        let category = client.get_category_id("Governance".to_string()).await.unwrap();
 
         println!("{}", category)
     }
