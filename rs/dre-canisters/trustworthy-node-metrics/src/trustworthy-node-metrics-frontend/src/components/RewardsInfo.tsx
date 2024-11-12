@@ -89,7 +89,7 @@ const NodeRewardExplanation = () => {
             </List>
 
             <Typography variant="body2" color="textSecondary" gutterBottom>
-              The reward multiplier for the rewarding period is then computed by subtracting the rewards reduction from 100%.
+              The reward multiplier in percentage is then computed for the rewarding period, by subtracting the rewards reduction from 100%.
             </Typography>
           </ListItem>
         </List>
