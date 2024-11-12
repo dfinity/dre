@@ -119,7 +119,7 @@ export const NodeProvidersRewardExplanation = () => {
           Nodes Assigned:
         </Typography>
         <Typography variant="body2" color="textSecondary" gutterBottom>
-          When assigned to a subnet, the reward calculation for a single node follows these steps:
+          Reward for a single node assigned to a subnet is calculated as follows:
         </Typography>            
         <Typography variant="body2" gutterBottom>
           <InlineMath math="Node \, Rewards = {\text{Rewards Multiplier}} * {\text{monthly permyriad XDRs (from Rewards Table)}}" />
