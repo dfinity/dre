@@ -4,13 +4,14 @@ use futures::{future::BoxFuture, TryFutureExt};
 use ic_types::PrincipalId;
 use mockall::automock;
 use reqwest::{Client, Method};
-use serde::{de::DeserializeOwned, Serialize};
+use serde::de::DeserializeOwned;
+use serde_json::json;
 
 #[automock]
 pub trait DiscourseClient: Sync + Send {
     fn create_replace_nodes_forum_post(&self, subnet_id: PrincipalId, summary: String) -> BoxFuture<'_, anyhow::Result<DiscourseResponse>>;
 
-    fn add_proposal_url_to_post(&self, id: String, proposal_url: String) -> BoxFuture<'_, anyhow::Result<()>>;
+    fn add_proposal_url_to_post(&self, post_id: u64, proposal_id: u64) -> BoxFuture<'_, anyhow::Result<()>>;
 }
 
 pub struct DiscourseClientImp {
@@ -79,12 +80,13 @@ impl DiscourseClientImp {
 
     async fn create_topic(&self, title: String, summary: String, category: String, tags: Vec<String>) -> anyhow::Result<DiscourseResponse> {
         let category = self.get_category_id(category).await?;
-        let payload = CreateTopicPayload {
-            title,
-            category,
-            raw: summary,
-            tags,
-        };
+
+        let payload = json!({
+           "title": title,
+           "category": category,
+           "raw": summary,
+           "tags": tags
+        });
         let payload = serde_json::to_string(&payload)?;
 
         let topic: serde_json::Value = self
@@ -100,6 +102,29 @@ impl DiscourseClientImp {
             id,
             url: format!("{}/t/{}/{}", self.forum_url, topic_slug, topic_id),
         })
+    }
+
+    async fn get_post_content(&self, post_id: u64) -> anyhow::Result<String> {
+        let post: serde_json::Value = self.request(format!("posts/{}.json", post_id), Method::GET, None).await?;
+        let content = post
+            .get("raw")
+            .ok_or(anyhow::anyhow!("Expected post response to container `raw` in the body"))?
+            .as_str()
+            .ok_or(anyhow::anyhow!("Expected `raw` to be of type `String`"))?;
+        Ok(content.to_string())
+    }
+
+    async fn update_post_content(&self, post_id: u64, new_content: String) -> anyhow::Result<()> {
+        let payload = json!({
+            "post": {
+                "raw": new_content
+            }
+        });
+        let payload = serde_json::to_string(&payload)?;
+
+        self.request::<serde_json::Value>(format!("posts/{}.json", post_id), Method::PUT, Some(payload))
+            .await
+            .map(|_resp| ())
     }
 }
 
@@ -120,8 +145,17 @@ impl DiscourseClient for DiscourseClientImp {
         })
     }
 
-    fn add_proposal_url_to_post(&self, id: String, proposal_url: String) -> BoxFuture<'_, anyhow::Result<()>> {
-        todo!()
+    fn add_proposal_url_to_post(&self, post_id: u64, proposal_id: u64) -> BoxFuture<'_, anyhow::Result<()>> {
+        Box::pin(async move {
+            let content = self.get_post_content(post_id).await?;
+            let new_content = format!(
+                r#"{0}
+
+Proposal id [{1}](https://dashboard.internetcomputer.org/proposal/{1})"#,
+                content, proposal_id
+            );
+            self.update_post_content(post_id, new_content).await
+        })
     }
 }
 
@@ -129,14 +163,6 @@ impl DiscourseClient for DiscourseClientImp {
 pub struct DiscourseResponse {
     pub url: String,
     pub id: u64,
-}
-
-#[derive(Serialize)]
-struct CreateTopicPayload {
-    title: String,
-    raw: String,
-    category: u64,
-    tags: Vec<String>,
 }
 
 #[cfg(test)]
@@ -156,11 +182,12 @@ mod tests {
     async fn discourse_test() {
         let client = get_client();
 
-        let response = client
-            .create_replace_nodes_forum_post(PrincipalId::new_subnet_test_id(0), "testing".to_string())
-            .await
-            .unwrap();
+        // let response = client
+        //     .create_replace_nodes_forum_post(PrincipalId::new_subnet_test_id(0), "testing".to_string())
+        //     .await
+        //     .unwrap();
+        client.add_proposal_url_to_post(17, 132225).await.unwrap();
 
-        println!("{:?}", response)
+        // println!("{:?}", response)
     }
 }
