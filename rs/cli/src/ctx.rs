@@ -269,7 +269,14 @@ impl DreContext {
             ),
         };
 
-        let client = Arc::new(DiscourseClientImp::new(forum_url, api_key, api_user)?);
+        let client = Arc::new(DiscourseClientImp::new(
+            forum_url,
+            api_key,
+            api_user,
+            // `offline` for discourse client means that it shouldn't try and create posts.
+            // It can happen because the tool runs in offline mode, or if its a dry run.
+            self.store.is_offline() || self.dry_run,
+        )?);
         *self.discourse_client.borrow_mut() = Some(client.clone());
         Ok(client)
     }
