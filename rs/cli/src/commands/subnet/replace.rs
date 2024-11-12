@@ -3,6 +3,8 @@ use ic_types::PrincipalId;
 
 use crate::{
     commands::{AuthRequirement, ExecutableCommand},
+    discourse_client::parse_proposal_id_from_governance_response,
+    ic_admin::ProposeOptions,
     subnet_manager::SubnetTarget,
 };
 
@@ -67,9 +69,42 @@ impl ExecutableCommand for Replace {
 
         let runner = ctx.runner().await?;
 
+        let subnet_id = subnet_change_response.subnet_id.clone();
+        // Should be refactored to not require forum post links like this.
         if let Some(runner_proposal) = runner.propose_subnet_change(subnet_change_response, ctx.forum_post_link()).await? {
+            let discourse_client = ctx.discourse_client()?;
+            let maybe_topic = if let Some(id) = subnet_id {
+                let summary = match (&runner_proposal.opts.summary, &runner_proposal.opts.motivation) {
+                    (Some(s), _) => s,
+                    (None, Some(m)) => m,
+                    _ => {
+                        return Err(anyhow::anyhow!(
+                            "Expected to have `summary` or `motivation` for proposal. Got: {:?}",
+                            runner_proposal
+                        ))
+                    }
+                };
+                discourse_client.create_replace_nodes_forum_post(id, summary.to_string()).await?
+            } else {
+                None
+            };
+
             let ic_admin = ctx.ic_admin().await?;
-            ic_admin.propose_run(runner_proposal.cmd, runner_proposal.opts).await?;
+            let proposal_response = ic_admin
+                .propose_run(
+                    runner_proposal.cmd,
+                    ProposeOptions {
+                        forum_post_link: maybe_topic.as_ref().map(|topic| topic.url.clone()),
+                        ..runner_proposal.opts
+                    },
+                )
+                .await?;
+
+            if let Some(topic) = maybe_topic {
+                discourse_client
+                    .add_proposal_url_to_post(topic.id, parse_proposal_id_from_governance_response(proposal_response)?)
+                    .await?
+            }
         }
         Ok(())
     }
