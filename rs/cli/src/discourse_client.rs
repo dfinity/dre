@@ -1,10 +1,10 @@
 use std::time::Duration;
 
 use futures::{future::BoxFuture, TryFutureExt};
-use ic_protobuf::types::v1::PrincipalId;
+use ic_types::PrincipalId;
 use mockall::automock;
 use reqwest::{Client, Method};
-use serde::de::DeserializeOwned;
+use serde::{de::DeserializeOwned, Serialize};
 
 #[automock]
 pub trait DiscourseClient: Sync + Send {
@@ -17,34 +17,39 @@ pub struct DiscourseClientImp {
     client: Client,
     forum_url: String,
     api_key: String,
+    api_user: String,
 }
 
 impl DiscourseClientImp {
-    pub fn new(url: String, api_key: String) -> anyhow::Result<Self> {
+    pub fn new(url: String, api_key: String, api_user: String) -> anyhow::Result<Self> {
         let client = reqwest::Client::builder().timeout(Duration::from_secs(30)).build()?;
 
         Ok(Self {
             client,
             forum_url: url,
             api_key,
+            api_user,
         })
     }
 
-    async fn request<T: DeserializeOwned>(&self, url: String, method: Method) -> anyhow::Result<T> {
-        self.client
-            .request(method, format!("{}/{}", self.forum_url, url))
+    async fn request<T: DeserializeOwned>(&self, url: String, method: Method, payload: Option<String>) -> anyhow::Result<T> {
+        let mut request = self
+            .client
+            .request(method.clone(), format!("{}/{}", self.forum_url, url))
             .header("Api-Key", &self.api_key)
-            .header("Content-Type", "application/json")
-            .send()
-            .await?
-            .error_for_status()?
-            .json()
-            .map_err(anyhow::Error::from)
-            .await
+            .header("Api-Username", &self.api_user)
+            .header("Content-Type", "application/json");
+
+        if method == Method::POST || method == Method::PUT {
+            let payload = payload.ok_or(anyhow::anyhow!("Expected payload for `{}` method", method))?;
+            request = request.body(payload);
+        }
+
+        request.send().await?.error_for_status()?.json().map_err(anyhow::Error::from).await
     }
 
     async fn get_category_id(&self, category_name: String) -> anyhow::Result<u64> {
-        let response: serde_json::Value = self.request("categories.json".to_string(), Method::GET).await?;
+        let response: serde_json::Value = self.request("categories.json".to_string(), Method::GET, None).await?;
 
         let categories = response
             .get("category_list")
@@ -72,17 +77,47 @@ impl DiscourseClientImp {
             .ok_or(anyhow::anyhow!("Failed to find category with name `{}`", category_name))
     }
 
-    async fn create_post(&self, title: String, summary: String, category: String, tags: Vec<String>) -> anyhow::Result<DiscourseResponse> {
+    async fn create_topic(&self, title: String, summary: String, category: String, tags: Vec<String>) -> anyhow::Result<DiscourseResponse> {
+        let category = self.get_category_id(category).await?;
+        let payload = CreateTopicPayload {
+            title,
+            category,
+            raw: summary,
+            tags,
+        };
+        let payload = serde_json::to_string(&payload)?;
+
+        let topic: serde_json::Value = self
+            .request("posts.json?skip_validations=true".to_string(), Method::POST, Some(payload))
+            .await?;
+
+        let (id, topic_slug, topic_id) = match (topic.get("id"), topic.get("topic_slug"), topic.get("topic_id")) {
+            (Some(id), Some(topic_slug), Some(topic_id)) => (id.as_u64().unwrap(), topic_slug.as_str().unwrap(), topic_id.as_u64().unwrap()),
+            _ => anyhow::bail!("Expected to get `id` and `topic_id` while creating topic"),
+        };
+
         Ok(DiscourseResponse {
-            id: "123".to_string(),
-            url: "123".to_string(),
+            id,
+            url: format!("{}/t/{}/{}", self.forum_url, topic_slug, topic_id),
         })
     }
 }
 
 impl DiscourseClient for DiscourseClientImp {
     fn create_replace_nodes_forum_post(&self, subnet_id: PrincipalId, summary: String) -> BoxFuture<'_, anyhow::Result<DiscourseResponse>> {
-        todo!()
+        Box::pin(async move {
+            let subnet_id = subnet_id.to_string();
+            let (first_part, _rest) = subnet_id
+                .split_once("-")
+                .ok_or(anyhow::anyhow!("Unexpected principal format `{}`", subnet_id))?;
+            self.create_topic(
+                format!("Replacing nodes in subnet {}", first_part),
+                summary,
+                "Governance".to_string(),
+                vec!["nns".to_string()],
+            )
+            .await
+        })
     }
 
     fn add_proposal_url_to_post(&self, id: String, proposal_url: String) -> BoxFuture<'_, anyhow::Result<()>> {
@@ -90,15 +125,18 @@ impl DiscourseClient for DiscourseClientImp {
     }
 }
 
+#[derive(Debug)]
 pub struct DiscourseResponse {
     pub url: String,
-    pub id: String,
+    pub id: u64,
 }
 
+#[derive(Serialize)]
 struct CreateTopicPayload {
     title: String,
     raw: String,
-    category: u8,
+    category: u64,
+    tags: Vec<String>,
 }
 
 #[cfg(test)]
@@ -109,6 +147,7 @@ mod tests {
         DiscourseClientImp::new(
             "http://localhost:3000".to_string(),
             "37e522a546506f9e3751265669de2576896491b0a3c39d0524be8689736c8722".to_string(),
+            "nikolamilosa20".to_string(),
         )
         .unwrap()
     }
@@ -117,8 +156,11 @@ mod tests {
     async fn discourse_test() {
         let client = get_client();
 
-        let category = client.get_category_id("Governance".to_string()).await.unwrap();
+        let response = client
+            .create_replace_nodes_forum_post(PrincipalId::new_subnet_test_id(0), "testing".to_string())
+            .await
+            .unwrap();
 
-        println!("{}", category)
+        println!("{:?}", response)
     }
 }

@@ -257,18 +257,19 @@ impl DreContext {
             return Ok(client.clone());
         }
 
-        let (api_key, forum_url) = match (
+        let (api_key, api_user, forum_url) = match (
             self.discourse_opts.discourse_api_key.clone(),
+            self.discourse_opts.discourse_api_user.clone(),
             self.discourse_opts.discourse_api_url.clone(),
         ) {
-            (Some(api_key), Some(forum_url)) => (api_key, forum_url),
+            (Some(api_key), Some(api_user), Some(forum_url)) => (api_key, api_user, forum_url),
             _ => anyhow::bail!(
                 "Expected to have both `api_key` and `forum_url`. Instead found: {:?}",
                 self.discourse_opts
             ),
         };
 
-        let client = Arc::new(DiscourseClientImp::new(forum_url, api_key)?);
+        let client = Arc::new(DiscourseClientImp::new(forum_url, api_key, api_user)?);
         *self.discourse_client.borrow_mut() = Some(client.clone());
         Ok(client)
     }
@@ -343,6 +344,7 @@ pub mod tests {
             discourse_opts: DiscourseOpts {
                 discourse_api_key: None,
                 discourse_api_url: None,
+                discourse_api_user: None,
             },
             discourse_client: RefCell::new(Some(discourse_client)),
         }

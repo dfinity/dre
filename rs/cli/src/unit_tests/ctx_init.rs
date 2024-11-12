@@ -51,6 +51,7 @@ async fn get_context(network: &Network, version: IcAdminVersion) -> anyhow::Resu
         crate::commands::DiscourseOpts {
             discourse_api_key: None,
             discourse_api_url: None,
+            discourse_api_user: None,
         },
     )
     .await
@@ -191,6 +192,7 @@ async fn get_ctx_for_neuron_test(
         crate::commands::DiscourseOpts {
             discourse_api_key: None,
             discourse_api_url: None,
+            discourse_api_user: None,
         },
     )
     .await
