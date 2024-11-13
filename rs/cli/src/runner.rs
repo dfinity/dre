@@ -658,7 +658,7 @@ impl Runner {
                     0,
                     health_of_nodes,
                     cordoned_features.clone(),
-                    &all_nodes,
+                    all_nodes,
                 )
             } else {
                 SubnetChangeRequest::new(subnet, available_nodes.to_vec(), vec![], vec![node.clone()], vec![]).resize(
@@ -667,7 +667,7 @@ impl Runner {
                     0,
                     health_of_nodes,
                     cordoned_features.clone(),
-                    &all_nodes,
+                    all_nodes,
                 )
             };
 

@@ -364,7 +364,7 @@ impl DecentralizedSubnet {
                 })
                 .collect::<AHashMap<PrincipalId, f64>>();
             let best_results = best_results
-                .into_iter()
+                .iter()
                 .map(|r| {
                     let pct = (percent_assigned_nodes_per_operator
                         .get(&r.node.operator.principal)
@@ -1090,7 +1090,7 @@ impl SubnetChangeRequest {
         let resized_subnet = resized_subnet
             .with_nodes(&self.include_nodes)
             .without_nodes(&self.nodes_to_remove)?
-            .subnet_with_more_nodes(how_many_nodes_to_add, &available_nodes, &all_nodes)
+            .subnet_with_more_nodes(how_many_nodes_to_add, &available_nodes, all_nodes)
             .map_err(|e| NetworkError::ResizeFailed(e.to_string()))?
             .without_duplicate_added_removed();
 
@@ -1320,7 +1320,7 @@ impl NetworkHealRequest {
                             &unhealthy_nodes,
                             health_of_nodes,
                             cordoned_features.clone(),
-                            &all_nodes,
+                            all_nodes,
                         )
                         .map_err(|e| warn!("{}", e))
                         .ok()
