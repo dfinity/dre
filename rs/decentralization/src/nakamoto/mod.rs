@@ -656,8 +656,9 @@ mod tests {
         let subnet_initial = new_test_subnet(0, 12, 1);
         let nodes_initial = subnet_initial.nodes.clone();
         let nodes_available = new_test_nodes("spare", 1, 0);
+        let all_nodes = nodes_initial.iter().chain(nodes_available.iter()).cloned().collect::<Vec<_>>();
 
-        let extended_subnet = subnet_initial.subnet_with_more_nodes(1, &nodes_available).unwrap();
+        let extended_subnet = subnet_initial.subnet_with_more_nodes(1, &nodes_available, &all_nodes).unwrap();
         assert_eq!(
             extended_subnet.nodes,
             nodes_initial.iter().chain(nodes_available.iter()).cloned().collect::<Vec<_>>()
@@ -687,11 +688,9 @@ mod tests {
             )
         );
         let nodes_available = new_test_nodes_with_overrides("spare", 13, 3, 0, (&NodeFeature::Country, &["US", "RO", "JP"]));
-        let health_of_nodes = nodes_available
-            .iter()
-            .chain(subnet_initial.nodes.iter())
-            .map(|n| (n.principal, HealthStatus::Healthy))
-            .collect::<IndexMap<_, _>>();
+        let all_nodes = nodes_available.iter().chain(subnet_initial.nodes.iter()).cloned().collect::<Vec<_>>();
+
+        let health_of_nodes = all_nodes.iter().map(|n| (n.principal, HealthStatus::Healthy)).collect::<IndexMap<_, _>>();
 
         println!(
             "initial {} Countries {:?}",
@@ -704,7 +703,7 @@ mod tests {
         );
 
         let subnet_change_req = SubnetChangeRequest::new(subnet_initial, nodes_available, Vec::new(), Vec::new(), Vec::new());
-        let subnet_change = subnet_change_req.optimize(2, &[], &health_of_nodes, vec![]).unwrap();
+        let subnet_change = subnet_change_req.optimize(2, &[], &health_of_nodes, vec![], &all_nodes).unwrap();
         for log in subnet_change.after().run_log.iter() {
             println!("{}", log);
         }
@@ -747,10 +746,8 @@ mod tests {
             )
         );
         let nodes_available = new_test_nodes_with_overrides("spare", 7, 2, 0, (&NodeFeature::NodeProvider, &["NP6", "NP7"]));
-        let health_of_nodes = nodes_available
-            .iter()
-            .map(|n| (n.principal, HealthStatus::Healthy))
-            .collect::<IndexMap<_, _>>();
+        let all_nodes = nodes_available.iter().chain(subnet_initial.nodes.iter()).cloned().collect::<Vec<_>>();
+        let health_of_nodes = all_nodes.iter().map(|n| (n.principal, HealthStatus::Healthy)).collect::<IndexMap<_, _>>();
 
         println!(
             "initial {} NPs {:?}",
@@ -763,7 +760,7 @@ mod tests {
         );
 
         let subnet_change_req = SubnetChangeRequest::new(subnet_initial, nodes_available, Vec::new(), Vec::new(), Vec::new());
-        let subnet_change = subnet_change_req.optimize(2, &[], &health_of_nodes, vec![]).unwrap();
+        let subnet_change = subnet_change_req.optimize(2, &[], &health_of_nodes, vec![], &all_nodes).unwrap();
         println!("Replacement run log:");
         for line in subnet_change.after().run_log.iter() {
             println!("{}", line);
@@ -803,11 +800,8 @@ mod tests {
 
         // There are 2 spare nodes, but both are DFINITY
         let nodes_available = new_test_nodes_with_overrides("spare", 7, 2, 2, (&NodeFeature::NodeProvider, &["NP6", "NP7"]));
-        let health_of_nodes = nodes_available
-            .iter()
-            .chain(subnet_initial.nodes.iter())
-            .map(|n| (n.principal, HealthStatus::Healthy))
-            .collect::<IndexMap<_, _>>();
+        let all_nodes = nodes_available.iter().chain(subnet_initial.nodes.iter()).cloned().collect::<Vec<_>>();
+        let health_of_nodes = all_nodes.iter().map(|n| (n.principal, HealthStatus::Healthy)).collect::<IndexMap<_, _>>();
 
         println!(
             "initial {} NPs {:?}",
@@ -820,7 +814,7 @@ mod tests {
         );
 
         let subnet_change_req = SubnetChangeRequest::new(subnet_initial, nodes_available, Vec::new(), Vec::new(), Vec::new());
-        let subnet_change = subnet_change_req.optimize(2, &[], &health_of_nodes, vec![]).unwrap();
+        let subnet_change = subnet_change_req.optimize(2, &[], &health_of_nodes, vec![], &all_nodes).unwrap();
 
         println!("Replacement run log:");
         for line in subnet_change.after().run_log.iter() {
@@ -880,6 +874,7 @@ mod tests {
             .filter(|n| n.subnet_id.is_none() && n.proposal.is_none())
             .cloned()
             .collect::<Vec<_>>();
+        let all_nodes = available_nodes.iter().chain(subnet_all.nodes.iter()).cloned().collect::<Vec<_>>();
 
         subnet_healthy.check_business_rules().expect("Check business rules failed");
 
@@ -888,7 +883,7 @@ mod tests {
         let nakamoto_score_before = subnet_healthy.nakamoto_score();
         println!("NakamotoScore before {}", nakamoto_score_before);
 
-        let extended_subnet = subnet_healthy.subnet_with_more_nodes(4, &available_nodes).unwrap();
+        let extended_subnet = subnet_healthy.subnet_with_more_nodes(4, &available_nodes, &all_nodes).unwrap();
         println!("{}", extended_subnet);
         let nakamoto_score_after = extended_subnet.nakamoto_score();
         println!("NakamotoScore after {}", nakamoto_score_after);
@@ -907,7 +902,7 @@ mod tests {
         let empty_subnet = DecentralizedSubnet::default();
 
         let want_subnet_size = 13;
-        let new_subnet_result = empty_subnet.subnet_with_more_nodes(want_subnet_size, &available_nodes);
+        let new_subnet_result = empty_subnet.subnet_with_more_nodes(want_subnet_size, &available_nodes, &available_nodes);
         assert!(new_subnet_result.is_ok(), "error: {:?}", new_subnet_result.err());
 
         let new_subnet = new_subnet_result.unwrap();
@@ -986,16 +981,15 @@ mod tests {
         .flat_map(PrincipalId::from_str)
         .collect_vec();
 
-        let health_of_nodes = subnet
-            .nodes
+        let all_nodes = nodes_available.iter().chain(subnet.nodes.iter()).cloned().collect::<Vec<_>>();
+        let health_of_nodes = all_nodes
             .iter()
-            .map(|n| n.principal)
-            .chain(nodes_available.iter().map(|n| n.principal))
             .map(|n| {
-                if unhealthy_principals.contains(&n) {
-                    (n, HealthStatus::Dead)
+                let node_id = n.principal;
+                if unhealthy_principals.contains(&node_id) {
+                    (node_id, HealthStatus::Dead)
                 } else {
-                    (n, HealthStatus::Healthy)
+                    (node_id, HealthStatus::Healthy)
                 }
             })
             .collect::<IndexMap<_, _>>();
@@ -1004,7 +998,7 @@ mod tests {
         important.insert(subnet.principal, subnet);
 
         let network_heal_response = NetworkHealRequest::new(important.clone())
-            .heal_and_optimize(nodes_available.clone(), &health_of_nodes, vec![])
+            .heal_and_optimize(nodes_available.clone(), &health_of_nodes, vec![], &all_nodes)
             .await
             .unwrap();
         let result = network_heal_response.first().unwrap().clone();
@@ -1018,18 +1012,15 @@ mod tests {
     fn test_subnet_rescue() {
         let nodes_available = new_test_nodes("spare", 10, 1);
         let subnet_initial = new_test_subnet_with_overrides(0, 11, 7, 1, (&NodeFeature::Country, &["CH", "CA", "CA", "CA", "CA", "CA", "BE"]));
-        let health_of_nodes = nodes_available
-            .iter()
-            .chain(subnet_initial.nodes.iter())
-            .map(|n| (n.principal, HealthStatus::Healthy))
-            .collect::<IndexMap<_, _>>();
+        let all_nodes = nodes_available.iter().chain(subnet_initial.nodes.iter()).cloned().collect::<Vec<_>>();
+        let health_of_nodes = all_nodes.iter().map(|n| (n.principal, HealthStatus::Healthy)).collect::<IndexMap<_, _>>();
 
         let change_initial = SubnetChangeRequest::new(subnet_initial.clone(), nodes_available, Vec::new(), Vec::new(), Vec::new());
 
         let with_keeping_features = change_initial
             .clone()
             .keeping_from_used(vec!["CH".to_string()])
-            .rescue(&health_of_nodes, vec![])
+            .rescue(&health_of_nodes, vec![], &all_nodes)
             .unwrap();
 
         assert_eq!(with_keeping_features.added().len(), 4);
@@ -1047,7 +1038,7 @@ mod tests {
         let with_keeping_principals = change_initial
             .clone()
             .keeping_from_used(vec!["CH".to_string()])
-            .rescue(&health_of_nodes, vec![])
+            .rescue(&health_of_nodes, vec![], &all_nodes)
             .unwrap();
 
         assert_eq!(with_keeping_principals.added().len(), 4);
@@ -1061,7 +1052,7 @@ mod tests {
             1
         );
 
-        let rescue_all = change_initial.clone().rescue(&health_of_nodes, vec![]).unwrap();
+        let rescue_all = change_initial.clone().rescue(&health_of_nodes, vec![], &all_nodes).unwrap();
 
         assert_eq!(rescue_all.added().len(), 5);
         assert_eq!(rescue_all.removed().len(), 5);
@@ -1070,14 +1061,11 @@ mod tests {
     #[test]
     fn test_resize() {
         let subnet_initial = new_test_subnet(0, 24, 0);
-        let health_of_nodes = subnet_initial
-            .nodes
-            .iter()
-            .map(|n| (n.principal, HealthStatus::Healthy))
-            .collect::<IndexMap<_, _>>();
-        let change_initial = SubnetChangeRequest::new(subnet_initial.clone(), Vec::new(), Vec::new(), Vec::new(), Vec::new());
+        let all_nodes = subnet_initial.nodes.clone();
+        let health_of_nodes = all_nodes.iter().map(|n| (n.principal, HealthStatus::Healthy)).collect::<IndexMap<_, _>>();
+        let change_initial = SubnetChangeRequest::new(subnet_initial.clone(), all_nodes.clone(), Vec::new(), Vec::new(), Vec::new());
 
-        let after_resize = change_initial.resize(2, 2, 0, &health_of_nodes, vec![]).unwrap();
+        let after_resize = change_initial.resize(2, 2, 0, &health_of_nodes, vec![], &all_nodes).unwrap();
 
         assert_eq!(subnet_initial.nodes.len(), after_resize.new_nodes.len());
 

@@ -11,6 +11,7 @@ use decentralization::network::SubnetChangeRequest;
 use decentralization::network::SubnetQueryBy;
 use decentralization::subnets::NodesRemover;
 use decentralization::SubnetChangeResponse;
+use futures::future::try_join3;
 use futures::TryFutureExt;
 use futures_util::future::try_join;
 use ic_management_backend::health::HealthStatusQuerier;
@@ -141,6 +142,7 @@ impl Runner {
         replica_version: Option<String>,
         other_args: Vec<String>,
     ) -> anyhow::Result<Option<RunnerProposal>> {
+        let all_nodes = self.registry.nodes().await?.values().cloned().collect_vec();
         let health_of_nodes = self.health_of_nodes().await?;
 
         let subnet_creation_data = self
@@ -156,6 +158,7 @@ impl Runner {
                     warn!("Will continue running as if no features were cordoned");
                     vec![]
                 }),
+                &all_nodes,
             )
             .await?;
         let subnet_creation_data = SubnetChangeResponse::new(&subnet_creation_data, &health_of_nodes, Some(motivation.clone()));
@@ -523,8 +526,13 @@ impl Runner {
             })
             .map(|(id, subnet)| (*id, subnet.clone()))
             .collect::<IndexMap<_, _>>();
-        let (available_nodes, health_of_nodes) =
-            try_join(self.registry.available_nodes().map_err(anyhow::Error::from), self.health_client.nodes()).await?;
+        let (all_nodes, available_nodes, health_of_nodes) = try_join3(
+            self.registry.nodes(),
+            self.registry.available_nodes().map_err(anyhow::Error::from),
+            self.health_client.nodes(),
+        )
+        .await?;
+        let all_nodes = all_nodes.values().cloned().collect::<Vec<Node>>();
 
         let subnets_change_responses = NetworkHealRequest::new(subnets_without_proposals)
             .heal_and_optimize(
@@ -535,6 +543,7 @@ impl Runner {
                     warn!("Will continue running as if no features were cordoned");
                     vec![]
                 }),
+                &all_nodes,
             )
             .await?;
 
@@ -635,6 +644,7 @@ impl Runner {
         node: &Node,
         ensure_assigned: bool,
         cordoned_features: Vec<NodeFeaturePair>,
+        all_nodes: &[Node],
     ) -> Option<SubnetChangeResponse> {
         let mut best_change: Option<SubnetChangeResponse> = None;
 
@@ -648,6 +658,7 @@ impl Runner {
                     0,
                     health_of_nodes,
                     cordoned_features.clone(),
+                    &all_nodes,
                 )
             } else {
                 SubnetChangeRequest::new(subnet, available_nodes.to_vec(), vec![], vec![node.clone()], vec![]).resize(
@@ -656,6 +667,7 @@ impl Runner {
                     0,
                     health_of_nodes,
                     cordoned_features.clone(),
+                    &all_nodes,
                 )
             };
 
@@ -706,15 +718,16 @@ impl Runner {
         let mut subnets = self.get_subnets(skip_subnets).await?;
         let (mut available_nodes, health_of_nodes) = self.get_available_and_healthy_nodes().await?;
         let all_node_operators = self.registry.operators().await?;
-        let all_nodes = self.registry.nodes().await?;
+        let all_nodes_map = self.registry.nodes().await?;
+        let all_nodes = all_nodes_map.values().cloned().collect_vec();
         let all_nodes_grouped_by_operator = all_nodes
-            .values()
+            .iter()
             .cloned()
-            .into_group_map_by(|node| all_nodes.get(&node.principal).expect("Node should exist").operator.principal);
+            .into_group_map_by(|node| all_nodes_map.get(&node.principal).expect("Node should exist").operator.principal);
         let available_nodes_grouped_by_operator = available_nodes
             .iter()
             .map(|n| (*n).clone())
-            .into_group_map_by(|node| all_nodes.get(&node.principal).expect("Node should exist").operator.principal);
+            .into_group_map_by(|node| all_nodes_map.get(&node.principal).expect("Node should exist").operator.principal);
         let cordoned_features = self.cordoned_features_fetcher.fetch().await.unwrap_or_else(|e| {
             warn!("Failed to fetch cordoned features with error: {:?}", e);
             warn!("Will continue running as if no features were cordoned");
@@ -725,7 +738,7 @@ impl Runner {
             &all_node_operators,
             &all_nodes_grouped_by_operator,
             &available_nodes_grouped_by_operator,
-            &all_nodes,
+            &all_nodes_map,
             &subnets,
             ensure_assigned,
         );
@@ -760,6 +773,7 @@ impl Runner {
                     node,
                     ensure_assigned,
                     cordoned_features.clone(),
+                    &all_nodes,
                 )
                 .await;
 
@@ -872,9 +886,10 @@ impl Runner {
             None => change_request,
         };
 
+        let all_nodes = self.registry.nodes().await?.values().cloned().collect_vec();
         let health_of_nodes = self.health_of_nodes().await?;
 
-        let change = &change_request.rescue(&health_of_nodes, self.cordoned_features_fetcher.fetch().await?)?;
+        let change = &change_request.rescue(&health_of_nodes, self.cordoned_features_fetcher.fetch().await?, &all_nodes)?;
         let change = SubnetChangeResponse::new(change, &health_of_nodes, Some("Recovering subnet".to_string()));
 
         if change.node_ids_added.is_empty() && change.node_ids_removed.is_empty() {

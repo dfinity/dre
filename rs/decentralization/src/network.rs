@@ -327,7 +327,7 @@ impl DecentralizedSubnet {
     /// of current nodes.  Since the node IDs are unique, we seed a PRNG
     /// with the sorted joined node IDs. We then choose a result
     /// randomly but deterministically using this seed.
-    fn choose_deterministic_random(best_results: &[ReplacementCandidate], current_nodes: &[Node]) -> Option<ReplacementCandidate> {
+    fn choose_one_result(best_results: &[ReplacementCandidate], current_nodes: &[Node], all_nodes: &[Node]) -> Option<ReplacementCandidate> {
         if best_results.is_empty() {
             None
         } else {
@@ -340,6 +340,47 @@ impl DecentralizedSubnet {
                     return Some(result.clone());
                 }
             }
+
+            // If none of the best_results nodes are already in the subnet,
+            // sort the nodes by percentage of nodes that the node operator has in subnets
+            // and choose the one with the lowest percentage.
+            let num_nodes_per_operator = all_nodes.iter().fold(AHashMap::new(), |mut acc: AHashMap<PrincipalId, u32>, n| {
+                *acc.entry(n.operator.principal).or_insert(0) += 1;
+                acc
+            });
+            let num_nodes_assigned_to_subnets_per_operator =
+                all_nodes
+                    .iter()
+                    .filter(|n| n.subnet_id.is_some())
+                    .fold(AHashMap::new(), |mut acc: AHashMap<PrincipalId, u32>, n| {
+                        *acc.entry(n.operator.principal).or_insert(0) += 1;
+                        acc
+                    });
+            let percent_assigned_nodes_per_operator = num_nodes_per_operator
+                .iter()
+                .map(|(operator, num_nodes)| {
+                    let num_nodes_in_subnet = num_nodes_assigned_to_subnets_per_operator.get(operator).copied().unwrap_or_default();
+                    (*operator, 100. * num_nodes_in_subnet as f64 / *num_nodes as f64)
+                })
+                .collect::<AHashMap<PrincipalId, f64>>();
+            let best_results = best_results
+                .into_iter()
+                .map(|r| {
+                    let pct = (percent_assigned_nodes_per_operator
+                        .get(&r.node.operator.principal)
+                        .copied()
+                        .unwrap_or_default()
+                        * 1000.) as u32;
+                    (pct, r)
+                })
+                .sorted_by_key(|(pct, _res)| *pct)
+                .collect_vec();
+            // filter all the results with the same lowest percentage
+            let best_results = best_results
+                .iter()
+                .take_while(|(pct, _res)| *pct == best_results[0].0)
+                .map(|(_pct, res)| (*res).clone())
+                .collect::<Vec<_>>();
 
             // We sort the current nodes by alphabetical order on their
             // PrincipalIDs to ensure consistency of the seed with the
@@ -366,7 +407,12 @@ impl DecentralizedSubnet {
     }
 
     /// Pick the best result amongst the list of "suitable" candidates.
-    fn choose_best_candidate(&self, candidates: Vec<ReplacementCandidate>, run_log: &mut Vec<String>) -> Option<ReplacementCandidate> {
+    fn choose_best_candidate(
+        &self,
+        candidates: Vec<ReplacementCandidate>,
+        run_log: &mut Vec<String>,
+        all_nodes: &[Node],
+    ) -> Option<ReplacementCandidate> {
         // First, sort the candidates by their Nakamoto Coefficients
         let candidates = candidates
             .into_iter()
@@ -432,11 +478,11 @@ impl DecentralizedSubnet {
         //
         // This approach also has the advantage of not favoring one NP over
         // an other, regardless of the Node PrincipalID
-        DecentralizedSubnet::choose_deterministic_random(&best_results, &self.nodes)
+        DecentralizedSubnet::choose_one_result(&best_results, &self.nodes, all_nodes)
     }
 
     /// Add nodes to a subnet in a way that provides the best decentralization.
-    pub fn subnet_with_more_nodes(self, how_many_nodes: usize, available_nodes: &[Node]) -> anyhow::Result<DecentralizedSubnet> {
+    pub fn subnet_with_more_nodes(self, how_many_nodes: usize, available_nodes: &[Node], all_nodes: &[Node]) -> anyhow::Result<DecentralizedSubnet> {
         let mut run_log = self.run_log.clone();
 
         let mut nodes_initial = self.nodes.clone();
@@ -464,7 +510,7 @@ impl DecentralizedSubnet {
                 .collect();
 
             let mut candidate_run_log = Vec::new();
-            match self.choose_best_candidate(suitable_candidates, &mut candidate_run_log) {
+            match self.choose_best_candidate(suitable_candidates, &mut candidate_run_log, all_nodes) {
                 Some(best_result) => {
                     // Append the complete run log
                     run_log.extend(
@@ -528,7 +574,7 @@ impl DecentralizedSubnet {
 
     /// Remove nodes from a subnet in a way that provides the best
     /// decentralization.
-    pub fn subnet_with_fewer_nodes(mut self, how_many_nodes: usize) -> anyhow::Result<DecentralizedSubnet> {
+    pub fn subnet_with_fewer_nodes(mut self, how_many_nodes: usize, all_nodes: &[Node]) -> anyhow::Result<DecentralizedSubnet> {
         let mut run_log = self.run_log.clone();
         let nodes_initial_len = self.nodes.len();
         let mut comment = None;
@@ -552,7 +598,7 @@ impl DecentralizedSubnet {
                 .collect();
 
             let mut candidate_run_log = Vec::new();
-            match self.choose_best_candidate(suitable_candidates, &mut candidate_run_log) {
+            match self.choose_best_candidate(suitable_candidates, &mut candidate_run_log, all_nodes) {
                 Some(best_result) => {
                     // Append the complete run log
                     run_log.extend(
@@ -766,6 +812,7 @@ pub trait TopologyManager: SubnetQuerier + AvailableNodesQuerier + Sync {
         only_nodes: Vec<String>,
         health_of_nodes: &'a IndexMap<PrincipalId, HealthStatus>,
         cordoned_features: Vec<NodeFeaturePair>,
+        all_nodes: &'a [Node],
     ) -> BoxFuture<'a, Result<SubnetChange, NetworkError>> {
         Box::pin(async move {
             SubnetChangeRequest {
@@ -775,7 +822,7 @@ pub trait TopologyManager: SubnetQuerier + AvailableNodesQuerier + Sync {
             .including_from_available(include_nodes)
             .excluding_from_available(exclude_nodes)
             .including_from_available(only_nodes)
-            .resize(size, 0, 0, health_of_nodes, cordoned_features)
+            .resize(size, 0, 0, health_of_nodes, cordoned_features, all_nodes)
         })
     }
 }
@@ -921,6 +968,7 @@ impl SubnetChangeRequest {
         replacements_unhealthy: &[Node],
         health_of_nodes: &IndexMap<PrincipalId, HealthStatus>,
         cordoned_features: Vec<NodeFeaturePair>,
+        all_nodes: &[Node],
     ) -> Result<SubnetChange, NetworkError> {
         let old_nodes = self.subnet.nodes.clone();
         self.subnet = self.subnet.without_nodes(replacements_unhealthy)?;
@@ -930,6 +978,7 @@ impl SubnetChangeRequest {
             replacements_unhealthy.len(),
             health_of_nodes,
             cordoned_features,
+            all_nodes,
         )?;
         Ok(SubnetChange { old_nodes, ..result })
     }
@@ -938,6 +987,7 @@ impl SubnetChangeRequest {
         mut self,
         health_of_nodes: &IndexMap<PrincipalId, HealthStatus>,
         cordoned_features: Vec<NodeFeaturePair>,
+        all_nodes: &[Node],
     ) -> Result<SubnetChange, NetworkError> {
         let old_nodes = self.subnet.nodes.clone();
         let nodes_to_remove = self
@@ -956,6 +1006,7 @@ impl SubnetChangeRequest {
             self.subnet.removed_nodes.len(),
             health_of_nodes,
             cordoned_features,
+            all_nodes,
         )?;
         Ok(SubnetChange { old_nodes, ..result })
     }
@@ -968,6 +1019,7 @@ impl SubnetChangeRequest {
         how_many_nodes_unhealthy: usize,
         health_of_nodes: &IndexMap<PrincipalId, HealthStatus>,
         cordoned_features: Vec<NodeFeaturePair>,
+        all_nodes: &[Node],
     ) -> Result<SubnetChange, NetworkError> {
         let old_nodes = self.subnet.nodes.clone();
 
@@ -1009,7 +1061,7 @@ impl SubnetChangeRequest {
         let resized_subnet = if how_many_nodes_to_remove > 0 {
             self.subnet
                 .clone()
-                .subnet_with_fewer_nodes(how_many_nodes_to_remove)
+                .subnet_with_fewer_nodes(how_many_nodes_to_remove, all_nodes)
                 .map_err(|e| NetworkError::ResizeFailed(e.to_string()))?
         } else {
             self.subnet.clone()
@@ -1038,7 +1090,7 @@ impl SubnetChangeRequest {
         let resized_subnet = resized_subnet
             .with_nodes(&self.include_nodes)
             .without_nodes(&self.nodes_to_remove)?
-            .subnet_with_more_nodes(how_many_nodes_to_add, &available_nodes)
+            .subnet_with_more_nodes(how_many_nodes_to_add, &available_nodes, &all_nodes)
             .map_err(|e| NetworkError::ResizeFailed(e.to_string()))?
             .without_duplicate_added_removed();
 
@@ -1072,8 +1124,9 @@ impl SubnetChangeRequest {
         self,
         health_of_nodes: &IndexMap<PrincipalId, HealthStatus>,
         cordoned_features: Vec<NodeFeaturePair>,
+        all_nodes: &[Node],
     ) -> Result<SubnetChange, NetworkError> {
-        self.resize(0, 0, 0, health_of_nodes, cordoned_features)
+        self.resize(0, 0, 0, health_of_nodes, cordoned_features, all_nodes)
     }
 }
 
@@ -1197,6 +1250,7 @@ impl NetworkHealRequest {
         mut available_nodes: Vec<Node>,
         health_of_nodes: &IndexMap<PrincipalId, HealthStatus>,
         cordoned_features: Vec<NodeFeaturePair>,
+        all_nodes: &[Node],
     ) -> Result<Vec<SubnetChangeResponse>, NetworkError> {
         let mut subnets_changed = Vec::new();
         let subnets_to_heal = unhealthy_with_nodes(&self.subnets, health_of_nodes)
@@ -1261,7 +1315,13 @@ impl NetworkHealRequest {
                 .filter_map(|num_nodes_to_optimize| {
                     change_req
                         .clone()
-                        .optimize(num_nodes_to_optimize, &unhealthy_nodes, health_of_nodes, cordoned_features.clone())
+                        .optimize(
+                            num_nodes_to_optimize,
+                            &unhealthy_nodes,
+                            health_of_nodes,
+                            cordoned_features.clone(),
+                            &all_nodes,
+                        )
                         .map_err(|e| warn!("{}", e))
                         .ok()
                 })
