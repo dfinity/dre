@@ -561,7 +561,7 @@ license-files = [{ path = "../../../../LICENSE", hash = 0xbd0eed23 }]
 [[licenses.clarify]]
 crate = "ic-registry-canister-client"
 expression = "LicenseRef-IC-1.0"
-license-files = [{ path = "../../../../LICENSE", hash = 0xbd0eed23 }]
+license-files = [{ path = "../../../LICENSE", hash = 0xbd0eed23 }]
 
 [[licenses.clarify]]
 crate = "ic-registry-client"
