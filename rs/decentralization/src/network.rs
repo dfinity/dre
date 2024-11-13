@@ -203,7 +203,7 @@ impl DecentralizedSubnet {
     /// provided nodes.
     pub fn without_nodes(&self, nodes_to_remove: &[Node]) -> Result<Self, NetworkError> {
         let mut new_subnet_nodes = self.nodes.clone();
-        let mut removed_nodes = Vec::new();
+        let mut removed_nodes = self.removed_nodes.clone();
         for node in nodes_to_remove {
             if let Some(index) = new_subnet_nodes.iter().position(|n| n.id == node.id) {
                 removed_nodes.push(new_subnet_nodes.remove(index));
@@ -214,7 +214,7 @@ impl DecentralizedSubnet {
         let removed_is_empty = removed_nodes.is_empty();
         let removed_node_ids = removed_nodes.iter().map(|n| n.id).collect::<Vec<_>>();
         if !removed_is_empty {
-            assert!(new_subnet_nodes.len() < self.nodes.len());
+            assert!(new_subnet_nodes.len() <= self.nodes.len());
         }
         Ok(Self {
             id: self.id,
@@ -1142,7 +1142,7 @@ impl SubnetChangeRequest {
         info!(
             "Evaluating change in subnet {} membership: removing ({} healthy + {} unhealthy) and adding {} node. Total available {} healthy nodes.",
             self.subnet.id.to_string().split_once('-').expect("subnet id is expected to have a -").0,
-            how_many_nodes_to_remove,
+            how_many_nodes_to_remove + self.nodes_to_remove.len(),
             how_many_nodes_unhealthy,
             how_many_nodes_to_add + self.include_nodes.len(),
             available_nodes.len(),
@@ -1179,6 +1179,7 @@ impl SubnetChangeRequest {
             .collect::<Vec<_>>();
         let resized_subnet = resized_subnet
             .with_nodes(&self.include_nodes)
+            .without_nodes(&self.nodes_to_remove)?
             .subnet_with_more_nodes(how_many_nodes_to_add, &available_nodes)
             .map_err(|e| NetworkError::ResizeFailed(e.to_string()))?
             .without_duplicate_added_removed();

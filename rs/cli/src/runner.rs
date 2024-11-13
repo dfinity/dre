@@ -1,9 +1,11 @@
 use std::cell::RefCell;
+use std::collections::HashMap;
 use std::sync::Arc;
 
 use ahash::AHashMap;
 use decentralization::network::DecentralizedSubnet;
 use decentralization::network::NetworkHealRequest;
+use decentralization::network::NodeFeaturePair;
 use decentralization::network::SubnetChange;
 use decentralization::network::SubnetChangeRequest;
 use decentralization::network::SubnetQueryBy;
@@ -23,7 +25,9 @@ use ic_management_types::Network;
 use ic_management_types::NetworkError;
 use ic_management_types::Node;
 use ic_management_types::NodeFeature;
+use ic_management_types::Operator;
 use ic_management_types::Release;
+use ic_management_types::Subnet;
 use ic_management_types::TopologyChangePayload;
 use ic_types::PrincipalId;
 use indexmap::{IndexMap, IndexSet};
@@ -499,158 +503,6 @@ impl Runner {
         })
     }
 
-    pub async fn network_ensure_operator_nodes_assigned(
-        &self,
-        forum_post_link: Option<String>,
-        skip_subnets: &[String],
-    ) -> anyhow::Result<Vec<RunnerProposal>> {
-        // Get the list of subnets, and the list of open proposal for each subnet, if any
-        let subnets = self.registry.subnets_and_proposals().await?;
-        let subnets_not_skipped = subnets
-            .iter()
-            .filter(|(subnet_id, _)| !skip_subnets.iter().any(|s| subnet_id.to_string().contains(s)))
-            .map(|(subnet_id, subnet)| (*subnet_id, subnet.clone()))
-            .collect::<IndexMap<_, _>>();
-        let mut subnets_without_proposals = subnets_not_skipped
-            .iter()
-            .filter(|(subnet_id, subnet)| match &subnet.proposal {
-                Some(p) => {
-                    info!("Skipping subnet {} as it has a pending proposal {}", subnet_id, p.id);
-                    false
-                }
-                None => true,
-            })
-            .map(|(id, subnet)| (*id, subnet.clone()))
-            .collect::<IndexMap<_, _>>();
-        let (mut available_nodes, health_of_nodes) =
-            try_join(self.registry.available_nodes().map_err(anyhow::Error::from), self.health_client.nodes()).await?;
-
-        let node_operators = self.registry.operators().await?;
-        // Filter out nodes that are not healthy
-        let nodes_all = self.registry.nodes().await?;
-        let healthy_nodes = available_nodes
-            .iter()
-            .filter(|node| health_of_nodes.get(&node.id) == Some(&HealthStatus::Healthy))
-            .collect::<Vec<_>>();
-        // Build a hashmap {node_id -> node} of all nodes that are in some (any) subnet
-        let nodes_in_subnets = subnets
-            .values()
-            .flat_map(|s| s.nodes.iter().map(|n| (n.principal, n)))
-            .collect::<AHashMap<_, _>>();
-        // Build a hashmap of healthy nodes, grouped by node operator {operator -> Vec<Node>}
-        let healthy_nodes_by_operator = healthy_nodes
-            .iter()
-            .into_group_map_by(|node| nodes_all.get(&node.id).expect("Node should exist").operator.principal);
-        // Finally, prepare a list of operators that have at least 1 node, but NONE of their nodes are in a subnet
-        let operators_without_nodes_in_subnets = node_operators
-            .iter()
-            .filter_map(|(operator_id, operator)| {
-                if let Some(operator_nodes) = healthy_nodes_by_operator.get(operator_id) {
-                    if operator_nodes.iter().all(|node| !nodes_in_subnets.contains_key(&node.id)) {
-                        Some((
-                            operator_id,
-                            operator.datacenter.as_ref().map(|dc| dc.name.clone()).unwrap_or_default(),
-                            operator_nodes
-                                .iter()
-                                .map(|node| nodes_all.get(&node.id).expect("Node should exist").clone())
-                                .collect::<Vec<_>>(),
-                        ))
-                    } else {
-                        None
-                    }
-                } else {
-                    None
-                }
-            })
-            .collect::<Vec<_>>();
-
-        // For each operator without nodes in subnets, we will create a proposal to add one of their nodes to a subnet, if it does not make decentralization worse
-        let mut changes = vec![];
-        for (operator_id, dc, healthy_operator_nodes) in operators_without_nodes_in_subnets {
-            // All nodes of the operator have the same health and effect on decentralization, so we can pick any node
-            let node = healthy_operator_nodes.first().expect("At least one node should be present");
-            let operator_id_short = operator_id
-                .to_string()
-                .split_once('-')
-                .expect("Operator ID should have dashes")
-                .0
-                .to_string();
-            let best_change = subnets_without_proposals
-                .values()
-                .filter_map(|subnet| {
-                    // Try to replace one of the nodes in the subnet with the node from the operator and see if it makes decentralization better or at least not worse
-                    let node = decentralization::network::Node::from(node);
-                    let subnet = DecentralizedSubnet::from(subnet);
-                    let subnet_id_short = subnet.id.to_string().split_once('-').expect("Subnet ID should have dashes").0.to_string();
-                    SubnetChangeRequest::new(subnet, available_nodes.clone(), vec![node], vec![], vec![])
-                        .resize(0, 1, 0, &health_of_nodes, vec![])
-                        .map(|c| {
-                            SubnetChangeResponse::new(
-                                &c,
-                                &health_of_nodes,
-                                Some(format!("The a node operator {} currently does not have nodes in any subnet. To get insights into the stability of the nodes of this node operator, we propose to add one of the operator's nodes to subnet {}.", operator_id_short, subnet_id_short)),
-                            )
-                        })
-                        .ok()
-                })
-                .filter(|c| c.penalties_after_change <= c.penalties_before_change && c.score_after >= c.score_before)
-                .max_by(|a, b| {
-                    // lower penalties are better
-                    let penalties_cmp = b.penalties_after_change.cmp(&a.penalties_after_change);
-                    if penalties_cmp == std::cmp::Ordering::Equal {
-                        // higher score is better
-                        a.score_after.partial_cmp(&b.score_after).unwrap_or(std::cmp::Ordering::Equal)
-                    } else {
-                        penalties_cmp
-                    }
-                });
-            let node_id_short = node
-                .principal
-                .to_string()
-                .split_once('-')
-                .expect("Node ID should have dashes")
-                .0
-                .to_string();
-            match best_change {
-                Some(change) => {
-                    changes.push(
-                        self.run_membership_change(change.clone(), replace_proposal_options(&change, forum_post_link.clone()).await?)
-                            .await?,
-                    );
-                    info!(
-                        "Operator {} in DC {} proposing to add a probe node {} to subnet {}",
-                        operator_id_short,
-                        dc,
-                        node_id_short,
-                        change
-                            .subnet_id
-                            .expect("Subnet ID should be present")
-                            .to_string()
-                            .split_once('-')
-                            .expect("Subnet ID should have dashes")
-                            .0
-                    );
-                    subnets_without_proposals.shift_remove(&change.subnet_id.expect("Subnet ID should be present"));
-                    // Remove the selected node from the list of available nodes
-                    available_nodes
-                        .iter()
-                        .position(|n| n.id == node.principal)
-                        .map(|i| available_nodes.remove(i));
-                    continue;
-                }
-                None => {
-                    warn!(
-                        "Adding node {} of the operator {} in DC {} would worsen decentralization in all subnets!",
-                        node_id_short,
-                        operator_id.to_string().split_once('-').unwrap().0,
-                        dc,
-                    );
-                }
-            }
-        }
-        Ok(changes)
-    }
-
     pub async fn network_heal(&self, forum_post_link: Option<String>, skip_subnets: &[String]) -> anyhow::Result<Vec<RunnerProposal>> {
         let mut errors = vec![];
 
@@ -704,6 +556,264 @@ impl Runner {
 
         // No errors, can be safely unwrapped
         Ok(changes.into_iter().map(|maybe_change| maybe_change.unwrap()).collect_vec())
+    }
+
+    async fn get_subnets(&self, skip_subnets: &[String]) -> anyhow::Result<IndexMap<PrincipalId, Subnet>> {
+        let subnets = self.registry.subnets_and_proposals().await?;
+        Ok(subnets
+            .iter()
+            .filter(|(subnet_id, _)| !skip_subnets.iter().any(|s| subnet_id.to_string().contains(s)))
+            .map(|(subnet_id, subnet)| (*subnet_id, subnet.clone()))
+            .collect::<IndexMap<_, _>>())
+    }
+
+    async fn get_available_and_healthy_nodes(&self) -> anyhow::Result<(Vec<decentralization::network::Node>, IndexMap<PrincipalId, HealthStatus>)> {
+        try_join(self.registry.available_nodes().map_err(anyhow::Error::from), self.health_client.nodes()).await
+    }
+
+    fn get_operators_to_optimize(
+        &self,
+        node_operators_all: &IndexMap<PrincipalId, Operator>,
+        all_nodes_grouped_by_operator: &HashMap<PrincipalId, Vec<decentralization::network::Node>>,
+        available_nodes_grouped_by_operator: &HashMap<PrincipalId, Vec<decentralization::network::Node>>,
+        nodes_all: &IndexMap<PrincipalId, Node>,
+        subnets: &IndexMap<PrincipalId, Subnet>,
+        ensure_assigned: bool,
+    ) -> Vec<(PrincipalId, String, Vec<Node>)> {
+        let nodes_in_subnets = subnets
+            .values()
+            .flat_map(|s| s.nodes.iter().map(|n| (n.principal, n)))
+            .collect::<AHashMap<_, _>>();
+
+        node_operators_all
+            .iter()
+            .filter_map(|(operator_id, operator)| {
+                all_nodes_grouped_by_operator.get(operator_id).and_then(|operator_nodes| {
+                    let condition = if ensure_assigned {
+                        operator_nodes.iter().all(|node| !nodes_in_subnets.contains_key(&node.id))
+                    } else {
+                        operator_nodes.iter().all(|node| nodes_in_subnets.contains_key(&node.id))
+                    };
+
+                    if condition {
+                        let nodes = if ensure_assigned {
+                            available_nodes_grouped_by_operator
+                                .get(operator_id)
+                                .unwrap_or(&vec![])
+                                .iter()
+                                .map(|node| nodes_all.get(&node.id).expect("Node should exist").clone())
+                                .collect::<Vec<_>>()
+                        } else {
+                            operator_nodes
+                                .iter()
+                                .filter_map(|node| nodes_in_subnets.get(&node.id))
+                                .map(|n| (*n).clone())
+                                .collect::<Vec<_>>()
+                        };
+
+                        if nodes.is_empty() || (!ensure_assigned && nodes.len() < 2) {
+                            None
+                        } else {
+                            Some((
+                                *operator_id,
+                                operator.datacenter.as_ref().map(|dc| dc.name.clone()).unwrap_or_default(),
+                                nodes,
+                            ))
+                        }
+                    } else {
+                        None
+                    }
+                })
+            })
+            .collect()
+    }
+
+    async fn get_best_change_for_operator(
+        &self,
+        subnets: &IndexMap<PrincipalId, Subnet>,
+        available_nodes: &[decentralization::network::Node],
+        health_of_nodes: &IndexMap<PrincipalId, HealthStatus>,
+        node: &Node,
+        ensure_assigned: bool,
+        cordoned_features: Vec<NodeFeaturePair>,
+    ) -> Option<SubnetChangeResponse> {
+        let decentr_node = decentralization::network::Node::from(node);
+        let mut best_change: Option<SubnetChangeResponse> = None;
+
+        for subnet in subnets.values() {
+            let subnet = DecentralizedSubnet::from(subnet);
+            let subnet_id_short = subnet.id.to_string().split_once('-').unwrap().0.to_string();
+            let change_request = if ensure_assigned {
+                SubnetChangeRequest::new(subnet, available_nodes.to_vec(), vec![decentr_node.clone()], vec![], vec![]).resize(
+                    0,
+                    1,
+                    0,
+                    health_of_nodes,
+                    cordoned_features.clone(),
+                )
+            } else {
+                SubnetChangeRequest::new(subnet, available_nodes.to_vec(), vec![], vec![decentr_node.clone()], vec![]).resize(
+                    1,
+                    0,
+                    0,
+                    health_of_nodes,
+                    cordoned_features.clone(),
+                )
+            };
+
+            if let Ok(change) = change_request {
+                let change_response = SubnetChangeResponse::new(
+                    &change,
+                    health_of_nodes,
+                    Some(if ensure_assigned {
+                        format!("The node operator {} currently does not have nodes in any subnet. To gain insights into the stability of the nodes of this node operator, we propose to add one of the operator's nodes to subnet {}.",
+                                node.operator.principal.to_string().split_once('-').unwrap().0,
+                                subnet_id_short)
+                    } else {
+                        format!("The node operator {} currently has all nodes assigned to subnets. We propose to remove one of the operator's nodes from subnet {} to optimize overall network topology, since subnet decentralization does not worsen upon node removal. This way the same node can be assigned to subnet where it would improve decentralization.",
+                                node.operator.principal.to_string().split_once('-').unwrap().0,
+                                subnet_id_short)
+                    }),
+                );
+
+                if change_response.penalties_after_change <= change_response.penalties_before_change
+                    && change_response.score_after >= change_response.score_before
+                {
+                    match best_change.clone() {
+                        Some(best) => {
+                            if change_response.penalties_after_change < best.penalties_after_change
+                                || (change_response.penalties_after_change == best.penalties_after_change
+                                    && change_response.score_after > best.score_after)
+                            {
+                                best_change = Some(change_response);
+                            }
+                        }
+                        None => {
+                            best_change = Some(change_response);
+                        }
+                    }
+                }
+            }
+        }
+
+        best_change
+    }
+
+    pub async fn network_ensure_operator_nodes(
+        &self,
+        forum_post_link: Option<String>,
+        skip_subnets: &[String],
+        ensure_assigned: bool,
+    ) -> anyhow::Result<Vec<RunnerProposal>> {
+        let mut subnets = self.get_subnets(skip_subnets).await?;
+        let (mut available_nodes, health_of_nodes) = self.get_available_and_healthy_nodes().await?;
+        let all_node_operators = self.registry.operators().await?;
+        let all_nodes = self.registry.nodes().await?;
+        let all_nodes_grouped_by_operator = all_nodes
+            .values()
+            .map(decentralization::network::Node::from)
+            .into_group_map_by(|node| all_nodes.get(&node.id).expect("Node should exist").operator.principal);
+        let available_nodes_grouped_by_operator = available_nodes
+            .iter()
+            .map(|n| (*n).clone())
+            .into_group_map_by(|node| all_nodes.get(&node.id).expect("Node should exist").operator.principal);
+        let cordoned_features = self.cordoned_features_fetcher.fetch().await.unwrap_or_else(|e| {
+            warn!("Failed to fetch cordoned features with error: {:?}", e);
+            warn!("Will continue running as if no features were cordoned");
+            vec![]
+        });
+
+        let operators_to_optimize = self.get_operators_to_optimize(
+            &all_node_operators,
+            &all_nodes_grouped_by_operator,
+            &available_nodes_grouped_by_operator,
+            &all_nodes,
+            &subnets,
+            ensure_assigned,
+        );
+
+        info!(
+            "Checked {} and found {} node operators with all nodes {}, after skipping {} subnets",
+            all_node_operators.len(),
+            operators_to_optimize.len(),
+            if ensure_assigned { "unassigned" } else { "assigned" },
+            skip_subnets.len()
+        );
+
+        if !operators_to_optimize.is_empty() {
+            info!(
+                "Will try to optimize the assignments of nodes for {} operators: {:#?}",
+                operators_to_optimize.len(),
+                operators_to_optimize
+                    .iter()
+                    .map(|(id, _, _)| id.to_string().split_once('-').unwrap().0.to_string())
+                    .collect::<Vec<_>>()
+            );
+        }
+
+        let mut changes = vec![];
+        for (operator_id, dc, healthy_operator_nodes) in operators_to_optimize {
+            let node = healthy_operator_nodes.first().expect("At least one node should be present");
+            let best_change = self
+                .get_best_change_for_operator(
+                    &subnets,
+                    &available_nodes,
+                    &health_of_nodes,
+                    node,
+                    ensure_assigned,
+                    cordoned_features.clone(),
+                )
+                .await;
+
+            if let Some(change) = best_change {
+                info!(
+                    "{} node {} of the operator {} in DC {} {} subnet {}",
+                    if ensure_assigned { "Adding" } else { "Removing" },
+                    node.principal.to_string().split_once('-').unwrap().0,
+                    operator_id.to_string().split_once('-').unwrap().0,
+                    dc,
+                    if ensure_assigned { "to" } else { "from" },
+                    change
+                        .subnet_id
+                        .expect("Subnet ID should be present")
+                        .to_string()
+                        .split_once('-')
+                        .unwrap()
+                        .0,
+                );
+                changes.push(
+                    self.run_membership_change(change.clone(), replace_proposal_options(&change, forum_post_link.clone()).await?)
+                        .await?,
+                );
+                subnets.shift_remove(&change.subnet_id.expect("Subnet ID should be present"));
+                available_nodes.retain(|n| n.id != node.principal);
+            } else {
+                warn!(
+                    "{} node {} of the operator {} in DC {} would worsen decentralization in all subnets!",
+                    if ensure_assigned { "Adding" } else { "Removing" },
+                    node.principal.to_string().split_once('-').unwrap().0,
+                    operator_id.to_string().split_once('-').unwrap().0,
+                    dc,
+                );
+            }
+        }
+        Ok(changes)
+    }
+
+    pub async fn network_ensure_operator_nodes_assigned(
+        &self,
+        forum_post_link: Option<String>,
+        skip_subnets: &[String],
+    ) -> anyhow::Result<Vec<RunnerProposal>> {
+        self.network_ensure_operator_nodes(forum_post_link, skip_subnets, true).await
+    }
+
+    pub async fn network_ensure_operator_nodes_unassigned(
+        &self,
+        forum_post_link: Option<String>,
+        skip_subnets: &[String],
+    ) -> anyhow::Result<Vec<RunnerProposal>> {
+        self.network_ensure_operator_nodes(forum_post_link, skip_subnets, false).await
     }
 
     pub async fn decentralization_change(
