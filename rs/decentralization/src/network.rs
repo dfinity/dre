@@ -1187,9 +1187,9 @@ impl SubnetChangeRequest {
             .map_err(|e| NetworkError::ResizeFailed(e.to_string()))?
             .0;
 
-        let penalties_after_change = DecentralizedSubnet::check_business_rules_for_subnet_with_nodes(&self.subnet.id, &resized_subnet.nodes)
-            .map_err(|e| NetworkError::ResizeFailed(e.to_string()))?
-            .0;
+        let business_rules_check_after_change =
+            DecentralizedSubnet::check_business_rules_for_subnet_with_nodes(&self.subnet.id, &resized_subnet.nodes)
+                .map_err(|e| NetworkError::ResizeFailed(e.to_string()))?;
 
         let subnet_change = SubnetChange {
             subnet_id: self.subnet.id,
@@ -1198,7 +1198,8 @@ impl SubnetChangeRequest {
             removed_nodes: resized_subnet.removed_nodes,
             added_nodes: resized_subnet.added_nodes,
             penalties_before_change,
-            penalties_after_change,
+            penalties_after_change: business_rules_check_after_change.0,
+            business_rules_log: business_rules_check_after_change.1,
             comment: resized_subnet.comment,
             run_log: resized_subnet.run_log,
         };
@@ -1226,6 +1227,7 @@ pub struct SubnetChange {
     pub added_nodes: Vec<Node>,
     pub penalties_before_change: usize,
     pub penalties_after_change: usize,
+    pub business_rules_log: Vec<String>,
     pub comment: Option<String>,
     pub run_log: Vec<String>,
 }

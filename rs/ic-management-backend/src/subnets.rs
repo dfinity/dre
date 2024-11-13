@@ -18,9 +18,9 @@ pub fn get_proposed_subnet_changes(
         let penalties_before_change = DecentralizedSubnet::check_business_rules_for_subnet_with_nodes(&subnet.principal, &subnet_nodes)
             .expect("Business rules check should succeed")
             .0;
-        let penalties_after_change = DecentralizedSubnet::check_business_rules_for_subnet_with_nodes(&subnet.principal, &subnet_nodes)
-            .expect("Business rules check should succeed")
-            .0;
+        let business_rules_check_after_change = DecentralizedSubnet::check_business_rules_for_subnet_with_nodes(&subnet.principal, &subnet_nodes)
+            .expect("Business rules check should succeed");
+
         let change = SubnetChange {
             subnet_id: subnet.principal,
             old_nodes: subnet_nodes.clone(),
@@ -28,7 +28,8 @@ pub fn get_proposed_subnet_changes(
             removed_nodes: vec![],
             added_nodes: vec![],
             penalties_before_change,
-            penalties_after_change,
+            penalties_after_change: business_rules_check_after_change.0,
+            business_rules_log: business_rules_check_after_change.1,
             comment: None,
             run_log: vec![],
         }

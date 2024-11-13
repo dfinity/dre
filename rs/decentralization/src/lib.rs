@@ -22,6 +22,7 @@ pub struct SubnetChangeResponse {
     pub score_after: nakamoto::NakamotoScore,
     pub penalties_before_change: usize,
     pub penalties_after_change: usize,
+    pub business_rules_log: Vec<String>,
     pub motivation: Option<String>,
     pub comment: Option<String>,
     pub run_log: Option<Vec<String>>,
@@ -47,6 +48,7 @@ impl SubnetChangeResponse {
             score_after: nakamoto::NakamotoScore::new_from_nodes(&change.new_nodes),
             penalties_before_change: change.penalties_before_change,
             penalties_after_change: change.penalties_after_change,
+            business_rules_log: change.business_rules_log.clone(),
             motivation,
             comment: change.comment.clone(),
             run_log: Some(change.run_log.clone()),
@@ -180,8 +182,12 @@ impl Display for SubnetChangeResponse {
 
         writeln!(f, "\n\n```\n{}```\n", table)?;
 
-        if let Some(comment) = &self.comment {
-            writeln!(f, "### Business rules analysis\n{}", comment)?;
+        if !self.business_rules_log.is_empty() {
+            writeln!(
+                f,
+                "### Business rules check results after the membership change\n\n{}",
+                self.business_rules_log.join("\n")
+            )?;
         }
 
         Ok(())
