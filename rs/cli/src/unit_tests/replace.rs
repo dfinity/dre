@@ -1,54 +1,46 @@
 use std::sync::Arc;
 
 use decentralization::{
-    nakamoto::NodeFeatures,
-    network::{DecentralizedSubnet, Node, NodeFeaturePair},
+    network::{DecentralizedSubnet, NodeFeaturePair},
     SubnetChangeResponse,
 };
 use ic_management_backend::{health::MockHealthStatusQuerier, lazy_registry::MockLazyRegistry};
-use ic_management_types::NodeFeature;
+use ic_management_types::{Node, NodeFeature, NodeFeatures};
 use ic_types::PrincipalId;
 use indexmap::{Equivalent, IndexMap};
 use itertools::Itertools;
 
 use crate::{cordoned_feature_fetcher::MockCordonedFeatureFetcher, subnet_manager::SubnetManager};
 
-fn node_principal(id: u64) -> PrincipalId {
-    PrincipalId::new_node_test_id(id)
-}
-
 fn user_principal(id: u64) -> String {
     PrincipalId::new_user_test_id(id).to_string()
 }
 
 fn node(id: u64, dfinity_owned: bool, features: &[(NodeFeature, &str)]) -> Node {
-    Node {
-        id: node_principal(id),
-        dfinity_owned,
-        features: NodeFeatures {
-            feature_map: {
-                let mut map = IndexMap::new();
+    let features = NodeFeatures {
+        feature_map: {
+            let mut map = IndexMap::new();
 
-                features.iter().for_each(|(feature, value)| {
-                    map.insert(feature.clone(), value.to_string());
-                });
+            features.iter().for_each(|(feature, value)| {
+                map.insert(feature.clone(), value.to_string());
+            });
 
-                // Insert mandatory features
-                for feature in &[
-                    NodeFeature::NodeProvider,
-                    NodeFeature::DataCenter,
-                    NodeFeature::DataCenterOwner,
-                    NodeFeature::Country,
-                ] {
-                    if !map.contains_key(feature) {
-                        map.insert(feature.clone(), "Some value".to_string());
-                    }
+            // Insert mandatory features
+            for feature in &[
+                NodeFeature::NodeProvider,
+                NodeFeature::DataCenter,
+                NodeFeature::DataCenterOwner,
+                NodeFeature::Country,
+            ] {
+                if !map.contains_key(feature) {
+                    map.insert(feature.clone(), "Some value".to_string());
                 }
+            }
 
-                map
-            },
+            map
         },
-    }
+    };
+    Node::new_test_node(id, features, dfinity_owned)
 }
 
 fn subnet(id: u64, nodes: &[Node]) -> DecentralizedSubnet {
@@ -101,11 +93,11 @@ fn pretty_print_node(node: &Node, num_ident: usize) -> String {
     format!(
         "{}- principal: {}\n{}  dfinity_owned: {}\n{}  features: [{}]",
         "\t".repeat(num_ident),
-        node.id,
+        node.principal,
         "\t".repeat(num_ident),
-        node.dfinity_owned,
+        node.dfinity_owned.unwrap_or_default(),
         "\t".repeat(num_ident),
-        node.features
+        node.get_features()
             .feature_map
             .iter()
             .map(|(feature, value)| format!("({}, {})", feature, value))
@@ -198,8 +190,8 @@ fn should_skip_cordoned_nodes() {
     // All nodes in the world are healthy for this test
     let nodes_health = available_nodes
         .iter()
-        .map(|n| n.id)
-        .chain(subnet.nodes.iter().map(|n| n.id))
+        .map(|n| n.principal)
+        .chain(subnet.nodes.iter().map(|n| n.principal))
         .map(|node_id| (node_id, ic_management_types::HealthStatus::Healthy))
         .collect::<IndexMap<PrincipalId, ic_management_types::HealthStatus>>();
     health_client.expect_nodes().returning(move || {
@@ -265,7 +257,9 @@ fn should_skip_cordoned_nodes() {
         // Act
         let response = runtime.block_on(
             subnet_manager
-                .with_target(crate::subnet_manager::SubnetTarget::FromNodesIds(vec![subnet.nodes.first().unwrap().id]))
+                .with_target(crate::subnet_manager::SubnetTarget::FromNodesIds(vec![
+                    subnet.nodes.first().unwrap().principal,
+                ]))
                 .membership_replace(false, None, None, None, vec![], None),
         );
 

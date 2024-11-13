@@ -48,7 +48,7 @@ use std::net::Ipv6Addr;
 use std::ops::Add;
 use std::path::{Path, PathBuf};
 use std::str::FromStr;
-use std::sync::Arc;
+use std::sync::{Arc, OnceLock};
 use tokio::sync::RwLock;
 use tokio::time::{sleep, Duration};
 use url::Url;
@@ -472,7 +472,7 @@ impl RegistryState {
                     Node {
                         principal,
                         dfinity_owned: Some(dfinity_dcs.contains(&dc_name) || guest.as_ref().map(|g| g.dfinity_owned).unwrap_or_default()),
-                        ip_addr,
+                        ip_addr: Some(ip_addr),
                         hostname: guest
                             .as_ref()
                             .map(|g| g.name.clone())
@@ -497,6 +497,7 @@ impl RegistryState {
                             .find(|r| r.commit_hash == nr.hostos_version_id.clone().unwrap_or_default())
                             .cloned(),
                         operator,
+                        cached_features: OnceLock::new(),
                         proposal: None,
                         label: guest.map(|g| g.name),
                         duplicates: node_entries
@@ -786,12 +787,9 @@ impl RegistryState {
         self.network.get_nns_urls()
     }
 
-    pub fn get_decentralized_nodes(&self, principals: &[PrincipalId]) -> Vec<decentralization::network::Node> {
-        self.nodes()
-            .values()
-            .filter(|node| principals.contains(&node.principal))
-            .map(decentralization::network::Node::from)
-            .collect_vec()
+    pub fn get_nodes_from_ids(&self, principals: &[PrincipalId]) -> Vec<Node> {
+        let all_nodes = self.nodes();
+        principals.iter().filter_map(|p| all_nodes.get(p).cloned()).collect()
     }
 
     pub async fn get_unassigned_nodes_replica_version(&self) -> Result<String, anyhow::Error> {
@@ -809,32 +807,15 @@ impl RegistryState {
             _ => Err(anyhow::anyhow!("No GuestOS version for unassigned nodes found".to_string(),)),
         }
     }
-
-    #[allow(dead_code)]
-    pub async fn node(&self, node_id: PrincipalId) -> Node {
-        self.nodes
-            .iter()
-            .filter(|(&id, _)| id == node_id)
-            .collect::<Vec<_>>()
-            .first()
-            .unwrap()
-            .1
-            .clone()
-    }
 }
 
 impl decentralization::network::TopologyManager for RegistryState {}
 
 impl NodesConverter for RegistryState {
-    fn get_nodes<'a>(&'a self, from: &'a [PrincipalId]) -> BoxFuture<'a, std::result::Result<Vec<decentralization::network::Node>, NetworkError>> {
+    fn get_nodes<'a>(&'a self, from: &'a [PrincipalId]) -> BoxFuture<'a, std::result::Result<Vec<Node>, NetworkError>> {
         Box::pin(async {
             from.iter()
-                .map(|n| {
-                    self.nodes()
-                        .get(n)
-                        .ok_or(NetworkError::NodeNotFound(*n))
-                        .map(decentralization::network::Node::from)
-                })
+                .map(|n| self.nodes().get(n).cloned().ok_or(NetworkError::NodeNotFound(*n)))
                 .collect()
         })
     }
@@ -849,7 +830,7 @@ impl SubnetQuerier for RegistryState {
                     .get(&id)
                     .map(|s| decentralization::network::DecentralizedSubnet {
                         id: s.principal,
-                        nodes: s.nodes.iter().map(decentralization::network::Node::from).collect(),
+                        nodes: s.nodes.clone(),
                         added_nodes: Vec::new(),
                         removed_nodes: Vec::new(),
                         comment: None,
@@ -860,7 +841,7 @@ impl SubnetQuerier for RegistryState {
                     let subnets = nodes
                         .to_vec()
                         .iter()
-                        .map(|n| self.nodes.get(&n.id).and_then(|n| n.subnet_id))
+                        .map(|n| self.nodes.get(&n.principal).and_then(|n| n.subnet_id))
                         .collect::<IndexSet<_>>();
                     if subnets.len() > 1 {
                         return Err(NetworkError::IllegalRequest("nodes don't belong to the same subnet".to_string()));
@@ -868,14 +849,7 @@ impl SubnetQuerier for RegistryState {
                     if let Some(Some(subnet)) = subnets.into_iter().next() {
                         Ok(decentralization::network::DecentralizedSubnet {
                             id: subnet,
-                            nodes: self
-                                .subnets
-                                .get(&subnet)
-                                .ok_or(NetworkError::SubnetNotFound(subnet))?
-                                .nodes
-                                .iter()
-                                .map(decentralization::network::Node::from)
-                                .collect(),
+                            nodes: self.subnets.get(&subnet).ok_or(NetworkError::SubnetNotFound(subnet))?.nodes.to_vec(),
                             added_nodes: Vec::new(),
                             removed_nodes: Vec::new(),
                             comment: None,
@@ -891,7 +865,7 @@ impl SubnetQuerier for RegistryState {
 }
 
 impl AvailableNodesQuerier for RegistryState {
-    fn available_nodes(&self) -> BoxFuture<'_, Result<Vec<decentralization::network::Node>, NetworkError>> {
+    fn available_nodes(&self) -> BoxFuture<'_, Result<Vec<Node>, NetworkError>> {
         Box::pin(async {
             let nodes = self
                 .nodes_with_proposals()
@@ -915,8 +889,8 @@ impl AvailableNodesQuerier for RegistryState {
                         .map(|s| matches!(*s, ic_management_types::HealthStatus::Healthy))
                         .unwrap_or(false)
                 })
-                .map(decentralization::network::Node::from)
-                .sorted_by(|n1, n2| n1.id.cmp(&n2.id))
+                .cloned()
+                .sorted_by(|n1, n2| n1.principal.cmp(&n2.principal))
                 .collect())
         })
     }

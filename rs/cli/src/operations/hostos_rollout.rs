@@ -292,8 +292,7 @@ impl HostosRollout {
         }
         nodes
             .iter()
-            .filter(|n| {
-                let node = decentralization::network::Node::from(n.to_owned());
+            .filter(|node| {
                 for filt in self.only_filter.iter() {
                     if node.matches_feature_value(filt) {
                         return true;
@@ -311,8 +310,7 @@ impl HostosRollout {
         }
         nodes
             .iter()
-            .filter(|n| {
-                let node = decentralization::network::Node::from(n.to_owned());
+            .filter(|node| {
                 for filt in self.exclude_filter.iter() {
                     if node.matches_feature_value(filt) {
                         return false;
@@ -440,50 +438,47 @@ impl HostosRollout {
                     }
                 }
             }
-            NodeAssignment::All => {
-                use HostosRolloutResponse::{None, Ok};
-                try_join(
-                    self.with_nodes_health_and_open_proposals(
-                        nodes_health.clone(),
-                        nodes_with_open_proposals.clone(),
-                        update_group.clone().with_assignment(NodeAssignment::Assigned),
-                    ),
-                    self.with_nodes_health_and_open_proposals(
-                        nodes_health.clone(),
-                        nodes_with_open_proposals.clone(),
-                        update_group.clone().with_assignment(NodeAssignment::Unassigned),
-                    ),
-                )
-                .await
-                .map(|response| match response {
-                    (Ok(assigned_nodes, subnet_affected), None(reason)) => {
-                        info!("No unassigned nodes selected for: {:?} ==> {:?}", update_group.node_group, reason);
-                        Ok(assigned_nodes, subnet_affected)
-                    }
-                    (None(reason), Ok(unassigned_nodes, _)) => {
-                        info!("No assigned nodes selected for: {:?} ==> {:?}", update_group.node_group, reason);
-                        Ok(unassigned_nodes, Option::None)
-                    }
+            NodeAssignment::All => try_join(
+                self.with_nodes_health_and_open_proposals(
+                    nodes_health.clone(),
+                    nodes_with_open_proposals.clone(),
+                    update_group.clone().with_assignment(NodeAssignment::Assigned),
+                ),
+                self.with_nodes_health_and_open_proposals(
+                    nodes_health.clone(),
+                    nodes_with_open_proposals.clone(),
+                    update_group.clone().with_assignment(NodeAssignment::Unassigned),
+                ),
+            )
+            .await
+            .map(|response| match response {
+                (HostosRolloutResponse::Ok(assigned_nodes, subnet_affected), HostosRolloutResponse::None(reason)) => {
+                    info!("No unassigned nodes selected for: {:?} ==> {:?}", update_group.node_group, reason);
+                    HostosRolloutResponse::Ok(assigned_nodes, subnet_affected)
+                }
+                (HostosRolloutResponse::None(reason), HostosRolloutResponse::Ok(unassigned_nodes, _)) => {
+                    info!("No assigned nodes selected for: {:?} ==> {:?}", update_group.node_group, reason);
+                    HostosRolloutResponse::Ok(unassigned_nodes, Option::None)
+                }
 
-                    (Ok(assigned_nodes, subnet_affected), Ok(unassigned_nodes, _)) => {
-                        info!(
-                            "{} assigned nodes and {} unassigned nodes selected for: {}",
-                            assigned_nodes.len(),
-                            unassigned_nodes.len(),
-                            update_group.node_group
-                        );
-                        Ok(assigned_nodes.into_iter().chain(unassigned_nodes).collect(), subnet_affected.clone())
-                    }
+                (HostosRolloutResponse::Ok(assigned_nodes, subnet_affected), HostosRolloutResponse::Ok(unassigned_nodes, _)) => {
+                    info!(
+                        "{} assigned nodes and {} unassigned nodes selected for: {}",
+                        assigned_nodes.len(),
+                        unassigned_nodes.len(),
+                        update_group.node_group
+                    );
+                    HostosRolloutResponse::Ok(assigned_nodes.into_iter().chain(unassigned_nodes).collect(), subnet_affected.clone())
+                }
 
-                    (None(assigned_reason), None(unassigned_reason)) => {
-                        info!(
-                            "No candidate nodes selected for: {:?} ==> {:?} {:?}",
-                            update_group.node_group, assigned_reason, unassigned_reason
-                        );
-                        None(assigned_reason.into_iter().chain(unassigned_reason).collect())
-                    }
-                })
-            }
+                (HostosRolloutResponse::None(assigned_reason), HostosRolloutResponse::None(unassigned_reason)) => {
+                    info!(
+                        "No candidate nodes selected for: {:?} ==> {:?} {:?}",
+                        update_group.node_group, assigned_reason, unassigned_reason
+                    );
+                    HostosRolloutResponse::None(assigned_reason.into_iter().chain(unassigned_reason).collect())
+                }
+            }),
         }
     }
 
@@ -538,7 +533,7 @@ pub mod test {
     use ic_management_backend::proposal::ProposalAgentImpl;
     use ic_management_types::{Network, Node, Operator, Provider, Subnet};
     use std::collections::BTreeMap;
-    use std::net::Ipv6Addr;
+    use std::sync::OnceLock;
 
     use super::*;
 
@@ -693,7 +688,7 @@ pub mod test {
         for i in start_at_number..start_at_number + num_nodes {
             let node = Node {
                 principal: PrincipalId::new_node_test_id(i),
-                ip_addr: Ipv6Addr::LOCALHOST,
+                ip_addr: None,
                 operator: Operator {
                     principal: PrincipalId::new_node_test_id(i),
                     provider: Provider {
@@ -706,6 +701,7 @@ pub mod test {
                     rewardable_nodes: BTreeMap::new(),
                     ipv6: "".to_string(),
                 },
+                cached_features: OnceLock::new(),
                 hostname: None,
                 hostos_release: None,
                 proposal: None,
