@@ -330,6 +330,7 @@ impl Node {
     }
     pub fn get_features(&self) -> NodeFeatures {
         let features = if let Some(features) = &self.cached_features.get() {
+            // Return a clone of the cached value, if it exists
             (*features).clone()
         } else {
             let country = self
@@ -383,7 +384,7 @@ impl Node {
     }
 
     pub fn get_feature(&self, feature: &NodeFeature) -> Option<String> {
-        self.cached_features.get().and_then(|fts| fts.get(feature))
+        self.get_features().get(feature)
     }
 
     pub fn matches_feature_value(&self, value: &str) -> bool {

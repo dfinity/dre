@@ -822,7 +822,7 @@ impl Runner {
     ) -> anyhow::Result<()> {
         let subnet_before = match override_subnet_nodes {
             Some(nodes) => {
-                let nodes = self.registry.get_decentralized_nodes(&nodes).await?;
+                let nodes = self.registry.get_nodes_from_ids(&nodes).await?;
                 DecentralizedSubnet::new_with_subnet_id_and_nodes(change.subnet_id, nodes)
             }
             None => self
@@ -835,11 +835,11 @@ impl Runner {
         let health_of_nodes = self.health_of_nodes().await?;
 
         // Simulate node removal
-        let removed_nodes = self.registry.get_decentralized_nodes(&change.get_removed_node_ids()).await?;
+        let removed_nodes = self.registry.get_nodes_from_ids(&change.get_removed_node_ids()).await?;
         let subnet_mid = subnet_before.without_nodes(&removed_nodes).map_err(|e| anyhow::anyhow!(e))?;
 
         // Now simulate node addition
-        let added_nodes = self.registry.get_decentralized_nodes(&change.get_added_node_ids()).await?;
+        let added_nodes = self.registry.get_nodes_from_ids(&change.get_added_node_ids()).await?;
 
         let subnet_after = subnet_mid.with_nodes(&added_nodes);
 

@@ -102,15 +102,10 @@ pub trait LazyRegistry:
         })
     }
 
-    fn get_decentralized_nodes<'a>(&'a self, principals: &'a [PrincipalId]) -> BoxFuture<'a, anyhow::Result<Vec<Node>>> {
+    fn get_nodes_from_ids<'a>(&'a self, principals: &'a [PrincipalId]) -> BoxFuture<'a, anyhow::Result<Vec<Node>>> {
         Box::pin(async {
-            Ok(self
-                .nodes()
-                .await?
-                .values()
-                .filter(|n| principals.contains(&n.principal))
-                .cloned()
-                .collect_vec())
+            let all_nodes = self.nodes().await?;
+            Ok(principals.iter().filter_map(|p| all_nodes.get(p).cloned()).collect())
         })
     }
 
@@ -753,7 +748,7 @@ impl LazyRegistry for LazyRegistryImpl {
         })
     }
 
-    fn get_decentralized_nodes<'a>(&'a self, principals: &'a [PrincipalId]) -> BoxFuture<'a, anyhow::Result<Vec<Node>>> {
+    fn get_nodes_from_ids<'a>(&'a self, principals: &'a [PrincipalId]) -> BoxFuture<'a, anyhow::Result<Vec<Node>>> {
         Box::pin(async {
             Ok(self
                 .nodes()

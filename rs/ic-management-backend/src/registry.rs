@@ -787,12 +787,9 @@ impl RegistryState {
         self.network.get_nns_urls()
     }
 
-    pub fn get_decentralized_nodes(&self, principals: &[PrincipalId]) -> Vec<Node> {
-        self.nodes()
-            .values()
-            .filter(|node| principals.contains(&node.principal))
-            .cloned()
-            .collect_vec()
+    pub fn get_nodes_from_ids(&self, principals: &[PrincipalId]) -> Vec<Node> {
+        let all_nodes = self.nodes();
+        principals.iter().filter_map(|p| all_nodes.get(p).cloned()).collect()
     }
 
     pub async fn get_unassigned_nodes_replica_version(&self) -> Result<String, anyhow::Error> {
@@ -809,18 +806,6 @@ impl RegistryState {
             }
             _ => Err(anyhow::anyhow!("No GuestOS version for unassigned nodes found".to_string(),)),
         }
-    }
-
-    #[allow(dead_code)]
-    pub async fn node(&self, node_id: PrincipalId) -> Node {
-        self.nodes
-            .iter()
-            .filter(|(&id, _)| id == node_id)
-            .collect::<Vec<_>>()
-            .first()
-            .unwrap()
-            .1
-            .clone()
     }
 }
 
