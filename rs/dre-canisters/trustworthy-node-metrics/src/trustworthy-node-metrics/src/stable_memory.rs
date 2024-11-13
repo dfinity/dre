@@ -144,20 +144,6 @@ pub fn nodes_metadata() -> Vec<NodeMetadata> {
     })
 }
 
-pub fn get_node_principals(node_provider: &Principal) -> Vec<Principal> {
-    NODE_METADATA_V2.with_borrow(|node_metadata| {
-        node_metadata
-            .iter()
-            .filter_map(|(node_id, node_metadata)| {
-                if &node_metadata.node_provider_id == node_provider {
-                    Some(node_id)
-                } else {
-                    None
-                }
-            })
-            .collect_vec()
-    })
-}
 
 pub fn insert_rewards_rates(region: String, rewards_rates: NodeRewardRates) {
     REWARDS_TABLE.with_borrow_mut(|rewards_table| rewards_table.insert(region, NodeRewardRatesStored { rewards_rates }));

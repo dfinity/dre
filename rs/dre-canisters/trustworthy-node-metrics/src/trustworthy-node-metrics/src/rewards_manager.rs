@@ -1,4 +1,3 @@
-use std::rc::Rc;
 
 use candid::Principal;
 use ic_base_types::PrincipalId;
@@ -9,15 +8,14 @@ use ic_registry_keys::NODE_REWARDS_TABLE_KEY;
 use itertools::Itertools;
 use node_provider_rewards_lib::{
     v1_rewards::{assigned_nodes_multiplier, calculate_rewards},
-    v1_types::{AHashMap, DailyNodeMetrics as NPRDailyNodeMetrics, Node},
+    v1_types::{AHashMap, DailyNodeMetrics as NPRDailyNodeMetrics},
 };
 use num_traits::ToPrimitive;
 use trustworthy_node_metrics_types::types::{DailyNodeMetrics, NodeProviderRewards, NodeRewardsMultiplier};
 
 use crate::{
     chrono_utils::DateTimeRange,
-    local_registry::LocalRegistry,
-    registry_querier::{self, RegistryQuerier},
+    registry_querier::RegistryQuerier,
     stable_memory,
 };
 
