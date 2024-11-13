@@ -1,4 +1,3 @@
-use crate::network::Node;
 use ic_base_types::PrincipalId;
 use ic_management_types::{
     requests::{NodeRemoval, NodeRemovalReason},
@@ -61,17 +60,15 @@ impl NodesRemover {
                     return None;
                 }
 
-                let decentralization_node = Node::from(&n);
-
                 if let Some(exclude) = self.exclude.as_ref() {
                     for exclude_feature in exclude {
-                        if decentralization_node.matches_feature_value(exclude_feature) {
+                        if n.matches_feature_value(exclude_feature) {
                             return None;
                         }
                     }
                 }
 
-                if let Some(filter) = self.extra_nodes_filter.iter().find(|f| decentralization_node.matches_feature_value(f)) {
+                if let Some(filter) = self.extra_nodes_filter.iter().find(|f| n.matches_feature_value(f)) {
                     return Some(NodeRemoval {
                         node: n,
                         reason: NodeRemovalReason::MatchedFilter(filter.clone()),

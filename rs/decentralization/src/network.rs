@@ -1,13 +1,13 @@
-use crate::nakamoto::{self, NakamotoScore};
+use crate::nakamoto::NakamotoScore;
 use crate::subnets::unhealthy_with_nodes;
 use crate::SubnetChangeResponse;
 use actix_web::http::StatusCode;
 use actix_web::{HttpResponse, ResponseError};
-use ahash::{AHashMap, AHashSet, HashMap, HashSet};
+use ahash::{AHashMap, AHashSet, HashSet};
 use anyhow::anyhow;
 use futures::future::BoxFuture;
 use ic_base_types::PrincipalId;
-use ic_management_types::{HealthStatus, NetworkError, NodeFeature};
+use ic_management_types::{HealthStatus, NetworkError, Node, NodeFeature};
 use indexmap::IndexMap;
 use itertools::Itertools;
 use log::{debug, info, warn};
@@ -15,154 +15,12 @@ use rand::{seq::SliceRandom, SeedableRng};
 use serde::{Deserialize, Serialize};
 use std::cmp::Ordering;
 use std::fmt::{Debug, Display, Formatter};
-use std::hash::Hash;
 
 #[derive(Clone, Serialize, Deserialize, Default)]
 pub struct DataCenterInfo {
     area: String,
     country: String,
     continent: String,
-}
-
-#[derive(Clone, Serialize, Deserialize, Debug, Eq)]
-pub struct Node {
-    pub id: PrincipalId,
-    pub features: nakamoto::NodeFeatures,
-    pub dfinity_owned: bool,
-}
-
-impl std::fmt::Display for Node {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(
-            f,
-            "Node ID: {}\nFeatures:\n{}\nDfinity Owned: {}",
-            self.id, self.features, self.dfinity_owned
-        )
-    }
-}
-
-impl Node {
-    pub fn new_test_node(node_number: u64, features: nakamoto::NodeFeatures, dfinity_owned: bool) -> Self {
-        Node {
-            id: PrincipalId::new_node_test_id(node_number),
-            features,
-            dfinity_owned,
-        }
-    }
-
-    pub fn get_features(&self) -> nakamoto::NodeFeatures {
-        self.features.clone()
-    }
-
-    pub fn get_feature(&self, feature: &NodeFeature) -> String {
-        self.features.get(feature).unwrap_or_default()
-    }
-
-    pub fn matches_feature_value(&self, value: &str) -> bool {
-        self.id.to_string() == *value.to_lowercase()
-            || self
-                .get_features()
-                .feature_map
-                .values()
-                .any(|v| *v.to_lowercase() == *value.to_lowercase())
-    }
-
-    pub fn is_country_from_eu(country: &str) -> bool {
-        // (As of 2024) the EU countries are not properly marked in the registry, so we check membership separately.
-        let eu_countries: HashMap<&str, &str> = HashMap::from_iter([
-            ("AT", "Austria"),
-            ("BE", "Belgium"),
-            ("BG", "Bulgaria"),
-            ("CY", "Cyprus"),
-            ("CZ", "Czechia"),
-            ("DE", "Germany"),
-            ("DK", "Denmark"),
-            ("EE", "Estonia"),
-            ("ES", "Spain"),
-            ("FI", "Finland"),
-            ("FR", "France"),
-            ("GR", "Greece"),
-            ("HR", "Croatia"),
-            ("HU", "Hungary"),
-            ("IE", "Ireland"),
-            ("IT", "Italy"),
-            ("LT", "Lithuania"),
-            ("LU", "Luxembourg"),
-            ("LV", "Latvia"),
-            ("MT", "Malta"),
-            ("NL", "Netherlands"),
-            ("PL", "Poland"),
-            ("PT", "Portugal"),
-            ("RO", "Romania"),
-            ("SE", "Sweden"),
-            ("SI", "Slovenia"),
-            ("SK", "Slovakia"),
-        ]);
-        eu_countries.contains_key(country)
-    }
-}
-
-impl Hash for Node {
-    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
-        self.id.hash(state);
-    }
-}
-
-impl PartialEq for Node {
-    fn eq(&self, other: &Self) -> bool {
-        self.id == other.id
-    }
-}
-
-impl From<&ic_management_types::Node> for Node {
-    fn from(n: &ic_management_types::Node) -> Self {
-        let country = n
-            .operator
-            .datacenter
-            .as_ref()
-            .map(|d| d.country.clone())
-            .unwrap_or_else(|| "unknown".to_string());
-        let area = n
-            .operator
-            .datacenter
-            .as_ref()
-            .map(|d| d.area.clone())
-            .unwrap_or_else(|| "unknown".to_string());
-
-        Self {
-            id: n.principal,
-            features: nakamoto::NodeFeatures::from_iter([
-                (NodeFeature::Area, area),
-                (NodeFeature::Country, country),
-                (
-                    NodeFeature::Continent,
-                    n.operator
-                        .datacenter
-                        .as_ref()
-                        .map(|d| d.continent.clone())
-                        .unwrap_or_else(|| "unknown".to_string()),
-                ),
-                (
-                    NodeFeature::DataCenterOwner,
-                    n.operator
-                        .datacenter
-                        .as_ref()
-                        .map(|d| d.owner.name.clone())
-                        .unwrap_or_else(|| "unknown".to_string()),
-                ),
-                (
-                    NodeFeature::DataCenter,
-                    n.operator
-                        .datacenter
-                        .as_ref()
-                        .map(|d| d.name.clone())
-                        .unwrap_or_else(|| "unknown".to_string()),
-                ),
-                (NodeFeature::NodeProvider, n.operator.provider.principal.to_string()),
-            ]),
-            dfinity_owned: n.dfinity_owned.unwrap_or_default(),
-        }
-    }
 }
 
 #[derive(Clone, Default, Debug, Serialize, Deserialize, PartialEq, Eq)]
@@ -205,14 +63,14 @@ impl DecentralizedSubnet {
         let mut new_subnet_nodes = self.nodes.clone();
         let mut removed_nodes = self.removed_nodes.clone();
         for node in nodes_to_remove {
-            if let Some(index) = new_subnet_nodes.iter().position(|n| n.id == node.id) {
+            if let Some(index) = new_subnet_nodes.iter().position(|n| n.principal == node.principal) {
                 removed_nodes.push(new_subnet_nodes.remove(index));
             } else {
-                return Err(NetworkError::NodeNotFound(node.id));
+                return Err(NetworkError::NodeNotFound(node.principal));
             }
         }
         let removed_is_empty = removed_nodes.is_empty();
-        let removed_node_ids = removed_nodes.iter().map(|n| n.id).collect::<Vec<_>>();
+        let removed_node_ids = removed_nodes.iter().map(|n| n.principal).collect::<Vec<_>>();
         if !removed_is_empty {
             assert!(new_subnet_nodes.len() <= self.nodes.len());
         }
@@ -279,7 +137,7 @@ impl DecentralizedSubnet {
 
         self.nodes
             .iter()
-            .filter(|n| n.get_feature(node_feature) == dominant_feature)
+            .filter(|n| n.get_feature(node_feature).unwrap() == dominant_feature)
             .cloned()
             .collect()
     }
@@ -303,7 +161,7 @@ impl DecentralizedSubnet {
         let subnet_id_str = subnet_id.to_string();
         let is_european_subnet = subnet_id_str == *"bkfrj-6k62g-dycql-7h53p-atvkj-zg4to-gaogh-netha-ptybj-ntsgw-rqe";
 
-        let dfinity_owned_nodes_count: usize = nodes.iter().map(|n| n.dfinity_owned as usize).sum();
+        let dfinity_owned_nodes_count: usize = nodes.iter().map(|n| n.dfinity_owned.unwrap_or_default() as usize).sum();
         let target_dfinity_owned_nodes_count = if subnet_id_str == *"tdb26-jop6k-aogll-7ltgs-eruif-6kk7m-qpktf-gdiqx-mxtrf-vb5e6-eqe" {
             3
         } else {
@@ -487,11 +345,11 @@ impl DecentralizedSubnet {
             // PrincipalIDs to ensure consistency of the seed with the
             // same machines in the subnet
             let mut id_sorted_current_nodes = current_nodes.to_owned();
-            id_sorted_current_nodes.sort_by(|n1, n2| std::cmp::Ord::cmp(&n1.id.to_string(), &n2.id.to_string()));
+            id_sorted_current_nodes.sort_by(|n1, n2| std::cmp::Ord::cmp(&n1.principal.to_string(), &n2.principal.to_string()));
             let seed = rand_seeder::Seeder::from(
                 id_sorted_current_nodes
                     .iter()
-                    .map(|n| n.id.to_string())
+                    .map(|n| n.principal.to_string())
                     .collect::<Vec<String>>()
                     .join("_"),
             )
@@ -502,7 +360,7 @@ impl DecentralizedSubnet {
             // the same set of machines with the best score, we always
             // get the same one.
             let mut id_sorted_best_results = best_results.to_owned();
-            id_sorted_best_results.sort_by(|r1, r2| std::cmp::Ord::cmp(&r1.node.id.to_string(), &r2.node.id.to_string()));
+            id_sorted_best_results.sort_by(|r1, r2| std::cmp::Ord::cmp(&r1.node.principal.to_string(), &r2.node.principal.to_string()));
             id_sorted_best_results.choose(&mut rng).cloned()
         }
     }
@@ -523,9 +381,9 @@ impl DecentralizedSubnet {
                     cmp = a.score.cmp(&b.score);
                 }
                 if cmp == Ordering::Less {
-                    debug!("Better node is {}", a.node.id);
+                    debug!("Better node is {}", a.node.principal);
                 } else {
-                    debug!("Better node is {}", b.node.id);
+                    debug!("Better node is {}", b.node.principal);
                 }
                 cmp
             })
@@ -534,7 +392,7 @@ impl DecentralizedSubnet {
         run_log.push("Sorted candidate nodes, with the best candidate at the end:".to_string());
         run_log.push("     <node-id>                                                      <penalty>  <Nakamoto score>".to_string());
         for s in &candidates {
-            run_log.push(format!(" -=> {} {} {}", s.node.id, s.penalty, s.score));
+            run_log.push(format!(" -=> {} {} {}", s.node.principal, s.penalty, s.score));
         }
 
         // Then, pick the candidates with the best (highest) Nakamoto Coefficients.
@@ -617,7 +475,7 @@ impl DecentralizedSubnet {
                     );
                     run_log.push(format!("Nakamoto score after extension {}", best_result.score));
                     added_nodes.push(best_result.node.clone());
-                    available_nodes.retain(|n| n.id != best_result.node.id);
+                    available_nodes.retain(|n| n.principal != best_result.node.principal);
                     nodes_after_extension.push(best_result.node.clone());
                     nodes_initial.push(best_result.node.clone());
                     total_penalty += best_result.penalty;
@@ -630,7 +488,7 @@ impl DecentralizedSubnet {
                                     "- adding node {} of {} ({}): {}",
                                     i + 1,
                                     how_many_nodes,
-                                    best_result.node.id.to_string().split('-').next().unwrap_or_default(),
+                                    best_result.node.principal.to_string().split('-').next().unwrap_or_default(),
                                     s
                                 )
                             })
@@ -688,7 +546,7 @@ impl DecentralizedSubnet {
                 .nodes
                 .iter()
                 .filter_map(|node| {
-                    let candidate_subnet_nodes: Vec<Node> = self.nodes.iter().filter(|n| n.id != node.id).cloned().collect();
+                    let candidate_subnet_nodes: Vec<Node> = self.nodes.iter().filter(|n| n.principal != node.principal).cloned().collect();
                     self._node_to_replacement_candidate(&candidate_subnet_nodes, node, &mut run_log)
                 })
                 .collect();
@@ -705,7 +563,7 @@ impl DecentralizedSubnet {
                     );
                     run_log.push(format!("Nakamoto score after removal {}", best_result.score));
                     self.removed_nodes.push(best_result.node.clone());
-                    self.nodes.retain(|n| n.id != best_result.node.id);
+                    self.nodes.retain(|n| n.principal != best_result.node.principal);
                     total_penalty += best_result.penalty;
                     business_rules_log.extend(
                         best_result
@@ -716,7 +574,7 @@ impl DecentralizedSubnet {
                                     "- removing node {} of {} ({}): {}",
                                     i + 1,
                                     how_many_nodes,
-                                    best_result.node.id.to_string().split('-').next().unwrap_or_default(),
+                                    best_result.node.principal.to_string().split('-').next().unwrap_or_default(),
                                     s
                                 )
                             })
@@ -760,8 +618,8 @@ impl DecentralizedSubnet {
             .removed_nodes
             .iter()
             .filter_map(|node_removed| {
-                if self.added_nodes.iter().any(|node_added| node_removed.id == node_added.id) {
-                    Some(node_removed.id)
+                if self.added_nodes.iter().any(|node_added| node_removed.principal == node_added.principal) {
+                    Some(node_removed.principal)
                 } else {
                     None
                 }
@@ -774,13 +632,13 @@ impl DecentralizedSubnet {
             let added_nodes_desc = self
                 .added_nodes
                 .into_iter()
-                .filter(|node_added| !common_nodes.iter().any(|common_node| common_node == &node_added.id))
+                .filter(|node_added| !common_nodes.iter().any(|common_node| common_node == &node_added.principal))
                 .collect();
 
             let removed_nodes_desc = self
                 .removed_nodes
                 .into_iter()
-                .filter(|node_removed| !common_nodes.iter().any(|common_node| common_node == &node_removed.id))
+                .filter(|node_removed| !common_nodes.iter().any(|common_node| common_node == &node_removed.principal))
                 .collect();
 
             Self {
@@ -808,7 +666,7 @@ impl DecentralizedSubnet {
                 })
             }
             Err(err) => {
-                err_log.push(format!("Node {} failed business rule {}", touched_node.id, err));
+                err_log.push(format!("Node {} failed business rule {}", touched_node.principal, err));
                 None
             }
         }
@@ -822,7 +680,7 @@ impl Display for DecentralizedSubnet {
             "Subnet id {} with {} nodes [{}]",
             self.id,
             self.nodes.len(),
-            self.nodes.iter().map(|n| n.id.to_string()).join(", ")
+            self.nodes.iter().map(|n| n.principal.to_string()).join(", ")
         )
     }
 }
@@ -837,7 +695,7 @@ impl From<&ic_management_types::Subnet> for DecentralizedSubnet {
     fn from(s: &ic_management_types::Subnet) -> Self {
         Self {
             id: s.principal,
-            nodes: s.nodes.iter().map(Node::from).collect(),
+            nodes: s.nodes.clone(),
             added_nodes: Vec::new(),
             removed_nodes: Vec::new(),
             comment: None,
@@ -929,7 +787,7 @@ pub trait Identifies<Node> {
 
 impl Identifies<Node> for PrincipalId {
     fn eq(&self, other: &Node) -> bool {
-        &other.id == self
+        &other.principal == self
     }
     fn partial_eq(&self, other: &Node) -> bool {
         Identifies::eq(self, other)
@@ -1118,14 +976,14 @@ impl SubnetChangeRequest {
             .clone()
             .into_iter()
             .filter(|n| !self.include_nodes.contains(n))
-            .filter(|n| health_of_nodes.get(&n.id).unwrap_or(&HealthStatus::Unknown) == &HealthStatus::Healthy)
+            .filter(|n| health_of_nodes.get(&n.principal).unwrap_or(&HealthStatus::Unknown) == &HealthStatus::Healthy)
             .collect::<Vec<_>>();
 
         let available_nodes = all_healthy_nodes
             .into_iter()
             .filter(|n| {
                 for cordoned_feature in &cordoned_features {
-                    if let Some(node_feature) = n.features.get(&cordoned_feature.feature) {
+                    if let Some(node_feature) = n.get_feature(&cordoned_feature.feature) {
                         if PartialEq::eq(&node_feature, &cordoned_feature.value) {
                             // Node contains cordoned feature
                             // exclude it from available pool
@@ -1161,10 +1019,10 @@ impl SubnetChangeRequest {
             .iter()
             .cloned()
             .chain(resized_subnet.removed_nodes.clone())
-            .filter(|n| health_of_nodes.get(&n.id).unwrap_or(&HealthStatus::Unknown) == &HealthStatus::Healthy)
+            .filter(|n| health_of_nodes.get(&n.principal).unwrap_or(&HealthStatus::Unknown) == &HealthStatus::Healthy)
             .filter(|n| {
                 for cordoned_feature in &cordoned_features {
-                    if let Some(node_feature) = n.features.get(&cordoned_feature.feature) {
+                    if let Some(node_feature) = n.get_feature(&cordoned_feature.feature) {
                         if PartialEq::eq(&node_feature, &cordoned_feature.value) {
                             // Node contains cordoned feature
                             // exclude it from available pool
@@ -1344,13 +1202,12 @@ impl NetworkHealRequest {
         let subnets_to_heal = unhealthy_with_nodes(&self.subnets, health_of_nodes)
             .iter()
             .flat_map(|(subnet_id, unhealthy_nodes)| {
-                let unhealthy_nodes = unhealthy_nodes.iter().map(Node::from).collect::<Vec<_>>();
                 let unhealthy_subnet = self.subnets.get(subnet_id).ok_or(NetworkError::SubnetNotFound(*subnet_id))?;
 
                 Ok::<NetworkHealSubnets, NetworkError>(NetworkHealSubnets {
                     name: unhealthy_subnet.metadata.name.clone(),
                     decentralized_subnet: DecentralizedSubnet::from(unhealthy_subnet),
-                    unhealthy_nodes,
+                    unhealthy_nodes: unhealthy_nodes.clone(),
                 })
             })
             .sorted_by(|a, b| a.cmp(b).reverse())
@@ -1372,7 +1229,7 @@ impl NetworkHealRequest {
                     subnet.decentralized_subnet.id,
                     max_replaceable_nodes,
                     unhealthy_nodes.len(),
-                    unhealthy_nodes.iter().map(|node| node.id).collect_vec()
+                    unhealthy_nodes.iter().map(|node| node.principal).collect_vec()
                 );
                 unhealthy_nodes
             } else {
@@ -1383,7 +1240,7 @@ impl NetworkHealRequest {
                     subnet
                         .unhealthy_nodes
                         .iter()
-                        .map(|node| node.id.to_string().split('-').next().unwrap().to_string())
+                        .map(|node| node.principal.to_string().split('-').next().unwrap().to_string())
                         .collect_vec(),
                     max_replaceable_nodes - subnet.unhealthy_nodes.len(),
                     max_replaceable_nodes
@@ -1527,19 +1384,19 @@ https://github.com/dfinity/dre/blob/79066127f58c852eaf4adda11610e815a426878c/rs/
                 motivations.push(format!(
                     "replacing {} node {}",
                     health_of_nodes
-                        .get(&node.id)
+                        .get(&node.principal)
                         .map(|s| s.to_string().to_lowercase())
                         .unwrap_or("unhealthy".to_string()),
-                    node.id
+                    node.principal
                 ));
             }
 
-            let unhealthy_nodes_ids = unhealthy_nodes.iter().map(|node| node.id).collect::<HashSet<_>>();
+            let unhealthy_nodes_ids = unhealthy_nodes.iter().map(|node| node.principal).collect::<HashSet<_>>();
             for node_id in change.node_ids_removed.iter().filter(|n| !unhealthy_nodes_ids.contains(n)) {
                 motivations.push(format!("replacing node {} to optimize network topology", node_id));
             }
 
-            available_nodes.retain(|node| !change.node_ids_added.contains(&node.id));
+            available_nodes.retain(|node| !change.node_ids_added.contains(&node.principal));
 
             let motivation = format!(
                 "\n{}{}\nNote: the information below is provided for your convenience. Please independently verify the decentralization changes rather than relying solely on this summary.\nHere is [an explaination of how decentralization is currently calculated](https://dfinity.github.io/dre/decentralization.html), \nand there are also [instructions for performing what-if analysis](https://dfinity.github.io/dre/subnet-decentralization-whatif.html) if you are wondering if another node would have improved decentralization more.\n\n",
@@ -1554,11 +1411,11 @@ https://github.com/dfinity/dre/blob/79066127f58c852eaf4adda11610e815a426878c/rs/
 }
 
 pub fn generate_removed_nodes_description(subnet_nodes: &[Node], remove_nodes: &[Node]) -> Vec<(Node, String)> {
-    let mut subnet_nodes: AHashMap<PrincipalId, Node> = AHashMap::from_iter(subnet_nodes.iter().map(|n| (n.id, n.clone())));
+    let mut subnet_nodes: AHashMap<PrincipalId, Node> = AHashMap::from_iter(subnet_nodes.iter().map(|n| (n.principal, n.clone())));
     let mut result = Vec::new();
     for node in remove_nodes {
         let nakamoto_before = NakamotoScore::new_from_nodes(subnet_nodes.values());
-        subnet_nodes.remove(&node.id);
+        subnet_nodes.remove(&node.principal);
         let nakamoto_after = NakamotoScore::new_from_nodes(subnet_nodes.values());
         let nakamoto_diff = nakamoto_after.describe_difference_from(&nakamoto_before).1;
 
@@ -1568,11 +1425,11 @@ pub fn generate_removed_nodes_description(subnet_nodes: &[Node], remove_nodes: &
 }
 
 pub fn generate_added_node_description(subnet_nodes: &[Node], add_nodes: &[Node]) -> Vec<(Node, String)> {
-    let mut subnet_nodes: AHashMap<PrincipalId, Node> = AHashMap::from_iter(subnet_nodes.iter().map(|n| (n.id, n.clone())));
+    let mut subnet_nodes: AHashMap<PrincipalId, Node> = AHashMap::from_iter(subnet_nodes.iter().map(|n| (n.principal, n.clone())));
     let mut result = Vec::new();
     for node in add_nodes {
         let nakamoto_before = NakamotoScore::new_from_nodes(subnet_nodes.values());
-        subnet_nodes.insert(node.id, node.clone());
+        subnet_nodes.insert(node.principal, node.clone());
         let nakamoto_after = NakamotoScore::new_from_nodes(subnet_nodes.values());
         let nakamoto_diff = nakamoto_after.describe_difference_from(&nakamoto_before).1;
 

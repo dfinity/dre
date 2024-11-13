@@ -1,5 +1,6 @@
 use std::{
     collections::{BTreeMap, HashMap},
+    net::Ipv6Addr,
     path::PathBuf,
     str::FromStr,
     sync::Arc,
@@ -314,11 +315,11 @@ async fn _get_nodes(
             NodeDetails {
                 node_id: *k,
                 xnet: Some(ConnectionEndpoint {
-                    ip_addr: record.ip_addr.to_string(),
+                    ip_addr: record.ip_addr.unwrap_or(Ipv6Addr::LOCALHOST).to_string(),
                     port: 2497,
                 }),
                 http: Some(ConnectionEndpoint {
-                    ip_addr: record.ip_addr.to_string(),
+                    ip_addr: record.ip_addr.unwrap_or(Ipv6Addr::LOCALHOST).to_string(),
                     port: 8080,
                 }),
                 node_operator_id,
