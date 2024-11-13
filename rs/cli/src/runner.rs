@@ -479,10 +479,9 @@ impl Runner {
         // Values
         for nr in &node_removals {
             let mut row = tabular::Row::new();
-            let decentralization_node = decentralization::network::Node::from(&nr.node);
             row.add_cell(nr.node.principal);
             for nf in NodeFeature::variants() {
-                row.add_cell(decentralization_node.get_feature(&nf));
+                row.add_cell(nr.node.get_feature(&nf).expect("Feature should exist"));
             }
             row.add_cell(nr.node.hostname.clone().unwrap_or_else(|| "N/A".to_string()));
             row.add_cell(nr.reason.message());
@@ -567,15 +566,15 @@ impl Runner {
             .collect::<IndexMap<_, _>>())
     }
 
-    async fn get_available_and_healthy_nodes(&self) -> anyhow::Result<(Vec<decentralization::network::Node>, IndexMap<PrincipalId, HealthStatus>)> {
+    async fn get_available_and_healthy_nodes(&self) -> anyhow::Result<(Vec<Node>, IndexMap<PrincipalId, HealthStatus>)> {
         try_join(self.registry.available_nodes().map_err(anyhow::Error::from), self.health_client.nodes()).await
     }
 
     fn get_operators_to_optimize(
         &self,
         node_operators_all: &IndexMap<PrincipalId, Operator>,
-        all_nodes_grouped_by_operator: &HashMap<PrincipalId, Vec<decentralization::network::Node>>,
-        available_nodes_grouped_by_operator: &HashMap<PrincipalId, Vec<decentralization::network::Node>>,
+        all_nodes_grouped_by_operator: &HashMap<PrincipalId, Vec<Node>>,
+        available_nodes_grouped_by_operator: &HashMap<PrincipalId, Vec<Node>>,
         nodes_all: &IndexMap<PrincipalId, Node>,
         subnets: &IndexMap<PrincipalId, Subnet>,
         ensure_assigned: bool,
@@ -590,9 +589,9 @@ impl Runner {
             .filter_map(|(operator_id, operator)| {
                 all_nodes_grouped_by_operator.get(operator_id).and_then(|operator_nodes| {
                     let condition = if ensure_assigned {
-                        operator_nodes.iter().all(|node| !nodes_in_subnets.contains_key(&node.id))
+                        operator_nodes.iter().all(|node| !nodes_in_subnets.contains_key(&node.principal))
                     } else {
-                        operator_nodes.iter().all(|node| nodes_in_subnets.contains_key(&node.id))
+                        operator_nodes.iter().all(|node| nodes_in_subnets.contains_key(&node.principal))
                     };
 
                     if condition {
@@ -601,12 +600,12 @@ impl Runner {
                                 .get(operator_id)
                                 .unwrap_or(&vec![])
                                 .iter()
-                                .map(|node| nodes_all.get(&node.id).expect("Node should exist").clone())
+                                .map(|node| nodes_all.get(&node.principal).expect("Node should exist").clone())
                                 .collect::<Vec<_>>()
                         } else {
                             operator_nodes
                                 .iter()
-                                .filter_map(|node| nodes_in_subnets.get(&node.id))
+                                .filter_map(|node| nodes_in_subnets.get(&node.principal))
                                 .map(|n| (*n).clone())
                                 .collect::<Vec<_>>()
                         };
@@ -631,20 +630,19 @@ impl Runner {
     async fn get_best_change_for_operator(
         &self,
         subnets: &IndexMap<PrincipalId, Subnet>,
-        available_nodes: &[decentralization::network::Node],
+        available_nodes: &[Node],
         health_of_nodes: &IndexMap<PrincipalId, HealthStatus>,
         node: &Node,
         ensure_assigned: bool,
         cordoned_features: Vec<NodeFeaturePair>,
     ) -> Option<SubnetChangeResponse> {
-        let decentr_node = decentralization::network::Node::from(node);
         let mut best_change: Option<SubnetChangeResponse> = None;
 
         for subnet in subnets.values() {
             let subnet = DecentralizedSubnet::from(subnet);
             let subnet_id_short = subnet.id.to_string().split_once('-').unwrap().0.to_string();
             let change_request = if ensure_assigned {
-                SubnetChangeRequest::new(subnet, available_nodes.to_vec(), vec![decentr_node.clone()], vec![], vec![]).resize(
+                SubnetChangeRequest::new(subnet, available_nodes.to_vec(), vec![node.clone()], vec![], vec![]).resize(
                     0,
                     1,
                     0,
@@ -652,7 +650,7 @@ impl Runner {
                     cordoned_features.clone(),
                 )
             } else {
-                SubnetChangeRequest::new(subnet, available_nodes.to_vec(), vec![], vec![decentr_node.clone()], vec![]).resize(
+                SubnetChangeRequest::new(subnet, available_nodes.to_vec(), vec![], vec![node.clone()], vec![]).resize(
                     1,
                     0,
                     0,
@@ -711,12 +709,12 @@ impl Runner {
         let all_nodes = self.registry.nodes().await?;
         let all_nodes_grouped_by_operator = all_nodes
             .values()
-            .map(decentralization::network::Node::from)
-            .into_group_map_by(|node| all_nodes.get(&node.id).expect("Node should exist").operator.principal);
+            .cloned()
+            .into_group_map_by(|node| all_nodes.get(&node.principal).expect("Node should exist").operator.principal);
         let available_nodes_grouped_by_operator = available_nodes
             .iter()
             .map(|n| (*n).clone())
-            .into_group_map_by(|node| all_nodes.get(&node.id).expect("Node should exist").operator.principal);
+            .into_group_map_by(|node| all_nodes.get(&node.principal).expect("Node should exist").operator.principal);
         let cordoned_features = self.cordoned_features_fetcher.fetch().await.unwrap_or_else(|e| {
             warn!("Failed to fetch cordoned features with error: {:?}", e);
             warn!("Will continue running as if no features were cordoned");
@@ -786,7 +784,7 @@ impl Runner {
                         .await?,
                 );
                 subnets.shift_remove(&change.subnet_id.expect("Subnet ID should be present"));
-                available_nodes.retain(|n| n.id != node.principal);
+                available_nodes.retain(|n| n.principal != node.principal);
             } else {
                 warn!(
                     "{} node {} of the operator {} in DC {} would worsen decentralization in all subnets!",

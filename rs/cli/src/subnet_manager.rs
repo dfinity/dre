@@ -5,12 +5,13 @@ use std::sync::Arc;
 use anyhow::anyhow;
 use anyhow::Ok;
 use decentralization::{
-    network::{DecentralizedSubnet, Node as DecentralizedNode, SubnetQueryBy},
+    network::{DecentralizedSubnet, SubnetQueryBy},
     SubnetChangeResponse,
 };
 use ic_management_backend::health::HealthStatusQuerier;
 use ic_management_backend::lazy_registry::LazyRegistry;
 use ic_management_types::HealthStatus;
+use ic_management_types::Node;
 use ic_types::PrincipalId;
 use indexmap::IndexMap;
 use log::{info, warn};
@@ -71,24 +72,24 @@ impl SubnetManager {
             .ok_or_else(|| anyhow!(SubnetManagerError::SubnetTargetNotProvided))
     }
 
-    async fn unhealthy_nodes(&self, subnet: DecentralizedSubnet) -> anyhow::Result<Vec<(DecentralizedNode, ic_management_types::HealthStatus)>> {
+    async fn unhealthy_nodes(&self, subnet: DecentralizedSubnet) -> anyhow::Result<Vec<(Node, HealthStatus)>> {
         let subnet_health = self.health_client.subnet(subnet.id).await?;
 
         let unhealthy = subnet
             .nodes
             .into_iter()
-            .filter_map(|n| match subnet_health.get(&n.id) {
+            .filter_map(|n| match subnet_health.get(&n.principal) {
                 Some(health) => {
-                    if *health == ic_management_types::HealthStatus::Healthy {
+                    if *health == HealthStatus::Healthy {
                         None
                     } else {
-                        info!("Node {} is {:?}", n.id, health);
+                        info!("Node {} is {:?}", n.id_short(), health);
                         Some((n, health.clone()))
                     }
                 }
                 None => {
-                    warn!("Node {} has no known health, assuming unhealthy", n.id);
-                    Some((n, ic_management_types::HealthStatus::Unknown))
+                    warn!("Node {} has no known health, assuming unhealthy", n.id_short());
+                    Some((n, HealthStatus::Unknown))
                 }
             })
             .collect::<Vec<_>>();
@@ -125,7 +126,7 @@ impl SubnetManager {
     ) -> anyhow::Result<SubnetChangeResponse> {
         let subnet_query_by = self.get_subnet_query_by(self.target()?).await?;
         let mut motivations = vec![];
-        let mut to_be_replaced: Vec<DecentralizedNode> = if let SubnetQueryBy::NodeList(nodes) = &subnet_query_by {
+        let mut to_be_replaced: Vec<Node> = if let SubnetQueryBy::NodeList(nodes) = &subnet_query_by {
             nodes.clone()
         } else {
             vec![]
@@ -142,8 +143,8 @@ impl SubnetManager {
         let mut node_ids_unhealthy = HashSet::new();
         if heal {
             for (node, health_status) in self.unhealthy_nodes(subnet_change_request.subnet()).await? {
-                node_ids_unhealthy.insert(node.id);
-                motivations.push(format!("replacing {} as it is unhealthy: {:?}", node.id, health_status));
+                node_ids_unhealthy.insert(node.principal);
+                motivations.push(format!("replacing {} as it is unhealthy: {:?}", node.principal, health_status));
                 to_be_replaced.push(node);
             }
         }
@@ -157,10 +158,10 @@ impl SubnetManager {
             self.cordoned_features_fetcher.fetch().await?,
         )?;
 
-        for n in change.removed().iter().filter(|n| !node_ids_unhealthy.contains(&n.id)) {
+        for n in change.removed().iter().filter(|n| !node_ids_unhealthy.contains(&n.principal)) {
             motivations.push(format!(
                 "replacing {} as per user request{}",
-                n.id,
+                n.id_short(),
                 match motivation {
                     Some(ref m) => format!(": {}", m),
                     None => "".to_string(),
@@ -202,11 +203,11 @@ impl SubnetManager {
             )?;
 
         for n in change.removed().iter() {
-            motivations.push(format!("removing {} for subnet resize", n.id));
+            motivations.push(format!("removing node {} for subnet resize", n.principal));
         }
 
         for n in change.added().iter() {
-            motivations.push(format!("adding {} for subnet resize", n.id));
+            motivations.push(format!("adding node {} for subnet resize", n.principal));
         }
 
         let motivation = format!(

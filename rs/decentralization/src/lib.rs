@@ -3,11 +3,11 @@ pub mod network;
 pub mod subnets;
 use indexmap::IndexMap;
 use itertools::Itertools;
-use network::{Node, SubnetChange};
+use network::SubnetChange;
 use std::fmt::{Display, Formatter};
 
 use ic_base_types::PrincipalId;
-use ic_management_types::{HealthStatus, NodeFeature};
+use ic_management_types::{HealthStatus, Node, NodeFeature};
 use serde::{self, Deserialize, Serialize};
 
 #[derive(Clone, Debug, Deserialize, Serialize, Default)]
@@ -36,8 +36,8 @@ impl SubnetChangeResponse {
     pub fn new(change: &SubnetChange, node_health: &IndexMap<PrincipalId, HealthStatus>, motivation: Option<String>) -> Self {
         Self {
             nodes_old: change.old_nodes.clone(),
-            node_ids_added: change.added().iter().map(|n| n.id).collect(),
-            node_ids_removed: change.removed().iter().map(|n| n.id).collect(),
+            node_ids_added: change.added().iter().map(|n| n.principal).collect(),
+            node_ids_removed: change.removed().iter().map(|n| n.principal).collect(),
             subnet_id: if change.subnet_id == Default::default() {
                 None
             } else {
@@ -60,14 +60,14 @@ impl SubnetChangeResponse {
                         .collect::<IndexMap<NodeFeature, FeatureDiff>>(),
                     |mut acc, n| {
                         for f in NodeFeature::variants() {
-                            acc.get_mut(&f).unwrap().entry(n.get_feature(&f)).or_insert((0, 0)).0 += 1;
+                            acc.get_mut(&f).unwrap().entry(n.get_feature(&f).unwrap_or_default()).or_insert((0, 0)).0 += 1;
                         }
                         acc
                     },
                 ),
                 |mut acc, n| {
                     for f in NodeFeature::variants() {
-                        acc.get_mut(&f).unwrap().entry(n.get_feature(&f)).or_insert((0, 0)).1 += 1;
+                        acc.get_mut(&f).unwrap().entry(n.get_feature(&f).unwrap_or_default()).or_insert((0, 0)).1 += 1;
                     }
                     acc
                 },

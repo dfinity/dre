@@ -2,6 +2,7 @@ pub mod errors;
 pub mod requests;
 pub use crate::errors::*;
 
+use ahash::AHashMap;
 use candid::{CandidType, Decode};
 use core::hash::Hash;
 use ic_base_types::NodeId;
@@ -15,6 +16,7 @@ use ic_protobuf::registry::subnet::v1::EcdsaConfig;
 use ic_protobuf::registry::subnet::v1::SubnetFeatures;
 use ic_registry_subnet_type::SubnetType;
 use ic_types::PrincipalId;
+use indexmap::IndexMap;
 use registry_canister::mutations::do_add_nodes_to_subnet::AddNodesToSubnetPayload;
 use registry_canister::mutations::do_change_subnet_membership::ChangeSubnetMembershipPayload;
 use registry_canister::mutations::do_create_subnet::CreateSubnetPayload;
@@ -33,6 +35,7 @@ use std::fmt::Debug;
 use std::net::Ipv6Addr;
 use std::ops::Deref;
 use std::str::FromStr;
+use std::sync::OnceLock;
 use strum::VariantNames;
 use strum_macros::EnumString;
 use url::Url;
@@ -193,7 +196,7 @@ impl TopologyChangePayload for RemoveNodesPayload {
     }
 }
 
-#[derive(CandidType, Serialize, Deserialize, Clone, Debug)]
+#[derive(CandidType, Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
 pub struct TopologyChangeProposal {
     pub node_ids_added: Vec<PrincipalId>,
     pub node_ids_removed: Vec<PrincipalId>,
@@ -289,10 +292,10 @@ pub struct SubnetMetadata {
     pub applications: Option<Vec<Application>>,
 }
 
-#[derive(Clone, Serialize, Debug, Deserialize)]
+#[derive(Clone, Serialize, Debug, Deserialize, Default)]
 pub struct Node {
     pub principal: PrincipalId,
-    pub ip_addr: Ipv6Addr,
+    pub ip_addr: Option<Ipv6Addr>,
     pub operator: Operator,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub hostname: Option<String>,
@@ -300,6 +303,8 @@ pub struct Node {
     pub subnet_id: Option<PrincipalId>,
     pub hostos_release: Option<Release>,
     pub hostos_version: String,
+    #[serde(skip)]
+    pub cached_features: OnceLock<NodeFeatures>,
     pub dfinity_owned: Option<bool>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub proposal: Option<TopologyChangeProposal>,
@@ -310,6 +315,146 @@ pub struct Node {
     pub chip_id: Option<Vec<u8>>,
     pub public_ipv4_config: Option<IPv4InterfaceConfig>,
 }
+
+impl Node {
+    pub fn id_short(&self) -> String {
+        self.principal.to_string().split_once('-').expect("invalid principal").0.to_string()
+    }
+    pub fn new_test_node(node_number: u64, features: NodeFeatures, dfinity_owned: bool) -> Self {
+        Node {
+            principal: PrincipalId::new_node_test_id(node_number),
+            cached_features: features.into(),
+            dfinity_owned: Some(dfinity_owned),
+            ..Default::default()
+        }
+    }
+    pub fn get_features(&self) -> NodeFeatures {
+        let features = if let Some(features) = &self.cached_features.get() {
+            (*features).clone()
+        } else {
+            let country = self
+                .operator
+                .datacenter
+                .as_ref()
+                .map(|d| d.country.clone())
+                .unwrap_or_else(|| "unknown".to_string());
+            let area = self
+                .operator
+                .datacenter
+                .as_ref()
+                .map(|d| d.area.clone())
+                .unwrap_or_else(|| "unknown".to_string());
+
+            NodeFeatures::from_iter([
+                (NodeFeature::Area, area),
+                (NodeFeature::Country, country),
+                (
+                    NodeFeature::Continent,
+                    self.operator
+                        .datacenter
+                        .as_ref()
+                        .map(|d| d.continent.clone())
+                        .unwrap_or_else(|| "unknown".to_string()),
+                ),
+                (
+                    NodeFeature::DataCenterOwner,
+                    self.operator
+                        .datacenter
+                        .as_ref()
+                        .map(|d| d.owner.name.clone())
+                        .unwrap_or_else(|| "unknown".to_string()),
+                ),
+                (
+                    NodeFeature::DataCenter,
+                    self.operator
+                        .datacenter
+                        .as_ref()
+                        .map(|d| d.name.clone())
+                        .unwrap_or_else(|| "unknown".to_string()),
+                ),
+                (NodeFeature::NodeProvider, self.operator.provider.principal.to_string()),
+            ])
+        };
+
+        // Cache the calculated value
+        self.cached_features.get_or_init(|| features.clone());
+
+        features
+    }
+
+    pub fn get_feature(&self, feature: &NodeFeature) -> Option<String> {
+        self.cached_features.get().and_then(|fts| fts.get(feature))
+    }
+
+    pub fn matches_feature_value(&self, value: &str) -> bool {
+        self.principal.to_string() == *value.to_lowercase()
+            || self
+                .get_features()
+                .feature_map
+                .values()
+                .any(|v| *v.to_lowercase() == *value.to_lowercase())
+    }
+
+    pub fn is_country_from_eu(country: &str) -> bool {
+        // (As of 2024) the EU countries are not properly marked in the registry, so we check membership separately.
+        let eu_countries: AHashMap<&str, &str> = AHashMap::from_iter([
+            ("AT", "Austria"),
+            ("BE", "Belgium"),
+            ("BG", "Bulgaria"),
+            ("CY", "Cyprus"),
+            ("CZ", "Czechia"),
+            ("DE", "Germany"),
+            ("DK", "Denmark"),
+            ("EE", "Estonia"),
+            ("ES", "Spain"),
+            ("FI", "Finland"),
+            ("FR", "France"),
+            ("GR", "Greece"),
+            ("HR", "Croatia"),
+            ("HU", "Hungary"),
+            ("IE", "Ireland"),
+            ("IT", "Italy"),
+            ("LT", "Lithuania"),
+            ("LU", "Luxembourg"),
+            ("LV", "Latvia"),
+            ("MT", "Malta"),
+            ("NL", "Netherlands"),
+            ("PL", "Poland"),
+            ("PT", "Portugal"),
+            ("RO", "Romania"),
+            ("SE", "Sweden"),
+            ("SI", "Slovenia"),
+            ("SK", "Slovakia"),
+        ]);
+        eu_countries.contains_key(country)
+    }
+}
+
+impl std::fmt::Display for Node {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "Node ID: {}\nFeatures:\n{}\nDfinity Owned: {}",
+            self.principal,
+            self.get_features(),
+            self.dfinity_owned.unwrap_or_default()
+        )
+    }
+}
+
+impl Hash for Node {
+    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+        self.principal.hash(state);
+    }
+}
+
+impl PartialEq for Node {
+    fn eq(&self, other: &Self) -> bool {
+        self.principal == other.principal
+    }
+}
+
+impl Eq for Node {}
 
 #[derive(strum_macros::Display, EnumString, VariantNames, Hash, Eq, PartialEq, Ord, PartialOrd, Clone, Serialize, Deserialize, Debug)]
 #[strum(serialize_all = "snake_case")]
@@ -334,6 +479,56 @@ impl NodeFeature {
     }
     pub fn variants_all() -> Vec<Self> {
         NodeFeature::VARIANTS.iter().map(|f| NodeFeature::from_str(f).unwrap()).collect()
+    }
+}
+
+#[derive(Eq, PartialEq, Clone, Serialize, Deserialize, Debug, Default)]
+pub struct NodeFeatures {
+    pub feature_map: IndexMap<NodeFeature, String>,
+}
+
+impl std::fmt::Display for NodeFeatures {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        for (feature, value) in &self.feature_map {
+            writeln!(f, "{}: {}", feature, value)?;
+        }
+        Ok(())
+    }
+}
+
+impl NodeFeatures {
+    pub fn get(&self, feature: &NodeFeature) -> Option<String> {
+        self.feature_map.get(feature).cloned()
+    }
+
+    pub fn new_test_feature_set(value: &str) -> Self {
+        let mut result = IndexMap::new();
+        for feature in NodeFeature::variants() {
+            result.insert(feature, value.to_string());
+        }
+        NodeFeatures { feature_map: result }
+    }
+
+    pub fn with_feature_value(&self, feature: &NodeFeature, value: &str) -> Self {
+        let mut feature_map = self.feature_map.clone();
+        feature_map.insert(feature.clone(), value.to_string());
+        NodeFeatures { feature_map }
+    }
+}
+
+impl FromIterator<(NodeFeature, &'static str)> for NodeFeatures {
+    fn from_iter<I: IntoIterator<Item = (NodeFeature, &'static str)>>(iter: I) -> Self {
+        Self {
+            feature_map: IndexMap::from_iter(iter.into_iter().map(|x| (x.0, String::from(x.1)))),
+        }
+    }
+}
+
+impl FromIterator<(NodeFeature, std::string::String)> for NodeFeatures {
+    fn from_iter<I: IntoIterator<Item = (NodeFeature, std::string::String)>>(iter: I) -> Self {
+        Self {
+            feature_map: IndexMap::from_iter(iter),
+        }
     }
 }
 
@@ -381,7 +576,7 @@ pub struct CreateSubnetProposalInfo {
     pub nodes: Vec<PrincipalId>,
 }
 
-#[derive(Clone, Serialize, Default, Debug, Deserialize)]
+#[derive(Clone, Serialize, Default, Debug, Deserialize, PartialEq, Eq)]
 pub struct Operator {
     pub principal: PrincipalId,
     pub provider: Provider,
@@ -415,6 +610,14 @@ pub struct Datacenter {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub longitude: Option<f64>,
 }
+
+impl PartialEq for Datacenter {
+    fn eq(&self, other: &Self) -> bool {
+        self.name == other.name
+    }
+}
+
+impl Eq for Datacenter {}
 
 #[derive(Clone, Serialize, Default, Debug, Deserialize)]
 pub struct DatacenterOwner {
