@@ -1,4 +1,3 @@
-
 use candid::Principal;
 use ic_base_types::PrincipalId;
 use ic_nns_constants::GOVERNANCE_CANISTER_ID;
@@ -13,11 +12,7 @@ use node_provider_rewards_lib::{
 use num_traits::ToPrimitive;
 use trustworthy_node_metrics_types::types::{DailyNodeMetrics, NodeProviderRewards, NodeRewardsMultiplier};
 
-use crate::{
-    chrono_utils::DateTimeRange,
-    registry_querier::RegistryQuerier,
-    stable_memory,
-};
+use crate::{chrono_utils::DateTimeRange, registry_querier::RegistryQuerier, stable_memory};
 
 fn get_daily_metrics(node_ids: Vec<Principal>, rewarding_period: DateTimeRange) -> AHashMap<Principal, Vec<DailyNodeMetrics>> {
     let mut daily_metrics: AHashMap<Principal, Vec<DailyNodeMetrics>> = AHashMap::default();
