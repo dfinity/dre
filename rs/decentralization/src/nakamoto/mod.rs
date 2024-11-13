@@ -1063,7 +1063,7 @@ mod tests {
         let subnet_initial = new_test_subnet(0, 24, 0);
         let all_nodes = subnet_initial.nodes.clone();
         let health_of_nodes = all_nodes.iter().map(|n| (n.principal, HealthStatus::Healthy)).collect::<IndexMap<_, _>>();
-        let change_initial = SubnetChangeRequest::new(subnet_initial.clone(), all_nodes.clone(), Vec::new(), Vec::new(), Vec::new());
+        let change_initial = SubnetChangeRequest::new(subnet_initial.clone(), Vec::new(), Vec::new(), Vec::new(), Vec::new());
 
         let after_resize = change_initial.resize(2, 2, 0, &health_of_nodes, vec![], &all_nodes).unwrap();
 
