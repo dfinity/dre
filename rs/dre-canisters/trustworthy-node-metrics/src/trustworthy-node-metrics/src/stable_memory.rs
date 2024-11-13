@@ -144,7 +144,6 @@ pub fn nodes_metadata() -> Vec<NodeMetadata> {
     })
 }
 
-
 pub fn insert_rewards_rates(region: String, rewards_rates: NodeRewardRates) {
     REWARDS_TABLE.with_borrow_mut(|rewards_table| rewards_table.insert(region, NodeRewardRatesStored { rewards_rates }));
 }
