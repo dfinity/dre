@@ -1,3 +1,5 @@
+use std::rc::Rc;
+
 use candid::Principal;
 use ic_base_types::PrincipalId;
 use ic_nns_constants::GOVERNANCE_CANISTER_ID;
@@ -12,7 +14,12 @@ use node_provider_rewards_lib::{
 use num_traits::ToPrimitive;
 use trustworthy_node_metrics_types::types::{DailyNodeMetrics, NodeProviderRewards, NodeRewardsMultiplier};
 
-use crate::{chrono_utils::DateTimeRange, stable_memory};
+use crate::{
+    chrono_utils::DateTimeRange,
+    local_registry::LocalRegistry,
+    registry_querier::{self, RegistryQuerier},
+    stable_memory,
+};
 
 fn get_daily_metrics(node_ids: Vec<Principal>, rewarding_period: DateTimeRange) -> AHashMap<Principal, Vec<DailyNodeMetrics>> {
     let mut daily_metrics: AHashMap<Principal, Vec<DailyNodeMetrics>> = AHashMap::default();
@@ -84,27 +91,17 @@ pub fn node_rewards_multiplier(node_ids: Vec<Principal>, rewarding_period: DateT
         .collect_vec()
 }
 
-pub fn node_provider_rewards(node_provider_id: Principal, rewarding_period: DateTimeRange) -> NodeProviderRewards {
+pub fn node_provider_rewards(node_provider_id: Principal, rewarding_period: DateTimeRange, registry_querier: RegistryQuerier) -> NodeProviderRewards {
     let total_days = rewarding_period.days_between();
     let rewards_table = stable_memory::get_node_rewards_table();
     let np_id = PrincipalId::from(node_provider_id);
 
     let latest_np_rewards = stable_memory::get_latest_node_providers_rewards();
-    let nodes_in_period = stable_memory::get_node_principals(&node_provider_id)
-        .into_iter()
-        .map(|node| {
-            let meta = stable_memory::get_node_metadata(&node).unwrap();
-            Node {
-                node_id: PrincipalId::from(node),
-                node_provider_id: np_id,
-                region: meta.region,
-                node_type: meta.node_type,
-            }
-        })
-        .collect_vec();
+    let nodes_in_period = registry_querier.nodes_in_period(&rewarding_period);
 
     let node_metrics_in_period = get_daily_metrics(nodes_in_period.iter().map(|node| node.node_id.0).collect(), rewarding_period)
         .into_iter()
+        .filter(|(_, metrics)| !metrics.is_empty())
         .map(|(np, metrics)| {
             (
                 PrincipalId::from(np),

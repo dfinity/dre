@@ -131,6 +131,29 @@ impl Storable for NodeMetadataStored {
     };
 }
 
+#[derive(Debug, Deserialize, Serialize, CandidType, Clone, PartialEq, Eq, PartialOrd, Ord)]
+pub struct RegistryKey {
+    pub version: u64,
+    pub key: String,
+}
+
+const MAX_VALUE_SIZE_BYTES_REGISTRY_KEY: u32 = 200;
+
+impl Storable for RegistryKey {
+    fn to_bytes(&self) -> std::borrow::Cow<[u8]> {
+        Cow::Owned(Encode!(self).unwrap())
+    }
+
+    fn from_bytes(bytes: std::borrow::Cow<[u8]>) -> Self {
+        Decode!(bytes.as_ref(), Self).unwrap()
+    }
+
+    const BOUND: Bound = Bound::Bounded {
+        max_size: MAX_VALUE_SIZE_BYTES_REGISTRY_KEY,
+        is_fixed_size: false,
+    };
+}
+
 #[derive(Debug, Deserialize, Serialize, CandidType, Clone)]
 pub struct NodeMetadataStoredV2 {
     pub node_operator_id: Principal,

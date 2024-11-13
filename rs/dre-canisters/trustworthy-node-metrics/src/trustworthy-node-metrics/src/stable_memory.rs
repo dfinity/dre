@@ -4,12 +4,13 @@ use ic_protobuf::registry::node_rewards::v2::{NodeRewardRates, NodeRewardsTable}
 use ic_stable_structures::memory_manager::{MemoryId, MemoryManager, VirtualMemory};
 use ic_stable_structures::{DefaultMemoryImpl, StableBTreeMap};
 use itertools::Itertools;
+use lazy_static::lazy_static;
 use std::cell::RefCell;
 use std::collections::BTreeMap;
 
 use trustworthy_node_metrics_types::types::{
     MonthlyNodeProviderRewardsStored, NodeMetadata, NodeMetadataStored, NodeMetadataStoredV2, NodeMetricsStored, NodeMetricsStoredKey,
-    NodeProviderRewardableKey, NodeRewardRatesStored, TimestampNanos,
+    NodeProviderRewardableKey, NodeRewardRatesStored, RegistryKey, TimestampNanos,
 };
 
 type Memory = VirtualMemory<DefaultMemoryImpl>;
@@ -60,6 +61,23 @@ thread_local! {
         MEMORY_MANAGER.with(|m| m.borrow().get(MemoryId::new(7)))
     ));
 
+    pub static REGISTRY_STORED: RefCell<StableBTreeMap<RegistryKey, Option<Vec<u8>>, Memory>> =
+        RefCell::new(StableBTreeMap::init(
+        MEMORY_MANAGER.with(|m| m.borrow().get(MemoryId::new(8)))
+    ));
+
+    pub static TS_REGISTRY_VERSIONS: RefCell<StableBTreeMap<TimestampNanos, u64, Memory>> =
+        RefCell::new(StableBTreeMap::init(
+        MEMORY_MANAGER.with(|m| m.borrow().get(MemoryId::new(9)))
+    ));
+}
+
+lazy_static! {
+    pub static ref MIN_STRING: String = String::from("");
+    pub static ref MAX_STRING: String = String::from("\u{10FFFF}");
+    static ref MIN_PRINCIPAL_ID: Principal = Principal::try_from(vec![]).expect("Unable to construct MIN_PRINCIPAL_ID.");
+    static ref MAX_PRINCIPAL_ID: Principal =
+        Principal::try_from(vec![0xFF_u8; Principal::MAX_LENGTH_IN_BYTES]).expect("Unable to construct MAX_PRINCIPAL_ID.");
 }
 
 pub fn insert_node_metrics(key: NodeMetricsStoredKey, value: NodeMetricsStored) {
