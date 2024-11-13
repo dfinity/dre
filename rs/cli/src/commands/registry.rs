@@ -193,6 +193,7 @@ async fn get_node_operators(local_registry: &Arc<dyn LazyRegistry>, network: &Ne
                 .iter()
                 .filter(|(_, value)| value.operator.principal == record.principal && value.subnet_id.is_some())
                 .count() as u64;
+            let nodes_in_registry = all_nodes.iter().filter(|(_, value)| value.operator.principal == record.principal).count() as u64;
             (
                 record.principal,
                 NodeOperator {
@@ -208,6 +209,7 @@ async fn get_node_operators(local_registry: &Arc<dyn LazyRegistry>, network: &Ne
                     nodes_health: Default::default(),
                     rewards_correct: false,
                     nodes_in_subnets,
+                    nodes_in_registry,
                 },
             )
         })
@@ -523,6 +525,7 @@ struct NodeOperator {
     nodes_health: IndexMap<String, Vec<PrincipalId>>,
     rewards_correct: bool,
     nodes_in_subnets: u64,
+    nodes_in_registry: u64,
 }
 
 // We re-create the rewards structs here in order to convert the output of get-rewards-table into the format
