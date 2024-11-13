@@ -72,6 +72,14 @@ impl ExecutableCommand for Replace {
         let subnet_id = subnet_change_response.subnet_id.clone();
         // Should be refactored to not require forum post links like this.
         if let Some(runner_proposal) = runner.propose_subnet_change(subnet_change_response, ctx.forum_post_link()).await? {
+            let ic_admin = ctx.ic_admin().await?;
+            if !ic_admin
+                .propose_print_and_confirm(runner_proposal.cmd.clone(), runner_proposal.opts.clone())
+                .await?
+            {
+                return Ok(());
+            }
+
             let discourse_client = ctx.discourse_client()?;
             let maybe_topic = if let Some(id) = subnet_id {
                 let summary = match (&runner_proposal.opts.summary, &runner_proposal.opts.motivation) {
@@ -89,9 +97,8 @@ impl ExecutableCommand for Replace {
                 None
             };
 
-            let ic_admin = ctx.ic_admin().await?;
             let proposal_response = ic_admin
-                .propose_run(
+                .propose_submit(
                     runner_proposal.cmd,
                     ProposeOptions {
                         forum_post_link: maybe_topic.as_ref().map(|topic| topic.url.clone()),
