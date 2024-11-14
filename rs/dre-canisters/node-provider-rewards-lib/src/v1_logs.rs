@@ -126,7 +126,7 @@ impl RewardsPerNodeProviderLog {
         self.node_provider_id = node_provider_id;
         self.entries.clear();
     }
-    
+
     pub fn add_entry(&mut self, entry: LogEntry) {
         self.entries.push(entry);
     }
