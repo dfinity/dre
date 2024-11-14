@@ -1,5 +1,5 @@
 use crate::nakamoto::NakamotoScore;
-use crate::subnets::unhealthy_with_nodes;
+use crate::subnets::{subnets_with_business_rules_violations, unhealthy_with_nodes};
 use crate::SubnetChangeResponse;
 use actix_web::http::StatusCode;
 use actix_web::{HttpResponse, ResponseError};
@@ -176,7 +176,7 @@ impl DecentralizedSubnet {
 
         if dfinity_owned_nodes_count != target_dfinity_owned_nodes_count {
             checks.push(format!(
-                "Subnet should have {} DFINITY-owned nodes, got {}",
+                "Subnet should have {} DFINITY-owned node(s) for subnet recovery, got {}",
                 target_dfinity_owned_nodes_count, dfinity_owned_nodes_count
             ));
             penalties += target_dfinity_owned_nodes_count.abs_diff(dfinity_owned_nodes_count) * 1000;
@@ -1258,6 +1258,7 @@ impl NetworkHealRequest {
         health_of_nodes: &IndexMap<PrincipalId, HealthStatus>,
         cordoned_features: Vec<NodeFeaturePair>,
         all_nodes: &[Node],
+        optimize_for_business_rules_compliance: bool,
     ) -> Result<Vec<SubnetChangeResponse>, NetworkError> {
         let mut subnets_changed = Vec::new();
         let subnets_to_heal = unhealthy_with_nodes(&self.subnets, health_of_nodes)
@@ -1273,12 +1274,42 @@ impl NetworkHealRequest {
             })
             .sorted_by(|a, b| a.cmp(b).reverse())
             .collect_vec();
+        let subnets_to_optimize = if optimize_for_business_rules_compliance {
+            // Exclude subnets that are already in subnets_to_heal
+            let subnet_ids_to_heal = subnets_to_heal
+                .iter()
+                .map(|subnet| subnet.decentralized_subnet.id)
+                .collect::<AHashSet<_>>();
+            let subnets = self
+                .subnets
+                .iter()
+                .filter_map(|(subnet_id, subnet)| {
+                    if subnet_ids_to_heal.contains(subnet_id) {
+                        None
+                    } else {
+                        Some(subnet.clone())
+                    }
+                })
+                .collect_vec();
+            // Find subnets that have business rules violations
+            subnets_with_business_rules_violations(&subnets)
+                .into_iter()
+                .map(|subnet| NetworkHealSubnets {
+                    name: subnet.metadata.name.clone(),
+                    decentralized_subnet: DecentralizedSubnet::from(subnet),
+                    unhealthy_nodes: vec![],
+                })
+                .sorted_by(|a, b| a.cmp(b).reverse())
+                .collect_vec()
+        } else {
+            vec![]
+        };
 
-        if subnets_to_heal.is_empty() {
-            info!("Nothing to do! All subnets are healthy.")
+        if subnets_to_heal.is_empty() && subnets_to_optimize.is_empty() {
+            info!("Nothing to do! All subnets are healthy and compliant with business rules.")
         }
 
-        for subnet in subnets_to_heal {
+        for subnet in subnets_to_heal.into_iter().chain(subnets_to_optimize) {
             // If more than 1/3 nodes do not have the latest subnet state, subnet will stall.
             // From those 1/2 are added and 1/2 removed -> nodes_in_subnet/3 * 1/2 = nodes_in_subnet/6
             let max_replaceable_nodes = subnet.decentralized_subnet.nodes.len() / 6;
@@ -1405,6 +1436,11 @@ impl NetworkHealRequest {
                     .find(|change: &&SubnetChangeResponse| change.score_after == changes_max_score.score_after)
                     .expect("No suitable changes found")
             };
+
+            if change.node_ids_removed.is_empty() {
+                warn!("No suitable changes found for subnet {}", subnet.decentralized_subnet.id);
+                continue;
+            }
 
             info!(
                 "Replacing {} nodes in subnet {} gives Nakamoto coefficient: {}\n",

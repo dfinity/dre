@@ -10,6 +10,11 @@ pub struct Network {
     #[clap(long)]
     pub heal: bool,
 
+    /// Optimize the decentralization of the subnets that are not compliant with the
+    /// business rules (target topology).
+    #[clap(long, visible_alias = "optimize")]
+    pub optimize_decentralization: bool,
+
     /// Ensure that at least one node of each node operator is
     /// assigned to some (any) subnet. Node will only be assigned to a subnet if
     /// this does not worsen the decentralization of the target subnet.
@@ -37,9 +42,11 @@ impl ExecutableCommand for Network {
         let ic_admin = ctx.ic_admin().await?;
         let mut errors = vec![];
         let network_heal = self.heal || std::env::args().any(|arg| arg == "heal");
-        if network_heal {
+        if network_heal || self.optimize_decentralization {
             info!("Healing the network by replacing unhealthy nodes and optimizing decentralization in subnets that have unhealthy nodes");
-            let proposals = runner.network_heal(ctx.forum_post_link(), &self.skip_subnets).await?;
+            let proposals = runner
+                .network_heal(ctx.forum_post_link(), &self.skip_subnets, self.optimize_decentralization)
+                .await?;
             for proposal in proposals {
                 if let Err(e) = ic_admin.propose_run(proposal.cmd, proposal.opts).await {
                     errors.push(e);
