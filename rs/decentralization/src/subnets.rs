@@ -7,6 +7,8 @@ use indexmap::IndexMap;
 use itertools::Itertools;
 use std::sync::Arc;
 
+use crate::network::DecentralizedSubnet;
+
 pub fn unhealthy_with_nodes(
     subnets: &IndexMap<PrincipalId, Subnet>,
     nodes_health: &IndexMap<PrincipalId, HealthStatus>,
@@ -31,6 +33,26 @@ pub fn unhealthy_with_nodes(
             }
         })
         .collect::<IndexMap<_, _>>()
+}
+
+pub fn subnets_with_business_rules_violations(subnets: &[Subnet]) -> Vec<Subnet> {
+    subnets
+        .iter()
+        .filter_map(|subnet| {
+            let decentralized_subnet = DecentralizedSubnet::from(subnet.clone());
+
+            if decentralized_subnet
+                .check_business_rules()
+                .expect("business rules check should succeed")
+                .0
+                > 0
+            {
+                Some(subnet.clone())
+            } else {
+                None
+            }
+        })
+        .collect_vec()
 }
 
 pub struct NodesRemover {

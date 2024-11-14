@@ -505,7 +505,12 @@ impl Runner {
         })
     }
 
-    pub async fn network_heal(&self, forum_post_link: Option<String>, skip_subnets: &[String]) -> anyhow::Result<Vec<RunnerProposal>> {
+    pub async fn network_heal(
+        &self,
+        forum_post_link: Option<String>,
+        skip_subnets: &[String],
+        optimize_decentralization: bool,
+    ) -> anyhow::Result<Vec<RunnerProposal>> {
         let mut errors = vec![];
 
         // Get the list of subnets, and the list of open proposal for each subnet, if any
@@ -544,6 +549,7 @@ impl Runner {
                     vec![]
                 }),
                 &all_nodes,
+                optimize_decentralization,
             )
             .await?;
 
