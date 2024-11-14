@@ -194,7 +194,7 @@ fn base_rewards_region_nodetype(
     }
 
     // Computes node rewards for type3* nodes in all regions and add it to region_nodetype_rewards
-    for (region_key, (coefficients, rewards)) in type3_coefficients_rewards {
+    for (key, (coefficients, rewards)) in type3_coefficients_rewards {
         let rewards_len = rewards.len();
         let mut running_coefficient = dec!(1);
         let mut region_rewards = Vec::new();
@@ -211,9 +211,14 @@ fn base_rewards_region_nodetype(
             Operation::Divide(region_rewards, Decimal::from(rewards_len)),
         );
 
-        logger().add_entry(LogEntry::AvgType3Rewards(region_key.0.clone(), region_rewards_avg));
+        logger().add_entry(LogEntry::AvgType3Rewards {
+            region: key.0.clone(),
+            rewards_avg,
+            coefficients_avg,
+            region_rewards_avg,
+        });
 
-        region_nodetype_rewards.insert(region_key, region_rewards_avg);
+        region_nodetype_rewards.insert(key, region_rewards_avg);
     }
 
     region_nodetype_rewards
@@ -231,6 +236,7 @@ fn node_provider_rewards(
     // Computes the rewards multiplier for unassigned nodes as the average of the multipliers of the assigned nodes.
     let assigned_multipliers_v = assigned_multipliers.values().flatten().cloned().collect_vec();
     let unassigned_multiplier = logger().execute("Unassigned Nodes Multiplier", Operation::Avg(assigned_multipliers_v));
+    logger().add_entry(LogEntry::UnassignedMultiplier(unassigned_multiplier));
 
     // Compute total rewards with/without performance penalty
     for ((region, node_type), node_count) in rewardable_nodes {
