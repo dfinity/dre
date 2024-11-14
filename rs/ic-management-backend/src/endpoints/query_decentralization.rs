@@ -99,11 +99,9 @@ async fn get_decentralization_analysis(
         None => updated_subnet,
     };
     let penalties_before_change = DecentralizedSubnet::check_business_rules_for_subnet_with_nodes(&original_subnet.id, &original_subnet.nodes)
-        .expect("Business rules check before should succeed")
-        .0;
-    let business_rules_check_after_change =
-        DecentralizedSubnet::check_business_rules_for_subnet_with_nodes(&original_subnet.id, &updated_subnet.nodes)
-            .expect("Business rules check after should succeed");
+        .expect("Business rules check before should succeed");
+    let penalties_after_change = DecentralizedSubnet::check_business_rules_for_subnet_with_nodes(&original_subnet.id, &updated_subnet.nodes)
+        .expect("Business rules check after should succeed");
 
     let subnet_change = SubnetChange {
         subnet_id: original_subnet.id,
@@ -112,8 +110,7 @@ async fn get_decentralization_analysis(
         removed_nodes: updated_subnet.removed_nodes.clone(),
         added_nodes: updated_subnet.added_nodes.clone(),
         penalties_before_change,
-        penalties_after_change: business_rules_check_after_change.0,
-        business_rules_log: business_rules_check_after_change.1,
+        penalties_after_change,
         comment: updated_subnet.comment.clone(),
         run_log: updated_subnet.run_log.clone(),
     };
