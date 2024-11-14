@@ -211,13 +211,12 @@ fn base_rewards_region_nodetype(
             Operation::Divide(region_rewards, Decimal::from(rewards_len)),
         );
 
-        logger().add_entry(LogEntry::AvgType3Rewards{
-            region: key.0.clone(), 
-            rewards_avg, 
-            coefficients_avg, 
-            region_rewards_avg
-        }
-        );
+        logger().add_entry(LogEntry::AvgType3Rewards {
+            region: key.0.clone(),
+            rewards_avg,
+            coefficients_avg,
+            region_rewards_avg,
+        });
 
         region_nodetype_rewards.insert(key, region_rewards_avg);
     }
