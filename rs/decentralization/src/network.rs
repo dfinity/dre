@@ -33,12 +33,18 @@ pub struct DecentralizedSubnet {
     pub run_log: Vec<String>,
 }
 
-#[derive(Clone, Debug)]
-struct ReplacementCandidate {
-    node: Node,
+#[derive(Clone, Debug, Default, PartialEq)]
+pub(crate) struct ReplacementCandidate {
+    pub(crate) node: Node,
     score: NakamotoScore,
     penalty: usize,
     business_rules_log: Vec<String>,
+}
+
+impl ReplacementCandidate {
+    pub fn new_with_node_for_tests(node: Node) -> Self {
+        Self { node, ..Default::default() }
+    }
 }
 
 impl DecentralizedSubnet {
@@ -327,7 +333,11 @@ impl DecentralizedSubnet {
     /// of current nodes.  Since the node IDs are unique, we seed a PRNG
     /// with the sorted joined node IDs. We then choose a result
     /// randomly but deterministically using this seed.
-    fn choose_one_result(best_results: &[ReplacementCandidate], current_nodes: &[Node], all_nodes: &[Node]) -> Option<ReplacementCandidate> {
+    pub(crate) fn choose_one_result(
+        best_results: &[ReplacementCandidate],
+        current_nodes: &[Node],
+        all_nodes: &[Node],
+    ) -> Option<ReplacementCandidate> {
         if best_results.is_empty() {
             None
         } else {
@@ -366,20 +376,25 @@ impl DecentralizedSubnet {
             let best_results = best_results
                 .iter()
                 .map(|r| {
-                    let pct = (percent_assigned_nodes_per_operator
+                    let pct_x1000 = (percent_assigned_nodes_per_operator
                         .get(&r.node.operator.principal)
                         .copied()
                         .unwrap_or_default()
                         * 1000.) as u32;
-                    (pct, r)
+                    let op_nodes = num_nodes_per_operator.get(&r.node.operator.principal).copied().unwrap_or_default() as i32;
+                    (pct_x1000, -op_nodes, r)
                 })
-                .sorted_by_key(|(pct, _res)| *pct)
+                // sorted_by_key sorts ascending, so we negate the number of nodes
+                // we prefer candidate nodes from operators with:
+                //  - the lowest percentage of nodes assigned to subnet
+                //  - highest number of nodes total (to prefer operators with more nodes)
+                .sorted_by_key(|(pct_x1000, neg_op_nodes, _res)| (*pct_x1000, *neg_op_nodes))
                 .collect_vec();
             // filter all the results with the same lowest percentage
             let best_results = best_results
                 .iter()
-                .take_while(|(pct, _res)| *pct == best_results[0].0)
-                .map(|(_pct, res)| (*res).clone())
+                .take_while(|(pct, neg_op_nodes, _res)| *pct == best_results[0].0 && *neg_op_nodes == best_results[0].1)
+                .map(|(_pct, _neg_op_nodes, res)| (*res).clone())
                 .collect::<Vec<_>>();
 
             // We sort the current nodes by alphabetical order on their

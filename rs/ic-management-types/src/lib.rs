@@ -328,6 +328,15 @@ impl Node {
             ..Default::default()
         }
     }
+    pub fn with_operator(self, operator: Operator) -> Self {
+        Node { operator, ..self }
+    }
+    pub fn with_subnet_id(self, subnet_id: PrincipalId) -> Self {
+        Node {
+            subnet_id: Some(subnet_id),
+            ..self
+        }
+    }
     pub fn get_features(&self) -> NodeFeatures {
         let features = if let Some(features) = &self.cached_features.get() {
             // Return a clone of the cached value, if it exists
