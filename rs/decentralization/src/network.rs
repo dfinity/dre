@@ -1113,7 +1113,7 @@ impl SubnetChangeRequest {
             .map_err(|e| NetworkError::ResizeFailed(e.to_string()))?;
 
         let penalties_after_change = DecentralizedSubnet::check_business_rules_for_subnet_with_nodes(&self.subnet.id, &resized_subnet.nodes)
-                .map_err(|e| NetworkError::ResizeFailed(e.to_string()))?;
+            .map_err(|e| NetworkError::ResizeFailed(e.to_string()))?;
 
         let subnet_change = SubnetChange {
             subnet_id: self.subnet.id,
