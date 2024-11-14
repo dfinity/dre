@@ -109,7 +109,7 @@ export const NodeProvidersRewardExplanation = () => {
       </Grid>
       <Grid item xs={12} md={6}>
         <Typography variant="body2" gutterBottom>
-          Nodes not registered:
+          Nodes Unregistered:
         </Typography>
         <Typography variant="body2" color="textSecondary" gutterBottom>
           Nodes which are not registered in the period get no rewards (0%).
@@ -135,6 +135,15 @@ export const NodeProvidersRewardExplanation = () => {
         </Typography>
         </Grid>
       <Grid item xs={12} md={6}>
+        <Typography variant="body2" gutterBottom>
+          No Node Assigned:
+        </Typography>
+        <Typography variant="body2" color="textSecondary" gutterBottom>
+          - For Node Provider with less than 4 nodes no penalty is applied
+        </Typography>
+        <Typography variant="body2" color="textSecondary" gutterBottom>
+          - For Node Provider with more than 4 nodes 80% penalty is applied
+        </Typography>
         <Typography variant="body2" gutterBottom>
           Final Node Provider rewards:
         </Typography>
