@@ -1372,7 +1372,7 @@ impl NetworkHealRequest {
                 })
                 .collect::<Vec<_>>();
 
-            if changes.is_empty() || changes.first().unwrap().node_ids_removed.is_empty() {
+            if changes.is_empty() {
                 warn!("No suitable changes found for subnet {}", subnet.decentralized_subnet.id);
                 continue;
             }
@@ -1436,6 +1436,11 @@ impl NetworkHealRequest {
                     .find(|change: &&SubnetChangeResponse| change.score_after == changes_max_score.score_after)
                     .expect("No suitable changes found")
             };
+
+            if change.node_ids_removed.is_empty() {
+                warn!("No suitable changes found for subnet {}", subnet.decentralized_subnet.id);
+                continue;
+            }
 
             info!(
                 "Replacing {} nodes in subnet {} gives Nakamoto coefficient: {}\n",
