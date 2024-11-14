@@ -2,20 +2,42 @@ use candid::Principal;
 use chrono_utils::DateTimeRange;
 use ic_cdk_macros::*;
 use itertools::Itertools;
-use std::collections::{btree_map::Entry, BTreeMap};
+use local_registry::LocalRegistry;
+use registry_querier::RegistryQuerier;
+use std::{
+    cell::RefCell,
+    collections::{btree_map::Entry, BTreeMap},
+    rc::Rc,
+};
 use trustworthy_node_metrics_types::types::{
     NodeMetadata, NodeMetrics, NodeMetricsStored, NodeMetricsStoredKey, NodeProviderRewards, NodeProviderRewardsArgs, NodeRewardsArgs,
     NodeRewardsMultiplier, SubnetNodeMetricsArgs, SubnetNodeMetricsResponse,
 };
 mod chrono_utils;
+mod local_registry;
 mod metrics_manager;
+mod registry_querier;
 mod rewards_manager;
 mod stable_memory;
 
 // Management canisters updates node metrics every day
 const TIMER_INTERVAL_SEC: u64 = 60 * 60 * 24;
 
+thread_local! {
+    static LOCAL_REGISTRY: RefCell<Rc<LocalRegistry>> = RefCell::new(Rc::new(Default::default()));
+}
+
 async fn update_metrics_task() {
+    let local_registry = LOCAL_REGISTRY.with_borrow(|local_registry| local_registry.clone());
+    match local_registry.sync_registry_stored().await {
+        Ok(_) => {
+            ic_cdk::println!("Successfully sync_registry_stored");
+        }
+        Err(e) => {
+            ic_cdk::println!("Error sync_registry_stored: {}", e);
+        }
+    }
+
     match metrics_manager::update_metrics().await {
         Ok(_) => {
             ic_cdk::println!("Successfully updated metrics");
@@ -120,6 +142,8 @@ fn node_rewards(args: NodeRewardsArgs) -> NodeRewardsMultiplier {
 fn node_provider_rewards(args: NodeProviderRewardsArgs) -> NodeProviderRewards {
     let rewarding_period = DateTimeRange::new(args.from_ts, args.to_ts);
     let node_provider_id = args.node_provider_id;
-
-    rewards_manager::node_provider_rewards(node_provider_id, rewarding_period)
+    let registry_querier = RegistryQuerier {
+        local_registry: LOCAL_REGISTRY.with_borrow(|local_registry| local_registry.clone()),
+    };
+    rewards_manager::node_provider_rewards(node_provider_id, rewarding_period, registry_querier)
 }
