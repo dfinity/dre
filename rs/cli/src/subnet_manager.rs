@@ -14,6 +14,7 @@ use ic_management_types::HealthStatus;
 use ic_management_types::Node;
 use ic_types::PrincipalId;
 use indexmap::IndexMap;
+use itertools::Itertools;
 use log::{info, warn};
 
 use crate::cordoned_feature_fetcher::CordonedFeatureFetcher;
@@ -123,6 +124,7 @@ impl SubnetManager {
         exclude: Option<Vec<String>>,
         only: Vec<String>,
         include: Option<Vec<PrincipalId>>,
+        all_nodes: &[Node],
     ) -> anyhow::Result<SubnetChangeResponse> {
         let subnet_query_by = self.get_subnet_query_by(self.target()?).await?;
         let mut motivations = vec![];
@@ -156,6 +158,7 @@ impl SubnetManager {
             &to_be_replaced,
             &health_of_nodes,
             self.cordoned_features_fetcher.fetch().await?,
+            all_nodes,
         )?;
 
         for n in change.removed().iter().filter(|n| !node_ids_unhealthy.contains(&n.principal)) {
@@ -186,6 +189,7 @@ impl SubnetManager {
         health_of_nodes: &IndexMap<PrincipalId, HealthStatus>,
     ) -> anyhow::Result<SubnetChangeResponse> {
         let registry = self.registry_instance.clone();
+        let all_nodes = registry.nodes().await?.values().cloned().collect_vec();
         let mut motivations = vec![];
 
         let change = registry
@@ -200,6 +204,7 @@ impl SubnetManager {
                 0,
                 health_of_nodes,
                 self.cordoned_features_fetcher.fetch().await?,
+                &all_nodes,
             )?;
 
         for n in change.removed().iter() {

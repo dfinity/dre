@@ -242,6 +242,7 @@ fn should_skip_cordoned_nodes() {
     let mut failed_scenarios = vec![];
 
     let registry = Arc::new(registry);
+    let all_nodes = available_nodes.iter().chain(subnet.nodes.iter()).cloned().collect_vec();
     let health_client = Arc::new(health_client);
     for (cordoned_features, should_succeed) in scenarios {
         let cordoned_features_clone = cordoned_features.clone();
@@ -260,7 +261,7 @@ fn should_skip_cordoned_nodes() {
                 .with_target(crate::subnet_manager::SubnetTarget::FromNodesIds(vec![
                     subnet.nodes.first().unwrap().principal,
                 ]))
-                .membership_replace(false, None, None, None, vec![], None),
+                .membership_replace(false, None, None, None, vec![], None, &all_nodes),
         );
 
         // Assert
