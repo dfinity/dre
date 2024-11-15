@@ -1,5 +1,5 @@
 {
-  "checksum": "aa252993bc9a1fcc695f6ece7209c356050c271ddc71c7d8f61cc8300a185cd0",
+  "checksum": "2ac4c75a89d54462c8c8486d8aa981f4cd57d3aa6bc128937ed532422bc02dd2",
   "crates": {
     "actix-codec 0.5.2": {
       "name": "actix-codec",
@@ -19433,6 +19433,10 @@
               "target": "env_logger"
             },
             {
+              "id": "fs-err 3.0.0",
+              "target": "fs_err"
+            },
+            {
               "id": "fs2 0.4.3",
               "target": "fs2"
             },
@@ -28132,35 +28136,29 @@
         ],
         "crate_features": {
           "common": [
+            "elf",
+            "errno",
             "general",
             "ioctl",
             "no_std"
           ],
           "selects": {
             "aarch64-unknown-linux-gnu": [
-              "elf",
-              "errno",
               "prctl",
               "std",
               "system"
             ],
             "arm-unknown-linux-gnueabi": [
-              "elf",
-              "errno",
               "prctl",
               "std",
               "system"
             ],
             "armv7-unknown-linux-gnueabi": [
-              "elf",
-              "errno",
               "prctl",
               "std",
               "system"
             ],
             "i686-unknown-linux-gnu": [
-              "elf",
-              "errno",
               "prctl",
               "std",
               "system"
@@ -28176,8 +28174,6 @@
               "system"
             ],
             "x86_64-unknown-linux-gnu": [
-              "elf",
-              "errno",
               "prctl",
               "std",
               "system"

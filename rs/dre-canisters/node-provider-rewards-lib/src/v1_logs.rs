@@ -3,6 +3,7 @@ use itertools::Itertools;
 use rust_decimal::{prelude::Zero, Decimal};
 use std::fmt;
 
+#[derive(Clone)]
 pub enum Operation {
     Sum(Vec<Decimal>),
     Avg(Vec<Decimal>),
@@ -63,7 +64,7 @@ pub enum LogEntry {
         operation: Operation,
         result: Decimal,
     },
-    RewardablesInRegionNodeType {
+    PerformanceBasedRewardables {
         node_type: String,
         region: String,
         count: usize,
@@ -87,6 +88,11 @@ pub enum LogEntry {
         region_rewards_avg: Decimal,
     },
     UnassignedMultiplier(Decimal),
+    NodeCountRewardables {
+        node_type: String,
+        region: String,
+        count: usize,
+    },
 }
 
 impl fmt::Display for LogEntry {
@@ -125,7 +131,7 @@ impl fmt::Display for LogEntry {
                     node_type, region, coeff, base_rewards
                 )
             }
-            LogEntry::RewardablesInRegionNodeType {
+            LogEntry::PerformanceBasedRewardables {
                 node_type,
                 region,
                 count,
@@ -138,8 +144,8 @@ impl fmt::Display for LogEntry {
                     region,
                     node_type,
                     count,
-                    assigned_multiplier.iter().map(|dec| dec.round_dp(2)),
-                    unassigned_multiplier.iter().map(|dec| dec.round_dp(2))
+                    assigned_multiplier.iter().map(|dec| dec.round_dp(2)).collect_vec(),
+                    unassigned_multiplier.iter().map(|dec| dec.round_dp(2)).collect_vec()
                 )
             }
             LogEntry::AvgType3Rewards {
@@ -151,11 +157,21 @@ impl fmt::Display for LogEntry {
                 write!(
                     f,
                     "Avg. rewards for nodes with type: type3* in region: {} is {}\nRegion rewards average: {}\nReduction coefficient average:{}",
-                    region, rewards_avg, region_rewards_avg, coefficients_avg
+                    region,
+                    rewards_avg.round_dp(2),
+                    region_rewards_avg,
+                    coefficients_avg
                 )
             }
             LogEntry::UnassignedMultiplier(unassigned_multiplier) => {
                 write!(f, "Unassigned Nodes Multiplier: {}", unassigned_multiplier.round_dp(2))
+            }
+            LogEntry::NodeCountRewardables { node_type, region, count } => {
+                write!(
+                    f,
+                    "Region {} with type: {} | Rewardable Nodes: {} Rewarded independently of their performance",
+                    region, node_type, count
+                )
             }
         }
     }
