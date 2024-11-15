@@ -1,10 +1,9 @@
 use crate::registry::local_cache_path;
+use fs_err::File;
 use ic_management_types::Network;
 use serde::de::DeserializeOwned;
-use std::path::PathBuf;
-use fs_err::File;
-use tokio::io::{AsyncReadExt, BufReader};
-use tokio::{fs::File, io::AsyncWriteExt};
+use std::io::{BufReader, Read};
+use std::{io::Write, path::PathBuf};
 
 const IC_DASHBOARD_API: &str = "https://ic-api.internetcomputer.org/api";
 const IC_API_REFRESH_INTERVAL_SECONDS: u64 = 60 * 60; // 1h
@@ -20,9 +19,10 @@ pub async fn query_ic_dashboard_list<T: DeserializeOwned>(network: &Network, que
         && (!network.is_mainnet()
             || local_cache_file_path.metadata().unwrap().modified().unwrap().elapsed().unwrap().as_secs() < IC_API_REFRESH_INTERVAL_SECONDS)
     {
-        let file = File::open(&local_cache_file_path).await?;
+        let file = File::open(&local_cache_file_path)?;
+        let mut buf_reader = BufReader::new(file);
         let mut buf = Vec::new();
-        BufReader::new(file).read_to_end(&mut buf).await?;
+        buf_reader.read_to_end(&mut buf)?;
         buf
     } else {
         let client = reqwest::Client::new();
@@ -38,8 +38,8 @@ pub async fn query_ic_dashboard_list<T: DeserializeOwned>(network: &Network, que
     };
     match serde_json::from_slice(data.as_slice()) {
         Ok(result) => {
-            let mut file = File::create(&local_cache_file_path).await?;
-            file.write_all(&data).await?;
+            let mut file = File::create(&local_cache_file_path)?;
+            file.write_all(&data)?;
             Ok(result)
         }
         Err(e) => Err(anyhow::format_err!("failed to parse as json: {}", e)),
