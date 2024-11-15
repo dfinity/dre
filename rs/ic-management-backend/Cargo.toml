@@ -20,6 +20,7 @@ dirs = { workspace = true }
 dotenv = { workspace = true }
 env_logger = { workspace = true }
 fs2 = { workspace = true }
+fs-err = { workspace = true }
 futures = { workspace = true }
 futures-util = { workspace = true }
 octocrab = { workspace = true }

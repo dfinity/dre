@@ -3915,6 +3915,7 @@ dependencies = [
  "dirs",
  "dotenv",
  "env_logger 0.11.5",
+ "fs-err",
  "fs2",
  "futures",
  "futures-util",

@@ -2,7 +2,7 @@ use crate::registry::local_cache_path;
 use ic_management_types::Network;
 use serde::de::DeserializeOwned;
 use std::path::PathBuf;
-use tokio::fs;
+use fs_err::File;
 use tokio::io::{AsyncReadExt, BufReader};
 use tokio::{fs::File, io::AsyncWriteExt};
 
@@ -38,10 +38,6 @@ pub async fn query_ic_dashboard_list<T: DeserializeOwned>(network: &Network, que
     };
     match serde_json::from_slice(data.as_slice()) {
         Ok(result) => {
-            if let Some(parent_dir) = std::path::Path::new(&local_cache_file_path).parent() {
-                fs::create_dir_all(parent_dir).await?;
-            }
-
             let mut file = File::create(&local_cache_file_path).await?;
             file.write_all(&data).await?;
             Ok(result)
