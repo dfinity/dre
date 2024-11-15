@@ -18,6 +18,7 @@ use crate::{
     },
 };
 
+const FULL_REWARDS_MACHINES_LIMIT: u32 = 4;
 const MIN_FAILURE_RATE: Decimal = dec!(0.1);
 const MAX_FAILURE_RATE: Decimal = dec!(0.6);
 
@@ -231,6 +232,8 @@ fn node_provider_rewards(
 ) -> Rewards {
     let mut rewards_xdr_total = Vec::new();
     let mut rewards_xdr_no_penalty_total = Vec::new();
+    let rewardable_nodes_count: u32 = rewardable_nodes.values().sum();
+
     let region_nodetype_rewards: AHashMap<RegionNodeTypeCategory, Decimal> = base_rewards_region_nodetype(rewardable_nodes, rewards_table);
 
     // Computes the rewards multiplier for unassigned nodes as the average of the multipliers of the assigned nodes.
@@ -238,36 +241,45 @@ fn node_provider_rewards(
     let unassigned_multiplier = logger().execute("Unassigned Nodes Multiplier", Operation::Avg(assigned_multipliers_v));
     logger().add_entry(LogEntry::UnassignedMultiplier(unassigned_multiplier));
 
-    // Compute total rewards with/without performance penalty
     for ((region, node_type), node_count) in rewardable_nodes {
-        let mut rewards_multipliers = assigned_multipliers
-            .get(&(region.clone(), node_type.clone()))
-            .cloned()
-            .unwrap_or_default();
-        let assigned_len = rewards_multipliers.len();
-        rewards_multipliers.resize(*node_count as usize, unassigned_multiplier);
+        let xdr_permyriad = if node_type.starts_with("type3") {
+            let region_key = region_type3_key(region.clone());
+            region_nodetype_rewards.get(&region_key).expect("Type3 rewards already filled")
+        } else {
+            region_nodetype_rewards
+                .get(&(region.clone(), node_type.clone()))
+                .expect("Rewards already filled")
+        };
+        let rewards_xdr_no_penalty = Operation::Multiply(*xdr_permyriad, Decimal::from(*node_count));
+        rewards_xdr_no_penalty_total.push(rewards_xdr_no_penalty.clone());
 
-        logger().add_entry(LogEntry::RewardablesInRegionNodeType {
-            node_type: node_type.clone(),
-            region: region.clone(),
-            count: rewards_multipliers.len(),
-            assigned_multipliers: rewards_multipliers[..assigned_len].to_vec(),
-            unassigned_multipliers: rewards_multipliers[assigned_len..].to_vec(),
-        });
+        // Node Providers with less than 4 machines are rewarded fully, independently on their performance
+        if rewardable_nodes_count < FULL_REWARDS_MACHINES_LIMIT {
+            logger().add_entry(LogEntry::NodeCountRewardables {
+                node_type: node_type.clone(),
+                region: region.clone(),
+                count: *node_count as usize,
+            });
 
-        for multiplier in rewards_multipliers {
-            if node_type.starts_with("type3") {
-                let region_key = region_type3_key(region.clone());
-                let xdr_permyriad_avg_based = region_nodetype_rewards.get(&region_key).expect("Type3 rewards already filled");
+            rewards_xdr_total.push(rewards_xdr_no_penalty);
+        } else {
+            let mut rewards_multipliers = assigned_multipliers
+                .get(&(region.clone(), node_type.clone()))
+                .cloned()
+                .unwrap_or_default();
+            let assigned_len = rewards_multipliers.len();
 
-                rewards_xdr_no_penalty_total.push(*xdr_permyriad_avg_based);
-                rewards_xdr_total.push(Operation::Multiply(*xdr_permyriad_avg_based, multiplier));
-            } else {
-                let xdr_permyriad = region_nodetype_rewards
-                    .get(&(region.clone(), node_type.clone()))
-                    .expect("Rewards already filled");
+            rewards_multipliers.resize(*node_count as usize, unassigned_multiplier);
 
-                rewards_xdr_no_penalty_total.push(*xdr_permyriad);
+            logger().add_entry(LogEntry::PerformanceBasedRewardables {
+                node_type: node_type.clone(),
+                region: region.clone(),
+                count: *node_count as usize,
+                assigned_multipliers: rewards_multipliers[..assigned_len].to_vec(),
+                unassigned_multipliers: rewards_multipliers[assigned_len..].to_vec(),
+            });
+
+            for multiplier in rewards_multipliers {
                 rewards_xdr_total.push(Operation::Multiply(*xdr_permyriad, multiplier));
             }
         }
@@ -276,7 +288,7 @@ fn node_provider_rewards(
     let rewards_xdr_total = logger().execute("Compute total permyriad XDR", Operation::SumOps(rewards_xdr_total));
     let rewards_xdr_no_reduction_total = logger().execute(
         "Compute total permyriad XDR no performance penalty",
-        Operation::Sum(rewards_xdr_no_penalty_total),
+        Operation::SumOps(rewards_xdr_no_penalty_total),
     );
     logger().add_entry(LogEntry::RewardsXDRTotal(rewards_xdr_total));
 
