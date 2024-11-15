@@ -13,23 +13,20 @@ pub fn get_proposed_subnet_changes(
 ) -> Result<SubnetChangeResponse, anyhow::Error> {
     if let Some(proposal) = &subnet.proposal {
         let proposal: &TopologyChangeProposal = proposal;
-        let subnet_nodes: Vec<_> = subnet.nodes.iter().map(decentralization::network::Node::from).collect();
 
-        let penalties_before_change = DecentralizedSubnet::check_business_rules_for_subnet_with_nodes(&subnet.principal, &subnet_nodes)
-            .expect("Business rules check should succeed")
-            .0;
-        let business_rules_check_after_change = DecentralizedSubnet::check_business_rules_for_subnet_with_nodes(&subnet.principal, &subnet_nodes)
+        let penalties_before_change = DecentralizedSubnet::check_business_rules_for_subnet_with_nodes(&subnet.principal, &subnet.nodes)
+            .expect("Business rules check should succeed");
+        let penalties_after_change = DecentralizedSubnet::check_business_rules_for_subnet_with_nodes(&subnet.principal, &subnet.nodes)
             .expect("Business rules check should succeed");
 
         let change = SubnetChange {
             subnet_id: subnet.principal,
-            old_nodes: subnet_nodes.clone(),
-            new_nodes: subnet_nodes,
+            old_nodes: subnet.nodes.clone(),
+            new_nodes: subnet.nodes.clone(),
             removed_nodes: vec![],
             added_nodes: vec![],
             penalties_before_change,
-            penalties_after_change: business_rules_check_after_change.0,
-            business_rules_log: business_rules_check_after_change.1,
+            penalties_after_change,
             comment: None,
             run_log: vec![],
         }
@@ -37,14 +34,14 @@ pub fn get_proposed_subnet_changes(
             &proposal
                 .node_ids_added
                 .iter()
-                .map(|p| (decentralization::network::Node::from(all_nodes.get(p).unwrap())))
+                .map(|p| all_nodes.get(p).unwrap().clone())
                 .collect::<Vec<_>>(),
         )
         .without_nodes(
             &proposal
                 .node_ids_removed
                 .iter()
-                .map(|p| (decentralization::network::Node::from(all_nodes.get(p).unwrap())))
+                .map(|p| all_nodes.get(p).unwrap().clone())
                 .collect::<Vec<_>>(),
         );
         let mut response = SubnetChangeResponse::new(&change, health_of_nodes, None);
@@ -61,7 +58,7 @@ pub fn get_proposed_subnet_changes(
 // Adding some tests to the above function
 #[cfg(test)]
 mod tests {
-    use std::net::Ipv6Addr;
+    use std::sync::OnceLock;
 
     use ic_management_types::{Datacenter, DatacenterOwner, Operator, Provider};
 
@@ -157,7 +154,8 @@ mod tests {
                 },
                 subnet_id: Some(subnet_id),
                 hostos_release: None,
-                ip_addr: Ipv6Addr::new(0, 0, 0, 0, 0, 0, 0, 1),
+                ip_addr: None,
+                cached_features: OnceLock::new(),
                 hostname: None,
                 dfinity_owned: None,
                 proposal: None,

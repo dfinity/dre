@@ -1,6 +1,7 @@
 use clap::{error::ErrorKind, Args};
 
 use ic_types::PrincipalId;
+use itertools::Itertools;
 
 use crate::{
     commands::{AuthRequirement, ExecutableCommand},
@@ -53,6 +54,9 @@ impl ExecutableCommand for Replace {
             _ => SubnetTarget::FromNodesIds(self.nodes.clone()),
         };
 
+        let runner = ctx.runner().await?;
+        let all_nodes = ctx.registry().await.nodes().await?.values().cloned().collect_vec();
+
         let subnet_manager = ctx.subnet_manager().await?;
         let subnet_change_response = subnet_manager
             .with_target(subnet_target)
@@ -63,10 +67,9 @@ impl ExecutableCommand for Replace {
                 self.exclude.clone().into(),
                 self.only.clone(),
                 self.include.clone().into(),
+                &all_nodes,
             )
             .await?;
-
-        let runner = ctx.runner().await?;
 
         if let Some(runner_proposal) = runner.propose_subnet_change(subnet_change_response, ctx.forum_post_link()).await? {
             let ic_admin = ctx.ic_admin().await?;
