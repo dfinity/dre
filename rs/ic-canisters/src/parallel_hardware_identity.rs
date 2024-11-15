@@ -541,7 +541,10 @@ impl ParallelHardwareIdentity {
         // The PKCS#11 context may have been deleted before.
         // If empty, it must be recreated.
         let ctx = match ctx_guard.take() {
-            None => PKCS11Ctx::init()?,
+            None => {
+                warn!(target:"pkcs11", "PKCS#11 context appears to have been dropped before; will initialize a new context now");
+                PKCS11Ctx::init()?
+            }
             Some(c) => c,
         };
         match self.sign_hash_inner(&ctx, hash) {
@@ -554,6 +557,7 @@ impl ParallelHardwareIdentity {
             // Uh oh, failure.  Try deleting the context and recreating it, before
             // retrying the signing operation.
             Err(e) => {
+                warn!(target:"pkcs11", "PKCS#11 context appears to be malfunctioning ({}); will reset the context now and retry the signing operation", e);
                 drop(ctx);
                 let new_ctx = match PKCS11Ctx::init() {
                     Ok(c) => Ok(c),
