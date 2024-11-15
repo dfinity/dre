@@ -1,8 +1,4 @@
-use std::{
-    cell::RefCell,
-    rc::Rc,
-    sync::{Arc, Mutex},
-};
+use std::{cell::RefCell, rc::Rc, sync::Arc};
 
 use ic_canisters::IcAgentCanisterClient;
 use ic_management_backend::{
@@ -139,10 +135,10 @@ impl DreContext {
     }
 
     /// Uses `ic_agent::Agent`
-    pub async fn create_ic_agent_canister_client(&self, lock: Option<Mutex<()>>) -> anyhow::Result<IcAgentCanisterClient> {
+    pub async fn create_ic_agent_canister_client(&self) -> anyhow::Result<(Neuron, IcAgentCanisterClient)> {
         let neuron = self.neuron().await?;
-
-        neuron.auth.create_canister_client(self.network.get_nns_urls().to_vec(), lock)
+        let canister_client = neuron.auth.clone().create_canister_client(self.network.get_nns_urls().to_vec())?;
+        Ok((neuron, canister_client))
     }
 
     pub async fn ic_admin(&self) -> anyhow::Result<Arc<dyn IcAdmin>> {
@@ -183,8 +179,10 @@ impl DreContext {
         let neuron = match maybe_neuron {
             Ok(n) => n,
             Err(e) => {
-                warn!("Couldn't detect neuron due to: {:?}", e);
-                warn!("Falling back to Anonymous for dry-run");
+                warn!(
+                    "Couldn't detect neuron due to: {:?}.  Will fall back to anonymous in dry-run operations.",
+                    e
+                );
                 Neuron::dry_run_fake_neuron()?
             }
         };

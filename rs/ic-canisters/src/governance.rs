@@ -71,6 +71,13 @@ impl From<IcAgentCanisterClient> for GovernanceCanisterWrapper {
     }
 }
 
+impl<T> From<(T, IcAgentCanisterClient)> for GovernanceCanisterWrapper {
+    fn from(value: (T, IcAgentCanisterClient)) -> Self {
+        let (_, client) = value;
+        Self { client }
+    }
+}
+
 impl GovernanceCanisterWrapper {
     pub async fn get_pending_proposals(&self) -> anyhow::Result<Vec<ProposalInfo>> {
         let mut retries = 0;

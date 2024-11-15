@@ -15,9 +15,10 @@ impl ExecutableCommand for TopUp {
     fn validate(&self, _args: &crate::commands::Args, _cmd: &mut clap::Command) {}
 
     async fn execute(&self, ctx: crate::ctx::DreContext) -> anyhow::Result<()> {
-        let governance = GovernanceCanisterWrapper::from(ctx.create_ic_agent_canister_client(None).await?);
-        let full_neuron = governance.get_full_neuron(ctx.neuron().await?.neuron_id).await?;
-        let ledger = LedgerCanisterWrapper::from(ctx.create_ic_agent_canister_client(None).await?);
+        let (neuron, client) = ctx.create_ic_agent_canister_client().await?;
+        let governance = GovernanceCanisterWrapper::from(client);
+        let full_neuron = governance.get_full_neuron(neuron.neuron_id).await?;
+        let ledger = LedgerCanisterWrapper::from(ctx.create_ic_agent_canister_client().await?);
         let account = ledger
             .get_account_id(Some(
                 full_neuron
@@ -32,7 +33,7 @@ impl ExecutableCommand for TopUp {
         println!(
             "> Hi! Can I please get XX ICPs on the account address `{}` for neuron ID {} in order to be able to submit more NNS proposals. Thank you\n",
             account_hex,
-            ctx.neuron().await?.neuron_id
+            neuron.neuron_id
         );
         println!("You can check balance by running `dre neuron balance`");
 
