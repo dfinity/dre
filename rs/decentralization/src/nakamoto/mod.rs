@@ -647,7 +647,10 @@ mod tests {
         // expected error message
         assert_eq!(
             new_test_subnet(0, 2, 0).check_business_rules().unwrap(),
-            (1000, vec!["Subnet should have 1 DFINITY-owned nodes, got 0".to_string()])
+            (
+                1000,
+                vec!["Subnet should have 1 DFINITY-owned node(s) for subnet recovery, got 0".to_string()]
+            )
         );
     }
 
@@ -998,7 +1001,7 @@ mod tests {
         important.insert(subnet.principal, subnet);
 
         let network_heal_response = NetworkHealRequest::new(important.clone())
-            .heal_and_optimize(nodes_available.clone(), &health_of_nodes, vec![], &all_nodes)
+            .heal_and_optimize(nodes_available.clone(), &health_of_nodes, vec![], &all_nodes, false)
             .await
             .unwrap();
         let result = network_heal_response.first().unwrap().clone();
