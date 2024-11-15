@@ -253,7 +253,7 @@ fn node_provider_rewards(
         let rewards_xdr_no_penalty = Operation::Multiply(*xdr_permyriad, Decimal::from(*node_count));
         rewards_xdr_no_penalty_total.push(rewards_xdr_no_penalty.clone());
 
-        // Node Providers with less than 4 machines are rewarded fully, independently on their performance
+        // Node Providers with less than 4 machines are rewarded fully, independently of their performance
         if rewardable_nodes_count < FULL_REWARDS_MACHINES_LIMIT {
             logger().add_entry(LogEntry::NodeCountRewardables {
                 node_type: node_type.clone(),
