@@ -216,10 +216,10 @@ impl RewardsLog {
     pub fn get_log(&self, level: LogLevel) -> Vec<String> {
         self.entries
             .iter()
-            .filter_map(move |(entry_log_level, entry)| 
-                match (level, entry_log_level) {
-                    (LogLevel::Info, LogLevel::Debug) => None,
-                    _ => Some(format!("{}: {} ", level, entry)),
-            }).collect_vec()
+            .filter_map(move |(entry_log_level, entry)| match (level, entry_log_level) {
+                (LogLevel::Info, LogLevel::Debug) => None,
+                _ => Some(format!("{}: {} ", level, entry)),
+            })
+            .collect_vec()
     }
 }
