@@ -1,45 +1,34 @@
 use std::path::PathBuf;
-use std::str::FromStr;
 
 use anyhow::anyhow;
-use cryptoki::object::AttributeInfo;
-use cryptoki::session::Session;
-use cryptoki::{
-    context::{CInitializeArgs, Pkcs11},
-    object::{Attribute, AttributeType},
-    session::UserType,
-    slot::{Slot, TokenInfo},
-};
 use dialoguer::{console::Term, theme::ColorfulTheme, Password, Select};
 use ic_canisters::governance::GovernanceCanisterWrapper;
+use ic_canisters::parallel_hardware_identity::{hsm_key_id_to_string, KeyIdVec, ParallelHardwareIdentity};
 use ic_canisters::IcAgentCanisterClient;
 use ic_icrc1_test_utils::KeyPairGenerator;
 use ic_management_types::Network;
 use keyring::{Entry, Error};
 use log::{debug, info, warn};
-use std::sync::Mutex;
 
 use crate::commands::{AuthOpts, AuthRequirement, HsmOpts, HsmParams};
 
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Debug, Clone)]
 pub struct Neuron {
     pub auth: Auth,
     pub neuron_id: u64,
     pub include_proposer: bool,
 }
 
+impl PartialEq for Neuron {
+    fn eq(&self, other: &Self) -> bool {
+        self.neuron_id == other.neuron_id && self.include_proposer == other.include_proposer
+    }
+}
+
+impl Eq for Neuron {}
+
 pub const STAGING_NEURON_ID: u64 = 49;
 pub const STAGING_KEY_PATH_FROM_HOME: &str = ".config/dfx/identity/bootstrap-super-leader/identity.pem";
-
-// As per fn str_to_key_id(s: &str) in ic-canisters/.../parallel_hardware_identity.rs,
-// the representation of key ID that the canister client wants is a sequence of
-// pairs of hex digits, case-insensitive.  The key ID as stored in the HSM is
-// a Vec<u8>.  We only store the little-endianest of the digits from that Vec<> in
-// our key_id variable.  The following function produces what the ic-canisters
-// code wants.
-pub fn hsm_key_id_to_string(s: u8) -> String {
-    format!("{:02x?}", s)
-}
 
 impl Neuron {
     pub(crate) async fn from_opts_and_req(
@@ -81,7 +70,47 @@ impl Neuron {
             (neuron_id, auth_opts)
         };
 
-        Self::from_opts_and_req_inner(auth_opts, requirement, network, neuron_id, offline).await
+        match requirement {
+            AuthRequirement::Anonymous => Ok(Self {
+                auth: Auth::Anonymous,
+                neuron_id: 0,
+                include_proposer: false,
+            }),
+            AuthRequirement::Signer => Ok(Self {
+                auth: Auth::from_auth_opts(auth_opts).await?,
+                neuron_id: 0,
+                include_proposer: false,
+            }),
+            AuthRequirement::Neuron => Ok({
+                match (neuron_id, offline) {
+                    (Some(n), _) => Self {
+                        neuron_id: n,
+                        auth: Auth::from_auth_opts(auth_opts).await?,
+                        include_proposer: true,
+                    },
+                    // This is just a placeholder since
+                    // the tool is instructed to run in
+                    // offline mode.
+                    (None, true) => {
+                        warn!("Required full neuron but offline mode instructed! Will not attempt to auto-detect neuron id");
+                        Self {
+                            neuron_id: 0,
+                            auth: Auth::from_auth_opts(auth_opts).await?,
+                            include_proposer: true,
+                        }
+                    }
+                    (None, false) => {
+                        let auth = Auth::from_auth_opts(auth_opts).await?;
+                        let neuron_id = auth.clone().auto_detect_neuron_id(network.nns_urls.clone()).await?;
+                        Self {
+                            neuron_id,
+                            auth,
+                            include_proposer: true,
+                        }
+                    }
+                }
+            }),
+        }
     }
 
     #[cfg(test)]
@@ -116,45 +145,6 @@ impl Neuron {
         })
     }
 
-    async fn from_opts_and_req_inner(
-        auth_opts: AuthOpts,
-        requirement: AuthRequirement,
-        network: &Network,
-        neuron_id: Option<u64>,
-        offline: bool,
-    ) -> anyhow::Result<Self> {
-        match requirement {
-            AuthRequirement::Anonymous => Ok(Self {
-                auth: Auth::Anonymous,
-                neuron_id: 0,
-                include_proposer: false,
-            }),
-            AuthRequirement::Signer => Ok(Self {
-                auth: Auth::from_auth_opts(auth_opts).await?,
-                neuron_id: 0,
-                include_proposer: false,
-            }),
-            AuthRequirement::Neuron => Ok({
-                let auth = Auth::from_auth_opts(auth_opts).await?;
-                Self {
-                    neuron_id: match (neuron_id, offline) {
-                        (Some(n), _) => n,
-                        // This is just a placeholder since
-                        // the tool is instructed to run in
-                        // offline mode.
-                        (None, true) => {
-                            warn!("Required full neuron but offline mode instructed! Will not attempt to auto-detect neuron id");
-                            0
-                        }
-                        (None, false) => auth.auto_detect_neuron_id(network.nns_urls.clone()).await?,
-                    },
-                    auth,
-                    include_proposer: true,
-                }
-            }),
-        }
-    }
-
     pub fn as_arg_vec(&self) -> Vec<String> {
         self.auth.as_arg_vec()
     }
@@ -176,9 +166,9 @@ impl Neuron {
     }
 }
 
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Debug, Clone)]
 pub enum Auth {
-    Hsm { pin: String, slot: u64, key_id: u8 },
+    Hsm { identity: ParallelHardwareIdentity },
     Keyfile { path: PathBuf },
     Anonymous,
 }
@@ -186,46 +176,33 @@ pub enum Auth {
 impl Auth {
     pub fn as_arg_vec(&self) -> Vec<String> {
         match self {
-            Auth::Hsm { pin, slot, key_id } => vec![
+            Auth::Hsm { identity } => vec![
                 "--use-hsm".to_string(),
                 "--pin".to_string(),
-                pin.clone(),
+                identity.cached_pin.clone(),
                 "--slot".to_string(),
-                slot.to_string(),
+                identity.slot.to_string(),
                 "--key-id".to_string(),
-                key_id.to_string(),
+                hsm_key_id_to_string(&identity.key_id),
             ],
             Auth::Keyfile { path } => vec!["--secret-key-pem".to_string(), path.to_string_lossy().to_string()],
             Auth::Anonymous => vec![],
         }
     }
 
-    fn pkcs11_lib_path() -> anyhow::Result<PathBuf> {
-        let lib_macos_path = PathBuf::from_str("/Library/OpenSC/lib/opensc-pkcs11.so")?;
-        let lib_linux_path = PathBuf::from_str("/usr/lib/x86_64-linux-gnu/opensc-pkcs11.so")?;
-        if lib_macos_path.exists() {
-            Ok(lib_macos_path)
-        } else if lib_linux_path.exists() {
-            Ok(lib_linux_path)
-        } else {
-            Err(anyhow::anyhow!("no pkcs11 library found"))
-        }
-    }
-
-    pub fn create_canister_client(&self, nns_urls: Vec<url::Url>, lock: Option<Mutex<()>>) -> anyhow::Result<IcAgentCanisterClient> {
+    pub fn create_canister_client(self, nns_urls: Vec<url::Url>) -> anyhow::Result<IcAgentCanisterClient> {
         // FIXME: why do we even take multiple URLs if only the first one is ever used?
         let url = nns_urls.first().ok_or(anyhow::anyhow!("No NNS URLs provided"))?.to_owned();
         match self {
-            Auth::Hsm { pin, slot, key_id } => IcAgentCanisterClient::from_hsm(pin.clone(), *slot, hsm_key_id_to_string(*key_id), url, lock),
+            Auth::Hsm { identity } => IcAgentCanisterClient::from_hsm(identity, url),
             Auth::Keyfile { path } => IcAgentCanisterClient::from_key_file(path.clone(), url),
             Auth::Anonymous => IcAgentCanisterClient::from_anonymous(url),
         }
     }
 
-    async fn auto_detect_neuron_id(&self, nns_urls: Vec<url::Url>) -> anyhow::Result<u64> {
-        let selfclone = self.clone();
+    async fn auto_detect_neuron_id(self, nns_urls: Vec<url::Url>) -> anyhow::Result<u64> {
         let nnsurlsclone = nns_urls.clone();
-        let client = tokio::task::spawn_blocking(move || selfclone.create_canister_client(nnsurlsclone, None)).await??;
+        let client = tokio::task::spawn_blocking(move || self.create_canister_client(nnsurlsclone)).await??;
         let governance = GovernanceCanisterWrapper::from(client);
         let response = governance.list_neurons().await?;
         let neuron_ids = response.neuron_infos.keys().copied().collect::<Vec<_>>();
@@ -245,150 +222,25 @@ impl Auth {
     }
 
     /// If it is called it is expected to retrieve an Auth of type Hsm or fail
-    fn detect_hsm_auth(maybe_pin: Option<String>, maybe_slot: Option<u64>, maybe_key_id: Option<u8>) -> anyhow::Result<Self> {
-        if maybe_slot.is_none() && maybe_key_id.is_none() {
-            debug!("Scanning hardware security module devices");
-        }
-        if let Some(slot) = &maybe_slot {
-            debug!("Probing hardware security module in slot {}", slot);
-        }
-        if let Some(key_id) = &maybe_key_id {
-            debug!("Limiting key scan to keys with ID {}", key_id);
-        }
-
-        let ctx = Pkcs11::new(Self::pkcs11_lib_path()?)?;
-        ctx.initialize(CInitializeArgs::OsThreads)?;
-        for slot in ctx.get_slots_with_token()? {
-            let info = ctx.get_slot_info(slot)?;
-            let token_info = ctx.get_token_info(slot)?;
-            if info.slot_description().starts_with("Nitrokey Nitrokey HSM") && maybe_slot.is_none() || (maybe_slot.unwrap() == slot.id()) {
-                let session = ctx.open_ro_session(slot)?;
-                let key_id = match Auth::find_key_id_in_slot_session(&session, maybe_key_id)? {
-                    Some((key_id, label)) => {
-                        debug!(
-                            "Found key with ID {} ({}) in slot {}",
-                            key_id,
-                            match label {
-                                Some(label) => format!("labeled {}", label),
-                                None => "without label".to_string(),
-                            },
-                            slot.id()
-                        );
-                        key_id
-                    }
-                    None => {
-                        if maybe_slot.is_some() && maybe_key_id.is_some() {
-                            // We have been asked to be very specific.  Fail fast,
-                            // instead of falling back to Auth::Anonymous.
-                            return Err(anyhow!(
-                                "Could not find a key ID {} within hardware security module in slot {}",
-                                maybe_key_id.unwrap(),
-                                slot.id()
-                            ));
-                        } else {
-                            // Let's try the next slot just in case.
-                            continue;
-                        }
-                    }
-                };
-                let memo_key: String = format!("hsm-{}-{}", info.slot_description(), info.manufacturer_id());
-                let pin = Auth::get_or_prompt_pin_checked_for_slot(&session, maybe_pin, slot, token_info, &memo_key)?;
-                let detected = Auth::Hsm {
-                    pin,
-                    slot: slot.id(),
-                    key_id,
-                };
-                info!("Using key ID {} of hardware security module in slot {}", key_id, slot);
-                return Ok(detected);
-            }
-        }
-        Err(anyhow!(
-            "No hardware security module detected{}{}",
-            match maybe_slot {
-                None => "".to_string(),
-                Some(slot) => format!(" in slot {}", slot),
-            },
-            match maybe_key_id {
-                None => "".to_string(),
-                Some(key_id) => format!(" that contains a key ID {}", key_id),
-            }
-        ))
-    }
-
-    /// Finds the key ID in a slot.  If a key ID is specified,
-    /// then the search is limited to that key ID.  If not, then
-    /// the first key that has an ID and is for a token is returned.
-    /// If a key is found, this function returns Some, with a tuple of
-    /// the found key ID, and possibly the label assigned to said key ID
-    /// (None if no / invalid label).
-    fn find_key_id_in_slot_session(session: &Session, key_id: Option<u8>) -> anyhow::Result<Option<(u8, Option<String>)>> {
-        let token_types = vec![AttributeType::Token, AttributeType::Id];
-        let label_types = vec![AttributeType::Label];
-        let objects = session.find_objects(&[])?;
-        for hnd in objects.iter() {
-            if let [AttributeInfo::Available(_), AttributeInfo::Available(_)] = session.get_attribute_info(*hnd, &token_types)?[0..token_types.len()]
-            {
-                // Object may be a token and has an ID.
-                if let [Attribute::Token(true), Attribute::Id(token_id)] = &session.get_attributes(*hnd, &token_types)?[0..token_types.len()] {
-                    // Object is a token, and we have extracted the ID.
-                    if !token_id.is_empty() && (key_id.is_none() || token_id[0] == key_id.unwrap()) {
-                        let found_key_id = token_id[0];
-                        let mut label: Option<String> = None;
-                        if let [AttributeInfo::Available(_)] = &session.get_attribute_info(*hnd, &label_types)?[0..label_types.len()] {
-                            // Object has a label.
-                            if let [Attribute::Label(token_label)] = &session.get_attributes(*hnd, &label_types)?[0..label_types.len()] {
-                                // We have extracted the label; we make a copy of it.
-                                label = match String::from_utf8(token_label.clone()) {
-                                    Ok(label) => Some(label),
-                                    Err(_) => None,
-                                }
-                            }
-                        }
-                        return Ok(Some((found_key_id, label)));
-                    }
-                }
-            }
-        }
-        Ok(None)
-    }
-
-    fn get_or_prompt_pin_checked_for_slot(
-        session: &Session,
-        maybe_pin: Option<String>,
-        slot: Slot,
-        token_info: TokenInfo,
-        memo_key: &str,
-    ) -> anyhow::Result<String> {
-        if token_info.user_pin_locked() {
-            return Err(anyhow!("The PIN for the token stored in slot {} is locked", slot.id()));
-        }
-        if token_info.user_pin_final_try() {
-            warn!(
-                "The PIN for the token stored in slot {} is at its last try, and if this operation fails, the token will be locked",
-                slot.id()
-            );
-        }
-        let ret = Ok(match maybe_pin {
-            Some(pin) => {
-                let auth_pin = cryptoki::types::AuthPin::from_str(pin.as_str()).expect("Parsin pin as AuthPin should succeed");
-                session.login(UserType::User, Some(&auth_pin))?;
-                pin
-            }
+    /// FIXME: this should not return anyhow::Error, but rather a structured error,
+    /// since anyhow swallows panics, and transforms them to errors.
+    fn detect_hsm_auth(maybe_pin: Option<String>, maybe_slot: Option<u64>, maybe_key_id: Option<KeyIdVec>) -> anyhow::Result<Self> {
+        let detected_hsm = ParallelHardwareIdentity::scan_for_hsm(maybe_slot, maybe_key_id)?;
+        let identity = match maybe_pin {
+            Some(pin) => detected_hsm.authenticate(pin),
             None => {
-                let pin_entry = Entry::new("dre-tool-hsm-pin", memo_key)?;
+                let pin_entry = Entry::new("dre-tool-hsm-pin", detected_hsm.memo_key.as_str())?;
                 let tentative_pin = match pin_entry.get_password() {
                     Err(Error::NoEntry) => Password::new()
                         .with_prompt("Please enter the hardware security module PIN: ")
                         .interact()?,
                     Ok(pin) => pin,
-                    Err(e) => return Err(anyhow::anyhow!("Problem getting from keyring: {}", e)),
+                    Err(e) => return Err(anyhow!("Problem getting PIN from keyring: {}", e)),
                 };
-                let auth_pin = cryptoki::types::AuthPin::from_str(tentative_pin.as_str()).expect("Parsin pin as AuthPin should succeed");
-
-                match session.login(UserType::User, Some(&auth_pin)) {
-                    Ok(_) => {
+                match detected_hsm.authenticate(tentative_pin.clone()) {
+                    Ok(identity) => {
                         pin_entry.set_password(&tentative_pin)?;
-                        tentative_pin
+                        Ok(identity)
                     }
                     Err(e) => {
                         pin_entry.delete_credential()?;
@@ -396,16 +248,15 @@ impl Auth {
                     }
                 }
             }
-        });
-        info!("Hardware security module PIN correct");
-        ret
+        }?;
+        Ok(Auth::Hsm { identity })
     }
 
     /// Create an Auth that automatically detects an HSM.  Falls back to
     /// anonymous authentication if no HSM is detected.  Prompts the user
     /// for a PIN if no PIN is specified and the HSM needs to be unlocked.
     /// Caller can optionally limit search to a specific slot or key ID.
-    pub async fn auto(hsm_pin: Option<String>, hsm_slot: Option<u64>, hsm_key_id: Option<u8>) -> anyhow::Result<Self> {
+    pub async fn auto(hsm_pin: Option<String>, hsm_slot: Option<u64>, hsm_key_id: Option<KeyIdVec>) -> anyhow::Result<Self> {
         tokio::task::spawn_blocking(move || Self::detect_hsm_auth(hsm_pin, hsm_slot, hsm_key_id)).await?
     }
 
@@ -436,7 +287,7 @@ impl Auth {
                         hsm_pin: pin,
                         hsm_params: HsmParams { hsm_slot, hsm_key_id },
                     },
-            } => Auth::auto(pin.clone(), *hsm_slot, *hsm_key_id).await,
+            } => Auth::auto(pin.clone(), *hsm_slot, hsm_key_id.clone()).await,
         }
     }
 }

@@ -22,10 +22,10 @@ ic-protobuf = { workspace = true }
 ic-registry-transport = { workspace = true }
 ic-utils = { workspace = true }
 log = { workspace = true }
-pkcs11 = { workspace = true }
 prost = { workspace = true }
 reqwest = { workspace = true }
 serde = { workspace = true }
+cryptoki = { workspace = true }
 sha2 = { workspace = true }
 simple_asn1 = { workspace = true }
 thiserror = { workspace = true }

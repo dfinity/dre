@@ -6,7 +6,7 @@ use crate::{
     cordoned_feature_fetcher::MockCordonedFeatureFetcher,
     store::{Store, FALLBACK_IC_ADMIN_VERSION},
 };
-use ic_canisters::governance::governance_canister_version;
+use ic_canisters::{governance::governance_canister_version, parallel_hardware_identity::KeyIdVec};
 use ic_management_backend::health::MockHealthStatusQuerier;
 use ic_management_types::Network;
 use itertools::Itertools;
@@ -193,7 +193,7 @@ struct NeuronAuthTestScenarion<'a> {
     neuron_id: Option<u64>,
     private_key_pem: Option<String>,
     hsm_pin: Option<String>,
-    hsm_key_id: Option<u8>,
+    hsm_key_id: Option<KeyIdVec>,
     hsm_slot: Option<u64>,
     requirement: AuthRequirement,
     network: String,
@@ -253,7 +253,7 @@ impl<'a> NeuronAuthTestScenarion<'a> {
         }
     }
 
-    fn with_key_id(self, hsm_key_id: u8) -> Self {
+    fn with_key_id(self, hsm_key_id: KeyIdVec) -> Self {
         Self {
             hsm_key_id: Some(hsm_key_id),
             ..self
@@ -290,7 +290,7 @@ impl<'a> NeuronAuthTestScenarion<'a> {
                     hsm_pin: self.hsm_pin.clone(),
                     hsm_params: crate::commands::HsmParams {
                         hsm_slot: self.hsm_slot,
-                        hsm_key_id: self.hsm_key_id,
+                        hsm_key_id: self.hsm_key_id.clone(),
                     },
                 },
             },

@@ -13,6 +13,13 @@ impl From<IcAgentCanisterClient> for LedgerCanisterWrapper {
     }
 }
 
+impl<T> From<(T, IcAgentCanisterClient)> for LedgerCanisterWrapper {
+    fn from(value: (T, IcAgentCanisterClient)) -> Self {
+        let (_, client) = value;
+        Self { agent: client }
+    }
+}
+
 impl LedgerCanisterWrapper {
     pub async fn get_account_id(&self, subaccount: Option<[u8; 32]>) -> anyhow::Result<Vec<u8>> {
         let args = Account {

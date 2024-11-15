@@ -22,7 +22,6 @@ clap_complete = { workspace = true }
 clap-num = { workspace = true }
 colored = { workspace = true }
 comfy-table = { workspace = true }
-cryptoki = { workspace = true }
 cycles-minting-canister = { workspace = true }
 decentralization = { workspace = true }
 dialoguer = { workspace = true }

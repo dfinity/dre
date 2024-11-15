@@ -14,9 +14,10 @@ impl ExecutableCommand for Refresh {
     fn validate(&self, _args: &crate::commands::Args, _cmd: &mut clap::Command) {}
 
     async fn execute(&self, ctx: crate::ctx::DreContext) -> anyhow::Result<()> {
-        let governance_canister = GovernanceCanisterWrapper::from(ctx.create_ic_agent_canister_client(None).await?);
+        let (neuron, client) = ctx.create_ic_agent_canister_client().await?;
+        let governance_canister = GovernanceCanisterWrapper::from(client);
 
-        let resp = governance_canister.refresh_neuron(ctx.neuron().await?.neuron_id).await?;
+        let resp = governance_canister.refresh_neuron(neuron.neuron_id).await?;
         println!("{:?}", resp);
 
         Ok(())

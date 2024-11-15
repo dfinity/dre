@@ -10,6 +10,7 @@ use der_to_principal::DerToPrincipal;
 use firewall::Firewall;
 use get::Get;
 use hostos::HostOs;
+use ic_canisters::parallel_hardware_identity::KeyIdVec;
 use network::Network;
 use neuron::Neuron;
 use node_metrics::NodeMetrics;
@@ -58,7 +59,7 @@ pub(crate) struct HsmParams {
 
     /// HSM Key ID, can be read with pkcs11-tool
     #[clap(required = false, conflicts_with = "private_key_pem", long, value_parser=maybe_hex::<u8>, global = true, env = "HSM_KEY_ID")]
-    pub(crate) hsm_key_id: Option<u8>,
+    pub(crate) hsm_key_id: Option<KeyIdVec>,
 }
 
 /// HSM authentication arguments

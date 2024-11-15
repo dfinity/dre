@@ -47,70 +47,89 @@ impl ExecutableCommand for Vote {
     }
 
     async fn execute(&self, ctx: crate::ctx::DreContext) -> anyhow::Result<()> {
-        let client: GovernanceCanisterWrapper = ctx.create_ic_agent_canister_client(None).await?.into();
+        let mut had_error = false;
+        let (neuron, client) = ctx.create_ic_agent_canister_client().await?;
+        let wrapper: GovernanceCanisterWrapper = client.into();
+        let no_duration = Duration::from_secs(0);
+        let mut voted_proposals: HashSet<u64> = HashSet::new();
 
-        let mut voted_proposals = HashSet::new();
-
-        if self.sleep_time != Duration::from_secs(0) {
+        if self.sleep_time != no_duration {
             DesktopNotifier::send_info("DRE vote: starting", "Starting the voting loop...");
         }
 
         loop {
-            let proposals = client.get_pending_proposals().await?;
-            let proposals: Vec<&ProposalInfo> = proposals
-                .iter()
-                .filter(|p| {
-                    self.accepted_topics.contains(&p.topic)
-                        && self.accepted_neurons.contains(&p.proposer.unwrap().id)
-                        && !voted_proposals.contains(&p.id.unwrap().id)
-                })
-                .collect();
+            match wrapper.get_pending_proposals().await {
+                Ok(proposals) => {
+                    let proposals: Vec<&ProposalInfo> = proposals
+                        .iter()
+                        .filter(|p| {
+                            self.accepted_topics.contains(&p.topic)
+                                && self.accepted_neurons.contains(&p.proposer.unwrap().id)
+                                && !voted_proposals.contains(&p.id.unwrap().id)
+                        })
+                        .collect();
 
-            // Clear last line in terminal
-            print!("\x1B[1A\x1B[K");
-            // No need to panic if standard out doesn't flush (e.g. /dev/null).
-            let _ = std::io::stdout().flush();
+                    // Clear last line in terminal
+                    print!("\x1B[1A\x1B[K");
+                    // No need to panic if standard out doesn't flush (e.g. /dev/null).
+                    let _ = std::io::stdout().flush();
 
-            for proposal in proposals {
-                DesktopNotifier::send_info(
-                    "DRE vote: voting",
-                    &format!(
-                        "Voting on proposal {} (topic {:?}, proposer {}) -> {}",
-                        proposal.id.unwrap().id,
-                        proposal.topic(),
-                        proposal.proposer.unwrap_or_default().id,
-                        proposal.proposal.clone().unwrap().title.unwrap()
-                    ),
-                );
+                    for proposal in proposals {
+                        DesktopNotifier::send_info(
+                            "DRE vote: voting",
+                            &format!(
+                                "Voting on proposal {} (topic {:?}, proposer {}) -> {}",
+                                proposal.id.unwrap().id,
+                                proposal.topic(),
+                                proposal.proposer.unwrap_or_default().id,
+                                proposal.proposal.clone().unwrap().title.unwrap()
+                            ),
+                        );
 
-                let prop_id = proposal.id.unwrap().id;
-                if !ctx.is_dry_run() {
-                    let response = match client.register_vote(ctx.neuron().await?.neuron_id, proposal.id.unwrap().id).await {
-                        Ok(response) => format!("Voted successfully: {}", response),
-                        Err(e) => {
-                            DesktopNotifier::send_critical(
-                                "DRE vote: error",
-                                &format!(
-                                    "Error voting on proposal {} (topic {:?}, proposer {}) -> {}",
-                                    prop_id,
-                                    proposal.topic(),
-                                    proposal.proposer.unwrap_or_default().id,
-                                    e
-                                ),
-                            );
-                            format!("Error voting: {}", e)
+                        let prop_id = proposal.id.unwrap().id;
+                        if !ctx.is_dry_run() {
+                            match wrapper.register_vote(neuron.neuron_id, proposal.id.unwrap().id).await {
+                                Ok(response) => {
+                                    info!("Voted successfully: {}", response);
+                                }
+                                Err(e) => {
+                                    DesktopNotifier::send_critical(
+                                        "DRE vote: error",
+                                        &format!(
+                                            "Error voting on proposal {} (topic {:?}, proposer {}) -> {}",
+                                            prop_id,
+                                            proposal.topic(),
+                                            proposal.proposer.unwrap_or_default().id,
+                                            e
+                                        ),
+                                    );
+                                }
+                            };
+                        } else {
+                            info!("Would have voted for proposal {}", prop_id)
                         }
-                    };
-                    info!("{}", response);
-                } else {
-                    info!("Would have voted for proposal {}", prop_id)
-                }
-                voted_proposals.insert(prop_id);
-            }
+                        voted_proposals.insert(prop_id);
+                    }
+                    had_error = false;
 
-            if self.sleep_time == Duration::from_secs(0) {
-                break;
-            }
+                    if self.sleep_time == no_duration {
+                        break;
+                    }
+                }
+                Err(e) => {
+                    if !had_error {
+                        let msg = format!(
+                            "Error obtaining proposals -> {} — {}",
+                            e, "please verify that your HSM is working correctly, or try unplugging it and plugging it back in"
+                        );
+                        DesktopNotifier::send_critical("DRE vote: error", &msg);
+                        had_error = true;
+                    }
+                    if self.sleep_time == no_duration {
+                        return Err(e);
+                    }
+                }
+            };
 
             let mut sp = Spinner::with_timer(
                 Spinners::Dots12,
