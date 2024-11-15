@@ -177,6 +177,7 @@ impl fmt::Display for LogEntry {
     }
 }
 
+#[derive(Copy, Clone)]
 pub enum LogLevel {
     Info,
     Debug,
@@ -212,15 +213,13 @@ impl RewardsLog {
         result
     }
 
-    pub fn get_log(&self) -> Vec<String> {
-        let mut log = Vec::new();
-
-        for (level, entry) in self.entries.iter() {
-            match level {
-                LogLevel::Info => log.push(format!("{}: {} ", level, entry)),
-                _ => continue,
-            }
-        }
-        log
+    pub fn get_log(&self, level: LogLevel) -> Vec<String> {
+        self.entries
+            .iter()
+            .filter_map(move |(entry_log_level, entry)| 
+                match (level, entry_log_level) {
+                    (LogLevel::Info, LogLevel::Debug) => None,
+                    _ => Some(format!("{}: {} ", level, entry)),
+            }).collect_vec()
     }
 }
