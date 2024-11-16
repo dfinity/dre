@@ -5,6 +5,7 @@ use ic_nns_governance_api::pb::v1::MonthlyNodeProviderRewards;
 use ic_protobuf::registry::node_rewards::{v2::NodeRewardRate, v2::NodeRewardsTable};
 use ic_registry_keys::NODE_REWARDS_TABLE_KEY;
 use itertools::Itertools;
+use node_provider_rewards_lib::v1_logs::LogLevel;
 use node_provider_rewards_lib::{
     v1_rewards::{assigned_nodes_multiplier, calculate_rewards},
     v1_types::{AHashMap, DailyNodeMetrics as NPRDailyNodeMetrics},
@@ -135,7 +136,7 @@ pub fn node_provider_rewards(node_provider_id: Principal, rewarding_period: Date
         node_provider_id,
         rewards_xdr_permyriad: rewards_ammount.xdr_permyriad,
         rewards_xdr_permyriad_no_reduction: rewards_ammount.xdr_permyriad_no_reduction,
-        computation_log: rewards.rewards_log_per_node_provider.get(&np_id).unwrap().get_log(),
+        computation_log: rewards.rewards_log_per_node_provider.get(&np_id).unwrap().get_log(LogLevel::Info),
         rewards_xdr_old,
         ts_distribution: latest_np_rewards.timestamp,
         xdr_conversion_rate: latest_np_rewards.xdr_conversion_rate.and_then(|rate| rate.xdr_permyriad_per_icp),
