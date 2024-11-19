@@ -10,6 +10,12 @@ jobs:
     runs-on: ubuntu-20.04
     container: ghcr.io/dfinity/dre/actions-runner:3dd4f38f076cad73fdcc68ad37fd29bed4fa3e4d
     steps:
+      - name: Create GitHub App Token
+        uses: actions/create-github-app-token@v1
+        id: app-token
+        with:
+          app-id: ${{ vars.PR_AUTOMATION_BOT_PUBLIC_APP_ID }}
+          private-key: ${{ secrets.PR_AUTOMATION_BOT_PUBLIC_PRIVATE_KEY }}
       - uses: actions/checkout@v4
       - name: "🔧 Setup runner"
         uses: ./.github/workflows/manage-runner-pre
@@ -56,7 +62,7 @@ jobs:
           branch: bot-update-deps
           title: "chore: Update dependencies"
           body: "This PR updates Python, Rust crates, and IC repository dependencies"
-          token: ${{ secrets.GIX_CREATE_PR_PAT }}
+          token: ${{ steps.app-token.outputs.token }}
 
       - name: "🪓 Tear down runner"
         uses: ./.github/workflows/manage-runner-post
