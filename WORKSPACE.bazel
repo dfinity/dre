@@ -27,7 +27,7 @@ http_archive(
 http_file(
     name = "target_determinator",
     sha256 = "65000bba3a5eb1713d93b1e08e33b6fbe5787535664bbc1ba2f4166b0d26d0a1",
-    url = "https://github.com/bazel-contrib/target-determinator/releases/download/v0.27.0/target-determinator.linux.amd64",
+    url = "https://github.com/bazel-contrib/target-determinator/releases/download/v0.28.0/target-determinator.linux.amd64",
 )
 
 http_file(
