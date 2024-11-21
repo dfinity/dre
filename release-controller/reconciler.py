@@ -66,7 +66,9 @@ class ReconcilerState:
                     "version %s: proposal %s already submitted", version, proposal_id
                 )
             else:
-                last_modified = datetime.datetime.fromtimestamp(os.path.getmtime(version_path))
+                last_modified = datetime.datetime.fromtimestamp(
+                    os.path.getmtime(version_path)
+                )
                 remaining_time_until_retry = datetime.timedelta(minutes=10) - (
                     datetime.datetime.now() - last_modified
                 )
@@ -373,9 +375,8 @@ def main():
     else:
         load_dotenv()
 
-    watchdog = Watchdog(
-        timeout_seconds=600
-    )  # Reconciler should report healthy every 10 minutes
+    # Watchdog needs to be fed (to report healthy progress) every 10 minutes
+    watchdog = Watchdog(timeout_seconds=600)
     watchdog.start()
 
     discourse_client = DiscourseClient(
