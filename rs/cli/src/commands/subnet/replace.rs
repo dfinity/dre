@@ -1,5 +1,6 @@
 use clap::{error::ErrorKind, Args};
 use ic_types::PrincipalId;
+use log::warn;
 
 use crate::{
     commands::{AuthRequirement, ExecutableCommand},
@@ -101,7 +102,15 @@ impl ExecutableCommand for Replace {
                 .propose_submit(
                     runner_proposal.cmd,
                     ProposeOptions {
-                        forum_post_link: maybe_topic.as_ref().map(|topic| topic.url.clone()),
+                        forum_post_link: match (maybe_topic.as_ref(), runner_proposal.opts.forum_post_link.as_ref()) {
+                            (Some(discourse_response), _) => Some(discourse_response.url.clone()),
+                            (None, Some(from_cli_or_auto_formated)) => Some(from_cli_or_auto_formated.clone()),
+                            _ => {
+                                warn!("Didn't find a link to forum post from discourse, cli and couldn't auto-format it.");
+                                warn!("Will not add forum post to the proposal");
+                                None
+                            }
+                        },
                         ..runner_proposal.opts
                     },
                 )

@@ -197,26 +197,6 @@ pub struct DiscourseResponse {
 mod tests {
     use super::*;
 
-    fn get_client() -> DiscourseClientImp {
-        DiscourseClientImp::new(
-            "http://localhost:3000".to_string(),
-            "37e522a546506f9e3751265669de2576896491b0a3c39d0524be8689736c8722".to_string(),
-            "nikolamilosa20".to_string(),
-        )
-        .unwrap()
-    }
-
-    // #[tokio::test]
-    async fn discourse_test() {
-        let client = get_client();
-
-        let response = client
-            .create_replace_nodes_forum_post(PrincipalId::new_subnet_test_id(0), "testing".to_string())
-            .await
-            .unwrap();
-        client.add_proposal_url_to_post(response.id, 132225).await.unwrap();
-    }
-
     #[test]
     fn parse_proposal_id_test() {
         let text = "propoSAL 123456".to_string();
