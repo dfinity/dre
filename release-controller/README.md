@@ -87,7 +87,7 @@ To resolve, you'll need to manually label all the commits that commit-annotator 
 Example error message in commit-annotator.
 
 ```
-INFO:root:annotating 7d81b536b2f66fd779198e2e4dbb405381545a55
+INFO:root:annotating git commit 7d81b536b2f66fd779198e2e4dbb405381545a55
 ERROR: ...
 ```
 
