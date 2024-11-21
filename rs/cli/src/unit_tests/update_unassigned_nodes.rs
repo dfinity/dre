@@ -4,6 +4,7 @@ use crate::artifact_downloader::MockArtifactDownloader;
 use crate::auth::Neuron;
 use crate::commands::{update_unassigned_nodes::UpdateUnassignedNodes, ExecutableCommand};
 use crate::cordoned_feature_fetcher::MockCordonedFeatureFetcher;
+use crate::discourse_client::MockDiscourseClient;
 use crate::ic_admin::MockIcAdmin;
 use ic_management_backend::health::MockHealthStatusQuerier;
 use ic_management_backend::{lazy_git::MockLazyGit, lazy_registry::MockLazyRegistry, proposal::MockProposalAgent};
@@ -53,6 +54,7 @@ async fn should_skip_update_same_version_nns_not_provided() {
         Arc::new(MockArtifactDownloader::new()),
         Arc::new(MockCordonedFeatureFetcher::new()),
         Arc::new(MockHealthStatusQuerier::new()),
+        Arc::new(MockDiscourseClient::new()),
     );
 
     let cmd = UpdateUnassignedNodes { nns_subnet_id: None };
@@ -89,6 +91,7 @@ async fn should_skip_update_same_version_nns_provided() {
         Arc::new(MockArtifactDownloader::new()),
         Arc::new(MockCordonedFeatureFetcher::new()),
         Arc::new(MockHealthStatusQuerier::new()),
+        Arc::new(MockDiscourseClient::new()),
     );
 
     let cmd = UpdateUnassignedNodes {
@@ -130,6 +133,7 @@ async fn should_update_unassigned_nodes() {
         Arc::new(MockArtifactDownloader::new()),
         Arc::new(MockCordonedFeatureFetcher::new()),
         Arc::new(MockHealthStatusQuerier::new()),
+        Arc::new(MockDiscourseClient::new()),
     );
 
     let cmd = UpdateUnassignedNodes {
@@ -169,6 +173,7 @@ async fn should_fail_nns_not_found() {
         Arc::new(MockArtifactDownloader::new()),
         Arc::new(MockCordonedFeatureFetcher::new()),
         Arc::new(MockHealthStatusQuerier::new()),
+        Arc::new(MockDiscourseClient::new()),
     );
 
     let cmd = UpdateUnassignedNodes {

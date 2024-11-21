@@ -48,6 +48,11 @@ async fn get_context(network: &Network, version: IcAdminVersion) -> anyhow::Resu
         Arc::new(MockCordonedFeatureFetcher::new()),
         Arc::new(MockHealthStatusQuerier::new()),
         Store::new(false)?,
+        crate::commands::DiscourseOpts {
+            discourse_api_key: None,
+            discourse_api_url: None,
+            discourse_api_user: None,
+        },
     )
     .await
 }
@@ -184,6 +189,11 @@ async fn get_ctx_for_neuron_test(
         Arc::new(MockCordonedFeatureFetcher::new()),
         Arc::new(MockHealthStatusQuerier::new()),
         Store::new(offline)?,
+        crate::commands::DiscourseOpts {
+            discourse_api_key: None,
+            discourse_api_url: None,
+            discourse_api_user: None,
+        },
     )
     .await
 }

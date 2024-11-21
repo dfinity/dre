@@ -21,7 +21,16 @@ const MAX_SUMMARY_CHAR_COUNT: usize = 29000;
 pub trait IcAdmin: Send + Sync + Debug {
     fn ic_admin_path(&self) -> Option<String>;
 
+    /// Function wraps calls to `propose_print_and_confirm` and if the user
+    /// confirms, calls `propose_submit`.
     fn propose_run(&self, cmd: ProposeCommand, opts: ProposeOptions) -> BoxFuture<'_, anyhow::Result<String>>;
+
+    /// Prints the proposal arguments and displays them to the user, asking for
+    /// confirmation if not automatically confirmed.
+    fn propose_print_and_confirm(&self, cmd: ProposeCommand, opts: ProposeOptions) -> BoxFuture<'_, anyhow::Result<bool>>;
+
+    /// Runs the ic-admin with specified args.
+    fn propose_submit(&self, cmd: ProposeCommand, opts: ProposeOptions) -> BoxFuture<'_, anyhow::Result<String>>;
 
     fn run<'a>(&'a self, command: &'a str, args: &'a [String], silent: bool) -> BoxFuture<'_, anyhow::Result<String>>;
 
@@ -145,6 +154,28 @@ impl IcAdmin for IcAdminImpl {
         };
         let dry_run = self.dry_run || cmd.args().contains(&String::from("--dry-run"));
         Box::pin(async move { self.propose_run_inner(cmd, Default::default(), dry_run).await })
+    }
+
+    fn propose_print_and_confirm(&self, cmd: ProposeCommand, opts: ProposeOptions) -> BoxFuture<'_, anyhow::Result<bool>> {
+        Box::pin(async move {
+            let _ = self._exec(cmd, opts, true, true, false).await;
+
+            if self.proceed_without_confirmation {
+                // Don't ask for confirmation, allow to proceed
+                return Ok(true);
+            }
+
+            // Ask for confirmation
+            Confirm::new()
+                .with_prompt("Do you want to continue?")
+                .default(false)
+                .interact()
+                .map_err(anyhow::Error::from)
+        })
+    }
+
+    fn propose_submit(&self, cmd: ProposeCommand, opts: ProposeOptions) -> BoxFuture<'_, anyhow::Result<String>> {
+        Box::pin(async move { self._exec(cmd, opts, false, true, true).await })
     }
 }
 
