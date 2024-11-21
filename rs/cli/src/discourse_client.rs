@@ -172,7 +172,7 @@ Proposal id [{1}](https://dashboard.internetcomputer.org/proposal/{1})"#,
 }
 
 pub fn parse_proposal_id_from_governance_response(response: String) -> anyhow::Result<u64> {
-    let re = Regex::new(r"proposal\s+(\d+)")?;
+    let re = Regex::new(r"\s*(\d+)\s*")?;
 
     re.captures(&response.to_lowercase())
         .ok_or(anyhow::anyhow!("Expected some captures while parsing id from governance canister"))?
@@ -199,16 +199,16 @@ mod tests {
 
     #[test]
     fn parse_proposal_id_test() {
-        let text = "propoSAL 123456".to_string();
+        let text = " 123456   ".to_string();
         let parsed = parse_proposal_id_from_governance_response(text).unwrap();
         assert_eq!(parsed, 123456);
 
-        let text = "Proposal 222222".to_string();
+        let text = "222222".to_string();
         let parsed = parse_proposal_id_from_governance_response(text).unwrap();
         assert_eq!(parsed, 222222);
 
         let text = "Proposal id 123456".to_string();
-        let parsed = parse_proposal_id_from_governance_response(text);
-        assert!(parsed.is_err())
+        let parsed = parse_proposal_id_from_governance_response(text).unwrap();
+        assert_eq!(parsed, 123456)
     }
 }
