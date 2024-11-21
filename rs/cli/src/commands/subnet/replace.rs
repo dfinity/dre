@@ -70,7 +70,7 @@ impl ExecutableCommand for Replace {
 
         let runner = ctx.runner().await?;
 
-        let subnet_id = subnet_change_response.subnet_id.clone();
+        let subnet_id = subnet_change_response.subnet_id;
         // Should be refactored to not require forum post links like this.
         if let Some(runner_proposal) = runner.propose_subnet_change(subnet_change_response, ctx.forum_post_link()).await? {
             let ic_admin = ctx.ic_admin().await?;

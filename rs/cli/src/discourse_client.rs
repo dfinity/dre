@@ -74,7 +74,7 @@ impl DiscourseClientImp {
                     if name == category_name {
                         return Some(id);
                     }
-                    return None;
+                    None
                 }
                 _ => None,
             })
