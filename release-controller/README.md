@@ -124,7 +124,7 @@ ERROR: ...
 
 ```shell
 git fetch origin 'refs/notes/*:refs/notes/*' -f --prune
-git rev-list --ancestry-path [BASE_COMMIT]...[RELEASE_COMMIT] | xargs -L1 -I_commit bash -c "echo -n '_commit '; git notes --ref guestos-changed show _commit | cat"
+git log --format='%H' --no-merges [BASE_COMMIT]..[RELEASE_COMMIT] | xargs -L1 -I_commit bash -c "echo -n '_commit '; git notes --ref guestos-changed show _commit | cat"
 ```
 
 
