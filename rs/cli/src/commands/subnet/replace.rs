@@ -123,7 +123,7 @@ impl ExecutableCommand for Replace {
 
             if let Some(topic) = maybe_topic {
                 discourse_client
-                    .add_proposal_url_to_post(topic.id, parse_proposal_id_from_governance_response(proposal_response)?)
+                    .add_proposal_url_to_post(topic.update_id, parse_proposal_id_from_governance_response(proposal_response)?)
                     .await?
             }
         }
