@@ -2,6 +2,7 @@ use std::{fmt::Display, time::Duration};
 
 use backon::{ExponentialBuilder, Retryable};
 use comfy_table::CellAlignment;
+
 use ic_registry_subnet_type::SubnetType;
 use ic_types::PrincipalId;
 use itertools::Itertools;
@@ -195,7 +196,7 @@ async fn wait_for_subnet_revision(ctx: &StepCtx, subnet: Option<PrincipalId>, re
         // Fetch the metrics of each node and check if it
         // contains the revision somewhere
         for node in nodes {
-            let url = format!("http://[{}]:9090/metrics", node.ip_addr);
+            let url = format!("http://[{}]:9090/metrics", node.ip_addr.unwrap());
 
             let response = match client.get(&url).send().await {
                 Ok(r) => match r.error_for_status() {

@@ -55,7 +55,7 @@ async fn get_decentralization_analysis(
         .map(|subnet_id| match subnets.get(&subnet_id) {
             Some(subnet) => DecentralizedSubnet {
                 id: subnet_id,
-                nodes: subnet.nodes.iter().map(decentralization::network::Node::from).collect(),
+                nodes: subnet.nodes.clone(),
                 added_nodes: Vec::new(),
                 removed_nodes: Vec::new(),
                 comment: None,
@@ -83,7 +83,7 @@ async fn get_decentralization_analysis(
         node_ids_to_remove
             .iter()
             .filter_map(|n| registry_nodes.get(n))
-            .map(decentralization::network::Node::from)
+            .cloned()
             .collect::<Vec<_>>()
     });
     let updated_subnet = match &nodes_to_remove {
@@ -93,20 +93,15 @@ async fn get_decentralization_analysis(
 
     let updated_subnet = match &node_ids_to_add {
         Some(node_ids_to_add) => {
-            let nodes_to_add = node_ids_to_add
-                .iter()
-                .map(|n| decentralization::network::Node::from(&registry_nodes[n]))
-                .collect::<Vec<_>>();
+            let nodes_to_add = node_ids_to_add.iter().map(|n| registry_nodes[n].clone()).collect::<Vec<_>>();
             updated_subnet.with_nodes(&nodes_to_add)
         }
         None => updated_subnet,
     };
     let penalties_before_change = DecentralizedSubnet::check_business_rules_for_subnet_with_nodes(&original_subnet.id, &original_subnet.nodes)
-        .expect("Business rules check before should succeed")
-        .0;
+        .expect("Business rules check before should succeed");
     let penalties_after_change = DecentralizedSubnet::check_business_rules_for_subnet_with_nodes(&original_subnet.id, &updated_subnet.nodes)
-        .expect("Business rules check after should succeed")
-        .0;
+        .expect("Business rules check after should succeed");
 
     let subnet_change = SubnetChange {
         subnet_id: original_subnet.id,

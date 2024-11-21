@@ -1,13 +1,13 @@
-use crate::nakamoto::{self, NakamotoScore};
-use crate::subnets::unhealthy_with_nodes;
+use crate::nakamoto::NakamotoScore;
+use crate::subnets::{subnets_with_business_rules_violations, unhealthy_with_nodes};
 use crate::SubnetChangeResponse;
 use actix_web::http::StatusCode;
 use actix_web::{HttpResponse, ResponseError};
-use ahash::{AHashMap, AHashSet, HashMap, HashSet};
+use ahash::{AHashMap, AHashSet, HashSet};
 use anyhow::anyhow;
 use futures::future::BoxFuture;
 use ic_base_types::PrincipalId;
-use ic_management_types::{HealthStatus, NetworkError, NodeFeature};
+use ic_management_types::{HealthStatus, NetworkError, Node, NodeFeature};
 use indexmap::IndexMap;
 use itertools::Itertools;
 use log::{debug, info, warn};
@@ -15,154 +15,12 @@ use rand::{seq::SliceRandom, SeedableRng};
 use serde::{Deserialize, Serialize};
 use std::cmp::Ordering;
 use std::fmt::{Debug, Display, Formatter};
-use std::hash::Hash;
 
 #[derive(Clone, Serialize, Deserialize, Default)]
 pub struct DataCenterInfo {
     area: String,
     country: String,
     continent: String,
-}
-
-#[derive(Clone, Serialize, Deserialize, Debug, Eq)]
-pub struct Node {
-    pub id: PrincipalId,
-    pub features: nakamoto::NodeFeatures,
-    pub dfinity_owned: bool,
-}
-
-impl std::fmt::Display for Node {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(
-            f,
-            "Node ID: {}\nFeatures:\n{}\nDfinity Owned: {}",
-            self.id, self.features, self.dfinity_owned
-        )
-    }
-}
-
-impl Node {
-    pub fn new_test_node(node_number: u64, features: nakamoto::NodeFeatures, dfinity_owned: bool) -> Self {
-        Node {
-            id: PrincipalId::new_node_test_id(node_number),
-            features,
-            dfinity_owned,
-        }
-    }
-
-    pub fn get_features(&self) -> nakamoto::NodeFeatures {
-        self.features.clone()
-    }
-
-    pub fn get_feature(&self, feature: &NodeFeature) -> String {
-        self.features.get(feature).unwrap_or_default()
-    }
-
-    pub fn matches_feature_value(&self, value: &str) -> bool {
-        self.id.to_string() == *value.to_lowercase()
-            || self
-                .get_features()
-                .feature_map
-                .values()
-                .any(|v| *v.to_lowercase() == *value.to_lowercase())
-    }
-
-    pub fn is_country_from_eu(country: &str) -> bool {
-        // (As of 2024) the EU countries are not properly marked in the registry, so we check membership separately.
-        let eu_countries: HashMap<&str, &str> = HashMap::from_iter([
-            ("AT", "Austria"),
-            ("BE", "Belgium"),
-            ("BG", "Bulgaria"),
-            ("CY", "Cyprus"),
-            ("CZ", "Czechia"),
-            ("DE", "Germany"),
-            ("DK", "Denmark"),
-            ("EE", "Estonia"),
-            ("ES", "Spain"),
-            ("FI", "Finland"),
-            ("FR", "France"),
-            ("GR", "Greece"),
-            ("HR", "Croatia"),
-            ("HU", "Hungary"),
-            ("IE", "Ireland"),
-            ("IT", "Italy"),
-            ("LT", "Lithuania"),
-            ("LU", "Luxembourg"),
-            ("LV", "Latvia"),
-            ("MT", "Malta"),
-            ("NL", "Netherlands"),
-            ("PL", "Poland"),
-            ("PT", "Portugal"),
-            ("RO", "Romania"),
-            ("SE", "Sweden"),
-            ("SI", "Slovenia"),
-            ("SK", "Slovakia"),
-        ]);
-        eu_countries.contains_key(country)
-    }
-}
-
-impl Hash for Node {
-    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
-        self.id.hash(state);
-    }
-}
-
-impl PartialEq for Node {
-    fn eq(&self, other: &Self) -> bool {
-        self.id == other.id
-    }
-}
-
-impl From<&ic_management_types::Node> for Node {
-    fn from(n: &ic_management_types::Node) -> Self {
-        let country = n
-            .operator
-            .datacenter
-            .as_ref()
-            .map(|d| d.country.clone())
-            .unwrap_or_else(|| "unknown".to_string());
-        let area = n
-            .operator
-            .datacenter
-            .as_ref()
-            .map(|d| d.area.clone())
-            .unwrap_or_else(|| "unknown".to_string());
-
-        Self {
-            id: n.principal,
-            features: nakamoto::NodeFeatures::from_iter([
-                (NodeFeature::Area, area),
-                (NodeFeature::Country, country),
-                (
-                    NodeFeature::Continent,
-                    n.operator
-                        .datacenter
-                        .as_ref()
-                        .map(|d| d.continent.clone())
-                        .unwrap_or_else(|| "unknown".to_string()),
-                ),
-                (
-                    NodeFeature::DataCenterOwner,
-                    n.operator
-                        .datacenter
-                        .as_ref()
-                        .map(|d| d.owner.name.clone())
-                        .unwrap_or_else(|| "unknown".to_string()),
-                ),
-                (
-                    NodeFeature::DataCenter,
-                    n.operator
-                        .datacenter
-                        .as_ref()
-                        .map(|d| d.name.clone())
-                        .unwrap_or_else(|| "unknown".to_string()),
-                ),
-                (NodeFeature::NodeProvider, n.operator.provider.principal.to_string()),
-            ]),
-            dfinity_owned: n.dfinity_owned.unwrap_or_default(),
-        }
-    }
 }
 
 #[derive(Clone, Default, Debug, Serialize, Deserialize, PartialEq, Eq)]
@@ -175,12 +33,18 @@ pub struct DecentralizedSubnet {
     pub run_log: Vec<String>,
 }
 
-#[derive(Clone, Debug)]
-struct ReplacementCandidate {
-    node: Node,
+#[derive(Clone, Debug, Default, PartialEq)]
+pub(crate) struct ReplacementCandidate {
+    pub(crate) node: Node,
     score: NakamotoScore,
     penalty: usize,
     business_rules_log: Vec<String>,
+}
+
+impl ReplacementCandidate {
+    pub fn new_with_node_for_tests(node: Node) -> Self {
+        Self { node, ..Default::default() }
+    }
 }
 
 impl DecentralizedSubnet {
@@ -203,18 +67,18 @@ impl DecentralizedSubnet {
     /// provided nodes.
     pub fn without_nodes(&self, nodes_to_remove: &[Node]) -> Result<Self, NetworkError> {
         let mut new_subnet_nodes = self.nodes.clone();
-        let mut removed_nodes = Vec::new();
+        let mut removed_nodes = self.removed_nodes.clone();
         for node in nodes_to_remove {
-            if let Some(index) = new_subnet_nodes.iter().position(|n| n.id == node.id) {
+            if let Some(index) = new_subnet_nodes.iter().position(|n| n.principal == node.principal) {
                 removed_nodes.push(new_subnet_nodes.remove(index));
             } else {
-                return Err(NetworkError::NodeNotFound(node.id));
+                return Err(NetworkError::NodeNotFound(node.principal));
             }
         }
         let removed_is_empty = removed_nodes.is_empty();
-        let removed_node_ids = removed_nodes.iter().map(|n| n.id).collect::<Vec<_>>();
+        let removed_node_ids = removed_nodes.iter().map(|n| n.principal).collect::<Vec<_>>();
         if !removed_is_empty {
-            assert!(new_subnet_nodes.len() < self.nodes.len());
+            assert!(new_subnet_nodes.len() <= self.nodes.len());
         }
         Ok(Self {
             id: self.id,
@@ -279,7 +143,7 @@ impl DecentralizedSubnet {
 
         self.nodes
             .iter()
-            .filter(|n| n.get_feature(node_feature) == dominant_feature)
+            .filter(|n| n.get_feature(node_feature).unwrap() == dominant_feature)
             .cloned()
             .collect()
     }
@@ -303,7 +167,7 @@ impl DecentralizedSubnet {
         let subnet_id_str = subnet_id.to_string();
         let is_european_subnet = subnet_id_str == *"bkfrj-6k62g-dycql-7h53p-atvkj-zg4to-gaogh-netha-ptybj-ntsgw-rqe";
 
-        let dfinity_owned_nodes_count: usize = nodes.iter().map(|n| n.dfinity_owned as usize).sum();
+        let dfinity_owned_nodes_count: usize = nodes.iter().map(|n| n.dfinity_owned.unwrap_or_default() as usize).sum();
         let target_dfinity_owned_nodes_count = if subnet_id_str == *"tdb26-jop6k-aogll-7ltgs-eruif-6kk7m-qpktf-gdiqx-mxtrf-vb5e6-eqe" {
             3
         } else {
@@ -312,7 +176,7 @@ impl DecentralizedSubnet {
 
         if dfinity_owned_nodes_count != target_dfinity_owned_nodes_count {
             checks.push(format!(
-                "Subnet should have {} DFINITY-owned nodes, got {}",
+                "Subnet should have {} DFINITY-owned node(s) for subnet recovery, got {}",
                 target_dfinity_owned_nodes_count, dfinity_owned_nodes_count
             ));
             penalties += target_dfinity_owned_nodes_count.abs_diff(dfinity_owned_nodes_count) * 1000;
@@ -469,7 +333,11 @@ impl DecentralizedSubnet {
     /// of current nodes.  Since the node IDs are unique, we seed a PRNG
     /// with the sorted joined node IDs. We then choose a result
     /// randomly but deterministically using this seed.
-    fn choose_deterministic_random(best_results: &[ReplacementCandidate], current_nodes: &[Node]) -> Option<ReplacementCandidate> {
+    pub(crate) fn choose_one_result(
+        best_results: &[ReplacementCandidate],
+        current_nodes: &[Node],
+        all_nodes: &[Node],
+    ) -> Option<ReplacementCandidate> {
         if best_results.is_empty() {
             None
         } else {
@@ -483,15 +351,61 @@ impl DecentralizedSubnet {
                 }
             }
 
+            // If none of the best_results nodes are already in the subnet,
+            // sort the nodes by percentage of nodes that the node operator has in subnets
+            // and choose the one with the lowest percentage.
+            let num_nodes_per_operator = all_nodes.iter().fold(AHashMap::new(), |mut acc: AHashMap<PrincipalId, u32>, n| {
+                *acc.entry(n.operator.principal).or_insert(0) += 1;
+                acc
+            });
+            let num_nodes_assigned_to_subnets_per_operator =
+                all_nodes
+                    .iter()
+                    .filter(|n| n.subnet_id.is_some())
+                    .fold(AHashMap::new(), |mut acc: AHashMap<PrincipalId, u32>, n| {
+                        *acc.entry(n.operator.principal).or_insert(0) += 1;
+                        acc
+                    });
+            let percent_assigned_nodes_per_operator = num_nodes_per_operator
+                .iter()
+                .map(|(operator, num_nodes)| {
+                    let num_nodes_in_subnet = num_nodes_assigned_to_subnets_per_operator.get(operator).copied().unwrap_or_default();
+                    (*operator, 100. * num_nodes_in_subnet as f64 / *num_nodes as f64)
+                })
+                .collect::<AHashMap<PrincipalId, f64>>();
+            let best_results = best_results
+                .iter()
+                .map(|r| {
+                    let pct_x1000 = (percent_assigned_nodes_per_operator
+                        .get(&r.node.operator.principal)
+                        .copied()
+                        .unwrap_or_default()
+                        * 1000.) as u32;
+                    let op_nodes = num_nodes_per_operator.get(&r.node.operator.principal).copied().unwrap_or_default() as i32;
+                    (pct_x1000, -op_nodes, r)
+                })
+                // sorted_by_key sorts ascending, so we negate the number of nodes
+                // we prefer candidate nodes from operators with:
+                //  - the lowest percentage of nodes assigned to subnet
+                //  - highest number of nodes total (to prefer operators with more nodes)
+                .sorted_by_key(|(pct_x1000, neg_op_nodes, _res)| (*pct_x1000, *neg_op_nodes))
+                .collect_vec();
+            // filter all the results with the same lowest percentage
+            let best_results = best_results
+                .iter()
+                .take_while(|(pct, neg_op_nodes, _res)| *pct == best_results[0].0 && *neg_op_nodes == best_results[0].1)
+                .map(|(_pct, _neg_op_nodes, res)| (*res).clone())
+                .collect::<Vec<_>>();
+
             // We sort the current nodes by alphabetical order on their
             // PrincipalIDs to ensure consistency of the seed with the
             // same machines in the subnet
             let mut id_sorted_current_nodes = current_nodes.to_owned();
-            id_sorted_current_nodes.sort_by(|n1, n2| std::cmp::Ord::cmp(&n1.id.to_string(), &n2.id.to_string()));
+            id_sorted_current_nodes.sort_by(|n1, n2| std::cmp::Ord::cmp(&n1.principal.to_string(), &n2.principal.to_string()));
             let seed = rand_seeder::Seeder::from(
                 id_sorted_current_nodes
                     .iter()
-                    .map(|n| n.id.to_string())
+                    .map(|n| n.principal.to_string())
                     .collect::<Vec<String>>()
                     .join("_"),
             )
@@ -502,13 +416,18 @@ impl DecentralizedSubnet {
             // the same set of machines with the best score, we always
             // get the same one.
             let mut id_sorted_best_results = best_results.to_owned();
-            id_sorted_best_results.sort_by(|r1, r2| std::cmp::Ord::cmp(&r1.node.id.to_string(), &r2.node.id.to_string()));
+            id_sorted_best_results.sort_by(|r1, r2| std::cmp::Ord::cmp(&r1.node.principal.to_string(), &r2.node.principal.to_string()));
             id_sorted_best_results.choose(&mut rng).cloned()
         }
     }
 
     /// Pick the best result amongst the list of "suitable" candidates.
-    fn choose_best_candidate(&self, candidates: Vec<ReplacementCandidate>, run_log: &mut Vec<String>) -> Option<ReplacementCandidate> {
+    fn choose_best_candidate(
+        &self,
+        candidates: Vec<ReplacementCandidate>,
+        run_log: &mut Vec<String>,
+        all_nodes: &[Node],
+    ) -> Option<ReplacementCandidate> {
         // First, sort the candidates by their Nakamoto Coefficients
         let candidates = candidates
             .into_iter()
@@ -523,9 +442,9 @@ impl DecentralizedSubnet {
                     cmp = a.score.cmp(&b.score);
                 }
                 if cmp == Ordering::Less {
-                    debug!("Better node is {}", a.node.id);
+                    debug!("Better node is {}", a.node.principal);
                 } else {
-                    debug!("Better node is {}", b.node.id);
+                    debug!("Better node is {}", b.node.principal);
                 }
                 cmp
             })
@@ -534,7 +453,7 @@ impl DecentralizedSubnet {
         run_log.push("Sorted candidate nodes, with the best candidate at the end:".to_string());
         run_log.push("     <node-id>                                                      <penalty>  <Nakamoto score>".to_string());
         for s in &candidates {
-            run_log.push(format!(" -=> {} {} {}", s.node.id, s.penalty, s.score));
+            run_log.push(format!(" -=> {} {} {}", s.node.principal, s.penalty, s.score));
         }
 
         // Then, pick the candidates with the best (highest) Nakamoto Coefficients.
@@ -574,11 +493,11 @@ impl DecentralizedSubnet {
         //
         // This approach also has the advantage of not favoring one NP over
         // an other, regardless of the Node PrincipalID
-        DecentralizedSubnet::choose_deterministic_random(&best_results, &self.nodes)
+        DecentralizedSubnet::choose_one_result(&best_results, &self.nodes, all_nodes)
     }
 
     /// Add nodes to a subnet in a way that provides the best decentralization.
-    pub fn subnet_with_more_nodes(self, how_many_nodes: usize, available_nodes: &[Node]) -> anyhow::Result<DecentralizedSubnet> {
+    pub fn subnet_with_more_nodes(self, how_many_nodes: usize, available_nodes: &[Node], all_nodes: &[Node]) -> anyhow::Result<DecentralizedSubnet> {
         let mut run_log = self.run_log.clone();
 
         let mut nodes_initial = self.nodes.clone();
@@ -606,7 +525,7 @@ impl DecentralizedSubnet {
                 .collect();
 
             let mut candidate_run_log = Vec::new();
-            match self.choose_best_candidate(suitable_candidates, &mut candidate_run_log) {
+            match self.choose_best_candidate(suitable_candidates, &mut candidate_run_log, all_nodes) {
                 Some(best_result) => {
                     // Append the complete run log
                     run_log.extend(
@@ -617,7 +536,7 @@ impl DecentralizedSubnet {
                     );
                     run_log.push(format!("Nakamoto score after extension {}", best_result.score));
                     added_nodes.push(best_result.node.clone());
-                    available_nodes.retain(|n| n.id != best_result.node.id);
+                    available_nodes.retain(|n| n.principal != best_result.node.principal);
                     nodes_after_extension.push(best_result.node.clone());
                     nodes_initial.push(best_result.node.clone());
                     total_penalty += best_result.penalty;
@@ -630,7 +549,7 @@ impl DecentralizedSubnet {
                                     "- adding node {} of {} ({}): {}",
                                     i + 1,
                                     how_many_nodes,
-                                    best_result.node.id.to_string().split('-').next().unwrap_or_default(),
+                                    best_result.node.principal.to_string().split('-').next().unwrap_or_default(),
                                     s
                                 )
                             })
@@ -670,7 +589,7 @@ impl DecentralizedSubnet {
 
     /// Remove nodes from a subnet in a way that provides the best
     /// decentralization.
-    pub fn subnet_with_fewer_nodes(mut self, how_many_nodes: usize) -> anyhow::Result<DecentralizedSubnet> {
+    pub fn subnet_with_fewer_nodes(mut self, how_many_nodes: usize, all_nodes: &[Node]) -> anyhow::Result<DecentralizedSubnet> {
         let mut run_log = self.run_log.clone();
         let nodes_initial_len = self.nodes.len();
         let mut comment = None;
@@ -688,13 +607,13 @@ impl DecentralizedSubnet {
                 .nodes
                 .iter()
                 .filter_map(|node| {
-                    let candidate_subnet_nodes: Vec<Node> = self.nodes.iter().filter(|n| n.id != node.id).cloned().collect();
+                    let candidate_subnet_nodes: Vec<Node> = self.nodes.iter().filter(|n| n.principal != node.principal).cloned().collect();
                     self._node_to_replacement_candidate(&candidate_subnet_nodes, node, &mut run_log)
                 })
                 .collect();
 
             let mut candidate_run_log = Vec::new();
-            match self.choose_best_candidate(suitable_candidates, &mut candidate_run_log) {
+            match self.choose_best_candidate(suitable_candidates, &mut candidate_run_log, all_nodes) {
                 Some(best_result) => {
                     // Append the complete run log
                     run_log.extend(
@@ -705,7 +624,7 @@ impl DecentralizedSubnet {
                     );
                     run_log.push(format!("Nakamoto score after removal {}", best_result.score));
                     self.removed_nodes.push(best_result.node.clone());
-                    self.nodes.retain(|n| n.id != best_result.node.id);
+                    self.nodes.retain(|n| n.principal != best_result.node.principal);
                     total_penalty += best_result.penalty;
                     business_rules_log.extend(
                         best_result
@@ -716,7 +635,7 @@ impl DecentralizedSubnet {
                                     "- removing node {} of {} ({}): {}",
                                     i + 1,
                                     how_many_nodes,
-                                    best_result.node.id.to_string().split('-').next().unwrap_or_default(),
+                                    best_result.node.principal.to_string().split('-').next().unwrap_or_default(),
                                     s
                                 )
                             })
@@ -760,8 +679,8 @@ impl DecentralizedSubnet {
             .removed_nodes
             .iter()
             .filter_map(|node_removed| {
-                if self.added_nodes.iter().any(|node_added| node_removed.id == node_added.id) {
-                    Some(node_removed.id)
+                if self.added_nodes.iter().any(|node_added| node_removed.principal == node_added.principal) {
+                    Some(node_removed.principal)
                 } else {
                     None
                 }
@@ -774,13 +693,13 @@ impl DecentralizedSubnet {
             let added_nodes_desc = self
                 .added_nodes
                 .into_iter()
-                .filter(|node_added| !common_nodes.iter().any(|common_node| common_node == &node_added.id))
+                .filter(|node_added| !common_nodes.iter().any(|common_node| common_node == &node_added.principal))
                 .collect();
 
             let removed_nodes_desc = self
                 .removed_nodes
                 .into_iter()
-                .filter(|node_removed| !common_nodes.iter().any(|common_node| common_node == &node_removed.id))
+                .filter(|node_removed| !common_nodes.iter().any(|common_node| common_node == &node_removed.principal))
                 .collect();
 
             Self {
@@ -808,7 +727,7 @@ impl DecentralizedSubnet {
                 })
             }
             Err(err) => {
-                err_log.push(format!("Node {} failed business rule {}", touched_node.id, err));
+                err_log.push(format!("Node {} failed business rule {}", touched_node.principal, err));
                 None
             }
         }
@@ -822,7 +741,7 @@ impl Display for DecentralizedSubnet {
             "Subnet id {} with {} nodes [{}]",
             self.id,
             self.nodes.len(),
-            self.nodes.iter().map(|n| n.id.to_string()).join(", ")
+            self.nodes.iter().map(|n| n.principal.to_string()).join(", ")
         )
     }
 }
@@ -837,7 +756,7 @@ impl From<&ic_management_types::Subnet> for DecentralizedSubnet {
     fn from(s: &ic_management_types::Subnet) -> Self {
         Self {
             id: s.principal,
-            nodes: s.nodes.iter().map(Node::from).collect(),
+            nodes: s.nodes.clone(),
             added_nodes: Vec::new(),
             removed_nodes: Vec::new(),
             comment: None,
@@ -908,6 +827,7 @@ pub trait TopologyManager: SubnetQuerier + AvailableNodesQuerier + Sync {
         only_nodes: Vec<String>,
         health_of_nodes: &'a IndexMap<PrincipalId, HealthStatus>,
         cordoned_features: Vec<NodeFeaturePair>,
+        all_nodes: &'a [Node],
     ) -> BoxFuture<'a, Result<SubnetChange, NetworkError>> {
         Box::pin(async move {
             SubnetChangeRequest {
@@ -917,7 +837,7 @@ pub trait TopologyManager: SubnetQuerier + AvailableNodesQuerier + Sync {
             .including_from_available(include_nodes)
             .excluding_from_available(exclude_nodes)
             .including_from_available(only_nodes)
-            .resize(size, 0, 0, health_of_nodes, cordoned_features)
+            .resize(size, 0, 0, health_of_nodes, cordoned_features, all_nodes)
         })
     }
 }
@@ -929,7 +849,7 @@ pub trait Identifies<Node> {
 
 impl Identifies<Node> for PrincipalId {
     fn eq(&self, other: &Node) -> bool {
-        &other.id == self
+        &other.principal == self
     }
     fn partial_eq(&self, other: &Node) -> bool {
         Identifies::eq(self, other)
@@ -1063,6 +983,7 @@ impl SubnetChangeRequest {
         replacements_unhealthy: &[Node],
         health_of_nodes: &IndexMap<PrincipalId, HealthStatus>,
         cordoned_features: Vec<NodeFeaturePair>,
+        all_nodes: &[Node],
     ) -> Result<SubnetChange, NetworkError> {
         let old_nodes = self.subnet.nodes.clone();
         self.subnet = self.subnet.without_nodes(replacements_unhealthy)?;
@@ -1072,6 +993,7 @@ impl SubnetChangeRequest {
             replacements_unhealthy.len(),
             health_of_nodes,
             cordoned_features,
+            all_nodes,
         )?;
         Ok(SubnetChange { old_nodes, ..result })
     }
@@ -1080,6 +1002,7 @@ impl SubnetChangeRequest {
         mut self,
         health_of_nodes: &IndexMap<PrincipalId, HealthStatus>,
         cordoned_features: Vec<NodeFeaturePair>,
+        all_nodes: &[Node],
     ) -> Result<SubnetChange, NetworkError> {
         let old_nodes = self.subnet.nodes.clone();
         let nodes_to_remove = self
@@ -1098,6 +1021,7 @@ impl SubnetChangeRequest {
             self.subnet.removed_nodes.len(),
             health_of_nodes,
             cordoned_features,
+            all_nodes,
         )?;
         Ok(SubnetChange { old_nodes, ..result })
     }
@@ -1110,6 +1034,7 @@ impl SubnetChangeRequest {
         how_many_nodes_unhealthy: usize,
         health_of_nodes: &IndexMap<PrincipalId, HealthStatus>,
         cordoned_features: Vec<NodeFeaturePair>,
+        all_nodes: &[Node],
     ) -> Result<SubnetChange, NetworkError> {
         let old_nodes = self.subnet.nodes.clone();
 
@@ -1118,14 +1043,14 @@ impl SubnetChangeRequest {
             .clone()
             .into_iter()
             .filter(|n| !self.include_nodes.contains(n))
-            .filter(|n| health_of_nodes.get(&n.id).unwrap_or(&HealthStatus::Unknown) == &HealthStatus::Healthy)
+            .filter(|n| health_of_nodes.get(&n.principal).unwrap_or(&HealthStatus::Unknown) == &HealthStatus::Healthy)
             .collect::<Vec<_>>();
 
         let available_nodes = all_healthy_nodes
             .into_iter()
             .filter(|n| {
                 for cordoned_feature in &cordoned_features {
-                    if let Some(node_feature) = n.features.get(&cordoned_feature.feature) {
+                    if let Some(node_feature) = n.get_feature(&cordoned_feature.feature) {
                         if PartialEq::eq(&node_feature, &cordoned_feature.value) {
                             // Node contains cordoned feature
                             // exclude it from available pool
@@ -1142,7 +1067,7 @@ impl SubnetChangeRequest {
         info!(
             "Evaluating change in subnet {} membership: removing ({} healthy + {} unhealthy) and adding {} node. Total available {} healthy nodes.",
             self.subnet.id.to_string().split_once('-').expect("subnet id is expected to have a -").0,
-            how_many_nodes_to_remove,
+            how_many_nodes_to_remove + self.nodes_to_remove.len(),
             how_many_nodes_unhealthy,
             how_many_nodes_to_add + self.include_nodes.len(),
             available_nodes.len(),
@@ -1151,7 +1076,7 @@ impl SubnetChangeRequest {
         let resized_subnet = if how_many_nodes_to_remove > 0 {
             self.subnet
                 .clone()
-                .subnet_with_fewer_nodes(how_many_nodes_to_remove)
+                .subnet_with_fewer_nodes(how_many_nodes_to_remove, all_nodes)
                 .map_err(|e| NetworkError::ResizeFailed(e.to_string()))?
         } else {
             self.subnet.clone()
@@ -1161,10 +1086,10 @@ impl SubnetChangeRequest {
             .iter()
             .cloned()
             .chain(resized_subnet.removed_nodes.clone())
-            .filter(|n| health_of_nodes.get(&n.id).unwrap_or(&HealthStatus::Unknown) == &HealthStatus::Healthy)
+            .filter(|n| health_of_nodes.get(&n.principal).unwrap_or(&HealthStatus::Unknown) == &HealthStatus::Healthy)
             .filter(|n| {
                 for cordoned_feature in &cordoned_features {
-                    if let Some(node_feature) = n.features.get(&cordoned_feature.feature) {
+                    if let Some(node_feature) = n.get_feature(&cordoned_feature.feature) {
                         if PartialEq::eq(&node_feature, &cordoned_feature.value) {
                             // Node contains cordoned feature
                             // exclude it from available pool
@@ -1179,17 +1104,16 @@ impl SubnetChangeRequest {
             .collect::<Vec<_>>();
         let resized_subnet = resized_subnet
             .with_nodes(&self.include_nodes)
-            .subnet_with_more_nodes(how_many_nodes_to_add, &available_nodes)
+            .without_nodes(&self.nodes_to_remove)?
+            .subnet_with_more_nodes(how_many_nodes_to_add, &available_nodes, all_nodes)
             .map_err(|e| NetworkError::ResizeFailed(e.to_string()))?
             .without_duplicate_added_removed();
 
         let penalties_before_change = DecentralizedSubnet::check_business_rules_for_subnet_with_nodes(&self.subnet.id, &old_nodes)
-            .map_err(|e| NetworkError::ResizeFailed(e.to_string()))?
-            .0;
+            .map_err(|e| NetworkError::ResizeFailed(e.to_string()))?;
 
         let penalties_after_change = DecentralizedSubnet::check_business_rules_for_subnet_with_nodes(&self.subnet.id, &resized_subnet.nodes)
-            .map_err(|e| NetworkError::ResizeFailed(e.to_string()))?
-            .0;
+            .map_err(|e| NetworkError::ResizeFailed(e.to_string()))?;
 
         let subnet_change = SubnetChange {
             subnet_id: self.subnet.id,
@@ -1212,8 +1136,9 @@ impl SubnetChangeRequest {
         self,
         health_of_nodes: &IndexMap<PrincipalId, HealthStatus>,
         cordoned_features: Vec<NodeFeaturePair>,
+        all_nodes: &[Node],
     ) -> Result<SubnetChange, NetworkError> {
-        self.resize(0, 0, 0, health_of_nodes, cordoned_features)
+        self.resize(0, 0, 0, health_of_nodes, cordoned_features, all_nodes)
     }
 }
 
@@ -1224,8 +1149,8 @@ pub struct SubnetChange {
     pub new_nodes: Vec<Node>,
     pub removed_nodes: Vec<Node>,
     pub added_nodes: Vec<Node>,
-    pub penalties_before_change: usize,
-    pub penalties_after_change: usize,
+    pub penalties_before_change: (usize, Vec<String>),
+    pub penalties_after_change: (usize, Vec<String>),
     pub comment: Option<String>,
     pub run_log: Vec<String>,
 }
@@ -1234,11 +1159,9 @@ impl SubnetChange {
     pub fn with_nodes(self, nodes_to_add: &[Node]) -> Self {
         let new_nodes = [self.new_nodes, nodes_to_add.to_vec()].concat();
         let penalties_before_change = DecentralizedSubnet::check_business_rules_for_subnet_with_nodes(&self.subnet_id, &self.old_nodes)
-            .expect("Business rules check before should succeed")
-            .0;
+            .expect("Business rules check before should succeed");
         let penalties_after_change = DecentralizedSubnet::check_business_rules_for_subnet_with_nodes(&self.subnet_id, &new_nodes)
-            .expect("Business rules check after should succeed")
-            .0;
+            .expect("Business rules check after should succeed");
         Self {
             new_nodes,
             added_nodes: nodes_to_add.to_vec(),
@@ -1253,11 +1176,9 @@ impl SubnetChange {
         self.removed_nodes.extend(nodes_to_remove.to_vec());
         self.new_nodes.retain(|n| !nodes_to_rm.contains(n));
         self.penalties_before_change = DecentralizedSubnet::check_business_rules_for_subnet_with_nodes(&self.subnet_id, &self.old_nodes)
-            .expect("Business rules check before should succeed")
-            .0;
+            .expect("Business rules check before should succeed");
         self.penalties_after_change = DecentralizedSubnet::check_business_rules_for_subnet_with_nodes(&self.subnet_id, &self.new_nodes)
-            .expect("Business rules check after should succeed")
-            .0;
+            .expect("Business rules check after should succeed");
         self
     }
 
@@ -1336,28 +1257,59 @@ impl NetworkHealRequest {
         mut available_nodes: Vec<Node>,
         health_of_nodes: &IndexMap<PrincipalId, HealthStatus>,
         cordoned_features: Vec<NodeFeaturePair>,
+        all_nodes: &[Node],
+        optimize_for_business_rules_compliance: bool,
     ) -> Result<Vec<SubnetChangeResponse>, NetworkError> {
         let mut subnets_changed = Vec::new();
         let subnets_to_heal = unhealthy_with_nodes(&self.subnets, health_of_nodes)
             .iter()
             .flat_map(|(subnet_id, unhealthy_nodes)| {
-                let unhealthy_nodes = unhealthy_nodes.iter().map(Node::from).collect::<Vec<_>>();
                 let unhealthy_subnet = self.subnets.get(subnet_id).ok_or(NetworkError::SubnetNotFound(*subnet_id))?;
 
                 Ok::<NetworkHealSubnets, NetworkError>(NetworkHealSubnets {
                     name: unhealthy_subnet.metadata.name.clone(),
                     decentralized_subnet: DecentralizedSubnet::from(unhealthy_subnet),
-                    unhealthy_nodes,
+                    unhealthy_nodes: unhealthy_nodes.clone(),
                 })
             })
             .sorted_by(|a, b| a.cmp(b).reverse())
             .collect_vec();
+        let subnets_to_optimize = if optimize_for_business_rules_compliance {
+            // Exclude subnets that are already in subnets_to_heal
+            let subnet_ids_to_heal = subnets_to_heal
+                .iter()
+                .map(|subnet| subnet.decentralized_subnet.id)
+                .collect::<AHashSet<_>>();
+            let subnets = self
+                .subnets
+                .iter()
+                .filter_map(|(subnet_id, subnet)| {
+                    if subnet_ids_to_heal.contains(subnet_id) {
+                        None
+                    } else {
+                        Some(subnet.clone())
+                    }
+                })
+                .collect_vec();
+            // Find subnets that have business rules violations
+            subnets_with_business_rules_violations(&subnets)
+                .into_iter()
+                .map(|subnet| NetworkHealSubnets {
+                    name: subnet.metadata.name.clone(),
+                    decentralized_subnet: DecentralizedSubnet::from(subnet),
+                    unhealthy_nodes: vec![],
+                })
+                .sorted_by(|a, b| a.cmp(b).reverse())
+                .collect_vec()
+        } else {
+            vec![]
+        };
 
-        if subnets_to_heal.is_empty() {
-            info!("Nothing to do! All subnets are healthy.")
+        if subnets_to_heal.is_empty() && subnets_to_optimize.is_empty() {
+            info!("Nothing to do! All subnets are healthy and compliant with business rules.")
         }
 
-        for subnet in subnets_to_heal {
+        for subnet in subnets_to_heal.into_iter().chain(subnets_to_optimize) {
             // If more than 1/3 nodes do not have the latest subnet state, subnet will stall.
             // From those 1/2 are added and 1/2 removed -> nodes_in_subnet/3 * 1/2 = nodes_in_subnet/6
             let max_replaceable_nodes = subnet.decentralized_subnet.nodes.len() / 6;
@@ -1369,7 +1321,7 @@ impl NetworkHealRequest {
                     subnet.decentralized_subnet.id,
                     max_replaceable_nodes,
                     unhealthy_nodes.len(),
-                    unhealthy_nodes.iter().map(|node| node.id).collect_vec()
+                    unhealthy_nodes.iter().map(|node| node.principal).collect_vec()
                 );
                 unhealthy_nodes
             } else {
@@ -1380,7 +1332,7 @@ impl NetworkHealRequest {
                     subnet
                         .unhealthy_nodes
                         .iter()
-                        .map(|node| node.id.to_string().split('-').next().unwrap().to_string())
+                        .map(|node| node.principal.to_string().split('-').next().unwrap().to_string())
                         .collect_vec(),
                     max_replaceable_nodes - subnet.unhealthy_nodes.len(),
                     max_replaceable_nodes
@@ -1401,7 +1353,13 @@ impl NetworkHealRequest {
                 .filter_map(|num_nodes_to_optimize| {
                     change_req
                         .clone()
-                        .optimize(num_nodes_to_optimize, &unhealthy_nodes, health_of_nodes, cordoned_features.clone())
+                        .optimize(
+                            num_nodes_to_optimize,
+                            &unhealthy_nodes,
+                            health_of_nodes,
+                            cordoned_features.clone(),
+                            all_nodes,
+                        )
                         .map_err(|e| warn!("{}", e))
                         .ok()
                 })
@@ -1423,7 +1381,7 @@ impl NetworkHealRequest {
                     "Replacing {} nodes in subnet {} results in subnet with business-rules penalty {} and Nakamoto coefficient: {}\n",
                     change.node_ids_removed.len(),
                     subnet.decentralized_subnet.id,
-                    change.penalties_after_change,
+                    change.penalties_after_change.0,
                     change.score_after
                 );
             }
@@ -1433,7 +1391,7 @@ impl NetworkHealRequest {
             // As a compromise, we will choose the change that has the lowest business-rules penalty,
             // or if there is no improvement in the business-rules penalty, we will choose the change
             // that replaces the fewest nodes.
-            let penalty_optimize_min = changes.iter().map(|change| change.penalties_after_change).min().unwrap();
+            let penalty_optimize_min = changes.iter().map(|change| change.penalties_after_change.0).min().unwrap();
             info!("Min business-rules penalty: {}", penalty_optimize_min);
 
             let all_optimizations_desc = changes
@@ -1442,25 +1400,25 @@ impl NetworkHealRequest {
                 .skip(1)
                 .map(|(num_opt, change)| {
                     format!(
-                        "- {} additional node{}{}: {}",
+                        "- {} additional node{} would result in: {}{}",
                         num_opt,
                         if num_opt > 1 { "s" } else { "" },
-                        if change.penalties_after_change > 0 {
-                            format!(" (solution penalty: {})", change.penalties_after_change)
-                        } else {
-                            "".to_string()
-                        },
                         change
                             .score_after
                             .describe_difference_from(&changes[num_opt.saturating_sub(1)].score_after)
-                            .1
+                            .1,
+                        if change.penalties_after_change.0 > 0 {
+                            format!(" (solution penalty: {})", change.penalties_after_change.0)
+                        } else {
+                            "".to_string()
+                        },
                     )
                 })
                 .collect::<Vec<_>>();
 
             let best_changes = changes
                 .into_iter()
-                .filter(|change| change.penalties_after_change == penalty_optimize_min)
+                .filter(|change| change.penalties_after_change.0 == penalty_optimize_min)
                 .collect::<Vec<_>>();
 
             let changes_max_score = best_changes
@@ -1469,7 +1427,7 @@ impl NetworkHealRequest {
                 .expect("Failed to find a replacement with the highest Nakamoto coefficient");
             info!("Best Nakamoto coefficient after the change: {}", changes_max_score.score_after);
 
-            let change = if penalty_optimize_min > 0 && penalty_optimize_min == best_changes[0].penalties_after_change {
+            let change = if penalty_optimize_min > 0 && penalty_optimize_min == best_changes[0].penalties_after_change.0 {
                 info!("No reduction in business-rules penalty, choosing the first change");
                 &best_changes[0]
             } else {
@@ -1478,6 +1436,11 @@ impl NetworkHealRequest {
                     .find(|change: &&SubnetChangeResponse| change.score_after == changes_max_score.score_after)
                     .expect("No suitable changes found")
             };
+
+            if change.node_ids_removed.is_empty() {
+                warn!("No suitable changes found for subnet {}", subnet.decentralized_subnet.id);
+                continue;
+            }
 
             info!(
                 "Replacing {} nodes in subnet {} gives Nakamoto coefficient: {}\n",
@@ -1524,19 +1487,19 @@ https://github.com/dfinity/dre/blob/79066127f58c852eaf4adda11610e815a426878c/rs/
                 motivations.push(format!(
                     "replacing {} node {}",
                     health_of_nodes
-                        .get(&node.id)
+                        .get(&node.principal)
                         .map(|s| s.to_string().to_lowercase())
                         .unwrap_or("unhealthy".to_string()),
-                    node.id
+                    node.principal
                 ));
             }
 
-            let unhealthy_nodes_ids = unhealthy_nodes.iter().map(|node| node.id).collect::<HashSet<_>>();
+            let unhealthy_nodes_ids = unhealthy_nodes.iter().map(|node| node.principal).collect::<HashSet<_>>();
             for node_id in change.node_ids_removed.iter().filter(|n| !unhealthy_nodes_ids.contains(n)) {
                 motivations.push(format!("replacing node {} to optimize network topology", node_id));
             }
 
-            available_nodes.retain(|node| !change.node_ids_added.contains(&node.id));
+            available_nodes.retain(|node| !change.node_ids_added.contains(&node.principal));
 
             let motivation = format!(
                 "\n{}{}\nNote: the information below is provided for your convenience. Please independently verify the decentralization changes rather than relying solely on this summary.\nHere is [an explaination of how decentralization is currently calculated](https://dfinity.github.io/dre/decentralization.html), \nand there are also [instructions for performing what-if analysis](https://dfinity.github.io/dre/subnet-decentralization-whatif.html) if you are wondering if another node would have improved decentralization more.\n\n",
@@ -1551,11 +1514,11 @@ https://github.com/dfinity/dre/blob/79066127f58c852eaf4adda11610e815a426878c/rs/
 }
 
 pub fn generate_removed_nodes_description(subnet_nodes: &[Node], remove_nodes: &[Node]) -> Vec<(Node, String)> {
-    let mut subnet_nodes: AHashMap<PrincipalId, Node> = AHashMap::from_iter(subnet_nodes.iter().map(|n| (n.id, n.clone())));
+    let mut subnet_nodes: AHashMap<PrincipalId, Node> = AHashMap::from_iter(subnet_nodes.iter().map(|n| (n.principal, n.clone())));
     let mut result = Vec::new();
     for node in remove_nodes {
         let nakamoto_before = NakamotoScore::new_from_nodes(subnet_nodes.values());
-        subnet_nodes.remove(&node.id);
+        subnet_nodes.remove(&node.principal);
         let nakamoto_after = NakamotoScore::new_from_nodes(subnet_nodes.values());
         let nakamoto_diff = nakamoto_after.describe_difference_from(&nakamoto_before).1;
 
@@ -1565,11 +1528,11 @@ pub fn generate_removed_nodes_description(subnet_nodes: &[Node], remove_nodes: &
 }
 
 pub fn generate_added_node_description(subnet_nodes: &[Node], add_nodes: &[Node]) -> Vec<(Node, String)> {
-    let mut subnet_nodes: AHashMap<PrincipalId, Node> = AHashMap::from_iter(subnet_nodes.iter().map(|n| (n.id, n.clone())));
+    let mut subnet_nodes: AHashMap<PrincipalId, Node> = AHashMap::from_iter(subnet_nodes.iter().map(|n| (n.principal, n.clone())));
     let mut result = Vec::new();
     for node in add_nodes {
         let nakamoto_before = NakamotoScore::new_from_nodes(subnet_nodes.values());
-        subnet_nodes.insert(node.id, node.clone());
+        subnet_nodes.insert(node.principal, node.clone());
         let nakamoto_after = NakamotoScore::new_from_nodes(subnet_nodes.values());
         let nakamoto_diff = nakamoto_after.describe_difference_from(&nakamoto_before).1;
 

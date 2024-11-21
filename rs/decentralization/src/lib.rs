@@ -1,13 +1,15 @@
 pub mod nakamoto;
 pub mod network;
+#[cfg(test)]
+mod network_tests;
 pub mod subnets;
 use indexmap::IndexMap;
 use itertools::Itertools;
-use network::{Node, SubnetChange};
+use network::SubnetChange;
 use std::fmt::{Display, Formatter};
 
 use ic_base_types::PrincipalId;
-use ic_management_types::{HealthStatus, NodeFeature};
+use ic_management_types::{HealthStatus, Node, NodeFeature};
 use serde::{self, Deserialize, Serialize};
 
 #[derive(Clone, Debug, Deserialize, Serialize, Default)]
@@ -20,8 +22,8 @@ pub struct SubnetChangeResponse {
     pub health_of_nodes: IndexMap<PrincipalId, HealthStatus>,
     pub score_before: nakamoto::NakamotoScore,
     pub score_after: nakamoto::NakamotoScore,
-    pub penalties_before_change: usize,
-    pub penalties_after_change: usize,
+    pub penalties_before_change: (usize, Vec<String>),
+    pub penalties_after_change: (usize, Vec<String>),
     pub motivation: Option<String>,
     pub comment: Option<String>,
     pub run_log: Option<Vec<String>>,
@@ -35,8 +37,8 @@ impl SubnetChangeResponse {
     pub fn new(change: &SubnetChange, node_health: &IndexMap<PrincipalId, HealthStatus>, motivation: Option<String>) -> Self {
         Self {
             nodes_old: change.old_nodes.clone(),
-            node_ids_added: change.added().iter().map(|n| n.id).collect(),
-            node_ids_removed: change.removed().iter().map(|n| n.id).collect(),
+            node_ids_added: change.added().iter().map(|n| n.principal).collect(),
+            node_ids_removed: change.removed().iter().map(|n| n.principal).collect(),
             subnet_id: if change.subnet_id == Default::default() {
                 None
             } else {
@@ -45,8 +47,8 @@ impl SubnetChangeResponse {
             health_of_nodes: node_health.clone(),
             score_before: nakamoto::NakamotoScore::new_from_nodes(&change.old_nodes),
             score_after: nakamoto::NakamotoScore::new_from_nodes(&change.new_nodes),
-            penalties_before_change: change.penalties_before_change,
-            penalties_after_change: change.penalties_after_change,
+            penalties_before_change: change.penalties_before_change.clone(),
+            penalties_after_change: change.penalties_after_change.clone(),
             motivation,
             comment: change.comment.clone(),
             run_log: Some(change.run_log.clone()),
@@ -58,14 +60,14 @@ impl SubnetChangeResponse {
                         .collect::<IndexMap<NodeFeature, FeatureDiff>>(),
                     |mut acc, n| {
                         for f in NodeFeature::variants() {
-                            acc.get_mut(&f).unwrap().entry(n.get_feature(&f)).or_insert((0, 0)).0 += 1;
+                            acc.get_mut(&f).unwrap().entry(n.get_feature(&f).unwrap_or_default()).or_insert((0, 0)).0 += 1;
                         }
                         acc
                     },
                 ),
                 |mut acc, n| {
                     for f in NodeFeature::variants() {
-                        acc.get_mut(&f).unwrap().entry(n.get_feature(&f)).or_insert((0, 0)).1 += 1;
+                        acc.get_mut(&f).unwrap().entry(n.get_feature(&f).unwrap_or_default()).or_insert((0, 0)).1 += 1;
                     }
                     acc
                 },
@@ -118,11 +120,11 @@ impl Display for SubnetChangeResponse {
             self.score_after.describe_difference_from(&self.score_before).1
         )?;
 
-        if self.penalties_before_change != self.penalties_after_change || self.penalties_after_change > 0 {
+        if (self.penalties_before_change.0 != self.penalties_after_change.0) || (self.penalties_after_change.0 > 0) {
             writeln!(
                 f,
                 "\nImpact on business rules penalties: {} -> {}",
-                self.penalties_before_change, self.penalties_after_change
+                self.penalties_before_change.0, self.penalties_after_change.0
             )?;
         }
 
@@ -178,10 +180,22 @@ impl Display for SubnetChangeResponse {
             }));
         }
 
-        writeln!(f, "\n\n```\n{}```\n", table)?;
+        writeln!(f, "\n\n```\n{}```", table)?;
 
-        if let Some(comment) = &self.comment {
-            writeln!(f, "### Business rules analysis\n{}", comment)?;
+        if !self.penalties_before_change.1.is_empty() {
+            writeln!(
+                f,
+                "\n\nBusiness rules check results *before* the membership change:\n{}",
+                self.penalties_before_change.1.iter().map(|l| format!("- {}", l)).join("\n")
+            )?;
+        }
+
+        if !self.penalties_after_change.1.is_empty() {
+            writeln!(
+                f,
+                "\n\nBusiness rules check results *after* the membership change:\n{}",
+                self.penalties_after_change.1.iter().map(|l| format!("- {}", l)).join("\n")
+            )?;
         }
 
         Ok(())

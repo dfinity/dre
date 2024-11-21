@@ -71,7 +71,6 @@ feature-depth = 1
 # output a note when they are encountered.
 ignore = [
     #"RUSTSEC-0000-0000",
-    { id = "RUSTSEC-2022-0034", reason = "our use of pkcs11 does not involve pointer magic" },
     { id = "RUSTSEC-2021-0127", reason = "migration to ciborium / minicbor pending" },
     { id = "RUSTSEC-2021-0141", reason = "migration away from dotenv pending" },
     { id = "RUSTSEC-2024-0370", reason = "alternative not yet available" },
@@ -559,6 +558,11 @@ expression = "LicenseRef-IC-1.0"
 license-files = [{ path = "../../../../LICENSE", hash = 0xbd0eed23 }]
 
 [[licenses.clarify]]
+crate = "ic-registry-canister-client"
+expression = "LicenseRef-IC-1.0"
+license-files = [{ path = "../../../LICENSE", hash = 0xbd0eed23 }]
+
+[[licenses.clarify]]
 crate = "ic-registry-client"
 expression = "LicenseRef-IC-1.0"
 license-files = [{ path = "../../../LICENSE", hash = 0xbd0eed23 }]
@@ -782,6 +786,11 @@ license-files = [{ path = "../../../../../../LICENSE", hash = 0xbd0eed23 }]
 crate = "ic-nervous-system-linear-map"
 expression = "LicenseRef-IC-1.0"
 license-files = [{ path = "../../../LICENSE", hash = 0xbd0eed23 }]
+
+[[licenses.clarify]]
+crate = "ic-sns-governance-api"
+expression = "LicenseRef-IC-1.0"
+license-files = [{ path = "../../../../LICENSE", hash = 0xbd0eed23 }]
 
 
 [licenses.private]

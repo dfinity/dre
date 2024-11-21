@@ -1,13 +1,16 @@
 use ic_agent::{agent::EnvelopeContent, export::Principal, identity::Delegation, Identity, Signature};
 
-use pkcs11::{
-    types::{
-        CKA_CLASS, CKA_EC_PARAMS, CKA_EC_POINT, CKA_ID, CKA_KEY_TYPE, CKF_LOGIN_REQUIRED, CKF_SERIAL_SESSION, CKK_ECDSA, CKM_ECDSA, CKO_PRIVATE_KEY,
-        CKO_PUBLIC_KEY, CKU_USER, CK_ATTRIBUTE, CK_ATTRIBUTE_TYPE, CK_KEY_TYPE, CK_MECHANISM, CK_OBJECT_CLASS, CK_OBJECT_HANDLE, CK_SESSION_HANDLE,
-        CK_SLOT_ID,
-    },
-    Ctx,
+use cryptoki::{
+    context::{CInitializeArgs, Pkcs11 as CryptokiPkcs11},
+    error::{Error as CryptokiError, RvError},
+    mechanism::Mechanism,
+    object::{Attribute, AttributeInfo, AttributeType, KeyType},
+    session::UserType,
+    slot::{Slot, SlotInfo, TokenInfo},
 };
+use log::error;
+use log::info;
+use log::{debug, warn};
 use sha2::{
     digest::{generic_array::GenericArray, OutputSizeUser},
     Digest, Sha256,
@@ -17,25 +20,47 @@ use simple_asn1::{
     ASN1Block::{BitString, ObjectIdentifier, OctetString, Sequence},
     ASN1DecodeErr, ASN1EncodeErr,
 };
-use std::{path::Path, ptr, sync::Mutex};
+use std::{error::Error, sync::Mutex};
+use std::{marker::PhantomData, path::Path, str::FromStr, sync::Arc};
 use thiserror::Error;
 
-type KeyIdVec = Vec<u8>;
-type KeyId = [u8];
+pub type KeyIdVec = Vec<u8>;
+
+#[derive(Clone, Debug, Eq, PartialEq)]
+struct HsmAuthParams {
+    pub pin: String,
+    pub slot: u64,
+    pub key_id: KeyIdVec,
+}
+
 type DerPublicKeyVec = Vec<u8>;
 
 /// Type alias for a sha256 result (ie. a u256).
 type Sha256Hash = GenericArray<u8, <Sha256 as OutputSizeUser>::OutputSize>;
 
+// We expect the curve to be an EC curve.
+const EXPECTED_KEY_TYPE: KeyType = KeyType::EC;
+
 // We expect the parameters to be curve secp256r1.  This is the base127 encoded form:
 const EXPECTED_EC_PARAMS: &[u8; 10] = b"\x06\x08\x2a\x86\x48\xce\x3d\x03\x01\x07";
+
+// The key ID stored in the HSM is referenced by a sixteen-bit unsigned number.
+//  We represent this internally as an array of two bytes.
+// The following function produces the key ID in the format that ic-admin wants.
+pub fn hsm_key_id_to_string(s: &KeyIdVec) -> String {
+    format!("0x{}", hex::encode(s))
+}
 
 /// An error happened related to a HardwareIdentity.
 #[derive(Error, Debug)]
 pub enum HardwareIdentityError {
-    /// A PKCS11 error occurred.
+    /// A PKCS11 error loading the library occurred.
     #[error(transparent)]
-    PKCS11(#[from] pkcs11::errors::Error),
+    LibraryNotFound(#[from] std::io::Error),
+
+    /// A cryptoki error occurred.
+    #[error(transparent)]
+    Cryptoki(#[from] cryptoki::error::Error),
 
     // ASN1DecodeError does not implement the Error trait and so we cannot use #[from]
     /// An error occurred when decoding ASN1.
@@ -54,13 +79,13 @@ pub enum HardwareIdentityError {
     #[error("Key not found")]
     KeyNotFound,
 
-    /// An unexpected key type was found.
-    #[error("Unexpected key type {0}")]
-    UnexpectedKeyType(CK_KEY_TYPE),
-
     /// An EcPoint block was expected to be an OctetString, but was not.
     #[error("Expected EcPoint to be an OctetString")]
     ExpectedEcPointOctetString,
+
+    /// An EcPoint block was expected to be an OctetString, but was not.
+    #[error("Expected EcPoint OctetString to be 65 bytes in length, not {0}")]
+    IncorrectEcPointLength(usize),
 
     /// An EcPoint block was unexpectedly empty.
     #[error("EcPoint is empty")]
@@ -68,7 +93,7 @@ pub enum HardwareIdentityError {
 
     /// The attribute with the specified type was not found.
     #[error("Attribute with type={0} not found")]
-    AttributeNotFound(CK_ATTRIBUTE_TYPE),
+    AttributeNotFound(AttributeType),
 
     /// The EcParams given were not the ones the crate expected.
     #[error("Invalid EcParams.  Expected prime256v1 {:02x?}, actual is {:02x?}", .expected, .actual)]
@@ -83,56 +108,385 @@ pub enum HardwareIdentityError {
     #[error("User PIN is required: {0}")]
     UserPinRequired(String),
 
+    /// The PIN is expired.
+    #[error("User PIN expired")]
+    UserPinExpired,
+
+    /// The PIN is not correct.
+    #[error("User PIN incorrect")]
+    UserPinIncorrect,
+
+    /// The PIN is not valid.
+    #[error("User PIN invalid")]
+    UserPinInvalid,
+
+    /// The PIN is too long or too short.
+    #[error("User PIN too long or too short")]
+    UserPinLenRange,
+
+    /// The PIN is too long or too short.
+    #[error("The user PIN for the token in slot {0} is locked")]
+    UserPinLocked(Slot),
+
+    /// The PIN is too long or too short.
+    #[error("User PIN does not meet the strength standards")]
+    UserPinTooWeak,
+
     /// A slot index was provided that does not exist.
     #[error("No such slot index ({0}")]
     NoSuchSlotIndex(usize),
+
+    #[error("Hardware security key not found: {0}")]
+    NoHSM(String),
 }
 
-/// An identity based on an HSM
+fn pkcs11_lib_path() -> Result<std::path::PathBuf, std::io::Error> {
+    let lib_macos_path = std::path::PathBuf::from_str("/Library/OpenSC/lib/opensc-pkcs11.so").unwrap();
+    let lib_linux_path = std::path::PathBuf::from_str("/usr/lib/x86_64-linux-gnu/opensc-pkcs11.so").unwrap();
+    if lib_macos_path.exists() {
+        Ok(lib_macos_path)
+    } else if lib_linux_path.exists() {
+        Ok(lib_linux_path)
+    } else {
+        Err(std::io::Error::from(std::io::ErrorKind::NotFound))
+    }
+}
+
 #[derive(Debug)]
-pub struct ParallelHardwareIdentity {
+struct PKCS11Ctx {
+    cryptokictx: CryptokiPkcs11,
+}
+
+impl PKCS11Ctx {
+    fn init() -> Result<Self, HardwareIdentityError> {
+        let p = pkcs11_lib_path().map_err(HardwareIdentityError::LibraryNotFound)?;
+        debug!(target: "pkcs11", "PKCS#11 context is being initialized");
+        Self::init_with_path(p)
+    }
+
+    fn init_with_path<P>(pkcs11_lib_path: P) -> Result<Self, HardwareIdentityError>
+    where
+        P: AsRef<Path> + Clone,
+    {
+        let cryptokictx = CryptokiPkcs11::new(pkcs11_lib_path.clone())?;
+        cryptokictx.initialize(CInitializeArgs::OsThreads)?;
+        Ok(Self { cryptokictx })
+    }
+
+    fn get_slots_with_token(&self) -> Result<Vec<Slot>, HardwareIdentityError> {
+        Ok(self.cryptokictx.get_slots_with_token()?)
+    }
+
+    fn get_slot_info(&self, slot: Slot) -> Result<SlotInfo, HardwareIdentityError> {
+        Ok(self.cryptokictx.get_slot_info(slot)?)
+    }
+
+    fn get_token_info(&self, slot: Slot) -> Result<TokenInfo, HardwareIdentityError> {
+        Ok(self.cryptokictx.get_token_info(slot)?)
+    }
+
+    fn open_ro_session(&self, slot: Slot) -> Result<PKCS11Sess<Unauthenticated>, CryptokiError> {
+        let sess = self.cryptokictx.open_ro_session(slot)?;
+        let s: PKCS11Sess<Unauthenticated> = PKCS11Sess {
+            sess,
+            slot,
+            _marker: PhantomData,
+        };
+        Ok(s)
+    }
+}
+
+impl Drop for PKCS11Ctx {
+    fn drop(&mut self) {
+        debug!(target: "pkcs11", "PKCS#11 context is being retired");
+    }
+}
+
+trait IdentityState {}
+struct Unauthenticated;
+struct Authenticated;
+
+impl IdentityState for Unauthenticated {}
+impl IdentityState for Authenticated {}
+
+struct PKCS11Sess<S: IdentityState> {
+    sess: cryptoki::session::Session,
+    slot: Slot,
+    _marker: PhantomData<S>,
+}
+
+impl<S: IdentityState> PKCS11Sess<S> {
+    /// Finds the key ID in a slot.  If a key ID is specified,
+    /// then the search is limited to that key ID.  If not, then
+    /// the first key that has an ID and is for a token is returned.
+    /// If a key is found, this function returns Some, with a tuple of
+    /// the found key ID, and possibly the label assigned to said key ID
+    /// (None if no / invalid label).
+    fn find_key_id(&self, key_id: Option<KeyIdVec>) -> Result<Option<(KeyIdVec, Option<String>)>, HardwareIdentityError> {
+        let token_types = vec![AttributeType::Token, AttributeType::Id];
+        let label_types = vec![AttributeType::Label];
+        let objects = self.sess.find_objects(&[])?;
+        for hnd in objects.iter() {
+            if let [AttributeInfo::Available(_), AttributeInfo::Available(_)] =
+                self.sess.get_attribute_info(*hnd, &token_types)?[0..token_types.len()]
+            {
+                // Object may be a token and has an ID.
+                if let [Attribute::Token(true), Attribute::Id(token_id)] = &self.sess.get_attributes(*hnd, &token_types)?[0..token_types.len()] {
+                    // Object is a token, and we have extracted the ID.
+                    if !token_id.is_empty()
+                        && match &key_id {
+                            None => true,
+                            Some(key_id) => *token_id == *key_id,
+                        }
+                    {
+                        let found_key_id = token_id;
+                        let mut label: Option<String> = None;
+                        if let [AttributeInfo::Available(_)] = &self.sess.get_attribute_info(*hnd, &label_types)?[0..label_types.len()] {
+                            // Object has a label.
+                            if let [Attribute::Label(token_label)] = &self.sess.get_attributes(*hnd, &label_types)?[0..label_types.len()] {
+                                // We have extracted the label; we make a copy of it.
+                                label = match String::from_utf8(token_label.clone()) {
+                                    Ok(label) => Some(label),
+                                    Err(_) => None,
+                                }
+                            }
+                        }
+                        return Ok(Some((found_key_id.clone(), label)));
+                    }
+                }
+            }
+        }
+        Ok(None)
+    }
+
+    fn get_der_encoded_public_key(&self, key_id: KeyIdVec) -> Result<DerPublicKeyVec, HardwareIdentityError> {
+        // Obtain all ECDSA keys that match the expected EC parameters.
+        let key_handle = *self
+            .sess
+            .find_objects(&[
+                Attribute::Id(key_id),
+                Attribute::KeyType(EXPECTED_KEY_TYPE),
+                Attribute::EcParams(EXPECTED_EC_PARAMS.to_vec()),
+            ])?
+            .first()
+            .ok_or(HardwareIdentityError::KeyNotFound)?;
+
+        let der_encoded_ec_point = match self
+            .sess
+            .get_attributes(key_handle, &[AttributeType::EcPoint])?
+            .first()
+            .ok_or(HardwareIdentityError::EcPointEmpty)?
+        {
+            Attribute::EcPoint(point) => point.clone(),
+            _ => return Err(HardwareIdentityError::AttributeNotFound(AttributeType::EcPoint)),
+        };
+
+        let asn1_blocks = from_der(der_encoded_ec_point.as_slice()).map_err(HardwareIdentityError::ASN1Decode)?;
+        let asn1_block = asn1_blocks.first().ok_or(HardwareIdentityError::EcPointEmpty)?;
+
+        let ec_point = if let OctetString(_size, data) = asn1_block {
+            Ok(data.clone())
+        } else {
+            Err(HardwareIdentityError::ExpectedEcPointOctetString)
+        }?;
+
+        // We expect the octet string to be 65 bytes in length.
+        if ec_point.len() != 65 {
+            return Err(HardwareIdentityError::IncorrectEcPointLength(ec_point.len()));
+        }
+        let (oid_ecdsa, oid_curve_secp256r1) = (oid!(1, 2, 840, 10045, 2, 1), oid!(1, 2, 840, 10045, 3, 1, 7));
+        let asn1_public_key = Sequence(
+            0,
+            vec![
+                Sequence(0, vec![ObjectIdentifier(0, oid_ecdsa), ObjectIdentifier(0, oid_curve_secp256r1)]),
+                BitString(0, ec_point.len() * 8, ec_point),
+            ],
+        );
+        Ok(to_der(&asn1_public_key)?)
+    }
+}
+
+impl PKCS11Sess<Unauthenticated> {
+    fn authenticate(self, pin: String) -> Result<PKCS11Sess<Authenticated>, HardwareIdentityError> {
+        let pin = cryptoki::types::AuthPin::from_str(pin.as_str()).unwrap();
+        match self.sess.login(UserType::User, Some(&pin)) {
+            Ok(_) => (),
+            Err(CryptokiError::Pkcs11(RvError::PinExpired, _)) => return Err(HardwareIdentityError::UserPinExpired),
+            Err(CryptokiError::Pkcs11(RvError::PinIncorrect, _)) => return Err(HardwareIdentityError::UserPinIncorrect),
+            Err(CryptokiError::Pkcs11(RvError::PinInvalid, _)) => return Err(HardwareIdentityError::UserPinInvalid),
+            Err(CryptokiError::Pkcs11(RvError::PinLenRange, _)) => return Err(HardwareIdentityError::UserPinLenRange),
+            Err(CryptokiError::Pkcs11(RvError::PinLocked, _)) => return Err(HardwareIdentityError::UserPinLocked(self.slot)),
+            Err(CryptokiError::Pkcs11(RvError::PinTooWeak, _)) => return Err(HardwareIdentityError::UserPinTooWeak),
+            Err(e) => return Err(HardwareIdentityError::Cryptoki(e)),
+        };
+        let sess: PKCS11Sess<Authenticated> = PKCS11Sess {
+            sess: self.sess,
+            slot: self.slot,
+            _marker: PhantomData,
+        };
+        Ok(sess)
+    }
+}
+
+impl PKCS11Sess<Authenticated> {
+    fn sign_hash(&self, key_id: KeyIdVec, hash: &Sha256Hash) -> Result<Vec<u8>, HardwareIdentityError> {
+        let key_handle = *self
+            .sess
+            .find_objects(&[
+                Attribute::Id(key_id),
+                Attribute::KeyType(EXPECTED_KEY_TYPE),
+                Attribute::EcParams(EXPECTED_EC_PARAMS.to_vec()),
+            ])?
+            .first()
+            .ok_or(HardwareIdentityError::KeyNotFound)?;
+        let mechanism = Mechanism::Ecdsa;
+        self.sess.sign(&mechanism, key_handle, hash).map_err(|e| e.into())
+    }
+}
+
+pub struct DetectedHsm {
+    ctx: PKCS11Ctx,
+    sess: PKCS11Sess<Unauthenticated>,
+    token_info: TokenInfo,
     key_id: KeyIdVec,
-    ctx: Ctx,
+    pub memo_key: String,
+}
+
+impl DetectedHsm {
+    pub fn authenticate(self, pin: String) -> Result<ParallelHardwareIdentity, HardwareIdentityError> {
+        if self.token_info.user_pin_locked() {
+            return Err(HardwareIdentityError::UserPinLocked(self.sess.slot));
+        }
+        if self.token_info.user_pin_final_try() {
+            warn!(
+                "The PIN for the token stored in slot {} is at its last try, and if this operation fails, the token will be locked",
+                self.sess.slot
+            );
+        }
+        let slot_u64: u64 = self.sess.slot.into();
+        self.sess.authenticate(pin.clone())?;
+        info!("Hardware security module PIN correct");
+        ParallelHardwareIdentity::new(
+            self.ctx,
+            HsmAuthParams {
+                key_id: self.key_id.clone(),
+                slot: slot_u64,
+                pin,
+            },
+        )
+    }
+}
+
+/// An identity based on an HSM.
+#[derive(Debug, Clone)]
+pub struct ParallelHardwareIdentity {
+    pub key_id: KeyIdVec,
+    ctx: Arc<Mutex<Option<PKCS11Ctx>>>,
     public_key: DerPublicKeyVec,
-    lock: Option<Mutex<()>>,
-    slot_id: u64,
-    cached_pin: String,
+    pub slot: Slot,
+    // FIXME: This should be a criptoki::secret to prevent debug dumps of it.
+    pub cached_pin: String,
 }
 
 impl ParallelHardwareIdentity {
-    /// Create an identity using a specific key on an HSM.
-    /// The filename will be something like /usr/local/lib/opensc-pkcs11.s
+    /// Create an identity using a specific key on an HSM, through a PKCS#11 context.
     /// The key_id must refer to a ECDSA key with parameters prime256v1 (secp256r1)
     /// The key must already have been created.  You can create one with pkcs11-tool:
     /// $ pkcs11-tool -k --slot $SLOT -d $KEY_ID --key-type EC:prime256v1 --pin $PIN
-    pub fn new<P, PinFn>(
-        pkcs11_lib_path: P,
-        slot_index: usize,
-        key_id: &str,
-        pin_fn: PinFn,
-        lock: Option<Mutex<()>>,
-    ) -> Result<Self, HardwareIdentityError>
-    where
-        P: AsRef<Path>,
-        PinFn: FnOnce() -> Result<String, String>,
-    {
-        let ctx = Ctx::new_and_initialize(pkcs11_lib_path)?;
-        let slot_id = get_slot_id(&ctx, slot_index)?;
-        let session_handle = open_session(&ctx, slot_id)?;
-        let pin = pin_fn().map_err(HardwareIdentityError::UserPinRequired)?;
-        login_if_required(&ctx, session_handle, pin.clone(), slot_id)?;
-        let key_id = str_to_key_id(key_id)?;
-        let public_key = get_der_encoded_public_key(&ctx, session_handle, &key_id)?;
-        ctx.close_session(session_handle).unwrap();
+    fn new(ctx: PKCS11Ctx, params: HsmAuthParams) -> Result<Self, HardwareIdentityError> {
+        let slot_id = params.slot;
+        let key_id = params.key_id.clone();
+
+        let slot: Slot = slot_id.try_into()?;
+        let public_key = match ctx.open_ro_session(slot) {
+            Ok(sess) => sess,
+            Err(cryptoki::error::Error::Pkcs11(RvError::SlotIdInvalid, _)) => return Err(HardwareIdentityError::NoSuchSlotIndex(slot_id as usize)),
+            Err(e) => return Err(HardwareIdentityError::Cryptoki(e)),
+        }
+        .get_der_encoded_public_key(key_id.clone())?;
 
         Ok(Self {
             key_id,
-            ctx,
+            ctx: Arc::new(Mutex::new(Some(ctx))),
             public_key,
-            lock,
-            slot_id,
-            cached_pin: pin,
+            slot,
+            cached_pin: params.pin,
         })
+    }
+
+    pub fn scan_for_hsm(maybe_slot: Option<u64>, maybe_key_id: Option<KeyIdVec>) -> Result<DetectedHsm, HardwareIdentityError> {
+        let ctx = PKCS11Ctx::init()?;
+
+        if maybe_slot.is_none() && maybe_key_id.is_none() {
+            debug!("Scanning hardware security module devices");
+        }
+        if let Some(slot) = &maybe_slot {
+            debug!("Probing hardware security module in slot {}", slot);
+        }
+        if let Some(key_id) = &maybe_key_id {
+            debug!("Limiting key scan to keys with ID {}", hsm_key_id_to_string(key_id));
+        }
+
+        for slot in ctx.get_slots_with_token()? {
+            let info = ctx.get_slot_info(slot)?;
+            let token_info = ctx.get_token_info(slot)?;
+            if info.slot_description().starts_with("Nitrokey Nitrokey HSM") && maybe_slot.is_none() || (maybe_slot.unwrap() == slot.id()) {
+                let sess = ctx.open_ro_session(slot)?;
+                let key_id = match sess.find_key_id(maybe_key_id.clone())? {
+                    Some((key_id, label)) => {
+                        debug!(
+                            "Found key with ID {} ({}) in slot {}",
+                            hsm_key_id_to_string(&key_id),
+                            match label {
+                                Some(label) => format!("labeled {}", label),
+                                None => "without label".to_string(),
+                            },
+                            slot.id()
+                        );
+                        key_id
+                    }
+                    None => {
+                        if maybe_slot.is_some() && maybe_key_id.is_some() {
+                            // We have been asked to be very specific.  Fail fast,
+                            // instead of falling back to Auth::Anonymous.
+                            return Err(HardwareIdentityError::NoHSM(format!(
+                                "Could not find a key ID {} within hardware security module in slot {}",
+                                hsm_key_id_to_string(&maybe_key_id.unwrap()),
+                                slot.id()
+                            )));
+                        } else {
+                            // Let's try the next slot just in case.
+                            continue;
+                        }
+                    }
+                };
+                let memo_key: String = format!("hsm-{}-{}", info.slot_description(), info.manufacturer_id());
+                info!(
+                    "Trying key ID {} of hardware security module in slot {} ({})",
+                    hsm_key_id_to_string(&key_id),
+                    slot,
+                    memo_key
+                );
+                return Ok(DetectedHsm {
+                    ctx,
+                    sess,
+                    token_info,
+                    key_id,
+                    memo_key,
+                });
+            }
+        }
+        Err(HardwareIdentityError::NoHSM(format!(
+            "No hardware security module detected{}{}",
+            match maybe_slot {
+                None => "".to_string(),
+                Some(slot) => format!(" in slot {}", slot),
+            },
+            match &maybe_key_id {
+                None => "".to_string(),
+                Some(key_id) => format!(" that contains a key ID {}", hsm_key_id_to_string(key_id)),
+            }
+        )))
     }
 }
 
@@ -155,14 +509,16 @@ impl Identity for ParallelHardwareIdentity {
 
     fn sign_arbitrary(&self, content: &[u8]) -> Result<Signature, String> {
         let hash = Sha256::digest(content);
-        let signature = match &self.lock {
-            None => self.sign_hash(&hash)?,
-            Some(lock) => {
-                let _lock = lock.lock().map_err(|e| e.to_string())?;
-                self.sign_hash(&hash)?
-            }
-        };
-
+        let signature = self.sign_hash(&hash).map_err(|e| {
+            format!(
+                "Could not sign payload: {}{}",
+                e,
+                match e.source() {
+                    None => "".to_string(),
+                    Some(source) => format!(" ({})", source),
+                }
+            )
+        })?;
         Ok(Signature {
             public_key: self.public_key(),
             signature: Some(signature),
@@ -171,185 +527,47 @@ impl Identity for ParallelHardwareIdentity {
     }
 }
 
-fn get_slot_id(ctx: &Ctx, slot_index: usize) -> Result<CK_SLOT_ID, HardwareIdentityError> {
-    ctx.get_slot_list(true)?
-        .get(slot_index)
-        .ok_or(HardwareIdentityError::NoSuchSlotIndex(slot_index))
-        .copied()
-}
-
-// We open a session for the duration of the lifetime of the HardwareIdentity.
-fn open_session(ctx: &Ctx, slot_id: CK_SLOT_ID) -> Result<CK_SESSION_HANDLE, HardwareIdentityError> {
-    let flags = CKF_SERIAL_SESSION;
-    let application = None;
-    let notify = None;
-    let session_handle = ctx.open_session(slot_id, flags, application, notify)?;
-    Ok(session_handle)
-}
-
-// We might need to log in.  This requires the PIN.
-fn login_if_required(ctx: &Ctx, session_handle: CK_SESSION_HANDLE, pin: String, slot_id: CK_SLOT_ID) -> Result<bool, HardwareIdentityError> {
-    let token_info = ctx.get_token_info(slot_id)?;
-    let login_required = token_info.flags & CKF_LOGIN_REQUIRED != 0;
-
-    if login_required {
-        ctx.login(session_handle, CKU_USER, Some(&pin))?;
-    }
-    Ok(login_required)
-}
-
-// Return the DER-encoded public key in the expected format.
-// We also validate that it's an ECDSA key on the correct curve.
-fn get_der_encoded_public_key(ctx: &Ctx, session_handle: CK_SESSION_HANDLE, key_id: &KeyId) -> Result<DerPublicKeyVec, HardwareIdentityError> {
-    let object_handle = get_public_key_handle(ctx, session_handle, key_id)?;
-
-    validate_key_type(ctx, session_handle, object_handle)?;
-    validate_ec_params(ctx, session_handle, object_handle)?;
-
-    let ec_point = get_ec_point(ctx, session_handle, object_handle)?;
-
-    let oid_ecdsa = oid!(1, 2, 840, 10045, 2, 1);
-    let oid_curve_secp256r1 = oid!(1, 2, 840, 10045, 3, 1, 7);
-    let ec_param = Sequence(0, vec![ObjectIdentifier(0, oid_ecdsa), ObjectIdentifier(0, oid_curve_secp256r1)]);
-    let ec_point = BitString(0, ec_point.len() * 8, ec_point);
-    let public_key = Sequence(0, vec![ec_param, ec_point]);
-    let der = to_der(&public_key)?;
-    Ok(der)
-}
-
-// Ensure that the key type is ECDSA.
-fn validate_key_type(ctx: &Ctx, session_handle: CK_SESSION_HANDLE, object_handle: CK_OBJECT_HANDLE) -> Result<(), HardwareIdentityError> {
-    // The call to ctx.get_attribute_value() will mutate kt!
-    // with_ck_ulong` stores &kt as a mutable pointer by casting it to CK_VOID_PTR, which is:
-    //      pub type CK_VOID_PTR = *mut CK_VOID;
-    // `let mut kt...` here emits a warning, unfortunately.
-    let kt: CK_KEY_TYPE = 0;
-
-    let mut attribute_types = vec![CK_ATTRIBUTE::new(CKA_KEY_TYPE).with_ck_ulong(&kt)];
-    ctx.get_attribute_value(session_handle, object_handle, &mut attribute_types)?;
-    if kt != CKK_ECDSA {
-        Err(HardwareIdentityError::UnexpectedKeyType(kt))
-    } else {
-        Ok(())
-    }
-}
-
-// We just want to make sure that we are using the expected EC curve prime256v1 (secp256r1),
-// since the HSMs also support things like secp384r1 and secp512r1.
-fn validate_ec_params(ctx: &Ctx, session_handle: CK_SESSION_HANDLE, object_handle: CK_OBJECT_HANDLE) -> Result<(), HardwareIdentityError> {
-    let ec_params = get_ec_params(ctx, session_handle, object_handle)?;
-    if ec_params != EXPECTED_EC_PARAMS {
-        Err(HardwareIdentityError::InvalidEcParams {
-            expected: EXPECTED_EC_PARAMS.to_vec(),
-            actual: ec_params,
-        })
-    } else {
-        Ok(())
-    }
-}
-
-// Obtain the EcPoint, which is an (x,y) coordinate.  Each coordinate is 32 bytes.
-// These are preceded by an 04 byte meaning "uncompressed point."
-// The returned vector will therefore have len=65.
-fn get_ec_point(ctx: &Ctx, session_handle: CK_SESSION_HANDLE, object_handle: CK_OBJECT_HANDLE) -> Result<Vec<u8>, HardwareIdentityError> {
-    let der_encoded_ec_point = get_variable_length_attribute(ctx, session_handle, object_handle, CKA_EC_POINT)?;
-
-    let blocks = from_der(der_encoded_ec_point.as_slice()).map_err(HardwareIdentityError::ASN1Decode)?;
-    let block = blocks.first().ok_or(HardwareIdentityError::EcPointEmpty)?;
-    if let OctetString(_size, data) = block {
-        Ok(data.clone())
-    } else {
-        Err(HardwareIdentityError::ExpectedEcPointOctetString)
-    }
-}
-
-// In order to read a variable-length attribute, we need to first read its length.
-fn get_attribute_length(
-    ctx: &Ctx,
-    session_handle: CK_SESSION_HANDLE,
-    object_handle: CK_OBJECT_HANDLE,
-    attribute_type: CK_ATTRIBUTE_TYPE,
-) -> Result<usize, HardwareIdentityError> {
-    let mut attributes = vec![CK_ATTRIBUTE::new(attribute_type)];
-    ctx.get_attribute_value(session_handle, object_handle, &mut attributes)?;
-
-    let first = attributes.first().ok_or(HardwareIdentityError::AttributeNotFound(attribute_type))?;
-    Ok(first.ulValueLen as usize)
-}
-
-// Get a variable-length attribute, by first reading its length and then the value.
-fn get_variable_length_attribute(
-    ctx: &Ctx,
-    session_handle: CK_SESSION_HANDLE,
-    object_handle: CK_OBJECT_HANDLE,
-    attribute_type: CK_ATTRIBUTE_TYPE,
-) -> Result<Vec<u8>, HardwareIdentityError> {
-    let length = get_attribute_length(ctx, session_handle, object_handle, attribute_type)?;
-    let value = vec![0; length];
-
-    let mut attrs = vec![CK_ATTRIBUTE::new(attribute_type).with_bytes(value.as_slice())];
-    ctx.get_attribute_value(session_handle, object_handle, &mut attrs)?;
-    Ok(value)
-}
-
-fn get_ec_params(ctx: &Ctx, session_handle: CK_SESSION_HANDLE, object_handle: CK_OBJECT_HANDLE) -> Result<Vec<u8>, HardwareIdentityError> {
-    get_variable_length_attribute(ctx, session_handle, object_handle, CKA_EC_PARAMS)
-}
-
-fn get_public_key_handle(ctx: &Ctx, session_handle: CK_SESSION_HANDLE, key_id: &KeyId) -> Result<CK_OBJECT_HANDLE, HardwareIdentityError> {
-    get_object_handle_for_key(ctx, session_handle, key_id, CKO_PUBLIC_KEY)
-}
-
-fn get_private_key_handle(ctx: &Ctx, session_handle: CK_SESSION_HANDLE, key_id: &KeyId) -> Result<CK_OBJECT_HANDLE, HardwareIdentityError> {
-    get_object_handle_for_key(ctx, session_handle, key_id, CKO_PRIVATE_KEY)
-}
-
-// Find a public or private key.
-fn get_object_handle_for_key(
-    ctx: &Ctx,
-    session_handle: CK_SESSION_HANDLE,
-    key_id: &KeyId,
-    object_class: CK_OBJECT_CLASS,
-) -> Result<CK_OBJECT_HANDLE, HardwareIdentityError> {
-    let attributes = [
-        CK_ATTRIBUTE::new(CKA_ID).with_bytes(key_id),
-        CK_ATTRIBUTE::new(CKA_CLASS).with_ck_ulong(&object_class),
-    ];
-    ctx.find_objects_init(session_handle, &attributes)?;
-    let object_handles = ctx.find_objects(session_handle, 1)?;
-    let object_handle = *object_handles.first().ok_or(HardwareIdentityError::KeyNotFound)?;
-    ctx.find_objects_final(session_handle)?;
-    Ok(object_handle)
-}
-
-// A key id is a sequence of pairs of hex digits, case-insensitive.
-fn str_to_key_id(s: &str) -> Result<KeyIdVec, HardwareIdentityError> {
-    let bytes = hex::decode(s)?;
-    Ok(bytes)
-}
-
 impl ParallelHardwareIdentity {
-    fn sign_hash(&self, hash: &Sha256Hash) -> Result<Vec<u8>, String> {
-        let session_handle = open_session(&self.ctx, self.slot_id).map_err(|e| e.to_string())?;
-        login_if_required(&self.ctx, session_handle, self.cached_pin.clone(), self.slot_id).map_err(|e| e.to_string())?;
-        let private_key_handle =
-            get_private_key_handle(&self.ctx, session_handle, &self.key_id).map_err(|e| format!("Failed to get private key handle: {}", e))?;
+    fn sign_hash_inner(&self, ctx: &PKCS11Ctx, hash: &Sha256Hash) -> Result<Vec<u8>, HardwareIdentityError> {
+        let sess = ctx.open_ro_session(self.slot)?;
+        let signer = sess.authenticate(self.cached_pin.clone())?;
+        signer.sign_hash(self.key_id.clone(), hash)
+    }
 
-        let mechanism = CK_MECHANISM {
-            mechanism: CKM_ECDSA,
-            pParameter: ptr::null_mut(),
-            ulParameterLen: 0,
+    /// Sign a particular SHA256 hash.  If there is a temporary error during signing,
+    /// this will attempt to recreate the PKCS#11 context and try signing again.
+    fn sign_hash(&self, hash: &Sha256Hash) -> Result<Vec<u8>, HardwareIdentityError> {
+        let mut ctx_guard = self.ctx.lock().unwrap();
+        // The PKCS#11 context may have been deleted before.
+        // If empty, it must be recreated.
+        let ctx = match ctx_guard.take() {
+            None => {
+                warn!(target:"pkcs11", "PKCS#11 context appears to have been dropped before; will initialize a new context now");
+                PKCS11Ctx::init()?
+            }
+            Some(c) => c,
         };
-        self.ctx
-            .sign_init(session_handle, &mechanism, private_key_handle)
-            .map_err(|e| format!("Failed to initialize signature: {}", e))?;
-        let res = self
-            .ctx
-            .sign(session_handle, hash)
-            .map_err(|e| format!("Failed to generate signature: {}", e));
-
-        self.ctx.close_session(session_handle).unwrap();
-
-        res
+        match self.sign_hash_inner(&ctx, hash) {
+            // Signature succeeded.
+            Ok(signature) => {
+                ctx_guard.replace(ctx);
+                // Stow away the context before returning the result.
+                Ok(signature)
+            }
+            // Uh oh, failure.  Try deleting the context and recreating it, before
+            // retrying the signing operation.
+            Err(e) => {
+                warn!(target:"pkcs11", "PKCS#11 context appears to be malfunctioning ({}); will reset the context now and retry the signing operation", e);
+                drop(ctx);
+                let new_ctx = match PKCS11Ctx::init() {
+                    Ok(c) => Ok(c),
+                    Err(_) => Err(e),
+                }?;
+                let ret = self.sign_hash_inner(&new_ctx, hash);
+                // Stow away the context we just used.
+                ctx_guard.replace(new_ctx);
+                ret
+            }
+        }
     }
 }

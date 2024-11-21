@@ -13,7 +13,6 @@ use parallel_hardware_identity::ParallelHardwareIdentity;
 use serde::Deserialize;
 use std::path::PathBuf;
 use std::str::FromStr;
-use std::sync::Mutex;
 use std::time::Duration;
 use url::Url;
 
@@ -40,9 +39,7 @@ impl IcAgentCanisterClient {
         Self::build_agent(url, identity)
     }
 
-    pub fn from_hsm(pin: String, slot: u64, key_id: String, url: Url, lock: Option<Mutex<()>>) -> anyhow::Result<Self> {
-        let pin_fn = || Ok(pin);
-        let identity = ParallelHardwareIdentity::new(pkcs11_lib_path()?, slot as usize, &key_id, pin_fn, lock)?;
+    pub fn from_hsm(identity: ParallelHardwareIdentity, url: Url) -> anyhow::Result<Self> {
         Self::build_agent(url, Box::new(identity))
     }
 
@@ -93,16 +90,4 @@ pub struct CallIn<TCycles = u128> {
     method_name: String,
     args: Vec<u8>,
     cycles: TCycles,
-}
-
-fn pkcs11_lib_path() -> anyhow::Result<PathBuf> {
-    let lib_macos_path = PathBuf::from_str("/Library/OpenSC/lib/opensc-pkcs11.so")?;
-    let lib_linux_path = PathBuf::from_str("/usr/lib/x86_64-linux-gnu/opensc-pkcs11.so")?;
-    if lib_macos_path.exists() {
-        Ok(lib_macos_path)
-    } else if lib_linux_path.exists() {
-        Ok(lib_linux_path)
-    } else {
-        Err(anyhow::anyhow!("no pkcs11 library found"))
-    }
 }

@@ -43,7 +43,7 @@ impl Step for Workload {
             .find(|s| s.subnet_type.eq(&SubnetType::Application))
             .ok_or(anyhow::anyhow!("Application subnet required for step `{}`", self.name()))?;
 
-        let all_ipv6 = subnet.nodes.iter().map(|n| n.ip_addr).collect_vec();
+        let all_ipv6 = subnet.nodes.iter().map(|n| n.ip_addr.unwrap()).collect_vec();
         let args = &[
             all_ipv6.iter().map(|ip| format!("http://[{}]:8080/", ip)).join(","),
             "-m=UpdateCounter".to_string(),
