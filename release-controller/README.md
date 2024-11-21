@@ -84,6 +84,11 @@ ERROR:root:failed to reconcile: Could not find targets for commit 99ab7f0370
 
 To resolve, you'll need to manually label all the commits that commit-annotator is struggling with.
 
+> [!CAUTION]
+> Do not annotate commits reported by release-controller!
+> This will break commit-annotator and then you'll end up having to annotate more commits manually.
+> Instead, see if commit-annotator is stuck on certain commit and annotate that one.
+
 Example error message in commit-annotator.
 
 ```
@@ -112,6 +117,16 @@ ERROR: ...
   ```
   git push origin refs/notes/guestos-changed
   ```
+
+> [!TIP]
+> If someone messed up and labeled commits in between, commit annotator might report that it labeled everything.
+> Run the below commands on IC repo to find commits without labels.
+
+```shell
+git fetch origin 'refs/notes/*:refs/notes/*' -f --prune
+git rev-list --ancestry-path [BASE_COMMIT]...[RELEASE_COMMIT] | xargs -L1 -I_commit bash -c "echo -n '_commit '; git notes --ref guestos-changed show _commit | cat"
+```
+
 
 ### Missing proposal
 
