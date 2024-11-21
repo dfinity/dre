@@ -285,14 +285,10 @@ class GitRepo:
         subprocess.check_call(
             ["git", "reset", "--hard"],
             cwd=self.dir,
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL,
         )
         subprocess.check_call(
             ["git", "checkout", ref],
             cwd=self.dir,
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL,
         )
         if (
             subprocess.check_output(
@@ -305,8 +301,6 @@ class GitRepo:
             subprocess.check_call(
                 ["git", "reset", "--hard", f"origin/{ref}"],
                 cwd=self.dir,
-                stdout=subprocess.DEVNULL,
-                stderr=subprocess.DEVNULL,
             )
 
     def parent(self, object: str) -> str:
@@ -335,16 +329,12 @@ class GitRepo:
         subprocess.check_call(
             ["git", "fetch", "origin", f"{ref}:{ref}", "-f", "--prune"],
             cwd=self.dir,
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL,
         )
 
     def _push_notes(self, namespace: str):
         subprocess.check_call(
             ["git", "push", "origin", f"refs/notes/{namespace}", "-f"],
             cwd=self.dir,
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL,
         )
 
     def _notes(self, namespace: str, *args) -> str:
