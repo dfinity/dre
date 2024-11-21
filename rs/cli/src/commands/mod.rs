@@ -131,7 +131,7 @@ pub struct DiscourseOpts {
     #[clap(long, env = "DISCOURSE_API_KEY")]
     pub(crate) discourse_api_key: Option<String>,
 
-    /// Api key used to interact with the forum
+    /// Api user that will interact with the forum
     #[clap(long, env = "DISCOURSE_API_USER")]
     pub(crate) discourse_api_user: Option<String>,
 

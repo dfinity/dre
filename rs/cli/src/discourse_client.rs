@@ -146,7 +146,7 @@ impl DiscourseClient for DiscourseClientImp {
                     format!("Replacing nodes in subnet {}", first_part),
                     summary,
                     "Governance".to_string(),
-                    vec!["nns".to_string()],
+                    vec!["Subnet-management".to_string()],
                 )
                 .await?;
             Ok(Some(topic))
