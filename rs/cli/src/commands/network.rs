@@ -145,7 +145,7 @@ impl ExecutableCommand for Network {
                     (None, None) => anyhow::bail!("Expected to have `motivation` or `summary` for this proposal"),
                 };
 
-                let maybe_topic = match discourse_client.create_replace_nodes_forum_post(subnet_id.clone(), body).await {
+                let maybe_topic = match discourse_client.create_replace_nodes_forum_post(*subnet_id, body).await {
                     Ok(maybe_topic) => maybe_topic,
                     Err(e) => {
                         errors.push(DetailedError {
