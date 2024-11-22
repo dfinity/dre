@@ -202,9 +202,14 @@ impl DiscourseClient for DiscourseClientImp {
 }
 
 pub fn parse_proposal_id_from_governance_response(response: String) -> anyhow::Result<u64> {
+    // To ensure we capture just the line with "proposal xyz"
+    let last_line = response
+        .lines()
+        .last()
+        .ok_or(anyhow::anyhow!("Expected at least one line in the response"))?;
     let re = Regex::new(r"\s*(\d+)\s*")?;
 
-    re.captures(&response.to_lowercase())
+    re.captures(&last_line.to_lowercase())
         .ok_or(anyhow::anyhow!("Expected some captures while parsing id from governance canister"))?
         .iter()
         .last()
