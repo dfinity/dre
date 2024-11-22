@@ -1,5 +1,5 @@
 {
-  "checksum": "1dd74cd583c623172e2fd7871212a0fcdd087546bfb876e666e7523fb3fd2523",
+  "checksum": "b0ec2b8c25823c3cf45f0fc88d6e89efed82effa3649f89645909fb47a732ecb",
   "crates": {
     "actix-codec 0.5.2": {
       "name": "actix-codec",
@@ -15262,6 +15262,10 @@
             {
               "id": "backoff 0.4.0",
               "target": "backoff"
+            },
+            {
+              "id": "byteorder 1.5.0",
+              "target": "byteorder"
             },
             {
               "id": "candid 0.10.10",

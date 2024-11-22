@@ -1,5 +1,4 @@
-use ic_agent::{agent::EnvelopeContent, export::Principal, identity::Delegation, Identity, Signature};
-
+use byteorder::{BigEndian, ReadBytesExt};
 use cryptoki::{
     context::{CInitializeArgs, Pkcs11 as CryptokiPkcs11},
     error::{Error as CryptokiError, RvError},
@@ -8,6 +7,7 @@ use cryptoki::{
     session::UserType,
     slot::{Slot, SlotInfo, TokenInfo},
 };
+use ic_agent::{agent::EnvelopeContent, export::Principal, identity::Delegation, Identity, Signature};
 use log::error;
 use log::info;
 use log::{debug, warn};
@@ -20,6 +20,7 @@ use simple_asn1::{
     ASN1Block::{BitString, ObjectIdentifier, OctetString, Sequence},
     ASN1DecodeErr, ASN1EncodeErr,
 };
+use std::io::Cursor;
 use std::{error::Error, sync::Mutex};
 use std::{marker::PhantomData, path::Path, str::FromStr, sync::Arc};
 use thiserror::Error;
@@ -46,9 +47,19 @@ const EXPECTED_EC_PARAMS: &[u8; 10] = b"\x06\x08\x2a\x86\x48\xce\x3d\x03\x01\x07
 
 // The key ID stored in the HSM is referenced by a sixteen-bit unsigned number.
 //  We represent this internally as an array of two bytes.
-// The following function produces the key ID in the format that ic-admin wants.
 pub fn hsm_key_id_to_string(s: &KeyIdVec) -> String {
     format!("0x{}", hex::encode(s))
+}
+
+// When ic-admin wants the key ID, it is usually to pass to pkcs11-tool's
+// --id argument.  That wants the key ID as an integer.
+// FIXME: there should be no need to unwrap() here.  The fix is that KeyIdVec
+// should simply be a type that contains an u16, and then we don't need to use
+// read_uint() here at all.  Will fix in a later PR.
+pub fn hsm_key_id_to_int(s: &KeyIdVec) -> String {
+    let mut rdr = Cursor::new(s);
+    let i = rdr.read_uint::<BigEndian>(s.len()).unwrap();
+    format!("{}", i)
 }
 
 /// An error happened related to a HardwareIdentity.

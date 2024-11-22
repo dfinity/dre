@@ -9,6 +9,7 @@ license.workspace = true
 
 [dependencies]
 anyhow = { workspace = true }
+byteorder = "1.5.0"
 backoff = { workspace = true }
 candid = { workspace = true }
 hex = { workspace = true }
