@@ -128,20 +128,20 @@ impl TryFrom<String> for AuthOpts {
 #[derive(ClapArgs, Debug, Clone)]
 pub struct DiscourseOpts {
     /// Api key used to interact with the forum
-    #[clap(long, env = "DISCOURSE_API_KEY")]
+    #[clap(long, env = "DISCOURSE_API_KEY", global = true, hide_env_values = true)]
     pub(crate) discourse_api_key: Option<String>,
 
     /// Api user that will interact with the forum
-    #[clap(long, env = "DISCOURSE_API_USER")]
+    #[clap(long, env = "DISCOURSE_API_USER", global = true)]
     pub(crate) discourse_api_user: Option<String>,
 
     /// Api url used to interact with the forum
-    #[clap(long, env = "DISCOURSE_API_URL")]
+    #[clap(long, env = "DISCOURSE_API_URL", global = true)]
     pub(crate) discourse_api_url: Option<String>,
 
     /// Skip forum post creation all together, also will not
     /// prompt user for the link
-    #[clap(long, env = "DISCOURSE_SKIP_POST_CREATION")]
+    #[clap(long, env = "DISCOURSE_SKIP_POST_CREATION", global = true)]
     pub(crate) discourse_skip_post_creation: bool,
 }
 
