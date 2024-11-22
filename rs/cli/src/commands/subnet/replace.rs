@@ -80,7 +80,13 @@ impl ExecutableCommand for Replace {
         if let Some(runner_proposal) = runner.propose_subnet_change(subnet_change_response, ctx.forum_post_link()).await? {
             let ic_admin = ctx.ic_admin().await?;
             if !ic_admin
-                .propose_print_and_confirm(runner_proposal.cmd.clone(), runner_proposal.opts.clone())
+                .propose_print_and_confirm(
+                    runner_proposal.cmd.clone(),
+                    ProposeOptions {
+                        forum_post_link: Some("[comment]: <> (Link will be added on actual execution)".to_string()),
+                        ..runner_proposal.opts.clone()
+                    },
+                )
                 .await?
             {
                 return Ok(());
@@ -88,17 +94,14 @@ impl ExecutableCommand for Replace {
 
             let discourse_client = ctx.discourse_client()?;
             let maybe_topic = if let Some(id) = subnet_id {
-                let summary = match (&runner_proposal.opts.summary, &runner_proposal.opts.motivation) {
-                    (Some(s), _) => s,
-                    (None, Some(m)) => m,
-                    _ => {
-                        return Err(anyhow::anyhow!(
-                            "Expected to have `summary` or `motivation` for proposal. Got: {:?}",
-                            runner_proposal
-                        ))
-                    }
+                let body = match (&runner_proposal.opts.motivation, &runner_proposal.opts.summary) {
+                    (Some(motivation), None) => motivation.to_string(),
+                    (Some(motivation), Some(summary)) => format!("{}\nMotivation:\n{}", summary, motivation),
+                    (None, Some(summary)) => summary.to_string(),
+                    (None, None) => anyhow::bail!("Expected to have `motivation` or `summary` for this proposal"),
                 };
-                discourse_client.create_replace_nodes_forum_post(id, summary.to_string()).await?
+
+                discourse_client.create_replace_nodes_forum_post(id, body).await?
             } else {
                 None
             };
@@ -111,7 +114,7 @@ impl ExecutableCommand for Replace {
                             (Some(discourse_response), _) => Some(discourse_response.url.clone()),
                             (None, Some(from_cli_or_auto_formated)) => Some(from_cli_or_auto_formated.clone()),
                             _ => {
-                                warn!("Didn't find a link to forum post from discourse, cli and couldn't auto-format it.");
+                                warn!("Didn't find a link to forum post from discourse or cli and couldn't auto-format it.");
                                 warn!("Will not add forum post to the proposal");
                                 None
                             }

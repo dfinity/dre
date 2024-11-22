@@ -12,7 +12,7 @@ use serde_json::json;
 
 #[automock]
 pub trait DiscourseClient: Sync + Send {
-    fn create_replace_nodes_forum_post(&self, subnet_id: PrincipalId, summary: String) -> BoxFuture<'_, anyhow::Result<Option<DiscourseResponse>>>;
+    fn create_replace_nodes_forum_post(&self, subnet_id: PrincipalId, body: String) -> BoxFuture<'_, anyhow::Result<Option<DiscourseResponse>>>;
 
     fn add_proposal_url_to_post(&self, post_id: Option<u64>, proposal_id: u64) -> BoxFuture<'_, anyhow::Result<()>>;
 }
@@ -153,16 +153,13 @@ const GOVERNANCE_TOPIC: &str = "Governance";
 const SUBNET_MANAGEMENT_TAG: &str = "Subnet-management";
 
 impl DiscourseClient for DiscourseClientImp {
-    fn create_replace_nodes_forum_post(&self, subnet_id: PrincipalId, summary: String) -> BoxFuture<'_, anyhow::Result<Option<DiscourseResponse>>> {
+    fn create_replace_nodes_forum_post(&self, subnet_id: PrincipalId, body: String) -> BoxFuture<'_, anyhow::Result<Option<DiscourseResponse>>> {
         let subnet_id = subnet_id.to_string();
-        let (first_part, _rest) = subnet_id
-            .split_once("-")
-            .ok_or(anyhow::anyhow!("Unexpected principal format `{}`", subnet_id))
-            // We don't have any principals that don't have a `-` in them.
-            .unwrap();
+        // All principals have a `-` in the string from
+        let (first_part, _rest) = subnet_id.split_once("-").unwrap();
         let post = DiscourseTopic {
             title: format!("Replacing nodes in subnet {}", first_part),
-            content: summary,
+            content: body,
             tags: vec![SUBNET_MANAGEMENT_TAG.to_string()],
             category: GOVERNANCE_TOPIC.to_string(),
         };
