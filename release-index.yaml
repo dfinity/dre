@@ -9,6 +9,10 @@ releases:
       # https://github.com/dfinity/ic/actions/runs/11953927954
       - name: hashes-in-blocks
         version: 6e2c0d9fbea99f799a987a365ff6ad2b883067c9
+      # Qualification pipeline:
+      # https://github.com/dfinity/ic/actions/runs/11959662473
+      - name: 24.04-base-kernel
+        version: 5d202894864f4db4a5a46f44422aebc80c3d321b
   - rc_name: rc--2024-11-14_03-07
     versions:
       # Qualification pipeline:
