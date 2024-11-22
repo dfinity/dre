@@ -1,6 +1,3 @@
-use std::collections::{BTreeMap, HashSet};
-use std::{cmp::Ordering, sync::Arc};
-
 use candid::Principal;
 use ic_interfaces_registry::RegistryClient;
 use ic_interfaces_registry::{RegistryDataProvider, RegistryTransportRecord};
@@ -8,11 +5,16 @@ use ic_nns_constants::REGISTRY_CANISTER_ID;
 use ic_registry_canister_client::CanisterRegistryClient;
 use ic_registry_keys::{DATA_CENTER_KEY_PREFIX, NODE_OPERATOR_RECORD_KEY_PREFIX, NODE_RECORD_KEY_PREFIX};
 use ic_registry_transport::{deserialize_get_changes_since_response, pb::v1::RegistryDelta, serialize_get_changes_since_request};
+use ic_stable_structures::memory_manager::VirtualMemory;
+use ic_stable_structures::DefaultMemoryImpl;
 use ic_types::registry::RegistryDataProviderError;
 use ic_types::RegistryVersion;
 use itertools::Itertools;
 use lazy_static::lazy_static;
 use prost::Message;
+use std::collections::{BTreeMap, HashSet};
+use std::sync::RwLock;
+use std::{cmp::Ordering, sync::Arc};
 
 use crate::chrono_utils::DateTimeRange;
 use crate::stable_memory::{self, MIN_STRING};
@@ -28,8 +30,9 @@ lazy_static! {
     };
 }
 
-
-struct StableMemoryStore;
+struct StableMemoryStore {
+    memory: Arc<RwLock<VirtualMemory<DefaultMemoryImpl>>>,
+}
 impl StableMemoryStore {
     fn insert_registry_record(&self, key: RegistryKey, value: Option<Vec<u8>>) {
         stable_memory::REGISTRY_STORED.with_borrow_mut(|registry_stored| registry_stored.insert(key, value));
@@ -39,12 +42,8 @@ impl StableMemoryStore {
         stable_memory::TS_REGISTRY_VERSIONS.with_borrow_mut(|versions| versions.insert(ts, version));
     }
 
-    fn get_registry_versions(&self, start_ts: u64, end_ts: u64) -> Vec<u64>{
-        stable_memory::TS_REGISTRY_VERSIONS.with_borrow(|versions| versions
-            .range(start_ts..=end_ts)
-            .map(|(_, version)| version)
-            .collect_vec()
-        )
+    fn get_registry_versions(&self, start_ts: u64, end_ts: u64) -> Vec<u64> {
+        stable_memory::TS_REGISTRY_VERSIONS.with_borrow(|versions| versions.range(start_ts..=end_ts).map(|(_, version)| version).collect_vec())
     }
 
     fn new() -> Self {
@@ -65,7 +64,6 @@ impl RegistryDataProvider for StableMemoryStore {
                 )
                 .collect_vec();
 
-
             let res: Vec<_> = changelog
                 .iter()
                 .map(|(RegistryKey { version, key }, value)| RegistryTransportRecord {
@@ -78,7 +76,6 @@ impl RegistryDataProvider for StableMemoryStore {
         })
     }
 }
-
 
 pub struct LocalRegistry {
     registry_cache: CanisterRegistryClient,
@@ -130,26 +127,20 @@ impl LocalRegistry {
                 registry_records.sort_by_key(|tr| tr.version);
 
                 update_registry_version = registry_records.last().map(|redord| redord.version.get()).unwrap();
-    
+
                 registry_records.into_iter().for_each(|record| {
                     if RETAINED_KEYS.iter().any(|&prefix| record.key.starts_with(prefix)) {
                         let version = record.version.get();
 
                         self.local_store.insert_registry_version(sync_ts, version);
-                        self.local_store.insert_registry_record(
-                            RegistryKey {
-                                version,
-                                key: record.key,
-                            },
-                            record.value,
-                        );
-                    } 
+                        self.local_store
+                            .insert_registry_record(RegistryKey { version, key: record.key }, record.value);
+                    }
                 });
             }
             self.registry_cache.update_to_latest_version();
         }
 
-  
         Ok(())
     }
 
@@ -161,9 +152,7 @@ impl LocalRegistry {
     }
 
     pub fn get_versioned_value<T: Message + Default>(&self, key: &str, version: RegistryVersion) -> anyhow::Result<T> {
-        let r = self
-            .registry_cache
-            .get_versioned_value(key, version)?;
+        let r = self.registry_cache.get_versioned_value(key, version)?;
 
         Ok(r.as_ref().map(|v| T::decode(v.as_slice()).expect("Invalid registry value")).unwrap())
     }
@@ -234,4 +223,3 @@ fn registry_deltas_to_registry_transport_records(deltas: Vec<RegistryDelta>) -> 
     records.sort_by(|lhs, rhs| lhs.version.cmp(&rhs.version).then_with(|| lhs.key.cmp(&rhs.key)));
     Ok(records)
 }
-

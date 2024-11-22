@@ -1,14 +1,18 @@
+use crate::canister_data_provider::{CanisterDataProvider, StableMemoryStore};
 use chrono_utils::DateTimeRange;
 use ic_cdk_macros::*;
-use local_registry::LocalRegistry;
+use ic_registry_client::client::RegistryClientImpl;
 use registry_querier::RegistryQuerier;
 use rewards_manager::RewardsManager;
-use std::{cell::RefCell, rc::Rc};
+use std::cell::RefCell;
+use std::sync::Arc;
 use types::NodeProviderXDRRewardsArgs;
+
+mod canister_data_provider;
 mod chrono_utils;
 mod computation_logger;
-mod metrics;
 mod local_registry;
+mod metrics;
 mod registry_querier;
 mod rewards_manager;
 mod stable_memory;
@@ -18,7 +22,12 @@ mod types;
 const TIMER_INTERVAL_SEC: u64 = 60 * 60 * 24;
 
 thread_local! {
-    static LOCAL_REGISTRY: RefCell<Rc<LocalRegistry>> = RefCell::new(Rc::new(Default::default()));
+    static DATA_PROVIDER: RefCell<Arc<CanisterDataProvider<StableMemoryStore>>> =
+        RefCell::new(Arc::new(
+            CanisterDataProvider::new(Default::default())
+    ));
+    static REGISTRY_CLIENT: RefCell<RegistryClientImpl> =
+        RefCell::new(RegistryClientImpl::new(DATA_PROVIDER.with_borrow(|store| store.clone()), None));
 }
 
 async fn sync_node_metrics_task() {
@@ -36,15 +45,19 @@ async fn update_local_registry() {
     // sync_node_metrics_task().await;
     let local_registry = LOCAL_REGISTRY.with_borrow(|local_registry| local_registry.clone());
     match local_registry.sync_registry_stored().await {
-         Ok(_) => {
-             ic_cdk::println!("Successfully sync_registry_stored");
-         }
-         Err(e) => {
-             ic_cdk::println!("Error sync_registry_stored: {}", e);
-         }
-     }
+        Ok(_) => {
+            ic_cdk::println!("Successfully sync_registry_stored");
+        }
+        Err(e) => {
+            ic_cdk::println!("Error sync_registry_stored: {}", e);
+        }
+    }
 
-    get_node_providers_xdr_rewards(NodeProviderXDRRewardsArgs{from_ts: 1730187565000000000, to_ts: 1730894985000000000}).await;
+    get_node_providers_xdr_rewards(NodeProviderXDRRewardsArgs {
+        from_ts: 1730187565000000000,
+        to_ts: 1730894985000000000,
+    })
+    .await;
 }
 
 fn setup_timers() {

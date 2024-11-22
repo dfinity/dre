@@ -4395,16 +4395,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "ic-registry-canister-client"
-version = "0.9.0"
-source = "git+https://github.com/dfinity/ic.git?rev=e01d530332a344da018df52fa04c72e145688752#e01d530332a344da018df52fa04c72e145688752"
-dependencies = [
- "ic-cdk 0.16.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "ic-interfaces-registry",
- "ic-types",
-]
-
-[[package]]
 name = "ic-registry-client"
 version = "0.9.0"
 source = "git+https://github.com/dfinity/ic.git?rev=e01d530332a344da018df52fa04c72e145688752#e01d530332a344da018df52fa04c72e145688752"
@@ -5938,7 +5928,7 @@ dependencies = [
  "ic-nns-constants",
  "ic-nns-governance-api",
  "ic-protobuf",
- "ic-registry-canister-client",
+ "ic-registry-client",
  "ic-registry-common-proto",
  "ic-registry-keys",
  "ic-registry-transport",

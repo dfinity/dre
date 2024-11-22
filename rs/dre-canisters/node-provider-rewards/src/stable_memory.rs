@@ -1,15 +1,15 @@
-use candid::Principal;
-use ic_stable_structures::memory_manager::{MemoryId, MemoryManager, VirtualMemory};
-use ic_stable_structures::{DefaultMemoryImpl, StableBTreeMap};
-use itertools::Itertools;
-use lazy_static::lazy_static;
-use std::cell::RefCell;
-use std::collections::BTreeMap;
-
+use crate::canister_data_provider::StableRegistryRecord;
 use crate::types::{
     NodeMetricsStored, NodeMetricsStoredKey, NodeProviderRewards, NodeProviderRewardsKey, NodeRewardsMultiplierKey, RegistryKey,
     RewardsMultiplierStats, TimestampNanos,
 };
+use candid::Principal;
+use ic_stable_structures::memory_manager::{MemoryId, MemoryManager, VirtualMemory};
+use ic_stable_structures::{DefaultMemoryImpl, StableBTreeMap, StableVec};
+use itertools::Itertools;
+use lazy_static::lazy_static;
+use std::cell::RefCell;
+use std::collections::BTreeMap;
 
 type Memory = VirtualMemory<DefaultMemoryImpl>;
 pub type RegionNodeTypeCategory = (String, String);
@@ -42,6 +42,11 @@ thread_local! {
         RefCell::new(StableBTreeMap::init(
         MEMORY_MANAGER.with(|m| m.borrow().get(MemoryId::new(4)))
     ));
+
+    pub static REGISTRY: RefCell<StableVec<StableRegistryRecord, Memory>> =
+        RefCell::new(StableVec::init(
+        MEMORY_MANAGER.with(|m| m.borrow().get(MemoryId::new(4)))
+    ).unwrap());
 
     pub static TS_REGISTRY_VERSIONS: RefCell<StableBTreeMap<TimestampNanos, u64, Memory>> =
         RefCell::new(StableBTreeMap::init(
