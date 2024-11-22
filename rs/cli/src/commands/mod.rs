@@ -138,6 +138,11 @@ pub struct DiscourseOpts {
     /// Api url used to interact with the forum
     #[clap(long, env = "DISCOURSE_API_URL")]
     pub(crate) discourse_api_url: Option<String>,
+
+    /// Skip forum post creation all together, also will not
+    /// prompt user for the link
+    #[clap(long, env = "DISCOURSE_SKIP_POST_CREATION")]
+    pub(crate) discourse_skip_post_creation: bool,
 }
 
 #[derive(Parser, Debug)]

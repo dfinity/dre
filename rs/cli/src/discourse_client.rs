@@ -1,7 +1,9 @@
-use std::time::Duration;
+use std::{fmt::Display, time::Duration};
 
 use futures::{future::BoxFuture, TryFutureExt};
 use ic_types::PrincipalId;
+use itertools::Itertools;
+use log::warn;
 use mockall::automock;
 use regex::Regex;
 use reqwest::{Client, Method};
@@ -10,9 +12,9 @@ use serde_json::json;
 
 #[automock]
 pub trait DiscourseClient: Sync + Send {
-    fn create_replace_nodes_forum_post(&self, subnet_id: PrincipalId, summary: String) -> BoxFuture<'_, anyhow::Result<Option<DiscourseResponse>>>;
+    fn create_replace_nodes_forum_post(&self, subnet_id: PrincipalId, body: String) -> BoxFuture<'_, anyhow::Result<Option<DiscourseResponse>>>;
 
-    fn add_proposal_url_to_post(&self, post_id: u64, proposal_id: u64) -> BoxFuture<'_, anyhow::Result<()>>;
+    fn add_proposal_url_to_post(&self, post_id: Option<u64>, proposal_id: u64) -> BoxFuture<'_, anyhow::Result<()>>;
 }
 
 pub struct DiscourseClientImp {
@@ -21,10 +23,11 @@ pub struct DiscourseClientImp {
     api_key: String,
     api_user: String,
     offline: bool,
+    skip_forum_post_creation: bool,
 }
 
 impl DiscourseClientImp {
-    pub fn new(url: String, api_key: String, api_user: String, offline: bool) -> anyhow::Result<Self> {
+    pub fn new(url: String, api_key: String, api_user: String, offline: bool, skip_forum_post_creation: bool) -> anyhow::Result<Self> {
         let client = reqwest::Client::builder().timeout(Duration::from_secs(30)).build()?;
 
         Ok(Self {
@@ -33,6 +36,7 @@ impl DiscourseClientImp {
             api_key,
             api_user,
             offline,
+            skip_forum_post_creation,
         })
     }
 
@@ -81,14 +85,14 @@ impl DiscourseClientImp {
             .ok_or(anyhow::anyhow!("Failed to find category with name `{}`", category_name))
     }
 
-    async fn create_topic(&self, title: String, summary: String, category: String, tags: Vec<String>) -> anyhow::Result<DiscourseResponse> {
-        let category = self.get_category_id(category).await?;
+    async fn create_topic(&self, topic: DiscourseTopic) -> anyhow::Result<DiscourseResponse> {
+        let category = self.get_category_id(topic.category).await?;
 
         let payload = json!({
-           "title": title,
+           "title": topic.title,
            "category": category,
-           "raw": summary,
-           "tags": tags
+           "raw": topic.content,
+           "tags": topic.tags
         });
         let payload = serde_json::to_string(&payload)?;
 
@@ -102,7 +106,7 @@ impl DiscourseClientImp {
         };
 
         Ok(DiscourseResponse {
-            id,
+            update_id: Some(id),
             url: format!("{}/t/{}/{}", self.forum_url, topic_slug, topic_id),
         })
     }
@@ -129,42 +133,68 @@ impl DiscourseClientImp {
             .await
             .map(|_resp| ())
     }
+
+    fn request_from_user(&self, err: anyhow::Error, topic: DiscourseTopic) -> anyhow::Result<Option<DiscourseResponse>> {
+        warn!("Received error: {:?}", err);
+        warn!("Please create a topic with the following information");
+        println!("{}", topic);
+        let forum_post_link = dialoguer::Input::<String>::new()
+            .with_prompt("Forum post link")
+            .allow_empty(true)
+            .interact()?;
+        Ok(Some(DiscourseResponse {
+            url: forum_post_link,
+            update_id: None,
+        }))
+    }
 }
 
+const GOVERNANCE_TOPIC: &str = "Governance";
+const SUBNET_MANAGEMENT_TAG: &str = "Subnet-management";
+
 impl DiscourseClient for DiscourseClientImp {
-    fn create_replace_nodes_forum_post(&self, subnet_id: PrincipalId, summary: String) -> BoxFuture<'_, anyhow::Result<Option<DiscourseResponse>>> {
-        Box::pin(async move {
-            if self.offline {
+    fn create_replace_nodes_forum_post(&self, subnet_id: PrincipalId, body: String) -> BoxFuture<'_, anyhow::Result<Option<DiscourseResponse>>> {
+        let subnet_id = subnet_id.to_string();
+        // All principals have a `-` in the string from
+        let (first_part, _rest) = subnet_id.split_once("-").unwrap();
+        let post = DiscourseTopic {
+            title: format!("Replacing nodes in subnet {}", first_part),
+            content: body,
+            tags: vec![SUBNET_MANAGEMENT_TAG.to_string()],
+            category: GOVERNANCE_TOPIC.to_string(),
+        };
+        let post_clone = post.clone();
+
+        let try_call = async move {
+            if self.offline || self.skip_forum_post_creation {
                 return Ok(None);
             }
-            let subnet_id = subnet_id.to_string();
-            let (first_part, _rest) = subnet_id
-                .split_once("-")
-                .ok_or(anyhow::anyhow!("Unexpected principal format `{}`", subnet_id))?;
-            let topic = self
-                .create_topic(
-                    format!("Replacing nodes in subnet {}", first_part),
-                    summary,
-                    "Governance".to_string(),
-                    vec!["Subnet-management".to_string()],
-                )
-                .await?;
+            let topic = self.create_topic(post).await?;
             Ok(Some(topic))
-        })
+        };
+        Box::pin(async move { try_call.await.or_else(|e| self.request_from_user(e, post_clone)) })
     }
 
-    fn add_proposal_url_to_post(&self, post_id: u64, proposal_id: u64) -> BoxFuture<'_, anyhow::Result<()>> {
+    fn add_proposal_url_to_post(&self, post_id: Option<u64>, proposal_id: u64) -> BoxFuture<'_, anyhow::Result<()>> {
         Box::pin(async move {
-            if self.offline {
+            if self.offline || self.skip_forum_post_creation {
                 return Ok(());
             }
+
+            let new_content = format!("Proposal id [{0}](https://dashboard.internetcomputer.org/proposal/{0})", proposal_id);
+            if post_id.is_none() {
+                warn!("Update the forum post with the following text");
+                warn!("{}", new_content);
+                return Ok(());
+            }
+            let post_id = post_id.unwrap();
 
             let content = self.get_post_content(post_id).await?;
             let new_content = format!(
                 r#"{0}
 
-Proposal id [{1}](https://dashboard.internetcomputer.org/proposal/{1})"#,
-                content, proposal_id
+{1}"#,
+                content, new_content
             );
             self.update_post_content(post_id, new_content).await
         })
@@ -190,7 +220,32 @@ pub fn parse_proposal_id_from_governance_response(response: String) -> anyhow::R
 #[derive(Debug)]
 pub struct DiscourseResponse {
     pub url: String,
-    pub id: u64,
+    pub update_id: Option<u64>,
+}
+
+#[derive(Clone)]
+pub struct DiscourseTopic {
+    title: String,
+    content: String,
+    tags: Vec<String>,
+    category: String,
+}
+
+impl Display for DiscourseTopic {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            r#"Title: {}
+Category: {}
+Tags: [{}]
+Content:
+{}"#,
+            self.title,
+            self.category,
+            self.tags.iter().join(", "),
+            self.content
+        )
+    }
 }
 
 #[cfg(test)]

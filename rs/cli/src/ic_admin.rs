@@ -158,7 +158,7 @@ impl IcAdmin for IcAdminImpl {
 
     fn propose_print_and_confirm(&self, cmd: ProposeCommand, opts: ProposeOptions) -> BoxFuture<'_, anyhow::Result<bool>> {
         Box::pin(async move {
-            let _ = self._exec(cmd, opts, true, true, false).await;
+            let _ = self._exec(cmd, opts, true, false, false).await;
 
             if self.proceed_without_confirmation {
                 // Don't ask for confirmation, allow to proceed
