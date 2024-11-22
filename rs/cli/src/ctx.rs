@@ -261,8 +261,14 @@ impl DreContext {
             self.discourse_opts.discourse_api_url.clone(),
         ) {
             (Some(api_key), Some(api_user), Some(forum_url)) => (api_key, api_user, forum_url),
+            // Actual api won't be called so these values don't matter
+            _ if self.discourse_opts.discourse_skip_post_creation => (
+                "placeholder_key".to_string(),
+                "placeholder_user".to_string(),
+                "https://placeholder_url.com".to_string(),
+            ),
             _ => anyhow::bail!(
-                "Expected to have both `api_key` and `forum_url`. Instead found: {:?}",
+                "Expected to have `api_key`, `forum_url` and `api_user`. Instead found: {:?}",
                 self.discourse_opts
             ),
         };
