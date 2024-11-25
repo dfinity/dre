@@ -350,10 +350,9 @@ impl DecentralizedSubnet {
                     return Some(result.clone());
                 }
             }
-
             // If none of the best_results nodes are already in the subnet,
-            // sort the nodes by percentage of nodes that the node operator has in subnets
-            // and choose the one with the lowest percentage.
+            // sort the nodes by the absolute number of nodes that the node operator has
+            // that are not assigned to subnets and choose the one with the highest number.
             let num_nodes_per_operator = all_nodes.iter().fold(AHashMap::new(), |mut acc: AHashMap<PrincipalId, u32>, n| {
                 *acc.entry(n.operator.principal).or_insert(0) += 1;
                 acc
@@ -366,35 +365,34 @@ impl DecentralizedSubnet {
                         *acc.entry(n.operator.principal).or_insert(0) += 1;
                         acc
                     });
-            let percent_assigned_nodes_per_operator = num_nodes_per_operator
+            let num_nodes_not_assigned_per_operator = num_nodes_per_operator
                 .iter()
                 .map(|(operator, num_nodes)| {
                     let num_nodes_in_subnet = num_nodes_assigned_to_subnets_per_operator.get(operator).copied().unwrap_or_default();
-                    (*operator, 100. * num_nodes_in_subnet as f64 / *num_nodes as f64)
+                    (*operator, *num_nodes as i32 - num_nodes_in_subnet as i32)
                 })
-                .collect::<AHashMap<PrincipalId, f64>>();
+                .collect::<AHashMap<PrincipalId, i32>>();
             let best_results = best_results
                 .iter()
                 .map(|r| {
-                    let pct_x1000 = (percent_assigned_nodes_per_operator
+                    let num_not_assigned = num_nodes_not_assigned_per_operator
                         .get(&r.node.operator.principal)
                         .copied()
-                        .unwrap_or_default()
-                        * 1000.) as u32;
+                        .unwrap_or_default();
                     let op_nodes = num_nodes_per_operator.get(&r.node.operator.principal).copied().unwrap_or_default() as i32;
-                    (pct_x1000, -op_nodes, r)
+                    (num_not_assigned, op_nodes, r)
                 })
                 // sorted_by_key sorts ascending, so we negate the number of nodes
                 // we prefer candidate nodes from operators with:
-                //  - the lowest percentage of nodes assigned to subnet
+                //  - the highest number of nodes not assigned to subnets
                 //  - highest number of nodes total (to prefer operators with more nodes)
-                .sorted_by_key(|(pct_x1000, neg_op_nodes, _res)| (*pct_x1000, *neg_op_nodes))
+                .sorted_by_key(|(num_not_assigned, op_nodes, _res)| (-num_not_assigned, -op_nodes))
                 .collect_vec();
-            // filter all the results with the same lowest percentage
+            // filter all the results with the same highest number of nodes not assigned to subnets
             let best_results = best_results
                 .iter()
-                .take_while(|(pct, neg_op_nodes, _res)| *pct == best_results[0].0 && *neg_op_nodes == best_results[0].1)
-                .map(|(_pct, _neg_op_nodes, res)| (*res).clone())
+                .take_while(|(num_not_assigned, op_nodes, _res)| *num_not_assigned == best_results[0].0 && *op_nodes == best_results[0].1)
+                .map(|(_num_not_assigned, _op_nodes, res)| (*res).clone())
                 .collect::<Vec<_>>();
 
             // We sort the current nodes by alphabetical order on their

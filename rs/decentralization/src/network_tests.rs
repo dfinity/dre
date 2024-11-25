@@ -56,13 +56,13 @@ mod tests {
         };
         let subnet_1_id = PrincipalId::new_subnet_test_id(1);
 
-        // op1 and op3 each have 1 node, op2 has 2 nodes
-        // op3 should be chosen because it has lower percentage of nodes
+        // op1 and op2 hav 2 nodes each
+        // op2 should be chosen because it has more unassigned nodes
         let node1 = Node::new_test_node(1, NodeFeatures::default(), true)
             .with_operator(op1.clone())
             .with_subnet_id(subnet_1_id);
         let node2 = Node::new_test_node(2, NodeFeatures::default(), true).with_operator(op1.clone());
-        let node3 = Node::new_test_node(3, NodeFeatures::default(), true).with_operator(op1.clone());
+        let node3 = Node::new_test_node(3, NodeFeatures::default(), true).with_operator(op2.clone());
         let node4 = Node::new_test_node(4, NodeFeatures::default(), true).with_operator(op2.clone());
 
         let subnet = DecentralizedSubnet::new_with_subnet_id_and_nodes(subnet_1_id, vec![node1.clone()]);
@@ -77,8 +77,8 @@ mod tests {
 
         let result = DecentralizedSubnet::choose_one_result(&best_results, &subnet.nodes, &all_nodes);
 
-        // op2 has no nodes assigned to subnets, so it should be picked
-        assert_eq!(result.unwrap().node.principal, node4.principal);
+        // op2 has no nodes assigned to subnets, so node3 from op2 should be picked
+        assert_eq!(result.unwrap().node.principal, node3.principal);
     }
 
     #[test]
