@@ -9,3 +9,16 @@ features:
   # https://dfinity.slack.com/archives/C05LD0CEAHY/p1730385735765399
   - feature: data_center
     value: dl1
+    explanation: "offboarding DL1 DC after 48 months"
+  - feature: data_center
+    value: fm1
+    explanation: "offboarding FM1 DC after 48 months"
+  - feature: data_center
+    value: sj1
+    explanation: "offboarding SJ1 DC after 48 months"
+  - feature: data_center
+    value: at1
+    explanation: "offboarding AT1 DC after 48 months"
+  - feature: data_center
+    value: tp1
+    explanation: "offboarding TP1 DC after 48 months"
