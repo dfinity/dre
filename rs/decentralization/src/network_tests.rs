@@ -56,7 +56,7 @@ mod tests {
         };
         let subnet_1_id = PrincipalId::new_subnet_test_id(1);
 
-        // op1 and op2 hav 2 nodes each
+        // op1 and op2 each have 2 nodes
         // op2 should be chosen because it has more unassigned nodes
         let node1 = Node::new_test_node(1, NodeFeatures::default(), true)
             .with_operator(op1.clone())
