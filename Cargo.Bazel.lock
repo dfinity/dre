@@ -1,5 +1,5 @@
 {
-  "checksum": "b0ec2b8c25823c3cf45f0fc88d6e89efed82effa3649f89645909fb47a732ecb",
+  "checksum": "e377d3c4163808448beb72e15746805e63b88489b64841e43acf233d2e334573",
   "crates": {
     "actix-codec 0.5.2": {
       "name": "actix-codec",
@@ -265,7 +265,7 @@
               "target": "quote"
             },
             {
-              "id": "syn 2.0.87",
+              "id": "syn 2.0.89",
               "target": "syn"
             }
           ],
@@ -721,7 +721,7 @@
               "target": "time"
             },
             {
-              "id": "url 2.5.3",
+              "id": "url 2.5.4",
               "target": "url"
             }
           ],
@@ -781,7 +781,7 @@
               "target": "actix_router"
             },
             {
-              "id": "proc-macro2 1.0.89",
+              "id": "proc-macro2 1.0.92",
               "target": "proc_macro2"
             },
             {
@@ -789,7 +789,7 @@
               "target": "quote"
             },
             {
-              "id": "syn 2.0.87",
+              "id": "syn 2.0.89",
               "target": "syn"
             }
           ],
@@ -1807,7 +1807,7 @@
         "deps": {
           "common": [
             {
-              "id": "proc-macro2 1.0.89",
+              "id": "proc-macro2 1.0.92",
               "target": "proc_macro2"
             },
             {
@@ -1815,7 +1815,7 @@
               "target": "quote"
             },
             {
-              "id": "syn 2.0.87",
+              "id": "syn 2.0.89",
               "target": "syn"
             },
             {
@@ -1858,7 +1858,7 @@
         "deps": {
           "common": [
             {
-              "id": "proc-macro2 1.0.89",
+              "id": "proc-macro2 1.0.92",
               "target": "proc_macro2"
             },
             {
@@ -1866,7 +1866,7 @@
               "target": "quote"
             },
             {
-              "id": "syn 2.0.87",
+              "id": "syn 2.0.89",
               "target": "syn"
             }
           ],
@@ -2090,7 +2090,7 @@
         "deps": {
           "common": [
             {
-              "id": "proc-macro2 1.0.89",
+              "id": "proc-macro2 1.0.92",
               "target": "proc_macro2"
             },
             {
@@ -2098,7 +2098,7 @@
               "target": "quote"
             },
             {
-              "id": "syn 2.0.87",
+              "id": "syn 2.0.89",
               "target": "syn"
             }
           ],
@@ -2189,7 +2189,7 @@
         "deps": {
           "common": [
             {
-              "id": "proc-macro2 1.0.89",
+              "id": "proc-macro2 1.0.92",
               "target": "proc_macro2"
             },
             {
@@ -2197,7 +2197,7 @@
               "target": "quote"
             },
             {
-              "id": "syn 2.0.87",
+              "id": "syn 2.0.89",
               "target": "syn"
             }
           ],
@@ -2236,7 +2236,7 @@
         "deps": {
           "common": [
             {
-              "id": "proc-macro2 1.0.89",
+              "id": "proc-macro2 1.0.92",
               "target": "proc_macro2"
             },
             {
@@ -2244,7 +2244,7 @@
               "target": "quote"
             },
             {
-              "id": "syn 2.0.87",
+              "id": "syn 2.0.89",
               "target": "syn"
             }
           ],
@@ -2722,13 +2722,13 @@
       },
       "license": "MIT/Apache-2.0"
     },
-    "backon 1.2.0": {
+    "backon 1.3.0": {
       "name": "backon",
-      "version": "1.2.0",
+      "version": "1.3.0",
       "repository": {
         "Http": {
-          "url": "https://static.crates.io/crates/backon/1.2.0/download",
-          "sha256": "e4fa97bb310c33c811334143cf64c5bb2b7b3c06e453db6b095d7061eff8f113"
+          "url": "https://static.crates.io/crates/backon/1.3.0/download",
+          "sha256": "ba5289ec98f68f28dd809fd601059e6aa908bb8f6108620930828283d4ee23d7"
         }
       },
       "targets": [
@@ -2779,7 +2779,7 @@
           }
         },
         "edition": "2021",
-        "version": "1.2.0"
+        "version": "1.3.0"
       },
       "license": "Apache-2.0"
     },
@@ -3204,7 +3204,7 @@
               "target": "either"
             },
             {
-              "id": "proc-macro2 1.0.89",
+              "id": "proc-macro2 1.0.92",
               "target": "proc_macro2"
             },
             {
@@ -3614,7 +3614,7 @@
               "target": "proc_macro_crate"
             },
             {
-              "id": "proc-macro2 1.0.89",
+              "id": "proc-macro2 1.0.92",
               "target": "proc_macro2"
             },
             {
@@ -3622,7 +3622,7 @@
               "target": "quote"
             },
             {
-              "id": "syn 2.0.87",
+              "id": "syn 2.0.89",
               "target": "syn"
             }
           ],
@@ -4078,7 +4078,7 @@
               "target": "proc_macro_error"
             },
             {
-              "id": "proc-macro2 1.0.89",
+              "id": "proc-macro2 1.0.92",
               "target": "proc_macro2"
             },
             {
@@ -4331,7 +4331,7 @@
         "deps": {
           "common": [
             {
-              "id": "proc-macro2 1.0.89",
+              "id": "proc-macro2 1.0.92",
               "target": "proc_macro2"
             },
             {
@@ -4815,7 +4815,7 @@
               "target": "lazy_static"
             },
             {
-              "id": "proc-macro2 1.0.89",
+              "id": "proc-macro2 1.0.92",
               "target": "proc_macro2"
             },
             {
@@ -4823,7 +4823,7 @@
               "target": "quote"
             },
             {
-              "id": "syn 2.0.87",
+              "id": "syn 2.0.89",
               "target": "syn"
             }
           ],
@@ -4883,7 +4883,7 @@
               "target": "tokio"
             },
             {
-              "id": "url 2.5.3",
+              "id": "url 2.5.4",
               "target": "url"
             }
           ],
@@ -5575,7 +5575,7 @@
               "target": "heck"
             },
             {
-              "id": "proc-macro2 1.0.89",
+              "id": "proc-macro2 1.0.92",
               "target": "proc_macro2"
             },
             {
@@ -5583,7 +5583,7 @@
               "target": "quote"
             },
             {
-              "id": "syn 2.0.87",
+              "id": "syn 2.0.89",
               "target": "syn"
             }
           ],
@@ -5868,7 +5868,7 @@
               "target": "convert_case"
             },
             {
-              "id": "proc-macro2 1.0.89",
+              "id": "proc-macro2 1.0.92",
               "target": "proc_macro2"
             },
             {
@@ -5919,7 +5919,7 @@
               "target": "convert_case"
             },
             {
-              "id": "proc-macro2 1.0.89",
+              "id": "proc-macro2 1.0.92",
               "target": "proc_macro2"
             },
             {
@@ -7553,7 +7553,7 @@
         "deps": {
           "common": [
             {
-              "id": "proc-macro2 1.0.89",
+              "id": "proc-macro2 1.0.92",
               "target": "proc_macro2"
             },
             {
@@ -7561,7 +7561,7 @@
               "target": "quote"
             },
             {
-              "id": "syn 2.0.87",
+              "id": "syn 2.0.89",
               "target": "syn"
             }
           ],
@@ -7718,7 +7718,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "77164cdf766ff18ae15e2b355c97b8560410ffe9"
+            "Rev": "8869fff652952265e0871ad137b40ad29880c9e6"
           },
           "strip_prefix": "rs/nns/cmc"
         }
@@ -8011,7 +8011,7 @@
               "target": "ident_case"
             },
             {
-              "id": "proc-macro2 1.0.89",
+              "id": "proc-macro2 1.0.92",
               "target": "proc_macro2"
             },
             {
@@ -8698,7 +8698,7 @@
               "target": "convert_case"
             },
             {
-              "id": "proc-macro2 1.0.89",
+              "id": "proc-macro2 1.0.92",
               "target": "proc_macro2"
             },
             {
@@ -8706,7 +8706,7 @@
               "target": "quote"
             },
             {
-              "id": "syn 2.0.87",
+              "id": "syn 2.0.89",
               "target": "syn"
             }
           ],
@@ -8724,7 +8724,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "77164cdf766ff18ae15e2b355c97b8560410ffe9"
+            "Rev": "8869fff652952265e0871ad137b40ad29880c9e6"
           },
           "strip_prefix": "rs/rust_canisters/dfn_candid"
         }
@@ -8782,7 +8782,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "77164cdf766ff18ae15e2b355c97b8560410ffe9"
+            "Rev": "8869fff652952265e0871ad137b40ad29880c9e6"
           },
           "strip_prefix": "rs/rust_canisters/dfn_core"
         }
@@ -8828,7 +8828,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "77164cdf766ff18ae15e2b355c97b8560410ffe9"
+            "Rev": "8869fff652952265e0871ad137b40ad29880c9e6"
           },
           "strip_prefix": "rs/rust_canisters/dfn_http"
         }
@@ -8886,7 +8886,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "77164cdf766ff18ae15e2b355c97b8560410ffe9"
+            "Rev": "8869fff652952265e0871ad137b40ad29880c9e6"
           },
           "strip_prefix": "rs/rust_canisters/dfn_http_metrics"
         }
@@ -8948,7 +8948,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "77164cdf766ff18ae15e2b355c97b8560410ffe9"
+            "Rev": "8869fff652952265e0871ad137b40ad29880c9e6"
           },
           "strip_prefix": "rs/rust_canisters/dfn_protobuf"
         }
@@ -9444,7 +9444,7 @@
         "deps": {
           "common": [
             {
-              "id": "proc-macro2 1.0.89",
+              "id": "proc-macro2 1.0.92",
               "target": "proc_macro2"
             },
             {
@@ -9452,7 +9452,7 @@
               "target": "quote"
             },
             {
-              "id": "syn 2.0.87",
+              "id": "syn 2.0.89",
               "target": "syn"
             }
           ],
@@ -9623,7 +9623,7 @@
               "target": "anyhow"
             },
             {
-              "id": "backon 1.2.0",
+              "id": "backon 1.3.0",
               "target": "backon"
             },
             {
@@ -9863,7 +9863,7 @@
               "target": "tokio"
             },
             {
-              "id": "url 2.5.3",
+              "id": "url 2.5.4",
               "target": "url"
             }
           ],
@@ -9921,7 +9921,7 @@
               "target": "ic_registry_keys"
             },
             {
-              "id": "url 2.5.3",
+              "id": "url 2.5.4",
               "target": "url"
             }
           ],
@@ -10549,7 +10549,7 @@
               "target": "heck"
             },
             {
-              "id": "proc-macro2 1.0.89",
+              "id": "proc-macro2 1.0.92",
               "target": "proc_macro2"
             },
             {
@@ -10557,7 +10557,7 @@
               "target": "quote"
             },
             {
-              "id": "syn 2.0.87",
+              "id": "syn 2.0.89",
               "target": "syn"
             }
           ],
@@ -11126,7 +11126,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "77164cdf766ff18ae15e2b355c97b8560410ffe9"
+            "Rev": "8869fff652952265e0871ad137b40ad29880c9e6"
           },
           "strip_prefix": "rs/crypto/internal/crypto_lib/threshold_sig/canister_threshold_sig/fe-derive"
         }
@@ -11162,7 +11162,7 @@
               "target": "num_traits"
             },
             {
-              "id": "proc-macro2 1.0.89",
+              "id": "proc-macro2 1.0.92",
               "target": "proc_macro2"
             },
             {
@@ -11936,7 +11936,7 @@
         "deps": {
           "common": [
             {
-              "id": "proc-macro2 1.0.89",
+              "id": "proc-macro2 1.0.92",
               "target": "proc_macro2"
             },
             {
@@ -11944,7 +11944,7 @@
               "target": "quote"
             },
             {
-              "id": "syn 2.0.87",
+              "id": "syn 2.0.89",
               "target": "syn"
             }
           ],
@@ -13784,7 +13784,7 @@
               "target": "log"
             },
             {
-              "id": "rustls 0.23.16",
+              "id": "rustls 0.23.18",
               "target": "rustls"
             },
             {
@@ -14114,7 +14114,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "77164cdf766ff18ae15e2b355c97b8560410ffe9"
+            "Rev": "8869fff652952265e0871ad137b40ad29880c9e6"
           },
           "strip_prefix": "rs/monitoring/adapter_metrics/client"
         }
@@ -14188,7 +14188,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "77164cdf766ff18ae15e2b355c97b8560410ffe9"
+            "Rev": "8869fff652952265e0871ad137b40ad29880c9e6"
           },
           "strip_prefix": "rs/monitoring/adapter_metrics/service"
         }
@@ -14430,7 +14430,7 @@
               "target": "time"
             },
             {
-              "id": "url 2.5.3",
+              "id": "url 2.5.4",
               "target": "url"
             }
           ],
@@ -14644,7 +14644,7 @@
               "target": "tower_service"
             },
             {
-              "id": "url 2.5.3",
+              "id": "url 2.5.4",
               "target": "url"
             }
           ],
@@ -14682,7 +14682,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "77164cdf766ff18ae15e2b355c97b8560410ffe9"
+            "Rev": "8869fff652952265e0871ad137b40ad29880c9e6"
           },
           "strip_prefix": "rs/async_utils"
         }
@@ -14760,7 +14760,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "77164cdf766ff18ae15e2b355c97b8560410ffe9"
+            "Rev": "8869fff652952265e0871ad137b40ad29880c9e6"
           },
           "strip_prefix": "rs/types/base_types"
         }
@@ -14898,7 +14898,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "77164cdf766ff18ae15e2b355c97b8560410ffe9"
+            "Rev": "8869fff652952265e0871ad137b40ad29880c9e6"
           },
           "strip_prefix": "rs/bitcoin/replica_types"
         }
@@ -14960,7 +14960,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "77164cdf766ff18ae15e2b355c97b8560410ffe9"
+            "Rev": "8869fff652952265e0871ad137b40ad29880c9e6"
           },
           "strip_prefix": "rs/canister_client"
         }
@@ -15048,7 +15048,7 @@
               "target": "prost"
             },
             {
-              "id": "rustls 0.23.16",
+              "id": "rustls 0.23.18",
               "target": "rustls"
             },
             {
@@ -15072,7 +15072,7 @@
               "target": "tree_deserializer"
             },
             {
-              "id": "url 2.5.3",
+              "id": "url 2.5.4",
               "target": "url"
             }
           ],
@@ -15090,7 +15090,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "77164cdf766ff18ae15e2b355c97b8560410ffe9"
+            "Rev": "8869fff652952265e0871ad137b40ad29880c9e6"
           },
           "strip_prefix": "rs/canister_client/sender"
         }
@@ -15152,7 +15152,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "77164cdf766ff18ae15e2b355c97b8560410ffe9"
+            "Rev": "8869fff652952265e0871ad137b40ad29880c9e6"
           },
           "strip_prefix": "rs/rust_canisters/canister_log"
         }
@@ -15194,7 +15194,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "77164cdf766ff18ae15e2b355c97b8560410ffe9"
+            "Rev": "8869fff652952265e0871ad137b40ad29880c9e6"
           },
           "strip_prefix": "rs/rust_canisters/canister_profiler"
         }
@@ -15372,7 +15372,7 @@
               "target": "thiserror"
             },
             {
-              "id": "url 2.5.3",
+              "id": "url 2.5.4",
               "target": "url"
             }
           ],
@@ -15390,7 +15390,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "77164cdf766ff18ae15e2b355c97b8560410ffe9"
+            "Rev": "8869fff652952265e0871ad137b40ad29880c9e6"
           },
           "strip_prefix": "rs/rust_canisters/http_types"
         }
@@ -15444,7 +15444,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "77164cdf766ff18ae15e2b355c97b8560410ffe9"
+            "Rev": "8869fff652952265e0871ad137b40ad29880c9e6"
           },
           "strip_prefix": "rs/canonical_state"
         }
@@ -15555,7 +15555,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "77164cdf766ff18ae15e2b355c97b8560410ffe9"
+            "Rev": "8869fff652952265e0871ad137b40ad29880c9e6"
           },
           "strip_prefix": "rs/canonical_state/tree_hash"
         }
@@ -15595,7 +15595,7 @@
               "target": "scoped_threadpool"
             },
             {
-              "id": "thiserror 1.0.69",
+              "id": "thiserror 2.0.3",
               "target": "thiserror"
             }
           ],
@@ -15821,7 +15821,7 @@
               "target": "candid"
             },
             {
-              "id": "proc-macro2 1.0.89",
+              "id": "proc-macro2 1.0.92",
               "target": "proc_macro2"
             },
             {
@@ -15880,7 +15880,7 @@
               "target": "candid"
             },
             {
-              "id": "proc-macro2 1.0.89",
+              "id": "proc-macro2 1.0.92",
               "target": "proc_macro2"
             },
             {
@@ -15896,7 +15896,7 @@
               "target": "serde_tokenstream"
             },
             {
-              "id": "syn 2.0.87",
+              "id": "syn 2.0.89",
               "target": "syn"
             }
           ],
@@ -15942,7 +15942,7 @@
               "target": "candid"
             },
             {
-              "id": "proc-macro2 1.0.89",
+              "id": "proc-macro2 1.0.92",
               "target": "proc_macro2"
             },
             {
@@ -15958,7 +15958,7 @@
               "target": "serde_tokenstream"
             },
             {
-              "id": "syn 2.0.87",
+              "id": "syn 2.0.89",
               "target": "syn"
             }
           ],
@@ -16001,7 +16001,7 @@
               "target": "candid"
             },
             {
-              "id": "proc-macro2 1.0.89",
+              "id": "proc-macro2 1.0.92",
               "target": "proc_macro2"
             },
             {
@@ -16156,7 +16156,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "77164cdf766ff18ae15e2b355c97b8560410ffe9"
+            "Rev": "8869fff652952265e0871ad137b40ad29880c9e6"
           },
           "strip_prefix": "rs/certification"
         }
@@ -16285,7 +16285,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "77164cdf766ff18ae15e2b355c97b8560410ffe9"
+            "Rev": "8869fff652952265e0871ad137b40ad29880c9e6"
           },
           "strip_prefix": "rs/canonical_state/certification_version"
         }
@@ -16383,7 +16383,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "77164cdf766ff18ae15e2b355c97b8560410ffe9"
+            "Rev": "8869fff652952265e0871ad137b40ad29880c9e6"
           },
           "strip_prefix": "rs/config"
         }
@@ -16453,7 +16453,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "77164cdf766ff18ae15e2b355c97b8560410ffe9"
+            "Rev": "8869fff652952265e0871ad137b40ad29880c9e6"
           },
           "strip_prefix": "rs/crypto/ed25519"
         }
@@ -16497,7 +16497,7 @@
               "target": "rand"
             },
             {
-              "id": "thiserror 1.0.69",
+              "id": "thiserror 2.0.3",
               "target": "thiserror"
             },
             {
@@ -16519,7 +16519,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "77164cdf766ff18ae15e2b355c97b8560410ffe9"
+            "Rev": "8869fff652952265e0871ad137b40ad29880c9e6"
           },
           "strip_prefix": "rs/crypto/getrandom_for_wasm"
         }
@@ -16569,7 +16569,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "77164cdf766ff18ae15e2b355c97b8560410ffe9"
+            "Rev": "8869fff652952265e0871ad137b40ad29880c9e6"
           },
           "strip_prefix": "rs/crypto/interfaces/sig_verification"
         }
@@ -16611,7 +16611,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "77164cdf766ff18ae15e2b355c97b8560410ffe9"
+            "Rev": "8869fff652952265e0871ad137b40ad29880c9e6"
           },
           "strip_prefix": "rs/crypto/internal/crypto_lib/basic_sig/der_utils"
         }
@@ -16654,84 +16654,6 @@
       },
       "license": null
     },
-    "ic-crypto-internal-basic-sig-ecdsa-secp256k1 0.9.0": {
-      "name": "ic-crypto-internal-basic-sig-ecdsa-secp256k1",
-      "version": "0.9.0",
-      "repository": {
-        "Git": {
-          "remote": "https://github.com/dfinity/ic.git",
-          "commitish": {
-            "Rev": "77164cdf766ff18ae15e2b355c97b8560410ffe9"
-          },
-          "strip_prefix": "rs/crypto/internal/crypto_lib/basic_sig/ecdsa_secp256k1"
-        }
-      },
-      "targets": [
-        {
-          "Library": {
-            "crate_name": "ic_crypto_internal_basic_sig_ecdsa_secp256k1",
-            "crate_root": "src/lib.rs",
-            "srcs": [
-              "**/*.rs"
-            ]
-          }
-        }
-      ],
-      "library_target_name": "ic_crypto_internal_basic_sig_ecdsa_secp256k1",
-      "common_attrs": {
-        "compile_data_glob": [
-          "**"
-        ],
-        "deps": {
-          "common": [
-            {
-              "id": "base64 0.13.1",
-              "target": "base64"
-            },
-            {
-              "id": "ic-crypto-internal-basic-sig-der-utils 0.9.0",
-              "target": "ic_crypto_internal_basic_sig_der_utils"
-            },
-            {
-              "id": "ic-crypto-internal-types 0.9.0",
-              "target": "ic_crypto_internal_types"
-            },
-            {
-              "id": "ic-crypto-secp256k1 0.9.0",
-              "target": "ic_crypto_secp256k1"
-            },
-            {
-              "id": "ic-crypto-secrets-containers 0.9.0",
-              "target": "ic_crypto_secrets_containers"
-            },
-            {
-              "id": "ic-types 0.9.0",
-              "target": "ic_types"
-            },
-            {
-              "id": "serde 1.0.215",
-              "target": "serde"
-            },
-            {
-              "id": "serde_bytes 0.11.15",
-              "target": "serde_bytes"
-            },
-            {
-              "id": "simple_asn1 0.6.2",
-              "target": "simple_asn1"
-            },
-            {
-              "id": "zeroize 1.8.1",
-              "target": "zeroize"
-            }
-          ],
-          "selects": {}
-        },
-        "edition": "2021",
-        "version": "0.9.0"
-      },
-      "license": null
-    },
     "ic-crypto-internal-basic-sig-ed25519 0.9.0": {
       "name": "ic-crypto-internal-basic-sig-ed25519",
       "version": "0.9.0",
@@ -16739,7 +16661,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "77164cdf766ff18ae15e2b355c97b8560410ffe9"
+            "Rev": "8869fff652952265e0871ad137b40ad29880c9e6"
           },
           "strip_prefix": "rs/crypto/internal/crypto_lib/basic_sig/ed25519"
         }
@@ -16837,7 +16759,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "77164cdf766ff18ae15e2b355c97b8560410ffe9"
+            "Rev": "8869fff652952265e0871ad137b40ad29880c9e6"
           },
           "strip_prefix": "rs/crypto/internal/crypto_lib/bls12_381/type"
         }
@@ -16924,7 +16846,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "77164cdf766ff18ae15e2b355c97b8560410ffe9"
+            "Rev": "8869fff652952265e0871ad137b40ad29880c9e6"
           },
           "strip_prefix": "rs/crypto/internal/crypto_lib/hmac"
         }
@@ -16966,7 +16888,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "77164cdf766ff18ae15e2b355c97b8560410ffe9"
+            "Rev": "8869fff652952265e0871ad137b40ad29880c9e6"
           },
           "strip_prefix": "rs/crypto/internal/crypto_lib/multi_sig/bls12_381"
         }
@@ -17052,7 +16974,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "77164cdf766ff18ae15e2b355c97b8560410ffe9"
+            "Rev": "8869fff652952265e0871ad137b40ad29880c9e6"
           },
           "strip_prefix": "rs/crypto/internal/crypto_lib/seed"
         }
@@ -17114,7 +17036,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "77164cdf766ff18ae15e2b355c97b8560410ffe9"
+            "Rev": "8869fff652952265e0871ad137b40ad29880c9e6"
           },
           "strip_prefix": "rs/crypto/internal/crypto_lib/sha2"
         }
@@ -17156,7 +17078,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "77164cdf766ff18ae15e2b355c97b8560410ffe9"
+            "Rev": "8869fff652952265e0871ad137b40ad29880c9e6"
           },
           "strip_prefix": "rs/crypto/internal/crypto_lib/threshold_sig/bls12_381"
         }
@@ -17275,7 +17197,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "77164cdf766ff18ae15e2b355c97b8560410ffe9"
+            "Rev": "8869fff652952265e0871ad137b40ad29880c9e6"
           },
           "strip_prefix": "rs/crypto/internal/crypto_lib/threshold_sig/canister_threshold_sig"
         }
@@ -17410,7 +17332,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "77164cdf766ff18ae15e2b355c97b8560410ffe9"
+            "Rev": "8869fff652952265e0871ad137b40ad29880c9e6"
           },
           "strip_prefix": "rs/crypto/internal/crypto_lib/types"
         }
@@ -17462,7 +17384,7 @@
               "target": "strum"
             },
             {
-              "id": "thiserror 1.0.69",
+              "id": "thiserror 2.0.3",
               "target": "thiserror"
             },
             {
@@ -17493,7 +17415,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "77164cdf766ff18ae15e2b355c97b8560410ffe9"
+            "Rev": "8869fff652952265e0871ad137b40ad29880c9e6"
           },
           "strip_prefix": "rs/crypto/node_key_validation"
         }
@@ -17575,7 +17497,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "77164cdf766ff18ae15e2b355c97b8560410ffe9"
+            "Rev": "8869fff652952265e0871ad137b40ad29880c9e6"
           },
           "strip_prefix": "rs/crypto/secp256k1"
         }
@@ -17649,7 +17571,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "77164cdf766ff18ae15e2b355c97b8560410ffe9"
+            "Rev": "8869fff652952265e0871ad137b40ad29880c9e6"
           },
           "strip_prefix": "rs/crypto/secrets_containers"
         }
@@ -17695,7 +17617,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "77164cdf766ff18ae15e2b355c97b8560410ffe9"
+            "Rev": "8869fff652952265e0871ad137b40ad29880c9e6"
           },
           "strip_prefix": "rs/crypto/sha2"
         }
@@ -17737,7 +17659,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "77164cdf766ff18ae15e2b355c97b8560410ffe9"
+            "Rev": "8869fff652952265e0871ad137b40ad29880c9e6"
           },
           "strip_prefix": "rs/crypto/test_utils/reproducible_rng"
         }
@@ -17783,7 +17705,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "77164cdf766ff18ae15e2b355c97b8560410ffe9"
+            "Rev": "8869fff652952265e0871ad137b40ad29880c9e6"
           },
           "strip_prefix": "rs/crypto/node_key_validation/tls_cert_validation"
         }
@@ -17845,7 +17767,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "77164cdf766ff18ae15e2b355c97b8560410ffe9"
+            "Rev": "8869fff652952265e0871ad137b40ad29880c9e6"
           },
           "strip_prefix": "rs/crypto/tree_hash"
         }
@@ -17889,7 +17811,7 @@
               "target": "serde_bytes"
             },
             {
-              "id": "thiserror 1.0.69",
+              "id": "thiserror 2.0.3",
               "target": "thiserror"
             }
           ],
@@ -17907,7 +17829,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "77164cdf766ff18ae15e2b355c97b8560410ffe9"
+            "Rev": "8869fff652952265e0871ad137b40ad29880c9e6"
           },
           "strip_prefix": "rs/crypto/utils/basic_sig"
         }
@@ -17957,7 +17879,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "77164cdf766ff18ae15e2b355c97b8560410ffe9"
+            "Rev": "8869fff652952265e0871ad137b40ad29880c9e6"
           },
           "strip_prefix": "rs/crypto/utils/ni_dkg"
         }
@@ -18007,7 +17929,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "77164cdf766ff18ae15e2b355c97b8560410ffe9"
+            "Rev": "8869fff652952265e0871ad137b40ad29880c9e6"
           },
           "strip_prefix": "rs/crypto/utils/threshold_sig"
         }
@@ -18061,7 +17983,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "77164cdf766ff18ae15e2b355c97b8560410ffe9"
+            "Rev": "8869fff652952265e0871ad137b40ad29880c9e6"
           },
           "strip_prefix": "rs/crypto/utils/threshold_sig_der"
         }
@@ -18115,7 +18037,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "77164cdf766ff18ae15e2b355c97b8560410ffe9"
+            "Rev": "8869fff652952265e0871ad137b40ad29880c9e6"
           },
           "strip_prefix": "rs/types/error_types"
         }
@@ -18178,7 +18100,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "77164cdf766ff18ae15e2b355c97b8560410ffe9"
+            "Rev": "8869fff652952265e0871ad137b40ad29880c9e6"
           },
           "strip_prefix": "rs/http_endpoints/metrics"
         }
@@ -18226,7 +18148,7 @@
               "target": "slog"
             },
             {
-              "id": "thiserror 1.0.69",
+              "id": "thiserror 2.0.3",
               "target": "thiserror"
             },
             {
@@ -18256,7 +18178,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "77164cdf766ff18ae15e2b355c97b8560410ffe9"
+            "Rev": "8869fff652952265e0871ad137b40ad29880c9e6"
           },
           "strip_prefix": "rs/ledger_suite/icrc1"
         }
@@ -18342,11 +18264,7 @@
               "target": "serde_bytes"
             },
             {
-              "id": "tempfile 3.14.0",
-              "target": "tempfile"
-            },
-            {
-              "id": "thiserror 1.0.69",
+              "id": "thiserror 2.0.3",
               "target": "thiserror"
             }
           ],
@@ -18364,7 +18282,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "77164cdf766ff18ae15e2b355c97b8560410ffe9"
+            "Rev": "8869fff652952265e0871ad137b40ad29880c9e6"
           },
           "strip_prefix": "rs/ledger_suite/icrc1/index-ng"
         }
@@ -18497,7 +18415,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "77164cdf766ff18ae15e2b355c97b8560410ffe9"
+            "Rev": "8869fff652952265e0871ad137b40ad29880c9e6"
           },
           "strip_prefix": "rs/ledger_suite/icrc1/ledger"
         }
@@ -18570,8 +18488,8 @@
               "target": "ic_cdk"
             },
             {
-              "id": "ic-crypto-tree-hash 0.9.0",
-              "target": "ic_crypto_tree_hash"
+              "id": "ic-certification 2.6.0",
+              "target": "ic_certification"
             },
             {
               "id": "ic-icrc1 0.9.0",
@@ -18606,12 +18524,12 @@
               "target": "ic_stable_structures"
             },
             {
-              "id": "icrc-ledger-client 0.1.2",
-              "target": "icrc_ledger_client"
-            },
-            {
               "id": "icrc-ledger-types 0.1.6",
               "target": "icrc_ledger_types"
+            },
+            {
+              "id": "leb128 0.2.5",
+              "target": "leb128"
             },
             {
               "id": "num-traits 0.2.19",
@@ -18676,7 +18594,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "77164cdf766ff18ae15e2b355c97b8560410ffe9"
+            "Rev": "8869fff652952265e0871ad137b40ad29880c9e6"
           },
           "strip_prefix": "rs/ledger_suite/icrc1/test_utils"
         }
@@ -18724,20 +18642,12 @@
               "target": "ic_icrc1"
             },
             {
-              "id": "ic-ledger-canister-core 0.9.0",
-              "target": "ic_ledger_canister_core"
-            },
-            {
               "id": "ic-ledger-core 0.9.0",
               "target": "ic_ledger_core"
             },
             {
               "id": "ic-ledger-hash-of 0.1.0",
               "target": "ic_ledger_hash_of"
-            },
-            {
-              "id": "ic-limits 0.9.0",
-              "target": "ic_limits"
             },
             {
               "id": "ic-types 0.9.0",
@@ -18790,7 +18700,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "77164cdf766ff18ae15e2b355c97b8560410ffe9"
+            "Rev": "8869fff652952265e0871ad137b40ad29880c9e6"
           },
           "strip_prefix": "rs/ledger_suite/icrc1/tokens_u64"
         }
@@ -18848,7 +18758,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "77164cdf766ff18ae15e2b355c97b8560410ffe9"
+            "Rev": "8869fff652952265e0871ad137b40ad29880c9e6"
           },
           "strip_prefix": "rs/interfaces"
         }
@@ -18932,7 +18842,7 @@
               "target": "strum"
             },
             {
-              "id": "thiserror 1.0.69",
+              "id": "thiserror 2.0.3",
               "target": "thiserror"
             },
             {
@@ -18963,7 +18873,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "77164cdf766ff18ae15e2b355c97b8560410ffe9"
+            "Rev": "8869fff652952265e0871ad137b40ad29880c9e6"
           },
           "strip_prefix": "rs/interfaces/registry"
         }
@@ -19013,7 +18923,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "77164cdf766ff18ae15e2b355c97b8560410ffe9"
+            "Rev": "8869fff652952265e0871ad137b40ad29880c9e6"
           },
           "strip_prefix": "rs/interfaces/state_manager"
         }
@@ -19049,7 +18959,7 @@
               "target": "phantom_newtype"
             },
             {
-              "id": "thiserror 1.0.69",
+              "id": "thiserror 2.0.3",
               "target": "thiserror"
             }
           ],
@@ -19067,7 +18977,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "77164cdf766ff18ae15e2b355c97b8560410ffe9"
+            "Rev": "8869fff652952265e0871ad137b40ad29880c9e6"
           },
           "strip_prefix": "rs/ledger_suite/common/ledger_canister_core"
         }
@@ -19123,10 +19033,6 @@
               "target": "ic_utils"
             },
             {
-              "id": "num-traits 0.2.19",
-              "target": "num_traits"
-            },
-            {
               "id": "serde 1.0.215",
               "target": "serde"
             }
@@ -19154,7 +19060,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "77164cdf766ff18ae15e2b355c97b8560410ffe9"
+            "Rev": "8869fff652952265e0871ad137b40ad29880c9e6"
           },
           "strip_prefix": "rs/ledger_suite/common/ledger_core"
         }
@@ -19216,7 +19122,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "77164cdf766ff18ae15e2b355c97b8560410ffe9"
+            "Rev": "8869fff652952265e0871ad137b40ad29880c9e6"
           },
           "strip_prefix": "packages/ic-ledger-hash-of"
         }
@@ -19266,7 +19172,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "77164cdf766ff18ae15e2b355c97b8560410ffe9"
+            "Rev": "8869fff652952265e0871ad137b40ad29880c9e6"
           },
           "strip_prefix": "rs/limits"
         }
@@ -19299,7 +19205,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "77164cdf766ff18ae15e2b355c97b8560410ffe9"
+            "Rev": "8869fff652952265e0871ad137b40ad29880c9e6"
           },
           "strip_prefix": "rs/monitoring/logger"
         }
@@ -19401,7 +19307,7 @@
               "target": "anyhow"
             },
             {
-              "id": "backon 1.2.0",
+              "id": "backon 1.3.0",
               "target": "backon"
             },
             {
@@ -19573,7 +19479,7 @@
               "target": "tokio"
             },
             {
-              "id": "url 2.5.3",
+              "id": "url 2.5.4",
               "target": "url"
             }
           ],
@@ -19609,7 +19515,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "77164cdf766ff18ae15e2b355c97b8560410ffe9"
+            "Rev": "8869fff652952265e0871ad137b40ad29880c9e6"
           },
           "strip_prefix": "rs/types/management_canister_types"
         }
@@ -19792,7 +19698,7 @@
               "target": "tokio"
             },
             {
-              "id": "url 2.5.3",
+              "id": "url 2.5.4",
               "target": "url"
             }
           ],
@@ -19828,7 +19734,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "77164cdf766ff18ae15e2b355c97b8560410ffe9"
+            "Rev": "8869fff652952265e0871ad137b40ad29880c9e6"
           },
           "strip_prefix": "rs/monitoring/metrics"
         }
@@ -19931,7 +19837,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "77164cdf766ff18ae15e2b355c97b8560410ffe9"
+            "Rev": "8869fff652952265e0871ad137b40ad29880c9e6"
           },
           "strip_prefix": "rs/nervous_system/canisters"
         }
@@ -20014,7 +19920,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "77164cdf766ff18ae15e2b355c97b8560410ffe9"
+            "Rev": "8869fff652952265e0871ad137b40ad29880c9e6"
           },
           "strip_prefix": "rs/nervous_system/clients"
         }
@@ -20121,7 +20027,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "77164cdf766ff18ae15e2b355c97b8560410ffe9"
+            "Rev": "8869fff652952265e0871ad137b40ad29880c9e6"
           },
           "strip_prefix": "rs/nervous_system/collections/union_multi_map"
         }
@@ -20154,7 +20060,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "77164cdf766ff18ae15e2b355c97b8560410ffe9"
+            "Rev": "8869fff652952265e0871ad137b40ad29880c9e6"
           },
           "strip_prefix": "rs/nervous_system/common"
         }
@@ -20332,7 +20238,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "77164cdf766ff18ae15e2b355c97b8560410ffe9"
+            "Rev": "8869fff652952265e0871ad137b40ad29880c9e6"
           },
           "strip_prefix": "rs/nervous_system/common/build_metadata"
         }
@@ -20365,7 +20271,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "77164cdf766ff18ae15e2b355c97b8560410ffe9"
+            "Rev": "8869fff652952265e0871ad137b40ad29880c9e6"
           },
           "strip_prefix": "rs/nervous_system/common/test_keys"
         }
@@ -20427,7 +20333,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "77164cdf766ff18ae15e2b355c97b8560410ffe9"
+            "Rev": "8869fff652952265e0871ad137b40ad29880c9e6"
           },
           "strip_prefix": "rs/nervous_system/common/validation"
         }
@@ -20460,7 +20366,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "77164cdf766ff18ae15e2b355c97b8560410ffe9"
+            "Rev": "8869fff652952265e0871ad137b40ad29880c9e6"
           },
           "strip_prefix": "rs/nervous_system/governance"
         }
@@ -20518,7 +20424,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "77164cdf766ff18ae15e2b355c97b8560410ffe9"
+            "Rev": "8869fff652952265e0871ad137b40ad29880c9e6"
           },
           "strip_prefix": "rs/nervous_system/initial_supply"
         }
@@ -20589,7 +20495,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "77164cdf766ff18ae15e2b355c97b8560410ffe9"
+            "Rev": "8869fff652952265e0871ad137b40ad29880c9e6"
           },
           "strip_prefix": "rs/nervous_system/linear_map"
         }
@@ -20631,7 +20537,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "77164cdf766ff18ae15e2b355c97b8560410ffe9"
+            "Rev": "8869fff652952265e0871ad137b40ad29880c9e6"
           },
           "strip_prefix": "rs/nervous_system/lock"
         }
@@ -20664,7 +20570,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "77164cdf766ff18ae15e2b355c97b8560410ffe9"
+            "Rev": "8869fff652952265e0871ad137b40ad29880c9e6"
           },
           "strip_prefix": "rs/nervous_system/proto"
         }
@@ -20726,7 +20632,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "77164cdf766ff18ae15e2b355c97b8560410ffe9"
+            "Rev": "8869fff652952265e0871ad137b40ad29880c9e6"
           },
           "strip_prefix": "rs/nervous_system/proxied_canister_calls_tracker"
         }
@@ -20768,7 +20674,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "77164cdf766ff18ae15e2b355c97b8560410ffe9"
+            "Rev": "8869fff652952265e0871ad137b40ad29880c9e6"
           },
           "strip_prefix": "rs/nervous_system/root"
         }
@@ -20842,7 +20748,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "77164cdf766ff18ae15e2b355c97b8560410ffe9"
+            "Rev": "8869fff652952265e0871ad137b40ad29880c9e6"
           },
           "strip_prefix": "rs/nervous_system/runtime"
         }
@@ -20909,7 +20815,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "77164cdf766ff18ae15e2b355c97b8560410ffe9"
+            "Rev": "8869fff652952265e0871ad137b40ad29880c9e6"
           },
           "strip_prefix": "rs/nervous_system/string"
         }
@@ -20942,7 +20848,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "77164cdf766ff18ae15e2b355c97b8560410ffe9"
+            "Rev": "8869fff652952265e0871ad137b40ad29880c9e6"
           },
           "strip_prefix": "rs/nervous_system/temporary"
         }
@@ -20975,7 +20881,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "77164cdf766ff18ae15e2b355c97b8560410ffe9"
+            "Rev": "8869fff652952265e0871ad137b40ad29880c9e6"
           },
           "strip_prefix": "rs/nervous_system/neurons_fund"
         }
@@ -21042,7 +20948,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "77164cdf766ff18ae15e2b355c97b8560410ffe9"
+            "Rev": "8869fff652952265e0871ad137b40ad29880c9e6"
           },
           "strip_prefix": "rs/nns/common"
         }
@@ -21156,7 +21062,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "77164cdf766ff18ae15e2b355c97b8560410ffe9"
+            "Rev": "8869fff652952265e0871ad137b40ad29880c9e6"
           },
           "strip_prefix": "rs/nns/constants"
         }
@@ -21202,7 +21108,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "77164cdf766ff18ae15e2b355c97b8560410ffe9"
+            "Rev": "8869fff652952265e0871ad137b40ad29880c9e6"
           },
           "strip_prefix": "rs/nns/governance"
         }
@@ -21539,7 +21445,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "77164cdf766ff18ae15e2b355c97b8560410ffe9"
+            "Rev": "8869fff652952265e0871ad137b40ad29880c9e6"
           },
           "strip_prefix": "rs/nns/governance/api"
         }
@@ -21666,7 +21572,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "77164cdf766ff18ae15e2b355c97b8560410ffe9"
+            "Rev": "8869fff652952265e0871ad137b40ad29880c9e6"
           },
           "strip_prefix": "rs/nns/governance/init"
         }
@@ -21752,7 +21658,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "77164cdf766ff18ae15e2b355c97b8560410ffe9"
+            "Rev": "8869fff652952265e0871ad137b40ad29880c9e6"
           },
           "strip_prefix": "rs/nns/gtc_accounts"
         }
@@ -21785,7 +21691,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "77164cdf766ff18ae15e2b355c97b8560410ffe9"
+            "Rev": "8869fff652952265e0871ad137b40ad29880c9e6"
           },
           "strip_prefix": "rs/nns/handlers/root/interface"
         }
@@ -21860,7 +21766,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "77164cdf766ff18ae15e2b355c97b8560410ffe9"
+            "Rev": "8869fff652952265e0871ad137b40ad29880c9e6"
           },
           "strip_prefix": "rs/protobuf"
         }
@@ -21926,7 +21832,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "77164cdf766ff18ae15e2b355c97b8560410ffe9"
+            "Rev": "8869fff652952265e0871ad137b40ad29880c9e6"
           },
           "strip_prefix": "rs/registry/canister/api"
         }
@@ -21962,7 +21868,7 @@
               "target": "serde"
             },
             {
-              "id": "thiserror 1.0.69",
+              "id": "thiserror 2.0.3",
               "target": "thiserror"
             }
           ],
@@ -21980,7 +21886,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "77164cdf766ff18ae15e2b355c97b8560410ffe9"
+            "Rev": "8869fff652952265e0871ad137b40ad29880c9e6"
           },
           "strip_prefix": "rs/registry/canister-client"
         }
@@ -22030,7 +21936,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "77164cdf766ff18ae15e2b355c97b8560410ffe9"
+            "Rev": "8869fff652952265e0871ad137b40ad29880c9e6"
           },
           "strip_prefix": "rs/registry/client"
         }
@@ -22092,7 +21998,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "77164cdf766ff18ae15e2b355c97b8560410ffe9"
+            "Rev": "8869fff652952265e0871ad137b40ad29880c9e6"
           },
           "strip_prefix": "rs/registry/fake"
         }
@@ -22138,7 +22044,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "77164cdf766ff18ae15e2b355c97b8560410ffe9"
+            "Rev": "8869fff652952265e0871ad137b40ad29880c9e6"
           },
           "strip_prefix": "rs/registry/helpers"
         }
@@ -22210,7 +22116,7 @@
               "target": "serde_cbor"
             },
             {
-              "id": "thiserror 1.0.69",
+              "id": "thiserror 2.0.3",
               "target": "thiserror"
             }
           ],
@@ -22228,7 +22134,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "77164cdf766ff18ae15e2b355c97b8560410ffe9"
+            "Rev": "8869fff652952265e0871ad137b40ad29880c9e6"
           },
           "strip_prefix": "rs/registry/proto"
         }
@@ -22270,7 +22176,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "77164cdf766ff18ae15e2b355c97b8560410ffe9"
+            "Rev": "8869fff652952265e0871ad137b40ad29880c9e6"
           },
           "strip_prefix": "rs/registry/keys"
         }
@@ -22328,7 +22234,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "77164cdf766ff18ae15e2b355c97b8560410ffe9"
+            "Rev": "8869fff652952265e0871ad137b40ad29880c9e6"
           },
           "strip_prefix": "rs/registry/local_registry"
         }
@@ -22384,7 +22290,7 @@
               "target": "ic_types"
             },
             {
-              "id": "thiserror 1.0.69",
+              "id": "thiserror 2.0.3",
               "target": "thiserror"
             },
             {
@@ -22392,7 +22298,7 @@
               "target": "tokio"
             },
             {
-              "id": "url 2.5.3",
+              "id": "url 2.5.4",
               "target": "url"
             }
           ],
@@ -22410,7 +22316,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "77164cdf766ff18ae15e2b355c97b8560410ffe9"
+            "Rev": "8869fff652952265e0871ad137b40ad29880c9e6"
           },
           "strip_prefix": "rs/registry/local_store"
         }
@@ -22468,7 +22374,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "77164cdf766ff18ae15e2b355c97b8560410ffe9"
+            "Rev": "8869fff652952265e0871ad137b40ad29880c9e6"
           },
           "strip_prefix": "rs/registry/local_store/artifacts"
         }
@@ -22501,7 +22407,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "77164cdf766ff18ae15e2b355c97b8560410ffe9"
+            "Rev": "8869fff652952265e0871ad137b40ad29880c9e6"
           },
           "strip_prefix": "rs/registry/nns_data_provider"
         }
@@ -22573,7 +22479,7 @@
               "target": "tree_deserializer"
             },
             {
-              "id": "url 2.5.3",
+              "id": "url 2.5.4",
               "target": "url"
             }
           ],
@@ -22591,7 +22497,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "77164cdf766ff18ae15e2b355c97b8560410ffe9"
+            "Rev": "8869fff652952265e0871ad137b40ad29880c9e6"
           },
           "strip_prefix": "rs/registry/node_provider_rewards"
         }
@@ -22637,7 +22543,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "77164cdf766ff18ae15e2b355c97b8560410ffe9"
+            "Rev": "8869fff652952265e0871ad137b40ad29880c9e6"
           },
           "strip_prefix": "rs/registry/provisional_whitelist"
         }
@@ -22683,7 +22589,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "77164cdf766ff18ae15e2b355c97b8560410ffe9"
+            "Rev": "8869fff652952265e0871ad137b40ad29880c9e6"
           },
           "strip_prefix": "rs/registry/routing_table"
         }
@@ -22737,7 +22643,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "77164cdf766ff18ae15e2b355c97b8560410ffe9"
+            "Rev": "8869fff652952265e0871ad137b40ad29880c9e6"
           },
           "strip_prefix": "rs/registry/subnet_features"
         }
@@ -22791,7 +22697,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "77164cdf766ff18ae15e2b355c97b8560410ffe9"
+            "Rev": "8869fff652952265e0871ad137b40ad29880c9e6"
           },
           "strip_prefix": "rs/registry/subnet_type"
         }
@@ -22854,7 +22760,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "77164cdf766ff18ae15e2b355c97b8560410ffe9"
+            "Rev": "8869fff652952265e0871ad137b40ad29880c9e6"
           },
           "strip_prefix": "rs/registry/transport"
         }
@@ -22912,7 +22818,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "77164cdf766ff18ae15e2b355c97b8560410ffe9"
+            "Rev": "8869fff652952265e0871ad137b40ad29880c9e6"
           },
           "strip_prefix": "rs/replicated_state"
         }
@@ -23123,7 +23029,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "77164cdf766ff18ae15e2b355c97b8560410ffe9"
+            "Rev": "8869fff652952265e0871ad137b40ad29880c9e6"
           },
           "strip_prefix": "rs/sns/governance"
         }
@@ -23417,7 +23323,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "77164cdf766ff18ae15e2b355c97b8560410ffe9"
+            "Rev": "8869fff652952265e0871ad137b40ad29880c9e6"
           },
           "strip_prefix": "rs/sns/governance/api"
         }
@@ -23528,7 +23434,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "77164cdf766ff18ae15e2b355c97b8560410ffe9"
+            "Rev": "8869fff652952265e0871ad137b40ad29880c9e6"
           },
           "strip_prefix": "rs/sns/governance/proposal_criticality"
         }
@@ -23570,7 +23476,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "77164cdf766ff18ae15e2b355c97b8560410ffe9"
+            "Rev": "8869fff652952265e0871ad137b40ad29880c9e6"
           },
           "strip_prefix": "rs/sns/governance/proposals_amount_total_limit"
         }
@@ -23629,7 +23535,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "77164cdf766ff18ae15e2b355c97b8560410ffe9"
+            "Rev": "8869fff652952265e0871ad137b40ad29880c9e6"
           },
           "strip_prefix": "rs/sns/governance/token_valuation"
         }
@@ -23732,7 +23638,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "77164cdf766ff18ae15e2b355c97b8560410ffe9"
+            "Rev": "8869fff652952265e0871ad137b40ad29880c9e6"
           },
           "strip_prefix": "rs/sns/init"
         }
@@ -23854,7 +23760,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "77164cdf766ff18ae15e2b355c97b8560410ffe9"
+            "Rev": "8869fff652952265e0871ad137b40ad29880c9e6"
           },
           "strip_prefix": "rs/sns/root"
         }
@@ -24016,7 +23922,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "77164cdf766ff18ae15e2b355c97b8560410ffe9"
+            "Rev": "8869fff652952265e0871ad137b40ad29880c9e6"
           },
           "strip_prefix": "rs/sns/swap"
         }
@@ -24214,7 +24120,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "77164cdf766ff18ae15e2b355c97b8560410ffe9"
+            "Rev": "8869fff652952265e0871ad137b40ad29880c9e6"
           },
           "strip_prefix": "rs/sns/swap/proto_library"
         }
@@ -24284,7 +24190,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "77164cdf766ff18ae15e2b355c97b8560410ffe9"
+            "Rev": "8869fff652952265e0871ad137b40ad29880c9e6"
           },
           "strip_prefix": "rs/nns/sns-wasm"
         }
@@ -24486,7 +24392,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "77164cdf766ff18ae15e2b355c97b8560410ffe9"
+            "Rev": "8869fff652952265e0871ad137b40ad29880c9e6"
           },
           "strip_prefix": "rs/sys"
         }
@@ -24559,7 +24465,7 @@
                 "target": "cvt"
               },
               {
-                "id": "thiserror 1.0.69",
+                "id": "thiserror 2.0.3",
                 "target": "thiserror"
               }
             ]
@@ -24733,7 +24639,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "77164cdf766ff18ae15e2b355c97b8560410ffe9"
+            "Rev": "8869fff652952265e0871ad137b40ad29880c9e6"
           },
           "strip_prefix": "rs/types/types"
         }
@@ -24857,7 +24763,7 @@
               "target": "strum"
             },
             {
-              "id": "thiserror 1.0.69",
+              "id": "thiserror 2.0.3",
               "target": "thiserror"
             },
             {
@@ -24995,7 +24901,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "77164cdf766ff18ae15e2b355c97b8560410ffe9"
+            "Rev": "8869fff652952265e0871ad137b40ad29880c9e6"
           },
           "strip_prefix": "rs/utils"
         }
@@ -25049,7 +24955,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "77164cdf766ff18ae15e2b355c97b8560410ffe9"
+            "Rev": "8869fff652952265e0871ad137b40ad29880c9e6"
           },
           "strip_prefix": "rs/utils/thread"
         }
@@ -25082,7 +24988,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "77164cdf766ff18ae15e2b355c97b8560410ffe9"
+            "Rev": "8869fff652952265e0871ad137b40ad29880c9e6"
           },
           "strip_prefix": "rs/utils/validate_eq"
         }
@@ -25124,7 +25030,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "77164cdf766ff18ae15e2b355c97b8560410ffe9"
+            "Rev": "8869fff652952265e0871ad137b40ad29880c9e6"
           },
           "strip_prefix": "rs/utils/validate_eq_derive"
         }
@@ -25148,7 +25054,7 @@
         "deps": {
           "common": [
             {
-              "id": "proc-macro2 1.0.89",
+              "id": "proc-macro2 1.0.92",
               "target": "proc_macro2"
             },
             {
@@ -25323,7 +25229,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "77164cdf766ff18ae15e2b355c97b8560410ffe9"
+            "Rev": "8869fff652952265e0871ad137b40ad29880c9e6"
           },
           "strip_prefix": "rs/types/wasm_types"
         }
@@ -25667,7 +25573,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "77164cdf766ff18ae15e2b355c97b8560410ffe9"
+            "Rev": "8869fff652952265e0871ad137b40ad29880c9e6"
           },
           "strip_prefix": "rs/ledger_suite/icp"
         }
@@ -25751,10 +25657,6 @@
               "target": "lazy_static"
             },
             {
-              "id": "num-traits 0.2.19",
-              "target": "num_traits"
-            },
-            {
               "id": "on_wire 0.9.0",
               "target": "on_wire"
             },
@@ -25802,7 +25704,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "77164cdf766ff18ae15e2b355c97b8560410ffe9"
+            "Rev": "8869fff652952265e0871ad137b40ad29880c9e6"
           },
           "strip_prefix": "packages/icrc-ledger-client"
         }
@@ -25861,7 +25763,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "77164cdf766ff18ae15e2b355c97b8560410ffe9"
+            "Rev": "8869fff652952265e0871ad137b40ad29880c9e6"
           },
           "strip_prefix": "packages/icrc-ledger-types"
         }
@@ -25981,11 +25883,11 @@
         "deps": {
           "common": [
             {
-              "id": "yoke 0.7.4",
+              "id": "yoke 0.7.5",
               "target": "yoke"
             },
             {
-              "id": "zerofrom 0.1.4",
+              "id": "zerofrom 0.1.5",
               "target": "zerofrom"
             },
             {
@@ -26043,7 +25945,7 @@
         "deps": {
           "common": [
             {
-              "id": "litemap 0.7.3",
+              "id": "litemap 0.7.4",
               "target": "litemap"
             },
             {
@@ -26447,11 +26349,11 @@
               "target": "writeable"
             },
             {
-              "id": "yoke 0.7.4",
+              "id": "yoke 0.7.5",
               "target": "yoke"
             },
             {
-              "id": "zerofrom 0.1.4",
+              "id": "zerofrom 0.1.5",
               "target": "zerofrom"
             },
             {
@@ -26507,7 +26409,7 @@
         "deps": {
           "common": [
             {
-              "id": "proc-macro2 1.0.89",
+              "id": "proc-macro2 1.0.92",
               "target": "proc_macro2"
             },
             {
@@ -26515,7 +26417,7 @@
               "target": "quote"
             },
             {
-              "id": "syn 2.0.87",
+              "id": "syn 2.0.89",
               "target": "syn"
             }
           ],
@@ -28235,13 +28137,13 @@
       },
       "license": "Apache-2.0 WITH LLVM-exception OR Apache-2.0 OR MIT"
     },
-    "litemap 0.7.3": {
+    "litemap 0.7.4": {
       "name": "litemap",
-      "version": "0.7.3",
+      "version": "0.7.4",
       "repository": {
         "Http": {
-          "url": "https://static.crates.io/crates/litemap/0.7.3/download",
-          "sha256": "643cb0b8d4fcc284004d5fd0d67ccf61dfffadb7f75e1e71bc420f4688a3a704"
+          "url": "https://static.crates.io/crates/litemap/0.7.4/download",
+          "sha256": "4ee93343901ab17bd981295f2cf0026d4ad018c7c31ba84549a4ddbb47a45104"
         }
       },
       "targets": [
@@ -28267,7 +28169,7 @@
           "selects": {}
         },
         "edition": "2021",
-        "version": "0.7.3"
+        "version": "0.7.4"
       },
       "license": "Unicode-3.0"
     },
@@ -28502,7 +28404,7 @@
               "target": "tokio"
             },
             {
-              "id": "url 2.5.3",
+              "id": "url 2.5.4",
               "target": "url"
             }
           ],
@@ -28628,7 +28530,7 @@
               "target": "tokio"
             },
             {
-              "id": "url 2.5.3",
+              "id": "url 2.5.4",
               "target": "url"
             }
           ],
@@ -29232,7 +29134,7 @@
               "target": "build_script_build"
             },
             {
-              "id": "proc-macro2 1.0.89",
+              "id": "proc-macro2 1.0.92",
               "target": "proc_macro2"
             },
             {
@@ -29240,7 +29142,7 @@
               "target": "quote"
             },
             {
-              "id": "syn 2.0.87",
+              "id": "syn 2.0.89",
               "target": "syn"
             }
           ],
@@ -29383,7 +29285,7 @@
               "target": "tokio"
             },
             {
-              "id": "url 2.5.3",
+              "id": "url 2.5.4",
               "target": "url"
             }
           ],
@@ -29480,7 +29382,7 @@
               "target": "tokio"
             },
             {
-              "id": "url 2.5.3",
+              "id": "url 2.5.4",
               "target": "url"
             }
           ],
@@ -29786,7 +29688,7 @@
               "target": "tokio"
             },
             {
-              "id": "url 2.5.3",
+              "id": "url 2.5.4",
               "target": "url"
             }
           ],
@@ -30571,7 +30473,7 @@
               "target": "serde"
             },
             {
-              "id": "url 2.5.3",
+              "id": "url 2.5.4",
               "target": "url"
             }
           ],
@@ -30743,7 +30645,7 @@
               "target": "tracing"
             },
             {
-              "id": "url 2.5.3",
+              "id": "url 2.5.4",
               "target": "url"
             }
           ],
@@ -30843,7 +30745,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "77164cdf766ff18ae15e2b355c97b8560410ffe9"
+            "Rev": "8869fff652952265e0871ad137b40ad29880c9e6"
           },
           "strip_prefix": "rs/rust_canisters/on_wire"
         }
@@ -32009,7 +31911,7 @@
               "target": "pest_meta"
             },
             {
-              "id": "proc-macro2 1.0.89",
+              "id": "proc-macro2 1.0.92",
               "target": "proc_macro2"
             },
             {
@@ -32017,7 +31919,7 @@
               "target": "quote"
             },
             {
-              "id": "syn 2.0.87",
+              "id": "syn 2.0.89",
               "target": "syn"
             }
           ],
@@ -32127,7 +32029,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "77164cdf766ff18ae15e2b355c97b8560410ffe9"
+            "Rev": "8869fff652952265e0871ad137b40ad29880c9e6"
           },
           "strip_prefix": "rs/phantom_newtype"
         }
@@ -32241,7 +32143,7 @@
         "deps": {
           "common": [
             {
-              "id": "proc-macro2 1.0.89",
+              "id": "proc-macro2 1.0.92",
               "target": "proc_macro2"
             },
             {
@@ -32249,7 +32151,7 @@
               "target": "quote"
             },
             {
-              "id": "syn 2.0.87",
+              "id": "syn 2.0.89",
               "target": "syn"
             }
           ],
@@ -32844,11 +32746,11 @@
               "target": "build_script_build"
             },
             {
-              "id": "proc-macro2 1.0.89",
+              "id": "proc-macro2 1.0.92",
               "target": "proc_macro2"
             },
             {
-              "id": "syn 2.0.87",
+              "id": "syn 2.0.89",
               "target": "syn"
             }
           ],
@@ -33058,7 +32960,7 @@
               "target": "build_script_build"
             },
             {
-              "id": "proc-macro2 1.0.89",
+              "id": "proc-macro2 1.0.92",
               "target": "proc_macro2"
             },
             {
@@ -33141,7 +33043,7 @@
               "target": "build_script_build"
             },
             {
-              "id": "proc-macro2 1.0.89",
+              "id": "proc-macro2 1.0.92",
               "target": "proc_macro2"
             },
             {
@@ -33223,13 +33125,13 @@
       },
       "license": "MIT OR Apache-2.0"
     },
-    "proc-macro2 1.0.89": {
+    "proc-macro2 1.0.92": {
       "name": "proc-macro2",
-      "version": "1.0.89",
+      "version": "1.0.92",
       "repository": {
         "Http": {
-          "url": "https://static.crates.io/crates/proc-macro2/1.0.89/download",
-          "sha256": "f139b0662de085916d1fb67d2b4169d1addddda1919e696f3252b740b629986e"
+          "url": "https://static.crates.io/crates/proc-macro2/1.0.92/download",
+          "sha256": "37d3544b3f2748c54e147655edb5025752e2303145b5aefb3c3ea2c78b973bb0"
         }
       },
       "targets": [
@@ -33267,18 +33169,18 @@
         "deps": {
           "common": [
             {
-              "id": "proc-macro2 1.0.89",
+              "id": "proc-macro2 1.0.92",
               "target": "build_script_build"
             },
             {
-              "id": "unicode-ident 1.0.13",
+              "id": "unicode-ident 1.0.14",
               "target": "unicode_ident"
             }
           ],
           "selects": {}
         },
         "edition": "2021",
-        "version": "1.0.89"
+        "version": "1.0.92"
       },
       "build_script_attrs": {
         "data_glob": [
@@ -33653,7 +33555,7 @@
               "target": "tokio"
             },
             {
-              "id": "url 2.5.3",
+              "id": "url 2.5.4",
               "target": "url"
             }
           ],
@@ -33714,7 +33616,7 @@
               "target": "time"
             },
             {
-              "id": "url 2.5.3",
+              "id": "url 2.5.4",
               "target": "url"
             }
           ],
@@ -34018,7 +33920,7 @@
               "target": "regex"
             },
             {
-              "id": "syn 2.0.87",
+              "id": "syn 2.0.89",
               "target": "syn"
             },
             {
@@ -34069,7 +33971,7 @@
               "target": "itertools"
             },
             {
-              "id": "proc-macro2 1.0.89",
+              "id": "proc-macro2 1.0.92",
               "target": "proc_macro2"
             },
             {
@@ -34077,7 +33979,7 @@
               "target": "quote"
             },
             {
-              "id": "syn 2.0.87",
+              "id": "syn 2.0.89",
               "target": "syn"
             }
           ],
@@ -34316,7 +34218,7 @@
         "deps": {
           "common": [
             {
-              "id": "proc-macro2 1.0.89",
+              "id": "proc-macro2 1.0.92",
               "target": "proc_macro2"
             },
             {
@@ -34460,7 +34362,7 @@
               "target": "rustc_hash"
             },
             {
-              "id": "rustls 0.23.16",
+              "id": "rustls 0.23.18",
               "target": "rustls"
             },
             {
@@ -34531,7 +34433,7 @@
               "target": "rustc_hash"
             },
             {
-              "id": "rustls 0.23.16",
+              "id": "rustls 0.23.18",
               "target": "rustls"
             },
             {
@@ -34678,7 +34580,7 @@
         "deps": {
           "common": [
             {
-              "id": "proc-macro2 1.0.89",
+              "id": "proc-macro2 1.0.92",
               "target": "proc_macro2"
             }
           ],
@@ -35439,7 +35341,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "77164cdf766ff18ae15e2b355c97b8560410ffe9"
+            "Rev": "8869fff652952265e0871ad137b40ad29880c9e6"
           },
           "strip_prefix": "rs/registry/canister"
         }
@@ -35620,7 +35522,7 @@
               "target": "serde"
             },
             {
-              "id": "url 2.5.3",
+              "id": "url 2.5.4",
               "target": "url"
             }
           ],
@@ -35793,7 +35695,7 @@
               "target": "tower_service"
             },
             {
-              "id": "url 2.5.3",
+              "id": "url 2.5.4",
               "target": "url"
             }
           ],
@@ -35848,7 +35750,7 @@
                 "target": "pin_project_lite"
               },
               {
-                "id": "rustls 0.23.16",
+                "id": "rustls 0.23.18",
                 "target": "rustls"
               },
               {
@@ -36213,7 +36115,7 @@
         "deps": {
           "common": [
             {
-              "id": "proc-macro2 1.0.89",
+              "id": "proc-macro2 1.0.92",
               "target": "proc_macro2"
             },
             {
@@ -36269,7 +36171,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "77164cdf766ff18ae15e2b355c97b8560410ffe9"
+            "Rev": "8869fff652952265e0871ad137b40ad29880c9e6"
           },
           "strip_prefix": "rs/rosetta-api/common/rosetta_core"
         }
@@ -36313,11 +36215,6 @@
               "target": "ic_crypto_ed25519"
             },
             {
-              "id": "ic-crypto-internal-basic-sig-ecdsa-secp256k1 0.9.0",
-              "target": "ic_crypto_internal_basic_sig_ecdsa_secp256k1",
-              "alias": "ecdsa_secp256k1"
-            },
-            {
               "id": "ic-crypto-secp256k1 0.9.0",
               "target": "ic_crypto_secp256k1"
             },
@@ -36344,10 +36241,6 @@
             {
               "id": "serde_bytes 0.11.15",
               "target": "serde_bytes"
-            },
-            {
-              "id": "serde_cbor 0.11.2",
-              "target": "serde_cbor"
             },
             {
               "id": "serde_json 1.0.133",
@@ -36826,13 +36719,13 @@
       },
       "license": "Apache-2.0 WITH LLVM-exception OR Apache-2.0 OR MIT"
     },
-    "rustls 0.23.16": {
+    "rustls 0.23.18": {
       "name": "rustls",
-      "version": "0.23.16",
+      "version": "0.23.18",
       "repository": {
         "Http": {
-          "url": "https://static.crates.io/crates/rustls/0.23.16/download",
-          "sha256": "eee87ff5d9b36712a58574e12e9f0ea80f915a5b0ac518d322b24a465617925e"
+          "url": "https://static.crates.io/crates/rustls/0.23.18/download",
+          "sha256": "9c9cc1d47e243d655ace55ed38201c19ae02c148ae56412ab8750e8f0166ab7f"
         }
       },
       "targets": [
@@ -36894,7 +36787,7 @@
               "target": "ring"
             },
             {
-              "id": "rustls 0.23.16",
+              "id": "rustls 0.23.18",
               "target": "build_script_build"
             },
             {
@@ -36918,7 +36811,7 @@
           "selects": {}
         },
         "edition": "2021",
-        "version": "0.23.16"
+        "version": "0.23.18"
       },
       "build_script_attrs": {
         "data_glob": [
@@ -38268,7 +38161,7 @@
         "deps": {
           "common": [
             {
-              "id": "proc-macro2 1.0.89",
+              "id": "proc-macro2 1.0.92",
               "target": "proc_macro2"
             },
             {
@@ -38276,7 +38169,7 @@
               "target": "quote"
             },
             {
-              "id": "syn 2.0.87",
+              "id": "syn 2.0.89",
               "target": "syn"
             }
           ],
@@ -38442,7 +38335,7 @@
         "deps": {
           "common": [
             {
-              "id": "proc-macro2 1.0.89",
+              "id": "proc-macro2 1.0.92",
               "target": "proc_macro2"
             },
             {
@@ -38450,7 +38343,7 @@
               "target": "quote"
             },
             {
-              "id": "syn 2.0.87",
+              "id": "syn 2.0.89",
               "target": "syn"
             }
           ],
@@ -38489,7 +38382,7 @@
         "deps": {
           "common": [
             {
-              "id": "proc-macro2 1.0.89",
+              "id": "proc-macro2 1.0.92",
               "target": "proc_macro2"
             },
             {
@@ -38536,7 +38429,7 @@
         "deps": {
           "common": [
             {
-              "id": "proc-macro2 1.0.89",
+              "id": "proc-macro2 1.0.92",
               "target": "proc_macro2"
             },
             {
@@ -38548,7 +38441,7 @@
               "target": "serde"
             },
             {
-              "id": "syn 2.0.87",
+              "id": "syn 2.0.89",
               "target": "syn"
             }
           ],
@@ -38698,7 +38591,7 @@
               "target": "darling"
             },
             {
-              "id": "proc-macro2 1.0.89",
+              "id": "proc-macro2 1.0.92",
               "target": "proc_macro2"
             },
             {
@@ -38895,7 +38788,7 @@
               "target": "tokio"
             },
             {
-              "id": "url 2.5.3",
+              "id": "url 2.5.4",
               "target": "url"
             }
           ],
@@ -40009,7 +39902,7 @@
               "target": "heck"
             },
             {
-              "id": "proc-macro2 1.0.89",
+              "id": "proc-macro2 1.0.92",
               "target": "proc_macro2"
             },
             {
@@ -40017,7 +39910,7 @@
               "target": "quote"
             },
             {
-              "id": "syn 2.0.87",
+              "id": "syn 2.0.89",
               "target": "syn"
             }
           ],
@@ -40089,7 +39982,7 @@
               "target": "tokio"
             },
             {
-              "id": "url 2.5.3",
+              "id": "url 2.5.4",
               "target": "url"
             }
           ],
@@ -40619,7 +40512,7 @@
               "target": "heck"
             },
             {
-              "id": "proc-macro2 1.0.89",
+              "id": "proc-macro2 1.0.92",
               "target": "proc_macro2"
             },
             {
@@ -40679,7 +40572,7 @@
               "target": "heck"
             },
             {
-              "id": "proc-macro2 1.0.89",
+              "id": "proc-macro2 1.0.92",
               "target": "proc_macro2"
             },
             {
@@ -40687,7 +40580,7 @@
               "target": "quote"
             },
             {
-              "id": "syn 2.0.87",
+              "id": "syn 2.0.89",
               "target": "syn"
             }
           ],
@@ -40828,7 +40721,7 @@
         "deps": {
           "common": [
             {
-              "id": "proc-macro2 1.0.89",
+              "id": "proc-macro2 1.0.92",
               "target": "proc_macro2"
             },
             {
@@ -40840,7 +40733,7 @@
               "target": "build_script_build"
             },
             {
-              "id": "unicode-ident 1.0.13",
+              "id": "unicode-ident 1.0.14",
               "target": "unicode_ident"
             }
           ],
@@ -40856,13 +40749,13 @@
       },
       "license": "MIT OR Apache-2.0"
     },
-    "syn 2.0.87": {
+    "syn 2.0.89": {
       "name": "syn",
-      "version": "2.0.87",
+      "version": "2.0.89",
       "repository": {
         "Http": {
-          "url": "https://static.crates.io/crates/syn/2.0.87/download",
-          "sha256": "25aa4ce346d03a6dcd68dd8b4010bcb74e54e62c90c573f394c46eae99aba32d"
+          "url": "https://static.crates.io/crates/syn/2.0.89/download",
+          "sha256": "44d46482f1c1c87acd84dea20c1bf5ebff4c757009ed6bf19cfd36fb10e92c4e"
         }
       },
       "targets": [
@@ -40900,7 +40793,7 @@
         "deps": {
           "common": [
             {
-              "id": "proc-macro2 1.0.89",
+              "id": "proc-macro2 1.0.92",
               "target": "proc_macro2"
             },
             {
@@ -40908,14 +40801,14 @@
               "target": "quote"
             },
             {
-              "id": "unicode-ident 1.0.13",
+              "id": "unicode-ident 1.0.14",
               "target": "unicode_ident"
             }
           ],
           "selects": {}
         },
         "edition": "2021",
-        "version": "2.0.87"
+        "version": "2.0.89"
       },
       "license": "MIT OR Apache-2.0"
     },
@@ -40951,7 +40844,7 @@
               "target": "proc_macro_error"
             },
             {
-              "id": "proc-macro2 1.0.89",
+              "id": "proc-macro2 1.0.92",
               "target": "proc_macro2"
             },
             {
@@ -40959,7 +40852,7 @@
               "target": "quote"
             },
             {
-              "id": "syn 2.0.87",
+              "id": "syn 2.0.89",
               "target": "syn"
             }
           ],
@@ -41081,7 +40974,7 @@
         "deps": {
           "common": [
             {
-              "id": "proc-macro2 1.0.89",
+              "id": "proc-macro2 1.0.92",
               "target": "proc_macro2"
             },
             {
@@ -41089,7 +40982,7 @@
               "target": "quote"
             },
             {
-              "id": "syn 2.0.87",
+              "id": "syn 2.0.89",
               "target": "syn"
             }
           ],
@@ -41194,7 +41087,7 @@
               "target": "proc_macro_error"
             },
             {
-              "id": "proc-macro2 1.0.89",
+              "id": "proc-macro2 1.0.92",
               "target": "proc_macro2"
             },
             {
@@ -41776,7 +41669,7 @@
         "deps": {
           "common": [
             {
-              "id": "proc-macro2 1.0.89",
+              "id": "proc-macro2 1.0.92",
               "target": "proc_macro2"
             },
             {
@@ -41784,7 +41677,7 @@
               "target": "quote"
             },
             {
-              "id": "syn 2.0.87",
+              "id": "syn 2.0.89",
               "target": "syn"
             }
           ],
@@ -41823,7 +41716,7 @@
         "deps": {
           "common": [
             {
-              "id": "proc-macro2 1.0.89",
+              "id": "proc-macro2 1.0.92",
               "target": "proc_macro2"
             },
             {
@@ -41831,7 +41724,7 @@
               "target": "quote"
             },
             {
-              "id": "syn 2.0.87",
+              "id": "syn 2.0.89",
               "target": "syn"
             }
           ],
@@ -42459,7 +42352,7 @@
         "deps": {
           "common": [
             {
-              "id": "proc-macro2 1.0.89",
+              "id": "proc-macro2 1.0.92",
               "target": "proc_macro2"
             },
             {
@@ -42467,7 +42360,7 @@
               "target": "quote"
             },
             {
-              "id": "syn 2.0.87",
+              "id": "syn 2.0.89",
               "target": "syn"
             }
           ],
@@ -42573,7 +42466,7 @@
         "deps": {
           "common": [
             {
-              "id": "rustls 0.23.16",
+              "id": "rustls 0.23.18",
               "target": "rustls"
             },
             {
@@ -42969,7 +42862,7 @@
               "target": "prettyplease"
             },
             {
-              "id": "proc-macro2 1.0.89",
+              "id": "proc-macro2 1.0.92",
               "target": "proc_macro2"
             },
             {
@@ -42985,7 +42878,7 @@
               "target": "quote"
             },
             {
-              "id": "syn 2.0.87",
+              "id": "syn 2.0.89",
               "target": "syn"
             }
           ],
@@ -43468,7 +43361,7 @@
         "deps": {
           "common": [
             {
-              "id": "proc-macro2 1.0.89",
+              "id": "proc-macro2 1.0.92",
               "target": "proc_macro2"
             },
             {
@@ -43476,7 +43369,7 @@
               "target": "quote"
             },
             {
-              "id": "syn 2.0.87",
+              "id": "syn 2.0.89",
               "target": "syn"
             }
           ],
@@ -43540,7 +43433,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "77164cdf766ff18ae15e2b355c97b8560410ffe9"
+            "Rev": "8869fff652952265e0871ad137b40ad29880c9e6"
           },
           "strip_prefix": "rs/tree_deserializer"
         }
@@ -44017,13 +43910,13 @@
       },
       "license": "MIT OR Apache-2.0"
     },
-    "unicode-ident 1.0.13": {
+    "unicode-ident 1.0.14": {
       "name": "unicode-ident",
-      "version": "1.0.13",
+      "version": "1.0.14",
       "repository": {
         "Http": {
-          "url": "https://static.crates.io/crates/unicode-ident/1.0.13/download",
-          "sha256": "e91b56cd4cadaeb79bbf1a5645f6b4f8dc5bde8834ad5894a8db35fda9efa1fe"
+          "url": "https://static.crates.io/crates/unicode-ident/1.0.14/download",
+          "sha256": "adb9e6ca4f869e1180728b7950e35922a7fc6397f7b641499e8f3ef06e50dc83"
         }
       },
       "targets": [
@@ -44043,9 +43936,9 @@
           "**"
         ],
         "edition": "2018",
-        "version": "1.0.13"
+        "version": "1.0.14"
       },
-      "license": "(MIT OR Apache-2.0) AND Unicode-DFS-2016"
+      "license": "(MIT OR Apache-2.0) AND Unicode-3.0"
     },
     "unicode-segmentation 1.12.0": {
       "name": "unicode-segmentation",
@@ -44210,13 +44103,13 @@
       },
       "license": "ISC"
     },
-    "url 2.5.3": {
+    "url 2.5.4": {
       "name": "url",
-      "version": "2.5.3",
+      "version": "2.5.4",
       "repository": {
         "Http": {
-          "url": "https://static.crates.io/crates/url/2.5.3/download",
-          "sha256": "8d157f1b96d14500ffdc1f10ba712e780825526c03d9a49b4d0324b0d9113ada"
+          "url": "https://static.crates.io/crates/url/2.5.4/download",
+          "sha256": "32f8b686cadd1473f4bd0117a5d28d36b1ade384ea9b5069a1c40aefed7fda60"
         }
       },
       "targets": [
@@ -44265,7 +44158,7 @@
           "selects": {}
         },
         "edition": "2018",
-        "version": "2.5.3"
+        "version": "2.5.4"
       },
       "license": "MIT OR Apache-2.0"
     },
@@ -44653,7 +44546,7 @@
               "target": "heck"
             },
             {
-              "id": "proc-macro2 1.0.89",
+              "id": "proc-macro2 1.0.92",
               "target": "proc_macro2"
             },
             {
@@ -44872,7 +44765,7 @@
               "target": "once_cell"
             },
             {
-              "id": "proc-macro2 1.0.89",
+              "id": "proc-macro2 1.0.92",
               "target": "proc_macro2"
             },
             {
@@ -44880,7 +44773,7 @@
               "target": "quote"
             },
             {
-              "id": "syn 2.0.87",
+              "id": "syn 2.0.89",
               "target": "syn"
             },
             {
@@ -45032,7 +44925,7 @@
         "deps": {
           "common": [
             {
-              "id": "proc-macro2 1.0.89",
+              "id": "proc-macro2 1.0.92",
               "target": "proc_macro2"
             },
             {
@@ -45040,7 +44933,7 @@
               "target": "quote"
             },
             {
-              "id": "syn 2.0.87",
+              "id": "syn 2.0.89",
               "target": "syn"
             },
             {
@@ -47135,7 +47028,7 @@
               "target": "tokio"
             },
             {
-              "id": "url 2.5.3",
+              "id": "url 2.5.4",
               "target": "url"
             }
           ],
@@ -47533,13 +47426,13 @@
       },
       "license": "MIT OR Apache-2.0"
     },
-    "yoke 0.7.4": {
+    "yoke 0.7.5": {
       "name": "yoke",
-      "version": "0.7.4",
+      "version": "0.7.5",
       "repository": {
         "Http": {
-          "url": "https://static.crates.io/crates/yoke/0.7.4/download",
-          "sha256": "6c5b1314b079b0930c31e3af543d8ee1757b1951ae1e1565ec704403a7240ca5"
+          "url": "https://static.crates.io/crates/yoke/0.7.5/download",
+          "sha256": "120e6aef9aa629e3d4f52dc8cc43a015c7724194c97dfaf45180d2daf2b77f40"
         }
       },
       "targets": [
@@ -47574,7 +47467,7 @@
               "target": "stable_deref_trait"
             },
             {
-              "id": "zerofrom 0.1.4",
+              "id": "zerofrom 0.1.5",
               "target": "zerofrom"
             }
           ],
@@ -47584,23 +47477,23 @@
         "proc_macro_deps": {
           "common": [
             {
-              "id": "yoke-derive 0.7.4",
+              "id": "yoke-derive 0.7.5",
               "target": "yoke_derive"
             }
           ],
           "selects": {}
         },
-        "version": "0.7.4"
+        "version": "0.7.5"
       },
       "license": "Unicode-3.0"
     },
-    "yoke-derive 0.7.4": {
+    "yoke-derive 0.7.5": {
       "name": "yoke-derive",
-      "version": "0.7.4",
+      "version": "0.7.5",
       "repository": {
         "Http": {
-          "url": "https://static.crates.io/crates/yoke-derive/0.7.4/download",
-          "sha256": "28cc31741b18cb6f1d5ff12f5b7523e3d6eb0852bbbad19d73905511d9849b95"
+          "url": "https://static.crates.io/crates/yoke-derive/0.7.5/download",
+          "sha256": "2380878cad4ac9aac1e2435f3eb4020e8374b5f13c296cb75b4620ff8e229154"
         }
       },
       "targets": [
@@ -47622,7 +47515,7 @@
         "deps": {
           "common": [
             {
-              "id": "proc-macro2 1.0.89",
+              "id": "proc-macro2 1.0.92",
               "target": "proc_macro2"
             },
             {
@@ -47630,7 +47523,7 @@
               "target": "quote"
             },
             {
-              "id": "syn 2.0.87",
+              "id": "syn 2.0.89",
               "target": "syn"
             },
             {
@@ -47641,7 +47534,7 @@
           "selects": {}
         },
         "edition": "2021",
-        "version": "0.7.4"
+        "version": "0.7.5"
       },
       "license": "Unicode-3.0"
     },
@@ -47731,7 +47624,7 @@
         "deps": {
           "common": [
             {
-              "id": "proc-macro2 1.0.89",
+              "id": "proc-macro2 1.0.92",
               "target": "proc_macro2"
             },
             {
@@ -47739,7 +47632,7 @@
               "target": "quote"
             },
             {
-              "id": "syn 2.0.87",
+              "id": "syn 2.0.89",
               "target": "syn"
             }
           ],
@@ -47750,13 +47643,13 @@
       },
       "license": "BSD-2-Clause OR Apache-2.0 OR MIT"
     },
-    "zerofrom 0.1.4": {
+    "zerofrom 0.1.5": {
       "name": "zerofrom",
-      "version": "0.1.4",
+      "version": "0.1.5",
       "repository": {
         "Http": {
-          "url": "https://static.crates.io/crates/zerofrom/0.1.4/download",
-          "sha256": "91ec111ce797d0e0784a1116d0ddcdbea84322cd79e5d5ad173daeba4f93ab55"
+          "url": "https://static.crates.io/crates/zerofrom/0.1.5/download",
+          "sha256": "cff3ee08c995dee1859d998dea82f7374f2826091dd9cd47def953cae446cd2e"
         }
       },
       "targets": [
@@ -47786,23 +47679,23 @@
         "proc_macro_deps": {
           "common": [
             {
-              "id": "zerofrom-derive 0.1.4",
+              "id": "zerofrom-derive 0.1.5",
               "target": "zerofrom_derive"
             }
           ],
           "selects": {}
         },
-        "version": "0.1.4"
+        "version": "0.1.5"
       },
       "license": "Unicode-3.0"
     },
-    "zerofrom-derive 0.1.4": {
+    "zerofrom-derive 0.1.5": {
       "name": "zerofrom-derive",
-      "version": "0.1.4",
+      "version": "0.1.5",
       "repository": {
         "Http": {
-          "url": "https://static.crates.io/crates/zerofrom-derive/0.1.4/download",
-          "sha256": "0ea7b4a3637ea8669cedf0f1fd5c286a17f3de97b8dd5a70a6c167a1730e63a5"
+          "url": "https://static.crates.io/crates/zerofrom-derive/0.1.5/download",
+          "sha256": "595eed982f7d355beb85837f651fa22e90b3c044842dc7f2c2842c086f295808"
         }
       },
       "targets": [
@@ -47824,7 +47717,7 @@
         "deps": {
           "common": [
             {
-              "id": "proc-macro2 1.0.89",
+              "id": "proc-macro2 1.0.92",
               "target": "proc_macro2"
             },
             {
@@ -47832,7 +47725,7 @@
               "target": "quote"
             },
             {
-              "id": "syn 2.0.87",
+              "id": "syn 2.0.89",
               "target": "syn"
             },
             {
@@ -47843,7 +47736,7 @@
           "selects": {}
         },
         "edition": "2021",
-        "version": "0.1.4"
+        "version": "0.1.5"
       },
       "license": "Unicode-3.0"
     },
@@ -47922,7 +47815,7 @@
         "deps": {
           "common": [
             {
-              "id": "proc-macro2 1.0.89",
+              "id": "proc-macro2 1.0.92",
               "target": "proc_macro2"
             },
             {
@@ -47930,7 +47823,7 @@
               "target": "quote"
             },
             {
-              "id": "syn 2.0.87",
+              "id": "syn 2.0.89",
               "target": "syn"
             }
           ],
@@ -47976,11 +47869,11 @@
         "deps": {
           "common": [
             {
-              "id": "yoke 0.7.4",
+              "id": "yoke 0.7.5",
               "target": "yoke"
             },
             {
-              "id": "zerofrom 0.1.4",
+              "id": "zerofrom 0.1.5",
               "target": "zerofrom"
             }
           ],
@@ -48028,7 +47921,7 @@
         "deps": {
           "common": [
             {
-              "id": "proc-macro2 1.0.89",
+              "id": "proc-macro2 1.0.92",
               "target": "proc_macro2"
             },
             {
@@ -48036,7 +47929,7 @@
               "target": "quote"
             },
             {
-              "id": "syn 2.0.87",
+              "id": "syn 2.0.89",
               "target": "syn"
             }
           ],
