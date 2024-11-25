@@ -3136,7 +3136,7 @@ checksum = "dd8ecacd682fa05a985253592963306cb9799622d7b1cce4b1edb89c6ec85be1"
 dependencies = [
  "candid",
  "ic-cdk-macros 0.16.0",
- "ic0 0.23.0",
+ "ic0 0.23.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde",
  "serde_bytes",
 ]
@@ -3148,7 +3148,7 @@ source = "git+https://github.com/dfinity/cdk-rs.git?rev=8f57d6d26b1d142b5be4b39e
 dependencies = [
  "candid",
  "ic-cdk-macros 0.17.0",
- "ic0 0.23.0",
+ "ic0 0.23.0 (git+https://github.com/dfinity/cdk-rs.git?rev=8f57d6d26b1d142b5be4b39ea8ade59d7c848cde)",
  "serde",
  "serde_bytes",
 ]
@@ -3229,7 +3229,7 @@ source = "git+https://github.com/dfinity/cdk-rs.git?rev=8f57d6d26b1d142b5be4b39e
 dependencies = [
  "futures",
  "ic-cdk 0.17.0",
- "ic0 0.23.0",
+ "ic0 0.23.0 (git+https://github.com/dfinity/cdk-rs.git?rev=8f57d6d26b1d142b5be4b39ea8ade59d7c848cde)",
  "serde",
  "serde_bytes",
  "slotmap",
@@ -7380,9 +7380,9 @@ dependencies = [
 
 [[package]]
 name = "rustls"
-version = "0.23.16"
+version = "0.23.18"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "eee87ff5d9b36712a58574e12e9f0ea80f915a5b0ac518d322b24a465617925e"
+checksum = "9c9cc1d47e243d655ace55ed38201c19ae02c148ae56412ab8750e8f0166ab7f"
 dependencies = [
  "brotli",
  "brotli-decompressor",
@@ -8805,9 +8805,9 @@ checksum = "8ecb6da28b8a351d773b68d5825ac39017e680750f980f3a1a85cd8dd28a47c1"
 
 [[package]]
 name = "url"
-version = "2.5.3"
+version = "2.5.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8d157f1b96d14500ffdc1f10ba712e780825526c03d9a49b4d0324b0d9113ada"
+checksum = "32f8b686cadd1473f4bd0117a5d28d36b1ade384ea9b5069a1c40aefed7fda60"
 dependencies = [
  "form_urlencoded",
  "idna",
