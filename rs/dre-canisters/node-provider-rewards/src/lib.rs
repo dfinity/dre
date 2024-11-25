@@ -1,9 +1,8 @@
-use crate::canister_data_provider::{CanisterDataProvider, StableMemoryStore};
+use crate::canister_data_provider::StableMemoryStore;
+use crate::data_provider::CanisterDataProvider;
 use chrono_utils::DateTimeRange;
 use ic_cdk_macros::*;
-use ic_registry_client::client::RegistryClientImpl;
-use registry_querier::RegistryQuerier;
-use rewards_manager::RewardsManager;
+use ic_registry_canister_client::CanisterRegistryClient;
 use std::cell::RefCell;
 use std::sync::Arc;
 use types::NodeProviderXDRRewardsArgs;
@@ -11,10 +10,8 @@ use types::NodeProviderXDRRewardsArgs;
 mod canister_data_provider;
 mod chrono_utils;
 mod computation_logger;
-mod local_registry;
+mod data_provider;
 mod metrics;
-mod registry_querier;
-mod rewards_manager;
 mod stable_memory;
 mod types;
 
@@ -26,8 +23,8 @@ thread_local! {
         RefCell::new(Arc::new(
             CanisterDataProvider::new(Default::default())
     ));
-    static REGISTRY_CLIENT: RefCell<RegistryClientImpl> =
-        RefCell::new(RegistryClientImpl::new(DATA_PROVIDER.with_borrow(|store| store.clone()), None));
+    static REGISTRY_CLIENT: RefCell<CanisterRegistryClient> =
+        RefCell::new(CanisterRegistryClient::new(DATA_PROVIDER.with_borrow(|store| store.clone())));
 }
 
 async fn sync_node_metrics_task() {
@@ -42,8 +39,10 @@ async fn sync_node_metrics_task() {
 }
 
 async fn update_local_registry() {
-    // sync_node_metrics_task().await;
-    let local_registry = LOCAL_REGISTRY.with_borrow(|local_registry| local_registry.clone());
+    // update store
+
+    stable_memory::REGISTRY.with_borrow_mut(|registry_stored| registry_stored.clear_new());
+    let local_registry = DATA_PROVIDER.with_borrow(|provider| provider.clone());
     match local_registry.sync_registry_stored().await {
         Ok(_) => {
             ic_cdk::println!("Successfully sync_registry_stored");
@@ -53,11 +52,9 @@ async fn update_local_registry() {
         }
     }
 
-    get_node_providers_xdr_rewards(NodeProviderXDRRewardsArgs {
-        from_ts: 1730187565000000000,
-        to_ts: 1730894985000000000,
-    })
-    .await;
+    // update cache
+
+    REGISTRY_CLIENT.with_borrow(|registry_client| registry_client.update_to_latest_version());
 }
 
 fn setup_timers() {
@@ -78,11 +75,4 @@ fn post_upgrade() {
 async fn get_node_providers_xdr_rewards(args: NodeProviderXDRRewardsArgs) {
     let rewarding_period: DateTimeRange = DateTimeRange::new(args.from_ts, args.to_ts);
     ic_cdk::println!("Computing and storing rewards for {}", rewarding_period);
-
-    let registry_querier = RegistryQuerier {
-        local_registry: LOCAL_REGISTRY.with_borrow(|local_registry| local_registry.clone()),
-    };
-    let rewards_manager = RewardsManager::new(registry_querier, rewarding_period);
-
-    rewards_manager.compute_node_providers_rewards().await;
 }

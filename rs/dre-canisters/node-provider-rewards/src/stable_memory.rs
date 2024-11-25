@@ -1,11 +1,11 @@
-use crate::canister_data_provider::StableRegistryRecord;
+use crate::data_provider::{StorableRegistryKey, StorableRegistryValue};
 use crate::types::{
     NodeMetricsStored, NodeMetricsStoredKey, NodeProviderRewards, NodeProviderRewardsKey, NodeRewardsMultiplierKey, RegistryKey,
     RewardsMultiplierStats, TimestampNanos,
 };
 use candid::Principal;
 use ic_stable_structures::memory_manager::{MemoryId, MemoryManager, VirtualMemory};
-use ic_stable_structures::{DefaultMemoryImpl, StableBTreeMap, StableVec};
+use ic_stable_structures::{DefaultMemoryImpl, StableBTreeMap};
 use itertools::Itertools;
 use lazy_static::lazy_static;
 use std::cell::RefCell;
@@ -43,10 +43,10 @@ thread_local! {
         MEMORY_MANAGER.with(|m| m.borrow().get(MemoryId::new(4)))
     ));
 
-    pub static REGISTRY: RefCell<StableVec<StableRegistryRecord, Memory>> =
-        RefCell::new(StableVec::init(
-        MEMORY_MANAGER.with(|m| m.borrow().get(MemoryId::new(4)))
-    ).unwrap());
+    pub static REGISTRY: RefCell<StableBTreeMap<StorableRegistryKey, StorableRegistryValue, Memory>> =
+        RefCell::new(StableBTreeMap::init(
+        MEMORY_MANAGER.with(|m| m.borrow().get(MemoryId::new(8)))
+    ));
 
     pub static TS_REGISTRY_VERSIONS: RefCell<StableBTreeMap<TimestampNanos, u64, Memory>> =
         RefCell::new(StableBTreeMap::init(
