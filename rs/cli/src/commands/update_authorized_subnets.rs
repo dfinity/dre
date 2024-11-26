@@ -1,3 +1,4 @@
+use ic_canisters::cycles_minting::CyclesMintingCanisterWrapper;
 use indexmap::IndexMap;
 use std::{path::PathBuf, sync::Arc};
 
@@ -89,7 +90,10 @@ impl ExecutableCommand for UpdateAuthorizedSubnets {
             }
         }
 
-        let summary = construct_summary(&subnets, &excluded_subnets, ctx.forum_post_link())?;
+        let (_, agent) = ctx.create_ic_agent_canister_client().await?;
+        let cmc = CyclesMintingCanisterWrapper::from(agent);
+        let public_subnets = cmc.get_authorized_subnets().await?;
+        let summary = construct_summary(&subnets, &excluded_subnets, public_subnets, ctx.forum_post_link())?;
 
         let authorized = subnets
             .keys()
@@ -141,6 +145,7 @@ impl UpdateAuthorizedSubnets {
 fn construct_summary(
     subnets: &Arc<IndexMap<PrincipalId, Subnet>>,
     excluded_subnets: &IndexMap<PrincipalId, String>,
+    current_public_subnets: Vec<PrincipalId>,
     forum_post_link: Option<String>,
 ) -> anyhow::Result<String> {
     Ok(format!(
@@ -155,10 +160,16 @@ fn construct_summary(
             .values()
             .map(|s| {
                 let excluded_desc = excluded_subnets.get(&s.principal);
+                let was_public = current_public_subnets.iter().find(|principal| *principal == &s.principal).is_some();
                 format!(
                     "| {} | {} | {} |",
                     s.principal,
-                    excluded_desc.is_none(),
+                    match (was_public, excluded_desc.is_none()) {
+                        // The state doesn't change
+                        (was_public, is_excluded) if was_public == is_excluded => was_public.to_string(),
+                        // It changed from `was_public` to `is_excluded`
+                        (was_public, is_excluded) => format!("~~{}~~ {}", was_public, is_excluded),
+                    },
                     excluded_desc.map(|s| s.to_string()).unwrap_or_default()
                 )
             })
