@@ -1,5 +1,3 @@
-use std::path::PathBuf;
-
 use crate::commands::subnet::Subnet;
 use api_boundary_nodes::ApiBoundaryNodes;
 use clap::Args as ClapArgs;
@@ -212,7 +210,7 @@ The argument is mandatory for testnets, and is optional for mainnet and staging"
 
     /// Path to file which contains cordoned features
     #[clap(long, global = true, visible_aliases = &["cf-file", "cfff"])]
-    pub cordon_feature_fallback_file: Option<PathBuf>,
+    pub cordoned_features_file: Option<String>,
 }
 
 // Do not use outside of DRE CLI.
