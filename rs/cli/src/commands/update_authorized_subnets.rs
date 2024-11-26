@@ -160,7 +160,7 @@ fn construct_summary(
             .values()
             .map(|s| {
                 let excluded_desc = excluded_subnets.get(&s.principal);
-                let was_public = current_public_subnets.iter().find(|principal| *principal == &s.principal).is_some();
+                let was_public = current_public_subnets.iter().any(|principal| principal == &s.principal);
                 format!(
                     "| {} | {} | {} |",
                     s.principal,
@@ -168,7 +168,7 @@ fn construct_summary(
                         // The state doesn't change
                         (was_public, is_excluded) if was_public == is_excluded => was_public.to_string(),
                         // It changed from `was_public` to `is_excluded`
-                        (was_public, is_excluded) => format!("~~{}~~ {}", was_public, is_excluded),
+                        (was_public, is_excluded) => format!("~~{}~~ ⇒ {}", was_public, is_excluded),
                     },
                     excluded_desc.map(|s| s.to_string()).unwrap_or_default()
                 )
