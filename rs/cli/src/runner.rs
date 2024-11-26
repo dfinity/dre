@@ -905,7 +905,7 @@ impl Runner {
                 let node = all_nodes_map.get(&node.principal).expect("Node should exist");
                 if let Some(explanation) = cordoned_features.iter().find_map(|cf| {
                     if node.get_feature(&cf.feature).as_ref() == Some(&cf.value) {
-                        Some(cf.explanation.as_ref().map(|e| format!(": {}", e)).unwrap_or_else(|| "".to_string()))
+                        Some(cf.explanation.as_ref().map(|e| format!(": {}", e)).unwrap_or_default())
                     } else {
                         None
                     }
