@@ -33,6 +33,10 @@ pub struct Network {
     /// Skip provided subnets.
     #[clap(long, num_args(1..))]
     pub skip_subnets: Vec<String>,
+
+    /// Remove cordoned nodes from their subnets.
+    #[clap(long)]
+    pub remove_cordoned_nodes: bool,
 }
 
 impl ExecutableCommand for Network {
@@ -88,6 +92,23 @@ impl ExecutableCommand for Network {
             }
         } else {
             info!("No network ensure operator nodes unassigned requested");
+        }
+
+        if self.remove_cordoned_nodes {
+            info!("Removing cordoned nodes from their subnets");
+            let maybe_proposals = runner.network_remove_cordoned_nodes(ctx.forum_post_link(), &self.skip_subnets).await;
+            match maybe_proposals {
+                Ok(remove_cordoned_nodes_proposals) => proposals.extend(remove_cordoned_nodes_proposals),
+                Err(e) => errors.push(DetailedError {
+                    proposal: None,
+                    error: anyhow::anyhow!(
+                        "Failed to calculate proposals for removing cordoned nodes and they won't be submitted. Error received: {:?}",
+                        e
+                    ),
+                }),
+            }
+        } else {
+            info!("No network remove cordoned nodes requested");
         }
 
         // This check saves time if there are no proposals to be submitted
@@ -226,10 +247,10 @@ Error {}.:
     fn validate(&self, _args: &crate::commands::Args, cmd: &mut clap::Command) {
         // At least one of the two options must be provided
         let network_heal = self.heal || std::env::args().any(|arg| arg == "heal");
-        if !network_heal && !self.ensure_operator_nodes_assigned && !self.ensure_operator_nodes_unassigned {
+        if !network_heal && !self.ensure_operator_nodes_assigned && !self.ensure_operator_nodes_unassigned && !self.remove_cordoned_nodes {
             cmd.error(
                 clap::error::ErrorKind::MissingRequiredArgument,
-                "At least one of '--heal' or '--ensure-operator-nodes-assigned' or '--ensure-operator-nodes-unassigned' must be specified.",
+                "At least one of '--heal' or '--ensure-operator-nodes-assigned' or '--ensure-operator-nodes-unassigned' or '--remove-cordoned-nodes' must be specified.",
             )
             .exit()
         }
