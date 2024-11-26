@@ -1,6 +1,6 @@
 use std::{path::PathBuf, time::Duration};
 
-use decentralization::network::NodeFeaturePair;
+use decentralization::network::CordonedFeature;
 use futures::future::BoxFuture;
 use ic_management_types::NodeFeature;
 use itertools::Itertools;
@@ -11,10 +11,10 @@ use strum::VariantNames;
 
 #[automock]
 pub trait CordonedFeatureFetcher: Sync + Send {
-    fn fetch(&self) -> BoxFuture<'_, anyhow::Result<Vec<NodeFeaturePair>>>;
+    fn fetch(&self) -> BoxFuture<'_, anyhow::Result<Vec<CordonedFeature>>>;
 
     #[cfg(test)]
-    fn parse_outer(&self, contents: &[u8]) -> anyhow::Result<Vec<NodeFeaturePair>>;
+    fn parse_outer(&self, contents: &[u8]) -> anyhow::Result<Vec<CordonedFeature>>;
 }
 
 pub struct CordonedFeatureFetcherImpl {
@@ -24,19 +24,23 @@ pub struct CordonedFeatureFetcherImpl {
     // fetch from github. If github is
     // unreachable, this cache will be used
     local_copy: PathBuf,
-    offline: bool,
+    use_local_file: bool, // By default, cordoned features are fetched from github
 }
 
 const CORDONED_FEATURES_FILE_URL: &str = "https://raw.githubusercontent.com/dfinity/dre/refs/heads/main/cordoned_features.yaml";
 
 impl CordonedFeatureFetcherImpl {
-    pub fn new(local_copy: PathBuf, offline: bool) -> anyhow::Result<Self> {
+    pub fn new(local_copy: PathBuf, use_local_file: bool) -> anyhow::Result<Self> {
         let client = ClientBuilder::new().timeout(Duration::from_secs(10)).build()?;
 
-        Ok(Self { client, local_copy, offline })
+        Ok(Self {
+            client,
+            local_copy,
+            use_local_file,
+        })
     }
 
-    async fn fetch_from_git(&self) -> anyhow::Result<Vec<NodeFeaturePair>> {
+    async fn fetch_from_git(&self) -> anyhow::Result<Vec<CordonedFeature>> {
         let bytes = self
             .client
             .get(CORDONED_FEATURES_FILE_URL)
@@ -58,13 +62,13 @@ impl CordonedFeatureFetcherImpl {
         self.parse(&bytes)
     }
 
-    fn fetch_from_file(&self) -> anyhow::Result<Vec<NodeFeaturePair>> {
+    fn fetch_from_file(&self) -> anyhow::Result<Vec<CordonedFeature>> {
         let contents = std::fs::read(&self.local_copy)?;
 
         self.parse(&contents)
     }
 
-    fn parse(&self, contents: &[u8]) -> anyhow::Result<Vec<NodeFeaturePair>> {
+    fn parse(&self, contents: &[u8]) -> anyhow::Result<Vec<CordonedFeature>> {
         let valid_yaml = serde_yaml::from_slice::<serde_yaml::Value>(contents)?;
 
         let features = match valid_yaml.get("features") {
@@ -78,7 +82,7 @@ impl CordonedFeatureFetcherImpl {
 
         let mut valid_features = vec![];
         for feature in features {
-            valid_features.push(NodeFeaturePair {
+            valid_features.push(CordonedFeature {
                 feature: feature
                     .get("feature")
                     .map(|value| {
@@ -90,7 +94,7 @@ impl CordonedFeatureFetcherImpl {
                             )
                         })
                     })
-                    .ok_or(anyhow::anyhow!("Expected `feature` key to be present. Got: \n{:?}", feature))??,
+                    .ok_or(anyhow::anyhow!("Expected `feature` field to be present. Got: \n{:?}", feature))??,
                 value: feature
                     .get("value")
                     .map(|value| {
@@ -102,7 +106,8 @@ impl CordonedFeatureFetcherImpl {
                             ))
                             .map(|s| s.to_string())
                     })
-                    .ok_or(anyhow::anyhow!("Expected `value` key to be present. Got: \n{:?}", feature))??,
+                    .ok_or(anyhow::anyhow!("Expected `value` field to be present. Got: \n{:?}", feature))??,
+                explanation: feature.get("explanation").and_then(|value| value.as_str().map(|s| s.to_string())),
             });
         }
 
@@ -111,12 +116,13 @@ impl CordonedFeatureFetcherImpl {
 }
 
 impl CordonedFeatureFetcher for CordonedFeatureFetcherImpl {
-    fn fetch(&self) -> BoxFuture<'_, anyhow::Result<Vec<NodeFeaturePair>>> {
+    fn fetch(&self) -> BoxFuture<'_, anyhow::Result<Vec<CordonedFeature>>> {
         Box::pin(async {
-            if self.offline {
-                // Offline mode specified, use cache
-                info!("In offline mode, cordoned features will be loaded from cache");
-                info!("Cache path for cordoned features: {}", self.local_copy.display());
+            if self.use_local_file {
+                info!(
+                    "Received request to load cordoned features from local cache path: {}",
+                    self.local_copy.display()
+                );
                 self.fetch_from_file()
             } else {
                 self.fetch_from_git().await
@@ -125,7 +131,7 @@ impl CordonedFeatureFetcher for CordonedFeatureFetcherImpl {
     }
 
     #[cfg(test)]
-    fn parse_outer(&self, contents: &[u8]) -> anyhow::Result<Vec<NodeFeaturePair>> {
+    fn parse_outer(&self, contents: &[u8]) -> anyhow::Result<Vec<CordonedFeature>> {
         self.parse(contents)
     }
 }

@@ -3,9 +3,9 @@ use std::collections::HashMap;
 use std::sync::Arc;
 
 use ahash::AHashMap;
+use decentralization::network::CordonedFeature;
 use decentralization::network::DecentralizedSubnet;
 use decentralization::network::NetworkHealRequest;
-use decentralization::network::NodeFeaturePair;
 use decentralization::network::SubnetChange;
 use decentralization::network::SubnetChangeRequest;
 use decentralization::network::SubnetQueryBy;
@@ -648,7 +648,7 @@ impl Runner {
         health_of_nodes: &IndexMap<PrincipalId, HealthStatus>,
         node: &Node,
         ensure_assigned: bool,
-        cordoned_features: Vec<NodeFeaturePair>,
+        cordoned_features: Vec<CordonedFeature>,
         all_nodes: &[Node],
     ) -> Option<SubnetChangeResponse> {
         let mut best_change: Option<SubnetChangeResponse> = None;

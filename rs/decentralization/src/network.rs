@@ -824,7 +824,7 @@ pub trait TopologyManager: SubnetQuerier + AvailableNodesQuerier + Sync {
         exclude_nodes: Vec<String>,
         only_nodes: Vec<String>,
         health_of_nodes: &'a IndexMap<PrincipalId, HealthStatus>,
-        cordoned_features: Vec<NodeFeaturePair>,
+        cordoned_features: Vec<CordonedFeature>,
         all_nodes: &'a [Node],
     ) -> BoxFuture<'a, Result<SubnetChange, NetworkError>> {
         Box::pin(async move {
@@ -883,9 +883,10 @@ impl<T: Identifies<Node>> MatchAnyNode<T> for std::slice::Iter<'_, T> {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
-pub struct NodeFeaturePair {
+pub struct CordonedFeature {
     pub feature: NodeFeature,
     pub value: String,
+    pub explanation: Option<String>,
 }
 
 #[derive(Default, Clone, Debug)]
@@ -980,7 +981,7 @@ impl SubnetChangeRequest {
         optimize_count: usize,
         replacements_unhealthy: &[Node],
         health_of_nodes: &IndexMap<PrincipalId, HealthStatus>,
-        cordoned_features: Vec<NodeFeaturePair>,
+        cordoned_features: Vec<CordonedFeature>,
         all_nodes: &[Node],
     ) -> Result<SubnetChange, NetworkError> {
         let old_nodes = self.subnet.nodes.clone();
@@ -999,7 +1000,7 @@ impl SubnetChangeRequest {
     pub fn rescue(
         mut self,
         health_of_nodes: &IndexMap<PrincipalId, HealthStatus>,
-        cordoned_features: Vec<NodeFeaturePair>,
+        cordoned_features: Vec<CordonedFeature>,
         all_nodes: &[Node],
     ) -> Result<SubnetChange, NetworkError> {
         let old_nodes = self.subnet.nodes.clone();
@@ -1031,7 +1032,7 @@ impl SubnetChangeRequest {
         how_many_nodes_to_remove: usize,
         how_many_nodes_unhealthy: usize,
         health_of_nodes: &IndexMap<PrincipalId, HealthStatus>,
-        cordoned_features: Vec<NodeFeaturePair>,
+        cordoned_features: Vec<CordonedFeature>,
         all_nodes: &[Node],
     ) -> Result<SubnetChange, NetworkError> {
         let old_nodes = self.subnet.nodes.clone();
@@ -1133,7 +1134,7 @@ impl SubnetChangeRequest {
     pub fn evaluate(
         self,
         health_of_nodes: &IndexMap<PrincipalId, HealthStatus>,
-        cordoned_features: Vec<NodeFeaturePair>,
+        cordoned_features: Vec<CordonedFeature>,
         all_nodes: &[Node],
     ) -> Result<SubnetChange, NetworkError> {
         self.resize(0, 0, 0, health_of_nodes, cordoned_features, all_nodes)
@@ -1254,7 +1255,7 @@ impl NetworkHealRequest {
         &self,
         mut available_nodes: Vec<Node>,
         health_of_nodes: &IndexMap<PrincipalId, HealthStatus>,
-        cordoned_features: Vec<NodeFeaturePair>,
+        cordoned_features: Vec<CordonedFeature>,
         all_nodes: &[Node],
         optimize_for_business_rules_compliance: bool,
     ) -> Result<Vec<SubnetChangeResponse>, NetworkError> {

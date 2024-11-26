@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
 use decentralization::{
-    network::{DecentralizedSubnet, NodeFeaturePair},
+    network::{CordonedFeature, DecentralizedSubnet},
     SubnetChangeResponse,
 };
 use ic_management_backend::{health::MockHealthStatusQuerier, lazy_registry::MockLazyRegistry};
@@ -54,10 +54,11 @@ fn subnet(id: u64, nodes: &[Node]) -> DecentralizedSubnet {
     }
 }
 
-fn cordoned_feature(feature: NodeFeature, value: &str) -> NodeFeaturePair {
-    NodeFeaturePair {
+fn cordoned_feature(feature: NodeFeature, value: &str) -> CordonedFeature {
+    CordonedFeature {
         feature,
         value: value.to_string(),
+        explanation: None,
     }
 }
 
