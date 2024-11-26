@@ -263,7 +263,7 @@ impl IcAdminImpl {
                                     opts.motivation
                                         .map(|m| format!(
                                             "\n\nMotivation: {m}{}",
-                                            match opts.forum_post_link {
+                                            match &opts.forum_post_link {
                                                 Some(link) => format!("\nForum post link: {}\n", link),
                                                 None => "".to_string(),
                                             }
@@ -275,6 +275,10 @@ impl IcAdminImpl {
                         .unwrap_or_default(),
                     cmd.args(),
                     self.neuron.proposer_as_arg_vec(),
+                    match &opts.forum_post_link {
+                        Some(link) if link.to_lowercase().starts_with("https://") => vec!["--proposal-url".to_string(), link.clone()],
+                        _ => vec![],
+                    },
                 ]
                 .concat()
                 .as_slice(),
