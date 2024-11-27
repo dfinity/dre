@@ -4,12 +4,10 @@
 # https://github.com/dfinity/dre/blob/main/rs/ic-management-types/src/lib.rs#L317-L324
 features:
   # Background:
-  # As per the NP's forum post and notification, 87M is going to keep LV1 and PL1, which means that DL1 is going to be offboarded (and sold to someone else to onboard the nodes somewhere.
-  # His end date is Nov 30!
-  # https://dfinity.slack.com/archives/C05LD0CEAHY/p1730385735765399
+  # https://forum.dfinity.org/t/proposal-update-interim-gen-1-node-provider-remuneration-after-48-months/35001/12
   - feature: data_center
-    value: dl1
-    explanation: "offboarding DL1 DC after 48 months"
+    value: pl1
+    explanation: "NP is selling the PL1 DC after 48 months"
   - feature: data_center
     value: fm1
     explanation: "offboarding FM1 DC after 48 months"
