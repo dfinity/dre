@@ -103,7 +103,6 @@ allow = [
     "CC0-1.0",                        # basically public domain but explicitly put in legal terms
     "ISC",
     "BSL-1.0",
-    "Unicode-DFS-2016",
     "OpenSSL",
 ]
 # The confidence threshold for detecting a license from license text.
