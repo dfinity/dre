@@ -116,7 +116,7 @@ impl DreContext {
             args.subcommands.require_auth(),
             args.forum_post_link.clone(),
             args.ic_admin_version.clone(),
-            store.cordoned_features_fetcher()?,
+            store.cordoned_features_fetcher(args.cordoned_features_file.clone())?,
             store.health_client(&network)?,
             store,
             args.discourse_opts.clone(),
