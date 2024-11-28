@@ -127,7 +127,6 @@ impl ExecutableCommand for UpdateAuthorizedSubnets {
             .collect();
 
         let ic_admin = ctx.ic_admin().await?;
-        let discourse_client = ctx.discourse_client()?;
 
         let cmd = ProposeCommand::SetAuthorizedSubnetworks { subnets: authorized };
         let opts = ProposeOptions {
@@ -141,6 +140,7 @@ impl ExecutableCommand for UpdateAuthorizedSubnets {
             return Ok(());
         }
 
+        let discourse_client = ctx.discourse_client()?;
         let maybe_topic = discourse_client.create_authorized_subnets_update_forum_post(summary).await?;
 
         let proposal_response = ic_admin
