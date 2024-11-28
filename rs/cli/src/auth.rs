@@ -291,11 +291,12 @@ impl Auth {
     /// anonymous authentication if no HSM is detected.  Prompts the user
     /// for a PIN if no PIN is specified and the HSM needs to be unlocked.
     /// Caller can optionally limit search to a specific slot or key ID.
-    pub async fn auto(hsm_pin: Option<String>, hsm_slot: Option<u64>, hsm_key_id: Option<KeyIdVec>) -> anyhow::Result<Self> {
+    async fn auto(hsm_pin: Option<String>, hsm_slot: Option<u64>, hsm_key_id: Option<KeyIdVec>) -> anyhow::Result<Self> {
         tokio::task::spawn_blocking(move || Self::detect_hsm_auth(hsm_pin, hsm_slot, hsm_key_id)).await?
     }
 
-    pub async fn pem(private_key_pem: PathBuf) -> anyhow::Result<Self> {
+    /// Create an Auth that uses a specified PEM file.
+    async fn pem(private_key_pem: PathBuf) -> anyhow::Result<Self> {
         // Check path exists.
         if !private_key_pem.exists() {
             return Err(anyhow::anyhow!("Private key file not found: {:?}", private_key_pem));
@@ -303,8 +304,9 @@ impl Auth {
         Ok(Self::Keyfile { path: private_key_pem })
     }
 
+    /// Create an Auth based on the specified user options.
     pub(crate) async fn from_auth_opts(auth_opts: AuthOpts) -> Result<Self, anyhow::Error> {
-        match &auth_opts {
+        match auth_opts {
             // Private key case.
             AuthOpts {
                 private_key_pem: Some(private_key_pem),
@@ -322,7 +324,7 @@ impl Auth {
                         hsm_pin: pin,
                         hsm_params: HsmParams { hsm_slot, hsm_key_id },
                     },
-            } => Auth::auto(pin.clone(), *hsm_slot, hsm_key_id.clone()).await,
+            } => Auth::auto(pin, hsm_slot, hsm_key_id).await,
         }
     }
 }
