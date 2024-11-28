@@ -9,7 +9,10 @@ use ic_types::PrincipalId;
 use itertools::Itertools;
 use log::info;
 
-use crate::ic_admin::{ProposeCommand, ProposeOptions};
+use crate::{
+    discourse_client::parse_proposal_id_from_governance_response,
+    ic_admin::{ProposeCommand, ProposeOptions},
+};
 
 use super::{AuthRequirement, ExecutableCommand};
 
@@ -124,17 +127,37 @@ impl ExecutableCommand for UpdateAuthorizedSubnets {
             .collect();
 
         let ic_admin = ctx.ic_admin().await?;
-        ic_admin
-            .propose_run(
-                ProposeCommand::SetAuthorizedSubnetworks { subnets: authorized },
+        let discourse_client = ctx.discourse_client()?;
+
+        let cmd = ProposeCommand::SetAuthorizedSubnetworks { subnets: authorized };
+        let opts = ProposeOptions {
+            title: Some("Updating list of public subnets".to_string()),
+            summary: Some(summary.clone()),
+            motivation: None,
+            forum_post_link: Some("[comment]: <> (Link will be added on actual execution)".to_string()),
+        };
+
+        if !ic_admin.propose_print_and_confirm(cmd.clone(), opts.clone()).await? {
+            return Ok(());
+        }
+
+        let maybe_topic = discourse_client.create_authorized_subnets_update_forum_post(summary).await?;
+
+        let proposal_response = ic_admin
+            .propose_submit(
+                cmd,
                 ProposeOptions {
-                    title: Some("Update list of public subnets".to_string()),
-                    summary: Some(summary),
-                    motivation: None,
-                    forum_post_link: ctx.forum_post_link(),
+                    forum_post_link: maybe_topic.as_ref().map(|resp| resp.url.clone()),
+                    ..opts
                 },
             )
             .await?;
+
+        if let Some(topic) = maybe_topic {
+            discourse_client
+                .add_proposal_url_to_post(topic.update_id, parse_proposal_id_from_governance_response(proposal_response)?)
+                .await?;
+        }
 
         Ok(())
     }
