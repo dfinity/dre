@@ -27,12 +27,6 @@ jobs:
     # This image is based on ubuntu:20.04
     container: ghcr.io/dfinity/dre/actions-runner:3dd4f38f076cad73fdcc68ad37fd29bed4fa3e4d
     steps:
-      - name: Create GitHub App Token
-        uses: actions/create-github-app-token@v1
-        id: app-token
-        with:
-          app-id: ${{ vars.PR_AUTOMATION_BOT_PUBLIC_APP_ID }}
-          private-key: ${{ secrets.PR_AUTOMATION_BOT_PUBLIC_PRIVATE_KEY }}
       - uses: actions/checkout@v4
         with:
           fetch-depth: 2
@@ -47,7 +41,7 @@ jobs:
       - name: "🚀 Building"
         uses: ./.github/workflows/build
         with:
-          GITHUB_TOKEN: "${{ steps.app-token.outputs.token }}"
+          GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
       - name: "🚀 Testing"
         env:
           STAGING_PRIVATE_KEY_PEM: "${{ secrets.STAGING_PRIVATE_KEY_PEM }}"
