@@ -131,7 +131,7 @@ impl ExecutableCommand for UpdateAuthorizedSubnets {
 
         let cmd = ProposeCommand::SetAuthorizedSubnetworks { subnets: authorized };
         let opts = ProposeOptions {
-            title: Some("Updating list of public subnets".to_string()),
+            title: Some("Updating the list of public subnets".to_string()),
             summary: Some(summary.clone()),
             motivation: None,
             forum_post_link: Some("[comment]: <> (Link will be added on actual execution)".to_string()),

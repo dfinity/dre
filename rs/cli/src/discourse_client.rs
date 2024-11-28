@@ -204,9 +204,9 @@ impl DiscourseClient for DiscourseClientImp {
 
     fn create_authorized_subnets_update_forum_post(&self, body: String) -> BoxFuture<'_, anyhow::Result<Option<DiscourseResponse>>> {
         let post = DiscourseTopic {
-            title: "Adjusting authorized subnets".to_string(),
+            title: "Updating the list of public subnets".to_string(),
             content: body,
-            tags: vec![],
+            tags: vec![SUBNET_MANAGEMENT_TAG.to_string()],
             category: GOVERNANCE_TOPIC.to_string(),
         };
         let post_clone = post.clone();
