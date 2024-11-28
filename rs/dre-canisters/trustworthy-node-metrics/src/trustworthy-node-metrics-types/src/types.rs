@@ -6,7 +6,6 @@ use ic_management_canister_types::NodeMetricsHistoryResponse;
 use ic_nns_governance_api::pb::v1::MonthlyNodeProviderRewards;
 use ic_protobuf::registry::node_rewards::v2::{NodeRewardRate, NodeRewardRates};
 use ic_stable_structures::{storable::Bound, Storable};
-use node_provider_rewards_lib::v1_types::MultiplierStats;
 use serde::Serialize;
 
 pub type SubnetNodeMetricsHistory = (PrincipalId, Vec<NodeMetricsHistoryResponse>);
@@ -131,29 +130,6 @@ impl Storable for NodeMetadataStored {
     };
 }
 
-#[derive(Debug, Deserialize, Serialize, CandidType, Clone, PartialEq, Eq, PartialOrd, Ord)]
-pub struct RegistryKey {
-    pub version: u64,
-    pub key: String,
-}
-
-const MAX_VALUE_SIZE_BYTES_REGISTRY_KEY: u32 = 200;
-
-impl Storable for RegistryKey {
-    fn to_bytes(&self) -> std::borrow::Cow<[u8]> {
-        Cow::Owned(Encode!(self).unwrap())
-    }
-
-    fn from_bytes(bytes: std::borrow::Cow<[u8]>) -> Self {
-        Decode!(bytes.as_ref(), Self).unwrap()
-    }
-
-    const BOUND: Bound = Bound::Bounded {
-        max_size: MAX_VALUE_SIZE_BYTES_REGISTRY_KEY,
-        is_fixed_size: false,
-    };
-}
-
 #[derive(Debug, Deserialize, Serialize, CandidType, Clone)]
 pub struct NodeMetadataStoredV2 {
     pub node_operator_id: Principal,
@@ -230,6 +206,12 @@ pub struct DailyNodeMetrics {
     pub failure_rate: f64,
 }
 
+#[derive(Debug, Clone, Deserialize, Serialize, CandidType)]
+pub struct DailyNodeMetricsResponse {
+    pub node_id: Principal,
+    pub daily_node_metrics: Vec<DailyNodeMetrics>
+}
+
 impl fmt::Display for DailyNodeMetrics {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
@@ -260,12 +242,24 @@ impl DailyNodeMetrics {
 }
 
 #[derive(Debug, Deserialize, CandidType)]
+pub struct RewardsMultiplierStats {
+    pub days_assigned: u64,
+    pub days_unassigned: u64,
+    pub rewards_reduction: f64,
+    pub blocks_failed: u64,
+    pub blocks_proposed: u64,
+    pub blocks_total: u64,
+    pub failure_rate: f64,
+    pub computation_log: Vec<OperationExecutorLog>,
+}
+
+#[derive(Debug, Deserialize, CandidType)]
 pub struct NodeRewardsMultiplier {
     pub node_id: Principal,
     pub daily_node_metrics: Vec<DailyNodeMetrics>,
     pub node_rate: NodeRewardRate,
     pub rewards_multiplier: f64,
-    pub rewards_multiplier_stats: MultiplierStats,
+    pub rewards_multiplier_stats: RewardsMultiplierStats,
 }
 
 pub struct NodeProviderRewardsComputation {
@@ -281,8 +275,8 @@ pub struct NodeProviderRewards {
     pub rewards_xdr_old: Option<u64>,
     pub ts_distribution: u64,
     pub xdr_conversion_rate: Option<u64>,
-    pub rewards_multipliers_stats: Vec<MultiplierStats>,
-    pub computation_log: Vec<String>,
+    pub rewards_multipliers_stats: Vec<RewardsMultiplierStats>,
+    pub computation_log: Vec<OperationExecutorLog>,
 }
 
 #[derive(Debug, Deserialize, CandidType)]

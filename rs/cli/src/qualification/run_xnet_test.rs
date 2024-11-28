@@ -58,7 +58,7 @@ impl Step for RunXnetTest {
 
         let args = &[
             "--nns_url".to_string(),
-            format!("http://[{}]:8080/", nns_node.ip_addr.unwrap()),
+            format!("http://[{}]:8080/", nns_node.ip_addr),
             "--subnets".to_string(),
             NUM_SUBNETS.to_string(),
             "--principal_key".to_string(),

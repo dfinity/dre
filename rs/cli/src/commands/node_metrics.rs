@@ -1,7 +1,7 @@
 use std::{
     collections::{btree_map::Entry, BTreeMap},
     str::FromStr,
-    sync::Arc,
+    sync::{Arc, Mutex},
 };
 
 use clap::{error::ErrorKind, Args};
@@ -129,7 +129,8 @@ impl ExecutableCommand for NodeMetrics {
     }
 
     async fn execute(&self, ctx: crate::ctx::DreContext) -> anyhow::Result<()> {
-        let (_, canister_agent) = ctx.create_ic_agent_canister_client().await?;
+        let lock = Mutex::new(());
+        let canister_agent: ic_canisters::IcAgentCanisterClient = ctx.create_ic_agent_canister_client(Some(lock)).await?;
         info!("Started action...");
 
         let metrics_by_subnet = if self.trustworthy {

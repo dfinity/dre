@@ -1,17 +1,13 @@
 use std::cell::RefCell;
-use std::collections::HashMap;
 use std::sync::Arc;
 
-use ahash::AHashMap;
-use decentralization::network::CordonedFeature;
 use decentralization::network::DecentralizedSubnet;
 use decentralization::network::NetworkHealRequest;
 use decentralization::network::SubnetChange;
-use decentralization::network::SubnetChangeRequest;
 use decentralization::network::SubnetQueryBy;
+use decentralization::network::{generate_added_node_description, generate_removed_nodes_description};
 use decentralization::subnets::NodesRemover;
 use decentralization::SubnetChangeResponse;
-use futures::future::try_join3;
 use futures::TryFutureExt;
 use futures_util::future::try_join;
 use ic_management_backend::health::HealthStatusQuerier;
@@ -26,9 +22,7 @@ use ic_management_types::Network;
 use ic_management_types::NetworkError;
 use ic_management_types::Node;
 use ic_management_types::NodeFeature;
-use ic_management_types::Operator;
 use ic_management_types::Release;
-use ic_management_types::Subnet;
 use ic_management_types::TopologyChangePayload;
 use ic_types::PrincipalId;
 use indexmap::{IndexMap, IndexSet};
@@ -38,7 +32,6 @@ use log::warn;
 
 use regex::Regex;
 use registry_canister::mutations::do_change_subnet_membership::ChangeSubnetMembershipPayload;
-use reqwest::get;
 use tabled::builder::Builder;
 use tabled::settings::Style;
 
@@ -61,7 +54,7 @@ pub struct Runner {
     health_client: Arc<dyn HealthStatusQuerier>,
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone)]
 pub struct RunnerProposal {
     pub cmd: ProposeCommand,
     pub opts: ProposeOptions,
@@ -142,7 +135,6 @@ impl Runner {
         replica_version: Option<String>,
         other_args: Vec<String>,
     ) -> anyhow::Result<Option<RunnerProposal>> {
-        let all_nodes = self.registry.nodes().await?.values().cloned().collect_vec();
         let health_of_nodes = self.health_of_nodes().await?;
 
         let subnet_creation_data = self
@@ -158,10 +150,9 @@ impl Runner {
                     warn!("Will continue running as if no features were cordoned");
                     vec![]
                 }),
-                &all_nodes,
             )
             .await?;
-        let subnet_creation_data = SubnetChangeResponse::new(&subnet_creation_data, &health_of_nodes, Some(motivation.clone()));
+        let subnet_creation_data = SubnetChangeResponse::from(&subnet_creation_data).with_health_of_nodes(health_of_nodes.clone());
 
         if self.verbose {
             if let Some(run_log) = &subnet_creation_data.run_log {
@@ -179,14 +170,14 @@ impl Runner {
 
         Ok(Some(RunnerProposal {
             cmd: ProposeCommand::CreateSubnet {
-                node_ids: subnet_creation_data.node_ids_added,
+                node_ids: subnet_creation_data.added_with_desc.iter().map(|a| a.0).collect::<Vec<_>>(),
                 replica_version,
                 other_args,
             },
             opts: ProposeOptions {
                 title: Some("Creating new subnet".into()),
                 summary: Some("# Creating new subnet with nodes: ".into()),
-                motivation: Some(motivation),
+                motivation: Some(motivation.clone()),
                 forum_post_link,
             },
         }))
@@ -203,11 +194,11 @@ impl Runner {
             }
         }
 
-        if change.node_ids_added.is_empty() && change.node_ids_removed.is_empty() {
+        if change.added_with_desc.is_empty() && change.removed_with_desc.is_empty() {
             return Ok(None);
         }
 
-        let options = replace_proposal_options(&change, forum_post_link).await?;
+        let options = replace_proposal_options(&change, forum_post_link)?;
         self.run_membership_change(change, options).await.map(Some)
     }
 
@@ -458,7 +449,7 @@ impl Runner {
     }
 
     pub async fn remove_nodes(&self, nodes_remover: NodesRemover) -> anyhow::Result<RunnerProposal> {
-        let (healths, nodes_with_proposals) = try_join(self.health_client.nodes(), self.registry.nodes_and_proposals()).await?;
+        let (healths, nodes_with_proposals) = try_join(self.health_client.nodes(), self.registry.nodes_with_proposals()).await?;
         let (mut node_removals, motivation) = nodes_remover.remove_nodes(healths, nodes_with_proposals);
         node_removals.sort_by_key(|nr| nr.reason.message());
 
@@ -482,9 +473,10 @@ impl Runner {
         // Values
         for nr in &node_removals {
             let mut row = tabular::Row::new();
+            let decentralization_node = decentralization::network::Node::from(&nr.node);
             row.add_cell(nr.node.principal);
             for nf in NodeFeature::variants() {
-                row.add_cell(nr.node.get_feature(&nf).expect("Feature should exist"));
+                row.add_cell(decentralization_node.get_feature(&nf));
             }
             row.add_cell(nr.node.hostname.clone().unwrap_or_else(|| "N/A".to_string()));
             row.add_cell(nr.reason.message());
@@ -505,22 +497,12 @@ impl Runner {
         })
     }
 
-    pub async fn network_heal(
-        &self,
-        forum_post_link: Option<String>,
-        skip_subnets: &[String],
-        optimize_decentralization: bool,
-    ) -> anyhow::Result<Vec<RunnerProposal>> {
+    pub async fn network_heal(&self, forum_post_link: Option<String>) -> anyhow::Result<Vec<RunnerProposal>> {
         let mut errors = vec![];
 
         // Get the list of subnets, and the list of open proposal for each subnet, if any
         let subnets = self.registry.subnets_and_proposals().await?;
-        let subnets_not_skipped = subnets
-            .iter()
-            .filter(|(subnet_id, _)| !skip_subnets.iter().any(|s| subnet_id.to_string().contains(s)))
-            .map(|(subnet_id, subnet)| (*subnet_id, subnet.clone()))
-            .collect::<IndexMap<_, _>>();
-        let subnets_without_proposals = subnets_not_skipped
+        let subnets_without_proposals = subnets
             .iter()
             .filter(|(subnet_id, subnet)| match &subnet.proposal {
                 Some(p) => {
@@ -531,15 +513,10 @@ impl Runner {
             })
             .map(|(id, subnet)| (*id, subnet.clone()))
             .collect::<IndexMap<_, _>>();
-        let (all_nodes, available_nodes, health_of_nodes) = try_join3(
-            self.registry.nodes(),
-            self.registry.available_nodes().map_err(anyhow::Error::from),
-            self.health_client.nodes(),
-        )
-        .await?;
-        let all_nodes = all_nodes.values().cloned().collect::<Vec<Node>>();
+        let (available_nodes, health_of_nodes) =
+            try_join(self.registry.available_nodes().map_err(anyhow::Error::from), self.health_client.nodes()).await?;
 
-        let subnets_change_responses = NetworkHealRequest::new(subnets_without_proposals)
+        let subnets_change_response = NetworkHealRequest::new(subnets_without_proposals)
             .heal_and_optimize(
                 available_nodes,
                 &health_of_nodes,
@@ -548,15 +525,13 @@ impl Runner {
                     warn!("Will continue running as if no features were cordoned");
                     vec![]
                 }),
-                &all_nodes,
-                optimize_decentralization,
             )
             .await?;
 
         let mut changes = vec![];
-        for change in &subnets_change_responses {
+        for change in &subnets_change_response {
             let current = self
-                .run_membership_change(change.clone(), replace_proposal_options(change, forum_post_link.clone()).await?)
+                .run_membership_change(change.clone(), replace_proposal_options(change, forum_post_link.clone())?)
                 .await
                 .map_err(|e| {
                     println!("{}", e);
@@ -568,410 +543,18 @@ impl Runner {
             anyhow::bail!("Errors: {:?}", errors);
         }
 
-        // No errors, can be safely unwrapped
+        // No errors, can be safly unwrapped
         Ok(changes.into_iter().map(|maybe_change| maybe_change.unwrap()).collect_vec())
-    }
-
-    async fn get_subnets(&self, skip_subnets: &[String]) -> anyhow::Result<IndexMap<PrincipalId, Subnet>> {
-        let subnets = self.registry.subnets_and_proposals().await?;
-        Ok(subnets
-            .iter()
-            .filter(|(subnet_id, _)| !skip_subnets.iter().any(|s| subnet_id.to_string().contains(s)))
-            .map(|(subnet_id, subnet)| (*subnet_id, subnet.clone()))
-            .collect::<IndexMap<_, _>>())
-    }
-
-    async fn get_available_and_healthy_nodes(
-        &self,
-        cordoned_features: &[CordonedFeature],
-    ) -> anyhow::Result<(Vec<Node>, IndexMap<PrincipalId, HealthStatus>)> {
-        let (available_nodes, node_health) =
-            try_join(self.registry.available_nodes().map_err(anyhow::Error::from), self.health_client.nodes()).await?;
-        let available_nodes = available_nodes
-            .into_iter()
-            .filter(|n| !cordoned_features.iter().any(|cf| n.get_feature(&cf.feature).as_ref() == Some(&cf.value)))
-            .collect();
-        Ok((available_nodes, node_health))
-    }
-
-    fn get_operators_to_optimize(
-        &self,
-        node_operators_all: &IndexMap<PrincipalId, Operator>,
-        all_nodes_grouped_by_operator: &HashMap<PrincipalId, Vec<Node>>,
-        available_nodes_grouped_by_operator: &HashMap<PrincipalId, Vec<Node>>,
-        nodes_in_subnets_or_proposals: &AHashMap<PrincipalId, Node>,
-        nodes_all: &IndexMap<PrincipalId, Node>,
-        ensure_assigned: bool,
-    ) -> Vec<(PrincipalId, String, Vec<Node>)> {
-        node_operators_all
-            .iter()
-            .filter_map(|(operator_id, operator)| {
-                all_nodes_grouped_by_operator.get(operator_id).and_then(|operator_nodes| {
-                    let condition = if ensure_assigned {
-                        operator_nodes
-                            .iter()
-                            .all(|node| !nodes_in_subnets_or_proposals.contains_key(&node.principal))
-                    } else {
-                        operator_nodes
-                            .iter()
-                            .all(|node| nodes_in_subnets_or_proposals.contains_key(&node.principal))
-                    };
-
-                    if condition {
-                        let nodes = if ensure_assigned {
-                            available_nodes_grouped_by_operator
-                                .get(operator_id)
-                                .unwrap_or(&vec![])
-                                .iter()
-                                .map(|node| nodes_all.get(&node.principal).expect("Node should exist").clone())
-                                .collect::<Vec<_>>()
-                        } else {
-                            operator_nodes
-                                .iter()
-                                .filter_map(|node| nodes_in_subnets_or_proposals.get(&node.principal))
-                                .map(|n| (*n).clone())
-                                .collect::<Vec<_>>()
-                        };
-
-                        if nodes.is_empty() || (!ensure_assigned && nodes.len() < 2) {
-                            None
-                        } else {
-                            Some((
-                                *operator_id,
-                                operator.datacenter.as_ref().map(|dc| dc.name.clone()).unwrap_or_default(),
-                                nodes,
-                            ))
-                        }
-                    } else {
-                        None
-                    }
-                })
-            })
-            .collect()
-    }
-
-    async fn get_best_change_for_operator(
-        &self,
-        subnets: &IndexMap<PrincipalId, Subnet>,
-        available_nodes: &[Node],
-        health_of_nodes: &IndexMap<PrincipalId, HealthStatus>,
-        node: &Node,
-        ensure_assigned: bool,
-        cordoned_features: Vec<CordonedFeature>,
-        all_nodes: &[Node],
-    ) -> Option<SubnetChangeResponse> {
-        let mut best_change: Option<SubnetChangeResponse> = None;
-
-        for subnet in subnets.values() {
-            let subnet = DecentralizedSubnet::from(subnet);
-            let subnet_id_short = subnet.id.to_string().split_once('-').unwrap().0.to_string();
-            let change_request = if ensure_assigned {
-                SubnetChangeRequest::new(subnet, available_nodes.to_vec(), vec![node.clone()], vec![], vec![]).resize(
-                    0,
-                    1,
-                    0,
-                    health_of_nodes,
-                    cordoned_features.clone(),
-                    all_nodes,
-                )
-            } else {
-                SubnetChangeRequest::new(subnet, available_nodes.to_vec(), vec![], vec![node.clone()], vec![]).resize(
-                    1,
-                    0,
-                    0,
-                    health_of_nodes,
-                    cordoned_features.clone(),
-                    all_nodes,
-                )
-            };
-
-            if let Ok(change) = change_request {
-                let change_response = SubnetChangeResponse::new(
-                    &change,
-                    health_of_nodes,
-                    Some(if ensure_assigned {
-                        format!("The node operator {} currently does not have nodes in any subnet. To gain insights into the stability of the nodes of this node operator, we propose to add one of the operator's nodes to subnet {}.",
-                                node.operator.principal.to_string().split_once('-').unwrap().0,
-                                subnet_id_short)
-                    } else {
-                        format!("The node operator {} currently has all nodes assigned to subnets. We propose to remove one of the operator's nodes from subnet {} to optimize overall network topology, since subnet decentralization does not worsen upon node removal. This way the same node can be assigned to subnet where it would improve decentralization.",
-                                node.operator.principal.to_string().split_once('-').unwrap().0,
-                                subnet_id_short)
-                    }),
-                );
-
-                if change_response.penalties_after_change <= change_response.penalties_before_change
-                    && change_response.score_after >= change_response.score_before
-                {
-                    match best_change.clone() {
-                        Some(best) => {
-                            if change_response.penalties_after_change < best.penalties_after_change
-                                || (change_response.penalties_after_change == best.penalties_after_change
-                                    && change_response.score_after > best.score_after)
-                            {
-                                best_change = Some(change_response);
-                            }
-                        }
-                        None => {
-                            best_change = Some(change_response);
-                        }
-                    }
-                }
-            }
-        }
-
-        best_change
-    }
-
-    pub fn num_nodes_per_operator(all_nodes: &[Node], operator_id: &PrincipalId) -> usize {
-        all_nodes.iter().filter(|n| &n.operator.principal == operator_id).count()
-    }
-
-    pub async fn network_ensure_operator_nodes(
-        &self,
-        forum_post_link: Option<String>,
-        skip_subnets: &[String],
-        ensure_assigned: bool,
-    ) -> anyhow::Result<Vec<RunnerProposal>> {
-        let subnets_not_skipped = self.get_subnets(skip_subnets).await?;
-        let mut subnets_that_have_no_proposals = subnets_not_skipped
-            .iter()
-            .filter(|(subnet_id, subnet)| match &subnet.proposal {
-                Some(p) => {
-                    info!("Skipping subnet {} as it has a pending proposal {}", subnet_id, p.id);
-                    false
-                }
-                None => true,
-            })
-            .map(|(id, subnet)| (*id, subnet.clone()))
-            .collect::<IndexMap<_, _>>();
-        let cordoned_features = self.cordoned_features_fetcher.fetch().await.unwrap_or_else(|e| {
-            warn!("Failed to fetch cordoned features with error: {:?}", e);
-            warn!("Will continue running as if no features were cordoned");
-            vec![]
-        });
-        let (mut available_nodes, health_of_nodes) = self.get_available_and_healthy_nodes(&cordoned_features).await?;
-        let all_node_operators = self.registry.operators().await?;
-        let all_nodes_map = self.registry.nodes().await?;
-        let all_nodes = all_nodes_map.values().cloned().collect_vec();
-        let all_nodes_grouped_by_operator = all_nodes
-            .iter()
-            .cloned()
-            .into_group_map_by(|node| all_nodes_map.get(&node.principal).expect("Node should exist").operator.principal);
-        let available_nodes_grouped_by_operator = available_nodes
-            .iter()
-            .map(|n| (*n).clone())
-            .into_group_map_by(|node| all_nodes_map.get(&node.principal).expect("Node should exist").operator.principal);
-        let nodes_with_proposals_grouped_by_operator = self
-            .registry
-            .nodes_and_proposals()
-            .await?
-            .iter()
-            .filter(|(_, n)| n.proposal.is_some())
-            .map(|(_, n)| n.clone())
-            .into_group_map_by(|node| node.operator.principal);
-        let nodes_in_subnets_or_proposals = nodes_in_subnets_or_proposals(&subnets_that_have_no_proposals, &nodes_with_proposals_grouped_by_operator);
-
-        let operators_to_optimize = self.get_operators_to_optimize(
-            &all_node_operators,
-            &all_nodes_grouped_by_operator,
-            &available_nodes_grouped_by_operator,
-            &nodes_in_subnets_or_proposals,
-            &all_nodes_map,
-            ensure_assigned,
-        );
-
-        info!(
-            "Checked {} and found {} node operators with all nodes {}, after skipping {} subnets",
-            all_node_operators.len(),
-            operators_to_optimize.len(),
-            if ensure_assigned { "unassigned" } else { "assigned" },
-            skip_subnets.len()
-        );
-
-        if !operators_to_optimize.is_empty() {
-            info!(
-                "Will try to optimize the assignments of nodes for {} operators: {:#?}",
-                operators_to_optimize.len(),
-                operators_to_optimize
-                    .iter()
-                    .map(|(id, _, _)| id.to_string().split_once('-').unwrap().0.to_string())
-                    .collect::<Vec<_>>()
-            );
-        }
-
-        let mut changes = vec![];
-        for (operator_id, dc, healthy_operator_nodes) in operators_to_optimize {
-            let node = healthy_operator_nodes.first().expect("At least one node should be present");
-            let best_change = self
-                .get_best_change_for_operator(
-                    &subnets_that_have_no_proposals,
-                    &available_nodes,
-                    &health_of_nodes,
-                    node,
-                    ensure_assigned,
-                    cordoned_features.clone(),
-                    &all_nodes,
-                )
-                .await;
-
-            if let Some(change) = best_change {
-                if ensure_assigned {
-                    // If this is the single assigned node of the removed operator, we should not remove it
-                    let node_id_removed = change.node_ids_removed.first().expect("At least one node should be present");
-                    let node_removed = all_nodes_map.get(node_id_removed).expect("Node should exist");
-                    if Self::num_nodes_per_operator(&all_nodes, &node_removed.operator.principal) < 2 {
-                        warn!(
-                            "Skipping node {} of the operator {} in DC {} as it is the only node of the operator",
-                            node.principal.to_string().split_once('-').unwrap().0,
-                            operator_id.to_string().split_once('-').unwrap().0,
-                            dc
-                        );
-                        continue;
-                    }
-                } else {
-                    // Ensuring that some nodes are unassigned ==> prevent that we're making the same problem again by assigning all nodes of the newly picked operator
-                    let node_id_added = change.node_ids_added.first().expect("At least one node should be present");
-                    let node_added = all_nodes_map.get(node_id_added).expect("Node should exist");
-                    if Self::num_nodes_per_operator(&available_nodes, &node_added.operator.principal) < 2 {
-                        warn!(
-                            "Skipping node {} of the operator {} in DC {} as it does not have enough available nodes",
-                            node_added.principal.to_string().split_once('-').unwrap().0,
-                            node_added.operator.principal.to_string().split_once('-').unwrap().0,
-                            dc
-                        );
-                        continue;
-                    }
-                };
-                changes.push(
-                    self.run_membership_change(change.clone(), replace_proposal_options(&change, forum_post_link.clone()).await?)
-                        .await?,
-                );
-                subnets_that_have_no_proposals.shift_remove(&change.subnet_id.expect("Subnet ID should be present"));
-                available_nodes.retain(|n| !change.node_ids_added.contains(&n.principal));
-            } else {
-                warn!(
-                    "{} node {} of the operator {} in DC {} would worsen decentralization in all subnets!",
-                    if ensure_assigned { "Adding" } else { "Removing" },
-                    node.principal.to_string().split_once('-').unwrap().0,
-                    operator_id.to_string().split_once('-').unwrap().0,
-                    dc,
-                );
-            }
-        }
-        Ok(changes)
-    }
-
-    pub async fn network_ensure_operator_nodes_assigned(
-        &self,
-        forum_post_link: Option<String>,
-        skip_subnets: &[String],
-    ) -> anyhow::Result<Vec<RunnerProposal>> {
-        self.network_ensure_operator_nodes(forum_post_link, skip_subnets, true).await
-    }
-
-    pub async fn network_ensure_operator_nodes_unassigned(
-        &self,
-        forum_post_link: Option<String>,
-        skip_subnets: &[String],
-    ) -> anyhow::Result<Vec<RunnerProposal>> {
-        self.network_ensure_operator_nodes(forum_post_link, skip_subnets, false).await
-    }
-
-    pub async fn network_remove_cordoned_nodes(
-        &self,
-        forum_post_link: Option<String>,
-        skip_subnets: &[String],
-    ) -> anyhow::Result<Vec<RunnerProposal>> {
-        let subnets_not_skipped = self.get_subnets(skip_subnets).await?;
-        let cordoned_features = self.cordoned_features_fetcher.fetch().await.unwrap_or_else(|e| {
-            warn!("Failed to fetch cordoned features with error: {:?}", e);
-            warn!("Will continue running as if no features were cordoned");
-            vec![]
-        });
-        let (mut available_nodes, health_of_nodes) = self.get_available_and_healthy_nodes(&cordoned_features).await?;
-        let all_nodes = self.registry.nodes().await?;
-        let all_nodes = all_nodes.values().cloned().collect::<Vec<Node>>();
-        let all_nodes_map = self.registry.nodes().await?;
-
-        let mut changes = vec![];
-        // Iterate through all subnets and then through all nodes of each subnet, and check if any of the nodes matches the cordoned features
-        for (_subnet_id, subnet) in &subnets_not_skipped {
-            let subnet = DecentralizedSubnet::from(subnet);
-            let subnet_id_short = subnet.id.to_string().split_once('-').unwrap().0.to_string();
-
-            let mut nodes_to_remove_with_explanations = vec![];
-            for node in &subnet.nodes {
-                let node = all_nodes_map.get(&node.principal).expect("Node should exist");
-                if let Some(explanation) = cordoned_features.iter().find_map(|cf| {
-                    if node.get_feature(&cf.feature).as_ref() == Some(&cf.value) {
-                        Some(cf.explanation.as_ref().map(|e| format!(": {}", e)).unwrap_or_default())
-                    } else {
-                        None
-                    }
-                }) {
-                    nodes_to_remove_with_explanations.push((node.clone(), explanation));
-                }
-            }
-
-            if !nodes_to_remove_with_explanations.is_empty() {
-                let change_request = SubnetChangeRequest::new(
-                    subnet,
-                    available_nodes.clone(),
-                    vec![],
-                    nodes_to_remove_with_explanations.iter().map(|(n, _)| n.clone()).collect_vec(),
-                    vec![],
-                )
-                .resize(
-                    nodes_to_remove_with_explanations.len(),
-                    0,
-                    0,
-                    &health_of_nodes,
-                    cordoned_features.clone(),
-                    &all_nodes,
-                );
-
-                if let Ok(change) = change_request {
-                    let change_response = SubnetChangeResponse::new(
-                        &change,
-                        &health_of_nodes,
-                        Some(format!(
-                            "The following nodes in subnet `{}` have been cordoned and will be removed:\n{}",
-                            subnet_id_short,
-                            nodes_to_remove_with_explanations
-                                .iter()
-                                .map(|(n, e)| format!("- {}{}", n.principal.to_string().split_once('-').unwrap().0, e))
-                                .join("\n"),
-                        )),
-                    );
-
-                    if change_response.node_ids_added.is_empty() && change_response.node_ids_removed.is_empty() {
-                        continue;
-                    }
-
-                    changes.push(
-                        self.run_membership_change(
-                            change_response.clone(),
-                            replace_proposal_options(&change_response, forum_post_link.clone()).await?,
-                        )
-                        .await?,
-                    );
-                    available_nodes.retain(|n| !change_response.node_ids_added.contains(&n.principal));
-                }
-            }
-        }
-        Ok(changes)
     }
 
     pub async fn decentralization_change(
         &self,
         change: &ChangeSubnetMembershipPayload,
         override_subnet_nodes: Option<Vec<PrincipalId>>,
-        summary: Option<String>,
     ) -> anyhow::Result<()> {
         let subnet_before = match override_subnet_nodes {
             Some(nodes) => {
-                let nodes = self.registry.get_nodes_from_ids(&nodes).await?;
+                let nodes = self.registry.get_decentralized_nodes(&nodes).await?;
                 DecentralizedSubnet::new_with_subnet_id_and_nodes(change.subnet_id, nodes)
             }
             None => self
@@ -984,23 +567,30 @@ impl Runner {
         let health_of_nodes = self.health_of_nodes().await?;
 
         // Simulate node removal
-        let removed_nodes = self.registry.get_nodes_from_ids(&change.get_removed_node_ids()).await?;
-        let subnet_mid = subnet_before.without_nodes(&removed_nodes).map_err(|e| anyhow::anyhow!(e))?;
+        let removed_nodes = self.registry.get_decentralized_nodes(&change.get_removed_node_ids()).await?;
+        let removed_nodes_with_desc = generate_removed_nodes_description(&subnet_before.nodes, &removed_nodes);
+        let subnet_mid = subnet_before
+            .without_nodes(removed_nodes_with_desc.clone())
+            .map_err(|e| anyhow::anyhow!(e))?;
 
         // Now simulate node addition
-        let added_nodes = self.registry.get_nodes_from_ids(&change.get_added_node_ids()).await?;
+        let added_nodes = self.registry.get_decentralized_nodes(&change.get_added_node_ids()).await?;
+        let added_nodes_with_desc = generate_added_node_description(&subnet_mid.nodes, &added_nodes);
 
-        let subnet_after = subnet_mid.with_nodes(&added_nodes);
+        let subnet_after = subnet_mid.with_nodes(added_nodes_with_desc.clone());
 
         let subnet_change = SubnetChange {
-            subnet_id: subnet_after.id,
+            id: subnet_after.id,
             old_nodes: nodes_before,
             new_nodes: subnet_after.nodes,
-            added_nodes: added_nodes.clone(),
-            removed_nodes: removed_nodes.clone(),
+            added_nodes_desc: added_nodes_with_desc.clone(),
+            removed_nodes_desc: removed_nodes_with_desc.clone(),
             ..Default::default()
         };
-        println!("{}", SubnetChangeResponse::new(&subnet_change, &health_of_nodes, summary));
+        println!(
+            "{}",
+            SubnetChangeResponse::from(&subnet_change).with_health_of_nodes(health_of_nodes.clone())
+        );
         Ok(())
     }
 
@@ -1021,17 +611,16 @@ impl Runner {
             None => change_request,
         };
 
-        let all_nodes = self.registry.nodes().await?.values().cloned().collect_vec();
         let health_of_nodes = self.health_of_nodes().await?;
 
-        let change = &change_request.rescue(&health_of_nodes, self.cordoned_features_fetcher.fetch().await?, &all_nodes)?;
-        let change = SubnetChangeResponse::new(change, &health_of_nodes, Some("Recovering subnet".to_string()));
+        let change = SubnetChangeResponse::from(&change_request.rescue(&health_of_nodes, self.cordoned_features_fetcher.fetch().await?)?)
+            .with_health_of_nodes(health_of_nodes);
 
-        if change.node_ids_added.is_empty() && change.node_ids_removed.is_empty() {
+        if change.added_with_desc.is_empty() && change.removed_with_desc.is_empty() {
             return Ok(None);
         }
 
-        self.run_membership_change(change.clone(), replace_proposal_options(&change, forum_post_link).await?)
+        self.run_membership_change(change.clone(), replace_proposal_options(&change, forum_post_link)?)
             .await
             .map(Some)
     }
@@ -1119,8 +708,8 @@ impl Runner {
         Ok(RunnerProposal {
             cmd: ProposeCommand::ChangeSubnetMembership {
                 subnet_id,
-                node_ids_add: change.node_ids_added,
-                node_ids_remove: change.node_ids_removed,
+                node_ids_add: change.added_with_desc.iter().map(|a| a.0).collect::<Vec<_>>(),
+                node_ids_remove: change.removed_with_desc.iter().map(|a| a.0).collect::<Vec<_>>(),
             },
             opts: options,
         })
@@ -1167,63 +756,20 @@ impl Runner {
     }
 }
 
-fn nodes_in_subnets_or_proposals(
-    subnets: &IndexMap<PrincipalId, Subnet>,
-    nodes_with_proposals_grouped_by_operator: &HashMap<PrincipalId, Vec<Node>>,
-) -> AHashMap<PrincipalId, Node> {
-    let nodes_in_subnets = subnets
-        .values()
-        .flat_map(|s| s.nodes.iter().map(|n| (n.principal, n.clone())))
-        .collect::<AHashMap<_, _>>();
-    let nodes_in_subnets_or_proposals = nodes_in_subnets
-        .into_iter()
-        .chain(
-            nodes_with_proposals_grouped_by_operator
-                .iter()
-                .flat_map(|(_, nodes)| nodes.iter().map(|n| (n.principal, n.clone()))),
-        )
-        .collect::<AHashMap<_, _>>();
-    nodes_in_subnets_or_proposals
-}
-
-pub async fn replace_proposal_options(change: &SubnetChangeResponse, forum_post_link: Option<String>) -> anyhow::Result<ic_admin::ProposeOptions> {
+pub fn replace_proposal_options(change: &SubnetChangeResponse, forum_post_link: Option<String>) -> anyhow::Result<ic_admin::ProposeOptions> {
     let subnet_id = change.subnet_id.ok_or_else(|| anyhow::anyhow!("subnet_id is required"))?.to_string();
 
-    let replace_target = if change.node_ids_added.len() > 1 || change.node_ids_removed.len() > 1 {
+    let replace_target = if change.added_with_desc.len() > 1 || change.removed_with_desc.len() > 1 {
         "nodes"
     } else {
         "a node"
     };
     let subnet_id_short = subnet_id.split('-').next().unwrap();
 
-    let change_desc = if change.node_ids_added.len() == change.node_ids_removed.len() {
+    let change_desc = if change.added_with_desc.len() == change.removed_with_desc.len() {
         format!("Replace {} in subnet {}", replace_target, subnet_id_short)
     } else {
         format!("Resize subnet {}", subnet_id_short)
-    };
-
-    let forum_post_link = match forum_post_link {
-        Some(_) => forum_post_link,
-        None => {
-            let base_forum_post_link = format!("https://forum.dfinity.org/t/subnet-management-{}", subnet_id_short);
-            let links_to_check = vec![
-                format!("{}-nns", base_forum_post_link),
-                format!("{}-ii", base_forum_post_link),
-                format!("{}-application", base_forum_post_link),
-                format!("{}-application-sns", base_forum_post_link),
-                format!("{}-fiduciary", base_forum_post_link),
-                format!("{}-system-bitcoin", base_forum_post_link),
-                format!("{}-european", base_forum_post_link),
-            ];
-            let mut found_forum_post_link = None;
-            for link in links_to_check {
-                if get(&link).await?.status().is_success() {
-                    found_forum_post_link = Some(link);
-                    break;
-                }
-            }
-            found_forum_post_link
-        }
     };
 
     Ok(ic_admin::ProposeOptions {
@@ -1311,13 +857,11 @@ pub fn format_regular_version_upgrade_summary(
 
     ```
     # From https://github.com/dfinity/ic#verifying-releases
-    sudo apt-get install -y curl && curl --proto '=https' --tlsv1.2 -sSLO https://raw.githubusercontent.com/dfinity/ic/{version}/ci/tools/repro-check.sh && chmod +x repro-check.sh && ./repro-check.sh -c {version} --guestos
+    sudo apt-get install -y curl && curl --proto '=https' --tlsv1.2 -sSLO https://raw.githubusercontent.com/dfinity/ic/{version}/ci/tools/repro-check.sh && chmod +x repro-check.sh && ./repro-check.sh -c {version}
     ```
 
     The two SHA256 sums printed above from a) the downloaded CDN image and b) the locally built image,
     must be identical, and must match the SHA256 from the payload of the NNS proposal.
-
-    While not required for this NNS proposal, as we are only electing a new GuestOS version here, you have the option to verify the build reproducibility of the HostOS by passing `--hostos` to the script above instead of `--guestos`, or the SetupOS by passing `--setupos`.
 
     Forum post link: {forum_post_link}
     "#

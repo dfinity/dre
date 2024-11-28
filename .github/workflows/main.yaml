@@ -41,7 +41,7 @@ jobs:
       - name: "🚀 Building"
         uses: ./.github/workflows/build
         with:
-          GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
+          GITHUB_TOKEN: "${{ secrets.GIX_CREATE_PR_PAT }}"
       - name: "🚀 Testing"
         env:
           STAGING_PRIVATE_KEY_PEM: "${{ secrets.STAGING_PRIVATE_KEY_PEM }}"

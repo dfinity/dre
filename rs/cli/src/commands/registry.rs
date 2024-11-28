@@ -1,13 +1,10 @@
-use std::{
-    collections::{BTreeMap, HashMap},
-    net::Ipv6Addr,
-    path::PathBuf,
-    str::FromStr,
-    sync::Arc,
-};
+use std::{collections::BTreeMap, path::PathBuf, str::FromStr, sync::Arc};
 
 use clap::Args;
-use ic_management_backend::{health::HealthStatusQuerier, lazy_registry::LazyRegistry};
+use ic_management_backend::{
+    health::{HealthClient, HealthStatusQuerier},
+    lazy_registry::LazyRegistry,
+};
 use ic_management_types::{HealthStatus, Network};
 use ic_protobuf::registry::{
     dc::v1::DataCenterRecord,
@@ -120,7 +117,7 @@ impl Registry {
 
         let dcs = local_registry.get_datacenters()?;
 
-        let (subnets, nodes) = get_subnets_and_nodes(&local_registry, &node_operators, ctx.health_client()).await?;
+        let (subnets, nodes) = get_subnets_and_nodes(&local_registry, &node_operators, ctx.network()).await?;
 
         let unassigned_nodes_config = local_registry.get_unassigned_nodes()?;
 
@@ -160,7 +157,6 @@ impl Registry {
             node_operators: node_operators.values().cloned().collect_vec(),
             node_rewards_table,
             api_bns,
-            node_providers: get_node_providers(&local_registry).await?,
         })
     }
 }
@@ -190,11 +186,6 @@ async fn get_node_operators(local_registry: &Arc<dyn LazyRegistry>, network: &Ne
             });
             // Find the number of nodes registered by this operator
             let operator_registered_nodes_num = all_nodes.iter().filter(|(nk, _)| nk == &k).count() as u64;
-            let nodes_in_subnets = all_nodes
-                .iter()
-                .filter(|(_, value)| value.operator.principal == record.principal && value.subnet_id.is_some())
-                .count() as u64;
-            let nodes_in_registry = all_nodes.iter().filter(|(_, value)| value.operator.principal == record.principal).count() as u64;
             (
                 record.principal,
                 NodeOperator {
@@ -209,8 +200,6 @@ async fn get_node_operators(local_registry: &Arc<dyn LazyRegistry>, network: &Ne
                     total_up_nodes: 0,
                     nodes_health: Default::default(),
                     rewards_correct: false,
-                    nodes_in_subnets,
-                    nodes_in_registry,
                 },
             )
         })
@@ -221,7 +210,7 @@ async fn get_node_operators(local_registry: &Arc<dyn LazyRegistry>, network: &Ne
 async fn get_subnets_and_nodes(
     local_registry: &Arc<dyn LazyRegistry>,
     node_operators: &IndexMap<PrincipalId, NodeOperator>,
-    health_client: Arc<dyn HealthStatusQuerier>,
+    network: &Network,
 ) -> anyhow::Result<(Vec<SubnetRecord>, Vec<NodeDetails>)> {
     let subnets = local_registry.subnets().await?;
     let subnets = subnets
@@ -250,7 +239,7 @@ async fn get_subnets_and_nodes(
             chain_key_config: record.chain_key_config.clone(),
         })
         .collect::<Vec<_>>();
-    let nodes = _get_nodes(local_registry, node_operators, &subnets, health_client).await?;
+    let nodes = _get_nodes(local_registry, node_operators, &subnets, network).await?;
     let subnets = subnets
         .into_iter()
         .map(|subnet| {
@@ -270,8 +259,9 @@ async fn _get_nodes(
     local_registry: &Arc<dyn LazyRegistry>,
     node_operators: &IndexMap<PrincipalId, NodeOperator>,
     subnets: &[SubnetRecord],
-    health_client: Arc<dyn HealthStatusQuerier>,
+    network: &Network,
 ) -> anyhow::Result<Vec<NodeDetails>> {
+    let health_client = HealthClient::new(network.clone());
     let nodes_health = health_client.nodes().await?;
 
     // Rewardable nodes for all node operators
@@ -315,11 +305,11 @@ async fn _get_nodes(
             NodeDetails {
                 node_id: *k,
                 xnet: Some(ConnectionEndpoint {
-                    ip_addr: record.ip_addr.unwrap_or(Ipv6Addr::LOCALHOST).to_string(),
+                    ip_addr: record.ip_addr.to_string(),
                     port: 2497,
                 }),
                 http: Some(ConnectionEndpoint {
-                    ip_addr: record.ip_addr.unwrap_or(Ipv6Addr::LOCALHOST).to_string(),
+                    ip_addr: record.ip_addr.to_string(),
                     port: 8080,
                 }),
                 node_operator_id,
@@ -417,38 +407,6 @@ fn get_api_boundary_nodes(local_registry: &Arc<dyn LazyRegistry>) -> anyhow::Res
     Ok(api_bns)
 }
 
-async fn get_node_providers(local_registry: &Arc<dyn LazyRegistry>) -> anyhow::Result<Vec<NodeProvider>> {
-    let all_nodes = local_registry.nodes().await?;
-    let node_providers = local_registry
-        .operators()
-        .await?
-        .values()
-        .map(|operator| operator.provider.clone())
-        .sorted_by_key(|provider| provider.principal)
-        .dedup_by(|x, y| x.principal == y.principal)
-        .collect_vec();
-
-    Ok(node_providers
-        .iter()
-        .map(|provider| {
-            let provider_nodes = all_nodes.values().filter(|node| node.operator.provider.principal == provider.principal);
-
-            NodeProvider {
-                principal: provider.principal,
-                total_nodes: provider_nodes.clone().count(),
-                nodes_in_subnet: provider_nodes.clone().filter(|node| node.subnet_id.is_some()).count(),
-                nodes_per_dc: provider_nodes
-                    .map(|node| match &node.operator.datacenter {
-                        Some(dc) => dc.name.clone(),
-                        None => "Unknown".to_string(),
-                    })
-                    .counts_by(|dc_name| dc_name),
-                name: provider.name.clone().unwrap_or("Unknown".to_string()),
-            }
-        })
-        .collect())
-}
-
 #[derive(Debug, Serialize)]
 struct RegistryDump {
     subnets: Vec<SubnetRecord>,
@@ -460,7 +418,6 @@ struct RegistryDump {
     api_bns: Vec<ApiBoundaryNodeDetails>,
     elected_guest_os_versions: Vec<ReplicaVersionRecord>,
     elected_host_os_versions: Vec<HostosVersionRecord>,
-    node_providers: Vec<NodeProvider>,
 }
 
 #[derive(Clone, Debug, Serialize)]
@@ -525,8 +482,6 @@ struct NodeOperator {
     total_up_nodes: u32,
     nodes_health: IndexMap<String, Vec<PrincipalId>>,
     rewards_correct: bool,
-    nodes_in_subnets: u64,
-    nodes_in_registry: u64,
 }
 
 // We re-create the rewards structs here in order to convert the output of get-rewards-table into the format
@@ -556,15 +511,6 @@ pub struct NodeRewardsTableFlattened {
     #[prost(btree_map = "string, message", tag = "1")]
     #[serde(flatten)]
     pub table: BTreeMap<String, NodeRewardRatesFlattened>,
-}
-
-#[derive(serde::Serialize, Debug)]
-struct NodeProvider {
-    name: String,
-    principal: PrincipalId,
-    total_nodes: usize,
-    nodes_in_subnet: usize,
-    nodes_per_dc: HashMap<String, usize>,
 }
 
 #[derive(Debug, Clone)]

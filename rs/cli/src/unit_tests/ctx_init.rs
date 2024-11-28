@@ -6,7 +6,8 @@ use crate::{
     cordoned_feature_fetcher::MockCordonedFeatureFetcher,
     store::{Store, FALLBACK_IC_ADMIN_VERSION},
 };
-use ic_canisters::{governance::governance_canister_version, parallel_hardware_identity::KeyIdVec};
+use clio::{ClioPath, InputPath};
+use ic_canisters::governance::governance_canister_version;
 use ic_management_backend::health::MockHealthStatusQuerier;
 use ic_management_types::Network;
 use itertools::Itertools;
@@ -27,7 +28,8 @@ fn get_deleted_status_file() -> PathBuf {
 
 async fn get_context(network: &Network, version: IcAdminVersion) -> anyhow::Result<DreContext> {
     DreContext::new(
-        network.clone(),
+        network.name.clone(),
+        network.nns_urls.clone(),
         AuthOpts {
             private_key_pem: None,
             hsm_opts: crate::commands::HsmOpts {
@@ -48,12 +50,6 @@ async fn get_context(network: &Network, version: IcAdminVersion) -> anyhow::Resu
         Arc::new(MockCordonedFeatureFetcher::new()),
         Arc::new(MockHealthStatusQuerier::new()),
         Store::new(false)?,
-        crate::commands::DiscourseOpts {
-            discourse_api_key: None,
-            discourse_api_url: None,
-            discourse_api_user: None,
-            discourse_skip_post_creation: true,
-        },
     )
     .await
 }
@@ -178,7 +174,8 @@ async fn get_ctx_for_neuron_test(
     offline: bool,
 ) -> anyhow::Result<DreContext> {
     DreContext::new(
-        ic_management_types::Network::new_unchecked(network, &[]).unwrap(),
+        network,
+        vec![],
         auth,
         neuron_id,
         true,
@@ -190,12 +187,6 @@ async fn get_ctx_for_neuron_test(
         Arc::new(MockCordonedFeatureFetcher::new()),
         Arc::new(MockHealthStatusQuerier::new()),
         Store::new(offline)?,
-        crate::commands::DiscourseOpts {
-            discourse_api_key: None,
-            discourse_api_url: None,
-            discourse_api_user: None,
-            discourse_skip_post_creation: false,
-        },
     )
     .await
 }
@@ -205,7 +196,7 @@ struct NeuronAuthTestScenarion<'a> {
     neuron_id: Option<u64>,
     private_key_pem: Option<String>,
     hsm_pin: Option<String>,
-    hsm_key_id: Option<KeyIdVec>,
+    hsm_key_id: Option<u8>,
     hsm_slot: Option<u64>,
     requirement: AuthRequirement,
     network: String,
@@ -265,7 +256,7 @@ impl<'a> NeuronAuthTestScenarion<'a> {
         }
     }
 
-    fn with_key_id(self, hsm_key_id: KeyIdVec) -> Self {
+    fn with_key_id(self, hsm_key_id: u8) -> Self {
         Self {
             hsm_key_id: Some(hsm_key_id),
             ..self
@@ -297,12 +288,15 @@ impl<'a> NeuronAuthTestScenarion<'a> {
     async fn get_neuron(&self) -> anyhow::Result<Neuron> {
         let ctx = get_ctx_for_neuron_test(
             AuthOpts {
-                private_key_pem: self.private_key_pem.clone(),
+                private_key_pem: self
+                    .private_key_pem
+                    .as_ref()
+                    .map(|path| InputPath::new(ClioPath::new(path).unwrap()).unwrap()),
                 hsm_opts: HsmOpts {
                     hsm_pin: self.hsm_pin.clone(),
                     hsm_params: crate::commands::HsmParams {
                         hsm_slot: self.hsm_slot,
-                        hsm_key_id: self.hsm_key_id.clone(),
+                        hsm_key_id: self.hsm_key_id,
                     },
                 },
             },

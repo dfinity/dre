@@ -1,64 +1,71 @@
 use std::sync::Arc;
 
 use decentralization::{
-    network::{CordonedFeature, DecentralizedSubnet},
+    nakamoto::NodeFeatures,
+    network::{DecentralizedSubnet, Node, NodeFeaturePair},
     SubnetChangeResponse,
 };
 use ic_management_backend::{health::MockHealthStatusQuerier, lazy_registry::MockLazyRegistry};
-use ic_management_types::{Node, NodeFeature, NodeFeatures};
+use ic_management_types::NodeFeature;
 use ic_types::PrincipalId;
 use indexmap::{Equivalent, IndexMap};
 use itertools::Itertools;
 
 use crate::{cordoned_feature_fetcher::MockCordonedFeatureFetcher, subnet_manager::SubnetManager};
 
+fn node_principal(id: u64) -> PrincipalId {
+    PrincipalId::new_node_test_id(id)
+}
+
 fn user_principal(id: u64) -> String {
     PrincipalId::new_user_test_id(id).to_string()
 }
 
 fn node(id: u64, dfinity_owned: bool, features: &[(NodeFeature, &str)]) -> Node {
-    let features = NodeFeatures {
-        feature_map: {
-            let mut map = IndexMap::new();
+    Node {
+        id: node_principal(id),
+        dfinity_owned,
+        features: NodeFeatures {
+            feature_map: {
+                let mut map = IndexMap::new();
 
-            features.iter().for_each(|(feature, value)| {
-                map.insert(feature.clone(), value.to_string());
-            });
+                features.iter().for_each(|(feature, value)| {
+                    map.insert(feature.clone(), value.to_string());
+                });
 
-            // Insert mandatory features
-            for feature in &[
-                NodeFeature::NodeProvider,
-                NodeFeature::DataCenter,
-                NodeFeature::DataCenterOwner,
-                NodeFeature::Country,
-            ] {
-                if !map.contains_key(feature) {
-                    map.insert(feature.clone(), "Some value".to_string());
+                // Insert mandatory features
+                for feature in &[
+                    NodeFeature::NodeProvider,
+                    NodeFeature::DataCenter,
+                    NodeFeature::DataCenterOwner,
+                    NodeFeature::Country,
+                ] {
+                    if !map.contains_key(feature) {
+                        map.insert(feature.clone(), "Some value".to_string());
+                    }
                 }
-            }
 
-            map
+                map
+            },
         },
-    };
-    Node::new_test_node(id, features, dfinity_owned)
+    }
 }
 
 fn subnet(id: u64, nodes: &[Node]) -> DecentralizedSubnet {
     DecentralizedSubnet {
         id: PrincipalId::new_subnet_test_id(id),
         nodes: nodes.to_vec(),
-        added_nodes: vec![],
-        removed_nodes: vec![],
+        added_nodes_desc: vec![],
+        removed_nodes_desc: vec![],
         comment: None,
         run_log: vec![],
     }
 }
 
-fn cordoned_feature(feature: NodeFeature, value: &str) -> CordonedFeature {
-    CordonedFeature {
+fn cordoned_feature(feature: NodeFeature, value: &str) -> NodeFeaturePair {
+    NodeFeaturePair {
         feature,
         value: value.to_string(),
-        explanation: None,
     }
 }
 
@@ -73,8 +80,14 @@ fn test_pretty_format_response(response: &Result<SubnetChangeResponse, anyhow::E
     Feature diff:
 {}
             "#,
-            r.node_ids_added.iter().map(|id| format!("\t\t- principal: {}", id)).join("\n"),
-            r.node_ids_removed.iter().map(|id| format!("\t\t- principal: {}", id)).join("\n"),
+            r.added_with_desc
+                .iter()
+                .map(|(id, desc)| format!("\t\t- principal: {}\n\t\t  desc: {}", id, desc))
+                .join("\n"),
+            r.removed_with_desc
+                .iter()
+                .map(|(id, desc)| format!("\t\t- principal: {}\n\t\t  desc: {}", id, desc))
+                .join("\n"),
             r.feature_diff
                 .iter()
                 .map(|(feature, diff)| format!(
@@ -94,11 +107,11 @@ fn pretty_print_node(node: &Node, num_ident: usize) -> String {
     format!(
         "{}- principal: {}\n{}  dfinity_owned: {}\n{}  features: [{}]",
         "\t".repeat(num_ident),
-        node.principal,
+        node.id,
         "\t".repeat(num_ident),
-        node.dfinity_owned.unwrap_or_default(),
+        node.dfinity_owned,
         "\t".repeat(num_ident),
-        node.get_features()
+        node.features
             .feature_map
             .iter()
             .map(|(feature, value)| format!("({}, {})", feature, value))
@@ -191,8 +204,8 @@ fn should_skip_cordoned_nodes() {
     // All nodes in the world are healthy for this test
     let nodes_health = available_nodes
         .iter()
-        .map(|n| n.principal)
-        .chain(subnet.nodes.iter().map(|n| n.principal))
+        .map(|n| n.id)
+        .chain(subnet.nodes.iter().map(|n| n.id))
         .map(|node_id| (node_id, ic_management_types::HealthStatus::Healthy))
         .collect::<IndexMap<PrincipalId, ic_management_types::HealthStatus>>();
     health_client.expect_nodes().returning(move || {
@@ -243,7 +256,6 @@ fn should_skip_cordoned_nodes() {
     let mut failed_scenarios = vec![];
 
     let registry = Arc::new(registry);
-    let all_nodes = available_nodes.iter().chain(subnet.nodes.iter()).cloned().collect_vec();
     let health_client = Arc::new(health_client);
     for (cordoned_features, should_succeed) in scenarios {
         let cordoned_features_clone = cordoned_features.clone();
@@ -259,10 +271,8 @@ fn should_skip_cordoned_nodes() {
         // Act
         let response = runtime.block_on(
             subnet_manager
-                .with_target(crate::subnet_manager::SubnetTarget::FromNodesIds(vec![
-                    subnet.nodes.first().unwrap().principal,
-                ]))
-                .membership_replace(false, None, None, None, vec![], None, &all_nodes),
+                .with_target(crate::subnet_manager::SubnetTarget::FromNodesIds(vec![subnet.nodes.first().unwrap().id]))
+                .membership_replace(false, None, None, None, vec![], None),
         );
 
         // Assert
@@ -284,12 +294,12 @@ fn should_skip_cordoned_nodes() {
         }
 
         let response = response.unwrap();
-        if response.node_ids_removed.is_empty() {
+        if response.removed_with_desc.is_empty() {
             failed_scenarios.push((Ok(response), cordoned_features, "Expected nodes to be removed".to_string()));
             continue;
         }
 
-        if response.node_ids_added.is_empty() {
+        if response.added_with_desc.is_empty() {
             failed_scenarios.push((Ok(response), cordoned_features, "Expected nodes to be added".to_string()));
             continue;
         }

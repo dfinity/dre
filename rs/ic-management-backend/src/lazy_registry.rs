@@ -2,7 +2,7 @@ use indexmap::{IndexMap, IndexSet};
 use std::net::Ipv6Addr;
 use std::path::PathBuf;
 use std::str::FromStr;
-use std::sync::{Arc, OnceLock};
+use std::sync::Arc;
 
 use decentralization::network::{AvailableNodesQuerier, DecentralizedSubnet, NodesConverter, SubnetQuerier, SubnetQueryBy};
 use futures::future::BoxFuture;
@@ -71,7 +71,7 @@ pub trait LazyRegistry:
 
     fn subnets(&self) -> BoxFuture<'_, anyhow::Result<Arc<IndexMap<PrincipalId, Subnet>>>>;
 
-    fn nodes_and_proposals(&self) -> BoxFuture<'_, anyhow::Result<Arc<IndexMap<PrincipalId, Node>>>>;
+    fn nodes_with_proposals(&self) -> BoxFuture<'_, anyhow::Result<Arc<IndexMap<PrincipalId, Node>>>>;
 
     fn nns_replica_version(&self) -> BoxFuture<'_, anyhow::Result<Option<String>>> {
         Box::pin(async {
@@ -102,10 +102,15 @@ pub trait LazyRegistry:
         })
     }
 
-    fn get_nodes_from_ids<'a>(&'a self, principals: &'a [PrincipalId]) -> BoxFuture<'a, anyhow::Result<Vec<Node>>> {
+    fn get_decentralized_nodes<'a>(&'a self, principals: &'a [PrincipalId]) -> BoxFuture<'a, anyhow::Result<Vec<decentralization::network::Node>>> {
         Box::pin(async {
-            let all_nodes = self.nodes().await?;
-            Ok(principals.iter().filter_map(|p| all_nodes.get(p).cloned()).collect())
+            Ok(self
+                .nodes()
+                .await?
+                .values()
+                .filter(|n| principals.contains(&n.principal))
+                .map(decentralization::network::Node::from)
+                .collect_vec())
         })
     }
 
@@ -141,15 +146,22 @@ pub trait LazyRegistry:
 }
 
 impl NodesConverter for Box<dyn LazyRegistry> {
-    fn get_nodes<'a>(&'a self, node_ids: &'a [PrincipalId]) -> BoxFuture<'a, Result<Vec<Node>, ic_management_types::NetworkError>> {
+    fn get_nodes<'a>(
+        &'a self,
+        from: &'a [PrincipalId],
+    ) -> BoxFuture<'a, Result<Vec<decentralization::network::Node>, ic_management_types::NetworkError>> {
         Box::pin(async {
             let nodes = self
                 .nodes()
                 .await
                 .map_err(|e| ic_management_types::NetworkError::DataRequestError(e.to_string()))?;
-            node_ids
-                .iter()
-                .map(|n| nodes.get(n).cloned().ok_or(ic_management_types::NetworkError::NodeNotFound(*n)))
+            from.iter()
+                .map(|n| {
+                    nodes
+                        .get(n)
+                        .ok_or(ic_management_types::NetworkError::NodeNotFound(*n))
+                        .map(decentralization::network::Node::from)
+                })
                 .collect()
         })
     }
@@ -173,7 +185,6 @@ where
     offline: bool,
     proposal_agent: Arc<dyn ProposalAgent>,
     guest_labels_cache_path: PathBuf,
-    health_client: Arc<dyn HealthStatusQuerier>,
 }
 
 pub trait LazyRegistryEntry: RegistryValue {
@@ -276,7 +287,6 @@ impl LazyRegistryImpl {
         offline: bool,
         proposal_agent: Arc<dyn ProposalAgent>,
         guest_labels_cache_path: PathBuf,
-        health_client: Arc<dyn HealthStatusQuerier>,
     ) -> Self {
         Self {
             local_registry,
@@ -292,7 +302,6 @@ impl LazyRegistryImpl {
             offline,
             proposal_agent,
             guest_labels_cache_path,
-            health_client,
         }
     }
 
@@ -512,7 +521,7 @@ impl LazyRegistry for LazyRegistryImpl {
                         Node {
                             principal,
                             dfinity_owned: Some(dfinity_dcs.contains(&dc_name) || guest.as_ref().map(|g| g.dfinity_owned).unwrap_or_default()),
-                            ip_addr: Some(ip_addr),
+                            ip_addr,
                             hostname: guest
                                 .as_ref()
                                 .map(|g| g.name.clone())
@@ -536,7 +545,6 @@ impl LazyRegistry for LazyRegistryImpl {
                             // TODO: map hostos release
                             hostos_release: None,
                             operator: operator.clone().unwrap_or_default(),
-                            cached_features: OnceLock::new(),
                             proposal: None,
                             label: guest.map(|g| g.name),
                             duplicates: versioned_node_entries
@@ -672,7 +680,7 @@ impl LazyRegistry for LazyRegistryImpl {
         })
     }
 
-    fn nodes_and_proposals(&self) -> BoxFuture<'_, anyhow::Result<Arc<IndexMap<PrincipalId, Node>>>> {
+    fn nodes_with_proposals(&self) -> BoxFuture<'_, anyhow::Result<Arc<IndexMap<PrincipalId, Node>>>> {
         Box::pin(async {
             let nodes = self.nodes().await?;
             if nodes.iter().any(|(_, n)| n.proposal.is_some()) {
@@ -748,14 +756,14 @@ impl LazyRegistry for LazyRegistryImpl {
         })
     }
 
-    fn get_nodes_from_ids<'a>(&'a self, principals: &'a [PrincipalId]) -> BoxFuture<'a, anyhow::Result<Vec<Node>>> {
+    fn get_decentralized_nodes<'a>(&'a self, principals: &'a [PrincipalId]) -> BoxFuture<'a, anyhow::Result<Vec<decentralization::network::Node>>> {
         Box::pin(async {
             Ok(self
                 .nodes()
                 .await?
                 .values()
                 .filter(|n| principals.contains(&n.principal))
-                .cloned()
+                .map(decentralization::network::Node::from)
                 .collect_vec())
         })
     }
@@ -807,14 +815,22 @@ impl LazyRegistry for LazyRegistryImpl {
 }
 
 impl NodesConverter for LazyRegistryImpl {
-    fn get_nodes<'a>(&'a self, from: &'a [PrincipalId]) -> BoxFuture<'a, Result<Vec<Node>, ic_management_types::NetworkError>> {
+    fn get_nodes<'a>(
+        &'a self,
+        from: &'a [PrincipalId],
+    ) -> BoxFuture<'a, Result<Vec<decentralization::network::Node>, ic_management_types::NetworkError>> {
         Box::pin(async {
             let nodes = self
                 .nodes()
                 .await
                 .map_err(|e| ic_management_types::NetworkError::DataRequestError(e.to_string()))?;
             from.iter()
-                .map(|n| nodes.get(n).cloned().ok_or(ic_management_types::NetworkError::NodeNotFound(*n)))
+                .map(|n| {
+                    nodes
+                        .get(n)
+                        .ok_or(ic_management_types::NetworkError::NodeNotFound(*n))
+                        .map(decentralization::network::Node::from)
+                })
                 .collect()
         })
     }
@@ -831,9 +847,9 @@ impl SubnetQuerier for LazyRegistryImpl {
                     .get(&id)
                     .map(|s| DecentralizedSubnet {
                         id: s.principal,
-                        nodes: s.nodes.clone(),
-                        added_nodes: vec![],
-                        removed_nodes: vec![],
+                        nodes: s.nodes.iter().map(decentralization::network::Node::from).collect(),
+                        added_nodes_desc: vec![],
+                        removed_nodes_desc: vec![],
                         comment: None,
                         run_log: vec![],
                     })
@@ -842,7 +858,7 @@ impl SubnetQuerier for LazyRegistryImpl {
                     let reg_nodes = self.nodes().await.map_err(|e| NetworkError::DataRequestError(e.to_string()))?;
                     let subnets = nodes
                         .iter()
-                        .map(|n| reg_nodes.get(&n.principal).and_then(|n| n.subnet_id))
+                        .map(|n| reg_nodes.get(&n.id).and_then(|n| n.subnet_id))
                         .collect::<IndexSet<_>>();
                     if subnets.len() > 1 {
                         return Err(NetworkError::IllegalRequest("Nodes don't belong to the same subnet".to_owned()));
@@ -857,9 +873,11 @@ impl SubnetQuerier for LazyRegistryImpl {
                                 .get(subnet)
                                 .ok_or(NetworkError::SubnetNotFound(*subnet))?
                                 .nodes
-                                .to_vec(),
-                            added_nodes: vec![],
-                            removed_nodes: vec![],
+                                .iter()
+                                .map(decentralization::network::Node::from)
+                                .collect(),
+                            added_nodes_desc: vec![],
+                            removed_nodes_desc: vec![],
                             comment: None,
                             run_log: vec![],
                         })
@@ -874,17 +892,18 @@ impl SubnetQuerier for LazyRegistryImpl {
 impl decentralization::network::TopologyManager for LazyRegistryImpl {}
 
 impl AvailableNodesQuerier for LazyRegistryImpl {
-    fn available_nodes(&self) -> BoxFuture<'_, Result<Vec<Node>, ic_management_types::NetworkError>> {
+    fn available_nodes(&self) -> BoxFuture<'_, Result<Vec<decentralization::network::Node>, ic_management_types::NetworkError>> {
         Box::pin(async {
-            let (nodes_and_proposals, healths) = try_join!(self.nodes_and_proposals(), self.health_client.nodes())
+            let health_client = crate::health::HealthClient::new(self.network.clone());
+            let (nodes, healths) = try_join!(self.nodes_with_proposals(), health_client.nodes())
                 .map_err(|e| ic_management_types::NetworkError::DataRequestError(e.to_string()))?;
-            let available_nodes = nodes_and_proposals
+            let nodes = nodes
                 .values()
                 .filter(|n| n.subnet_id.is_none() && n.proposal.is_none() && n.duplicates.is_none() && !n.is_api_boundary_node)
                 .cloned()
                 .collect_vec();
 
-            Ok(available_nodes
+            Ok(nodes
                 .iter()
                 .filter(|n| {
                     // Keep only healthy nodes.
@@ -893,8 +912,8 @@ impl AvailableNodesQuerier for LazyRegistryImpl {
                         .map(|s| matches!(*s, ic_management_types::HealthStatus::Healthy))
                         .unwrap_or(false)
                 })
-                .cloned()
-                .sorted_by(|n1, n2| n1.principal.cmp(&n2.principal))
+                .map(decentralization::network::Node::from)
+                .sorted_by(|n1, n2| n1.id.cmp(&n2.id))
                 .collect())
         })
     }
@@ -919,7 +938,7 @@ mock! {
 
         fn subnets(&self) -> BoxFuture<'_, anyhow::Result<Arc<IndexMap<PrincipalId, Subnet>>>>;
 
-        fn nodes_and_proposals(&self) -> BoxFuture<'_, anyhow::Result<Arc<IndexMap<PrincipalId, Node>>>>;
+        fn nodes_with_proposals(&self) -> BoxFuture<'_, anyhow::Result<Arc<IndexMap<PrincipalId, Node>>>>;
 
         fn unassigned_nodes_replica_version(&self) -> BoxFuture<'_, anyhow::Result<Arc<String>>>;
 
@@ -947,7 +966,7 @@ mock! {
     }
 
     impl NodesConverter for LazyRegistry {
-        fn get_nodes<'a>(&'a self, from: &'a [PrincipalId]) -> BoxFuture<'_, Result<Vec<Node>, NetworkError>>;
+        fn get_nodes<'a>(&'a self, from: &'a [PrincipalId]) -> BoxFuture<'_, Result<Vec<decentralization::network::Node>, NetworkError>>;
     }
 
     impl SubnetQuerier for LazyRegistry {
@@ -957,6 +976,6 @@ mock! {
     impl decentralization::network::TopologyManager for LazyRegistry {}
 
     impl AvailableNodesQuerier for LazyRegistry {
-        fn available_nodes(&self) -> BoxFuture<'_, Result<Vec<Node>, NetworkError>>;
+        fn available_nodes(&self) -> BoxFuture<'_, Result<Vec<decentralization::network::Node>, NetworkError>>;
     }
 }

@@ -7,7 +7,6 @@ import { WidgetNumber } from './Widgets';
 import { boxStyleWidget } from '../Styles';
 import { ExportTable } from './ExportTable';
 import { GridColDef, GridRowsProp } from '@mui/x-data-grid';
-import { NodeProvidersRewardExplanation } from './RewardsInfo';
 
 export interface NodeProviderRewardsChartProps {
     provider: string;
@@ -43,12 +42,16 @@ export const NodeProviderRewardsChart: React.FC<NodeProviderRewardsChartProps> =
         return { 
             id: index,
             col0: index,
-            col1: data,
+            col1: data.reason, 
+            col2: data.operation,
+            col3: data.result
             };
     });
     const colDef: GridColDef[] = [
         { field: 'col0', headerName: 'Step', width: 100},
         { field: 'col1', headerName: 'Description', width: 1500},
+        { field: 'col2', headerName: 'Operation', width: 500 },
+        { field: 'col3', headerName: 'Result', width: 200 },
         ];
 
     return (
@@ -66,9 +69,6 @@ export const NodeProviderRewardsChart: React.FC<NodeProviderRewardsChartProps> =
                 <WidgetNumber value={Math.round(Number(latestProviderRewards.rewards_xdr_permyriad) / Number(latestProviderRewards.xdr_conversion_rate)).toString()} title="Expected Rewards ICP"  sxValue={{ color: '#FFCC00' }} />
                 <WidgetNumber value={Math.round(Number(rewards_xdr_old[0]) / 100000000).toString()} title="Last Rewards ICP Received"  sxValue={{ color: '#FFCC00' }} />
             </Box>
-            </Grid>
-            <Grid item xs={12} md={12}>
-                <NodeProvidersRewardExplanation/>
             </Grid>
             <Grid item xs={12} md={12}>
                 <Typography variant="body1" gutterBottom>

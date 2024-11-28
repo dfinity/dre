@@ -18,7 +18,7 @@ impl ExecutableCommand for Analyze {
     }
 
     async fn execute(&self, ctx: crate::ctx::DreContext) -> anyhow::Result<()> {
-        let client = GovernanceCanisterWrapper::from(ctx.create_ic_agent_canister_client().await?);
+        let client = GovernanceCanisterWrapper::from(ctx.create_ic_agent_canister_client(None).await?);
         let proposal = client.get_proposal(self.proposal_id).await?;
 
         if proposal.status() != ProposalStatus::Open {
@@ -29,12 +29,11 @@ impl ExecutableCommand for Analyze {
                 ProposalStatus::Open.as_str_name()
             ));
         }
-        let proposal_summary = proposal.clone().proposal.map(|p| p.summary);
 
         let runner = ctx.runner().await?;
 
         match filter_map_nns_function_proposals::<ChangeSubnetMembershipPayload>(&[proposal]).first() {
-            Some((_, change_membership)) => runner.decentralization_change(change_membership, None, proposal_summary).await,
+            Some((_, change_membership)) => runner.decentralization_change(change_membership, None).await,
             _ => Err(anyhow::anyhow!(
                 "Proposal {} must have {} type",
                 self.proposal_id,

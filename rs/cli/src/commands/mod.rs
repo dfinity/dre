@@ -1,15 +1,17 @@
+use std::path::PathBuf;
+
 use crate::commands::subnet::Subnet;
 use api_boundary_nodes::ApiBoundaryNodes;
 use clap::Args as ClapArgs;
 use clap::Parser;
 use clap_num::maybe_hex;
+use clio::*;
 use completions::Completions;
 use der_to_principal::DerToPrincipal;
 use firewall::Firewall;
 use get::Get;
+use heal::Heal;
 use hostos::HostOs;
-use ic_canisters::parallel_hardware_identity::KeyIdVec;
-use network::Network;
 use neuron::Neuron;
 use node_metrics::NodeMetrics;
 use nodes::Nodes;
@@ -30,8 +32,8 @@ pub(crate) mod completions;
 pub(crate) mod der_to_principal;
 pub(crate) mod firewall;
 pub mod get;
+pub(crate) mod heal;
 pub mod hostos;
-pub(crate) mod network;
 pub(crate) mod neuron;
 pub(crate) mod node_metrics;
 pub(crate) mod nodes;
@@ -57,7 +59,7 @@ pub(crate) struct HsmParams {
 
     /// HSM Key ID, can be read with pkcs11-tool
     #[clap(required = false, conflicts_with = "private_key_pem", long, value_parser=maybe_hex::<u8>, global = true, env = "HSM_KEY_ID")]
-    pub(crate) hsm_key_id: Option<KeyIdVec>,
+    pub(crate) hsm_key_id: Option<u8>,
 }
 
 /// HSM authentication arguments
@@ -101,17 +103,17 @@ pub struct AuthOpts {
         global = true,
         conflicts_with_all = ["hsm_pin", "hsm_slot", "hsm_key_id"],
         env = "PRIVATE_KEY_PEM")]
-    pub(crate) private_key_pem: Option<String>,
+    pub(crate) private_key_pem: Option<InputPath>,
     #[clap(flatten)]
     pub(crate) hsm_opts: HsmOpts,
 }
 
-impl TryFrom<String> for AuthOpts {
+impl TryFrom<PathBuf> for AuthOpts {
     type Error = anyhow::Error;
 
-    fn try_from(value: String) -> std::result::Result<Self, Self::Error> {
+    fn try_from(value: PathBuf) -> std::result::Result<Self, Self::Error> {
         Ok(AuthOpts {
-            private_key_pem: Some(value),
+            private_key_pem: Some(InputPath::new(ClioPath::new(value)?)?),
             hsm_opts: HsmOpts {
                 hsm_pin: None,
                 hsm_params: HsmParams {
@@ -123,34 +125,11 @@ impl TryFrom<String> for AuthOpts {
     }
 }
 
-#[derive(ClapArgs, Debug, Clone)]
-pub struct DiscourseOpts {
-    /// Api key used to interact with the forum
-    #[clap(long, env = "DISCOURSE_API_KEY", global = true, hide_env_values = true)]
-    pub(crate) discourse_api_key: Option<String>,
-
-    /// Api user that will interact with the forum
-    #[clap(long, env = "DISCOURSE_API_USER", global = true)]
-    pub(crate) discourse_api_user: Option<String>,
-
-    /// Api url used to interact with the forum
-    #[clap(long, env = "DISCOURSE_API_URL", global = true)]
-    pub(crate) discourse_api_url: Option<String>,
-
-    /// Skip forum post creation all together, also will not
-    /// prompt user for the link
-    #[clap(long, env = "DISCOURSE_SKIP_POST_CREATION", global = true)]
-    pub(crate) discourse_skip_post_creation: bool,
-}
-
 #[derive(Parser, Debug)]
 #[clap(version = env!("CARGO_PKG_VERSION"), about, author)]
 pub struct Args {
     #[clap(flatten)]
     pub(crate) auth_opts: AuthOpts,
-
-    #[clap(flatten)]
-    pub(crate) discourse_opts: DiscourseOpts,
 
     /// Neuron ID
     #[clap(long, global = true, env = "NEURON_ID")]
@@ -210,7 +189,7 @@ The argument is mandatory for testnets, and is optional for mainnet and staging"
 
     /// Path to file which contains cordoned features
     #[clap(long, global = true, visible_aliases = &["cf-file", "cfff"])]
-    pub cordoned_features_file: Option<String>,
+    pub cordon_feature_fallback_file: Option<PathBuf>,
 }
 
 // Do not use outside of DRE CLI.
@@ -268,7 +247,7 @@ macro_rules! impl_executable_command_for_enums {
 }
 pub(crate) use impl_executable_command_for_enums;
 
-impl_executable_command_for_enums! { DerToPrincipal, Network, Subnet, Get, Propose, UpdateUnassignedNodes, Version, NodeMetrics, HostOs, Nodes, ApiBoundaryNodes, Vote, Registry, Firewall, Upgrade, Proposals, Completions, Qualify, UpdateAuthorizedSubnets, Neuron }
+impl_executable_command_for_enums! { DerToPrincipal, Heal, Subnet, Get, Propose, UpdateUnassignedNodes, Version, NodeMetrics, HostOs, Nodes, ApiBoundaryNodes, Vote, Registry, Firewall, Upgrade, Proposals, Completions, Qualify, UpdateAuthorizedSubnets, Neuron }
 
 pub trait ExecutableCommand {
     fn require_auth(&self) -> AuthRequirement;

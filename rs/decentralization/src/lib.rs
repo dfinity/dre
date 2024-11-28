@@ -1,29 +1,24 @@
 pub mod nakamoto;
 pub mod network;
-#[cfg(test)]
-mod network_tests;
 pub mod subnets;
 use indexmap::IndexMap;
 use itertools::Itertools;
-use network::SubnetChange;
 use std::fmt::{Display, Formatter};
 
 use ic_base_types::PrincipalId;
-use ic_management_types::{HealthStatus, Node, NodeFeature};
+use ic_management_types::{HealthStatus, NodeFeature};
 use serde::{self, Deserialize, Serialize};
 
 #[derive(Clone, Debug, Deserialize, Serialize, Default)]
 pub struct SubnetChangeResponse {
-    pub nodes_old: Vec<Node>,
-    pub node_ids_added: Vec<PrincipalId>,
-    pub node_ids_removed: Vec<PrincipalId>,
+    pub added_with_desc: Vec<(PrincipalId, String)>,
+    pub removed_with_desc: Vec<(PrincipalId, String)>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub subnet_id: Option<PrincipalId>,
     pub health_of_nodes: IndexMap<PrincipalId, HealthStatus>,
     pub score_before: nakamoto::NakamotoScore,
     pub score_after: nakamoto::NakamotoScore,
-    pub penalties_before_change: (usize, Vec<String>),
-    pub penalties_after_change: (usize, Vec<String>),
+    pub penalties_after_change: usize,
     pub motivation: Option<String>,
     pub comment: Option<String>,
     pub run_log: Option<Vec<String>>,
@@ -34,22 +29,28 @@ pub struct SubnetChangeResponse {
 pub type FeatureDiff = IndexMap<String, (usize, usize)>;
 
 impl SubnetChangeResponse {
-    pub fn new(change: &SubnetChange, node_health: &IndexMap<PrincipalId, HealthStatus>, motivation: Option<String>) -> Self {
+    pub fn with_motivation(self, motivation: String) -> Self {
+        SubnetChangeResponse {
+            motivation: Some(motivation),
+            ..self
+        }
+    }
+    pub fn with_health_of_nodes(self, health_of_nodes: IndexMap<PrincipalId, HealthStatus>) -> Self {
+        SubnetChangeResponse { health_of_nodes, ..self }
+    }
+}
+
+impl From<&network::SubnetChange> for SubnetChangeResponse {
+    fn from(change: &network::SubnetChange) -> Self {
         Self {
-            nodes_old: change.old_nodes.clone(),
-            node_ids_added: change.added().iter().map(|n| n.principal).collect(),
-            node_ids_removed: change.removed().iter().map(|n| n.principal).collect(),
-            subnet_id: if change.subnet_id == Default::default() {
-                None
-            } else {
-                Some(change.subnet_id)
-            },
-            health_of_nodes: node_health.clone(),
+            added_with_desc: change.added().iter().map(|n| (n.0.id, n.1.clone())).collect(),
+            removed_with_desc: change.removed().iter().map(|n| (n.0.id, n.1.clone())).collect(),
+            subnet_id: if change.id == Default::default() { None } else { Some(change.id) },
+            health_of_nodes: IndexMap::new(),
             score_before: nakamoto::NakamotoScore::new_from_nodes(&change.old_nodes),
             score_after: nakamoto::NakamotoScore::new_from_nodes(&change.new_nodes),
-            penalties_before_change: change.penalties_before_change.clone(),
-            penalties_after_change: change.penalties_after_change.clone(),
-            motivation,
+            penalties_after_change: change.penalties_after_change,
+            motivation: None,
             comment: change.comment.clone(),
             run_log: Some(change.run_log.clone()),
             feature_diff: change.new_nodes.iter().fold(
@@ -60,25 +61,19 @@ impl SubnetChangeResponse {
                         .collect::<IndexMap<NodeFeature, FeatureDiff>>(),
                     |mut acc, n| {
                         for f in NodeFeature::variants() {
-                            acc.get_mut(&f).unwrap().entry(n.get_feature(&f).unwrap_or_default()).or_insert((0, 0)).0 += 1;
+                            acc.get_mut(&f).unwrap().entry(n.get_feature(&f)).or_insert((0, 0)).0 += 1;
                         }
                         acc
                     },
                 ),
                 |mut acc, n| {
                     for f in NodeFeature::variants() {
-                        acc.get_mut(&f).unwrap().entry(n.get_feature(&f).unwrap_or_default()).or_insert((0, 0)).1 += 1;
+                        acc.get_mut(&f).unwrap().entry(n.get_feature(&f)).or_insert((0, 0)).1 += 1;
                     }
                     acc
                 },
             ),
             proposal_id: None,
-        }
-    }
-    pub fn with_motivation(self, motivation: String) -> Self {
-        SubnetChangeResponse {
-            motivation: Some(motivation),
-            ..self
         }
     }
 }
@@ -111,40 +106,33 @@ impl Display for SubnetChangeResponse {
 
         let total_before = self.score_before.score_avg_linear();
         let total_after = self.score_after.score_avg_linear();
-        writeln!(
-            f,
-            "```\n\n**Mean Nakamoto comparison:** {:.2} -> {:.2}  ({:+.0}%)\n\nOverall replacement impact: {}",
+        let output = format!(
+            "\n**Mean Nakamoto comparison:** {:.2} -> {:.2}  ({:+.0}%)\n\nOverall replacement impact: {}",
             total_before,
             total_after,
             ((total_after - total_before) / total_before) * 100.,
             self.score_after.describe_difference_from(&self.score_before).1
-        )?;
+        );
 
-        if (self.penalties_before_change.0 != self.penalties_after_change.0) || (self.penalties_after_change.0 > 0) {
-            writeln!(
-                f,
-                "\nImpact on business rules penalties: {} -> {}",
-                self.penalties_before_change.0, self.penalties_after_change.0
-            )?;
-        }
+        writeln!(f, "```\n{}\n\n# Details\n\n", output)?;
 
-        writeln!(f, "\n\n# Details\n\nNodes removed:")?;
-        for node_id in &self.node_ids_removed {
+        writeln!(f, "Nodes removed:")?;
+        for (id, desc) in &self.removed_with_desc {
             let health = self
                 .health_of_nodes
-                .get(node_id)
+                .get(id)
                 .map(|h| h.to_string().to_lowercase())
                 .unwrap_or("unknown".to_string());
-            writeln!(f, "- `{}` [health: {}]", node_id, health).expect("write failed");
+            writeln!(f, "- `{}` [health: {}, impact on decentralization: {}]", id, health, desc).expect("write failed");
         }
         writeln!(f, "\nNodes added:")?;
-        for node_id in &self.node_ids_added {
+        for (id, desc) in &self.added_with_desc {
             let health = self
                 .health_of_nodes
-                .get(node_id)
+                .get(id)
                 .map(|h| h.to_string().to_lowercase())
                 .unwrap_or("unknown".to_string());
-            writeln!(f, "- `{}` [health: {}]", node_id, health).expect("write failed");
+            writeln!(f, "- `{}` [health: {}, impact on decentralization: {}]", id, health, desc).expect("write failed");
         }
 
         let rows = self.feature_diff.values().map(|diff| diff.len()).max().unwrap_or(0);
@@ -180,22 +168,10 @@ impl Display for SubnetChangeResponse {
             }));
         }
 
-        writeln!(f, "\n\n```\n{}```", table)?;
+        writeln!(f, "\n\n```\n{}```\n", table)?;
 
-        if !self.penalties_before_change.1.is_empty() {
-            writeln!(
-                f,
-                "\n\nBusiness rules check results *before* the membership change:\n{}",
-                self.penalties_before_change.1.iter().map(|l| format!("- {}", l)).join("\n")
-            )?;
-        }
-
-        if !self.penalties_after_change.1.is_empty() {
-            writeln!(
-                f,
-                "\n\nBusiness rules check results *after* the membership change:\n{}",
-                self.penalties_after_change.1.iter().map(|l| format!("- {}", l)).join("\n")
-            )?;
+        if let Some(comment) = &self.comment {
+            writeln!(f, "### Business rules analysis\n{}", comment)?;
         }
 
         Ok(())

@@ -1,3 +1,4 @@
+use crate::network::Node;
 use ic_base_types::PrincipalId;
 use ic_management_types::{
     requests::{NodeRemoval, NodeRemovalReason},
@@ -6,8 +7,6 @@ use ic_management_types::{
 use indexmap::IndexMap;
 use itertools::Itertools;
 use std::sync::Arc;
-
-use crate::network::DecentralizedSubnet;
 
 pub fn unhealthy_with_nodes(
     subnets: &IndexMap<PrincipalId, Subnet>,
@@ -33,26 +32,6 @@ pub fn unhealthy_with_nodes(
             }
         })
         .collect::<IndexMap<_, _>>()
-}
-
-pub fn subnets_with_business_rules_violations(subnets: &[Subnet]) -> Vec<Subnet> {
-    subnets
-        .iter()
-        .filter_map(|subnet| {
-            let decentralized_subnet = DecentralizedSubnet::from(subnet.clone());
-
-            if decentralized_subnet
-                .check_business_rules()
-                .expect("business rules check should succeed")
-                .0
-                > 0
-            {
-                Some(subnet.clone())
-            } else {
-                None
-            }
-        })
-        .collect_vec()
 }
 
 pub struct NodesRemover {
@@ -82,15 +61,17 @@ impl NodesRemover {
                     return None;
                 }
 
+                let decentralization_node = Node::from(&n);
+
                 if let Some(exclude) = self.exclude.as_ref() {
                     for exclude_feature in exclude {
-                        if n.matches_feature_value(exclude_feature) {
+                        if decentralization_node.matches_feature_value(exclude_feature) {
                             return None;
                         }
                     }
                 }
 
-                if let Some(filter) = self.extra_nodes_filter.iter().find(|f| n.matches_feature_value(f)) {
+                if let Some(filter) = self.extra_nodes_filter.iter().find(|f| decentralization_node.matches_feature_value(f)) {
                     return Some(NodeRemoval {
                         node: n,
                         reason: NodeRemovalReason::MatchedFilter(filter.clone()),

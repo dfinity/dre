@@ -1,5 +1,4 @@
 use clap::Args;
-
 use ic_management_types::requests::SubnetResizeRequest;
 use ic_types::PrincipalId;
 

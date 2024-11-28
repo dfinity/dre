@@ -3,7 +3,6 @@ use std::{io::Read, os::unix::fs::PermissionsExt, path::PathBuf, sync::Arc, time
 use flate2::bufread::GzDecoder;
 use ic_canisters::governance::governance_canister_version;
 use ic_management_backend::{
-    health::{HealthClient, HealthStatusQuerier},
     lazy_registry::{LazyRegistry, LazyRegistryImpl},
     proposal::ProposalAgent,
     registry::sync_local_store_with_path,
@@ -51,7 +50,7 @@ impl Store {
 
     fn new_inner(offline: bool, path: PathBuf) -> anyhow::Result<Self> {
         if !path.exists() {
-            fs_err::create_dir_all(&path)?;
+            std::fs::create_dir_all(&path)?;
         }
         Ok(Self { path, offline })
     }
@@ -73,7 +72,7 @@ impl Store {
                 network.name,
                 local_store_dir.display()
             );
-            fs_err::create_dir_all(&local_store_dir)?
+            std::fs::create_dir_all(&local_store_dir)?
         }
 
         Ok(local_store_dir)
@@ -88,7 +87,7 @@ impl Store {
                 network.name,
                 dir.display()
             );
-            fs_err::create_dir_all(&dir)?
+            std::fs::create_dir_all(&dir)?
         }
 
         Ok(dir)
@@ -103,7 +102,7 @@ impl Store {
         let path = self.guest_labels_cache_dir(network)?.join("labels.yaml");
 
         if !path.exists() {
-            fs_err::write(&path, "")?;
+            std::fs::write(&path, "")?;
         }
 
         Ok(path)
@@ -127,7 +126,6 @@ impl Store {
             self.offline,
             proposal_agent,
             self.guest_labels_cache_path(network)?,
-            self.health_client(network)?,
         )))
     }
 
@@ -136,7 +134,7 @@ impl Store {
 
         if !path.exists() {
             info!("ic-admin.revisions dir was missing. Creating on path `{}`...", path.display());
-            fs_err::create_dir_all(&path)?;
+            std::fs::create_dir_all(&path)?;
         }
 
         Ok(path)
@@ -152,7 +150,7 @@ impl Store {
 
         if !status_file.exists() {
             info!("ic-admin.status file was missing. Creating on path `{}`...", status_file.display());
-            fs_err::write(&status_file, "")?
+            std::fs::write(&status_file, "")?
         }
 
         Ok(status_file)
@@ -173,10 +171,10 @@ impl Store {
         let mut decoded = GzDecoder::new(body.as_ref());
 
         let path_parent = path.parent().ok_or(anyhow::anyhow!("Failed to get parent for ic admin revision dir"))?;
-        fs_err::create_dir_all(path_parent).map_err(|_| anyhow::anyhow!("create_dir_all failed for {}", path_parent.display()))?;
-        let mut out = fs_err::File::create(path)?;
+        std::fs::create_dir_all(path_parent).map_err(|_| anyhow::anyhow!("create_dir_all failed for {}", path_parent.display()))?;
+        let mut out = std::fs::File::create(path)?;
         std::io::copy(&mut decoded, &mut out)?;
-        fs_err::set_permissions(path, std::fs::Permissions::from_mode(0o755))?;
+        std::fs::set_permissions(path, std::fs::Permissions::from_mode(0o755))?;
         Ok(())
     }
 
@@ -224,7 +222,7 @@ impl Store {
             IcAdminVersion::Strict(ver) => self.init_ic_admin(ver, network, proceed_without_confirmation, neuron, dry_run).await,
             // This is the most probable way of running
             IcAdminVersion::FromGovernance => {
-                let mut status_file = fs_err::File::open(&self.ic_admin_status_file()?)?;
+                let mut status_file = std::fs::File::open(&self.ic_admin_status_file()?)?;
                 let elapsed = status_file.metadata()?.modified()?.elapsed().unwrap_or_default();
 
                 let mut version_from_file = "".to_string();
@@ -276,7 +274,7 @@ impl Store {
 
                 // Only update file when the sync
                 // with governance has been performed
-                fs_err::write(self.ic_admin_status_file()?, version)?;
+                std::fs::write(self.ic_admin_status_file()?, version)?;
                 Ok(ic_admin)
             }
         }
@@ -284,55 +282,22 @@ impl Store {
 
     #[cfg(test)]
     pub fn cordoned_features_file_outer(&self) -> anyhow::Result<PathBuf> {
-        self.cordoned_features_file(None)
+        self.cordoned_features_file()
     }
 
-    fn cordoned_features_file(&self, file_path: Option<String>) -> anyhow::Result<PathBuf> {
-        let file = match file_path {
-            Some(path) => std::path::PathBuf::from(path).canonicalize()?,
-            None => {
-                let file = self.path().join("cordoned_features.yaml");
-
-                if !file.exists() {
-                    info!("Cordoned features file was missing. Creating on path `{}`...", file.display());
-                    fs_err::write(&file, "")?;
-                }
-
-                file
-            }
-        };
-
-        Ok(file)
-    }
-
-    pub fn cordoned_features_fetcher(&self, local_file_path: Option<String>) -> anyhow::Result<Arc<dyn CordonedFeatureFetcher>> {
-        let file = self.cordoned_features_file(local_file_path.clone())?;
-        Ok(Arc::new(CordonedFeatureFetcherImpl::new(
-            file,
-            self.is_offline() || local_file_path.is_some(),
-        )?))
-    }
-
-    #[cfg(test)]
-    pub fn node_health_file_outer(&self, network: &Network) -> anyhow::Result<PathBuf> {
-        self.node_health_file(network)
-    }
-
-    fn node_health_file(&self, network: &Network) -> anyhow::Result<PathBuf> {
-        let file = self.path().join("node_healths").join(&network.name).join("node_healths.json");
+    fn cordoned_features_file(&self) -> anyhow::Result<PathBuf> {
+        let file = self.path().join("cordoned_features.yaml");
 
         if !file.exists() {
-            info!("Node health file was missing. Creating on path `{}`...", file.display());
-            fs_err::create_dir_all(file.parent().unwrap())?;
-            fs_err::write(&file, "")?;
+            info!("Cordoned features file was missing. Creating on path `{}`...", file.display());
+            std::fs::write(&file, "")?;
         }
 
         Ok(file)
     }
 
-    pub fn health_client(&self, network: &Network) -> anyhow::Result<Arc<dyn HealthStatusQuerier>> {
-        let file = self.node_health_file(network)?;
-
-        Ok(Arc::new(HealthClient::new(network.clone(), Some(file), self.is_offline())))
+    pub fn cordoned_features_fetcher(&self) -> anyhow::Result<Arc<dyn CordonedFeatureFetcher>> {
+        let file = self.cordoned_features_file()?;
+        Ok(Arc::new(CordonedFeatureFetcherImpl::new(file, self.is_offline())?))
     }
 }

@@ -1,6 +1,7 @@
 use candid::CandidType;
 use candid::Decode;
 use candid::Principal;
+use ic_agent::agent::http_transport::ReqwestTransport;
 use ic_agent::identity::AnonymousIdentity;
 use ic_agent::identity::BasicIdentity;
 use ic_agent::identity::Secp256k1Identity;
@@ -13,12 +14,11 @@ use parallel_hardware_identity::ParallelHardwareIdentity;
 use serde::Deserialize;
 use std::path::PathBuf;
 use std::str::FromStr;
+use std::sync::Mutex;
 use std::time::Duration;
 use url::Url;
 
-pub mod cycles_minting;
 pub mod governance;
-pub mod ledger;
 pub mod management;
 pub mod node_metrics;
 pub mod parallel_hardware_identity;
@@ -40,7 +40,9 @@ impl IcAgentCanisterClient {
         Self::build_agent(url, identity)
     }
 
-    pub fn from_hsm(identity: ParallelHardwareIdentity, url: Url) -> anyhow::Result<Self> {
+    pub fn from_hsm(pin: String, slot: u64, key_id: String, url: Url, lock: Option<Mutex<()>>) -> anyhow::Result<Self> {
+        let pin_fn = || Ok(pin);
+        let identity = ParallelHardwareIdentity::new(pkcs11_lib_path()?, slot as usize, &key_id, pin_fn, lock)?;
         Self::build_agent(url, Box::new(identity))
     }
 
@@ -56,8 +58,7 @@ impl IcAgentCanisterClient {
             .expect("Could not create HTTP client.");
         let agent = Agent::builder()
             .with_identity(identity)
-            .with_http_client(client)
-            .with_url(url)
+            .with_transport(ReqwestTransport::create_with_client(url, client)?)
             .with_verify_query_signatures(false)
             .build()?;
         Ok(Self { agent })
@@ -91,4 +92,16 @@ pub struct CallIn<TCycles = u128> {
     method_name: String,
     args: Vec<u8>,
     cycles: TCycles,
+}
+
+fn pkcs11_lib_path() -> anyhow::Result<PathBuf> {
+    let lib_macos_path = PathBuf::from_str("/Library/OpenSC/lib/opensc-pkcs11.so")?;
+    let lib_linux_path = PathBuf::from_str("/usr/lib/x86_64-linux-gnu/opensc-pkcs11.so")?;
+    if lib_macos_path.exists() {
+        Ok(lib_macos_path)
+    } else if lib_linux_path.exists() {
+        Ok(lib_linux_path)
+    } else {
+        Err(anyhow::anyhow!("no pkcs11 library found"))
+    }
 }

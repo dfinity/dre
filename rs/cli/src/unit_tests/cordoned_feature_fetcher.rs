@@ -1,6 +1,6 @@
 use std::path::PathBuf;
 
-use decentralization::network::CordonedFeature;
+use decentralization::network::NodeFeaturePair;
 use ic_management_types::NodeFeature;
 use itertools::Itertools;
 use serde_yaml::Mapping;
@@ -11,7 +11,7 @@ fn ensure_empty(file: PathBuf) {
     std::fs::write(file, "").unwrap();
 }
 
-fn write_to_cache(contents: &[CordonedFeature], path: PathBuf) {
+fn write_to_cache(contents: &[NodeFeaturePair], path: PathBuf) {
     let mut mapping = Mapping::new();
     mapping.insert("features".into(), serde_yaml::to_value(contents).unwrap());
     let root = serde_yaml::Value::Mapping(mapping);
@@ -23,7 +23,7 @@ fn write_to_cache(contents: &[CordonedFeature], path: PathBuf) {
 struct TestScenario {
     name: String,
     offline: bool,
-    cache_contents: Option<Vec<CordonedFeature>>,
+    cache_contents: Option<Vec<NodeFeaturePair>>,
     should_succeed: bool,
 }
 
@@ -52,7 +52,7 @@ impl TestScenario {
         }
     }
 
-    fn with_cache(self, pairs: &[CordonedFeature]) -> Self {
+    fn with_cache(self, pairs: &[NodeFeaturePair]) -> Self {
         Self {
             cache_contents: Some(pairs.to_vec()),
             ..self
@@ -82,18 +82,16 @@ fn cordoned_feature_fetcher_tests() {
         TestScenario::new("[Offline] No cache").no_cache().offline().should_fail(),
         TestScenario::new("[Offline] Fetch from cache")
             .offline()
-            .with_cache(&[CordonedFeature {
+            .with_cache(&[NodeFeaturePair {
                 feature: NodeFeature::NodeProvider,
                 value: "some-np".to_string(),
-                explanation: None,
             }])
             .should_succeed(),
         TestScenario::new("[Online] Stale cache")
             .online()
-            .with_cache(&[CordonedFeature {
+            .with_cache(&[NodeFeaturePair {
                 feature: NodeFeature::NodeProvider,
                 value: "some-np".to_string(),
-                explanation: None,
             }])
             .should_succeed(),
     ];
@@ -109,7 +107,7 @@ fn cordoned_feature_fetcher_tests() {
             None => ensure_empty(store.cordoned_features_file_outer().unwrap()),
         }
 
-        let cordoned_feature_fetcher = store.cordoned_features_fetcher(None).unwrap();
+        let cordoned_feature_fetcher = store.cordoned_features_fetcher().unwrap();
 
         let maybe_cordoned_features = runtime.block_on(cordoned_feature_fetcher.fetch());
 

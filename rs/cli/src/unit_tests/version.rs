@@ -1,4 +1,3 @@
-use crate::discourse_client::MockDiscourseClient;
 use indexmap::IndexMap;
 use std::sync::{Arc, RwLock};
 
@@ -73,7 +72,6 @@ async fn guest_os_elect_version_tests() {
         Arc::new(artifact_downloader),
         Arc::new(MockCordonedFeatureFetcher::new()),
         Arc::new(MockHealthStatusQuerier::new()),
-        Arc::new(MockDiscourseClient::new()),
     );
 
     for (name, expected_title, cmd) in [
