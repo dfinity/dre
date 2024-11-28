@@ -27,13 +27,6 @@ use thiserror::Error;
 
 pub type KeyIdVec = Vec<u8>;
 
-#[derive(Clone, Debug, Eq, PartialEq)]
-struct HsmAuthParams {
-    pub pin: String,
-    pub slot: u64,
-    pub key_id: KeyIdVec,
-}
-
 type DerPublicKeyVec = Vec<u8>;
 
 /// Type alias for a sha256 result (ie. a u256).
@@ -143,12 +136,11 @@ pub enum HardwareIdentityError {
     #[error("User PIN does not meet the strength standards")]
     UserPinTooWeak,
 
-    /// A slot index was provided that does not exist.
-    #[error("No such slot index ({0}")]
-    NoSuchSlotIndex(usize),
-
     #[error("Hardware security key not found: {0}")]
     NoHSM(String),
+
+    #[error("Problem with PIN handler: {0}")]
+    PinHandlerError(PinHandlerError),
 }
 
 fn pkcs11_lib_path() -> Result<std::path::PathBuf, std::io::Error> {
@@ -355,149 +347,205 @@ impl PKCS11Sess<Authenticated> {
     }
 }
 
-pub struct DetectedHsm {
-    ctx: PKCS11Ctx,
-    sess: PKCS11Sess<Unauthenticated>,
-    token_info: TokenInfo,
-    key_id: KeyIdVec,
-    pub memo_key: String,
+#[derive(Debug, Clone, Error)]
+#[error("{0}")]
+pub struct PinHandlerError(pub String);
+
+impl From<PinHandlerError> for HardwareIdentityError {
+    fn from(e: PinHandlerError) -> Self {
+        HardwareIdentityError::PinHandlerError(e)
+    }
 }
 
-impl DetectedHsm {
-    pub fn authenticate(self, pin: String) -> Result<ParallelHardwareIdentity, HardwareIdentityError> {
-        if self.token_info.user_pin_locked() {
-            return Err(HardwareIdentityError::UserPinLocked(self.sess.slot));
-        }
-        if self.token_info.user_pin_final_try() {
-            warn!(
-                "The PIN for the token stored in slot {} is at its last try, and if this operation fails, the token will be locked",
-                self.sess.slot
-            );
-        }
-        let slot_u64: u64 = self.sess.slot.into();
-        self.sess.authenticate(pin.clone())?;
-        info!("Hardware security module PIN correct");
-        ParallelHardwareIdentity::new(
-            self.ctx,
-            HsmAuthParams {
-                key_id: self.key_id.clone(),
-                slot: slot_u64,
-                pin,
-            },
-        )
-    }
+/// Interface to retrieve, store and forget PINs associated with HSMs.
+pub trait HsmPinHandler {
+    /// Retrieve a PIN from the user, or from within the user keyring associated with the specified key.
+    /// If from_keyring is false, implementors must disregard keyring contents and force a prompt.
+    /// PINs `retrieve()`d using this method will later be `store()`d if they check out.
+    fn retrieve(&self, key: &str, from_keyring: bool) -> Result<String, PinHandlerError>;
+    /// Store a PIN in the user keyring associated with the specified key.
+    fn store(&self, key: &str, pin: &str) -> Result<(), PinHandlerError>;
+    /// Forget any PIN in the user keyring associated with the specified key.
+    /// Implementors must return Ok(()) if there is nothing to erase.
+    fn forget(&self, key: &str) -> Result<(), PinHandlerError>;
 }
 
 /// An identity based on an HSM.
 #[derive(Debug, Clone)]
 pub struct ParallelHardwareIdentity {
-    pub key_id: KeyIdVec,
     ctx: Arc<Mutex<Option<PKCS11Ctx>>>,
     public_key: DerPublicKeyVec,
     pub slot: Slot,
+    pub key_id: KeyIdVec,
     // FIXME: This should be a criptoki::secret to prevent debug dumps of it.
+    // In fact, everywhere we use a PIN, it should be that type.
     pub cached_pin: String,
 }
 
 impl ParallelHardwareIdentity {
     /// Create an identity using a specific key on an HSM, through a PKCS#11 context.
-    /// The key_id must refer to a ECDSA key with parameters prime256v1 (secp256r1)
+    /// If specified, key_id must refer to a ECDSA key with parameters prime256v1 (secp256r1)
     /// The key must already have been created.  You can create one with pkcs11-tool:
     /// $ pkcs11-tool -k --slot $SLOT -d $KEY_ID --key-type EC:prime256v1 --pin $PIN
-    fn new(ctx: PKCS11Ctx, params: HsmAuthParams) -> Result<Self, HardwareIdentityError> {
-        let slot_id = params.slot;
-        let key_id = params.key_id.clone();
-
-        let slot: Slot = slot_id.try_into()?;
-        let public_key = match ctx.open_ro_session(slot) {
-            Ok(sess) => sess,
-            Err(cryptoki::error::Error::Pkcs11(RvError::SlotIdInvalid, _)) => return Err(HardwareIdentityError::NoSuchSlotIndex(slot_id as usize)),
-            Err(e) => return Err(HardwareIdentityError::Cryptoki(e)),
+    pub fn scan(
+        maybe_user_supplied_pin: Option<String>,
+        maybe_slot: Option<u64>,
+        maybe_key_id: Option<KeyIdVec>,
+        memory: &dyn HsmPinHandler,
+    ) -> Result<Self, HardwareIdentityError> {
+        struct ConfirmedHsmParams {
+            sess: PKCS11Sess<Unauthenticated>,
+            token_info: TokenInfo,
+            key_id: KeyIdVec,
+            memo_key: String,
         }
-        .get_der_encoded_public_key(key_id.clone())?;
+
+        fn discover_hsm_parameters(
+            ctx: &PKCS11Ctx,
+            maybe_slot: Option<u64>,
+            maybe_key_id: Option<KeyIdVec>,
+        ) -> Result<ConfirmedHsmParams, HardwareIdentityError> {
+            if maybe_slot.is_none() && maybe_key_id.is_none() {
+                debug!("Scanning hardware security module devices");
+            }
+            if let Some(slot) = &maybe_slot {
+                debug!("Probing hardware security module in slot {}", slot);
+            }
+            if let Some(key_id) = &maybe_key_id {
+                debug!("Limiting key scan to keys with ID {}", hsm_key_id_to_string(key_id));
+            }
+
+            for slot in ctx.get_slots_with_token()? {
+                let info = ctx.get_slot_info(slot)?;
+                let token_info = ctx.get_token_info(slot)?;
+                if info.slot_description().starts_with("Nitrokey Nitrokey HSM") && maybe_slot.is_none() || (maybe_slot.unwrap() == slot.id()) {
+                    let sess = ctx.open_ro_session(slot)?;
+                    let key_id = match sess.find_key_id(maybe_key_id.clone())? {
+                        Some((key_id, label)) => {
+                            debug!(
+                                "Found key with ID {} ({}) in slot {}",
+                                hsm_key_id_to_string(&key_id),
+                                match label {
+                                    Some(label) => format!("labeled {}", label),
+                                    None => "without label".to_string(),
+                                },
+                                slot.id()
+                            );
+                            key_id
+                        }
+                        None => {
+                            if maybe_slot.is_some() && maybe_key_id.is_some() {
+                                // We have been asked to be very specific.  Fail fast,
+                                // instead of falling back to Auth::Anonymous.
+                                return Err(HardwareIdentityError::NoHSM(format!(
+                                    "Could not find a key ID {} within hardware security module in slot {}",
+                                    hsm_key_id_to_string(&maybe_key_id.unwrap()),
+                                    slot.id()
+                                )));
+                            } else {
+                                // Let's try the next slot just in case.
+                                continue;
+                            }
+                        }
+                    };
+                    let memo_key: String = format!("hsm-{}-{}", info.slot_description(), info.manufacturer_id());
+                    info!(
+                        "Trying key ID {} of hardware security module in slot {} ({})",
+                        hsm_key_id_to_string(&key_id),
+                        slot,
+                        memo_key
+                    );
+                    return Ok(ConfirmedHsmParams {
+                        sess,
+                        token_info,
+                        key_id,
+                        memo_key,
+                    });
+                }
+            }
+            Err(HardwareIdentityError::NoHSM(format!(
+                "No hardware security module detected{}{}",
+                match maybe_slot {
+                    None => "".to_string(),
+                    Some(slot) => format!(" in slot {}", slot),
+                },
+                match &maybe_key_id {
+                    None => "".to_string(),
+                    Some(key_id) => format!(" that contains a key ID {}", hsm_key_id_to_string(key_id)),
+                }
+            )))
+        }
+
+        // Discover or confirm user-supplied HSM parameters.
+        let initial_pkcs11_ctx = PKCS11Ctx::init()?;
+        let ConfirmedHsmParams {
+            sess,
+            token_info,
+            key_id,
+            memo_key,
+        } = discover_hsm_parameters(&initial_pkcs11_ctx, maybe_slot, maybe_key_id)?;
+        let slot = sess.slot;
+
+        let public_key = sess.get_der_encoded_public_key(key_id.clone())?;
+
+        // Let's check the PIN now.
+        if token_info.user_pin_locked() {
+            return Err(HardwareIdentityError::UserPinLocked(sess.slot));
+        }
+        let checked_pin = match (maybe_user_supplied_pin, token_info.user_pin_final_try()) {
+            (Some(pin), false) => {
+                // This branch does not use the PIN memory because we do not
+                // want to save any user-supplied PIN to the PIN memory.
+                sess.authenticate(pin.clone())?;
+                pin
+            }
+            (Some(_), true) => {
+                // If the PIN HAS been supplied as a parameter, it is likely that the
+                // supplied PIN will cause the HSM to get locked.  Abort in this case.
+                return Err(HardwareIdentityError::UserPinRequired(format!("The PIN for the token stored in slot {} is at its last try; to protect your HSM from getting locked due to an incorrect PIN specified as a parameter, you must manually enter the PIN", sess.slot)));
+            }
+            (None, final_try) => {
+                let tentative_pin = memory.retrieve(
+                    memo_key.as_str(),
+                    if final_try {
+                        // If the PIN has not been supplied as a parameter, and there is only
+                        // one more try for the PIN available in the HSM, prompt the user for the
+                        // PIN manually instead of attempting a retrieval from the keyring only
+                        // to waste the final try in what could be an invalid PIN.
+                        warn!(
+                            "The PIN for the token stored in slot {} is at its last try; to protect your HSM from getting locked due to an incorrect PIN stored in your keyring, you must manually enter the PIN",
+                            sess.slot
+                        );
+                        false
+                    } else {
+                        true
+                    },
+                )?;
+                match sess.authenticate(tentative_pin.clone()) {
+                    Ok(_) => {
+                        if let Err(e) = memory.store(memo_key.as_str(), tentative_pin.as_str()) {
+                            warn!("Could not store the PIN into the keyring: {}", e)
+                        };
+                        tentative_pin
+                    }
+                    Err(e) => {
+                        if let Err(e) = memory.forget(memo_key.as_str()) {
+                            warn!("Could not erase the PIN from the keyring: {}", e)
+                        };
+                        return Err(e);
+                    }
+                }
+            }
+        };
+        info!("Hardware security module PIN correct");
 
         Ok(Self {
             key_id,
-            ctx: Arc::new(Mutex::new(Some(ctx))),
+            ctx: Arc::new(Mutex::new(Some(initial_pkcs11_ctx))),
             public_key,
             slot,
-            cached_pin: params.pin,
+            cached_pin: checked_pin,
         })
-    }
-
-    pub fn scan_for_hsm(maybe_slot: Option<u64>, maybe_key_id: Option<KeyIdVec>) -> Result<DetectedHsm, HardwareIdentityError> {
-        let ctx = PKCS11Ctx::init()?;
-
-        if maybe_slot.is_none() && maybe_key_id.is_none() {
-            debug!("Scanning hardware security module devices");
-        }
-        if let Some(slot) = &maybe_slot {
-            debug!("Probing hardware security module in slot {}", slot);
-        }
-        if let Some(key_id) = &maybe_key_id {
-            debug!("Limiting key scan to keys with ID {}", hsm_key_id_to_string(key_id));
-        }
-
-        for slot in ctx.get_slots_with_token()? {
-            let info = ctx.get_slot_info(slot)?;
-            let token_info = ctx.get_token_info(slot)?;
-            if info.slot_description().starts_with("Nitrokey Nitrokey HSM") && maybe_slot.is_none() || (maybe_slot.unwrap() == slot.id()) {
-                let sess = ctx.open_ro_session(slot)?;
-                let key_id = match sess.find_key_id(maybe_key_id.clone())? {
-                    Some((key_id, label)) => {
-                        debug!(
-                            "Found key with ID {} ({}) in slot {}",
-                            hsm_key_id_to_string(&key_id),
-                            match label {
-                                Some(label) => format!("labeled {}", label),
-                                None => "without label".to_string(),
-                            },
-                            slot.id()
-                        );
-                        key_id
-                    }
-                    None => {
-                        if maybe_slot.is_some() && maybe_key_id.is_some() {
-                            // We have been asked to be very specific.  Fail fast,
-                            // instead of falling back to Auth::Anonymous.
-                            return Err(HardwareIdentityError::NoHSM(format!(
-                                "Could not find a key ID {} within hardware security module in slot {}",
-                                hsm_key_id_to_string(&maybe_key_id.unwrap()),
-                                slot.id()
-                            )));
-                        } else {
-                            // Let's try the next slot just in case.
-                            continue;
-                        }
-                    }
-                };
-                let memo_key: String = format!("hsm-{}-{}", info.slot_description(), info.manufacturer_id());
-                info!(
-                    "Trying key ID {} of hardware security module in slot {} ({})",
-                    hsm_key_id_to_string(&key_id),
-                    slot,
-                    memo_key
-                );
-                return Ok(DetectedHsm {
-                    ctx,
-                    sess,
-                    token_info,
-                    key_id,
-                    memo_key,
-                });
-            }
-        }
-        Err(HardwareIdentityError::NoHSM(format!(
-            "No hardware security module detected{}{}",
-            match maybe_slot {
-                None => "".to_string(),
-                Some(slot) => format!(" in slot {}", slot),
-            },
-            match &maybe_key_id {
-                None => "".to_string(),
-                Some(key_id) => format!(" that contains a key ID {}", hsm_key_id_to_string(key_id)),
-            }
-        )))
     }
 }
 
