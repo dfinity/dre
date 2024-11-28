@@ -358,6 +358,7 @@ impl From<PinHandlerError> for HardwareIdentityError {
 }
 
 /// Interface to retrieve, store and forget PINs associated with HSMs.
+/// The key is a string derived from the HSM slot description and manufacturer.
 pub trait HsmPinHandler {
     /// Retrieve a PIN from the user, or from within the user keyring associated with the specified key.
     /// If from_keyring is false, implementors must disregard keyring contents and force a prompt.
