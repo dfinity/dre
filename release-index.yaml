@@ -1,4 +1,14 @@
 releases:
+  - rc_name: rc--2024-11-28_03-15
+    versions:
+      # Qualification pipeline:
+      # https://github.com/dfinity/ic/actions/runs/12061858233
+      - name: base
+        version: 2d8611eb4efa8e69c4dd567546c1c353a545e0a6
+      # Qualification pipeline:
+      # https://github.com/dfinity/ic/actions/runs/12071521437
+      - name: revert-hashes-in-blocks
+        version: f9085dbe8d86dcca77b05adaee93d608498dae0b
   - rc_name: rc--2024-11-21_03-11
     versions:
       # Qualification pipeline:
