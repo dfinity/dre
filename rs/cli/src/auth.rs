@@ -3,7 +3,7 @@ use std::path::PathBuf;
 use anyhow::anyhow;
 use dialoguer::{console::Term, theme::ColorfulTheme, Password, Select};
 use ic_canisters::governance::GovernanceCanisterWrapper;
-use ic_canisters::parallel_hardware_identity::{hsm_key_id_to_string, KeyIdVec, ParallelHardwareIdentity};
+use ic_canisters::parallel_hardware_identity::{hsm_key_id_to_int, KeyIdVec, ParallelHardwareIdentity};
 use ic_canisters::IcAgentCanisterClient;
 use ic_icrc1_test_utils::KeyPairGenerator;
 use ic_management_types::Network;
@@ -183,7 +183,7 @@ impl Auth {
                 "--slot".to_string(),
                 identity.slot.to_string(),
                 "--key-id".to_string(),
-                hsm_key_id_to_string(&identity.key_id),
+                hsm_key_id_to_int(&identity.key_id),
             ],
             Auth::Keyfile { path } => vec!["--secret-key-pem".to_string(), path.to_string_lossy().to_string()],
             Auth::Anonymous => vec![],

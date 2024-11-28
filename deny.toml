@@ -103,7 +103,6 @@ allow = [
     "CC0-1.0",                        # basically public domain but explicitly put in legal terms
     "ISC",
     "BSL-1.0",
-    "Unicode-DFS-2016",
     "OpenSSL",
 ]
 # The confidence threshold for detecting a license from license text.
@@ -786,6 +785,11 @@ license-files = [{ path = "../../../../../../LICENSE", hash = 0xbd0eed23 }]
 crate = "ic-nervous-system-linear-map"
 expression = "LicenseRef-IC-1.0"
 license-files = [{ path = "../../../LICENSE", hash = 0xbd0eed23 }]
+
+[[licenses.clarify]]
+crate = "ic-sns-governance-api"
+expression = "LicenseRef-IC-1.0"
+license-files = [{ path = "../../../../LICENSE", hash = 0xbd0eed23 }]
 
 
 [licenses.private]

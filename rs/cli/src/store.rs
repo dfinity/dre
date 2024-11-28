@@ -284,23 +284,33 @@ impl Store {
 
     #[cfg(test)]
     pub fn cordoned_features_file_outer(&self) -> anyhow::Result<PathBuf> {
-        self.cordoned_features_file()
+        self.cordoned_features_file(None)
     }
 
-    fn cordoned_features_file(&self) -> anyhow::Result<PathBuf> {
-        let file = self.path().join("cordoned_features.yaml");
+    fn cordoned_features_file(&self, file_path: Option<String>) -> anyhow::Result<PathBuf> {
+        let file = match file_path {
+            Some(path) => std::path::PathBuf::from(path).canonicalize()?,
+            None => {
+                let file = self.path().join("cordoned_features.yaml");
 
-        if !file.exists() {
-            info!("Cordoned features file was missing. Creating on path `{}`...", file.display());
-            fs_err::write(&file, "")?;
-        }
+                if !file.exists() {
+                    info!("Cordoned features file was missing. Creating on path `{}`...", file.display());
+                    fs_err::write(&file, "")?;
+                }
+
+                file
+            }
+        };
 
         Ok(file)
     }
 
-    pub fn cordoned_features_fetcher(&self) -> anyhow::Result<Arc<dyn CordonedFeatureFetcher>> {
-        let file = self.cordoned_features_file()?;
-        Ok(Arc::new(CordonedFeatureFetcherImpl::new(file, self.is_offline())?))
+    pub fn cordoned_features_fetcher(&self, local_file_path: Option<String>) -> anyhow::Result<Arc<dyn CordonedFeatureFetcher>> {
+        let file = self.cordoned_features_file(local_file_path.clone())?;
+        Ok(Arc::new(CordonedFeatureFetcherImpl::new(
+            file,
+            self.is_offline() || local_file_path.is_some(),
+        )?))
     }
 
     #[cfg(test)]

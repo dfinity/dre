@@ -13,8 +13,9 @@ use log::warn;
 use crate::{
     artifact_downloader::{ArtifactDownloader, ArtifactDownloaderImpl},
     auth::Neuron,
-    commands::{Args, AuthOpts, AuthRequirement, ExecutableCommand, IcAdminVersion},
+    commands::{Args, AuthOpts, AuthRequirement, DiscourseOpts, ExecutableCommand, IcAdminVersion},
     cordoned_feature_fetcher::CordonedFeatureFetcher,
+    discourse_client::{DiscourseClient, DiscourseClientImp},
     ic_admin::{IcAdmin, IcAdminImpl},
     runner::Runner,
     store::Store,
@@ -47,6 +48,8 @@ pub struct DreContext {
     cordoned_features_fetcher: Arc<dyn CordonedFeatureFetcher>,
     health_client: Arc<dyn HealthStatusQuerier>,
     store: Store,
+    discourse_opts: DiscourseOpts,
+    discourse_client: RefCell<Option<Arc<dyn DiscourseClient>>>,
 }
 
 #[allow(clippy::too_many_arguments)]
@@ -64,6 +67,7 @@ impl DreContext {
         cordoned_features_fetcher: Arc<dyn CordonedFeatureFetcher>,
         health_client: Arc<dyn HealthStatusQuerier>,
         store: Store,
+        discourse_opts: DiscourseOpts,
     ) -> anyhow::Result<Self> {
         Ok(Self {
             proposal_agent: Arc::new(ProposalAgentImpl::new(&network.nns_urls)),
@@ -87,6 +91,8 @@ impl DreContext {
             cordoned_features_fetcher,
             health_client,
             store,
+            discourse_opts,
+            discourse_client: RefCell::new(None),
         })
     }
 
@@ -110,9 +116,10 @@ impl DreContext {
             args.subcommands.require_auth(),
             args.forum_post_link.clone(),
             args.ic_admin_version.clone(),
-            store.cordoned_features_fetcher()?,
+            store.cordoned_features_fetcher(args.cordoned_features_file.clone())?,
             store.health_client(&network)?,
             store,
+            args.discourse_opts.clone(),
         )
         .await
     }
@@ -242,6 +249,42 @@ impl DreContext {
     pub fn health_client(&self) -> Arc<dyn HealthStatusQuerier> {
         self.health_client.clone()
     }
+
+    pub fn discourse_client(&self) -> anyhow::Result<Arc<dyn DiscourseClient>> {
+        if let Some(client) = self.discourse_client.borrow().as_ref() {
+            return Ok(client.clone());
+        }
+
+        let (api_key, api_user, forum_url) = match (
+            self.discourse_opts.discourse_api_key.clone(),
+            self.discourse_opts.discourse_api_user.clone(),
+            self.discourse_opts.discourse_api_url.clone(),
+        ) {
+            (Some(api_key), Some(api_user), Some(forum_url)) => (api_key, api_user, forum_url),
+            // Actual api won't be called so these values don't matter
+            _ if self.discourse_opts.discourse_skip_post_creation => (
+                "placeholder_key".to_string(),
+                "placeholder_user".to_string(),
+                "https://placeholder_url.com".to_string(),
+            ),
+            _ => anyhow::bail!(
+                "Expected to have `api_key`, `forum_url` and `api_user`. Instead found: {:?}",
+                self.discourse_opts
+            ),
+        };
+
+        let client = Arc::new(DiscourseClientImp::new(
+            forum_url,
+            api_key,
+            api_user,
+            // `offline` for discourse client means that it shouldn't try and create posts.
+            // It can happen because the tool runs in offline mode, or if its a dry run.
+            self.store.is_offline() || self.dry_run,
+            self.discourse_opts.discourse_skip_post_creation,
+        )?);
+        *self.discourse_client.borrow_mut() = Some(client.clone());
+        Ok(client)
+    }
 }
 
 #[cfg(test)]
@@ -255,8 +298,9 @@ pub mod tests {
     use crate::{
         artifact_downloader::ArtifactDownloader,
         auth::Neuron,
-        commands::{AuthOpts, HsmOpts, HsmParams},
+        commands::{AuthOpts, DiscourseOpts, HsmOpts, HsmParams},
         cordoned_feature_fetcher::CordonedFeatureFetcher,
+        discourse_client::DiscourseClient,
         ic_admin::IcAdmin,
         store::Store,
     };
@@ -273,6 +317,7 @@ pub mod tests {
         artifact_downloader: Arc<dyn ArtifactDownloader>,
         cordoned_features_fetcher: Arc<dyn CordonedFeatureFetcher>,
         health_client: Arc<dyn HealthStatusQuerier>,
+        discourse_client: Arc<dyn DiscourseClient>,
     ) -> DreContext {
         DreContext {
             network,
@@ -308,6 +353,13 @@ pub mod tests {
             cordoned_features_fetcher,
             health_client,
             store: Store::new(false).unwrap(),
+            discourse_opts: DiscourseOpts {
+                discourse_api_key: None,
+                discourse_api_url: None,
+                discourse_api_user: None,
+                discourse_skip_post_creation: true,
+            },
+            discourse_client: RefCell::new(Some(discourse_client)),
         }
     }
 }

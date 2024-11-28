@@ -4,6 +4,7 @@ exports_files([
     "archive_canister.wasm.gz",
     "clippy.toml",
     "rustfmt.toml",
+    "cordoned_features.yaml",
     "WORKSPACE.bazel",
 ])
 

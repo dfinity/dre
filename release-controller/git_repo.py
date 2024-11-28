@@ -34,7 +34,12 @@ class Commit:
 class GitRepo:
     """Class for interacting with a git repository."""
 
-    def __init__(self, repo: str, repo_cache_dir=pathlib.Path.home() / ".cache/git", main_branch="main"):
+    def __init__(
+        self,
+        repo: str,
+        repo_cache_dir=pathlib.Path.home() / ".cache/git",
+        main_branch="main",
+    ):
         """Create a new GitRepo object."""
         if not repo.startswith("https://"):
             raise ValueError("invalid repo")
@@ -47,7 +52,9 @@ class GitRepo:
             repo_cache_dir = pathlib.Path(self.cache_temp_dir.name)
 
         self.dir = repo_cache_dir / (
-            "authed/{}".format(repo.split("@", 1)[1]) if "@" in repo else repo.removeprefix("https://")
+            "authed/{}".format(repo.split("@", 1)[1])
+            if "@" in repo
+            else repo.removeprefix("https://")
         )
         self.cache = {}
         self.fetch()
@@ -285,14 +292,10 @@ class GitRepo:
         subprocess.check_call(
             ["git", "reset", "--hard"],
             cwd=self.dir,
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL,
         )
         subprocess.check_call(
             ["git", "checkout", ref],
             cwd=self.dir,
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL,
         )
         if (
             subprocess.check_output(
@@ -305,8 +308,6 @@ class GitRepo:
             subprocess.check_call(
                 ["git", "reset", "--hard", f"origin/{ref}"],
                 cwd=self.dir,
-                stdout=subprocess.DEVNULL,
-                stderr=subprocess.DEVNULL,
             )
 
     def parent(self, object: str) -> str:
@@ -335,16 +336,12 @@ class GitRepo:
         subprocess.check_call(
             ["git", "fetch", "origin", f"{ref}:{ref}", "-f", "--prune"],
             cwd=self.dir,
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL,
         )
 
     def _push_notes(self, namespace: str):
         subprocess.check_call(
             ["git", "push", "origin", f"refs/notes/{namespace}", "-f"],
             cwd=self.dir,
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL,
         )
 
     def _notes(self, namespace: str, *args) -> str:
@@ -454,13 +451,18 @@ def main():
     load_dotenv()
 
     token = os.environ["GITHUB_TOKEN"]
-    repo = GitRepo(f"https://oauth2:{token}@github.com/dfinity/ic-dre-testing.git", main_branch="master")
+    repo = GitRepo(
+        f"https://oauth2:{token}@github.com/dfinity/ic-dre-testing.git",
+        main_branch="master",
+    )
     push_release_tags(
         repo,
         Release(
             rc_name="rc--2024-02-21_23-01",
             versions=[
-                Version(name="default", version="2e921c9adfc71f3edc96a9eb5d85fc742e7d8a9f"),
+                Version(
+                    name="default", version="2e921c9adfc71f3edc96a9eb5d85fc742e7d8a9f"
+                ),
                 # Version(name="p2p", version="a2cf671f832c36c0153d4960148d3e676659a747"),
             ],
         ),

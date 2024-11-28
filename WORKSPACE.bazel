@@ -26,8 +26,8 @@ http_archive(
 
 http_file(
     name = "target_determinator",
-    sha256 = "65000bba3a5eb1713d93b1e08e33b6fbe5787535664bbc1ba2f4166b0d26d0a1",
-    url = "https://github.com/bazel-contrib/target-determinator/releases/download/v0.27.0/target-determinator.linux.amd64",
+    sha256 = "306071a0037fd9074d7b878a9a489597878b6035606f8ed60ef9baaf81074228",
+    url = "https://github.com/bazel-contrib/target-determinator/releases/download/v0.28.0/target-determinator.linux.amd64",
 )
 
 http_file(
@@ -75,7 +75,7 @@ aspect_bazel_lib_dependencies()
 
 aspect_bazel_lib_register_toolchains()
 
-IC_REPO_VERSION = "132c2452bea8a9df83c54cd02835d64451f67250"
+IC_REPO_VERSION = "8869fff652952265e0871ad137b40ad29880c9e6"
 
 http_archive(
     name = "ic_repo",

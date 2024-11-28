@@ -16,6 +16,7 @@ use std::str::FromStr;
 use std::time::Duration;
 use url::Url;
 
+pub mod cycles_minting;
 pub mod governance;
 pub mod ledger;
 pub mod management;
