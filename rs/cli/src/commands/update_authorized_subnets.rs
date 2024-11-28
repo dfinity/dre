@@ -31,6 +31,10 @@ pub struct UpdateAuthorizedSubnets {
     /// Size limit for marking a subnet as non public in bytes
     #[clap(default_value_t = DEFAULT_STATE_SIZE_BYTES_LIMIT)]
     state_size_limit: u64,
+
+    /// Number of verified subnets to open that weren't open before
+    #[clap(long, default_value_t = 0)]
+    open_verified_subnets: u64,
 }
 
 impl ExecutableCommand for UpdateAuthorizedSubnets {
@@ -62,14 +66,25 @@ impl ExecutableCommand for UpdateAuthorizedSubnets {
         let human_bytes = human_bytes::human_bytes(self.state_size_limit as f64);
         let (_, agent) = ctx.create_ic_agent_canister_client().await?;
 
+        let cmc = CyclesMintingCanisterWrapper::from(agent.clone());
+        let public_subnets = cmc.get_authorized_subnets().await?;
+
+        let mut verified_subnets_to_open = self.open_verified_subnets;
+
         for subnet in subnets.values() {
             if subnet.subnet_type.eq(&SubnetType::System) {
-                excluded_subnets.insert(subnet.principal, "System subnet".to_string());
+                excluded_subnets.insert(subnet.principal, "System subnets should be closed for public access".to_string());
                 continue;
             }
             if subnet.subnet_type.eq(&SubnetType::VerifiedApplication) {
-                excluded_subnets.insert(subnet.principal, "Verified App subnet".to_string());
-                continue;
+                // Subnet is already open
+                if public_subnets.contains(&subnet.principal) || verified_subnets_to_open == 0 {
+                    excluded_subnets.insert(subnet.principal, "Subnet should stay closed for now".to_string());
+                    continue;
+                }
+
+                // Let the filtering continue, but only if other filters are
+                // satisfied, then exclude the subnet
             }
 
             let subnet_principal_string = subnet.principal.to_string();
@@ -88,11 +103,18 @@ impl ExecutableCommand for UpdateAuthorizedSubnets {
             if subnet_metrics.canister_state_bytes >= self.state_size_limit {
                 excluded_subnets.insert(subnet.principal, format!("Subnet has more than {} state size", human_bytes));
             }
+
+            if subnet.subnet_type.eq(&SubnetType::VerifiedApplication) {
+                if verified_subnets_to_open != 0 {
+                    verified_subnets_to_open -= 1;
+                } else {
+                    unreachable!(
+                        "Error in logic! Subnet of type VerifiedApplication cannot be let through the filter if `open_verified_subnets` is 0"
+                    )
+                }
+            }
         }
 
-        let (_, agent) = ctx.create_ic_agent_canister_client().await?;
-        let cmc = CyclesMintingCanisterWrapper::from(agent);
-        let public_subnets = cmc.get_authorized_subnets().await?;
         let summary = construct_summary(&subnets, &excluded_subnets, public_subnets, ctx.forum_post_link())?;
 
         let authorized = subnets
@@ -151,8 +173,8 @@ fn construct_summary(
     Ok(format!(
         "Updating the list of authorized subnets to:
 
-| Subnet id | Public | Description |
-| --------- | ------ | ----------- |
+| Subnet id | Subnet Type | Public | Description |
+| --------- | ----------- | ------ | ----------- |
 {}
 {}
 ",
@@ -162,8 +184,13 @@ fn construct_summary(
                 let excluded_desc = excluded_subnets.get(&s.principal);
                 let was_public = current_public_subnets.iter().any(|principal| principal == &s.principal);
                 format!(
-                    "| {} | {} | {} |",
+                    "| {} | {} | {} | {} |",
                     s.principal,
+                    match &s.subnet_type {
+                        SubnetType::Application => "Application",
+                        SubnetType::System => "System",
+                        SubnetType::VerifiedApplication => "Verified Application",
+                    },
                     match (was_public, excluded_desc.is_none()) {
                         // The state doesn't change
                         (was_public, is_excluded) if was_public == is_excluded => was_public.to_string(),
