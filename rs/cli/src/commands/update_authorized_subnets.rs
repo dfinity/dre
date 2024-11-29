@@ -79,6 +79,8 @@ impl ExecutableCommand for UpdateAuthorizedSubnets {
                 excluded_subnets.insert(subnet.principal, "System subnets should not have public access".to_string());
                 continue;
             }
+
+            // There was a request to open up 1 verified subnet per week
             if subnet.subnet_type.eq(&SubnetType::VerifiedApplication) {
                 // Subnet is already open or a sufficient number of verified_subnets has already
                 // been opened up
@@ -93,11 +95,9 @@ impl ExecutableCommand for UpdateAuthorizedSubnets {
                     excluded_subnets.insert(subnet.principal, description);
                     continue;
                 }
-
-                // Let the filtering continue, but only if other filters are
-                // satisfied, then exclude the subnet
             }
 
+            // Check if subnet is explicitly marked as non-public
             let subnet_principal_string = subnet.principal.to_string();
             if let Some((_, description)) = non_public_subnets_csv
                 .iter()
@@ -107,6 +107,7 @@ impl ExecutableCommand for UpdateAuthorizedSubnets {
                 continue;
             }
 
+            // Check if subnet utilization metrics are too high
             let subnet_metrics = agent.read_state_subnet_metrics(&subnet.principal).await?;
 
             if subnet_metrics.num_canisters >= self.canister_limit {
@@ -118,6 +119,9 @@ impl ExecutableCommand for UpdateAuthorizedSubnets {
                 excluded_subnets.insert(subnet.principal, format!("Subnet has more than {} state size", human_bytes));
             }
 
+            // Looks like we're good to go!
+            // Now only adjust the counter of how many VerifiedApplication subnets have been opened
+            // up in this run.
             if subnet.subnet_type.eq(&SubnetType::VerifiedApplication) {
                 if verified_subnets_to_open > 0 {
                     verified_subnets_to_open -= 1;
