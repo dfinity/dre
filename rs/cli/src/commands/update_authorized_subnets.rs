@@ -59,8 +59,8 @@ impl ExecutableCommand for UpdateAuthorizedSubnets {
     }
 
     async fn execute(&self, ctx: crate::ctx::DreContext) -> anyhow::Result<()> {
-        let csv_contents = self.parse_csv()?;
-        info!("Found following elements: {:?}", csv_contents);
+        let non_public_subnets_csv = self.parse_csv()?;
+        info!("Found following elements: {:?}", non_public_subnets_csv);
 
         let registry = ctx.registry().await;
         let subnets = registry.subnets().await?;
@@ -80,9 +80,17 @@ impl ExecutableCommand for UpdateAuthorizedSubnets {
                 continue;
             }
             if subnet.subnet_type.eq(&SubnetType::VerifiedApplication) {
-                // Subnet is already open
+                // Subnet is already open or a sufficient number of verified_subnets has already
+                // been opened up
                 if public_subnets.contains(&subnet.principal) || verified_subnets_to_open == 0 {
-                    excluded_subnets.insert(subnet.principal, "Subnet should stay closed for now".to_string());
+                    // Check if the subnet ID matches any entry in the CSV and use the description.
+                    // If no match is found, default to a generic message.
+                    let description = non_public_subnets_csv
+                        .iter()
+                        .find(|(short_id, _)| subnet.principal.to_string().starts_with(short_id))
+                        .map(|(_, desc)| desc.to_string())
+                        .unwrap_or("Subnet will be opened up soon".to_string());
+                    excluded_subnets.insert(subnet.principal, description);
                     continue;
                 }
 
@@ -91,8 +99,11 @@ impl ExecutableCommand for UpdateAuthorizedSubnets {
             }
 
             let subnet_principal_string = subnet.principal.to_string();
-            if let Some((_, description)) = csv_contents.iter().find(|(short_id, _)| subnet_principal_string.starts_with(short_id)) {
-                excluded_subnets.insert(subnet.principal, format!("[Explicitly removed] {}", description));
+            if let Some((_, description)) = non_public_subnets_csv
+                .iter()
+                .find(|(short_id, _)| subnet_principal_string.starts_with(short_id))
+            {
+                excluded_subnets.insert(subnet.principal, format!("Explicitly marked as non-public ({})", description));
                 continue;
             }
 
