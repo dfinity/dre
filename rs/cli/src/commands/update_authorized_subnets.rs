@@ -37,7 +37,7 @@ pub struct UpdateAuthorizedSubnets {
 
     /// Number of verified subnets to open that weren't open before
     #[clap(long, default_value_t = 0)]
-    open_verified_subnets: u64,
+    open_verified_subnets: i32,
 }
 
 impl ExecutableCommand for UpdateAuthorizedSubnets {
@@ -76,7 +76,7 @@ impl ExecutableCommand for UpdateAuthorizedSubnets {
 
         for subnet in subnets.values() {
             if subnet.subnet_type.eq(&SubnetType::System) {
-                excluded_subnets.insert(subnet.principal, "System subnets should be closed for public access".to_string());
+                excluded_subnets.insert(subnet.principal, "System subnets should not have public access".to_string());
                 continue;
             }
             if subnet.subnet_type.eq(&SubnetType::VerifiedApplication) {
@@ -119,7 +119,7 @@ impl ExecutableCommand for UpdateAuthorizedSubnets {
             }
 
             if subnet.subnet_type.eq(&SubnetType::VerifiedApplication) {
-                if verified_subnets_to_open != 0 {
+                if verified_subnets_to_open > 0 {
                     verified_subnets_to_open -= 1;
                 } else {
                     unreachable!(
