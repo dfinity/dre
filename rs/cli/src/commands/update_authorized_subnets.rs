@@ -9,7 +9,10 @@ use ic_types::PrincipalId;
 use itertools::Itertools;
 use log::info;
 
-use crate::ic_admin::{ProposeCommand, ProposeOptions};
+use crate::{
+    discourse_client::parse_proposal_id_from_governance_response,
+    ic_admin::{ProposeCommand, ProposeOptions},
+};
 
 use super::{AuthRequirement, ExecutableCommand};
 
@@ -31,6 +34,10 @@ pub struct UpdateAuthorizedSubnets {
     /// Size limit for marking a subnet as non public in bytes
     #[clap(default_value_t = DEFAULT_STATE_SIZE_BYTES_LIMIT)]
     state_size_limit: u64,
+
+    /// Number of verified subnets to open that weren't open before
+    #[clap(long, default_value_t = 0)]
+    open_verified_subnets: i32,
 }
 
 impl ExecutableCommand for UpdateAuthorizedSubnets {
@@ -52,8 +59,8 @@ impl ExecutableCommand for UpdateAuthorizedSubnets {
     }
 
     async fn execute(&self, ctx: crate::ctx::DreContext) -> anyhow::Result<()> {
-        let csv_contents = self.parse_csv()?;
-        info!("Found following elements: {:?}", csv_contents);
+        let non_public_subnets_csv = self.parse_csv()?;
+        info!("Found following elements: {:?}", non_public_subnets_csv);
 
         let registry = ctx.registry().await;
         let subnets = registry.subnets().await?;
@@ -62,22 +69,45 @@ impl ExecutableCommand for UpdateAuthorizedSubnets {
         let human_bytes = human_bytes::human_bytes(self.state_size_limit as f64);
         let (_, agent) = ctx.create_ic_agent_canister_client().await?;
 
+        let cmc = CyclesMintingCanisterWrapper::from(agent.clone());
+        let public_subnets = cmc.get_authorized_subnets().await?;
+
+        let mut verified_subnets_to_open = self.open_verified_subnets;
+
         for subnet in subnets.values() {
             if subnet.subnet_type.eq(&SubnetType::System) {
-                excluded_subnets.insert(subnet.principal, "System subnet".to_string());
+                excluded_subnets.insert(subnet.principal, "System subnets should not have public access".to_string());
                 continue;
             }
+
+            // There was a request to open up 1 verified subnet per week
             if subnet.subnet_type.eq(&SubnetType::VerifiedApplication) {
-                excluded_subnets.insert(subnet.principal, "Verified App subnet".to_string());
-                continue;
+                // Subnet is already open or a sufficient number of verified_subnets has already
+                // been opened up
+                if public_subnets.contains(&subnet.principal) || verified_subnets_to_open == 0 {
+                    // Check if the subnet ID matches any entry in the CSV and use the description.
+                    // If no match is found, default to a generic message.
+                    let description = non_public_subnets_csv
+                        .iter()
+                        .find(|(short_id, _)| subnet.principal.to_string().starts_with(short_id))
+                        .map(|(_, desc)| desc.to_string())
+                        .unwrap_or("Subnet will be opened up soon".to_string());
+                    excluded_subnets.insert(subnet.principal, description);
+                    continue;
+                }
             }
 
+            // Check if subnet is explicitly marked as non-public
             let subnet_principal_string = subnet.principal.to_string();
-            if let Some((_, description)) = csv_contents.iter().find(|(short_id, _)| subnet_principal_string.starts_with(short_id)) {
-                excluded_subnets.insert(subnet.principal, format!("[Explicitly removed] {}", description));
+            if let Some((_, description)) = non_public_subnets_csv
+                .iter()
+                .find(|(short_id, _)| subnet_principal_string.starts_with(short_id))
+            {
+                excluded_subnets.insert(subnet.principal, format!("Explicitly marked as non-public ({})", description));
                 continue;
             }
 
+            // Check if subnet utilization metrics are too high
             let subnet_metrics = agent.read_state_subnet_metrics(&subnet.principal).await?;
 
             if subnet_metrics.num_canisters >= self.canister_limit {
@@ -88,11 +118,21 @@ impl ExecutableCommand for UpdateAuthorizedSubnets {
             if subnet_metrics.canister_state_bytes >= self.state_size_limit {
                 excluded_subnets.insert(subnet.principal, format!("Subnet has more than {} state size", human_bytes));
             }
+
+            // Looks like we're good to go!
+            // Now only adjust the counter of how many VerifiedApplication subnets have been opened
+            // up in this run.
+            if subnet.subnet_type.eq(&SubnetType::VerifiedApplication) {
+                if verified_subnets_to_open > 0 {
+                    verified_subnets_to_open -= 1;
+                } else {
+                    unreachable!(
+                        "Error in logic! Subnet of type VerifiedApplication cannot be let through the filter if `open_verified_subnets` is 0"
+                    )
+                }
+            }
         }
 
-        let (_, agent) = ctx.create_ic_agent_canister_client().await?;
-        let cmc = CyclesMintingCanisterWrapper::from(agent);
-        let public_subnets = cmc.get_authorized_subnets().await?;
         let summary = construct_summary(&subnets, &excluded_subnets, public_subnets, ctx.forum_post_link())?;
 
         let authorized = subnets
@@ -102,17 +142,37 @@ impl ExecutableCommand for UpdateAuthorizedSubnets {
             .collect();
 
         let ic_admin = ctx.ic_admin().await?;
-        ic_admin
-            .propose_run(
-                ProposeCommand::SetAuthorizedSubnetworks { subnets: authorized },
+
+        let cmd = ProposeCommand::SetAuthorizedSubnetworks { subnets: authorized };
+        let opts = ProposeOptions {
+            title: Some("Updating the list of public subnets".to_string()),
+            summary: Some(summary.clone()),
+            motivation: None,
+            forum_post_link: Some("[comment]: <> (Link will be added on actual execution)".to_string()),
+        };
+
+        if !ic_admin.propose_print_and_confirm(cmd.clone(), opts.clone()).await? {
+            return Ok(());
+        }
+
+        let discourse_client = ctx.discourse_client()?;
+        let maybe_topic = discourse_client.create_authorized_subnets_update_forum_post(summary).await?;
+
+        let proposal_response = ic_admin
+            .propose_submit(
+                cmd,
                 ProposeOptions {
-                    title: Some("Update list of public subnets".to_string()),
-                    summary: Some(summary),
-                    motivation: None,
-                    forum_post_link: ctx.forum_post_link(),
+                    forum_post_link: maybe_topic.as_ref().map(|resp| resp.url.clone()),
+                    ..opts
                 },
             )
             .await?;
+
+        if let Some(topic) = maybe_topic {
+            discourse_client
+                .add_proposal_url_to_post(topic.update_id, parse_proposal_id_from_governance_response(proposal_response)?)
+                .await?;
+        }
 
         Ok(())
     }
@@ -151,8 +211,8 @@ fn construct_summary(
     Ok(format!(
         "Updating the list of authorized subnets to:
 
-| Subnet id | Public | Description |
-| --------- | ------ | ----------- |
+| Subnet id | Subnet Type | Public | Description |
+| --------- | ----------- | ------ | ----------- |
 {}
 {}
 ",
@@ -162,8 +222,13 @@ fn construct_summary(
                 let excluded_desc = excluded_subnets.get(&s.principal);
                 let was_public = current_public_subnets.iter().any(|principal| principal == &s.principal);
                 format!(
-                    "| {} | {} | {} |",
+                    "| {} | {} | {} | {} |",
                     s.principal,
+                    match &s.subnet_type {
+                        SubnetType::Application => "Application",
+                        SubnetType::System => "System",
+                        SubnetType::VerifiedApplication => "Verified Application",
+                    },
                     match (was_public, excluded_desc.is_none()) {
                         // The state doesn't change
                         (was_public, is_excluded) if was_public == is_excluded => was_public.to_string(),
