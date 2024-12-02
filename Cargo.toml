@@ -202,7 +202,7 @@ dfn_core = { git = "https://github.com/dfinity/ic.git", rev = "8869fff652952265e
 node-provider-rewards-lib = { path = "rs/dre-canisters/node-provider-rewards-lib" }
 
 # dre-airflow deps, should be replaced with dre-airflow once
-indexmap = { version = "2.6.0", features = ["serde"] }
+indexmap = { version = "2.7.0", features = ["serde"] }
 
 [profile.release]
 # Add debug information to the release build (does NOT reduce the level of optimization!)
