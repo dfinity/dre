@@ -176,17 +176,33 @@ impl PublicDashboardHealthClient {
                 }
             };
 
-            let status = match node.get("status") {
-                None => {
+            let status = match (node.get("alertname"), node.get("status")) {
+                (alertname, Some(s)) => {
+                    let s = s.to_string();
+                    let s = get_unquoted(&s);
+                    let alertname = alertname.map(|a| a.to_string()).unwrap_or_default();
+                    let alertname = get_unquoted(&alertname);
+                    HealthStatus::from_str_from_dashboard(alertname, s)
+                }
+                (_, None) => {
                     warn!("Didn't find node while checking node health which shouldn't happen!");
                     continue;
                 }
-                Some(s) => {
-                    let s = s.to_string();
-                    let s = get_unquoted(&s);
-                    HealthStatus::from_str_from_dashboard(s)
+            };
+
+            let node_dc = match node.get("dc_id") {
+                None => {
+                    warn!("Didn't find datacenter while checking node health which shouldn't happen!");
+                    continue;
+                }
+                Some(dc) => {
+                    let dc = dc.to_string();
+                    let dc = get_unquoted(&dc);
+                    dc.to_string()
                 }
             };
+
+            let status = if node_dc == "mn2" { HealthStatus::Healthy } else { status };
 
             let maybe_subnet = match node.get("subnet_id") {
                 None => None,
@@ -256,7 +272,10 @@ impl PrometheusHealthClient {
 
             // Alerts are synthetic time series and cannot be queries as regular metrics
             // https://prometheus.io/docs/prometheus/latest/configuration/alerting_rules/#inspecting-alerts-during-runtime
-            let query_alert = format!("ALERTS{{ic=\"{}\", job=\"replica\", alertstate=\"firing\"}}", self.network.legacy_name(),);
+            let query_alert = format!(
+                "ALERTS{{ic=\"{}\", job=\"replica\", alertstate=\"firing\", alertname!=\"IC_PrometheusTargetMissing\"}}",
+                self.network.legacy_name(),
+            );
             let response_alert = self.client.query(query_alert).get().await?;
             let instant_alert = response_alert.data().as_vector().expect("Expected instant vector");
             let node_ids_with_alerts: HashSet<PrincipalId> = instant_alert
