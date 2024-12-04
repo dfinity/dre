@@ -1,3 +1,6 @@
+#!/usr/bin/env python3
+"""Check Cargo.lock for a) disallowed crates or b) multiple versions of crates required to have a single version."""
+
 import sys
 
 try:
