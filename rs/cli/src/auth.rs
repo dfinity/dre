@@ -1,14 +1,12 @@
-use std::path::PathBuf;
-
-use anyhow::anyhow;
 use dialoguer::{console::Term, theme::ColorfulTheme, Password, Select};
 use ic_canisters::governance::GovernanceCanisterWrapper;
-use ic_canisters::parallel_hardware_identity::{hsm_key_id_to_int, KeyIdVec, ParallelHardwareIdentity};
+use ic_canisters::parallel_hardware_identity::{hsm_key_id_to_int, HsmPinHandler, KeyIdVec, ParallelHardwareIdentity, PinHandlerError};
 use ic_canisters::IcAgentCanisterClient;
 use ic_icrc1_test_utils::KeyPairGenerator;
 use ic_management_types::Network;
 use keyring::{Entry, Error};
-use log::{debug, info, warn};
+use log::{debug, error, info, warn};
+use std::path::PathBuf;
 
 use crate::commands::{AuthOpts, AuthRequirement, HsmOpts, HsmParams};
 
@@ -29,6 +27,65 @@ impl Eq for Neuron {}
 
 pub const STAGING_NEURON_ID: u64 = 49;
 pub const STAGING_KEY_PATH_FROM_HOME: &str = ".config/dfx/identity/bootstrap-super-leader/identity.pem";
+
+/// `keyring`-based memory for PIN that uses console prompting for the PIN
+/// when a PIN is necessary and has not been supplied by the user.
+/// This implementation lives in this crate to avoid having to add a
+/// `keyring` dependency to the parallel_hardware_identity module.
+#[derive(Default)]
+struct PlatformKeyringPinHandler {}
+
+impl HsmPinHandler for PlatformKeyringPinHandler {
+    fn retrieve(&self, key: &str, from_memory: bool) -> Result<String, PinHandlerError> {
+        if !from_memory {
+            match Password::new().with_prompt("Please enter the hardware security module PIN: ").interact() {
+                Ok(pin) => Ok(pin),
+                Err(e) => Err(PinHandlerError(format!("Prompt for PIN failed: {}", e))),
+            }
+        } else {
+            let entry = match Entry::new("dre-tool-hsm-pin", key) {
+                Ok(entry) => Ok(entry),
+                Err(e) => Err(PinHandlerError(format!("Keyring initialization failed: {}", e))),
+            }?;
+            match entry.get_password() {
+                Ok(pin) => Ok(pin),
+                Err(e) => {
+                    if let Error::NoEntry = e {
+                    } else {
+                        error!("Cannot retrieve password from keyring; switching to unconditional prompt.  Error: {}", e);
+                    };
+                    match Password::new().with_prompt("Please enter the hardware security module PIN: ").interact() {
+                        Ok(pin) => Ok(pin),
+                        Err(e) => Err(PinHandlerError(format!("Prompt for PIN failed: {}", e))),
+                    }
+                }
+            }
+        }
+    }
+
+    fn store(&self, key: &str, pin: &str) -> Result<(), PinHandlerError> {
+        let entry = match Entry::new("dre-tool-hsm-pin", key) {
+            Ok(entry) => Ok(entry),
+            Err(e) => Err(PinHandlerError(format!("Keyring initialization failed: {}", e))),
+        }?;
+        match entry.set_password(pin) {
+            Ok(()) => Ok(()),
+            Err(e) => Err(PinHandlerError(format!("{}", e))),
+        }
+    }
+
+    fn forget(&self, key: &str) -> Result<(), PinHandlerError> {
+        let entry = match Entry::new("dre-tool-hsm-pin", key) {
+            Ok(entry) => Ok(entry),
+            Err(e) => Err(PinHandlerError(format!("Keyring initialization failed: {}", e))),
+        }?;
+        match entry.delete_credential() {
+            Ok(()) => Ok(()),
+            Err(keyring::Error::NoEntry) => Ok(()),
+            Err(e) => Err(PinHandlerError(format!("{}", e))),
+        }
+    }
+}
 
 impl Neuron {
     pub(crate) async fn from_opts_and_req(
@@ -221,46 +278,25 @@ impl Auth {
         }
     }
 
-    /// If it is called it is expected to retrieve an Auth of type Hsm or fail
     /// FIXME: this should not return anyhow::Error, but rather a structured error,
     /// since anyhow swallows panics, and transforms them to errors.
     fn detect_hsm_auth(maybe_pin: Option<String>, maybe_slot: Option<u64>, maybe_key_id: Option<KeyIdVec>) -> anyhow::Result<Self> {
-        let detected_hsm = ParallelHardwareIdentity::scan_for_hsm(maybe_slot, maybe_key_id)?;
-        let identity = match maybe_pin {
-            Some(pin) => detected_hsm.authenticate(pin),
-            None => {
-                let pin_entry = Entry::new("dre-tool-hsm-pin", detected_hsm.memo_key.as_str())?;
-                let tentative_pin = match pin_entry.get_password() {
-                    Err(Error::NoEntry) => Password::new()
-                        .with_prompt("Please enter the hardware security module PIN: ")
-                        .interact()?,
-                    Ok(pin) => pin,
-                    Err(e) => return Err(anyhow!("Problem getting PIN from keyring: {}", e)),
-                };
-                match detected_hsm.authenticate(tentative_pin.clone()) {
-                    Ok(identity) => {
-                        pin_entry.set_password(&tentative_pin)?;
-                        Ok(identity)
-                    }
-                    Err(e) => {
-                        pin_entry.delete_credential()?;
-                        return Err(anyhow!("Hardware security module PIN incorrect ({})", e));
-                    }
-                }
-            }
-        }?;
-        Ok(Auth::Hsm { identity })
+        let memory = PlatformKeyringPinHandler::default();
+        Ok(Auth::Hsm {
+            identity: ParallelHardwareIdentity::scan(maybe_pin, maybe_slot, maybe_key_id, &memory)?,
+        })
     }
 
     /// Create an Auth that automatically detects an HSM.  Falls back to
     /// anonymous authentication if no HSM is detected.  Prompts the user
     /// for a PIN if no PIN is specified and the HSM needs to be unlocked.
     /// Caller can optionally limit search to a specific slot or key ID.
-    pub async fn auto(hsm_pin: Option<String>, hsm_slot: Option<u64>, hsm_key_id: Option<KeyIdVec>) -> anyhow::Result<Self> {
+    async fn auto(hsm_pin: Option<String>, hsm_slot: Option<u64>, hsm_key_id: Option<KeyIdVec>) -> anyhow::Result<Self> {
         tokio::task::spawn_blocking(move || Self::detect_hsm_auth(hsm_pin, hsm_slot, hsm_key_id)).await?
     }
 
-    pub async fn pem(private_key_pem: PathBuf) -> anyhow::Result<Self> {
+    /// Create an Auth that uses a specified PEM file.
+    async fn pem(private_key_pem: PathBuf) -> anyhow::Result<Self> {
         // Check path exists.
         if !private_key_pem.exists() {
             return Err(anyhow::anyhow!("Private key file not found: {:?}", private_key_pem));
@@ -268,8 +304,9 @@ impl Auth {
         Ok(Self::Keyfile { path: private_key_pem })
     }
 
+    /// Create an Auth based on the specified user options.
     pub(crate) async fn from_auth_opts(auth_opts: AuthOpts) -> Result<Self, anyhow::Error> {
-        match &auth_opts {
+        match auth_opts {
             // Private key case.
             AuthOpts {
                 private_key_pem: Some(private_key_pem),
@@ -287,7 +324,7 @@ impl Auth {
                         hsm_pin: pin,
                         hsm_params: HsmParams { hsm_slot, hsm_key_id },
                     },
-            } => Auth::auto(pin.clone(), *hsm_slot, hsm_key_id.clone()).await,
+            } => Auth::auto(pin, hsm_slot, hsm_key_id).await,
         }
     }
 }
