@@ -710,11 +710,12 @@ pub enum HealthStatus {
 
 /// Even if `from_str` is implemented by `EnumString` in derive, public api returns them capitalized and this is the implementation for that convertion
 impl HealthStatus {
-    pub fn from_str_from_dashboard(s: &str) -> Self {
-        match s {
-            "UP" | "UNASSIGNED" => Self::Healthy,
-            "DEGRADED" => Self::Degraded,
-            "DOWN" => Self::Dead,
+    pub fn from_str_from_dashboard(alertname: &str, s: &str) -> Self {
+        match (alertname, s) {
+            (_, "UP" | "UNASSIGNED") => Self::Healthy,
+            ("IC_PrometheusTargetMissing", "DEGRADED") => Self::Healthy,
+            (_, "DEGRADED") => Self::Degraded,
+            (_, "DOWN") => Self::Dead,
             _ => Self::Unknown,
         }
     }
