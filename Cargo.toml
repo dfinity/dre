@@ -41,7 +41,7 @@ actix-web = { version = "4.9.0", default-features = false, features = [
 ] }
 actix-rt = "2.10.0"
 ahash = "0.8.11"
-anyhow = "1.0.93"
+anyhow = "1.0.94"
 async-recursion = "1.1.1"
 axum-otel-metrics = "0.8.1"
 axum = "0.7.9"
@@ -186,8 +186,8 @@ strum_macros = "0.26.4"
 tabled = "0.16.0"
 tabular = "0.2"
 tempfile = "3.14.0"
-thiserror = "2.0.3"
-tokio = { version = "1.41.1", features = ["full"] }
+thiserror = "2.0.4"
+tokio = { version = "1.42.0", features = ["full"] }
 tokio-util = "0.7.12"
 url = "2.5.4"
 wiremock = "0.6.2"
