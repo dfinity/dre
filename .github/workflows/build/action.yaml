@@ -63,6 +63,7 @@ runs:
       if: ${{ steps.build.outputs.repin == 'true' }}
       uses: ad-m/github-push-action@master
       with:
+        github_token: ${{ inputs.GITHUB_TOKEN }}
         branch: ${{ github.head_ref }}
 
     # TODO: right now we can't do it because our runners run in "kubernetes mode"
