@@ -14,6 +14,8 @@ use serde_json::json;
 pub trait DiscourseClient: Sync + Send {
     fn create_replace_nodes_forum_post(&self, subnet_id: PrincipalId, body: String) -> BoxFuture<'_, anyhow::Result<Option<DiscourseResponse>>>;
 
+    fn create_authorized_subnets_update_forum_post(&self, body: String) -> BoxFuture<'_, anyhow::Result<Option<DiscourseResponse>>>;
+
     fn add_proposal_url_to_post(&self, post_id: Option<u64>, proposal_id: u64) -> BoxFuture<'_, anyhow::Result<()>>;
 }
 
@@ -198,6 +200,25 @@ impl DiscourseClient for DiscourseClientImp {
             );
             self.update_post_content(post_id, new_content).await
         })
+    }
+
+    fn create_authorized_subnets_update_forum_post(&self, body: String) -> BoxFuture<'_, anyhow::Result<Option<DiscourseResponse>>> {
+        let post = DiscourseTopic {
+            title: "Updating the list of public subnets".to_string(),
+            content: body,
+            tags: vec![SUBNET_MANAGEMENT_TAG.to_string()],
+            category: GOVERNANCE_TOPIC.to_string(),
+        };
+        let post_clone = post.clone();
+
+        let try_call = async move {
+            if self.offline || self.skip_forum_post_creation {
+                return Ok(None);
+            }
+            let topic = self.create_topic(post).await?;
+            Ok(Some(topic))
+        };
+        Box::pin(async move { try_call.await.or_else(|e| self.request_from_user(e, post_clone)) })
     }
 }
 

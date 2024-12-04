@@ -25,6 +25,7 @@ pub mod parallel_hardware_identity;
 pub mod registry;
 pub mod sns_wasm;
 
+#[derive(Clone)]
 pub struct IcAgentCanisterClient {
     pub agent: Agent,
 }
