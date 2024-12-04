@@ -3,7 +3,7 @@ description: Reusable action for building and repin with bazel
 
 inputs:
   GITHUB_TOKEN:
-    description: "Github SA PTA for the repo allowing workflows to run actions"
+    description: "Github App Token, that allows to push to the repository and trigger actions"
     required: true
 
 runs:

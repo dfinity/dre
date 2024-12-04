@@ -34,6 +34,17 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 2
+
+      # The GitHub App token is necessary for pushing changed files back to the repository
+      # If regular secrets.GITHUB_TOKEN is used instead, the push will not trigger any actions
+      # https://github.com/orgs/community/discussions/25702
+      - name: Create GitHub App Token
+        uses: actions/create-github-app-token@v1
+        id: app-token
+        with:
+          app-id: ${{ vars.PR_AUTOMATION_BOT_PUBLIC_APP_ID }}
+          private-key: ${{ secrets.PR_AUTOMATION_BOT_PUBLIC_PRIVATE_KEY }}
+
       - name: "☁️ Setup runner"
         uses: ./.github/workflows/manage-runner-pre
 
@@ -45,7 +56,9 @@ jobs:
       - name: "🚀 Building"
         uses: ./.github/workflows/build
         with:
-          GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
+          # See above where the token is generated: we can't use regular secrets.GITHUB_TOKEN
+          # since the push needs to trigger actions again
+          GITHUB_TOKEN: "${{ steps.app-token.outputs.token }}"
       - name: "🚀 Testing"
         env:
           STAGING_PRIVATE_KEY_PEM: "${{ secrets.STAGING_PRIVATE_KEY_PEM }}"
