@@ -36,7 +36,7 @@ jobs:
           fetch-depth: 2
 
       # The GitHub App token is necessary for pushing changed files back to the repository
-      # If secrets.GITHUB_TOKEN is used, the push will not trigger any actions
+      # If regular secrets.GITHUB_TOKEN is used instead, the push will not trigger any actions
       # https://github.com/orgs/community/discussions/25702
       - name: Create GitHub App Token
         uses: actions/create-github-app-token@v1
