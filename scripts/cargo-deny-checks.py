@@ -4,9 +4,9 @@
 import sys
 
 try:
-    import tomllib
+    import tomllib  # Available in Python 3.11 and later
 except ModuleNotFoundError:
-    import tomli as tomllib
+    import tomli as tomllib  # Third-party package for earlier versions
 
 DISALLOWED_CRATES = {"openssl", "openssl-sys"}
 REQUIRE_SINGLE_VERSION = {"opentelemetry"}
