@@ -80,5 +80,4 @@ repos:
         language: script
         name: Cargo deny checks
         verbose: true
-        entry: bin/cargo-deny-checks.sh
-
+        entry: scripts/cargo-deny-checks.py
