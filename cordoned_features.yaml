@@ -20,3 +20,6 @@ features:
   - feature: data_center
     value: tp1
     explanation: "offboarding TP1 DC after 48 months"
+  - feature: data_center
+    value: ch3
+    explanation: "offboarding CH3 DC after 48 months; https://forum.dfinity.org/t/proposal-update-interim-gen-1-node-provider-remuneration-after-48-months/35001/16"
