@@ -10,7 +10,7 @@ use itertools::Itertools;
 use log::info;
 
 use crate::{
-    discourse_client::parse_proposal_id_from_governance_response,
+    discourse_client::parse_proposal_id_from_ic_admin_response,
     ic_admin::{ProposeCommand, ProposeOptions},
 };
 
@@ -170,7 +170,7 @@ impl ExecutableCommand for UpdateAuthorizedSubnets {
 
         if let Some(topic) = maybe_topic {
             discourse_client
-                .add_proposal_url_to_post(topic.update_id, parse_proposal_id_from_governance_response(proposal_response)?)
+                .add_proposal_url_to_post(topic.update_id, parse_proposal_id_from_ic_admin_response(proposal_response)?)
                 .await?;
         }
 

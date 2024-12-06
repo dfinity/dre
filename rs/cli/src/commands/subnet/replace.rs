@@ -6,7 +6,7 @@ use log::warn;
 
 use crate::{
     commands::{AuthRequirement, ExecutableCommand},
-    discourse_client::parse_proposal_id_from_governance_response,
+    discourse_client::parse_proposal_id_from_ic_admin_response,
     ic_admin::ProposeOptions,
     subnet_manager::SubnetTarget,
 };
@@ -126,7 +126,7 @@ impl ExecutableCommand for Replace {
 
             if let Some(topic) = maybe_topic {
                 discourse_client
-                    .add_proposal_url_to_post(topic.update_id, parse_proposal_id_from_governance_response(proposal_response)?)
+                    .add_proposal_url_to_post(topic.update_id, parse_proposal_id_from_ic_admin_response(proposal_response)?)
                     .await?
             }
         }

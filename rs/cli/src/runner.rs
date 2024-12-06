@@ -508,7 +508,8 @@ impl Runner {
     pub async fn network_heal(
         &self,
         forum_post_link: Option<String>,
-        skip_subnets: &[String],
+        omit_subnets: &[String],
+        omit_nodes: &[String],
         optimize_decentralization: bool,
     ) -> anyhow::Result<Vec<RunnerProposal>> {
         let mut errors = vec![];
@@ -517,20 +518,10 @@ impl Runner {
         let subnets = self.registry.subnets_and_proposals().await?;
         let subnets_not_skipped = subnets
             .iter()
-            .filter(|(subnet_id, _)| !skip_subnets.iter().any(|s| subnet_id.to_string().contains(s)))
+            .filter(|(subnet_id, _)| !omit_subnets.iter().any(|s| subnet_id.to_string().contains(s)))
             .map(|(subnet_id, subnet)| (*subnet_id, subnet.clone()))
             .collect::<IndexMap<_, _>>();
-        let subnets_without_proposals = subnets_not_skipped
-            .iter()
-            .filter(|(subnet_id, subnet)| match &subnet.proposal {
-                Some(p) => {
-                    info!("Skipping subnet {} as it has a pending proposal {}", subnet_id, p.id);
-                    false
-                }
-                None => true,
-            })
-            .map(|(id, subnet)| (*id, subnet.clone()))
-            .collect::<IndexMap<_, _>>();
+        let subnets_without_proposals = filter_subnets_without_proposals(subnets_not_skipped);
         let (all_nodes, available_nodes, health_of_nodes) = try_join3(
             self.registry.nodes(),
             self.registry.available_nodes().map_err(anyhow::Error::from),
@@ -538,6 +529,10 @@ impl Runner {
         )
         .await?;
         let all_nodes = all_nodes.values().cloned().collect::<Vec<Node>>();
+        let available_nodes = available_nodes
+            .into_iter()
+            .filter(|n| !omit_nodes.iter().any(|s| n.principal.to_string().contains(s)))
+            .collect::<Vec<Node>>();
 
         let subnets_change_responses = NetworkHealRequest::new(subnets_without_proposals)
             .heal_and_optimize(
@@ -572,11 +567,11 @@ impl Runner {
         Ok(changes.into_iter().map(|maybe_change| maybe_change.unwrap()).collect_vec())
     }
 
-    async fn get_subnets(&self, skip_subnets: &[String]) -> anyhow::Result<IndexMap<PrincipalId, Subnet>> {
+    async fn get_subnets(&self, omit_subnets: &[String]) -> anyhow::Result<IndexMap<PrincipalId, Subnet>> {
         let subnets = self.registry.subnets_and_proposals().await?;
         Ok(subnets
             .iter()
-            .filter(|(subnet_id, _)| !skip_subnets.iter().any(|s| subnet_id.to_string().contains(s)))
+            .filter(|(subnet_id, _)| !omit_subnets.iter().any(|s| subnet_id.to_string().contains(s)))
             .map(|(subnet_id, subnet)| (*subnet_id, subnet.clone()))
             .collect::<IndexMap<_, _>>())
     }
@@ -607,23 +602,29 @@ impl Runner {
             .iter()
             .filter_map(|(operator_id, operator)| {
                 all_nodes_grouped_by_operator.get(operator_id).and_then(|operator_nodes| {
-                    let condition = if ensure_assigned {
-                        operator_nodes
-                            .iter()
-                            .all(|node| !nodes_in_subnets_or_proposals.contains_key(&node.principal))
-                    } else {
-                        operator_nodes
-                            .iter()
-                            .all(|node| nodes_in_subnets_or_proposals.contains_key(&node.principal))
-                    };
+                    let should_optimize_operator_nodes = operator_nodes.len() > 2  // For 1-2 nodes don't bother
+                        && if ensure_assigned {
+                            operator_nodes
+                                .iter()
+                                .all(|node| !nodes_in_subnets_or_proposals.contains_key(&node.principal))
+                        } else {
+                            operator_nodes
+                                .iter()
+                                .all(|node| nodes_in_subnets_or_proposals.contains_key(&node.principal))
+                        };
 
-                    if condition {
+                    if should_optimize_operator_nodes {
                         let nodes = if ensure_assigned {
                             available_nodes_grouped_by_operator
                                 .get(operator_id)
                                 .unwrap_or(&vec![])
                                 .iter()
-                                .map(|node| nodes_all.get(&node.principal).expect("Node should exist").clone())
+                                .map(|node| {
+                                    nodes_all
+                                        .get(&node.principal)
+                                        .expect("Available node should be listed within all nodes")
+                                        .clone()
+                                })
                                 .collect::<Vec<_>>()
                         } else {
                             operator_nodes
@@ -690,12 +691,22 @@ impl Runner {
                     &change,
                     health_of_nodes,
                     Some(if ensure_assigned {
-                        format!("The node operator {} currently does not have nodes in any subnet. To gain insights into the stability of the nodes of this node operator, we propose to add one of the operator's nodes to subnet {}.",
+                        let np = node.operator.provider.principal.to_string();
+                        let np_short = np.split_once('-').unwrap().0;
+                        format!("The node operator `{}` (under NP [{}](https://dashboard.internetcomputer.org/provider/{})) has {} nodes in total but currently does not have active nodes in any subnet. To gain insights into the stability of the nodes of this node operator, we propose to add one of the operator's nodes to subnet {}.",
                                 node.operator.principal.to_string().split_once('-').unwrap().0,
+                                np_short,
+                                np,
+                                Self::num_nodes_per_operator(all_nodes, &node.operator.principal),
                                 subnet_id_short)
                     } else {
-                        format!("The node operator {} currently has all nodes assigned to subnets. We propose to remove one of the operator's nodes from subnet {} to optimize overall network topology, since subnet decentralization does not worsen upon node removal. This way the same node can be assigned to subnet where it would improve decentralization.",
+                        let np = node.operator.provider.principal.to_string();
+                        let np_short = np.split_once('-').unwrap().0;
+                        format!("The node operator {} (under NP [{}](https://dashboard.internetcomputer.org/provider/{})) has {} nodes in total and currently has all nodes assigned to subnets. We propose to remove one of the operator's nodes from subnet {} to allow optimization of the overall network topology. The removal of the node from the subnet does not worsen subnet decentralization, and may allow the node to be assigned to subnet where it would improve decentralization.",
                                 node.operator.principal.to_string().split_once('-').unwrap().0,
+                                np_short,
+                                np,
+                                Self::num_nodes_per_operator(all_nodes, &node.operator.principal),
                                 subnet_id_short)
                     }),
                 );
@@ -730,27 +741,22 @@ impl Runner {
     pub async fn network_ensure_operator_nodes(
         &self,
         forum_post_link: Option<String>,
-        skip_subnets: &[String],
+        omit_subnets: &[String],
+        omit_nodes: &[String],
         ensure_assigned: bool,
     ) -> anyhow::Result<Vec<RunnerProposal>> {
-        let subnets_not_skipped = self.get_subnets(skip_subnets).await?;
-        let mut subnets_that_have_no_proposals = subnets_not_skipped
-            .iter()
-            .filter(|(subnet_id, subnet)| match &subnet.proposal {
-                Some(p) => {
-                    info!("Skipping subnet {} as it has a pending proposal {}", subnet_id, p.id);
-                    false
-                }
-                None => true,
-            })
-            .map(|(id, subnet)| (*id, subnet.clone()))
-            .collect::<IndexMap<_, _>>();
+        let subnets_not_skipped = self.get_subnets(omit_subnets).await?;
+        let mut subnets_that_have_no_proposals = filter_subnets_without_proposals(subnets_not_skipped);
         let cordoned_features = self.cordoned_features_fetcher.fetch().await.unwrap_or_else(|e| {
             warn!("Failed to fetch cordoned features with error: {:?}", e);
             warn!("Will continue running as if no features were cordoned");
             vec![]
         });
-        let (mut available_nodes, health_of_nodes) = self.get_available_and_healthy_nodes(&cordoned_features).await?;
+        let (available_nodes, health_of_nodes) = self.get_available_and_healthy_nodes(&cordoned_features).await?;
+        let mut available_nodes = available_nodes
+            .into_iter()
+            .filter(|n| !omit_nodes.iter().any(|s| n.principal.to_string().contains(s)))
+            .collect::<Vec<Node>>();
         let all_node_operators = self.registry.operators().await?;
         let all_nodes_map = self.registry.nodes().await?;
         let all_nodes = all_nodes_map.values().cloned().collect_vec();
@@ -786,7 +792,7 @@ impl Runner {
             all_node_operators.len(),
             operators_to_optimize.len(),
             if ensure_assigned { "unassigned" } else { "assigned" },
-            skip_subnets.len()
+            omit_subnets.len()
         );
 
         if !operators_to_optimize.is_empty() {
@@ -865,38 +871,46 @@ impl Runner {
     pub async fn network_ensure_operator_nodes_assigned(
         &self,
         forum_post_link: Option<String>,
-        skip_subnets: &[String],
+        omit_subnets: &[String],
+        omit_nodes: &[String],
     ) -> anyhow::Result<Vec<RunnerProposal>> {
-        self.network_ensure_operator_nodes(forum_post_link, skip_subnets, true).await
+        self.network_ensure_operator_nodes(forum_post_link, omit_subnets, omit_nodes, true).await
     }
 
     pub async fn network_ensure_operator_nodes_unassigned(
         &self,
         forum_post_link: Option<String>,
-        skip_subnets: &[String],
+        omit_subnets: &[String],
+        omit_nodes: &[String],
     ) -> anyhow::Result<Vec<RunnerProposal>> {
-        self.network_ensure_operator_nodes(forum_post_link, skip_subnets, false).await
+        self.network_ensure_operator_nodes(forum_post_link, omit_subnets, omit_nodes, false).await
     }
 
     pub async fn network_remove_cordoned_nodes(
         &self,
         forum_post_link: Option<String>,
-        skip_subnets: &[String],
+        omit_subnets: &[String],
+        omit_nodes: &[String],
     ) -> anyhow::Result<Vec<RunnerProposal>> {
-        let subnets_not_skipped = self.get_subnets(skip_subnets).await?;
+        let subnets_not_skipped = self.get_subnets(omit_subnets).await?;
+        let subnets_that_have_no_proposals = filter_subnets_without_proposals(subnets_not_skipped);
         let cordoned_features = self.cordoned_features_fetcher.fetch().await.unwrap_or_else(|e| {
             warn!("Failed to fetch cordoned features with error: {:?}", e);
             warn!("Will continue running as if no features were cordoned");
             vec![]
         });
-        let (mut available_nodes, health_of_nodes) = self.get_available_and_healthy_nodes(&cordoned_features).await?;
+        let (available_nodes, health_of_nodes) = self.get_available_and_healthy_nodes(&cordoned_features).await?;
+        let mut available_nodes = available_nodes
+            .into_iter()
+            .filter(|n| !omit_nodes.iter().any(|s| n.principal.to_string().contains(s)))
+            .collect::<Vec<Node>>();
         let all_nodes = self.registry.nodes().await?;
         let all_nodes = all_nodes.values().cloned().collect::<Vec<Node>>();
         let all_nodes_map = self.registry.nodes().await?;
 
         let mut changes = vec![];
         // Iterate through all subnets and then through all nodes of each subnet, and check if any of the nodes matches the cordoned features
-        for (_subnet_id, subnet) in &subnets_not_skipped {
+        for (_subnet_id, subnet) in &subnets_that_have_no_proposals {
             let subnet = DecentralizedSubnet::from(subnet);
             let subnet_id_short = subnet.id.to_string().split_once('-').unwrap().0.to_string();
 
@@ -1165,6 +1179,20 @@ impl Runner {
             },
         }))
     }
+}
+
+fn filter_subnets_without_proposals(subnets: IndexMap<PrincipalId, Subnet>) -> IndexMap<PrincipalId, Subnet> {
+    subnets
+        .iter()
+        .filter(|(subnet_id, subnet)| match &subnet.proposal {
+            Some(p) => {
+                info!("Skipping subnet {} as it has a pending proposal {}", subnet_id, p.id);
+                false
+            }
+            None => true,
+        })
+        .map(|(id, subnet)| (*id, subnet.clone()))
+        .collect::<IndexMap<_, _>>()
 }
 
 fn nodes_in_subnets_or_proposals(

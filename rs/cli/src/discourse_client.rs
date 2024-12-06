@@ -222,10 +222,11 @@ impl DiscourseClient for DiscourseClientImp {
     }
 }
 
-pub fn parse_proposal_id_from_governance_response(response: String) -> anyhow::Result<u64> {
+pub fn parse_proposal_id_from_ic_admin_response(response: String) -> anyhow::Result<u64> {
     // To ensure we capture just the line with "proposal xyz"
     let last_line = response
         .lines()
+        .filter(|line| !line.trim().is_empty())
         .last()
         .ok_or(anyhow::anyhow!("Expected at least one line in the response"))?;
     let re = Regex::new(r"\s*(\d+)\s*")?;
@@ -280,16 +281,20 @@ mod tests {
 
     #[test]
     fn parse_proposal_id_test() {
-        let text = " 123456   ".to_string();
-        let parsed = parse_proposal_id_from_governance_response(text).unwrap();
+        let text = r#" some text blah 111
+proposal 123456
+
+"#
+        .to_string();
+        let parsed = parse_proposal_id_from_ic_admin_response(text).unwrap();
         assert_eq!(parsed, 123456);
 
         let text = "222222".to_string();
-        let parsed = parse_proposal_id_from_governance_response(text).unwrap();
+        let parsed = parse_proposal_id_from_ic_admin_response(text).unwrap();
         assert_eq!(parsed, 222222);
 
         let text = "Proposal id 123456".to_string();
-        let parsed = parse_proposal_id_from_governance_response(text).unwrap();
+        let parsed = parse_proposal_id_from_ic_admin_response(text).unwrap();
         assert_eq!(parsed, 123456)
     }
 }

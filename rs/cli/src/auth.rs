@@ -4,6 +4,7 @@ use ic_canisters::parallel_hardware_identity::{hsm_key_id_to_int, HsmPinHandler,
 use ic_canisters::IcAgentCanisterClient;
 use ic_icrc1_test_utils::KeyPairGenerator;
 use ic_management_types::Network;
+use itertools::Itertools;
 use keyring::{Entry, Error};
 use log::{debug, error, info, warn};
 use std::path::PathBuf;
@@ -202,6 +203,10 @@ impl Neuron {
         })
     }
 
+    pub fn is_fake_neuron(&self) -> bool {
+        self == &Self::dry_run_fake_neuron().unwrap()
+    }
+
     pub fn as_arg_vec(&self) -> Vec<String> {
         self.auth.as_arg_vec()
     }
@@ -262,7 +267,7 @@ impl Auth {
         let client = tokio::task::spawn_blocking(move || self.create_canister_client(nnsurlsclone)).await??;
         let governance = GovernanceCanisterWrapper::from(client);
         let response = governance.list_neurons().await?;
-        let neuron_ids = response.neuron_infos.keys().copied().collect::<Vec<_>>();
+        let neuron_ids = response.neuron_infos.keys().copied().sorted().collect::<Vec<_>>();
         match neuron_ids.len() {
             0 => Err(anyhow::anyhow!(
                 "Hardware security module doesn't control any neurons. Response from governance canister: {:?}",
