@@ -1,6 +1,51 @@
 # dre Changelog
 
 <!-- insertion marker -->
+## [0.5.7](https://github.com/dfinity/dre/releases/tag/0.5.7) - 2024-12-06
+
+<small>[Compare with first commit](https://github.com/dfinity/dre/compare/703c88841543adc7ef06ff40361b7bf6b7894ea1...0.5.7)</small>
+
+### Features
+
+- Ignore IC_PrometheusTargetMissing when checking node health (#1131) ([bcb61fe](https://github.com/dfinity/dre/commit/bcb61fe752d710fb815abb7d46cd84d34fd781f9) by Saša Tomić).
+- incremental opening of verified subnets  (#1127) ([349c2a5](https://github.com/dfinity/dre/commit/349c2a5444074399017e759cce2e4e4acf431328) by Nikola Milosavljevic).
+- add support for removing cordoned nodes from subnets (#1120) ([1ea97a9](https://github.com/dfinity/dre/commit/1ea97a9dc32b1c2b1d8df9ba0af73041d1f0dc37) by Saša Tomić).
+- update cordoned features handling and support for local file (#1119) ([ba28578](https://github.com/dfinity/dre/commit/ba28578444280ff4658f6d24a7014665da4e4dcf) by Saša Tomić).
+- update node selection logic to prioritize unassigned nodes of large operators (#1115) ([83230c0](https://github.com/dfinity/dre/commit/83230c094d22c7af9a34c46c561eeeff109ac78b) by Saša Tomić).
+- adding forum post creations for heal (#1110) ([f925aac](https://github.com/dfinity/dre/commit/f925aac97ae9a7f458de57b3cb7cc07d0db4660b) by Nikola Milosavljevic).
+- adding workarounds if post creation fails. (#1109) ([0b41460](https://github.com/dfinity/dre/commit/0b4146023c5d2f1a8b7c05986d86a04062cdc598) by Nikola Milosavljevic).
+- Refactor annotator logging and add watchdog functionality (#1101) ([c09058b](https://github.com/dfinity/dre/commit/c09058bc1554c283f5b9ab53d4bc73d06f850893) by Saša Tomić).
+- Discourse client for automatic forum post management around proposals. (#1098) ([bf58041](https://github.com/dfinity/dre/commit/bf5804168494b54ceb64fce62f7317defa277900) by Nikola Milosavljevic).
+- add --optimize to network heal for subnets not compliant with target topology (#1085) ([1d4fc23](https://github.com/dfinity/dre/commit/1d4fc231af1498a25f684c2c4ba550ec07fd2a1c) by Saša Tomić).
+- more informative messages on penalties before and after the change (#1082) ([17d9909](https://github.com/dfinity/dre/commit/17d99095aa32786ec18d5fa553825222fc6171ea) by Saša Tomić).
+- from nodes with same dec. prefer those from less used operators (#1080) ([4d305a7](https://github.com/dfinity/dre/commit/4d305a7b244b2c552e0fe191ad79af798b74a33b) by Saša Tomić).
+- add "network --ensure-operator-nodes-unassigned" (#1078) ([7834f29](https://github.com/dfinity/dre/commit/7834f29dc7144b63ba34bb040a055c1f0ddc7479) by Saša Tomić).
+- add nodes_in_registry field to NodeOperator (#1077) ([dd6475d](https://github.com/dfinity/dre/commit/dd6475d36abef5bbe3e1a48bacae5b9eb7fe5967) by Saša Tomić).
+- Add business rules logging to subnet change responses (#1076) ([dec9967](https://github.com/dfinity/dre/commit/dec9967b403812e24c3bdd071fb3f6f530be9360) by Saša Tomić).
+- ensure that there are some publishable changes in release notes (#1068) ([e018947](https://github.com/dfinity/dre/commit/e0189474c9e5e93547bab5d7a2049c62ebdc86d0) by Nikola Milosavljevic).
+- Add functionality to ensure that at least one node from each operator is in use (#1063) ([23174fe](https://github.com/dfinity/dre/commit/23174fe348d2c520e7e95ab13154f9f93017b66b) by Saša Tomić).
+- health client with cache (#1013) ([066bdc0](https://github.com/dfinity/dre/commit/066bdc0c2c487ba26f48013d1910349359305660) by Nikola Milosavljevic).
+- number of nodes per subnet for node operators (#1017) ([c32e885](https://github.com/dfinity/dre/commit/c32e885509d98662df11086763574319d44a365f) by Nikola Milosavljevic).
+- offline mode (#1006) ([2206f64](https://github.com/dfinity/dre/commit/2206f647b4b1793eb451519f3f218f88bcbc2684) by Nikola Milosavljevic).
+
+### Bug Fixes
+
+- use GitHub App token to trigger CI actions (#1136) ([1c8ced4](https://github.com/dfinity/dre/commit/1c8ced4a6ffb22f8ac24b1298d42aceef5410c15) by Saša Tomić).
+- Remove cargo deny checks (#1132) ([e3a0784](https://github.com/dfinity/dre/commit/e3a0784a87052afbab3eb0ce6d907d6843eba7a9) by Saša Tomić).
+- Explicitly check if nodes are in open proposals for network --ensure-* (#1092) ([e2648e9](https://github.com/dfinity/dre/commit/e2648e98819caf4003674d17e819ff9bf772c20e) by Saša Tomić).
+- Only consider available nodes for network operator assignment (#1067) ([c9d7f33](https://github.com/dfinity/dre/commit/c9d7f330f778b309ed00656559baadec000c1a9a) by Saša Tomić).
+- Allow UK countries in the European subnet, since UK is GDPR compliant (#1065) ([97dfe8f](https://github.com/dfinity/dre/commit/97dfe8fc6b13c852b7d700e917e0e05baeddea5f) by Saša Tomić).
+- fetching of correct account (#1049) ([4e29451](https://github.com/dfinity/dre/commit/4e294515e810e35f61b160d359888ab715bbde94) by Nikola Milosavljevic).
+- using correct version for the ubuntu20.04 release (#1042) ([80af65f](https://github.com/dfinity/dre/commit/80af65f43784f5a75fcfaf470dff781fae1c15f3) by Nikola Milosavljevic).
+- duplicate entries in `node_providers` (#1040) ([1bf2d51](https://github.com/dfinity/dre/commit/1bf2d51a030153b0ff1e254fc54062dd0a837f83) by Nikola Milosavljevic).
+- autoupgrade deps (#1004) ([88b0906](https://github.com/dfinity/dre/commit/88b0906dde7b25c0444f94308d1709aae3f0ec12) by Nikola Milosavljevic).
+
+### Code Refactoring
+
+- remove suppression of stdout and stderr in git commands (#1100) ([af41ee5](https://github.com/dfinity/dre/commit/af41ee5f5797d5e1bdb34861e9c180d98c6574df) by Saša Tomić).
+- replace "decentralized" node with backend node (#1079) ([2069c13](https://github.com/dfinity/dre/commit/2069c1337238e282eccbeadab94f3f390a63f6fe) by Saša Tomić).
+- remove clio dependency to fix compilation issues (#1072) ([1042b62](https://github.com/dfinity/dre/commit/1042b624b8de69db0277ebe5d0a947246daa2a74) by Saša Tomić).
+
 ## [0.5.6](https://github.com/dfinity/dre/releases/tag/0.5.6) - 2024-10-04
 
 <small>[Compare with first commit](https://github.com/dfinity/dre/compare/e410b47d36c46bd6ec8398184777ee2fa40bb4f9...0.5.6)</small>
