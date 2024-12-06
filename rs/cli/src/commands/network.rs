@@ -1,8 +1,9 @@
 use clap::Args;
+use ic_types::PrincipalId;
 use itertools::Itertools;
-use log::{info, warn};
+use log::info;
 
-use crate::{discourse_client::parse_proposal_id_from_governance_response, ic_admin::ProposeOptions, runner::RunnerProposal};
+use crate::{discourse_client::parse_proposal_id_from_ic_admin_response, ic_admin::ProposeOptions, runner::RunnerProposal};
 
 use super::{AuthRequirement, ExecutableCommand};
 
@@ -30,9 +31,14 @@ pub struct Network {
     #[clap(long)]
     pub ensure_operator_nodes_unassigned: bool,
 
-    /// Skip provided subnets.
-    #[clap(long, num_args(1..))]
-    pub skip_subnets: Vec<String>,
+    /// Do not try to improve or optimize the provided subnets.
+    #[clap(long, num_args(1..), visible_alias = "skip-subnets")]
+    pub omit_subnets: Vec<String>,
+
+    /// Do not consider the following nodes for adding into the subnets, consider them as cordoned.
+    /// All node ids with the provided substrings will be omitted.
+    #[clap(long, num_args(1..), visible_alias = "cordoned-nodes")]
+    pub omit_nodes: Vec<String>,
 
     /// Remove cordoned nodes from their subnets.
     #[clap(long)]
@@ -50,14 +56,56 @@ impl ExecutableCommand for Network {
         let network_heal = self.heal || std::env::args().any(|arg| arg == "heal");
 
         let mut proposals = vec![];
+        let mut omit_subnets = self.omit_subnets.clone();
+        let mut omit_nodes = self.omit_nodes.clone();
+
+        let update_omit_nodes = |proposals: &[RunnerProposal], omit_nodes: &mut Vec<String>| {
+            omit_nodes.extend(
+                proposals
+                    .iter()
+                    .filter_map(|proposal| match &proposal.cmd {
+                        crate::ic_admin::ProposeCommand::ChangeSubnetMembership {
+                            subnet_id: _,
+                            node_ids_add,
+                            node_ids_remove,
+                        } => {
+                            let mut omit_nodes = vec![];
+                            omit_nodes.extend(node_ids_add.iter().map(|node_id| node_id.to_string()));
+                            omit_nodes.extend(node_ids_remove.iter().map(|node_id| node_id.to_string()));
+                            Some(omit_nodes)
+                        }
+                        _ => None,
+                    })
+                    .flatten()
+                    .unique()
+                    .collect::<Vec<String>>(),
+            );
+        };
+
+        let update_omit_subnets = |proposals: &[RunnerProposal], omit_subnets: &mut Vec<String>| {
+            omit_subnets.extend(
+                proposals
+                    .iter()
+                    .filter_map(|proposal| match &proposal.cmd {
+                        crate::ic_admin::ProposeCommand::ChangeSubnetMembership { subnet_id, .. } => Some(subnet_id.to_string()),
+                        _ => None,
+                    })
+                    .unique()
+                    .collect::<Vec<String>>(),
+            );
+        };
 
         if network_heal || self.optimize_decentralization {
             info!("Healing the network by replacing unhealthy nodes and optimizing decentralization in subnets that have unhealthy nodes");
             let maybe_proposals = runner
-                .network_heal(ctx.forum_post_link(), &self.skip_subnets, self.optimize_decentralization)
+                .network_heal(ctx.forum_post_link(), &omit_subnets, &omit_nodes, self.optimize_decentralization)
                 .await;
             match maybe_proposals {
-                Ok(heal_proposals) => proposals.extend(heal_proposals),
+                Ok(heal_proposals) => {
+                    update_omit_subnets(&heal_proposals, &mut omit_subnets);
+                    update_omit_nodes(&heal_proposals, &mut omit_nodes);
+                    proposals.extend(heal_proposals);
+                }
                 Err(e) => errors.push(DetailedError {
                     proposal: None,
                     error: anyhow::anyhow!(
@@ -69,26 +117,48 @@ impl ExecutableCommand for Network {
         } else {
             info!("No network healing requested");
         }
+
         if self.ensure_operator_nodes_assigned {
             info!("Ensuring some operator nodes are assigned, for every node operator");
             let maybe_proposals = runner
-                .network_ensure_operator_nodes_assigned(ctx.forum_post_link(), &self.skip_subnets)
+                .network_ensure_operator_nodes_assigned(ctx.forum_post_link(), &omit_subnets, &omit_nodes)
                 .await;
             match maybe_proposals {
-                Ok(operator_assigned_proposals) => proposals.extend(operator_assigned_proposals),
-                Err(e) => errors.push(DetailedError { proposal: None, error: anyhow::anyhow!("Failed to calculate proposals for ensuring each operator has some nodes assigned and they won't be submitted. Error received: {:?}", e) }),
+                Ok(operator_assigned_proposals) => {
+                    update_omit_subnets(&operator_assigned_proposals, &mut omit_subnets);
+                    update_omit_nodes(&operator_assigned_proposals, &mut omit_nodes);
+                    proposals.extend(operator_assigned_proposals);
+                }
+                Err(e) => errors.push(DetailedError {
+                    proposal: None,
+                    error: anyhow::anyhow!(
+                        "Failed to calculate proposals for ensuring each operator has some nodes assigned and they won't be submitted. Error received: {:?}",
+                        e
+                    ),
+                }),
             }
         } else {
             info!("No network ensure operator nodes assigned requested");
         }
+
         if self.ensure_operator_nodes_unassigned {
             info!("Ensuring some operator nodes are unassigned, for every node operator");
             let maybe_proposals = runner
-                .network_ensure_operator_nodes_unassigned(ctx.forum_post_link(), &self.skip_subnets)
+                .network_ensure_operator_nodes_unassigned(ctx.forum_post_link(), &omit_subnets, &omit_nodes)
                 .await;
             match maybe_proposals {
-                Ok(operator_unassigned_proposals) => proposals.extend(operator_unassigned_proposals),
-                Err(e) => errors.push(DetailedError { proposal: None, error: anyhow::anyhow!("Failed to calculate proposals for ensuring each operator has some nodes unassigned and they won't be submitted. Error received: {:?}", e) }),
+                Ok(operator_unassigned_proposals) => {
+                    update_omit_subnets(&operator_unassigned_proposals, &mut omit_subnets);
+                    update_omit_nodes(&operator_unassigned_proposals, &mut omit_nodes);
+                    proposals.extend(operator_unassigned_proposals);
+                }
+                Err(e) => errors.push(DetailedError {
+                    proposal: None,
+                    error: anyhow::anyhow!(
+                        "Failed to calculate proposals for ensuring each operator has some nodes unassigned and they won't be submitted. Error received: {:?}",
+                        e
+                    ),
+                }),
             }
         } else {
             info!("No network ensure operator nodes unassigned requested");
@@ -96,9 +166,15 @@ impl ExecutableCommand for Network {
 
         if self.remove_cordoned_nodes {
             info!("Removing cordoned nodes from their subnets");
-            let maybe_proposals = runner.network_remove_cordoned_nodes(ctx.forum_post_link(), &self.skip_subnets).await;
+            let maybe_proposals = runner
+                .network_remove_cordoned_nodes(ctx.forum_post_link(), &omit_subnets, &omit_nodes)
+                .await;
             match maybe_proposals {
-                Ok(remove_cordoned_nodes_proposals) => proposals.extend(remove_cordoned_nodes_proposals),
+                Ok(remove_cordoned_nodes_proposals) => {
+                    update_omit_subnets(&remove_cordoned_nodes_proposals, &mut omit_subnets);
+                    update_omit_nodes(&remove_cordoned_nodes_proposals, &mut omit_nodes);
+                    proposals.extend(remove_cordoned_nodes_proposals);
+                }
                 Err(e) => errors.push(DetailedError {
                     proposal: None,
                     error: anyhow::anyhow!(
@@ -111,136 +187,34 @@ impl ExecutableCommand for Network {
             info!("No network remove cordoned nodes requested");
         }
 
-        // This check saves time if there are no proposals to be submitted
-        // because it won't check for new versions of ic admin
-        if !proposals.is_empty() {
-            let ic_admin = ctx.ic_admin().await?;
-            let discourse_client = ctx.discourse_client()?;
-            for proposal in proposals {
-                let subnet_id = match &proposal.cmd {
-                    crate::ic_admin::ProposeCommand::ChangeSubnetMembership {
-                        subnet_id,
-                        node_ids_add: _,
-                        node_ids_remove: _,
-                    } => subnet_id,
-                    _ => {
-                        errors.push(DetailedError {
-                            proposal: Some(proposal.clone()),
-                            error: anyhow::anyhow!("Expected all proposals to be of type `ChangeSubnetMembership`"),
-                        });
-                        continue;
-                    }
-                };
+        if proposals.is_empty() {
+            return Ok(());
+        }
 
-                match ic_admin
-                    .propose_print_and_confirm(
-                        proposal.cmd.clone(),
-                        ProposeOptions {
-                            forum_post_link: Some("[comment]: <> (Link will be added on actual execution)".to_string()),
-                            ..proposal.opts.clone()
-                        },
-                    )
-                    .await
-                {
-                    Ok(should_proceed) => {
-                        if !should_proceed {
-                            // Said "no" to the prompt in cli, just abort this proposal
-                            // but this is not an error
-                            continue;
-                        }
-                        // Said "yes" to the prompt in cli
-                    }
-                    Err(e) => {
-                        errors.push(DetailedError {
-                            proposal: Some(proposal.clone()),
-                            error: anyhow::anyhow!("Received error when prompting user for confirmation. Error: {:?}", e),
-                        });
-                        continue;
-                    }
+        let ic_admin = ctx.ic_admin().await?;
+        let discourse_client = ctx.discourse_client()?;
+        let is_fake_neuron = ctx.neuron().await?.is_fake_neuron();
+
+        for proposal in proposals {
+            if let crate::ic_admin::ProposeCommand::ChangeSubnetMembership { subnet_id, .. } = &proposal.cmd {
+                if let Err(e) = process_proposal(&*ic_admin, &*discourse_client, &proposal, subnet_id, is_fake_neuron).await {
+                    errors.push(e);
                 }
-
-                let body = match (&proposal.opts.motivation, &proposal.opts.summary) {
-                    (Some(motivation), None) => motivation.to_string(),
-                    (Some(motivation), Some(summary)) => format!("{}\nMotivation:\n{}", summary, motivation),
-                    (None, Some(summary)) => summary.to_string(),
-                    (None, None) => anyhow::bail!("Expected to have `motivation` or `summary` for this proposal"),
-                };
-
-                let maybe_topic = match discourse_client.create_replace_nodes_forum_post(*subnet_id, body).await {
-                    Ok(maybe_topic) => maybe_topic,
-                    Err(e) => {
-                        errors.push(DetailedError {
-                            proposal: Some(proposal.clone()),
-                            error: anyhow::anyhow!("Got error when creating a forum post: {:?}", e),
-                        });
-                        continue;
-                    }
-                };
-
-                let proposal_response = match ic_admin
-                    .propose_submit(
-                        proposal.cmd.clone(),
-                        ProposeOptions {
-                            forum_post_link: match (maybe_topic.as_ref(), proposal.opts.forum_post_link.as_ref()) {
-                                (Some(discourse_response), _) => Some(discourse_response.url.clone()),
-                                (None, Some(from_cli_or_auto_formated)) => Some(from_cli_or_auto_formated.clone()),
-                                _ => {
-                                    warn!("Didn't find a link to forum post from discourse or cli and couldn't auto-format it.");
-                                    warn!("Will not add forum post to the proposal");
-                                    None
-                                }
-                            },
-                            ..proposal.opts.clone()
-                        },
-                    )
-                    .await
-                {
-                    Ok(response) => response,
-                    Err(e) => {
-                        errors.push(DetailedError {
-                            proposal: Some(proposal.clone()),
-                            error: anyhow::anyhow!("Received error when submitting proposal: {:?}", e),
-                        });
-                        continue;
-                    }
-                };
-
-                if let Some(topic) = maybe_topic {
-                    if let Err(e) = discourse_client
-                        .add_proposal_url_to_post(topic.update_id, parse_proposal_id_from_governance_response(proposal_response)?)
-                        .await
-                    {
-                        errors.push(DetailedError {
-                            proposal: Some(proposal.clone()),
-                            error: anyhow::anyhow!("Received error when updating forum post: {:?}", e),
-                        });
-                    }
-                }
+            } else {
+                errors.push(DetailedError {
+                    proposal: Some(proposal.clone()),
+                    error: anyhow::anyhow!("Expected all proposals to be of type `ChangeSubnetMembership`"),
+                });
             }
         }
 
-        match errors.is_empty() {
-            true => Ok(()),
-            false => Err(anyhow::anyhow!(
-                r#"All errors received:{}"#,
-                errors
-                    .iter()
-                    .enumerate()
-                    .map(|(i, detailed_error)| format!(
-                        r#"
-Error {}.:
-  - {}
-  - Error: {:?}"#,
-                        i + 1,
-                        match &detailed_error.proposal {
-                            Some(proposal) => format!("Proposal: {:?}", proposal),
-                            None => "Error is linked to a calculation of proposals to be submitted".to_string(),
-                        },
-                        detailed_error.error.to_string()
-                    ))
-                    // Doesn't need a `\n` because of the way the whole error is formatted.
-                    .join("")
-            )),
+        if errors.is_empty() {
+            Ok(())
+        } else {
+            Err(anyhow::anyhow!(
+                "All errors received:{}",
+                errors.iter().enumerate().map(format_error).join("")
+            ))
         }
     }
 
@@ -260,4 +234,118 @@ Error {}.:
 struct DetailedError {
     proposal: Option<RunnerProposal>,
     error: anyhow::Error,
+}
+
+impl From<anyhow::Error> for DetailedError {
+    fn from(error: anyhow::Error) -> Self {
+        DetailedError { proposal: None, error }
+    }
+}
+
+fn format_error((i, detailed_error): (usize, &DetailedError)) -> String {
+    format!(
+        "\nError {}.:\n  - {}\n  - Error: {:?}",
+        i + 1,
+        detailed_error.proposal.as_ref().map_or_else(
+            || "Error is linked to a calculation of proposals to be submitted".to_string(),
+            |proposal| format!("Proposal: {:?}", proposal)
+        ),
+        detailed_error.error
+    )
+}
+
+async fn process_proposal(
+    ic_admin: &dyn crate::ic_admin::IcAdmin,
+    discourse_client: &dyn crate::discourse_client::DiscourseClient,
+    proposal: &RunnerProposal,
+    subnet_id: &PrincipalId,
+    is_fake_neuron: bool,
+) -> Result<(), DetailedError> {
+    match ic_admin
+        .propose_print_and_confirm(
+            proposal.cmd.clone(),
+            ProposeOptions {
+                forum_post_link: Some("[comment]: <> (Link will be added on actual execution)".to_string()),
+                ..proposal.opts.clone()
+            },
+        )
+        .await
+    {
+        Ok(false) => return Ok(()), // User chose not to proceed
+        Ok(true) => {}
+        Err(e) => {
+            return Err(DetailedError {
+                proposal: Some(proposal.clone()),
+                error: anyhow::anyhow!("Error when prompting user for confirmation. Error: {:?}", e),
+            });
+        }
+    }
+
+    let body = match (&proposal.opts.motivation, &proposal.opts.summary) {
+        (Some(motivation), None) => motivation.to_string(),
+        (Some(motivation), Some(summary)) => format!("{}\nMotivation:\n{}", summary, motivation),
+        (None, Some(summary)) => summary.to_string(),
+        (None, None) => {
+            return Err(DetailedError {
+                proposal: Some(proposal.clone()),
+                error: anyhow::anyhow!("Expected to have `motivation` or `summary` for this proposal"),
+            });
+        }
+    };
+
+    let maybe_topic = if is_fake_neuron {
+        None
+    } else {
+        match discourse_client.create_replace_nodes_forum_post(*subnet_id, body).await {
+            Ok(maybe_topic) => maybe_topic,
+            Err(e) => {
+                return Err(DetailedError {
+                    proposal: Some(proposal.clone()),
+                    error: anyhow::anyhow!("Error when creating a forum post: {:?}", e),
+                });
+            }
+        }
+    };
+
+    let proposal_response = match ic_admin
+        .propose_submit(
+            proposal.cmd.clone(),
+            ProposeOptions {
+                forum_post_link: maybe_topic
+                    .as_ref()
+                    .map(|topic| topic.url.clone())
+                    .or_else(|| proposal.opts.forum_post_link.clone()),
+                ..proposal.opts.clone()
+            },
+        )
+        .await
+    {
+        Ok(response) => response,
+        Err(e) => {
+            return Err(DetailedError {
+                proposal: Some(proposal.clone()),
+                error: anyhow::anyhow!("Error when submitting proposal: {:?}", e),
+            });
+        }
+    };
+
+    if let Some(topic) = maybe_topic {
+        if let Err(e) = discourse_client
+            .add_proposal_url_to_post(
+                topic.update_id,
+                parse_proposal_id_from_ic_admin_response(proposal_response).map_err(|e| DetailedError {
+                    proposal: Some(proposal.clone()),
+                    error: anyhow::anyhow!("Error parsing proposal id from ic_admin output: {:?}", e),
+                })?,
+            )
+            .await
+        {
+            return Err(DetailedError {
+                proposal: Some(proposal.clone()),
+                error: anyhow::anyhow!("Error when updating forum post: {:?}", e),
+            });
+        }
+    }
+
+    Ok(())
 }
