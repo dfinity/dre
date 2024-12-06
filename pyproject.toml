@@ -1,6 +1,6 @@
 [project]
 name = "dre-repo"
-version = "0.5.6"
+version = "0.5.7"
 description = ""
 authors = [{ name = "DRE Team", email = "dept-DRE@dfinity.org" }]
 readme = "README.md"
