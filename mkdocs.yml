@@ -6,6 +6,30 @@ repo_name: Decentralized Reliability Engineering
 repo_url: https://github.com/dfinity/dre/
 edit_uri: edit/main/docs/
 
+nav:
+  - "ICP Support":
+      - Chatbot: "chat/icp-support.md"
+  - "General":
+      - index.md
+      - Getting started: getting-started.md
+      - Contributing: contributing.md
+      - How to update these docs?: how-to-update-docs.md
+  - "K8s":
+      - Tips and trics: "k8s/tips-and-tricks.md"
+  - "How to ...":
+      - Create a neuron: create-a-neuron.md
+      - Make a release: make-release.md
+      - Submit NNS proposal: nns-proposals.md
+      - Decentralization: decentralization.md
+      - Release controller: release.md
+      - Subnet decentralization: subnet-decentralization-whatif.md
+  - "Trustworthy metrics":
+      - General: trustworthy-metrics/trustworthy-metrics.md
+      - Architecture: trustworthy-metrics/architecture.md
+      - Untrusted metrics: trustworthy-metrics/untrusted-metrics.md
+  - "Bazel":
+      - Tips and tricks: bazel/tips-and-tricks.md
+
 theme:
   name: material
   features:
