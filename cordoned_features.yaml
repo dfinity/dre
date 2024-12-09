@@ -7,19 +7,19 @@ features:
   # https://forum.dfinity.org/t/proposal-update-interim-gen-1-node-provider-remuneration-after-48-months/35001/12
   - feature: data_center
     value: pl1
-    explanation: "NP is selling the PL1 DC after 48 months"
+    explanation: "NP is selling the PL1 DC after 48 months; https://forum.dfinity.org/t/subnet-management-general-discussion/34091/110"
   - feature: data_center
     value: fm1
-    explanation: "offboarding FM1 DC after 48 months"
+    explanation: "offboarding FM1 DC after 48 months; https://forum.dfinity.org/t/subnet-management-general-discussion/34091/110"
   - feature: data_center
     value: sj1
-    explanation: "offboarding SJ1 DC after 48 months"
+    explanation: "offboarding SJ1 DC after 48 months; https://forum.dfinity.org/t/subnet-management-general-discussion/34091/110"
   - feature: data_center
     value: at1
-    explanation: "offboarding AT1 DC after 48 months"
+    explanation: "offboarding AT1 DC after 48 months; https://forum.dfinity.org/t/subnet-management-general-discussion/34091/110"
   - feature: data_center
     value: tp1
-    explanation: "offboarding TP1 DC after 48 months"
+    explanation: "offboarding TP1 DC after 48 months; https://forum.dfinity.org/t/subnet-management-general-discussion/34091/110"
   - feature: data_center
     value: ch3
     explanation: "offboarding CH3 DC after 48 months; https://forum.dfinity.org/t/proposal-update-interim-gen-1-node-provider-remuneration-after-48-months/35001/16"
