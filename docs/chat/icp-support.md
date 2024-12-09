@@ -1,6 +1,3 @@
----
-weight: -100
----
 # Chat with support bot
 
 <iframe
