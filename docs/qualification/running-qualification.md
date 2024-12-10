@@ -3,8 +3,8 @@
 There are three ways to run the test and a couple of environment variables that a user should be aware of.
 
 ??? tip "Suggested way of running"
-    Since this is a long test and bazel tends to be pretty heavy on the system it is proposed to run it on a devenv!
-    To do that you should follow the guide on how to create a devenv by idx and once its deployed you can:
+    Since this is a long test and bazel tends to be pretty heavy on the system it is's a good idea to run the test in a devenv.
+    To do that you should follow the IDX guide on how to create a devenv. Once the devenv is deployed you can:
     ```bash
     eval `ssh-agent -s`
     ssh-add ~/.ssh/ssh_key_that_has_access_to_k8s_repo
@@ -31,7 +31,7 @@ bazel test //rs/tests/dre:guest_os_qualification --config=systest --cache_test_r
 ```
 
 ## Environment variables
-- `OLD_VERSION`: specifies the starting version for a testnet. If its not specified it will default to the version specified in `tests/mainnet_revision.json`.
+- `OLD_VERSION`: specifies the starting version for a testnet. If it's not specified it will default to the version specified in `tests/mainnet_revision.json`.
 
 ## How does it work
 Qualification test consits of multiple steps. If we have versions `A` and `B` where `A` is already deployed to the network and `B` is a version that is being qualified the steps would look like the following:
