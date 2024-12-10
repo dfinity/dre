@@ -20,6 +20,7 @@ nav:
       - Create a neuron: create-a-neuron.md
       - Make a release: make-release.md
       - Submit NNS proposal: nns-proposals.md
+      - Run qualification: qualification/running-qualification.md
       - Decentralization: decentralization.md
       - Release controller: release.md
       - Subnet decentralization: subnet-decentralization-whatif.md
