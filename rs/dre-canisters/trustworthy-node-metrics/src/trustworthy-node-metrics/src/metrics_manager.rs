@@ -67,7 +67,7 @@ fn node_metrics_storable(
 ///
 /// Calls to the node_metrics_history endpoint of the management canister for all the subnets
 /// to get updated metrics since refresh_ts.
-async fn fetch_metrics(subnets: Vec<PrincipalId>, refresh_ts: TimestampNanos) -> anyhow::Result<Vec<SubnetNodeMetricsHistory>> {
+pub async fn fetch_metrics(subnets: Vec<PrincipalId>, refresh_ts: TimestampNanos) -> anyhow::Result<Vec<SubnetNodeMetricsHistory>> {
     let mut subnets_node_metrics = Vec::new();
 
     for subnet_id in subnets {
@@ -110,7 +110,7 @@ async fn fetch_metrics(subnets: Vec<PrincipalId>, refresh_ts: TimestampNanos) ->
 /// Fetch subnets
 ///
 /// Fetch subnets from the registry canister
-async fn fetch_subnets() -> anyhow::Result<Vec<PrincipalId>> {
+pub async fn fetch_subnets() -> anyhow::Result<Vec<PrincipalId>> {
     let (registry_subnets, _): (SubnetListRecord, _) = ic_nns_common::registry::get_value("subnet_list".as_bytes(), None).await?;
     let subnets = registry_subnets
         .subnets

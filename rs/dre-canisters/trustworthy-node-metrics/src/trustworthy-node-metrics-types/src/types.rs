@@ -131,6 +131,28 @@ impl Storable for NodeMetadataStored {
     };
 }
 
+#[derive(Deserialize, Serialize, CandidType, Clone)]
+pub struct RewardsWithLogs {
+    pub xdr_permyriad: u64,
+    pub xdr_permyriad_no_reduction: u64,
+    pub logs: Vec<String>,
+}
+
+impl Storable for crate::types::RewardsWithLogs {
+    fn to_bytes(&self) -> std::borrow::Cow<[u8]> {
+        Cow::Owned(Encode!(self).unwrap())
+    }
+
+    fn from_bytes(bytes: std::borrow::Cow<[u8]>) -> Self {
+        Decode!(bytes.as_ref(), Self).unwrap()
+    }
+
+    const BOUND: Bound = Bound::Bounded {
+        max_size: 500000,
+        is_fixed_size: false,
+    };
+}
+
 #[derive(Debug, Deserialize, Serialize, CandidType, Clone, PartialEq, Eq, PartialOrd, Ord)]
 pub struct RegistryKey {
     pub version: u64,
@@ -281,7 +303,6 @@ pub struct NodeProviderRewards {
     pub rewards_xdr_old: Option<u64>,
     pub ts_distribution: u64,
     pub xdr_conversion_rate: Option<u64>,
-    pub rewards_multipliers_stats: Vec<MultiplierStats>,
     pub computation_log: Vec<String>,
 }
 

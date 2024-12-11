@@ -71,7 +71,6 @@ type NodeProviderRewards = record {
   rewards_xdr_old: opt nat64;
   ts_distribution: nat64;
   xdr_conversion_rate: opt nat64;
-  rewards_multipliers_stats: vec MultiplierStats;
   computation_log: vec text;
 };
 

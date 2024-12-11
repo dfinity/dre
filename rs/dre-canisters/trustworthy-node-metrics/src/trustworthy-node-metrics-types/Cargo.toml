@@ -25,3 +25,4 @@ ic-stable-structures = { workspace = true }
 ic-protobuf = { workspace = true }
 ic-nns-governance-api = { workspace = true }
 node-provider-rewards-lib = { workspace = true }
+ic-registry-node-provider-rewards = { workspace = true }

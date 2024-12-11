@@ -58,7 +58,20 @@ async fn update_metrics_task() {
 
     match rewards_manager::update_recent_provider_rewards().await {
         Ok(_) => {
-            ic_cdk::println!("Successfully updated recent provider rewards");
+            ic_cdk::println!("Successfully updated recent provider rewards from remote");
+        }
+        Err(e) => {
+            ic_cdk::println!("Error updated recent provider rewards: {}", e);
+        }
+    }
+
+    let registry_querier = RegistryQuerier {
+        local_registry: LOCAL_REGISTRY.with_borrow(|local_registry| local_registry.clone()),
+    };
+
+    match rewards_manager::store_node_provider_rewards_with_subnets(registry_querier).await {
+        Ok(_) => {
+            ic_cdk::println!("Successfully updated recent provider rewards from local");
         }
         Err(e) => {
             ic_cdk::println!("Error updated recent provider rewards: {}", e);

@@ -18,6 +18,17 @@ impl DateTimeRange {
         }
     }
 
+    pub fn from_end_ts(to_ts: TimestampNanos) -> Self {
+        let end_date = Utc.timestamp_nanos(to_ts as i64).date_naive().and_hms_opt(0, 0, 0).unwrap() + Duration::days(1);
+        let start_date = Utc.timestamp_nanos(to_ts as i64).date_naive().and_hms_opt(0, 0, 0).unwrap() - Duration::days(30);
+
+
+        Self {
+            start_dt: start_date,
+            end_dt: end_date,
+        }
+    }
+
     pub fn days_between(&self) -> u64 {
         (self.end_dt - self.start_dt).num_days() as u64
     }
