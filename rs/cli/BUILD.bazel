@@ -37,14 +37,15 @@ rust_binary(
     ) + DEPS + ["//rs/cli:dre-lib", ":build_script"],
     data = [
         "//:cordoned_features.yaml",
-    ]
+    ],
+    compile_data = [ "src/assets/subnet_topic_map.json" ],
 )
 
 rust_library(
     name = "dre-lib",
     srcs = glob(["src/**/*.rs"]),
     aliases = aliases(),
-    compile_data = glob(["config/**/*"]),
+    compile_data = glob(["config/**/*"]) + [ "src/assets/subnet_topic_map.json" ],
     crate_name = "dre",
     proc_macro_deps = all_crate_deps(
         proc_macro = True,

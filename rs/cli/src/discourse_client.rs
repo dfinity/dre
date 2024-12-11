@@ -104,7 +104,7 @@ impl DiscourseClientImp {
 
         let (id, topic_slug, topic_id) = match (topic.get("id"), topic.get("topic_slug"), topic.get("topic_id")) {
             (Some(id), Some(topic_slug), Some(topic_id)) => (id.as_u64().unwrap(), topic_slug.as_str().unwrap(), topic_id.as_u64().unwrap()),
-            _ => anyhow::bail!("Expected to get `id` and `topic_id` while creating topic"),
+            _ => anyhow::bail!("Expected to get `id`, `topic_slug` and `topic_id` while creating topic"),
         };
 
         Ok(DiscourseResponse {
@@ -128,18 +128,19 @@ impl DiscourseClientImp {
             .request("posts.json?skip_validations=true".to_string(), Method::POST, Some(payload))
             .await?;
 
-        println!("{:?}", post);
-
-        let id = post
-            .get("id")
-            .ok_or(anyhow::anyhow!("Failed to get id while creating post"))?
-            .as_u64()
-            .ok_or(anyhow::anyhow!("Failed to map id to u64"))?;
+        let (id, topic_slug, post_number) = match (post.get("id"), post.get("topic_slug"), post.get("post_number")) {
+            (Some(id), Some(topic_slug), Some(post_number)) => (id.as_u64().unwrap(), topic_slug.as_str().unwrap(), post_number.as_u64().unwrap()),
+            _ => anyhow::bail!("Expected to get `id`, `topic_slug` and `post_number` while creating topic"),
+        };
 
         Ok(DiscourseResponse {
             update_id: Some(id),
-            url: "".to_string(),
+            url: self.format_post_url(topic_slug, topic_id, post_number),
         })
+    }
+
+    fn format_post_url(&self, topic_slug: &str, topic_id: u64, post_number: u64) -> String {
+        format!("{}/{}", self.format_topic_url(topic_slug, topic_id), post_number)
     }
 
     async fn get_post_content(&self, post_id: u64) -> anyhow::Result<String> {
@@ -204,32 +205,8 @@ struct SubnetTopicInfo {
 }
 
 const SUBNET_TOPICS_AND_SLUGS: &str = include_str!("assets/subnet_topic_map.json");
-#[cfg(not(test))]
 fn get_subnet_topics_map() -> BTreeMap<PrincipalId, SubnetTopicInfo> {
     serde_json::from_str(SUBNET_TOPICS_AND_SLUGS).unwrap()
-}
-
-#[cfg(test)]
-fn get_subnet_topics_map() -> BTreeMap<PrincipalId, SubnetTopicInfo> {
-    let mut map = BTreeMap::new();
-
-    map.insert(
-        PrincipalId::new_subnet_test_id(1),
-        SubnetTopicInfo {
-            slug: "topic-for-subnet-1".to_string(),
-            topic_id: 34,
-        },
-    );
-
-    map.insert(
-        PrincipalId::new_subnet_test_id(1),
-        SubnetTopicInfo {
-            slug: "topic-for-subnet-2".to_string(),
-            topic_id: 35,
-        },
-    );
-
-    map
 }
 
 impl DiscourseClient for DiscourseClientImp {
@@ -247,7 +224,7 @@ impl DiscourseClient for DiscourseClientImp {
 
             self.create_post(body.clone(), topic_info.topic_id)
                 .await
-                .map(|res| Some(res))
+                .map(Some)
                 .or_else(|e| self.request_from_user_post(e, body, self.format_topic_url(&topic_info.slug, topic_info.topic_id)))
         })
     }
