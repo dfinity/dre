@@ -1,5 +1,5 @@
 // Construct a useful and specific version string for the CLI
-use std::{collections::HashMap, path::PathBuf, process::Command, str::FromStr};
+use std::{collections::BTreeMap, path::PathBuf, process::Command, str::FromStr};
 
 use serde::{Deserialize, Serialize};
 use serde_json::json;
@@ -58,10 +58,10 @@ fn maybe_fetch_and_update_subnet_topics() {
 
     // If there is something already in the file,
     // fetch that just so we don't override everything
-    let existing_sunbets_topics: HashMap<String, FoundPost> =
+    let existing_sunbets_topics: BTreeMap<String, FoundPost> =
         serde_json::from_str(&std::fs::read_to_string(&subnet_topics_file_path).unwrap_or("{}".to_string())).unwrap();
 
-    let new_subnet_topic_map: HashMap<String, FoundPost> = subnets
+    let new_subnet_topic_map: BTreeMap<String, FoundPost> = subnets
         .iter()
         .map(|subnet| {
             let subnet_id = subnet.get("subnet_id").map(|val| val.as_str().unwrap()).unwrap();
@@ -73,11 +73,14 @@ fn maybe_fetch_and_update_subnet_topics() {
     let chained = existing_sunbets_topics
         .into_iter()
         .chain(new_subnet_topic_map.into_iter())
-        .collect::<HashMap<String, FoundPost>>();
+        .collect::<BTreeMap<String, FoundPost>>();
 
-    let serialized = serde_json::to_string_pretty(&chained).unwrap();
-    println!("cargo:warning=Writing to path {}", subnet_topics_file_path.display());
-    std::fs::write(subnet_topics_file_path, serialized).unwrap();
+    let mut buf = Vec::new();
+    let formatter = serde_json::ser::PrettyFormatter::with_indent(b"    ");
+    let mut ser = serde_json::Serializer::with_formatter(&mut buf, formatter);
+    chained.serialize(&mut ser).unwrap();
+
+    std::fs::write(subnet_topics_file_path, buf).unwrap();
 }
 
 #[derive(Default, Serialize, Deserialize)]
