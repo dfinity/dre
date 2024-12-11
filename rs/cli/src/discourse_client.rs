@@ -1,4 +1,4 @@
-use std::{fmt::Display, time::Duration};
+use std::{collections::HashMap, fmt::Display, time::Duration};
 
 use futures::{future::BoxFuture, TryFutureExt};
 use ic_types::PrincipalId;
@@ -113,6 +113,27 @@ impl DiscourseClientImp {
         })
     }
 
+    async fn create_post(&self, content: String, topic_id: u64) -> anyhow::Result<DiscourseResponse> {
+        let payload = json!({
+           "raw": content,
+           "topic_id": topic_id
+        });
+        let payload = serde_json::to_string(&payload)?;
+
+        let post: serde_json::Value = self
+            .request("posts.json?skip_validations=true".to_string(), Method::POST, Some(payload))
+            .await?;
+
+        println!("{:?}", post);
+
+        let id = post.get("id").ok_or(anyhow::anyhow!("Failed to get id while creating post"))?;
+
+        Ok(DiscourseResponse {
+            update_id: Some(id),
+            url: "".to_string(),
+        })
+    }
+
     async fn get_post_content(&self, post_id: u64) -> anyhow::Result<String> {
         let post: serde_json::Value = self.request(format!("posts/{}.json", post_id), Method::GET, None).await?;
         let content = post
@@ -153,6 +174,11 @@ impl DiscourseClientImp {
 
 const GOVERNANCE_TOPIC: &str = "Governance";
 const SUBNET_MANAGEMENT_TAG: &str = "Subnet-management";
+
+struct SubnetTopicInfo {
+    slug: String,
+    id: u64,
+}
 
 impl DiscourseClient for DiscourseClientImp {
     fn create_replace_nodes_forum_post(&self, subnet_id: PrincipalId, body: String) -> BoxFuture<'_, anyhow::Result<Option<DiscourseResponse>>> {

@@ -159,6 +159,7 @@ registry-canister = { git = "https://github.com/dfinity/ic.git", rev = "a700085f
 reqwest = { version = "0.12", default-features = false, features = [
     "rustls-tls-webpki-roots",
     "blocking",
+    "json",
 ] }
 retry = "2.0.0"
 rstest = { version = "0.23.0", default-features = false }
