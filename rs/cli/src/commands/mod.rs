@@ -1,3 +1,5 @@
+use std::path::PathBuf;
+
 use crate::commands::subnet::Subnet;
 use api_boundary_nodes::ApiBoundaryNodes;
 use clap::Args as ClapArgs;
@@ -141,6 +143,9 @@ pub struct DiscourseOpts {
     /// prompt user for the link
     #[clap(long, env = "DISCOURSE_SKIP_POST_CREATION", global = true)]
     pub(crate) discourse_skip_post_creation: bool,
+
+    #[clap(long, env = "DISCOURSE_SUBNET_TOPIC_OVERRIDE_FILE_PATH", global = true)]
+    pub(crate) discourse_subnet_topic_override_file_path: Option<PathBuf>,
 }
 
 #[derive(Parser, Debug)]

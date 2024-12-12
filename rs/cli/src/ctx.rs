@@ -281,6 +281,7 @@ impl DreContext {
             // It can happen because the tool runs in offline mode, or if its a dry run.
             self.store.is_offline() || self.dry_run,
             self.discourse_opts.discourse_skip_post_creation,
+            self.discourse_opts.discourse_subnet_topic_override_file_path.clone(),
         )?);
         *self.discourse_client.borrow_mut() = Some(client.clone());
         Ok(client)
@@ -358,6 +359,7 @@ pub mod tests {
                 discourse_api_url: None,
                 discourse_api_user: None,
                 discourse_skip_post_creation: true,
+                discourse_subnet_topic_override_file_path: None,
             },
             discourse_client: RefCell::new(Some(discourse_client)),
         }

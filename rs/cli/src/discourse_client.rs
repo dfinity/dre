@@ -1,4 +1,9 @@
-use std::{fmt::Display, time::Duration};
+use std::{
+    collections::BTreeMap,
+    fmt::Display,
+    path::{Path, PathBuf},
+    time::Duration,
+};
 
 use futures::{future::BoxFuture, TryFutureExt};
 use ic_types::PrincipalId;
@@ -7,7 +12,7 @@ use log::warn;
 use mockall::automock;
 use regex::Regex;
 use reqwest::{Client, Method};
-use serde::de::DeserializeOwned;
+use serde::{de::DeserializeOwned, Deserialize};
 use serde_json::json;
 
 #[automock]
@@ -26,10 +31,18 @@ pub struct DiscourseClientImp {
     api_user: String,
     offline: bool,
     skip_forum_post_creation: bool,
+    subnet_topic_file_override: Option<PathBuf>,
 }
 
 impl DiscourseClientImp {
-    pub fn new(url: String, api_key: String, api_user: String, offline: bool, skip_forum_post_creation: bool) -> anyhow::Result<Self> {
+    pub fn new(
+        url: String,
+        api_key: String,
+        api_user: String,
+        offline: bool,
+        skip_forum_post_creation: bool,
+        subnet_topic_file_override: Option<PathBuf>,
+    ) -> anyhow::Result<Self> {
         let client = reqwest::Client::builder().timeout(Duration::from_secs(30)).build()?;
 
         Ok(Self {
@@ -39,6 +52,7 @@ impl DiscourseClientImp {
             api_user,
             offline,
             skip_forum_post_creation,
+            subnet_topic_file_override,
         })
     }
 
@@ -104,13 +118,43 @@ impl DiscourseClientImp {
 
         let (id, topic_slug, topic_id) = match (topic.get("id"), topic.get("topic_slug"), topic.get("topic_id")) {
             (Some(id), Some(topic_slug), Some(topic_id)) => (id.as_u64().unwrap(), topic_slug.as_str().unwrap(), topic_id.as_u64().unwrap()),
-            _ => anyhow::bail!("Expected to get `id` and `topic_id` while creating topic"),
+            _ => anyhow::bail!("Expected to get `id`, `topic_slug` and `topic_id` while creating topic"),
         };
 
         Ok(DiscourseResponse {
             update_id: Some(id),
-            url: format!("{}/t/{}/{}", self.forum_url, topic_slug, topic_id),
+            url: self.format_topic_url(topic_slug, topic_id),
         })
+    }
+
+    fn format_topic_url(&self, topic_slug: &str, topic_id: u64) -> String {
+        format!("{}/t/{}/{}", self.forum_url, topic_slug, topic_id)
+    }
+
+    async fn create_post(&self, content: String, topic_id: u64) -> anyhow::Result<DiscourseResponse> {
+        let payload = json!({
+           "raw": content,
+           "topic_id": topic_id
+        });
+        let payload = serde_json::to_string(&payload)?;
+
+        let post: serde_json::Value = self
+            .request("posts.json?skip_validations=true".to_string(), Method::POST, Some(payload))
+            .await?;
+
+        let (id, topic_slug, post_number) = match (post.get("id"), post.get("topic_slug"), post.get("post_number")) {
+            (Some(id), Some(topic_slug), Some(post_number)) => (id.as_u64().unwrap(), topic_slug.as_str().unwrap(), post_number.as_u64().unwrap()),
+            _ => anyhow::bail!("Expected to get `id`, `topic_slug` and `post_number` while creating topic"),
+        };
+
+        Ok(DiscourseResponse {
+            update_id: Some(id),
+            url: self.format_post_url(topic_slug, topic_id, post_number),
+        })
+    }
+
+    fn format_post_url(&self, topic_slug: &str, topic_id: u64, post_number: u64) -> String {
+        format!("{}/{}", self.format_topic_url(topic_slug, topic_id), post_number)
     }
 
     async fn get_post_content(&self, post_id: u64) -> anyhow::Result<String> {
@@ -136,10 +180,24 @@ impl DiscourseClientImp {
             .map(|_resp| ())
     }
 
-    fn request_from_user(&self, err: anyhow::Error, topic: DiscourseTopic) -> anyhow::Result<Option<DiscourseResponse>> {
+    fn request_from_user_topic(&self, err: anyhow::Error, topic: DiscourseTopic) -> anyhow::Result<Option<DiscourseResponse>> {
         warn!("Received error: {:?}", err);
         warn!("Please create a topic with the following information");
         println!("{}", topic);
+        let forum_post_link = dialoguer::Input::<String>::new()
+            .with_prompt("Forum post link")
+            .allow_empty(true)
+            .interact()?;
+        Ok(Some(DiscourseResponse {
+            url: forum_post_link,
+            update_id: None,
+        }))
+    }
+
+    fn request_from_user_post(&self, err: anyhow::Error, body: String, topic_url: String) -> anyhow::Result<Option<DiscourseResponse>> {
+        warn!("Received error: {:?}", err);
+        warn!("Please create a post in topic {} with the following content", topic_url);
+        println!("{}", body);
         let forum_post_link = dialoguer::Input::<String>::new()
             .with_prompt("Forum post link")
             .allow_empty(true)
@@ -154,27 +212,43 @@ impl DiscourseClientImp {
 const GOVERNANCE_TOPIC: &str = "Governance";
 const SUBNET_MANAGEMENT_TAG: &str = "Subnet-management";
 
+#[derive(Deserialize)]
+struct SubnetTopicInfo {
+    slug: String,
+    topic_id: u64,
+}
+
+const SUBNET_TOPICS_AND_SLUGS: &str = include_str!("assets/subnet_topic_map.json");
+fn get_subnet_topics_map() -> BTreeMap<PrincipalId, SubnetTopicInfo> {
+    serde_json::from_str(SUBNET_TOPICS_AND_SLUGS).unwrap()
+}
+
+fn get_subnet_topics_from_path(path: &Path) -> anyhow::Result<BTreeMap<PrincipalId, SubnetTopicInfo>> {
+    let file = std::fs::File::open(path)?;
+    serde_json::from_reader(file).map_err(anyhow::Error::from)
+}
+
 impl DiscourseClient for DiscourseClientImp {
     fn create_replace_nodes_forum_post(&self, subnet_id: PrincipalId, body: String) -> BoxFuture<'_, anyhow::Result<Option<DiscourseResponse>>> {
-        let subnet_id = subnet_id.to_string();
-        // All principals have a `-` in the string from
-        let (first_part, _rest) = subnet_id.split_once("-").unwrap();
-        let post = DiscourseTopic {
-            title: format!("Replacing nodes in subnet {}", first_part),
-            content: body,
-            tags: vec![SUBNET_MANAGEMENT_TAG.to_string()],
-            category: GOVERNANCE_TOPIC.to_string(),
-        };
-        let post_clone = post.clone();
-
-        let try_call = async move {
+        Box::pin(async move {
             if self.offline || self.skip_forum_post_creation {
                 return Ok(None);
             }
-            let topic = self.create_topic(post).await?;
-            Ok(Some(topic))
-        };
-        Box::pin(async move { try_call.await.or_else(|e| self.request_from_user(e, post_clone)) })
+
+            let subnet_topic_map = match &self.subnet_topic_file_override {
+                Some(path) => get_subnet_topics_from_path(path)?,
+                None => get_subnet_topics_map(),
+            };
+            let topic_info = subnet_topic_map.get(&subnet_id).ok_or(anyhow::anyhow!(
+                "Subnet {} not found in the subnet topic map. Don't know where to create a forum post",
+                subnet_id.to_string()
+            ))?;
+
+            self.create_post(body.clone(), topic_info.topic_id)
+                .await
+                .map(Some)
+                .or_else(|e| self.request_from_user_post(e, body, self.format_topic_url(&topic_info.slug, topic_info.topic_id)))
+        })
     }
 
     fn add_proposal_url_to_post(&self, post_id: Option<u64>, proposal_id: u64) -> BoxFuture<'_, anyhow::Result<()>> {
@@ -218,7 +292,7 @@ impl DiscourseClient for DiscourseClientImp {
             let topic = self.create_topic(post).await?;
             Ok(Some(topic))
         };
-        Box::pin(async move { try_call.await.or_else(|e| self.request_from_user(e, post_clone)) })
+        Box::pin(async move { try_call.await.or_else(|e| self.request_from_user_topic(e, post_clone)) })
     }
 }
 
