@@ -359,6 +359,7 @@ pub mod tests {
                 discourse_api_url: None,
                 discourse_api_user: None,
                 discourse_skip_post_creation: true,
+                discourse_subnet_topic_override_file_path: None,
             },
             discourse_client: RefCell::new(Some(discourse_client)),
         }
