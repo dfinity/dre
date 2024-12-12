@@ -1,4 +1,9 @@
-use std::{collections::BTreeMap, fmt::Display, time::Duration};
+use std::{
+    collections::BTreeMap,
+    fmt::Display,
+    path::{Path, PathBuf},
+    time::Duration,
+};
 
 use futures::{future::BoxFuture, TryFutureExt};
 use ic_types::PrincipalId;
@@ -26,10 +31,18 @@ pub struct DiscourseClientImp {
     api_user: String,
     offline: bool,
     skip_forum_post_creation: bool,
+    subnet_topic_file_override: Option<PathBuf>,
 }
 
 impl DiscourseClientImp {
-    pub fn new(url: String, api_key: String, api_user: String, offline: bool, skip_forum_post_creation: bool) -> anyhow::Result<Self> {
+    pub fn new(
+        url: String,
+        api_key: String,
+        api_user: String,
+        offline: bool,
+        skip_forum_post_creation: bool,
+        subnet_topic_file_override: Option<PathBuf>,
+    ) -> anyhow::Result<Self> {
         let client = reqwest::Client::builder().timeout(Duration::from_secs(30)).build()?;
 
         Ok(Self {
@@ -39,6 +52,7 @@ impl DiscourseClientImp {
             api_user,
             offline,
             skip_forum_post_creation,
+            subnet_topic_file_override,
         })
     }
 
@@ -209,6 +223,11 @@ fn get_subnet_topics_map() -> BTreeMap<PrincipalId, SubnetTopicInfo> {
     serde_json::from_str(SUBNET_TOPICS_AND_SLUGS).unwrap()
 }
 
+fn get_subnet_topics_from_path(path: &Path) -> anyhow::Result<BTreeMap<PrincipalId, SubnetTopicInfo>> {
+    let file = std::fs::File::open(path)?;
+    serde_json::from_reader(file).map_err(anyhow::Error::from)
+}
+
 impl DiscourseClient for DiscourseClientImp {
     fn create_replace_nodes_forum_post(&self, subnet_id: PrincipalId, body: String) -> BoxFuture<'_, anyhow::Result<Option<DiscourseResponse>>> {
         Box::pin(async move {
@@ -216,7 +235,10 @@ impl DiscourseClient for DiscourseClientImp {
                 return Ok(None);
             }
 
-            let subnet_topic_map = get_subnet_topics_map();
+            let subnet_topic_map = match &self.subnet_topic_file_override {
+                Some(path) => get_subnet_topics_from_path(path)?,
+                None => get_subnet_topics_map(),
+            };
             let topic_info = subnet_topic_map.get(&subnet_id).ok_or(anyhow::anyhow!(
                 "Subnet {} not found in the subnet topic map. Don't know where to create a forum post",
                 subnet_id.to_string()
