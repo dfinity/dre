@@ -36,7 +36,7 @@ pub struct UpdateAuthorizedSubnets {
     state_size_limit: u64,
 
     /// Number of verified subnets to open that weren't open before
-    #[clap(long, default_value_t = 0)]
+    #[clap(long, default_value_t = 1)]
     open_verified_subnets: i32,
 }
 
@@ -74,27 +74,10 @@ impl ExecutableCommand for UpdateAuthorizedSubnets {
 
         let mut verified_subnets_to_open = self.open_verified_subnets;
 
-        for subnet in subnets.values() {
+        for subnet in subnets.values().sorted_by_cached_key(|s| s.principal) {
             if subnet.subnet_type.eq(&SubnetType::System) {
                 excluded_subnets.insert(subnet.principal, "System subnets should not have public access".to_string());
                 continue;
-            }
-
-            // There was a request to open up 1 verified subnet per week
-            if subnet.subnet_type.eq(&SubnetType::VerifiedApplication) {
-                // Subnet is already open or a sufficient number of verified_subnets has already
-                // been opened up
-                if public_subnets.contains(&subnet.principal) || verified_subnets_to_open == 0 {
-                    // Check if the subnet ID matches any entry in the CSV and use the description.
-                    // If no match is found, default to a generic message.
-                    let description = non_public_subnets_csv
-                        .iter()
-                        .find(|(short_id, _)| subnet.principal.to_string().starts_with(short_id))
-                        .map(|(_, desc)| desc.to_string())
-                        .unwrap_or("Subnet will be opened up soon".to_string());
-                    excluded_subnets.insert(subnet.principal, description);
-                    continue;
-                }
             }
 
             // Check if subnet is explicitly marked as non-public
@@ -119,10 +102,29 @@ impl ExecutableCommand for UpdateAuthorizedSubnets {
                 excluded_subnets.insert(subnet.principal, format!("Subnet has more than {} state size", human_bytes));
             }
 
+            // There was a request to open up 1 verified subnet per week
+            if subnet.subnet_type.eq(&SubnetType::VerifiedApplication) {
+                if public_subnets.contains(&subnet.principal) {
+                    continue;
+                }
+                // A sufficient number of verified_subnets has already been opened up
+                if verified_subnets_to_open == 0 {
+                    // Check if the subnet ID matches any entry in the CSV and use the description.
+                    // If no match is found, default to a generic message.
+                    let description = non_public_subnets_csv
+                        .iter()
+                        .find(|(short_id, _)| subnet.principal.to_string().starts_with(short_id))
+                        .map(|(_, desc)| desc.to_string())
+                        .unwrap_or("Other verified subnets opened up in this run".to_string());
+                    excluded_subnets.insert(subnet.principal, description);
+                    continue;
+                }
+            }
+
             // Looks like we're good to go!
             // Now only adjust the counter of how many VerifiedApplication subnets have been opened
             // up in this run.
-            if subnet.subnet_type.eq(&SubnetType::VerifiedApplication) {
+            if subnet.subnet_type.eq(&SubnetType::VerifiedApplication) && !public_subnets.contains(&subnet.principal) {
                 if verified_subnets_to_open > 0 {
                     verified_subnets_to_open -= 1;
                 } else {
