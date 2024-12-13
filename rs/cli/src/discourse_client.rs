@@ -257,20 +257,21 @@ impl DiscourseClient for DiscourseClientImp {
                 return Ok(());
             }
 
-            let new_content = format!("Proposal id [{0}](https://dashboard.internetcomputer.org/proposal/{0})", proposal_id);
             if post_id.is_none() {
-                warn!("Update the forum post with the following text");
-                warn!("{}", new_content);
+                warn!("Failed to find post id to update the proposal id");
                 return Ok(());
             }
             let post_id = post_id.unwrap();
 
-            let content = self.get_post_content(post_id).await?;
+            let orig_content = self.get_post_content(post_id).await?;
             let new_content = format!(
-                r#"{0}
+                r#"A new proposal with id [{0}](https://dashboard.internetcomputer.org/proposal/{0}) has been submitted for this subnet.
 
-{1}"#,
-                content, new_content
+[details="Click here to open proposal details"]
+{1}
+[/details]
+"#,
+                proposal_id, orig_content
             );
             self.update_post_content(post_id, new_content).await
         })

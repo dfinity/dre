@@ -950,7 +950,7 @@ impl Runner {
                         &change,
                         &health_of_nodes,
                         Some(format!(
-                            "The following nodes in subnet `{}` have been cordoned and will be removed:\n{}",
+                            "The following nodes in subnet `{}` have been cordoned and need to be removed from the subnet:\n{}",
                             subnet_id_short,
                             nodes_to_remove_with_explanations
                                 .iter()
