@@ -8,7 +8,7 @@ use lazy_static::lazy_static;
 use std::cell::RefCell;
 use std::collections::BTreeMap;
 
-use trustworthy_node_metrics_types::types::{MonthlyNodeProviderRewardsStored, NodeMetadata, NodeMetadataStored, NodeMetadataStoredV2, NodeMetricsStored, NodeMetricsStoredKey, NodeProviderRewardableKey, NodeRewardRatesStored, RegistryKey, RewardsWithLogs, TimestampNanos};
+use trustworthy_node_metrics_types::types::{MonthlyNodeProviderRewardsStored, NodeMetadata, NodeMetadataStored, NodeMetadataStoredV2, NodeMetricsStored, NodeMetricsStoredKey, NodeProviderRewardableKey, NodeProviderRewardsStored, NodeRewardRatesStored, RegistryKey, TimestampNanos};
 
 type Memory = VirtualMemory<DefaultMemoryImpl>;
 
@@ -69,7 +69,7 @@ thread_local! {
     ));
 
 
-    pub static REWARDS_BY_NODE_PROVIDER: RefCell<StableBTreeMap<(u64, Principal), RewardsWithLogs, Memory>> =
+    pub static REWARDS_BY_NODE_PROVIDER: RefCell<StableBTreeMap<(u64, Principal), NodeProviderRewardsStored, Memory>> =
         RefCell::new(StableBTreeMap::init(
         MEMORY_MANAGER.with(|m| m.borrow().get(MemoryId::new(10)))
     ));

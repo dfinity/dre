@@ -1,13 +1,16 @@
-use std::{borrow::Cow, fmt};
-
 use candid::{CandidType, Decode, Deserialize, Encode, Principal};
 use dfn_core::api::PrincipalId;
 use ic_management_canister_types::NodeMetricsHistoryResponse;
 use ic_nns_governance_api::pb::v1::MonthlyNodeProviderRewards;
 use ic_protobuf::registry::node_rewards::v2::{NodeRewardRate, NodeRewardRates};
+use ic_registry_node_provider_rewards::v1_types::NodeProviderComputationData;
 use ic_stable_structures::{storable::Bound, Storable};
 use node_provider_rewards_lib::v1_types::MultiplierStats;
 use serde::Serialize;
+use std::{borrow::Cow, fmt};
+use num_traits::ToPrimitive;
+use itertools::Itertools;
+
 
 pub type SubnetNodeMetricsHistory = (PrincipalId, Vec<NodeMetricsHistoryResponse>);
 pub type NodeMetricsGrouped = (u64, PrincipalId, ic_management_canister_types::NodeMetrics);
@@ -131,14 +134,70 @@ impl Storable for NodeMetadataStored {
     };
 }
 
-#[derive(Deserialize, Serialize, CandidType, Clone)]
-pub struct RewardsWithLogs {
+#[derive(Deserialize, Serialize, CandidType, Clone, Hash, Eq, PartialEq, Debug)]
+pub struct RewardableNodeStored {
+    pub node_id: PrincipalId,
+    pub node_provider_id: PrincipalId,
+    pub region: String,
+    pub node_type: String,
+}
+
+#[derive(Deserialize, Serialize, CandidType, Debug)]
+pub struct NodeProviderComputationDataStorable {
+    pub avg_assigned_failure_rate: Vec<(PrincipalId, f64)>,
+    pub rewards_multiplier: Vec<(PrincipalId, f64)>,
+    pub region_nodetype_rewards: Vec<(String, String, f64)>,
+    pub failure_rate_rewarding_period: Vec<(PrincipalId, f64)>,
+    pub node_provider_rewardables: Vec<RewardableNodeStored>,
+    pub assigned_metrics: Vec<(PrincipalId, Vec<DailyNodeMetrics>)>,
+    pub node_daily_fr: Vec<(PrincipalId, Vec<f64>)>,
+    pub unassigned_fr: f64,
+    pub multiplier_unassigned: f64,
+    pub rewards_xdr_no_penalty_total: Vec<(PrincipalId, f64)>,
+    pub rewards_xdr: Vec<(PrincipalId, f64)>,
+}
+
+impl From<NodeProviderComputationData> for NodeProviderComputationDataStorable {
+    fn from(data: NodeProviderComputationData) -> Self {
+        NodeProviderComputationDataStorable {
+            avg_assigned_failure_rate: data.avg_assigned_failure_rate.into_iter().map(|(k, v)| (k, v.to_f64().unwrap())).collect(),
+            rewards_multiplier: data.rewards_multiplier.into_iter().map(|(k, v)| (k, v.to_f64().unwrap())).collect(),
+            region_nodetype_rewards: data.region_nodetype_rewards.into_iter().map(|((region, nodetype), reward)| (region, nodetype, reward.to_f64().unwrap())).collect(),
+            node_provider_rewardables: data.node_provider_rewardables.into_iter().map(|npr| RewardableNodeStored {
+                node_id: npr.node_id,
+                node_provider_id: npr.node_provider_id,
+                region: npr.region,
+                node_type: npr.node_type,
+            }).collect(),
+            failure_rate_rewarding_period: data.failure_rate_rewarding_period.into_iter().map(|(k, v)| (k, v.to_f64().unwrap())).collect(),
+            assigned_metrics: data.assigned_metrics.into_iter().map(|(k, v)| (k, v.into_iter()
+                .map(|daily_node_metrics| {
+                    DailyNodeMetrics {
+                        ts: daily_node_metrics.ts,
+                        subnet_assigned: daily_node_metrics.subnet_assigned.0,
+                        num_blocks_proposed: daily_node_metrics.num_blocks_proposed,
+                        num_blocks_failed: daily_node_metrics.num_blocks_failed,
+                        failure_rate: daily_node_metrics.failure_rate.to_f64().unwrap(),
+                    }
+                }).collect())).collect(),
+            node_daily_fr: data.node_daily_fr.into_iter().map(|(k, v)| (k, v.into_iter().map(|d| d.to_f64().unwrap()).collect())).collect_vec(),
+            unassigned_fr: data.unassigned_fr.to_f64().unwrap(),
+            multiplier_unassigned: data.multiplier_unassigned.to_f64().unwrap(),
+            rewards_xdr_no_penalty_total: data.rewards_xdr_no_penalty_total.into_iter().map(|(k, v)| (k, v.to_f64().unwrap())).collect(),
+            rewards_xdr: data.rewards_xdr.into_iter().map(|(k, v)| (k, v.to_f64().unwrap())).collect(),
+        }
+    }
+}
+
+#[derive(Deserialize, Serialize, CandidType)]
+pub struct NodeProviderRewardsStored {
     pub xdr_permyriad: u64,
     pub xdr_permyriad_no_reduction: u64,
     pub logs: Vec<String>,
+    pub computation_data: NodeProviderComputationDataStorable
 }
 
-impl Storable for crate::types::RewardsWithLogs {
+impl Storable for NodeProviderRewardsStored{
     fn to_bytes(&self) -> std::borrow::Cow<[u8]> {
         Cow::Owned(Encode!(self).unwrap())
     }
@@ -304,6 +363,7 @@ pub struct NodeProviderRewards {
     pub ts_distribution: u64,
     pub xdr_conversion_rate: Option<u64>,
     pub computation_log: Vec<String>,
+    pub computation_data: NodeProviderComputationDataStorable,
 }
 
 #[derive(Debug, Deserialize, CandidType)]

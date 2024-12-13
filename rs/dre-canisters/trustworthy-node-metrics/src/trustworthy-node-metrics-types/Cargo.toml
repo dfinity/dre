@@ -26,3 +26,5 @@ ic-protobuf = { workspace = true }
 ic-nns-governance-api = { workspace = true }
 node-provider-rewards-lib = { workspace = true }
 ic-registry-node-provider-rewards = { workspace = true }
+num-traits = { workspace = true }
+itertools = "0.13.0"

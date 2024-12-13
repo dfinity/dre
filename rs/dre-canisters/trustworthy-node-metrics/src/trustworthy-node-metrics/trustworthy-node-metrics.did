@@ -64,6 +64,27 @@ type NodeRewardsArgs = record {
   node_id: principal;
 };
 
+type RewardableNodeStored = record {
+    node_id: principal;
+    node_provider_id: principal;
+    region: text;
+    node_type: text;
+};
+
+type NodeProviderComputationDataStorable = record {
+    rewards_multiplier: vec record { principal; float64 };
+    avg_assigned_failure_rate: vec record { principal; float64 };
+    failure_rate_rewarding_period: vec record { principal; float64 };
+    region_nodetype_rewards: vec record { text; text; float64 };
+    node_provider_rewardables: vec RewardableNodeStored;
+    assigned_metrics: vec record { principal; vec DailyNodeMetrics };
+    node_daily_fr: vec record { principal; vec float64 };
+    unassigned_fr: float64;
+    multiplier_unassigned: float64;
+    rewards_xdr_no_penalty_total: vec record { principal; float64 };
+    rewards_xdr: vec record { principal; float64 };
+};
+
 type NodeProviderRewards = record {
   node_provider_id: principal;
   rewards_xdr_permyriad: nat64;
@@ -72,6 +93,7 @@ type NodeProviderRewards = record {
   ts_distribution: nat64;
   xdr_conversion_rate: opt nat64;
   computation_log: vec text;
+  computation_data: NodeProviderComputationDataStorable;
 };
 
 type NodeProviderRewardsArgs = record {

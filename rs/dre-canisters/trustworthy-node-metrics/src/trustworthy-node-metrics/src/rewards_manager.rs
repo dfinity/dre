@@ -14,7 +14,7 @@ use node_provider_rewards_lib::{
 };
 use num_traits::ToPrimitive;
 use std::collections::HashMap;
-use trustworthy_node_metrics_types::types::{DailyNodeMetrics, NodeProviderRewards, NodeRewardsMultiplier, RewardsWithLogs};
+use trustworthy_node_metrics_types::types::{DailyNodeMetrics, NodeProviderRewards, NodeProviderRewardsStored, NodeRewardsMultiplier};
 
 use crate::stable_memory::REWARDS_BY_NODE_PROVIDER;
 use crate::{chrono_utils::DateTimeRange, registry_querier::RegistryQuerier, stable_memory};
@@ -89,7 +89,7 @@ pub fn node_rewards_multiplier(node_ids: Vec<Principal>, rewarding_period: DateT
         .collect_vec()
 }
 
-pub fn node_provider_rewards(node_provider_id: Principal, rewarding_period: DateTimeRange, registry_querier: RegistryQuerier) -> NodeProviderRewards {
+pub fn node_provider_rewards(node_provider_id: Principal) -> NodeProviderRewards {
     let latest_np_rewards = stable_memory::get_latest_node_providers_rewards();
     let latest_rewards_ts = latest_np_rewards.timestamp * 1_000_000_000;
     let rewards_xdr_old = latest_np_rewards
@@ -113,7 +113,7 @@ pub fn node_provider_rewards(node_provider_id: Principal, rewarding_period: Date
             .expect("Node Provider rewards should be stored in memory")
     });
 
-    NodeProviderRewards  {
+    NodeProviderRewards {
         node_provider_id,
         rewards_xdr_permyriad: rewards.xdr_permyriad,
         rewards_xdr_permyriad_no_reduction: rewards.xdr_permyriad_no_reduction,
@@ -121,6 +121,7 @@ pub fn node_provider_rewards(node_provider_id: Principal, rewarding_period: Date
         rewards_xdr_old,
         ts_distribution: latest_np_rewards.timestamp,
         xdr_conversion_rate: latest_np_rewards.xdr_conversion_rate.and_then(|rate| rate.xdr_permyriad_per_icp),
+        computation_data: rewards.computation_data,
     }
 }
 
@@ -171,11 +172,7 @@ pub async fn store_node_provider_rewards_with_subnets(registry_querier: Registry
         })
         .collect();
 
-
-    ic_cdk::println!("Subnets metrics: {:?}", subnet_metrics);
-
-
-    let rewards = calculate_rewards_with_subnets(
+    let mut rewards = calculate_rewards_with_subnets(
         total_days,
         &rewards_table,
         subnet_metrics,
@@ -185,10 +182,12 @@ pub async fn store_node_provider_rewards_with_subnets(registry_querier: Registry
     REWARDS_BY_NODE_PROVIDER.with_borrow_mut(|rewards_by_node_provider| {
         ic_cdk::println!("Storing {} rewards", rewards.rewards_per_node_provider.len());
         for (np_id, rewards_given) in rewards.rewards_per_node_provider {
-            let rewards_stored = RewardsWithLogs{
+            let computation_data = rewards.rewards_data_per_node_provider.remove(&np_id).unwrap();
+            let rewards_stored = NodeProviderRewardsStored{
                 xdr_permyriad: rewards_given.xdr_permyriad,
                 xdr_permyriad_no_reduction: rewards_given.xdr_permyriad_no_reduction,
                 logs: rewards.rewards_log_per_node_provider.get(&np_id).unwrap().get_log(),
+                computation_data: computation_data.into(),
             };
             rewards_by_node_provider.insert((timestamp_ns_last_prod_rewards, np_id.0), rewards_stored);
         }

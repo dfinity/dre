@@ -153,10 +153,5 @@ fn node_rewards(args: NodeRewardsArgs) -> NodeRewardsMultiplier {
 
 #[query]
 fn node_provider_rewards(args: NodeProviderRewardsArgs) -> NodeProviderRewards {
-    let rewarding_period = DateTimeRange::new(args.from_ts, args.to_ts);
-    let node_provider_id = args.node_provider_id;
-    let registry_querier = RegistryQuerier {
-        local_registry: LOCAL_REGISTRY.with_borrow(|local_registry| local_registry.clone()),
-    };
-    rewards_manager::node_provider_rewards(node_provider_id, rewarding_period, registry_querier)
+    rewards_manager::node_provider_rewards(args.node_provider_id)
 }
