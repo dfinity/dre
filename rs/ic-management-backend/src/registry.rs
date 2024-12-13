@@ -901,18 +901,26 @@ fn node_ip_addr(nr: &NodeRecord) -> Ipv6Addr {
 }
 
 pub fn local_cache_path() -> PathBuf {
-    match std::env::var("LOCAL_REGISTRY_PATH") {
+    let path = match std::env::var("LOCAL_REGISTRY_PATH") {
         Ok(path) => PathBuf::from(path),
         Err(_) => match dirs::cache_dir() {
             Some(cache_dir) => cache_dir,
             None => PathBuf::from("/tmp"),
         },
     }
-    .join("ic-registry-cache")
+    .join("ic-registry-cache");
+    if !path.exists() {
+        std::fs::create_dir_all(&path).expect("failed to create local cache directory");
+    }
+    path
 }
 
 pub fn local_registry_path(network: &Network) -> PathBuf {
-    local_cache_path().join(Path::new(network.name.as_str())).join("local_registry")
+    let path = local_cache_path().join(Path::new(network.name.as_str())).join("local_registry");
+    if !path.exists() {
+        std::fs::create_dir_all(&path).expect("failed to create local registry directory");
+    }
+    path
 }
 
 #[allow(dead_code)]
