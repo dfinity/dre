@@ -8,7 +8,11 @@ import Header from './components/Header';
 import { LoadingIndicator } from './utils/utils';
 import { NodePage } from './components/NodePage';
 import { NodeProviderPage } from './components/NodeProviderPage';
-import { NodeMetadata } from '../../declarations/trustworthy-node-metrics/trustworthy-node-metrics.did.d';
+import {
+  NodeMetadata,
+  SubnetFailureRate
+} from '../../declarations/trustworthy-node-metrics/trustworthy-node-metrics.did.d';
+import {SubnetPage} from "./components/SubnetPage";
 
 // Theme configuration
 const darkTheme = createTheme({
@@ -27,6 +31,7 @@ const App: React.FC = () => {
   const [infoBanner, setInfoBanner] = useState<boolean | null>(true);
   const [providers, setProviders] = useState<Map<string, string>>(new Map());
   const [nodeMetadata, setNodeMetadata] = useState<NodeMetadata[]>([]);
+  const [subnets, setSubnets] = useState<SubnetFailureRate[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const theme = useTheme();
@@ -44,7 +49,9 @@ const App: React.FC = () => {
             metadata.node_metadata_stored.node_provider_name[0] ? metadata.node_metadata_stored.node_provider_name[0] : ""
           ])
         );
+        const subnets = await trustworthy_node_metrics.subnets_failure_rates();
 
+        setSubnets(subnets);
         setProviders(providers);
         setNodeMetadata(nodeMetadata);
       } catch (error) {
@@ -59,11 +66,12 @@ const App: React.FC = () => {
 
   const drawerProps = useMemo(() => ({
     providers,
+    subnets,
     drawerWidth,
     temporary: isSmallScreen,
     drawerOpen,
     onClosed: () => setDrawerOpen(false)
-  }), [providers, drawerWidth, isSmallScreen, drawerOpen]);
+  }), [providers, subnets, drawerWidth, isSmallScreen, drawerOpen]);
 
   return (
     <ThemeProvider theme={darkTheme}>
@@ -90,6 +98,7 @@ const App: React.FC = () => {
               } />
               <Route path="/nodes/:node" element={ isLoading ? <LoadingIndicator /> : <NodePage nodeProvidersMapping={nodeMetadata} />} />
               <Route path="/providers/:provider" element={ isLoading ? <LoadingIndicator /> :  <NodeProviderPage  nodeMetadata={nodeMetadata} /> } />
+              <Route path="/subnets/:subnet" element={ isLoading ? <LoadingIndicator /> :  <SubnetPage  subnetsData={subnets} /> } />
             </Routes>
           </Box>
         </Box>

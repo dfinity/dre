@@ -12,18 +12,29 @@ import {
 import { Link } from 'react-router-dom';
 import Logo from '../assets/icp_logo.svg'; 
 import { ExpandLess, ExpandMore } from '@mui/icons-material';
+import {SubnetFailureRate} from "../../../declarations/trustworthy-node-metrics/trustworthy-node-metrics.did";
 
 interface DrawerProps {
   providers: Map<string, string>;
+  subnets: SubnetFailureRate[];
   drawerWidth: number;
   temporary: boolean;
   drawerOpen: boolean;
   onClosed: () => void;
 }
 
-const Drawer: React.FC<DrawerProps> = ({ providers, drawerWidth, temporary, drawerOpen, onClosed }) => {
+const Drawer: React.FC<DrawerProps> = ({ providers, subnets, drawerWidth, temporary, drawerOpen, onClosed }) => {
   const [isNodeProvidersOpen, setIsNodeProvidersOpen] = React.useState(false);
+  const [isSubnetsOpen, setIsSubnetsOpen] = React.useState(false);
   const [selectedIndex, setSelectedIndex] = React.useState<number | null>(null);
+  const subnets_map = new Map<string, string>(
+    subnets
+        .filter(subnet => subnet.subnet_id != null)
+        .map(subnet => {
+            const id = subnet.subnet_id.toText();
+            return [id, id.split("-")[0]];
+        })
+  );
 
   const renderCollapsibleList = (
     title: string,
@@ -87,7 +98,8 @@ const Drawer: React.FC<DrawerProps> = ({ providers, drawerWidth, temporary, draw
               <ListItemText primary="Nodes" />
             </ListItemButton>
           </Link>
-          {renderCollapsibleList("Node Providers", providers, isNodeProvidersOpen, setIsNodeProvidersOpen, "providers")}
+            {renderCollapsibleList("Node Providers", providers, isNodeProvidersOpen, setIsNodeProvidersOpen, "providers")}
+            {renderCollapsibleList("Subnets", subnets_map, isSubnetsOpen, setIsSubnetsOpen, "subnets")}
         </List>
       </MUIDrawer>
   );

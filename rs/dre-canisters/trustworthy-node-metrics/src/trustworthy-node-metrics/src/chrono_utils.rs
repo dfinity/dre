@@ -20,7 +20,7 @@ impl DateTimeRange {
 
     pub fn from_end_ts(to_ts: TimestampNanos) -> Self {
         let end_date = Utc.timestamp_nanos(to_ts as i64).date_naive().and_hms_opt(0, 0, 0).unwrap() + Duration::days(1);
-        let start_date = Utc.timestamp_nanos(to_ts as i64).date_naive().and_hms_opt(0, 0, 0).unwrap() - Duration::days(31);
+        let start_date = end_date - Duration::days(30);
 
 
         Self {
@@ -35,6 +35,9 @@ impl DateTimeRange {
 
     pub fn start_timestamp_nanos(&self) -> TimestampNanos {
         self.start_dt.and_utc().timestamp_nanos_opt().unwrap() as u64
+    }
+    pub fn start_day_before_timestamp_nanos(&self) -> TimestampNanos {
+        (self.start_dt - Duration::days(1)).and_utc().timestamp_nanos_opt().unwrap() as u64
     }
 
     pub fn end_timestamp_nanos(&self) -> TimestampNanos {

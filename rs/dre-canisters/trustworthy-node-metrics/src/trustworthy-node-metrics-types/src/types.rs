@@ -134,6 +134,28 @@ impl Storable for NodeMetadataStored {
     };
 }
 
+#[derive(Debug, Deserialize, Serialize, CandidType, Clone)]
+pub struct SubnetFailureRate {
+    pub subnet_id: Principal,
+    pub ts: TimestampNanos,
+    pub failure_rate: f64,
+}
+
+impl Storable for SubnetFailureRate {
+    fn to_bytes(&self) -> std::borrow::Cow<[u8]> {
+        Cow::Owned(Encode!(self).unwrap())
+    }
+
+    fn from_bytes(bytes: std::borrow::Cow<[u8]>) -> Self {
+        Decode!(bytes.as_ref(), Self).unwrap()
+    }
+
+    const BOUND: Bound = Bound::Bounded {
+        max_size: MAX_VALUE_SIZE_BYTES_NODE_METRICS,
+        is_fixed_size: false,
+    };
+}
+
 #[derive(Deserialize, Serialize, CandidType, Clone, Hash, Eq, PartialEq, Debug)]
 pub struct RewardableNodeStored {
     pub node_id: PrincipalId,

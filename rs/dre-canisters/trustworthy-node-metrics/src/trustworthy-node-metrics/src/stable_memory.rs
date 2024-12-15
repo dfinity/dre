@@ -73,6 +73,11 @@ thread_local! {
         RefCell::new(StableBTreeMap::init(
         MEMORY_MANAGER.with(|m| m.borrow().get(MemoryId::new(10)))
     ));
+
+    pub static SYSTEMATIC_FAILURE_RATE: RefCell<StableBTreeMap<(u64, TimestampNanos, Principal), f64, Memory>> =
+        RefCell::new(StableBTreeMap::init(
+        MEMORY_MANAGER.with(|m| m.borrow().get(MemoryId::new(11)))
+    ));
 }
 
 lazy_static! {

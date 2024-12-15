@@ -116,10 +116,17 @@ type NodeMetadata = record {
   node_metadata_stored: NodeMetadataStoredV2;
 };
 
+type SubnetFailureRate = record {
+    subnet_id: principal;
+    ts: nat64;
+    failure_rate: float64;
+};
+
 service : {
     "subnet_node_metrics" : (SubnetNodeMetricsArgs) -> (SubnetNodeMetricsResult) query;
     "node_rewards" : (NodeRewardsArgs) -> (NodeRewardsMultiplier) query;
     "node_provider_rewards" : (NodeProviderRewardsArgs) -> (NodeProviderRewards) query;
     "node_ids" : () -> (vec principal) query;
     "nodes_metadata": () -> (vec NodeMetadata) query;
+    "subnets_failure_rates" : () -> (vec SubnetFailureRate) query;
 }

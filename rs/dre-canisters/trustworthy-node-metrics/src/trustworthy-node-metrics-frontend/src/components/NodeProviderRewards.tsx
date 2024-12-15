@@ -44,6 +44,8 @@ export const NodeProviderRewardsChart: React.FC<NodeProviderRewardsChartProps> =
     if (xdr_conversion_rate.length == 0 || rewards_xdr_old.length == 0) {
         return <p>No latestNodeRewards</p>;
     }
+
+    console.log(latestProviderRewards.ts_distribution);
     const distribution_date = new Date(Number(latestProviderRewards.ts_distribution) * 1000);
     const rows: GridRowsProp = latestProviderRewards.computation_log.map((data, index) => {
         return {
@@ -175,7 +177,11 @@ export const NodeProviderRewardsChart: React.FC<NodeProviderRewardsChartProps> =
                                                             {row.assigned_metrics?.map((metric, metricIndex) => (
                                                                 <TableRow key={metricIndex}>
                                                                     <TableCell>{formatDateToUTC(new Date(Number(metric.ts) / 1000000))}</TableCell>
-                                                                    <TableCell>{metric.subnet_assigned.toString()}</TableCell>
+                                                                    <TableCell>
+                                                                        <Link to={`/subnets/${metric.subnet_assigned.toString()}`} className="custom-link">
+                                                                            {metric.subnet_assigned.toString()}
+                                                                        </Link>
+                                                                    </TableCell>
                                                                     <TableCell>{metric.num_blocks_proposed.toString()}</TableCell>
                                                                     <TableCell>{metric.num_blocks_failed.toString()}</TableCell>
                                                                     <TableCell>{metric.failure_rate.toFixed(4)}</TableCell>

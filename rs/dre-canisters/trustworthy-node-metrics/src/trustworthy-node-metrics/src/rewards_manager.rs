@@ -5,7 +5,7 @@ use ic_nns_constants::GOVERNANCE_CANISTER_ID;
 use ic_nns_governance_api::pb::v1::MonthlyNodeProviderRewards;
 use ic_protobuf::registry::node_rewards::v2::{NodeRewardRate, NodeRewardsTable};
 use ic_registry_keys::NODE_REWARDS_TABLE_KEY;
-use ic_registry_node_provider_rewards::v1_rewards::calculate_rewards as calculate_rewards_with_subnets;
+use ic_registry_node_provider_rewards::v1_rewards::{calculate_rewards as calculate_rewards_with_subnets, daily_node_metrics, systematic_fr_per_subnet};
 use ic_registry_node_provider_rewards::v1_types::RewardableNode;
 use itertools::Itertools;
 use node_provider_rewards_lib::{
@@ -14,9 +14,9 @@ use node_provider_rewards_lib::{
 };
 use num_traits::ToPrimitive;
 use std::collections::HashMap;
-use trustworthy_node_metrics_types::types::{DailyNodeMetrics, NodeProviderRewards, NodeProviderRewardsStored, NodeRewardsMultiplier};
+use trustworthy_node_metrics_types::types::{DailyNodeMetrics, NodeProviderRewards, NodeProviderRewardsStored, NodeRewardsMultiplier, SubnetFailureRate};
 
-use crate::stable_memory::REWARDS_BY_NODE_PROVIDER;
+use crate::stable_memory::{REWARDS_BY_NODE_PROVIDER, SYSTEMATIC_FAILURE_RATE};
 use crate::{chrono_utils::DateTimeRange, registry_querier::RegistryQuerier, stable_memory};
 
 fn get_daily_metrics(node_ids: Vec<Principal>, rewarding_period: DateTimeRange) -> HashMap<Principal, Vec<DailyNodeMetrics>> {
@@ -128,22 +128,22 @@ pub fn node_provider_rewards(node_provider_id: Principal) -> NodeProviderRewards
 pub async fn store_node_provider_rewards_with_subnets(registry_querier: RegistryQuerier) -> anyhow::Result<()> {
 
     // REWARDS_BY_NODE_PROVIDER.with_borrow_mut(|rewards_by_node_provider| rewards_by_node_provider.clear_new());
-
     let rewards_table: NodeRewardsTable = stable_memory::get_node_rewards_table();
     let timestamp_ns_last_prod_rewards = stable_memory::get_latest_node_providers_rewards().timestamp * 1_000_000_000;
     let rewarding_period = DateTimeRange::from_end_ts(timestamp_ns_last_prod_rewards);
 
+    SYSTEMATIC_FAILURE_RATE.with_borrow_mut(|systematic_failure_rate_stored| {
+        systematic_failure_rate_stored.clear_new();
+    });
+
     let last_rewards_end_ts = REWARDS_BY_NODE_PROVIDER.with_borrow(|rewards_by_node_provider| {
         rewards_by_node_provider.last_key_value()
             .map(|((ts, _), _)| ts)
-    });
-
-    if timestamp_ns_last_prod_rewards == last_rewards_end_ts.unwrap_or(0) {
-        ic_cdk::println!("Node Provider rewards already stored for last reward period");
-        return Ok(());
-    }
+    }).unwrap_or(0);
 
     let total_days = rewarding_period.days_between();
+
+    ic_cdk::println!("Total days {:?}", total_days);
 
     let nodes_in_period = registry_querier
         .nodes_in_period(&rewarding_period)
@@ -159,7 +159,7 @@ pub async fn store_node_provider_rewards_with_subnets(registry_querier: Registry
         .collect_vec();
 
     let subnets = crate::metrics_manager::fetch_subnets().await?;
-    let subnet_metrics: HashMap<PrincipalId, Vec<NodeMetricsHistoryResponse>> = crate::metrics_manager::fetch_metrics(subnets, rewarding_period.start_timestamp_nanos())
+    let subnet_metrics: HashMap<PrincipalId, Vec<NodeMetricsHistoryResponse>> = crate::metrics_manager::fetch_metrics(subnets, rewarding_period.start_day_before_timestamp_nanos())
         .await?
         .into_iter()
         .map(|(subnet_id, metrics)| {
@@ -172,10 +172,27 @@ pub async fn store_node_provider_rewards_with_subnets(registry_querier: Registry
         })
         .collect();
 
+    let mut daily_node_metrics = daily_node_metrics(subnet_metrics.clone());
+
+    // remove first day of metrics
+    for (_, metrics) in daily_node_metrics.iter_mut() {
+        let first = metrics.first().unwrap();
+        if first.ts < rewarding_period.start_timestamp_nanos() {
+            metrics.remove(0);
+        }
+    }
+
+    let systematic_failure_rates = systematic_fr_per_subnet(&daily_node_metrics);
+    SYSTEMATIC_FAILURE_RATE.with_borrow_mut(|systematic_failure_rate_stored| {
+        for ((subnet_id, ts), fr) in systematic_failure_rates {
+            systematic_failure_rate_stored.insert((timestamp_ns_last_prod_rewards, ts, subnet_id.0), fr.to_f64().unwrap());
+        }
+    });
+
     let mut rewards = calculate_rewards_with_subnets(
         total_days,
         &rewards_table,
-        subnet_metrics,
+        daily_node_metrics,
         &nodes_in_period
     );
 
@@ -231,4 +248,20 @@ pub async fn update_recent_provider_rewards() -> anyhow::Result<()> {
     }
 
     Ok(())
+}
+
+pub(crate) fn subnets_failure_rates() -> Vec<SubnetFailureRate> {
+    let latest_np_rewards = stable_memory::get_latest_node_providers_rewards();
+    let latest_rewards_ts = latest_np_rewards.timestamp * 1_000_000_000;
+
+    SYSTEMATIC_FAILURE_RATE.with_borrow(|systematic_failure_rate_stored| {
+        systematic_failure_rate_stored
+            .range((latest_rewards_ts, 0, Principal::anonymous())..=(latest_rewards_ts, u64::MAX, Principal::anonymous()))
+            .map(|((_, ts, subnet_id), fr)| SubnetFailureRate {
+                subnet_id,
+                ts,
+                failure_rate: fr,
+            })
+            .collect_vec()
+    })
 }
