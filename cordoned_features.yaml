@@ -23,3 +23,15 @@ features:
   - feature: data_center
     value: ch3
     explanation: "offboarding CH3 DC after 48 months; https://forum.dfinity.org/t/proposal-update-interim-gen-1-node-provider-remuneration-after-48-months/35001/16"
+  - feature: data_center
+    value: sg3
+    explanation: "offboarding SG3 DC after 48 months; https://forum.dfinity.org/t/new-node-provider-proposals/16643/581"
+  - feature: data_center
+    value: ty2
+    explanation: "offboarding SG3 DC after 48 months; https://forum.dfinity.org/t/proposal-update-interim-gen-1-node-provider-remuneration-after-48-months/35001/32 and https://forum.dfinity.org/t/proposal-update-interim-gen-1-node-provider-remuneration-after-48-months/35001/42"
+  - feature: data_center
+    value: zh5
+    explanation: "offboarding SG3 DC after 48 months; https://forum.dfinity.org/t/proposal-update-interim-gen-1-node-provider-remuneration-after-48-months/35001/27"
+  - feature: data_center
+    value: ch2
+    explanation: "offboarding SG3 DC after 48 months; https://forum.dfinity.org/t/proposal-update-interim-gen-1-node-provider-remuneration-after-48-months/35001/40"
