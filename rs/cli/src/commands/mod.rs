@@ -102,7 +102,9 @@ pub struct AuthOpts {
         required = false,
         global = true,
         conflicts_with_all = ["hsm_pin", "hsm_slot", "hsm_key_id"],
-        env = "PRIVATE_KEY_PEM")]
+        env = "PRIVATE_KEY_PEM",
+        visible_aliases = &["pem", "key", "private-key"]
+    )]
     pub(crate) private_key_pem: Option<String>,
     #[clap(flatten)]
     pub(crate) hsm_opts: HsmOpts,
@@ -158,7 +160,7 @@ pub struct Args {
     pub(crate) discourse_opts: DiscourseOpts,
 
     /// Neuron ID
-    #[clap(long, global = true, env = "NEURON_ID")]
+    #[clap(long, global = true, env = "NEURON_ID", visible_aliases = &["neuron", "proposer"])]
     pub neuron_id: Option<u64>,
 
     /// Path to explicitly state ic-admin path to use
