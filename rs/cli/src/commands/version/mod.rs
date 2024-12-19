@@ -8,21 +8,7 @@ pub(crate) mod revise;
 #[derive(Args, Debug)]
 pub struct Version {
     #[clap(subcommand)]
-    pub subcommand: Subcommands,
+    pub subcommands: Subcommands,
 }
 
-impl_executable_command_for_enums! { ReviseElectedVersions }
-
-impl ExecutableCommand for Version {
-    fn require_auth(&self) -> AuthRequirement {
-        self.subcommand.require_auth()
-    }
-
-    async fn execute(&self, ctx: crate::ctx::DreContext) -> anyhow::Result<()> {
-        self.subcommand.execute(ctx).await
-    }
-
-    fn validate(&self, args: &crate::commands::Args, cmd: &mut clap::Command) {
-        self.subcommand.validate(args, cmd)
-    }
-}
+impl_executable_command_for_enums! { Version, ReviseElectedVersions }

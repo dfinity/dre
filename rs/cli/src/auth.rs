@@ -163,9 +163,8 @@ impl Neuron {
                 include_proposer: false,
             }),
             AuthRequirement::Neuron => Ok({
-                info!("Neuron: {:?}, Auth: {:?}, Neuron Override: {:?}", neuron_id, auth_opts, neuron_override);
                 if neuron_id.is_none() && !auth_specified && neuron_override.is_some() {
-                    info!("Using override neuron");
+                    info!("Using override neuron for this command since no auth options were provided");
                     neuron_override.unwrap()
                 } else {
                     match (neuron_id, offline) {

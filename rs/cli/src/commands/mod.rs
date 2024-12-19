@@ -220,34 +220,8 @@ The argument is mandatory for testnets, and is optional for mainnet and staging"
     pub cordoned_features_file: Option<String>,
 }
 
-// Do not use outside of DRE CLI.
-// You can run your command by directly instantiating it.
-impl ExecutableCommand for Args {
-    fn require_auth(&self) -> AuthRequirement {
-        self.subcommands.require_auth()
-    }
-
-    async fn execute(&self, ctx: DreContext) -> anyhow::Result<()> {
-        self.subcommands.execute(ctx).await
-    }
-
-    /// Validate the command line arguments. You can return an error with something like:
-    /// ```rust
-    /// if args.neuron_id.is_none() {
-    ///    cmd.error(ErrorKind::MissingRequiredArgument, "Neuron ID is required for this command.")).exit();
-    /// }
-    /// ```
-    fn validate(&self, args: &crate::commands::Args, cmd: &mut Command) {
-        self.subcommands.validate(args, cmd)
-    }
-
-    fn neuron_override(&self) -> Option<crate::auth::Neuron> {
-        self.subcommands.neuron_override()
-    }
-}
-
 macro_rules! impl_executable_command_for_enums {
-    ($($var:ident),*) => {
+    ($str_name:ident, $($var:ident),*) => {
         use crate::ctx::DreContext;
         use clap::{Subcommand, Command};
 
@@ -281,11 +255,35 @@ macro_rules! impl_executable_command_for_enums {
                 }
             }
         }
+
+        impl ExecutableCommand for $str_name {
+            fn require_auth(&self) -> AuthRequirement {
+                self.subcommands.require_auth()
+            }
+
+            async fn execute(&self, ctx: DreContext) -> anyhow::Result<()> {
+                self.subcommands.execute(ctx).await
+            }
+
+            /// Validate the command line arguments. You can return an error with something like:
+            /// ```rust
+            /// if args.neuron_id.is_none() {
+            ///    cmd.error(ErrorKind::MissingRequiredArgument, "Neuron ID is required for this command.")).exit();
+            /// }
+            /// ```
+            fn validate(&self, args: &crate::commands::Args, cmd: &mut Command) {
+                self.subcommands.validate(args, cmd)
+            }
+
+            fn neuron_override(&self) -> Option<crate::auth::Neuron> {
+                self.subcommands.neuron_override()
+            }
+        }
     }
 }
 pub(crate) use impl_executable_command_for_enums;
 
-impl_executable_command_for_enums! { DerToPrincipal, Network, Subnet, Get, Propose, UpdateUnassignedNodes, Version, NodeMetrics, HostOs, Nodes, ApiBoundaryNodes, Vote, Registry, Firewall, Upgrade, Proposals, Completions, Qualify, UpdateAuthorizedSubnets, Neuron }
+impl_executable_command_for_enums! { Args, DerToPrincipal, Network, Subnet, Get, Propose, UpdateUnassignedNodes, Version, NodeMetrics, HostOs, Nodes, ApiBoundaryNodes, Vote, Registry, Firewall, Upgrade, Proposals, Completions, Qualify, UpdateAuthorizedSubnets, Neuron }
 
 pub trait ExecutableCommand {
     fn require_auth(&self) -> AuthRequirement;

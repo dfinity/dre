@@ -59,24 +59,10 @@ mod pending;
 #[clap(alias = "proposal")]
 pub struct Proposals {
     #[clap(subcommand)]
-    pub subcommand: Subcommands,
+    pub subcommands: Subcommands,
 }
 
-impl_executable_command_for_enums! { Pending, Get, Analyze, Filter, List }
-
-impl ExecutableCommand for Proposals {
-    fn require_auth(&self) -> AuthRequirement {
-        self.subcommand.require_auth()
-    }
-
-    async fn execute(&self, ctx: crate::ctx::DreContext) -> anyhow::Result<()> {
-        self.subcommand.execute(ctx).await
-    }
-
-    fn validate(&self, args: &crate::commands::Args, cmd: &mut clap::Command) {
-        self.subcommand.validate(args, cmd)
-    }
-}
+impl_executable_command_for_enums! { Proposals, Pending, Get, Analyze, Filter, List }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Proposal {
