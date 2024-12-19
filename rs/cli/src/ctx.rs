@@ -350,6 +350,7 @@ pub mod tests {
                         },
                     },
                 },
+                neuron_override: None,
                 requirement: crate::commands::AuthRequirement::Neuron,
                 neuron_id: match neuron.neuron_id {
                     0 => None,
