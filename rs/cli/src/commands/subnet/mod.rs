@@ -35,4 +35,8 @@ impl ExecutableCommand for Subnet {
     fn validate(&self, args: &crate::commands::Args, cmd: &mut clap::Command) {
         self.subcommand.validate(args, cmd)
     }
+
+    fn neuron_override(&self) -> Option<crate::auth::Neuron> {
+        self.subcommand.neuron_override()
+    }
 }

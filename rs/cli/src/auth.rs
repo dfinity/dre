@@ -95,6 +95,7 @@ impl Neuron {
         network: &Network,
         neuron_id: Option<u64>,
         offline: bool,
+        neuron_override: Option<Neuron>,
     ) -> anyhow::Result<Self> {
         let (neuron_id, auth_opts) = if network.name == "staging" {
             let staging_known_path = dirs::home_dir().expect("Home dir should be set").join(STAGING_KEY_PATH_FROM_HOME);
@@ -128,6 +129,22 @@ impl Neuron {
             (neuron_id, auth_opts)
         };
 
+        let auth_specified = match auth_opts {
+            AuthOpts {
+                private_key_pem: None,
+                hsm_opts:
+                    HsmOpts {
+                        hsm_pin: None,
+                        hsm_params:
+                            HsmParams {
+                                hsm_slot: None,
+                                hsm_key_id: None,
+                            },
+                    },
+            } => false,
+            _ => true,
+        };
+
         match requirement {
             AuthRequirement::Anonymous => Ok(Self {
                 auth: Auth::Anonymous,
@@ -135,35 +152,47 @@ impl Neuron {
                 include_proposer: false,
             }),
             AuthRequirement::Signer => Ok(Self {
-                auth: Auth::from_auth_opts(auth_opts).await?,
+                // If nothing is specified for the signer and override is provided
+                // use overide neuron for auth
+                auth: if !auth_specified && neuron_override.is_some() {
+                    neuron_override.unwrap().auth
+                } else {
+                    Auth::from_auth_opts(auth_opts).await?
+                },
                 neuron_id: 0,
                 include_proposer: false,
             }),
             AuthRequirement::Neuron => Ok({
-                match (neuron_id, offline) {
-                    (Some(n), _) => Self {
-                        neuron_id: n,
-                        auth: Auth::from_auth_opts(auth_opts).await?,
-                        include_proposer: true,
-                    },
-                    // This is just a placeholder since
-                    // the tool is instructed to run in
-                    // offline mode.
-                    (None, true) => {
-                        warn!("Required full neuron but offline mode instructed! Will not attempt to auto-detect neuron id");
-                        Self {
-                            neuron_id: 0,
+                info!("Neuron: {:?}, Auth: {:?}, Neuron Override: {:?}", neuron_id, auth_opts, neuron_override);
+                if neuron_id.is_none() && !auth_specified && neuron_override.is_some() {
+                    info!("Using override neuron");
+                    neuron_override.unwrap()
+                } else {
+                    match (neuron_id, offline) {
+                        (Some(n), _) => Self {
+                            neuron_id: n,
                             auth: Auth::from_auth_opts(auth_opts).await?,
                             include_proposer: true,
+                        },
+                        // This is just a placeholder since
+                        // the tool is instructed to run in
+                        // offline mode.
+                        (None, true) => {
+                            warn!("Required full neuron but offline mode instructed! Will not attempt to auto-detect neuron id");
+                            Self {
+                                neuron_id: 0,
+                                auth: Auth::from_auth_opts(auth_opts).await?,
+                                include_proposer: true,
+                            }
                         }
-                    }
-                    (None, false) => {
-                        let auth = Auth::from_auth_opts(auth_opts).await?;
-                        let neuron_id = auth.clone().auto_detect_neuron_id(network.nns_urls.clone()).await?;
-                        Self {
-                            neuron_id,
-                            auth,
-                            include_proposer: true,
+                        (None, false) => {
+                            let auth = Auth::from_auth_opts(auth_opts).await?;
+                            let neuron_id = auth.clone().auto_detect_neuron_id(network.nns_urls.clone()).await?;
+                            Self {
+                                neuron_id,
+                                auth,
+                                include_proposer: true,
+                            }
                         }
                     }
                 }
@@ -226,6 +255,12 @@ impl Neuron {
             include_proposer: false,
         }
     }
+}
+
+const AUTOMATION_NEURON_DEFAULT_PATH: &str = ".config/dfx/identity/release-automation/identity.pem";
+pub fn get_automation_neuron_default_path() -> PathBuf {
+    let home = dirs::home_dir().unwrap();
+    home.join(AUTOMATION_NEURON_DEFAULT_PATH)
 }
 
 #[derive(Debug, Clone)]

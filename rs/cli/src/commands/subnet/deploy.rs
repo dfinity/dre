@@ -2,7 +2,10 @@ use clap::Args;
 
 use ic_types::PrincipalId;
 
-use crate::commands::{AuthRequirement, ExecutableCommand};
+use crate::{
+    auth::get_automation_neuron_default_path,
+    commands::{AuthRequirement, ExecutableCommand},
+};
 
 #[derive(Args, Debug)]
 pub struct Deploy {
@@ -29,4 +32,14 @@ impl ExecutableCommand for Deploy {
     }
 
     fn validate(&self, _args: &crate::commands::Args, _cmd: &mut clap::Command) {}
+
+    fn neuron_override(&self) -> Option<crate::auth::Neuron> {
+        Some(crate::auth::Neuron {
+            auth: crate::auth::Auth::Keyfile {
+                path: get_automation_neuron_default_path(),
+            },
+            neuron_id: 80,
+            include_proposer: true,
+        })
+    }
 }

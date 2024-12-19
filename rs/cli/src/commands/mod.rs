@@ -240,6 +240,10 @@ impl ExecutableCommand for Args {
     fn validate(&self, args: &crate::commands::Args, cmd: &mut Command) {
         self.subcommands.validate(args, cmd)
     }
+
+    fn neuron_override(&self) -> Option<crate::auth::Neuron> {
+        self.subcommands.neuron_override()
+    }
 }
 
 macro_rules! impl_executable_command_for_enums {
@@ -270,6 +274,12 @@ macro_rules! impl_executable_command_for_enums {
                     $(Subcommands::$var(variant) => variant.validate(args, cmd),)*
                 }
             }
+
+            fn neuron_override(&self) -> Option<crate::auth::Neuron> {
+                match &self {
+                    $(Subcommands::$var(variant) => variant.neuron_override(),)*
+                }
+            }
         }
     }
 }
@@ -283,6 +293,10 @@ pub trait ExecutableCommand {
     fn validate(&self, args: &crate::commands::Args, cmd: &mut Command);
 
     fn execute(&self, ctx: DreContext) -> impl std::future::Future<Output = anyhow::Result<()>>;
+
+    fn neuron_override(&self) -> Option<crate::auth::Neuron> {
+        None
+    }
 }
 
 #[derive(Clone)]
