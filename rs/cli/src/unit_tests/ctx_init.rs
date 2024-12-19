@@ -55,6 +55,7 @@ async fn get_context(network: &Network, version: IcAdminVersion) -> anyhow::Resu
             discourse_skip_post_creation: true,
             discourse_subnet_topic_override_file_path: None,
         },
+        None,
     )
     .await
 }
@@ -198,6 +199,7 @@ async fn get_ctx_for_neuron_test(
             discourse_skip_post_creation: false,
             discourse_subnet_topic_override_file_path: None,
         },
+        None,
     )
     .await
 }

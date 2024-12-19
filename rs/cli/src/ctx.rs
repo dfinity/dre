@@ -27,6 +27,7 @@ struct NeuronOpts {
     auth_opts: AuthOpts,
     requirement: AuthRequirement,
     neuron_id: Option<u64>,
+    neuron_override: Option<Neuron>,
 }
 
 #[derive(Clone)]
@@ -68,6 +69,7 @@ impl DreContext {
         health_client: Arc<dyn HealthStatusQuerier>,
         store: Store,
         discourse_opts: DiscourseOpts,
+        neuron_override: Option<Neuron>,
     ) -> anyhow::Result<Self> {
         Ok(Self {
             proposal_agent: Arc::new(ProposalAgentImpl::new(&network.nns_urls)),
@@ -87,6 +89,7 @@ impl DreContext {
                 auth_opts: auth,
                 requirement: auth_requirement,
                 neuron_id,
+                neuron_override,
             },
             cordoned_features_fetcher,
             health_client,
@@ -120,6 +123,7 @@ impl DreContext {
             store.health_client(&network)?,
             store,
             args.discourse_opts.clone(),
+            args.neuron_override(),
         )
         .await
     }
@@ -178,6 +182,7 @@ impl DreContext {
             self.network(),
             self.neuron_opts.neuron_id,
             self.store.is_offline(),
+            self.neuron_opts.neuron_override.clone(),
         )
         .await;
 
@@ -345,6 +350,7 @@ pub mod tests {
                         },
                     },
                 },
+                neuron_override: None,
                 requirement: crate::commands::AuthRequirement::Neuron,
                 neuron_id: match neuron.neuron_id {
                     0 => None,
