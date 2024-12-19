@@ -129,21 +129,19 @@ impl Neuron {
             (neuron_id, auth_opts)
         };
 
-        let auth_specified = match auth_opts {
+        let auth_specified = !matches!(
+            auth_opts,
             AuthOpts {
                 private_key_pem: None,
-                hsm_opts:
-                    HsmOpts {
-                        hsm_pin: None,
-                        hsm_params:
-                            HsmParams {
-                                hsm_slot: None,
-                                hsm_key_id: None,
-                            },
+                hsm_opts: HsmOpts {
+                    hsm_pin: None,
+                    hsm_params: HsmParams {
+                        hsm_slot: None,
+                        hsm_key_id: None,
                     },
-            } => false,
-            _ => true,
-        };
+                },
+            }
+        );
 
         match requirement {
             AuthRequirement::Anonymous => Ok(Self {
@@ -154,10 +152,9 @@ impl Neuron {
             AuthRequirement::Signer => Ok(Self {
                 // If nothing is specified for the signer and override is provided
                 // use overide neuron for auth
-                auth: if !auth_specified && neuron_override.is_some() {
-                    neuron_override.unwrap().auth
-                } else {
-                    Auth::from_auth_opts(auth_opts).await?
+                auth: match neuron_override {
+                    Some(neuron) if !auth_specified => neuron.auth,
+                    _ => Auth::from_auth_opts(auth_opts).await?,
                 },
                 neuron_id: 0,
                 include_proposer: false,
