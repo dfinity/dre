@@ -8,6 +8,7 @@ use crate::{
 };
 
 #[derive(Args, Debug)]
+#[clap(visible_aliases = &["upgrade", "update"])]
 pub struct Deploy {
     /// Version to propose for the subnet
     #[clap(long, short)]
