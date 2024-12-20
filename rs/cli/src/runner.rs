@@ -927,10 +927,10 @@ impl Runner {
                         None
                     }
                 }) {
+                    nodes_to_remove_with_explanations.push((node.clone(), explanation));
                     if nodes_to_remove_with_explanations.len() >= max_replaceable_nodes {
                         break;
                     }
-                    nodes_to_remove_with_explanations.push((node.clone(), explanation));
                 }
             }
 
