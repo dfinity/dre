@@ -915,6 +915,9 @@ impl Runner {
             let subnet_id_short = subnet.id.to_string().split_once('-').unwrap().0.to_string();
 
             let mut nodes_to_remove_with_explanations = vec![];
+            // If more than 1/3 nodes do not have the latest subnet state, subnet will stall until >2/3 nodes sync state.
+            // From those 1/2 are added and 1/2 removed -> nodes_in_subnet/3 * 1/2 = nodes_in_subnet/6
+            let max_replaceable_nodes = subnet.nodes.len() / 6;
             for node in &subnet.nodes {
                 let node = all_nodes_map.get(&node.principal).expect("Node should exist");
                 if let Some(explanation) = cordoned_features.iter().find_map(|cf| {
@@ -925,6 +928,9 @@ impl Runner {
                     }
                 }) {
                     nodes_to_remove_with_explanations.push((node.clone(), explanation));
+                    if nodes_to_remove_with_explanations.len() >= max_replaceable_nodes {
+                        break;
+                    }
                 }
             }
 
