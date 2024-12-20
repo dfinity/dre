@@ -265,7 +265,7 @@ impl DiscourseClient for DiscourseClientImp {
 
             let orig_content = self.get_post_content(post_id).await?;
             let new_content = format!(
-                r#"A new proposal with id [{0}](https://dashboard.internetcomputer.org/proposal/{0}) has been submitted for this subnet.
+                r#"A new proposal with id [{0}](https://dashboard.internetcomputer.org/proposal/{0}) has been submitted, please take a look.
 
 [details="Click here to open proposal details"]
 {1}
