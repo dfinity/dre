@@ -67,3 +67,9 @@ checkpoint*
 
 # Created by zigbuild
 .intentionally-empty-file*
+/.idea/.gitignore
+/.idea/dre.iml
+/.idea/material_theme_project_new.xml
+/.idea/modules.xml
+/.idea/inspectionProfiles/Project_Default.xml
+/.idea/vcs.xml
