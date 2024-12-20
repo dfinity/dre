@@ -14,7 +14,7 @@ use node_provider_rewards_lib::{
 };
 use num_traits::ToPrimitive;
 use std::collections::HashMap;
-use trustworthy_node_metrics_types::types::{DailyNodeMetrics, NodeProviderRewards, NodeProviderRewardsStored, NodeRewardsMultiplier, SubnetFailureRate};
+use trustworthy_node_metrics_types::types::{DailyNodeMetrics, NodeProviderRewards, NodeProviderRewardsStored, NodeRewardsMultiplier, SubnetFailureRate, SubnetNodeMetrics};
 
 use crate::stable_memory::{REWARDS_BY_NODE_PROVIDER, SYSTEMATIC_FAILURE_RATE};
 use crate::{chrono_utils::DateTimeRange, registry_querier::RegistryQuerier, stable_memory};
@@ -261,6 +261,33 @@ pub(crate) fn subnets_failure_rates() -> Vec<SubnetFailureRate> {
                 subnet_id,
                 ts,
                 failure_rate: fr,
+            })
+            .collect_vec()
+    })
+}
+
+pub(crate) fn subnet_nodes_metrics(subnet: Principal) -> Vec<SubnetNodeMetrics> {
+    let latest_np_rewards = stable_memory::get_latest_node_providers_rewards();
+    let latest_rewards_ts = latest_np_rewards.timestamp * 1_000_000_000;
+
+    REWARDS_BY_NODE_PROVIDER.with_borrow(|rewards_by_node_provider| {
+        rewards_by_node_provider
+            .range((latest_rewards_ts, Principal::anonymous())..)
+            .flat_map(|(_, rewards)| rewards.computation_data.assigned_metrics)
+            .filter_map(|(node_id, metrics)| {
+                let metrics = metrics
+                    .into_iter()
+                    .filter(|m| m.subnet_assigned == subnet)
+                    .collect_vec();
+
+                if metrics.is_empty() {
+                    None
+                } else {
+                    Some(SubnetNodeMetrics {
+                        node_id: node_id.0,
+                        daily_node_metrics: metrics
+                    })
+                }
             })
             .collect_vec()
     })

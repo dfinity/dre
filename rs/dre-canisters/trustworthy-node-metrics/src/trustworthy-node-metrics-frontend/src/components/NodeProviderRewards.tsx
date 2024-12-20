@@ -5,7 +5,6 @@ import { Principal } from '@dfinity/principal';
 import { NodeProviderRewards } from '../../../declarations/trustworthy-node-metrics/trustworthy-node-metrics.did';
 import { WidgetNumber } from './Widgets';
 import { boxStyleWidget } from '../Styles';
-import { GridColDef, GridRowsProp } from '@mui/x-data-grid';
 import Table from "@mui/material/Table";
 import TableHead from "@mui/material/TableHead";
 import TableRow from "@mui/material/TableRow";
@@ -47,18 +46,6 @@ export const NodeProviderRewardsChart: React.FC<NodeProviderRewardsChartProps> =
 
     console.log(latestProviderRewards.ts_distribution);
     const distribution_date = new Date(Number(latestProviderRewards.ts_distribution) * 1000);
-    const rows: GridRowsProp = latestProviderRewards.computation_log.map((data, index) => {
-        return {
-            id: index,
-            col0: index,
-            col1: data,
-        };
-    });
-    const colDef: GridColDef[] = [
-        { field: 'col0', headerName: 'Step', width: 100},
-        { field: 'col1', headerName: 'Description', width: 1500},
-    ];
-
     const computationData = latestProviderRewards.computation_data;
     const computationRows = computationData.node_provider_rewardables.map((node) => {
         const assignedMetrics = computationData.assigned_metrics.find(([principal]) => principal.toString() === node.node_id.toString());

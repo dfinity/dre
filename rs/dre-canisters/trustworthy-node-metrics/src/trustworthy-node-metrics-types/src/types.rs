@@ -320,6 +320,12 @@ pub struct NodeProviderRewardsArgs {
     pub node_provider_id: Principal,
 }
 
+#[derive(Deserialize, Serialize, CandidType)]
+pub struct SubnetNodeMetrics {
+    pub node_id: Principal,
+    pub daily_node_metrics: Vec<DailyNodeMetrics>,
+}
+
 #[derive(Debug, Clone, Deserialize, Serialize, CandidType)]
 pub struct DailyNodeMetrics {
     pub ts: u64,

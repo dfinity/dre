@@ -122,6 +122,11 @@ type SubnetFailureRate = record {
     failure_rate: float64;
 };
 
+type SubnetNodeMetrics = record {
+    node_id: principal;
+    daily_node_metrics: vec DailyNodeMetrics;
+};
+
 service : {
     "subnet_node_metrics" : (SubnetNodeMetricsArgs) -> (SubnetNodeMetricsResult) query;
     "node_rewards" : (NodeRewardsArgs) -> (NodeRewardsMultiplier) query;
@@ -129,4 +134,5 @@ service : {
     "node_ids" : () -> (vec principal) query;
     "nodes_metadata": () -> (vec NodeMetadata) query;
     "subnets_failure_rates" : () -> (vec SubnetFailureRate) query;
+    "subnet_nodes_metrics": (principal) -> (vec SubnetNodeMetrics) query;
 }

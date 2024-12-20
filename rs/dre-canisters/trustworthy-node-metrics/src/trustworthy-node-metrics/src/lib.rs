@@ -9,7 +9,7 @@ use std::{
     collections::{btree_map::Entry, BTreeMap},
     rc::Rc,
 };
-use trustworthy_node_metrics_types::types::{NodeMetadata, NodeMetrics, NodeMetricsStored, NodeMetricsStoredKey, NodeProviderRewards, NodeProviderRewardsArgs, NodeRewardsArgs, NodeRewardsMultiplier, SubnetFailureRate, SubnetNodeMetricsArgs, SubnetNodeMetricsResponse};
+use trustworthy_node_metrics_types::types::{DailyNodeMetrics, NodeMetadata, NodeMetrics, NodeMetricsStored, NodeMetricsStoredKey, NodeProviderRewards, NodeProviderRewardsArgs, NodeRewardsArgs, NodeRewardsMultiplier, SubnetFailureRate, SubnetNodeMetrics, SubnetNodeMetricsArgs, SubnetNodeMetricsResponse};
 mod chrono_utils;
 mod local_registry;
 mod metrics_manager;
@@ -151,6 +151,11 @@ fn node_rewards(args: NodeRewardsArgs) -> NodeRewardsMultiplier {
 #[query]
 fn node_provider_rewards(args: NodeProviderRewardsArgs) -> NodeProviderRewards {
     rewards_manager::node_provider_rewards(args.node_provider_id)
+}
+
+#[query]
+fn subnet_nodes_metrics(subnet: Principal) -> Vec<SubnetNodeMetrics> {
+    rewards_manager::subnet_nodes_metrics(subnet)
 }
 
 #[query]
