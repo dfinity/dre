@@ -28,13 +28,13 @@ features:
     explanation: "offboarding SG3 DC after 48 months; https://forum.dfinity.org/t/new-node-provider-proposals/16643/581"
   - feature: data_center
     value: ty2
-    explanation: "offboarding SG3 DC after 48 months; https://forum.dfinity.org/t/proposal-update-interim-gen-1-node-provider-remuneration-after-48-months/35001/32 and https://forum.dfinity.org/t/proposal-update-interim-gen-1-node-provider-remuneration-after-48-months/35001/42"
+    explanation: "offboarding TY2 DC after 48 months; https://forum.dfinity.org/t/proposal-update-interim-gen-1-node-provider-remuneration-after-48-months/35001/32 and https://forum.dfinity.org/t/proposal-update-interim-gen-1-node-provider-remuneration-after-48-months/35001/42"
   - feature: data_center
     value: zh5
-    explanation: "offboarding SG3 DC after 48 months; https://forum.dfinity.org/t/proposal-update-interim-gen-1-node-provider-remuneration-after-48-months/35001/27"
+    explanation: "offboarding ZH5 DC after 48 months; https://forum.dfinity.org/t/proposal-update-interim-gen-1-node-provider-remuneration-after-48-months/35001/27"
   - feature: data_center
     value: ch2
-    explanation: "offboarding SG3 DC after 48 months; https://forum.dfinity.org/t/proposal-update-interim-gen-1-node-provider-remuneration-after-48-months/35001/40"
+    explanation: "offboarding CH2 DC after 48 months; https://forum.dfinity.org/t/proposal-update-interim-gen-1-node-provider-remuneration-after-48-months/35001/40"
   - feature: data_center
     value: an1
     explanation: "offboarding AN1 DC after 48 months; https://forum.dfinity.org/t/proposal-update-interim-gen-1-node-provider-remuneration-after-48-months/35001/44 and https://forum.dfinity.org/t/proposal-update-interim-gen-1-node-provider-remuneration-after-48-months/35001/46"
