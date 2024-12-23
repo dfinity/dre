@@ -382,6 +382,7 @@ impl Node {
                         .map(|d| d.name.clone())
                         .unwrap_or_else(|| "unknown".to_string()),
                 ),
+                (NodeFeature::NodeOperator, self.operator.principal.to_string()),
                 (NodeFeature::NodeProvider, self.operator.provider.principal.to_string()),
             ])
         };

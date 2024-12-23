@@ -164,7 +164,7 @@ features:
 
         let parsed = fetcher.parse(contents).unwrap();
 
-        assert_eq!(parsed.len(), 6)
+        assert_eq!(parsed.len(), 7)
     }
 
     #[test]
