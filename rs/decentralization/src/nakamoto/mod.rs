@@ -530,6 +530,7 @@ mod tests {
         let score_expected = NakamotoScore {
             coefficients: IndexMap::from([
                 (NodeFeature::NodeProvider, 1.),
+                (NodeFeature::NodeOperator, 1.),
                 (NodeFeature::DataCenter, 1.),
                 (NodeFeature::DataCenterOwner, 1.),
                 (NodeFeature::Area, 1.),
@@ -538,6 +539,7 @@ mod tests {
             value_counts: IndexMap::new(),
             controlled_nodes: IndexMap::from([
                 (NodeFeature::NodeProvider, 1),
+                (NodeFeature::NodeOperator, 1),
                 (NodeFeature::DataCenter, 1),
                 (NodeFeature::DataCenterOwner, 1),
                 (NodeFeature::Area, 1),
@@ -854,7 +856,7 @@ mod tests {
         // Convert the subnet snapshot to the "Subnet" struct
         let subnet_all: DecentralizedSubnet = DecentralizedSubnet::from(subnet_all);
         let re_unhealthy_nodes = Regex::new(r"^(gp7wd|e4ysi|qhz4y|2fbvp)-.+$").unwrap();
-        let subnet_healthy: DecentralizedSubnet = DecentralizedSubnet {
+        let subnet_healthy = DecentralizedSubnet {
             id: subnet_all.id,
             nodes: subnet_all
                 .nodes

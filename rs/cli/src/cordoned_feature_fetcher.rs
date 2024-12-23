@@ -148,6 +148,8 @@ features:
       value: mu1
     - feature: node_provider
       value: some-np
+    - feature: node_operator
+      value: some-node-operator
     - feature: data_center_owner
       value: some-dco
     - feature: area
@@ -162,7 +164,7 @@ features:
 
         let parsed = fetcher.parse(contents).unwrap();
 
-        assert_eq!(parsed.len(), 6)
+        assert_eq!(parsed.len(), 7)
     }
 
     #[test]

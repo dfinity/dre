@@ -29,9 +29,9 @@ features:
   - feature: data_center
     value: ty2
     explanation: "offboarding TY2 DC after 48 months; https://forum.dfinity.org/t/proposal-update-interim-gen-1-node-provider-remuneration-after-48-months/35001/32 and https://forum.dfinity.org/t/proposal-update-interim-gen-1-node-provider-remuneration-after-48-months/35001/42"
-  - feature: data_center
-    value: zh5
-    explanation: "offboarding ZH5 DC after 48 months; https://forum.dfinity.org/t/proposal-update-interim-gen-1-node-provider-remuneration-after-48-months/35001/27"
+  - feature: node_operator
+    value: 4ohfd-bdyeu-5djlz-rf3lc-bqca2-h22rg-t5ipt-cjhl2-r5dbf-tk3fv-hae
+    explanation: "offboarding Sygnum ZH5 DC after 48 months; https://forum.dfinity.org/t/proposal-update-interim-gen-1-node-provider-remuneration-after-48-months/35001/27"
   - feature: data_center
     value: ch2
     explanation: "offboarding CH2 DC after 48 months; https://forum.dfinity.org/t/proposal-update-interim-gen-1-node-provider-remuneration-after-48-months/35001/40"
