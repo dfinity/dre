@@ -471,6 +471,7 @@ impl Eq for Node {}
 #[serde(rename_all = "snake_case")]
 pub enum NodeFeature {
     NodeProvider,
+    NodeOperator,
     DataCenter,
     DataCenterOwner,
     Area,    // Represents smaller geographic entities like cities and states

@@ -56,17 +56,18 @@ impl SubnetChangeResponse {
                 change.old_nodes.iter().fold(
                     NodeFeature::variants()
                         .into_iter()
+                        .filter(|f| f != &NodeFeature::NodeOperator)
                         .map(|f| (f, FeatureDiff::new()))
                         .collect::<IndexMap<NodeFeature, FeatureDiff>>(),
                     |mut acc, n| {
-                        for f in NodeFeature::variants() {
+                        for f in NodeFeature::variants().into_iter().filter(|f| f != &NodeFeature::NodeOperator) {
                             acc.get_mut(&f).unwrap().entry(n.get_feature(&f).unwrap_or_default()).or_insert((0, 0)).0 += 1;
                         }
                         acc
                     },
                 ),
                 |mut acc, n| {
-                    for f in NodeFeature::variants() {
+                    for f in NodeFeature::variants().into_iter().filter(|f| f != &NodeFeature::NodeOperator) {
                         acc.get_mut(&f).unwrap().entry(n.get_feature(&f).unwrap_or_default()).or_insert((0, 0)).1 += 1;
                     }
                     acc
@@ -96,6 +97,7 @@ impl Display for SubnetChangeResponse {
             .scores_individual()
             .keys()
             .sorted()
+            .filter(|f| *f != &NodeFeature::NodeOperator)
             .map(|k| {
                 let before = before_individual.get(k).unwrap();
                 let after = after_individual.get(k).unwrap();
