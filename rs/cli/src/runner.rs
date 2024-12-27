@@ -254,7 +254,7 @@ impl Runner {
         &self,
         release_artifact: &Artifact,
         version: &str,
-        release_tag: &str,
+        release_tag: &Option<String>,
         ignore_missing_urls: bool,
         forum_post_link: String,
         security_fix: bool,
@@ -289,7 +289,7 @@ impl Runner {
         &self,
         release_artifact: &Artifact,
         version: &str,
-        release_tag: &str,
+        release_tag: &Option<String>,
         ignore_missing_urls: bool,
         retire_versions: Option<Vec<String>>,
         security_fix: bool,
@@ -1327,9 +1327,13 @@ impl UpdateVersion {
 pub fn format_regular_version_upgrade_summary(
     version: &str,
     release_artifact: &Artifact,
-    release_tag: &str,
+    release_tag: &Option<String>,
     forum_post_link: String,
 ) -> anyhow::Result<String> {
+    let release_tag = match release_tag {
+        Some(git_tag) => git_tag,
+        None => return Err(anyhow::anyhow!("Release tag is required for non-security versions")),
+    };
     let template = format!(
         r#"Elect new {release_artifact} binary revision [{version}](https://github.com/dfinity/ic/tree/{release_tag})
 

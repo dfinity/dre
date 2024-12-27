@@ -10,7 +10,7 @@ pub struct HostOs {
 
     /// Git tag for the release
     #[clap(long)]
-    pub release_tag: String,
+    pub release_tag: Option<String>,
 
     /// Force proposal submission, ignoring missing download URLs
     #[clap(long, visible_alias = "force")]

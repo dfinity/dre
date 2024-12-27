@@ -82,7 +82,7 @@ async fn guest_os_elect_version_tests() {
             "Elect new IC",
             crate::commands::version::revise::guest_os::GuestOs {
                 version: "new_version".to_string(),
-                release_tag: "rel_tag".to_string(),
+                release_tag: Some("rel_tag".to_string()),
                 ignore_missing_urls: false,
                 security_fix: false,
             },
@@ -92,7 +92,7 @@ async fn guest_os_elect_version_tests() {
             "Security patch update",
             crate::commands::version::revise::guest_os::GuestOs {
                 version: "new_version".to_string(),
-                release_tag: "rel_tag".to_string(),
+                release_tag: Some("rel_tag".to_string()),
                 ignore_missing_urls: false,
                 security_fix: true,
             },
