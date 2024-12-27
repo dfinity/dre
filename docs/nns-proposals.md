@@ -241,6 +241,84 @@ You would now go through each of these output lines (subnets) and submit proposa
 dre subnet replace --exclude bo1 --nodes q2ucv-x7dv5-hheao-ocsye-jbg4z-enm75-ss62d-ehqhj-zwwm3-cap5q-tqe --motivation "Removing BO1 nodes for maintenance"
 ```
 
+### Replacing a Specific Node in a Subnet
+
+The following step-by-step instructions describe how a node in a subnet can be replaced using the DRE tool while maintaining the same number of nodes in the subnet.
+
+#### Prerequisites
+- DRE tool installed and configured.
+- Knowledge of the node IDs to be replaced.
+
+#### Step-by-Step Instructions
+
+##### 1. Understand the Command Structure
+The command to replace a node looks like this:
+```bash
+❯ dre subnet replace --nodes <NODES_TO_REMOVE> --motivation "<REPLACEMENT_REASON>"
+```
+
+##### 2. Example Command
+Below is an example command to replace a node in subnet `pjljw`:
+```bash
+❯ dre subnet replace \
+  --nodes z6jp6-245uu-gh3cs-sblcy-f3jmj-s4ngl-v3z4u-lafz2-qudjr-6mbqx-vqe \
+  --motivation "Requested by the node operator in order to redeploy all nodes in the DC after 48 months, and switch to a new node operator ID."
+```
+
+Note that it's possible to provide multiple node ids in the command above, separated by spaces, as long as they are all in the same subnet.
+
+##### 3. Execute the Command
+Run the command to propose the node replacement. The tool will perform a series of checks and outputs similar to the following:
+
+```plaintext
+2024-12-27T17:33:31.470Z INFO  dre > Running version 0.5.7-9c513fc1
+2024-12-27T17:33:31.541Z INFO  dre::store > Using local registry path for network mainnet: /home/user/.cache/dre-store/local_registry/mainnet
+...
+2024-12-27T17:33:54.327Z INFO  dre::ic_admin > running ic-admin:
+...
+```
+
+##### 4. Verify the Proposal Details
+Review the details provided by the tool for:
+- **Nodes to be removed**
+- **Nodes to be added**
+- **Impact on decentralization metrics**
+
+##### 5. Confirm the Replacement
+If the proposal details look correct, confirm the action when prompted:
+```plaintext
+Do you want to continue? yes
+```
+
+##### 6. Post-Execution Verification
+To get the proposal adopted and executed:
+- Please answer questions in the forum if there are any for the proposal.
+
+##### 7. Post-Execution Verification
+After the replacement process is complete:
+- Verify that the new node is active and healthy in the subnet.
+
+#### Example Output
+The tool provides a detailed summary of the decentralization impact, as shown below:
+
+```plaintext
+Decentralization Nakamoto coefficient changes for subnet `pjljw`:
+
+    node_provider: 5.00 -> 5.00    (+0%)
+      data_center: 5.00 -> 5.00    (+0%)
+data_center_owner: 5.00 -> 5.00    (+0%)
+             area: 5.00 -> 5.00    (+0%)
+          country: 4.00 -> 4.00    (+0%)
+```
+
+#### Notes
+- Always verify the decentralization impact to ensure the subnet remains balanced.
+- If any issues arise, consult the DRE documentation or reach out to the appropriate support channels.
+
+#### Additional Resources
+- [DRE GitHub Repository](https://github.com/dfinity/dre)
+- [Dfinity Forum](https://forum.dfinity.org/)
+
 ### Removing nodes from the registry
 
 Here is an example where we remove all AW1 nodes from the registry, for redeployment. Note that the nodes should already be removed from the subnet(s), so they should in unassigned state (awaiting subnet).
