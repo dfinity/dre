@@ -71,8 +71,6 @@ class GitRepo:
                 subprocess.check_call(
                     ["git", "checkout", branch],
                     cwd=self.dir,
-                    stdout=subprocess.DEVNULL,
-                    stderr=subprocess.DEVNULL,
                 )
             except subprocess.CalledProcessError:
                 print("Branch {} does not exist".format(branch))
@@ -80,8 +78,6 @@ class GitRepo:
         subprocess.check_call(
             ["git", "checkout", self.main_branch],
             cwd=self.dir,
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL,
         )
 
     def show(self, obj: str) -> Commit | None:
@@ -146,14 +142,10 @@ class GitRepo:
             subprocess.check_call(
                 ["git", "fetch"],
                 cwd=self.dir,
-                stdout=subprocess.DEVNULL,
-                stderr=subprocess.DEVNULL,
             )
             subprocess.check_call(
                 ["git", "reset", "--hard", f"origin/{self.main_branch}"],
                 cwd=self.dir,
-                stdout=subprocess.DEVNULL,
-                stderr=subprocess.DEVNULL,
             )
         else:
             os.makedirs(self.dir, exist_ok=True)
@@ -164,8 +156,6 @@ class GitRepo:
                     self.repo,
                     self.dir,
                 ],
-                stdout=subprocess.DEVNULL,
-                stderr=subprocess.DEVNULL,
             )
         subprocess.check_call(
             [
@@ -173,8 +163,6 @@ class GitRepo:
                 "fetch",
                 "--all",
             ],
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL,
             cwd=self.dir,
         )
 
@@ -397,8 +385,6 @@ def push_release_tags(repo: GitRepo, release: Release):
                 "origin",
                 f"{v.version}:refs/remotes/origin/{v.version}-commit",
             ],
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL,
             cwd=repo.dir,
         )
         tag = version_name(release.rc_name, v.name)
@@ -410,8 +396,6 @@ def push_release_tags(repo: GitRepo, release: Release):
                 v.version,
                 "-f",
             ],
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL,
             cwd=repo.dir,
         )
         tag_version = (
@@ -441,8 +425,6 @@ def push_release_tags(repo: GitRepo, release: Release):
                     tag,
                     "-f",
                 ],
-                stdout=subprocess.DEVNULL,
-                stderr=subprocess.DEVNULL,
                 cwd=repo.dir,
             )
 

@@ -334,15 +334,11 @@ def main():
         subprocess.check_call(
             ["git", "fetch"],
             cwd=ic_repo_path,
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL,
         )
         print("Resetting HEAD to latest origin/master.")
         subprocess.check_call(
             ["git", "reset", "--hard", "origin/master"],
             cwd=ic_repo_path,
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL,
         )
     else:
         print("Cloning IC repo to {}".format(ic_repo_path))
@@ -353,8 +349,6 @@ def main():
                 "https://github.com/dfinity/ic.git",
                 ic_repo_path,
             ],
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL,
         )
 
     if last_commit == "":
