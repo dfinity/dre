@@ -264,7 +264,7 @@ impl IcAdminImpl {
                                         .map(|m| format!(
                                             "\n\nMotivation: {m}{}",
                                             match &opts.forum_post_link {
-                                                Some(link) => format!("\nForum post link: {}\n", link),
+                                                Some(link) => format!("\n\nForum post link: {}\n", link),
                                                 None => "".to_string(),
                                             }
                                         ))
