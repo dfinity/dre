@@ -1,5 +1,5 @@
 {
-  "checksum": "9b114dd1f58e0ade31049e0ecd6bbc1aed942d2d1d326f2eb31404064ca5d87a",
+  "checksum": "f057248fe3333221bba8683e81adaa371ced055af99b77f49deffbb1ddd79d2e",
   "crates": {
     "actix-codec 0.5.2": {
       "name": "actix-codec",
@@ -9762,6 +9762,10 @@
               "target": "ic_types"
             },
             {
+              "id": "icp-ledger 0.9.0",
+              "target": "icp_ledger"
+            },
+            {
               "id": "indexmap 2.7.0",
               "target": "indexmap"
             },
@@ -15297,6 +15301,10 @@
             {
               "id": "ic-nns-governance 0.9.0",
               "target": "ic_nns_governance"
+            },
+            {
+              "id": "ic-nns-governance-api 0.9.0",
+              "target": "ic_nns_governance_api"
             },
             {
               "id": "ic-protobuf 0.9.0",
