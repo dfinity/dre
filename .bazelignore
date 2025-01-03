@@ -1,3 +1,4 @@
 linear-jira/
 dashboard/node_modules/
 dashboard/packages/backend/node_modules/
+target/
