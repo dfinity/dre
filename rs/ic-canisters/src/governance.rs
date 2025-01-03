@@ -16,7 +16,9 @@ use ic_nns_governance::pb::v1::ManageNeuron;
 use ic_nns_governance::pb::v1::ManageNeuronResponse;
 use ic_nns_governance::pb::v1::Neuron;
 use ic_nns_governance::pb::v1::NeuronInfo;
+use ic_nns_governance::pb::v1::NodeProvider as PbNodeProvider;
 use ic_nns_governance::pb::v1::ProposalInfo;
+use ic_nns_governance_api::pb::v1::ListNodeProvidersResponse;
 use serde::{self, Serialize};
 use std::str::FromStr;
 use std::time::Duration;
@@ -205,6 +207,14 @@ impl GovernanceCanisterWrapper {
             })?,
         )
         .await
+    }
+
+    pub async fn get_node_providers(&self) -> anyhow::Result<Vec<PbNodeProvider>> {
+        let response = self
+            .query::<ListNodeProvidersResponse>("list_node_providers", candid::encode_one(())?)
+            .await?;
+        let node_providers = response.node_providers.into_iter().map(PbNodeProvider::from).collect();
+        Ok(node_providers)
     }
 
     async fn query<T>(&self, method_name: &str, args: Vec<u8>) -> anyhow::Result<T>

@@ -54,6 +54,7 @@ ic-registry-subnet-type = { workspace = true }
 ic-sns-wasm = { workspace = true }
 ic-sys = { workspace = true }
 ic-types = { workspace = true }
+icp-ledger = { workspace = true }
 indexmap = { workspace = true }
 itertools = { workspace = true }
 keyring = { workspace = true }
