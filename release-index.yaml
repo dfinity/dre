@@ -11,10 +11,18 @@ releases:
       # https://github.com/dfinity/ic/actions/runs/12198247997
       - name: base
         version: d9fe2076f677a08734bed90c67b1c3f4056ed621
-      # Qualification pipelin:
+      # Qualification pipeline:
       # https://github.com/dfinity/ic/actions/runs/12316350606
       - name: sandboxes7k
         version: 3e24396441e4c7380928d4e8b4ccff7de77d0e7e
+      # Qualification pipeline:
+      # https://github.com/dfinity/ic-private/actions/runs/12515153590
+      - name: base-secfix
+        version: d69648b2f5a3d90fb515824314ac2f868cbf499a
+      # Qualification pipeline:
+      # https://github.com/dfinity/ic-private/actions/runs/
+      - name: sandboxes7k-secfix
+        version: 9427aba69301dbaaa9b7eb48d809b01749b24d88
   - rc_name: rc--2024-11-28_03-15
     versions:
       # Qualification pipeline:
