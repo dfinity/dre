@@ -17,7 +17,7 @@ use crate::{
 use super::{AuthRequirement, ExecutableCommand};
 
 const DEFAULT_CANISTER_LIMIT: u64 = 60_000;
-const DEFAULT_STATE_SIZE_BYTES_LIMIT: u64 = 429_496_729_600; // 400GB
+const DEFAULT_STATE_SIZE_BYTES_LIMIT: u64 = 400 * 1024 * 1024 * 1024; // 400GB
 
 const DEFAULT_AUTHORIZED_SUBNETS_CSV: &str = include_str!(concat!(env!("OUT_DIR"), "/non_public_subnets.csv"));
 
