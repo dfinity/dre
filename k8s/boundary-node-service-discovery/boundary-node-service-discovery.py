@@ -49,8 +49,9 @@ def main():
         if response.status_code != 200:
             logging.error("Couldn't fetch code due to error: %s", response.text)
             exit(1)
-        content = base64.b64decode(response.json()["content"])
-        raw_hosts[env] = yaml.safe_load(content.decode())["boundary"]["hosts"]
+
+        content = response.text
+        raw_hosts[env] = yaml.safe_load(content)["boundary"]["hosts"]
 
     hosts = {}
     for env in envs:
