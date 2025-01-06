@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 import argparse
-import base64
 import logging
 import os
 
