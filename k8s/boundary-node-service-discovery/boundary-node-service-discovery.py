@@ -40,8 +40,11 @@ def main():
     raw_hosts = {}
     for env in envs:
         response = requests.get(
-            f"https://gitlab.com/api/v4/projects/29756090/repository/files/deployments%2Fboundary-nodes%2Fenv%2F{env}%2Fhosts.yml?ref=main",
-            headers={"PRIVATE-TOKEN": key},
+            f"https://raw.githubusercontent.com/dfinity-ops/release/refs/heads/main/deployments/boundary-nodes/env/{env}/hosts.yml",
+            headers={
+                "Authorization": f"token {key}",
+                "User-Agent": "bn-sd-script"
+            },
         )
         if response.status_code != 200:
             logging.error("Couldn't fetch code due to error: %s", response.text)
