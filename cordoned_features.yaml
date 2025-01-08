@@ -47,3 +47,9 @@ features:
   - feature: data_center
     value: mr1
     explanation: "offboarding MR1 DC after 48 months; https://forum.dfinity.org/t/dfinity-gen-1-servers-available-for-sale-through-silent-auction/36710"
+  - feature: data_center
+    value: MM1
+    explanation: "offboarding MM1 DC after 48 months; https://forum.dfinity.org/t/proposal-update-interim-gen-1-node-provider-remuneration-after-48-months/35001/49 and https://forum.dfinity.org/t/proposal-update-interim-gen-1-node-provider-remuneration-after-48-months/35001/103 "
+  - feature: data_center
+    value: ZH5
+    explanation: "offboarding ZH5 DC after 48 months; https://forum.dfinity.org/t/proposal-update-interim-gen-1-node-provider-remuneration-after-48-months/35001/27"
