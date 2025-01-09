@@ -5,6 +5,10 @@ releases:
       # https://github.com/dfinity/ic/actions/runs/12592107683
       - name: base
         version: 76a634c31dfb840da25fbe286855eb0be1818ca8
+      # Qualification pipeline:
+      # https://github.com/dfinity/ic-private/actions/runs/12649432945
+      - name: base-secfix
+        version: 43670245ed6919790e7858813c7e838c6fbcedf5
   - rc_name: rc--2024-12-06_03-16
     versions:
       # Qualification pipeline:
