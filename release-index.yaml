@@ -1,4 +1,5 @@
 releases:
+  # NOTE: Make sure to mark security hotfixes with the `security_fix: true` flag.
   - rc_name: rc--2025-01-09_03-19
     versions:
       # Qualification pipeline:
@@ -15,6 +16,7 @@ releases:
       # https://github.com/dfinity/ic-private/actions/runs/12649432945
       - name: base-secfix
         version: 43670245ed6919790e7858813c7e838c6fbcedf5
+        security_fix: true
   - rc_name: rc--2024-12-06_03-16
     versions:
       # Qualification pipeline:
@@ -29,10 +31,12 @@ releases:
       # https://github.com/dfinity/ic-private/actions/runs/12515153590
       - name: base-secfix
         version: d69648b2f5a3d90fb515824314ac2f868cbf499a
+        security_fix: true
       # Qualification pipeline:
       # https://github.com/dfinity/ic-private/actions/runs/
       - name: sandboxes7k-secfix
         version: 9427aba69301dbaaa9b7eb48d809b01749b24d88
+        security_fix: true
   - rc_name: rc--2024-11-28_03-15
     versions:
       # Qualification pipeline:

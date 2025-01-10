@@ -6,7 +6,6 @@ from dotenv import load_dotenv
 from github import Auth
 from github import Github
 from github.Repository import Repository
-import markdown
 from itertools import groupby
 from google_docs import ReleaseNotesClient
 import pathlib

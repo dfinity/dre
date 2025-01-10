@@ -1,12 +1,9 @@
-import json
 import logging
 import os
 from typing import Callable
 
 from dotenv import load_dotenv
-from pydantic_yaml import parse_yaml_raw_as
 from pydiscourse import DiscourseClient
-from release_index import Model
 from release_index import Release
 from util import version_name
 
@@ -102,7 +99,7 @@ class ReleaseCandidateForumTopic:
                 changelog=changelog(v.version),
                 proposal=proposal(v.version),
             )
-            for v in self.release.versions
+            for v in self.release.versions if not v.security_fix
         ]
 
         created_posts = self.created_posts()
