@@ -14,6 +14,7 @@ class Version(BaseModel):
     )
     name: str
     version: str
+    security_fix: bool
 
 
 class Release(BaseModel):

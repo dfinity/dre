@@ -42,6 +42,9 @@
         },
         "version": {
           "type": "string"
+        },
+        "security-fix": {
+          "type": "boolean"
         }
       },
       "required": ["name", "version"],
