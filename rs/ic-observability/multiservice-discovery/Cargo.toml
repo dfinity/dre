@@ -37,5 +37,5 @@ retry = { workspace = true }
 tempfile = { workspace = true }
 reqwest = { workspace = true }
 assert_cmd = "2.0.16"
-anyhow = "1.0.94"
+anyhow = "1.0.95"
 flate2 = "1.0.35"
