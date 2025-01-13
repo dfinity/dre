@@ -1,6 +1,40 @@
 # dre Changelog
 
 <!-- insertion marker -->
+## [0.5.8](https://github.com/dfinity/dre/releases/tag/0.5.8) - 2025-01-13
+
+<small>[Compare with first commit](https://github.com/dfinity/dre/compare/fbfca2c53582ac763b8b660e0ae4e77bd23b907f...0.5.8)</small>
+
+### Features
+
+- add security_fix flag to skip security updates (#1187) ([2e34f72](https://github.com/dfinity/dre/commit/2e34f721e2d9746d03794981ccb9198f49bef900) by Saša Tomić).
+- improve node provider queries with info from governance canister (#1175) ([8608c99](https://github.com/dfinity/dre/commit/8608c9946e5d6a1d1ea1a554e9c03207260d6a89) by Saša Tomić).
+- add release candidate for 2025-01-03 (#1170) ([5a634d7](https://github.com/dfinity/dre/commit/5a634d7ae40465269f64a5339a84f74fd6862a9b) by StephanusFischer).
+- add release candidate for 2025-01-03 ([2acab1d](https://github.com/dfinity/dre/commit/2acab1d7b9ba3c13cb5bb032e364f15b6a2504ea) by Saša Tomić).
+- Add missing NodeOperator node feature and update offboarding for sygnum zh5 (#1166) ([f0dea0e](https://github.com/dfinity/dre/commit/f0dea0e95b8784be7160c0e47da910054e553e4a) by Saša Tomić).
+- Adding possibility to override neurons per command (#1159) ([a2e006d](https://github.com/dfinity/dre/commit/a2e006d6f54a6f0929f510bed2ce234bd3c12ffd) by Nikola Milosavljevic).
+- add aliases for private_key_pem and neuron_id options (#1158) ([4e20800](https://github.com/dfinity/dre/commit/4e20800194b51c9414d50857c6272a586d84b2f7) by Saša Tomić).
+- add ability to omit/ignore a list of nodes when healing the entire network (#1143) ([a3e10ae](https://github.com/dfinity/dre/commit/a3e10ae908b565e798bb2b56f772f3b70d4205a1) by Saša Tomić).
+
+### Bug Fixes
+
+- remove cargo-deny installation (#1191) ([5f06a81](https://github.com/dfinity/dre/commit/5f06a8136dc96fd98b1fec65b289f2c052a190d4) by Saša Tomić).
+- boundary nodes update script migration to github (#1179) ([af5d423](https://github.com/dfinity/dre/commit/af5d42351b5eea829b4ef6073bcb9750af2b437d) by Nikola Milosavljevic).
+- adjust new line for forum post link formatting (#1174) ([ea3ea30](https://github.com/dfinity/dre/commit/ea3ea30fc9be5a3e4541a892a9a1d54ae3d1ac26) by Saša Tomić).
+- remove suppression of stdout and stderr in Git commands (#1172) ([63753dc](https://github.com/dfinity/dre/commit/63753dc97ef5b8ee7b760c9a8d4ad8b54efd27ae) by Saša Tomić).
+- correct a typo and add a past security hotfix (#1171) ([8483556](https://github.com/dfinity/dre/commit/8483556a032e946f84d561017301742a5983d66b) by Saša Tomić).
+- Update proposal submission notification message (#1164) ([7cb6022](https://github.com/dfinity/dre/commit/7cb6022391488d31686ba27df961eba3d3b66f76) by Saša Tomić).
+- Fix some typos in the list of cordoned nodes/DCs (#1163) ([ae312c0](https://github.com/dfinity/dre/commit/ae312c00229b763a80c2da7ee3eb1643c69c2db4) by Saša Tomić).
+- Limit the number of nodes removed from subnets for cordone (#1162) ([edc2aa5](https://github.com/dfinity/dre/commit/edc2aa5514a40bec33178741e7351dee9bc15d0a) by Saša Tomić).
+- improve logic for opening up verified subnets (#1154) ([3cc9a46](https://github.com/dfinity/dre/commit/3cc9a466eeebea43812b249e2a64910c8c9a8737) by Saša Tomić).
+- update discourse forum posts contents for subnet proposals (#1151) ([e48aa11](https://github.com/dfinity/dre/commit/e48aa111cc10c29bcc0944b3e31162855fbada61) by Saša Tomić).
+- ensure local cache and registry directories are created if they do not exist (#1150) ([9cdd83c](https://github.com/dfinity/dre/commit/9cdd83c8ae8fc6dd149b88ffeac126e1d59decec) by Saša Tomić).
+- update explanations for data center offboarding with relevant links (#1142) ([601ce4c](https://github.com/dfinity/dre/commit/601ce4c8f9e7bcf2680941ad87d23c5f755e8ced) by Saša Tomić).
+
+### Code Refactoring
+
+- Refactoring discourse to create posts to a single topic per subnet (#1148) ([c24be37](https://github.com/dfinity/dre/commit/c24be37c347a66dddea024a07ad64954eb984559) by Nikola Milosavljevic).
+
 ## [0.5.7](https://github.com/dfinity/dre/releases/tag/0.5.7) - 2024-12-06
 
 <small>[Compare with first commit](https://github.com/dfinity/dre/compare/703c88841543adc7ef06ff40361b7bf6b7894ea1...0.5.7)</small>
