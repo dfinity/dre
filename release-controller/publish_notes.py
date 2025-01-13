@@ -53,11 +53,19 @@ def post_process_release_notes(release_notes: str) -> str:
 
     if excluded_changes:
         changelog += "\n\n## Excluded Changes\n"
-        for reason, lines in groupby(sorted(excluded_changes, key=exclusion_reason), exclusion_reason):
-            lines = [re.sub(EXCLUSION_REGEX, "", line).strip() for line in lines]
-            changelog += f"\n### {reason}\n"
-            changelog += "\n".join(lines)
-            changelog += "\n"
+        for the_reason, these_excluded_lines in groupby(
+            sorted(excluded_changes, key=exclusion_reason), exclusion_reason
+        ):
+            changelog += (
+                f"\n### {the_reason}\n"
+                + "\n".join(
+                    [
+                        re.sub(EXCLUSION_REGEX, "", line).strip()
+                        for line in these_excluded_lines
+                    ]
+                )
+                + "\n"
+            )
 
     # remove empty sections
     changelog = re.sub(r"[^\n]+\n-+\n(?!\s*\*)", "", changelog, flags=re.S)
@@ -88,18 +96,28 @@ class PublishNotesClient:
         version_path = f"{REPLICA_RELEASES_DIR}/{version}.md"
         if not [b for b in self.repo.get_branches() if b.name == branch_name]:
             logging.info("creating branch %s for version %s", branch_name, version)
-            self.repo.create_git_ref(ref=f"refs/heads/{branch_name}", sha=self.repo.get_branch("main").commit.sha)
+            self.repo.create_git_ref(
+                ref=f"refs/heads/{branch_name}",
+                sha=self.repo.get_branch("main").commit.sha,
+            )
 
         try:
             logging.info("creating version %s file on branch %s", version, branch_name)
             self.repo.create_file(
-                path=version_path, message=f"Elect version {version}", content=changelog, branch=branch_name
+                path=version_path,
+                message=f"Elect version {version}",
+                content=changelog,
+                branch=branch_name,
             )
         except:  # pylint: disable=bare-except  # noqa: E722
-            logging.warning("failed to create version %s file on branch %s", version, branch_name)
+            logging.warning(
+                "failed to create version %s file on branch %s", version, branch_name
+            )
 
         logging.info("creating pull request for %s, branch %s", version, branch_name)
-        self.repo.create_pull(title=f"Elect version {version}", base="main", head=pull_head)
+        self.repo.create_pull(
+            title=f"Elect version {version}", base="main", head=pull_head
+        )
 
     def publish_if_ready(self, google_doc_markdownified, version: str):
         """Publish the release notes if they are ready."""
@@ -111,7 +129,9 @@ class PublishNotesClient:
 
         release_notes_start = changelog.find("Release Notes")
         if release_notes_start == -1:
-            logging.error("could not find release notes section for version %s", version)
+            logging.error(
+                "could not find release notes section for version %s", version
+            )
             return
 
         if not re.match(
@@ -123,10 +143,13 @@ class PublishNotesClient:
 
         changelog = changelog[release_notes_start:]
         if check_number_of_changes(changelog) == 0:
-            logging.error("release notes for version %s contain no commits that would be published.")
+            logging.error(
+                "release notes for version %s contain no commits that would be published."
+            )
             return
         # TODO: parse markdown to check formatting is correct
         self.ensure_published(version=version, changelog=changelog)
+
 
 def check_number_of_changes(changelog: str) -> int:
     BEGINNING_MARKER = "To see a full list of commits added since last release"
@@ -148,6 +171,7 @@ def check_number_of_changes(changelog: str) -> int:
                 num_changes += 1
 
     return num_changes
+
 
 def main():
     load_dotenv()

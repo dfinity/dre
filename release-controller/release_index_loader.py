@@ -12,10 +12,14 @@ from pydantic_yaml import parse_yaml_raw_as
 RELEASE_INDEX_FILE = "release-index.yaml"
 
 
-def _verify_release_instructions(version):
+def _verify_release_instructions(version: str, security_fix: bool):
+    with_security_caveat = ""
+    if security_fix:
+        with_security_caveat = "\n_Please wait up to 10 days after this proposal has been adopted and rolled out to all subnets to run the verification process._\n"
+
     return f"""
 # IC-OS Verification
-
+{with_security_caveat}
 To build and verify the IC-OS disk image, run:
 
 ```
@@ -56,8 +60,9 @@ class ReleaseLoader:
         version_changelog_path = self.release_index_dir / self.changelog_path(version)
         if version_changelog_path.exists():
             return open(version_changelog_path, "r").read()
+        return None
 
-    def proposal_summary(self, version: str) -> str | None:
+    def proposal_summary(self, version: str, security_fix: bool) -> str | None:
         """Return the proposal summary for the given version."""
         changelog = self.changelog(version)
         if not changelog:
@@ -68,7 +73,7 @@ class ReleaseLoader:
             f"Full list of changes (including the ones that are not relevant to GuestOS) can be found on [GitHub](https://github.com/dfinity/dre/blob/{self.changelog_commit(version)}/replica-releases/{version}.md).\n",
             changelog,
             flags=re.S,
-        ) + _verify_release_instructions(version)
+        ) + _verify_release_instructions(version, security_fix)
 
 
 class DevReleaseLoader(ReleaseLoader):
@@ -77,7 +82,9 @@ class DevReleaseLoader(ReleaseLoader):
     def __init__(self):
         """Create a new DevReleaseLoader."""
         dev_repo_root = (
-            subprocess.check_output(["git", "rev-parse", "--show-toplevel"], stderr=subprocess.DEVNULL)
+            subprocess.check_output(
+                ["git", "rev-parse", "--show-toplevel"], stderr=subprocess.DEVNULL
+            )
             .decode(sys.stdout.encoding)
             .strip()
         )
@@ -105,10 +112,10 @@ class GitReleaseLoader(ReleaseLoader):
         self.git_repo.fetch()
         return super().index()
 
-    def proposal_summary(self, version):
+    def proposal_summary(self, version: str, security_fix: bool):
         """Fetch the latest changes from the git repo and load the proposal summary."""
         self.git_repo.fetch()
-        return super().proposal_summary(version)
+        return super().proposal_summary(version, security_fix)
 
     def changelog_commit(self, version) -> str:
         """Return the commit hash for the changelog file."""

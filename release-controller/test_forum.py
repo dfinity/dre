@@ -34,13 +34,13 @@ def test_create_release_notes_on_new_release():
         )
     )
 
-    def changelog(v: str):
-        return f"release notes for version {v}..."
+    def changelog(v: str, security_fix: bool):
+        return f"release notes for version {v}{' (security fix)' if security_fix else ''}..."
 
     def proposal(v: str):
         return int(v.removeprefix("test"))
 
-    post.update(changelog=changelog, proposal=proposal)
+    post.update(summary_retriever=changelog, proposal_id_retriever=proposal)
     expected_post_1 = {
         "raw": """\
 Hello there!
@@ -159,13 +159,13 @@ release notes for version test2...
         )
     )
 
-    def changelog(v: str):
-        return f"release notes for version {v}..."
+    def changelog(v: str, security_fix: bool):
+        return f"release notes for version {v}{' (security fix)' if security_fix else ''}..."
 
     def proposal(v: str):
         return int(v.removeprefix("test"))
 
-    post.update(changelog=changelog, proposal=proposal)
+    post.update(summary_retriever=changelog, proposal_id_retriever=proposal)
 
     post = forum_client.get_or_create(
         Release(
@@ -175,7 +175,7 @@ release notes for version test2...
             ],
         )
     )
-    post.update(changelog=changelog, proposal=proposal)
+    post.update(summary_retriever=changelog, proposal_id_retriever=proposal)
     new_post = {
         "raw": """\
 Hello there!

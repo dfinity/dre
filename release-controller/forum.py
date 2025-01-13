@@ -1,5 +1,6 @@
 import logging
 import os
+import textwrap
 from typing import Callable
 
 from dotenv import load_dotenv
@@ -8,30 +9,47 @@ from release_index import Release
 from util import version_name
 
 
-def _post_template(changelog, version_name, proposal=None):
+def _post_template(
+    changelog: str | None,
+    version_name: str,
+    proposal: int | None = None,
+):
     if not proposal:
         return f"We're preparing [a new IC release](https://github.com/dfinity/ic/tree/{version_name}). The changelog will be announced soon."
 
-    return f"""\
-Hello there!
+    return textwrap.dedent(
+        f"""\
+        Hello there!
 
-We are happy to announce that voting is now open for [a new IC release](https://github.com/dfinity/ic/tree/{version_name}).
-The NNS proposal is here: [IC NNS Proposal {proposal}](https://dashboard.internetcomputer.org/proposal/{proposal}).
+        We are happy to announce that voting is now open for [a new IC release](https://github.com/dfinity/ic/tree/{version_name}).
+        The NNS proposal is here: [IC NNS Proposal {proposal}](https://dashboard.internetcomputer.org/proposal/{proposal}).
 
-Here is a summary of the changes since the last release:
+        Here is a summary of the changes since the last release:
 
-{changelog}
-"""
+        {changelog}
+        """
+    )
 
 
 class ReleaseCandidateForumPost:
     """A post in a release candidate forum topic."""
 
-    def __init__(self, version_name: str, changelog: str | None, proposal: int | None):
+    def __init__(
+        self,
+        version_name: str,
+        changelog: str | None,
+        proposal: int | None,
+        security_fix: bool = False,
+    ):
         """Create a new post."""
         self.version_name = version_name
         self.changelog = changelog
         self.proposal = proposal
+        self.security_fix = security_fix
+
+
+SummaryRetriever = Callable[[str, bool], str | None]
+ProposalRetriever = Callable[[str], int | None]
 
 
 class ReleaseCandidateForumTopic:
@@ -89,17 +107,18 @@ class ReleaseCandidateForumTopic:
 
     def update(
         self,
-        changelog: Callable[[str], str | None],
-        proposal: Callable[[str], int | None],
+        summary_retriever: SummaryRetriever,
+        proposal_id_retriever: ProposalRetriever,
     ):
         """Update the topic with the latest release information."""
         posts = [
             ReleaseCandidateForumPost(
                 version_name=version_name(self.release.rc_name, v.name),
-                changelog=changelog(v.version),
-                proposal=proposal(v.version),
+                changelog=summary_retriever(v.version, v.security_fix),
+                proposal=proposal_id_retriever(v.version),
+                security_fix=v.security_fix,
             )
-            for v in self.release.versions if not v.security_fix
+            for v in self.release.versions
         ]
 
         created_posts = self.created_posts()
@@ -205,13 +224,13 @@ def main():
     #         name: feat-hotfix1
     # """,
     #     )
-    forum_client = ReleaseCandidateForumClient(
+    _forum_client = ReleaseCandidateForumClient(
         discourse_client,
     )
 
 
 #     topic = forum_client.get_or_create(index.root.releases[0])
-#     topic.update(lambda _: None, lambda _: None)
+#     topic.update(lambda _, _: None, lambda _: None)
 
 # print(topic.post_url(version="31e9076fb99dfc36eb27fb3a2edc68885e6163ac"))
 

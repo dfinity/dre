@@ -6,6 +6,7 @@ import re
 import subprocess
 import sys
 import tempfile
+import textwrap
 import time
 import typing
 from dataclasses import dataclass
@@ -210,7 +211,11 @@ def get_rc_branch(repo_dir, commit_hash):
         .splitlines()
     )
     all_branches = [branch.strip() for branch in all_branches]
-    rc_branches = [branch for branch in all_branches if branch_strip_remote(branch).startswith("rc--20")]
+    rc_branches = [
+        branch
+        for branch in all_branches
+        if branch_strip_remote(branch).startswith("rc--20")
+    ]
     if rc_branches:
         return rc_branches[0]
     return ""
@@ -263,6 +268,7 @@ def release_changes(
     changes: dict[str, list[Change]] = {}
 
     commits = ic_repo.get_commits_info("%h", base_release_commit, release_commit)
+    assert isinstance(commits, list), "Commits is not a list: %r" % (commits,)
 
     if len(commits) >= max_commits:
         print("WARNING: max commits limit reached, increase depth")
@@ -288,21 +294,73 @@ def release_changes(
     return changes
 
 
+class ReleaseNotesRequest(object):
+    def __init__(self, release_tag: str, release_commit: str):
+        self.release_tag = release_tag
+        self.release_commit = release_commit
+
+
+class SecurityReleaseNotesRequest(ReleaseNotesRequest):
+    pass
+
+
+class OrdinaryReleaseNotesRequest(ReleaseNotesRequest):
+    def __init__(
+        self,
+        release_tag: str,
+        release_commit: str,
+        base_release_tag: str,
+        base_release_commit: str,
+    ):
+        super().__init__(release_tag, release_commit)
+        self.base_release_tag = base_release_tag
+        self.base_release_commit = base_release_commit
+
+
+class PreparedReleaseNotes(str):
+    pass
+
+
 def prepare_release_notes(
-    base_release_tag,
-    base_release_commit,
-    release_tag,
-    release_commit,
+    request: SecurityReleaseNotesRequest | OrdinaryReleaseNotesRequest,
     max_commits=1000,
-):
+) -> PreparedReleaseNotes:
+    if isinstance(request, SecurityReleaseNotesRequest):
+        # Special case to avoid generation of any release notes in the case of security fixes.
+        # It would be impossible anyway since policy prohibits it, and the repository containing
+        # the fixes is private.
+        return PreparedReleaseNotes(
+            textwrap.dedent(
+                f"""\
+                # Release Notes for [{request.release_tag}](https://github.com/dfinity/ic/tree/{request.release_tag}) (`{request.release_commit}`)
+
+                In accordance with the Security Patch Policy and Procedure that was adopted in
+                [proposal 48792](https://dashboard.internetcomputer.org/proposal/48792),
+                the source code that was used to build this release will be disclosed at the latest
+                10 days after the fix is rolled out to all subnets.
+
+                The community will then be able to retroactively verify the binaries that were rolled out.
+                """
+            )
+        )
+
     ic_repo = GitRepo("https://github.com/dfinity/ic.git", main_branch="master")
     changes = release_changes(
         ic_repo,
-        base_release_commit,
-        release_commit,
+        request.base_release_commit,
+        request.release_commit,
         max_commits,
     )
-    return release_notes_markdown(ic_repo, base_release_tag, base_release_commit, release_tag, release_commit, changes)
+    return PreparedReleaseNotes(
+        release_notes_markdown(
+            ic_repo,
+            request.base_release_tag,
+            request.base_release_commit,
+            request.release_tag,
+            request.release_commit,
+            changes,
+        )
+    )
 
 
 def get_change_description_for_commit(
@@ -330,7 +388,8 @@ def get_change_description_for_commit(
             f
             for f in file_changes
             if not any(
-                f not in INCLUDE_CHANGES and re.search(filter, f["file_path"]) for filter in EXCLUDE_CHANGES_FILTERS
+                f not in INCLUDE_CHANGES and re.search(filter, f["file_path"])
+                for filter in EXCLUDE_CHANGES_FILTERS
             )
         )
     ):
@@ -340,7 +399,11 @@ def get_change_description_for_commit(
     stripped_message = re.sub(jira_ticket_regex, "", commit_message)
     stripped_message = re.sub(empty_brackets_regex, "", stripped_message)
     # add github PR links
-    stripped_message = re.sub(r"\(#(\d+)\)", r"([#\1](https://github.com/dfinity/ic/pull/\1))", stripped_message)
+    stripped_message = re.sub(
+        r"\(#(\d+)\)",
+        r"([#\1](https://github.com/dfinity/ic/pull/\1))",
+        stripped_message,
+    )
     stripped_message = stripped_message.strip()
 
     conventional = parse_conventional_commit(stripped_message, conv_commit_pattern)
@@ -349,12 +412,16 @@ def get_change_description_for_commit(
     for change in file_changes:
         teams = set(
             sum(
-                [codeowners[p] for p in codeowners.keys() if fnmatch.fnmatch(change["file_path"], p.removeprefix("/"))],
+                [
+                    codeowners[p]
+                    for p in codeowners.keys()
+                    if fnmatch.fnmatch(change["file_path"], p.removeprefix("/"))
+                ],
                 [],
             )
         )
         if not teams:
-            teams = ["unknown"]
+            teams = set(["unknown"])
 
         for team in teams:
             if team not in ownership:
@@ -362,14 +429,21 @@ def get_change_description_for_commit(
                 continue
             ownership[team] += change["num_changes"]
 
-    if "ic-owners-owners" in ownership and len(set(ownership.keys()).intersection(REPLICA_TEAMS)) > 1:
+    if (
+        "ic-owners-owners" in ownership
+        and len(set(ownership.keys()).intersection(REPLICA_TEAMS)) > 1
+    ):
         ownership.pop("ic-owners-owners")
 
     # TODO: count max first by replica team then others
     teams = set()
     if ownership:
-        replica_ownership = {team: lines for team, lines in ownership.items() if team in REPLICA_TEAMS}
-        max_ownership_replica = max([lines for team, lines in ownership.items() if team in REPLICA_TEAMS] or [0])
+        replica_ownership = {
+            team: lines for team, lines in ownership.items() if team in REPLICA_TEAMS
+        }
+        max_ownership_replica = max(
+            [lines for team, lines in ownership.items() if team in REPLICA_TEAMS] or [0]
+        )
         for key, value in replica_ownership.items():
             if value >= max_ownership_replica * MAX_OWNERSHIP_AREA:
                 teams.add(key)
@@ -382,14 +456,16 @@ def get_change_description_for_commit(
     commit_type = conventional["type"].lower()
     commit_type = commit_type if commit_type in TYPE_PRETTY_MAP else "other"
 
-    if guestos_change and not exclusion_reason and not REPLICA_TEAMS.intersection(teams):
+    if (
+        guestos_change
+        and not exclusion_reason
+        and not REPLICA_TEAMS.intersection(teams)
+    ):
         exclusion_reason = "The change is not owned by any replica team"
 
     scope = conventional["scope"] if conventional["scope"] else ""
     if guestos_change and not exclusion_reason and scope in EXCLUDED_SCOPES:
         exclusion_reason = f"Scope of the change ({scope}) is not related to GuestOS"
-
-    teams = sorted(list(teams))
 
     commiter_parts = commiter.split()
     commiter = "{:<4} {:<4}".format(
@@ -399,7 +475,7 @@ def get_change_description_for_commit(
 
     return Change(
         commit=commit_hash,
-        teams=list(teams),
+        teams=list(sorted(list(teams))),
         type=commit_type,
         scope=scope,
         message=conventional["message"],
@@ -434,7 +510,13 @@ def release_notes_markdown(
     """Generate release notes in markdown format."""
     merge_base = ic_repo.merge_base(base_release_commit, release_commit)
 
-    reviewers_text = "\n".join([f"- {t.google_docs_handle}" for t in RELEASE_NOTES_REVIEWERS if t.send_announcement])
+    reviewers_text = "\n".join(
+        [
+            f"- {t.google_docs_handle}"
+            for t in RELEASE_NOTES_REVIEWERS
+            if t.send_announcement
+        ]
+    )
 
     notes = """\
 # Review checklist
@@ -468,8 +550,12 @@ Changes [were removed](https://github.com/dfinity/ic/compare/{release_tag}...{ba
         )
 
     def format_change(change: Change):
-        commit_part = "[`{0}`](https://github.com/dfinity/ic/commit/{0})".format(change["commit"][:9])
-        team_part = ",".join([TEAM_PRETTY_MAP.get(team, team) for team in change["teams"]])
+        commit_part = "[`{0}`](https://github.com/dfinity/ic/commit/{0})".format(
+            change["commit"][:9]
+        )
+        team_part = ",".join(
+            [TEAM_PRETTY_MAP.get(team, team) for team in change["teams"]]
+        )
         team_part = team_part if team_part else "General"
         scope_part = (
             ":"
@@ -479,10 +565,15 @@ Changes [were removed](https://github.com/dfinity/ic/compare/{release_tag}...{ba
         message_part = change["message"]
         commiter_part = f"author: {change['commiter']}"
 
-        text = "{4} | {0} {1}{2} {3}".format(commit_part, team_part, scope_part, message_part, commiter_part)
+        text = "{4} | {0} {1}{2} {3}".format(
+            commit_part, team_part, scope_part, message_part, commiter_part
+        )
         if change["exclusion_reason"] or not change["guestos_change"]:
             text = "~~{} [AUTO-EXCLUDED:{}]~~".format(
-                text, "Not modifying GuestOS" if not change["guestos_change"] else change["exclusion_reason"]
+                text,
+                "Not modifying GuestOS"
+                if not change["guestos_change"]
+                else change["exclusion_reason"],
             )
         return "* " + text + "\n"
 
@@ -492,7 +583,9 @@ Changes [were removed](https://github.com/dfinity/ic/compare/{release_tag}...{ba
             continue
         notes += "## {0}:\n".format(TYPE_PRETTY_MAP[current_type][0])
 
-        for change in sorted(change_infos[current_type], key=lambda x: ",".join(x["teams"])):
+        for change in sorted(
+            change_infos[current_type], key=lambda x: ",".join(x["teams"])
+        ):
             if not change["guestos_change"]:
                 non_guestos_changes.append(change)
                 continue
@@ -540,6 +633,7 @@ def main():
         args.base_release_commit,
         args.release_tag,
         args.release_commit,
+        False,
         max_commits=args.max_commits,
     )
     print(release_notes)

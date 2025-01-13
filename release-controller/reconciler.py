@@ -16,6 +16,7 @@ sys.path.append(os.path.join(os.path.dirname(__file__)))
 import __fix_import_paths  # isort:skip  # noqa: F401 # pylint: disable=W0611
 import release_index
 import requests
+import slack_announce
 from dotenv import load_dotenv
 from forum import ReleaseCandidateForumClient
 from git_repo import GitRepo
@@ -30,8 +31,16 @@ from pydiscourse import DiscourseClient
 from release_index_loader import DevReleaseLoader
 from release_index_loader import GitReleaseLoader
 from release_index_loader import ReleaseLoader
+from release_notes import (
+    prepare_release_notes,
+    SecurityReleaseNotesRequest,
+    OrdinaryReleaseNotesRequest,
+)
 from util import version_name
 from watchdog import Watchdog
+
+
+LOGGER = logging.getLogger(__name__)
 
 
 class ReconcilerState:
@@ -62,7 +71,7 @@ class ReconcilerState:
         if self._version_path(version).exists():
             proposal_id = self.version_proposal(version)
             if proposal_id:
-                logging.info(
+                LOGGER.info(
                     "version %s: proposal %s already submitted", version, proposal_id
                 )
             else:
@@ -193,7 +202,7 @@ def version_package_checksum(version: str):
 
         for i, u in enumerate(version_package_urls(version)):
             image_file = str(pathlib.Path(d) / f"update-img-{i}.tar.zst")
-            logging.debug("fetching package %s", u)
+            LOGGER.debug("fetching package %s", u)
             with open(image_file, "wb") as file:
                 response = requests.get(u, timeout=10)
                 file.write(response.content)
@@ -201,6 +210,14 @@ def version_package_checksum(version: str):
                 raise RuntimeError("checksums do not match")
 
         return checksum
+
+
+class ActiveVersionProvider(typing.Protocol):
+    def active_versions(self) -> list[str]: ...
+
+
+class ReplicaVersionProposalProvider(typing.Protocol):
+    def replica_version_proposals(self) -> dict[str, int]: ...
 
 
 class Reconciler:
@@ -215,6 +232,8 @@ class Reconciler:
         nns_url: str,
         state: ReconcilerState,
         ic_repo: GitRepo,
+        active_version_provider: ActiveVersionProvider,
+        replica_version_proposal_provider: ReplicaVersionProposalProvider,
         ignore_releases=None,
     ):
         """Create a new reconciler."""
@@ -223,11 +242,9 @@ class Reconciler:
         self.notes_client = notes_client
         self.publish_client = publish_client
         self.nns_url = nns_url
-        self.governance_canister = GovernanceCanister()
+        self.governance_canister = replica_version_proposal_provider
         self.state = state
-        self.ic_prometheus = ICPrometheus(
-            url="https://victoria.mainnet.dfinity.network/select/0/prometheus"
-        )
+        self.ic_prometheus = active_version_provider
         self.ic_repo = ic_repo
         self.ignore_releases = ignore_releases or []
 
@@ -235,7 +252,9 @@ class Reconciler:
         """Reconcile the state of the network with the release index."""
         config = self.loader.index()
         active_versions = self.ic_prometheus.active_versions()
-        logging.info(
+        logger = LOGGER.getChild("reconcile")
+
+        logger.info(
             "GuestOS versions active on subnets or unassigned nodes: %s",
             active_versions,
         )
@@ -245,7 +264,7 @@ class Reconciler:
                 neuron_id=os.environ["PROPOSER_NEURON_ID"],
             )
         )
-        for rc_idx, rc in enumerate(
+        for _rc_idx, rc in enumerate(
             config.root.releases[
                 : config.root.releases.index(
                     oldest_active_release(config, active_versions)
@@ -253,84 +272,126 @@ class Reconciler:
                 + 1
             ]
         ):
+            rclogger = logger.getChild(f"{rc.rc_name}")
+
             if rc.rc_name in self.ignore_releases:
+                rclogger.debug("In ignore list.  Skipping.")
                 continue
+
             rc_forum_topic = self.forum_client.get_or_create(rc)
             # update to create posts for any releases
             rc_forum_topic.update(
-                changelog=self.loader.proposal_summary,
-                proposal=self.state.version_proposal,
+                summary_retriever=self.loader.proposal_summary,
+                proposal_id_retriever=self.state.version_proposal,
             )
+
             for v_idx, v in enumerate(rc.versions):
-                logging.info("Updating version %s", v)
-                push_release_tags(self.ic_repo, rc)
-                base_release_commit, base_release_name = find_base_release(
-                    self.ic_repo, config, v.version
+                release_tag, release_commit = (
+                    version_name(rc_name=rc.rc_name, name=v.name),
+                    v.version,
                 )
-                self.notes_client.ensure(
-                    base_release_commit=base_release_commit,
-                    base_release_tag=base_release_name,
-                    release_tag=version_name(rc_name=rc.rc_name, name=v.name),
-                    release_commit=v.version,
-                    tag_teams_on_create=v_idx == 0,
-                )
+                revlogger = rclogger.getChild(f"{release_tag}")
+
+                if not self.notes_client.has_release_notes(release_commit):
+                    revlogger.info("No release notes found.  Creating.")
+                    if v.security_fix:
+                        revlogger.info(
+                            "It's a security fix.  Skipping base release investigation."
+                        )
+                        # FIXME: how to push the release tags and artifacts
+                        # of security fixes 10 days after their rollout?
+                        request = SecurityReleaseNotesRequest(
+                            release_tag, release_commit
+                        )
+                    else:
+                        revlogger.info(
+                            "It's an ordinary release.  Generating full changelog."
+                        )
+                        push_release_tags(self.ic_repo, rc)
+                        base_release_commit, base_release_tag = find_base_release(
+                            self.ic_repo, config, release_commit
+                        )
+                        request = OrdinaryReleaseNotesRequest(
+                            release_tag,
+                            release_commit,
+                            base_release_tag,
+                            base_release_commit,
+                        )
+
+                    revlogger.info("Preparing release notes.")
+                    content = prepare_release_notes(request)
+
+                    revlogger.info("Uploading release notes.")
+                    gdoc = self.notes_client.ensure(
+                        release_tag=release_tag,
+                        release_commit=release_commit,
+                        content=content,
+                    )
+
+                    if "SLACK_WEBHOOK_URL" in os.environ:
+                        # This should have never been in the Google Docs code.
+                        revlogger.info("Announcing release notes")
+                        slack_announce.announce_release(
+                            slack_url=os.environ["SLACK_WEBHOOK_URL"],
+                            version_name=release_tag,
+                            google_doc_url=gdoc["alternateLink"],
+                            tag_all_teams=v_idx == 0,
+                        )
 
                 self.publish_client.publish_if_ready(
-                    google_doc_markdownified=self.notes_client.markdown_file(v.version),
-                    version=v.version,
+                    google_doc_markdownified=self.notes_client.markdown_file(
+                        release_commit
+                    ),
+                    version=release_commit,
                 )
 
                 # returns a result only if changelog is published
-                changelog = self.loader.proposal_summary(v.version)
-                if changelog:
-                    if self.state.proposal_submitted(v.version):
-                        logging.info(
-                            "RC %s: proposal already submitted for version %s",
-                            rc.rc_name,
-                            v.version,
-                        )
-                    else:
-                        logging.info(
-                            "RC %s: submitting proposal for version %s",
-                            rc.rc_name,
-                            v.version,
-                        )
-                        unelect_versions = []
-                        if v_idx == 0:
-                            unelect_versions.extend(
-                                versions_to_unelect(
-                                    config,
-                                    active_versions=active_versions,
-                                    elected_versions=dre.get_blessed_versions()[
-                                        "value"
-                                    ]["blessed_version_ids"],
-                                ),
-                            )
-                        # This is a defensive approach in case the ic-admin exits with failure
-                        # but still manages to submit the proposal, e.g. because it fails to decode the response.
-                        # We had cases like this in the past.
-                        self.state.mark_submitted(v.version)
+                changelog = self.loader.proposal_summary(release_commit)
+                if not changelog:
+                    continue
 
+                if self.state.proposal_submitted(release_commit):
+                    revlogger.debug("Proposal already submitted.")
+                else:
+                    revlogger.info("Submitting proposal.")
+                    unelect_versions = []
+                    if v_idx == 0:
+                        unelect_versions.extend(
+                            versions_to_unelect(
+                                config,
+                                active_versions=active_versions,
+                                elected_versions=dre.get_blessed_versions()["value"][
+                                    "blessed_version_ids"
+                                ],
+                            ),
+                        )
+
+                    try:
                         place_proposal(
                             dre=dre,
                             changelog=changelog,
-                            version=v.version,
-                            forum_post_url=rc_forum_topic.post_url(v.version),
+                            version=release_commit,
+                            forum_post_url=rc_forum_topic.post_url(release_commit),
                             unelect_versions=unelect_versions,
                         )
+                    finally:
+                        # This is a defensive approach in case the ic-admin exits with failure
+                        # but still manages to submit the proposal, e.g. because it fails to decode the response.
+                        # We had cases like this in the past.
+                        self.state.mark_submitted(release_commit)
 
-                    versions_proposals = (
-                        self.governance_canister.replica_version_proposals()
+                versions_proposals = (
+                    self.governance_canister.replica_version_proposals()
+                )
+                if release_commit in versions_proposals:
+                    self.state.save_proposal(
+                        release_commit, versions_proposals[release_commit]
                     )
-                    if v.version in versions_proposals:
-                        self.state.save_proposal(
-                            v.version, versions_proposals[v.version]
-                        )
 
             # update the forum posts in case the proposal was created
             rc_forum_topic.update(
-                changelog=self.loader.proposal_summary,
-                proposal=self.state.version_proposal,
+                summary_retriever=self.loader.proposal_summary,
+                proposal_id_retriever=self.state.version_proposal,
             )
 
 
@@ -347,7 +408,7 @@ def place_proposal(
         unelect_versions_args.append("--replica-versions-to-unelect")
         unelect_versions_args.extend(unelect_versions)
     summary = changelog + f"\n\nLink to the forum post: {forum_post_url}"
-    logging.info("submitting proposal for version %s", version)
+    LOGGER.info("submitting proposal for version %s", version)
     dre.run(
         "propose",
         "update-elected-replica-versions",
@@ -424,6 +485,10 @@ def main():
             f"https://oauth2:{github_token}@github.com/dfinity/ic.git",
             main_branch="master",
         ),
+        active_version_provider=ICPrometheus(
+            url="https://victoria.mainnet.dfinity.network/select/0/prometheus"
+        ),
+        replica_version_proposal_provider=GovernanceCanister(),
     )
 
     while True:
@@ -431,8 +496,8 @@ def main():
             reconciler.reconcile()
             watchdog.report_healthy()
         except Exception as e:
-            logging.error(traceback.format_exc())
-            logging.error("failed to reconcile: %s", e)
+            LOGGER.error(traceback.format_exc())
+            LOGGER.error("failed to reconcile: %s", e)
         time.sleep(60)
 
 

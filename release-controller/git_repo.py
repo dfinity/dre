@@ -55,7 +55,7 @@ class GitRepo:
             if "@" in repo
             else repo.removeprefix("https://")
         )
-        self.cache = {}
+        self.cache: dict[str, Commit] = {}
         self.fetch()
 
     def __del__(self):
@@ -68,14 +68,14 @@ class GitRepo:
         for branch in branches:
             try:
                 subprocess.check_call(
-                    ["git", "checkout", branch],
+                    ["git", "checkout", "--quiet", branch],
                     cwd=self.dir,
                 )
             except subprocess.CalledProcessError:
                 print("Branch {} does not exist".format(branch))
 
         subprocess.check_call(
-            ["git", "checkout", self.main_branch],
+            ["git", "checkout", "--quiet", self.main_branch],
             cwd=self.dir,
         )
 
@@ -94,7 +94,6 @@ class GitRepo:
                     obj,
                 ],
                 stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
                 text=True,
                 check=True,
                 cwd=self.dir,
@@ -143,7 +142,7 @@ class GitRepo:
                 cwd=self.dir,
             )
             subprocess.check_call(
-                ["git", "reset", "--hard", f"origin/{self.main_branch}"],
+                ["git", "reset", "--hard", "--quiet", f"origin/{self.main_branch}"],
                 cwd=self.dir,
             )
         else:
@@ -210,11 +209,10 @@ class GitRepo:
                     "{}..{}".format(first_commit, last_commit),
                 ],
                 cwd=self.dir,
-                stderr=subprocess.DEVNULL,
+                text=True,
             )
-            .decode("utf-8")
-            .strip()
-            .split("\n")
+            .rstrip()
+            .splitlines()
         )
 
     def get_commit_info(
@@ -265,19 +263,18 @@ class GitRepo:
             additions = additions if additions != "-" else "0"
             deletions = deletions if deletions != "-" else "0"
 
-            changes.append(
-                {
-                    "file_path": file_path,
-                    "num_changes": int(additions) + int(deletions),
-                }
-            )
+            chg: FileChange = {
+                "file_path": file_path,
+                "num_changes": int(additions) + int(deletions),
+            }
+            changes.append(chg)
 
         return changes
 
     def checkout(self, ref: str):
         """Checkout the given ref."""
         subprocess.check_call(
-            ["git", "reset", "--hard"],
+            ["git", "reset", "--hard", "--quiet"],
             cwd=self.dir,
         )
         subprocess.check_call(
@@ -293,7 +290,7 @@ class GitRepo:
             .strip()
         ):
             subprocess.check_call(
-                ["git", "reset", "--hard", f"origin/{ref}"],
+                ["git", "reset", "--hard", "--quiet", f"origin/{ref}"],
                 cwd=self.dir,
             )
 
@@ -319,15 +316,15 @@ class GitRepo:
         ]
 
     def _fetch_notes(self):
-        ref = f"refs/notes/*"
+        ref = "refs/notes/*"
         subprocess.check_call(
-            ["git", "fetch", "origin", f"{ref}:{ref}", "-f", "--prune"],
+            ["git", "fetch", "origin", f"{ref}:{ref}", "-f", "--prune", "--quiet"],
             cwd=self.dir,
         )
 
     def _push_notes(self, namespace: str):
         subprocess.check_call(
-            ["git", "push", "origin", f"refs/notes/{namespace}", "-f"],
+            ["git", "push", "origin", f"refs/notes/{namespace}", "-f", "--quiet"],
             cwd=self.dir,
         )
 
@@ -381,6 +378,7 @@ def push_release_tags(repo: GitRepo, release: Release):
             [
                 "git",
                 "fetch",
+                "--quiet",
                 "origin",
                 f"{v.version}:refs/remotes/origin/{v.version}-commit",
             ],
@@ -420,6 +418,7 @@ def push_release_tags(repo: GitRepo, release: Release):
                 [
                     "git",
                     "push",
+                    "--quiet",
                     "origin",
                     tag,
                     "-f",

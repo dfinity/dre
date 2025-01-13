@@ -1,14 +1,13 @@
-import os
 import pathlib
 import tempfile
 
 import mammoth
 import markdown
-import slack_announce
 from markdownify import markdownify
 from pydrive2.auth import GoogleAuth
 from pydrive2.drive import GoogleDrive
-from release_notes import prepare_release_notes
+
+from release_notes import PreparedReleaseNotes
 
 md = markdown.Markdown(
     extensions=["pymdownx.tilde", "pymdownx.details"],
@@ -21,7 +20,11 @@ pathlib.Path(__file__).parent.resolve()
 class ReleaseNotesClient:
     """Client for managing release notes in Google Drive."""
 
-    def __init__(self, credentials_file: pathlib.Path, release_notes_folder="1y-nuH29Gd5Err3pazYH6-LzcDShcOIFf"):
+    def __init__(
+        self,
+        credentials_file: pathlib.Path,
+        release_notes_folder="1y-nuH29Gd5Err3pazYH6-LzcDShcOIFf",
+    ):
         """Create a new ReleaseNotesClient."""
         settings = {
             "client_config_backend": "service",
@@ -35,34 +38,43 @@ class ReleaseNotesClient:
         gauth.ServiceAuth()
         self.drive = GoogleDrive(gauth)
 
-    def ensure(self, base_release_tag, base_release_commit, release_tag, release_commit, tag_teams_on_create: bool):
-        """Ensure that a release notes document exists for the given version."""
+    def has_release_notes(self, release_commit) -> bool:
+        return self.file(release_commit)
+
+    def ensure(
+        self,
+        release_tag,
+        release_commit,
+        content: PreparedReleaseNotes,
+    ):
+        """
+        Ensure that a release notes document exists for the given version.
+
+        No changes are effected if the document mapped to this release commit
+        already exists.
+        """
         existing_file = self.file(release_commit)
         if existing_file:
             return existing_file
-        content = prepare_release_notes(base_release_tag, base_release_commit, release_tag, release_commit)
         htmldoc = md.convert(content)
         gdoc = self.drive.CreateFile(
             {
                 "title": f"Release Notes - {release_tag} ({release_commit})",
                 "mimeType": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-                "parents": [{"kind": "drive#fileLink", "id": self.release_notes_folder}],
+                "parents": [
+                    {"kind": "drive#fileLink", "id": self.release_notes_folder}
+                ],
             }
         )
         gdoc.SetContentString(htmldoc)
         gdoc.Upload()
-        if "SLACK_WEBHOOK_URL" in os.environ:
-            slack_announce.announce_release(
-                slack_url=os.environ["SLACK_WEBHOOK_URL"],
-                version_name=release_tag,
-                google_doc_url=gdoc["alternateLink"],
-                tag_all_teams=tag_teams_on_create,
-            )
         return gdoc
 
     def file(self, version: str):
         """Get the file for the given version."""
-        release_notes = self.drive.ListFile({"q": "'{}' in parents".format(self.release_notes_folder)}).GetList()
+        release_notes = self.drive.ListFile(
+            {"q": "'{}' in parents".format(self.release_notes_folder)}
+        ).GetList()
         for file in release_notes:
             if version in file["title"]:
                 return file
@@ -83,7 +95,9 @@ def google_doc_to_markdown(release_docx: pathlib.Path) -> str:
     # google docs will convert the document to docx format first time it's saved
     # before that, it should be in html
     try:
-        with open(release_docx, "tr", encoding="utf8") as f:  # try open file in text mode
+        with open(
+            release_docx, "tr", encoding="utf8"
+        ) as f:  # try open file in text mode
             release_html = f.read()
     except:  # if fail then file is non-text (binary)  # noqa: E722  # pylint: disable=bare-except
         release_html = mammoth.convert_to_html(open(release_docx, "rb")).value

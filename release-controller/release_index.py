@@ -3,26 +3,26 @@
 
 from __future__ import annotations
 
-from typing import List, Optional
+from typing import List
 
 from pydantic import BaseModel, ConfigDict, RootModel
 
 
 class Version(BaseModel):
-    model_config = ConfigDict(extra='allow')
+    model_config = ConfigDict(extra="allow")
     name: str
     version: str
-    security_fix: Optional[bool] = None
+    security_fix: bool = False
 
 
 class Release(BaseModel):
-    model_config = ConfigDict(extra='forbid')
+    model_config = ConfigDict(extra="forbid")
     rc_name: str
     versions: List[Version]
 
 
 class ReleaseIndex(BaseModel):
-    model_config = ConfigDict(extra='forbid')
+    model_config = ConfigDict(extra="forbid")
     releases: List[Release]
 
 
