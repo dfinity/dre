@@ -67,8 +67,8 @@
   slack_id: U07TLD4BZAS  # Yusef Habib Fernández
 - neuron_id: 64
   slack_id: U01806HR6MP  # Ian Blenke
-# - neuron_id: 65
-#   slack_id:
+- neuron_id: 65
+  slack_id: U07TC5UJE12  # Louis Pahlavi
 - neuron_id: 66
   slack_id: U01EQQYUWRG  # Sam Howard
 - neuron_id: 67
