@@ -1,5 +1,5 @@
 {
-  "checksum": "1d41d1345cc2e2b2d6378bab1739fbf697f755e8d18b95a23f2d0eee5964aed3",
+  "checksum": "15716aceb37f750d7cf9723f4376964fc23b1daa724102e7506b0074161d73f5",
   "crates": {
     "actix-codec 0.5.2": {
       "name": "actix-codec",
@@ -25659,9 +25659,12 @@
       "name": "ic0",
       "version": "0.23.0",
       "repository": {
-        "Http": {
-          "url": "https://static.crates.io/crates/ic0/0.23.0/download",
-          "sha256": "8de254dd67bbd58073e23dc1c8553ba12fa1dc610a19de94ad2bbcd0460c067f"
+        "Git": {
+          "remote": "https://github.com/dfinity/cdk-rs.git",
+          "commitish": {
+            "Rev": "8f57d6d26b1d142b5be4b39ea8ade59d7c848cde"
+          },
+          "strip_prefix": "src/ic0"
         }
       },
       "targets": [
