@@ -64,3 +64,4 @@ runs:
         title: "chore(release): Update `CHANGELOG.md`"
         body: "This PR updates `CHANGELOG.md` with the contents of a new release [${{ steps.generate.outputs.tag }}](https://github.com/dfinity/dre/releases/tag/${{ steps.generate.outputs.tag }})"
         token: ${{ inputs.PUSH_TOKEN }}
+        base: main
