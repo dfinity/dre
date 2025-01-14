@@ -38,7 +38,7 @@ runs:
         # Generate for this release only and save 
         # it in tmp so that we can create a PR with 
         # the same workflow
-        git cliff --unreleased --tag $TAG --sort newest > /tmp/curret_release.md
+        git cliff --unreleased --tag $TAG --sort newest > /tmp/current_release.md
         
         # Extract the generated tag
         echo "tag=$TAG" >> $GITHUB_OUTPUT
@@ -49,7 +49,7 @@ runs:
       uses: softprops/action-gh-release@de2c0eb89ae2a093876385947365aca7b0e5f844
       with:
         token: ${{ inputs.GITHUB_TOKEN }}
-        body_path: /tmp/curret_release.md
+        body_path: /tmp/current_release.md
         generate_release_notes: true
         draft: true
         prerelease: true
