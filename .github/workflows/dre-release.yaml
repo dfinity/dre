@@ -24,7 +24,7 @@ jobs:
       - name: "Test DRE"
         shell: bash
         run: |
-          bazel test //rs/cli:unit_test
+          bazel test //rs/cli:unit_test --spawn_strategy=local --test_env=HOME=/home/runner
 
   release:
     needs: [ test ]
@@ -72,7 +72,7 @@ jobs:
         shell: bash
         run: |
           cargo install git-cliff
-          bazel build //rs/cli:dre 
+          bazel build --config=ci //rs/cli:dre 
           cargo drecross
 
           mkdir -p release/artifacts
