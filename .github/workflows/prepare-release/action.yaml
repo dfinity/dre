@@ -5,9 +5,6 @@ inputs:
   github_token:
     description: "A GitHub token with permissions to create releases"
     required: true
-  push_token:
-    description: "Github token that has permissions to create a PR"
-    required: true
 
 runs:
   using: composite
@@ -21,46 +18,18 @@ runs:
       shell: bash
       run: |
         set -eExuo pipefail
-        # query the location of the bazel "dre" binary and copy it to the "/tmp/release" directory
-        mkdir -p /tmp/release
-        cp --dereference bazel-out/k8-opt/bin/rs/cli/dre /tmp/release/dre-x86_64-unknown-linux
-        cp target/x86_64-apple-darwin/release/dre /tmp/release/dre-x86_64-apple-darwin
-
-    - name: "⚒️ Generating release notes"
-      shell: bash
-      id: generate
-      run: |
-        TAG=${GITHUB_REF#refs/*/}
-        cargo install git-cliff
-        # Prepend to the ongoing CHANGELOG.md
-        git cliff --unreleased --tag $TAG --sort newest --prepend CHANGELOG.md 
-        
-        # Generate for this release only and save 
-        # it in tmp so that we can create a PR with 
-        # the same workflow
-        git cliff --unreleased --tag $TAG --sort newest > /tmp/current_release.md
-        
-        # Extract the generated tag
-        echo "tag=$TAG" >> $GITHUB_OUTPUT
-
-
+        # query the location of the bazel "dre" binary and copy it to the "release" directory
+        mkdir -p release
+        cp --dereference bazel-out/k8-opt/bin/rs/cli/dre release/dre-x86_64-unknown-linux
+        cp target/x86_64-apple-darwin/release/dre release/dre-x86_64-apple-darwin
     - name: "🆕 📢 Prepare release"
       # v0.1.15
       uses: softprops/action-gh-release@de2c0eb89ae2a093876385947365aca7b0e5f844
       with:
         token: ${{ inputs.GITHUB_TOKEN }}
-        body_path: /tmp/current_release.md
+        body_path: CHANGELOG.md
         generate_release_notes: true
         draft: true
         prerelease: true
         files: |
-          /tmp/release/*
-
-    - name: "🆕 Create a new Pull Request with the changes"
-      uses: peter-evans/create-pull-request@v7
-      with:
-        commit-message: "chore: `CHANGELOG.md`"
-        branch: bot-update-changelog
-        title: "chore(release): Update `CHANGELOG.md`"
-        body: "This PR updates `CHANGELOG.md` with the contents of a new release [${{ steps.generate.outputs.tag }}](https://github.com/dfinity/dre/releases/tag/${{ steps.generate.outputs.tag }})"
-        token: ${{ inputs.PUSH_TOKEN }}
+          release/*
