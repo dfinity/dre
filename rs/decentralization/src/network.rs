@@ -41,12 +41,6 @@ pub(crate) struct ReplacementCandidate {
     business_rules_log: Vec<String>,
 }
 
-impl ReplacementCandidate {
-    pub fn new_with_node_for_tests(node: Node) -> Self {
-        Self { node, ..Default::default() }
-    }
-}
-
 impl DecentralizedSubnet {
     pub fn new_with_subnet_id_and_nodes(subnet_id: PrincipalId, nodes: Vec<Node>) -> Self {
         Self {
@@ -1538,4 +1532,15 @@ pub fn generate_added_node_description(subnet_nodes: &[Node], add_nodes: &[Node]
         result.push((node.clone(), nakamoto_diff));
     }
     result
+}
+
+#[cfg(test)]
+pub mod tests {
+    use super::*;
+
+    impl ReplacementCandidate {
+        pub fn new_with_node_for_tests(node: Node) -> Self {
+            Self { node, ..Default::default() }
+        }
+    }
 }
