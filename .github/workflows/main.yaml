@@ -58,20 +58,20 @@ jobs:
         shell: bash
         id: tag
         run: |
-          TAG=${GITHUB_REF#refs/*/}
+          TAG=${GITHUB_REF#refs/tags/}
           # Cache bin/mk-release.py from this commit
           cp bin/mk-release.py /tmp
           git pull
           git checkout main
 
-          if [ -z "$TAG" ]; then
+          if [ $TAG == refs/ ]; then
             TAG=${{ github.event.inputs.tag }}
           fi
           echo "Using tag $TAG"
 
           # Copy cached version back
-          yes | cp bin/mk-release.py bin/ 
-          rye run python /tmp/mk-release.py $TAG
+          yes | cp /tmp/mk-release.py bin/ 
+          rye run python bin/mk-release.py $TAG
           # Reset the cached version
           git checkout main -- bin/mk-release.py
           echo "tag=$TAG" >> $GITHUB_OUTPUT
