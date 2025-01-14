@@ -1,0 +1,92 @@
+name: Release DRE binary
+on:
+  push:
+    branches:
+      - main
+    tags:
+      - "v*"
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    container: ghcr.io/dfinity/dre/actions-runner:3dd4f38f076cad73fdcc68ad37fd29bed4fa3e4d
+    permissions:
+      contents: write
+      packages: write
+      pages: write
+    steps:
+      - uses: actions/checkout@v4
+
+      # The GitHub App token is necessary for pushing changed files back to the repository
+      # If regular secrets.GITHUB_TOKEN is used instead, the push will not trigger any actions
+      # https://github.com/orgs/community/discussions/25702
+      - name: Create GitHub App Token
+        uses: actions/create-github-app-token@v1
+        id: app-token
+        with:
+          app-id: ${{ vars.PR_AUTOMATION_BOT_PUBLIC_APP_ID }}
+          private-key: ${{ secrets.PR_AUTOMATION_BOT_PUBLIC_PRIVATE_KEY }}
+
+      - name: Determine tag
+        shell: bash
+        id: tag
+        run: |
+          TAG=${GITHUB_REF#refs/tags/}
+          if [[ $TAG == refs/* ]]; then
+            TAG="v0.5.9-testing"
+          fi
+
+          echo "Will be using tag $TAG"
+          echo "tag=$TAG" >> $GITHUB_OUTPUT
+
+      - name: Update tags in code
+        shell: bash
+        run: |
+          rye run python bin/mk-release.py ${{ steps.tag.outputs.tag }}
+
+      - name: Build artifacts
+        shell: bash
+        run: |
+          cargo install git-cliff
+          cargo build --bin dre --release
+          cargo drecross
+
+          mkdir -p release/artifacts
+          cp target/release/dre release/artifacts/dre-x86_64-unknown-linux
+          cp target/x86_64-apple-darwin/release/dre release/artifacts/dre-x86_64-apple-darwin
+
+          git cliff --unreleased --tag ${{ steps.tag.outputs.tag }} --sort newest > release/CHANGELOG.md
+      
+      - name: "🆕 📢 Prepare release"
+        # v0.1.15
+        uses: softprops/action-gh-release@de2c0eb89ae2a093876385947365aca7b0e5f844
+        id: release
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          name: ${{ steps.tag.outputs.tag }}
+          tag_name: ${{ steps.tag.outputs.tag }}
+          body_path: release/CHANGELOG.md
+          draft: true
+          prerelease: true
+          files: |
+            release/artifacts/*
+      
+      - name: "Clean up release artifacts"
+        shell: bash
+        run: |
+          rm -rf release
+
+      - name: "🆕 Create a new Pull Request with the changes"
+        uses: peter-evans/create-pull-request@v7
+        with:
+          commit-message: "chore(release): New release of `dre` version ${{ steps.tag.outputs.tag }}"
+          branch: bot-release-${{ steps.tag.outputs.tag }}
+          title: "chore(release): New release of `dre` version ${{ steps.tag.outputs.tag }}"
+          body: "This PR updates versions in the code used to generate the contents of a new release `[${{ steps.tag.outputs.tag }}](${{ steps.release.outputs.url }})`"
+          token: ${{ inputs.PUSH_TOKEN }}
+          base: main
+        

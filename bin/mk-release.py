@@ -12,6 +12,7 @@ Example use:
     # That will create and push the new git tag to github
     # Open https://github.com/dfinity/dre/releases/ and review, check, and publish the new release
 """
+
 import argparse
 import difflib
 import logging
@@ -39,7 +40,11 @@ def get_current_version():
 def parse_args():
     parser = argparse.ArgumentParser(description="Update the version in the repo")
     parser.add_argument("new_version", type=str, help="New version")
-    parser.add_argument("--tag", action="store_true", help="Only create and push the git tag for the new version")
+    parser.add_argument(
+        "--tag",
+        action="store_true",
+        help="Only create and push the git tag for the new version",
+    )
     return parser.parse_args()
 
 
@@ -47,9 +52,13 @@ def patch_file(file_path, search_regex, replacement_string):
     log.info("Patching file %s", file_path)
     with open(file_path, "r", encoding="utf8") as f:
         contents = f.read()
-    contents_new = re.sub(search_regex, replacement_string, contents, flags=re.MULTILINE)
+    contents_new = re.sub(
+        search_regex, replacement_string, contents, flags=re.MULTILINE
+    )
     # Show difference between old and new contents
-    for line in difflib.unified_diff(contents.splitlines(), contents_new.splitlines(), lineterm=""):
+    for line in difflib.unified_diff(
+        contents.splitlines(), contents_new.splitlines(), lineterm=""
+    ):
         log.info("  %s", line)
     with open(file_path, "w", encoding="utf8") as f:
         f.write(contents_new)
@@ -97,25 +106,20 @@ def main():
         sys.exit(0)
     # Check that the new version has format x.y.z
     if not re.match(r"\d+\.\d+\.\d+", new_version):
-        raise SystemExit(f"New version needs to be provided in format x.y.z {new_version}")
+        raise SystemExit(
+            f"New version needs to be provided in format x.y.z {new_version}"
+        )
     # Check that the new version is greater than the current version
     if new_version <= current_version:
-        raise SystemExit(f"New version {new_version} needs to be greater than the current version {current_version}")
+        raise SystemExit(
+            f"New version {new_version} needs to be greater than the current version {current_version}"
+        )
     log.info("Updating version from %s to %s", current_version, new_version)
     subprocess.check_call(["git", "pull"])
     patch_file("pyproject.toml", r'^version = "[\d\.]+"', f'version = "{new_version}"')
     patch_file("Cargo.toml", r'^version = "[\d\.]+"', f'version = "{new_version}"')
     patch_file("VERSION", f"^{current_version}$", new_version)
     # Create a new branch for the release
-    update_change_log(current_version, new_version)
-    if subprocess.call(["git", "rev-parse", "--verify", f"release-{new_version}"]) == 0:
-        subprocess.check_call(["git", "branch", "-d", f"release-{new_version}"])
-    subprocess.check_call(["git", "checkout", "-b", f"release-{new_version}"])
-    # Commit the changes
-    subprocess.check_call(["git", "commit", "-m", f"Release {new_version}", "--no-verify"])
-    # Push the new branch
-    subprocess.check_call(["git", "push", "origin", "--force", f"release-{new_version}"])
-    # git branch --set-upstream-to=origin/<branch> release-0.3.2
 
 
 if __name__ == "__main__":
