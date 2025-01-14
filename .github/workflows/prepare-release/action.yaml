@@ -8,6 +8,9 @@ inputs:
   push_token:
     description: "Github token that has permissions to create a PR"
     required: true
+  tag: 
+    description: "Tag for the new version"
+    required: true
 
 runs:
   using: composite
@@ -30,19 +33,14 @@ runs:
       shell: bash
       id: generate
       run: |
-        TAG=${GITHUB_REF#refs/*/}
         cargo install git-cliff
         # Prepend to the ongoing CHANGELOG.md
-        git cliff --unreleased --tag $TAG --sort newest --prepend CHANGELOG.md 
+        git cliff --unreleased --tag ${{ inputs.TAG }} --sort newest --prepend CHANGELOG.md 
         
         # Generate for this release only and save 
         # it in tmp so that we can create a PR with 
         # the same workflow
-        git cliff --unreleased --tag $TAG --sort newest > /tmp/current_release.md
-        
-        # Extract the generated tag
-        echo "tag=$TAG" >> $GITHUB_OUTPUT
-
+        git cliff --unreleased --tag ${{ inputs.TAG }} --sort newest > /tmp/current_release.md
 
     - name: "🆕 📢 Prepare release"
       # v0.1.15
@@ -59,9 +57,9 @@ runs:
     - name: "🆕 Create a new Pull Request with the changes"
       uses: peter-evans/create-pull-request@v7
       with:
-        commit-message: "chore: `CHANGELOG.md`"
-        branch: bot-update-changelog
-        title: "chore(release): Update `CHANGELOG.md`"
-        body: "This PR updates `CHANGELOG.md` with the contents of a new release [${{ steps.generate.outputs.tag }}](https://github.com/dfinity/dre/releases/tag/${{ steps.generate.outputs.tag }})"
+        commit-message: "chore(release): Release ${{ inputs.TAG }}"
+        branch: bot-release-{{ inputs.TAG }}
+        title: "chore(release): new Release ${{ inputs.TAG }}"
+        body: "This PR updates versions in the repo to the version of a new release [${{ inputs.TAG }}](https://github.com/dfinity/dre/releases/tag/${{ inputs.TAG }})"
         token: ${{ inputs.PUSH_TOKEN }}
         base: main

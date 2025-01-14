@@ -15,6 +15,11 @@ on:
       - "replica-releases/**"
       - "node-labels/**"
   workflow_dispatch:
+    inputs: 
+      tag:
+        type: string
+        required: true
+        description: New release version
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
@@ -48,6 +53,29 @@ jobs:
       - name: "☁️ Setup runner"
         uses: ./.github/workflows/manage-runner-pre
 
+      - name: "Prepare for release"
+        if: ${{ startsWith(github.ref, 'refs/tags/v') || github.event_name == 'workflow_dispatch' }}
+        shell: bash
+        id: tag
+        run: |
+          TAG=${GITHUB_REF#refs/*/}
+          # Cache mk_release.py from this commit
+          cp bin/mk_release.py /tmp
+          git pull origin main:main
+          git checkout main
+
+          if [ -z "$TAG" ]; then
+            TAG=${{ github.event.inputs.tag }}
+          fi
+          echo "Using tag $TAG"
+
+          # Copy cached version back
+          yes | cp /tmp/mk_release.py bin/ 
+          rye run python /tmp/mk_release.py $TAG
+          # Reset the cached version
+          git checkout main -- bin/mk_release.py
+          echo "tag=$TAG" >> $GITHUB_OUTPUT
+
       ########################################
       # Build and test
       # Will run test as a local subprocess because for some tests
@@ -59,6 +87,7 @@ jobs:
           # See above where the token is generated: we can't use regular secrets.GITHUB_TOKEN
           # since the push needs to trigger actions again
           GITHUB_TOKEN: "${{ steps.app-token.outputs.token }}"
+          SKIP_REPIN: ${{ startsWith(github.ref, 'refs/tags/v') || github.event_name == 'workflow_dispatch' }}
       - name: "🚀 Testing"
         env:
           STAGING_PRIVATE_KEY_PEM: "${{ secrets.STAGING_PRIVATE_KEY_PEM }}"
@@ -91,11 +120,12 @@ jobs:
       # Prepare release
       ########################################
       - name: "🚢 Prepare release"
-        if: ${{ startsWith(github.ref, 'refs/tags/v') }}
+        if: ${{ startsWith(github.ref, 'refs/tags/v') || github.event_name == 'workflow_dispatch' }}
         uses: ./.github/workflows/prepare-release
         with:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           PUSH_TOKEN: ${{ steps.app-token.outputs.token }}
+          TAG: ${{ steps.tag.outputs.tag }}
 
       ########################################
       # Upload container images
@@ -116,6 +146,8 @@ jobs:
       ########################################
       - name: "❓ Check if dashboard/* changed in last commit"
         id: check
+        # No need to do this on tags
+        if: ${{ !(startsWith(github.ref, 'refs/tags/v') || github.event_name == 'workflow_dispatch') }}
         uses: ./.github/workflows/check-modified-files-as-step
         with:
           path: dashboard/*

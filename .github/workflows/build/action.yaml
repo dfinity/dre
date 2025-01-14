@@ -5,6 +5,9 @@ inputs:
   GITHUB_TOKEN:
     description: "Github App Token, that allows to push to the repository and trigger actions"
     required: true
+  SKIP_REPIN:
+    description: "Skip pushing repin"
+    required: true
 
 runs:
   using: composite
@@ -50,7 +53,7 @@ runs:
         fetch-depth: 0
 
     - name: Commit files
-      if: ${{ steps.build.outputs.repin == 'true' }}
+      if: ${{ steps.build.outputs.repin == 'true' && !inputs.SKIP_REPIN }}
       run: |
         set -euxo pipefail
         CARGO_BAZEL_REPIN=true bazel build ... || return $?
@@ -60,7 +63,7 @@ runs:
       shell: bash
 
     - name: Push changes
-      if: ${{ steps.build.outputs.repin == 'true' }}
+      if: ${{ steps.build.outputs.repin == 'true' && !inputs.SKIP_REPIN }}
       uses: ad-m/github-push-action@master
       with:
         github_token: ${{ inputs.GITHUB_TOKEN }}
