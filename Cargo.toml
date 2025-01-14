@@ -210,3 +210,7 @@ indexmap = { version = "2.7.0", features = ["serde"] }
 # Makes flamegraphs and backtraces more readable.
 # https://doc.rust-lang.org/cargo/reference/manifest.html#the-profile-sections
 debug = true
+
+[patch.crates-io]
+ic0 = { git = "https://github.com/dfinity/cdk-rs.git", rev = "8f57d6d26b1d142b5be4b39ea8ade59d7c848cde" }
+

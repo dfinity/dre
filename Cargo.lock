@@ -5219,12 +5219,6 @@ checksum = "a54b5297861c651551676e8c43df805dad175cc33bc97dbd992edbbb85dcbcdf"
 [[package]]
 name = "ic0"
 version = "0.23.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8de254dd67bbd58073e23dc1c8553ba12fa1dc610a19de94ad2bbcd0460c067f"
-
-[[package]]
-name = "ic0"
-version = "0.23.0"
 source = "git+https://github.com/dfinity/cdk-rs.git?rev=8f57d6d26b1d142b5be4b39ea8ade59d7c848cde#8f57d6d26b1d142b5be4b39ea8ade59d7c848cde"
 
 [[package]]
