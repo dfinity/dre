@@ -61,7 +61,7 @@ jobs:
           TAG=${GITHUB_REF#refs/*/}
           # Cache bin/mk-release.py from this commit
           cp bin/mk-release.py /tmp
-          git pull origin main:main
+          git pull
           git checkout main
 
           if [ -z "$TAG" ]; then
