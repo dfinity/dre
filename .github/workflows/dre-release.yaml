@@ -75,7 +75,7 @@ jobs:
         shell: bash
         run: |
           cargo install git-cliff
-          bazel build --config=ci //rs/cli:dre 
+          CARGO_BAZEL_REPIN=true bazel build --config=ci //rs/cli:dre 
           cargo drecross
 
           mkdir -p release/artifacts
