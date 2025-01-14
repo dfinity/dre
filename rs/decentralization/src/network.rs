@@ -41,12 +41,6 @@ pub(crate) struct ReplacementCandidate {
     business_rules_log: Vec<String>,
 }
 
-impl ReplacementCandidate {
-    pub fn new_with_node_for_tests(node: Node) -> Self {
-        Self { node, ..Default::default() }
-    }
-}
-
 impl DecentralizedSubnet {
     pub fn new_with_subnet_id_and_nodes(subnet_id: PrincipalId, nodes: Vec<Node>) -> Self {
         Self {
