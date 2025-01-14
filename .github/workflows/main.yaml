@@ -64,13 +64,13 @@ jobs:
           git pull
           git checkout main
 
-          if [ $TAG == refs/ ]; then
+          if [[ $TAG == refs/* ]]; then
             TAG=${{ github.event.inputs.tag }}
           fi
           echo "Using tag $TAG"
 
           # Copy cached version back
-          yes | cp /tmp/mk-release.py bin/ 
+          cp /tmp/mk-release.py bin/ 
           rye run python bin/mk-release.py $TAG
           # Reset the cached version
           git checkout main -- bin/mk-release.py
