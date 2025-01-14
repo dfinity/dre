@@ -11,8 +11,25 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  test:
+    runs-on: 
+      labels: dre-runner-custom
+    container: ghcr.io/dfinity/dre/actions-runner:3dd4f38f076cad73fdcc68ad37fd29bed4fa3e4d
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: "☁️ Setup runner"
+        uses: ./.github/workflows/manage-runner-pre
+      
+      - name: "Test DRE"
+        shell: bash
+        run: |
+          bazel test //rs/cli:unit_test
+
   release:
-    runs-on: ubuntu-latest
+    needs: [ test ]
+    runs-on: 
+      labels: dre-runner-custom
     container: ghcr.io/dfinity/dre/actions-runner:3dd4f38f076cad73fdcc68ad37fd29bed4fa3e4d
     permissions:
       contents: write
@@ -20,6 +37,9 @@ jobs:
       pages: write
     steps:
       - uses: actions/checkout@v4
+
+      - name: "☁️ Setup runner"
+        uses: ./.github/workflows/manage-runner-pre
 
       # The GitHub App token is necessary for pushing changed files back to the repository
       # If regular secrets.GITHUB_TOKEN is used instead, the push will not trigger any actions
@@ -52,11 +72,11 @@ jobs:
         shell: bash
         run: |
           cargo install git-cliff
-          cargo build --bin dre --release
+          bazel build //rs/cli:dre 
           cargo drecross
 
           mkdir -p release/artifacts
-          cp target/release/dre release/artifacts/dre-x86_64-unknown-linux
+          cp --dereference bazel-out/k8-opt/bin/rs/cli/dre release/artifacts/dre-x86_64-unknown-linux
           cp target/x86_64-apple-darwin/release/dre release/artifacts/dre-x86_64-apple-darwin
 
           git cliff --unreleased --tag ${{ steps.tag.outputs.tag }} --sort newest > release/CHANGELOG.md
