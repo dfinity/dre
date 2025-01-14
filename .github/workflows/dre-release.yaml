@@ -20,10 +20,13 @@ jobs:
 
       - name: "☁️ Setup runner"
         uses: ./.github/workflows/manage-runner-pre
-      
-      - name: "Test DRE"
-        shell: bash
+          
+      - name: "🚀 Testing"
+        env:
+          STAGING_PRIVATE_KEY_PEM: "${{ secrets.STAGING_PRIVATE_KEY_PEM }}"
         run: |
+          mkdir -p ~/.config/dfx/identity/bootstrap-super-leader/
+          echo $STAGING_PRIVATE_KEY_PEM > ~/.config/dfx/identity/bootstrap-super-leader/identity.pem
           bazel test //rs/cli:unit_test --spawn_strategy=local --test_env=HOME=/home/runner
 
   release:
