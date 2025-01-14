@@ -100,7 +100,7 @@ rust_analyzer_dependencies()
 rust_register_toolchains(
     edition = "2021",
     versions = [
-        "1.80.0",
+        "1.82.0",
     ],
 )
 
