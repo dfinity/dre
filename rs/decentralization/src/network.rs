@@ -1533,3 +1533,14 @@ pub fn generate_added_node_description(subnet_nodes: &[Node], add_nodes: &[Node]
     }
     result
 }
+
+#[cfg(test)]
+pub mod tests {
+    use super::*;
+
+    impl ReplacementCandidate {
+        pub fn new_with_node_for_tests(node: Node) -> Self {
+            Self { node, ..Default::default() }
+        }
+    }
+}
