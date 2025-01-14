@@ -2,7 +2,7 @@ name: Release DRE binary
 on:
   push:
     branches:
-      - main
+      - nm-dre-release-process
     tags:
       - "v*"
 
