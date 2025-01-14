@@ -1,6 +1,5 @@
 # dre Changelog
 
-<!-- insertion marker -->
 ## [0.5.8](https://github.com/dfinity/dre/releases/tag/0.5.8) - 2025-01-13
 
 <small>[Compare with first commit](https://github.com/dfinity/dre/compare/fbfca2c53582ac763b8b660e0ae4e77bd23b907f...0.5.8)</small>

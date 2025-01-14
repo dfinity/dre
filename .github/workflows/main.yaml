@@ -95,6 +95,7 @@ jobs:
         uses: ./.github/workflows/prepare-release
         with:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PUSH_TOKEN: ${{ steps.app-token.outputs.token }}
 
       ########################################
       # Upload container images
