@@ -1,8 +1,6 @@
 name: Release DRE binary
 on:
   push:
-    branches:
-      - nm-dre-release-process
     tags:
       - "v*"
 
@@ -63,7 +61,8 @@ jobs:
         run: |
           TAG=${GITHUB_REF#refs/tags/}
           if [[ $TAG == refs/* ]]; then
-            TAG="v0.5.9"
+            echo "Invalid value for tag $TAG"
+            exit 1
           fi
 
           echo "Will be using tag $TAG"
@@ -113,7 +112,10 @@ jobs:
           commit-message: "chore(release): New release of `dre` version ${{ steps.tag.outputs.tag }}"
           branch: bot-release-${{ steps.tag.outputs.tag }}
           title: "chore(release): New release of `dre` version ${{ steps.tag.outputs.tag }}"
-          body: "This PR updates versions in the code used to generate the contents of a new release `[${{ steps.tag.outputs.tag }}](${{ steps.release.outputs.url }})`"
+          body: |
+            This PR updates versions in the code used to generate the contents of a new release [${{ steps.tag.outputs.tag }}](${{ steps.release.outputs.url }})
+
+            If the release notes are correct, set it as latest release and publish it. 
           token: ${{ steps.app-token.outputs.token }}
           base: main
         

@@ -4,7 +4,10 @@
 [changelog]
 # template for the changelog header
 header = """
-# dre Changelog\n
+# Changelog
+
+To setup `dre` tool follow the [Getting started guide](https://github.com/dfinity/dre/blob/main/docs/getting-started.md)
+Searchable docs are availalbe on our [github pages](https://dfinity.github.io/dre/)
 """
 # template for the changelog body
 # https://keats.github.io/tera/docs/#introduction
@@ -22,7 +25,7 @@ body = """
 {% for group, commits in commits | group_by(attribute="group") %}
     ### {{ group | upper_first }}
     {% for commit in commits %}
-        - {{ commit.message | split(pat="\n") | first | upper_first | trim }} ([{{ commit.id | truncate(length=7, end="") }}](https://github.com/dfinity/dre/commit/{{ commit.id }}) by @{{ commit.author.name }})\
+        - {{ commit.message | split(pat="\n") | first | upper_first | trim }} ([{{ commit.id | truncate(length=7, end="") }}](https://github.com/dfinity/dre/commit/{{ commit.id }}) by {{ commit.author.name }})\
           {% for footer in commit.footers -%}
             , {{ footer.token }}{{ footer.separator }}{{ footer.value }}\
           {% endfor %}\
