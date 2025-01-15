@@ -123,5 +123,5 @@ While not required for this NNS proposal, as we are only electing a new GuestOS 
         "35bfcadd0f2a474057e42393917b8b3ac269627a", security_fix=True
     )
     assert (
-        "You will be able follow the upgrade process" in res
-    ), f"'You will be able follow the upgrade process' signifying security fix not found in\n\n{res}"
+        "You will be able to follow" in res
+    ), f"'You will be able to follow' signifying security fix not found in\n\n{res}"
