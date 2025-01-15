@@ -85,7 +85,7 @@ jobs:
           cp --dereference bazel-out/k8-opt/bin/rs/cli/dre release/artifacts/dre-x86_64-unknown-linux
           cp target/x86_64-apple-darwin/release/dre release/artifacts/dre-x86_64-apple-darwin
 
-          git cliff --unreleased --tag ${{ steps.tag.outputs.tag }} --sort newest > release/CHANGELOG.md
+          git cliff --current --sort newest > release/CHANGELOG.md
       
       - name: "🆕 📢 Prepare release"
         # v0.1.15
