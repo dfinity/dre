@@ -2,6 +2,7 @@ import argparse
 import json
 import os
 import pathlib
+import typing
 from datetime import datetime
 
 import yaml
@@ -16,7 +17,13 @@ BASE_VERSION_NAME = "base"
 
 def parse_args():
     parser = argparse.ArgumentParser(description="Tool for checking release index")
-    parser.add_argument("--path", type=str, dest="path", help="Path to the release index", default="release-index.yaml")
+    parser.add_argument(
+        "--path",
+        type=str,
+        dest="path",
+        help="Path to the release index",
+        default="release-index.yaml",
+    )
     parser.add_argument(
         "--schema-path",
         type=str,
@@ -25,7 +32,11 @@ def parse_args():
         default="release-index-schema.json",
     )
     parser.add_argument(
-        "--repo-path", type=str, dest="repo_path", help="Path to the repo", default=os.environ.get("IC_REPO_PATH")
+        "--repo-path",
+        type=str,
+        dest="repo_path",
+        help="Path to the repo",
+        default=os.environ.get("IC_REPO_PATH"),
     )
 
     return parser.parse_args()
@@ -78,7 +89,9 @@ def check_if_there_is_a_base_version(index: ReleaseIndex) -> list[str]:
                 found = True
                 break
         if not found:
-            errors.append(error_print(f"Release {release.rc_name} does not have a base version"))
+            errors.append(
+                error_print(f"Release {release.rc_name} does not have a base version")
+            )
 
     if len(errors) == 0:
         success_print("All releases have a base version")
@@ -106,24 +119,38 @@ def check_unique_version_names_within_release(index: ReleaseIndex) -> list[str]:
 def check_rc_order(index: ReleaseIndex) -> list[str]:
     errors = []
     date_format = "%Y-%m-%d_%H-%M"
-    parsed = [
+
+    class NameAndDate(typing.TypedDict):
+        name: str
+        date: datetime
+
+    parsed: list[NameAndDate] = [
         {
             "name": release.rc_name,
-            "date": datetime.strptime(release.rc_name.removeprefix("rc--").removesuffix("--github"), date_format),
+            "date": datetime.strptime(
+                release.rc_name.removeprefix("rc--").removesuffix("--github"),
+                date_format,
+            ),
         }
         for release in index.releases
     ]
 
     for i in range(1, len(parsed)):
         if parsed[i]["date"] > parsed[i - 1]["date"]:
-            errors.append(error_print(f"Release {parsed[i]['name']} is older than {parsed[i - 1]['name']}"))
+            errors.append(
+                error_print(
+                    f"Release {parsed[i]['name']} is older than {parsed[i - 1]['name']}"
+                )
+            )
 
     if len(errors) == 0:
         success_print("All RC's are ordered descending by date")
     return errors
 
 
-def check_versions_on_specific_branches(index: ReleaseIndex, repo: GitRepo) -> list[str]:
+def check_versions_on_specific_branches(
+    index: ReleaseIndex, repo: GitRepo
+) -> list[str]:
     errors = []
     for release in index.releases:
         for version in release.versions:
@@ -162,7 +189,9 @@ if __name__ == "__main__":
     errors.extend(check_rc_order(index))
 
     repo = GitRepo(
-        "https://github.com/dfinity/ic.git", repo_cache_dir=pathlib.Path(args.repo_path).parent, main_branch="master"
+        "https://github.com/dfinity/ic.git",
+        repo_cache_dir=pathlib.Path(args.repo_path).parent,
+        main_branch="master",
     )
     repo.fetch()
     repo.ensure_branches([release.rc_name for release in index.releases])

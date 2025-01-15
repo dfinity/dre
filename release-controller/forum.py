@@ -1,5 +1,6 @@
 import logging
 import os
+import textwrap
 from typing import Callable
 
 from dotenv import load_dotenv
@@ -8,30 +9,50 @@ from release_index import Release
 from util import version_name
 
 
-def _post_template(changelog, version_name, proposal=None):
+LOGGER = logging.getLogger(__name__)
+
+
+def _post_template(
+    changelog: str | None,
+    version_name: str,
+    proposal: int | None = None,
+):
     if not proposal:
         return f"We're preparing [a new IC release](https://github.com/dfinity/ic/tree/{version_name}). The changelog will be announced soon."
 
-    return f"""\
-Hello there!
+    return textwrap.dedent(
+        f"""\
+        Hello there!
 
-We are happy to announce that voting is now open for [a new IC release](https://github.com/dfinity/ic/tree/{version_name}).
-The NNS proposal is here: [IC NNS Proposal {proposal}](https://dashboard.internetcomputer.org/proposal/{proposal}).
+        We are happy to announce that voting is now open for [a new IC release](https://github.com/dfinity/ic/tree/{version_name}).
+        The NNS proposal is here: [IC NNS Proposal {proposal}](https://dashboard.internetcomputer.org/proposal/{proposal}).
 
-Here is a summary of the changes since the last release:
+        Here is a summary of the changes since the last release:
 
-{changelog}
-"""
+        {changelog}
+        """
+    )
 
 
 class ReleaseCandidateForumPost:
     """A post in a release candidate forum topic."""
 
-    def __init__(self, version_name: str, changelog: str | None, proposal: int | None):
+    def __init__(
+        self,
+        version_name: str,
+        changelog: str | None,
+        proposal: int | None,
+        security_fix: bool = False,
+    ):
         """Create a new post."""
         self.version_name = version_name
         self.changelog = changelog
         self.proposal = proposal
+        self.security_fix = security_fix
+
+
+SummaryRetriever = Callable[[str, bool], str | None]
+ProposalRetriever = Callable[[str], int | None]
 
 
 class ReleaseCandidateForumTopic:
@@ -41,18 +62,19 @@ class ReleaseCandidateForumTopic:
         self,
         release: Release,
         client: DiscourseClient,
-        nns_proposal_discussions_category,
+        nns_proposal_discussions_category_id: int,
     ):
         """Create a new topic."""
+        self._logger = LOGGER.getChild(self.__class__.__name__)
         self.posts_count = 1
         self.release = release
         self.client = client
-        self.nns_proposal_discussions_category = nns_proposal_discussions_category
+        self.nns_proposal_discussions_category_id = nns_proposal_discussions_category_id
         topic = next(
             (
                 t
                 for t in client.topics_by(self.client.api_username)
-                if self.release.rc_name in t["title"]
+                if self.release.rc_name in t.get("title", "")
             ),
             None,
         )
@@ -61,7 +83,7 @@ class ReleaseCandidateForumTopic:
             self.posts_count = topic["posts_count"]
         else:
             post = client.create_post(
-                category_id=nns_proposal_discussions_category["id"],
+                category_id=nns_proposal_discussions_category_id,
                 content="The proposal for the next release will be announced soon.",
                 tags=["IC-OS-election", "release"],
                 title="Proposal to elect new release {}".format(self.release.rc_name),
@@ -81,7 +103,7 @@ class ReleaseCandidateForumTopic:
             results.extend(
                 [
                     p
-                    for p in topic_posts.get("post_stream", {}).get("posts", {})
+                    for p in topic_posts.get("post_stream", {}).get("posts", [])
                     if p["yours"]
                 ]
             )
@@ -89,17 +111,18 @@ class ReleaseCandidateForumTopic:
 
     def update(
         self,
-        changelog: Callable[[str], str | None],
-        proposal: Callable[[str], int | None],
+        summary_retriever: SummaryRetriever,
+        proposal_id_retriever: ProposalRetriever,
     ):
         """Update the topic with the latest release information."""
         posts = [
             ReleaseCandidateForumPost(
                 version_name=version_name(self.release.rc_name, v.name),
-                changelog=changelog(v.version),
-                proposal=proposal(v.version),
+                changelog=summary_retriever(v.version, v.security_fix),
+                proposal=proposal_id_retriever(v.version),
+                security_fix=v.security_fix,
             )
-            for v in self.release.versions if not v.security_fix
+            for v in self.release.versions
         ]
 
         created_posts = self.created_posts()
@@ -114,13 +137,13 @@ class ReleaseCandidateForumTopic:
                 post = self.client.post_by_id(post_id)
                 if post["raw"] == content_expected:
                     # log the complete URL of the post
-                    logging.info("post up to date: %s", self.post_to_url(post))
+                    self._logger.debug("Post up to date: %s.", self.post_to_url(post))
                     continue
                 elif post["can_edit"]:
-                    logging.info("updating post %s", post_id)
+                    self._logger.info("Updating post %s.", post_id)
                     self.client.update_post(post_id=post_id, content=content_expected)
                 else:
-                    logging.warning("post is not editable %s", post_id)
+                    self._logger.warning("Post %s is not editable.  Ignoring.", post_id)
             else:
                 self.client.create_post(
                     topic_id=self.topic_id,
@@ -160,7 +183,7 @@ class ReleaseCandidateForumClient:
     def __init__(self, discourse_client: DiscourseClient):
         """Create a new client."""
         self.discourse_client = discourse_client
-        self.nns_proposal_discussions_category = next(
+        self.nns_proposal_discussions_category_id: int = next(
             (
                 c
                 for c in self.discourse_client.categories(include_subcategories="true")
@@ -169,14 +192,14 @@ class ReleaseCandidateForumClient:
             self.discourse_client.category(76)[
                 "category"
             ],  # hardcoded category id, seems like "include_subcategories" is not working
-        )
+        )["id"]
 
     def get_or_create(self, release: Release) -> ReleaseCandidateForumTopic:
         """Get or create a forum topic for the given release."""
         return ReleaseCandidateForumTopic(
             release=release,
             client=self.discourse_client,
-            nns_proposal_discussions_category=self.nns_proposal_discussions_category,
+            nns_proposal_discussions_category_id=self.nns_proposal_discussions_category_id,
         )
 
 
@@ -205,13 +228,13 @@ def main():
     #         name: feat-hotfix1
     # """,
     #     )
-    forum_client = ReleaseCandidateForumClient(
+    _forum_client = ReleaseCandidateForumClient(
         discourse_client,
     )
 
 
 #     topic = forum_client.get_or_create(index.root.releases[0])
-#     topic.update(lambda _: None, lambda _: None)
+#     topic.update(lambda _, _: None, lambda _: None)
 
 # print(topic.post_url(version="31e9076fb99dfc36eb27fb3a2edc68885e6163ac"))
 

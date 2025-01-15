@@ -1,0 +1,18 @@
+module(name = "dre", version = "0.0.1")
+
+bazel_dep(name="rules_python", version="0.37.0")
+python = use_extension("@rules_python//python/extensions:python.bzl", "python")
+python.toolchain(python_version = "3.12.2", is_default = True)
+
+bazel_dep(name = "rules_mypy", version = "0.22.0")
+
+#types = use_extension("@rules_mypy//mypy:types.bzl", "types")
+#types.requirements(
+#    name = "pip_types",
+#    # `@pip` in the next line corresponds to the `hub_name` when using
+#    # rules_python's `pip.parse(...)`.
+#    # pip_requirements = "@pip//:requirements.bzl",
+#    # also legal to pass a `requirements.in` here
+#    requirements_txt = "//:requirements.lock",
+#)
+#use_repo(types, "pip_types")
