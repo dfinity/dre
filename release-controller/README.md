@@ -191,7 +191,7 @@ bazel test //release-controller:pytest
 Mypy typing tests:
 
 ```sh
-bazel test \
+bazel build \
   --enable_bzlmod \
   --aspects //tools:aspects.bzl%mypy_aspect \
   --experimental_ui_max_stdouterr_bytes=10485760 \
