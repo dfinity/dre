@@ -1,3 +1,4 @@
+#![allow(dead_code)]
 use candid::Principal;
 use chrono_utils::DateTimeRange;
 use ic_cdk_macros::*;

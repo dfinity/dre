@@ -27,7 +27,7 @@ members = [
 resolver = "2"
 
 [workspace.package]
-version = "0.5.7"
+version = "0.5.9"
 edition = "2021"
 authors = ["IC Decentralized Reliability Engineering (DRE) Team"]
 description = "Tooling for managing the Internet Computer"
@@ -210,3 +210,6 @@ indexmap = { version = "2.7.0", features = ["serde"] }
 # Makes flamegraphs and backtraces more readable.
 # https://doc.rust-lang.org/cargo/reference/manifest.html#the-profile-sections
 debug = true
+
+[patch.'https://github.com/dfinity/cdk-rs.git']
+ic0 = "0.23.0"
