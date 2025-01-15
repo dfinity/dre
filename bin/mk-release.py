@@ -115,7 +115,6 @@ def main():
             f"New version {new_version} needs to be greater than the current version {current_version}"
         )
     log.info("Updating version from %s to %s", current_version, new_version)
-    subprocess.check_call(["git", "pull"])
     patch_file("pyproject.toml", r'^version = "[\d\.]+"', f'version = "{new_version}"')
     patch_file("Cargo.toml", r'^version = "[\d\.]+"', f'version = "{new_version}"')
     patch_file("VERSION", f"^{current_version}$", new_version)
