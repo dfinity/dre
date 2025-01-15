@@ -602,7 +602,7 @@ def main():
             reconciler.reconcile()
             watchdog.report_healthy()
             time.sleep(60)
-        except Exception as e:
+        except Exception:
             LOGGER.exception(
                 "Failed to reconcile.  Retrying in 15 seconds.  Traceback:"
             )
