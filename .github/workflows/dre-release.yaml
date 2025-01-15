@@ -75,6 +75,7 @@ jobs:
         shell: bash
         run: |
           cargo install git-cliff
+          rustup target add x86_64-apple-darwin
           CARGO_BAZEL_REPIN=true bazel build --config=ci //rs/cli:dre 
           cargo drecross
 
