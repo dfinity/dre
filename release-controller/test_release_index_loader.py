@@ -123,5 +123,5 @@ While not required for this NNS proposal, as we are only electing a new GuestOS 
         "35bfcadd0f2a474057e42393917b8b3ac269627a", security_fix=True
     )
     assert (
-        "up to 10 days" in res
-    ), f"'up to 10 days' signifying security fix not found in\n\n{res}"
+        "You will be able follow the upgrade process" in res
+    ), f"'You will be able follow the upgrade process' signifying security fix not found in\n\n{res}"
