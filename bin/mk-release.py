@@ -70,28 +70,6 @@ def add_git_tag(tag_name):
     subprocess.check_call(["git", "tag", tag_name])
 
 
-def update_change_log(current_version, new_version):
-    # call rye run pychangelog generate to update CHANGELOG.md
-    subprocess.check_call(
-        [
-            "rye",
-            "run",
-            "git-changelog",
-            "--filter-commits",
-            f"v{current_version}..",
-            "--convention",
-            "conventional",
-            "--in-place",
-            "--output",
-            "CHANGELOG.md",
-            "--bump",
-            new_version,
-        ]
-    )
-    # Add the CHANGELOG.md to the commit
-    subprocess.check_call(["git", "add", "CHANGELOG.md"])
-
-
 def main():
     args = parse_args()
     current_version = get_current_version()
