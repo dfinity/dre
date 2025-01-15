@@ -17,6 +17,7 @@ load("@bazel_skylib//:workspace.bzl", "bazel_skylib_workspace")
 
 bazel_skylib_workspace()
 
+# Overridden in MODULE.bazel when running with --enable_bzlmod.
 http_archive(
     name = "rules_python",
     sha256 = "c285495ee02df843a337c78617c196b7a87ea11da8961b7dd5ae28d43f9a1d85",
