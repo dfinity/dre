@@ -8,6 +8,7 @@ from github import Github
 from github.Repository import Repository
 from itertools import groupby
 from google_docs import ReleaseNotesClient
+from release_notes import PreparedReleaseNotes
 import pathlib
 
 REPLICA_RELEASES_DIR = "replica-releases"
@@ -119,7 +120,9 @@ class PublishNotesClient:
             title=f"Elect version {version}", base="main", head=pull_head
         )
 
-    def publish_if_ready(self, google_doc_markdownified, version: str):
+    def publish_if_ready(
+        self, google_doc_markdownified: PreparedReleaseNotes, version: str
+    ):
         """Publish the release notes if they are ready."""
         if not isinstance(google_doc_markdownified, str):
             logging.warning("didn't get markdown notes for %s, skipping", version)

@@ -278,7 +278,7 @@ class GitRepo:
             cwd=self.dir,
         )
         subprocess.check_call(
-            ["git", "checkout", ref],
+            ["git", "checkout", "--quiet", ref],
             cwd=self.dir,
         )
         if (
@@ -334,7 +334,7 @@ class GitRepo:
             cwd=self.dir,
         ).decode()
 
-    def add_note(self, namespace: str, object: str, content: str):
+    def add_note(self, namespace: str, object: str, content: str) -> None:
         self._fetch_notes()
         with tempfile.TemporaryDirectory() as td:
             f = os.path.join(td, "content")
@@ -369,62 +369,65 @@ class GitRepo:
             .strip()
         )
 
-
-# TODO: test
-def push_release_tags(repo: GitRepo, release: Release):
-    repo.fetch()
-    for v in release.versions:
-        subprocess.check_call(
-            [
-                "git",
-                "fetch",
-                "--quiet",
-                "origin",
-                f"{v.version}:refs/remotes/origin/{v.version}-commit",
-            ],
-            cwd=repo.dir,
-        )
-        tag = version_name(release.rc_name, v.name)
-        subprocess.check_call(
-            [
-                "git",
-                "tag",
-                tag,
-                v.version,
-                "-f",
-            ],
-            cwd=repo.dir,
-        )
-        tag_version = (
-            subprocess.check_output(
-                [
-                    "git",
-                    "ls-remote",
-                    "origin",
-                    f"refs/tags/{tag}",
-                ],
-                cwd=repo.dir,
-            )
-            .decode("utf-8")
-            .strip()
-            .split(" ")[0]
-            != v.version
-        )
-        if tag_version == v.version:
-            logging.info("RC %s: tag %s already exists on origin", release.rc_name, tag)
-        else:
-            logging.info("RC %s: pushing tag %s to the origin", release.rc_name, tag)
+    # TODO: test
+    def push_release_tags(self, release: Release):
+        self.fetch()
+        for v in release.versions:
             subprocess.check_call(
                 [
                     "git",
-                    "push",
+                    "fetch",
                     "--quiet",
                     "origin",
+                    f"{v.version}:refs/remotes/origin/{v.version}-commit",
+                ],
+                cwd=self.dir,
+            )
+            tag = version_name(release.rc_name, v.name)
+            subprocess.check_call(
+                [
+                    "git",
+                    "tag",
                     tag,
+                    v.version,
                     "-f",
                 ],
-                cwd=repo.dir,
+                cwd=self.dir,
             )
+            tag_version = (
+                subprocess.check_output(
+                    [
+                        "git",
+                        "ls-remote",
+                        "origin",
+                        f"refs/tags/{tag}",
+                    ],
+                    cwd=self.dir,
+                )
+                .decode("utf-8")
+                .strip()
+                .split(" ")[0]
+                != v.version
+            )
+            if tag_version == v.version:
+                logging.info(
+                    "RC %s: tag %s already exists on origin", release.rc_name, tag
+                )
+            else:
+                logging.info(
+                    "RC %s: pushing tag %s to the origin", release.rc_name, tag
+                )
+                subprocess.check_call(
+                    [
+                        "git",
+                        "push",
+                        "--quiet",
+                        "origin",
+                        tag,
+                        "-f",
+                    ],
+                    cwd=self.dir,
+                )
 
 
 def main():
@@ -435,8 +438,7 @@ def main():
         f"https://oauth2:{token}@github.com/dfinity/ic-dre-testing.git",
         main_branch="master",
     )
-    push_release_tags(
-        repo,
+    repo.push_release_tags(
         Release(
             rc_name="rc--2024-02-21_23-01",
             versions=[

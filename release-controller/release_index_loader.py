@@ -1,3 +1,4 @@
+import logging
 import pathlib
 import re
 import subprocess
@@ -10,12 +11,13 @@ from publish_notes import REPLICA_RELEASES_DIR
 from pydantic_yaml import parse_yaml_raw_as
 
 RELEASE_INDEX_FILE = "release-index.yaml"
+LOGGER = logging.getLogger(__name__)
 
 
 def _verify_release_instructions(version: str, security_fix: bool):
     with_security_caveat = ""
     if security_fix:
-        with_security_caveat = "\n_Please wait up to 10 days after this proposal has been adopted and rolled out to all subnets to run the verification process._\n"
+        with_security_caveat = "\n_You will be able to follow the instructions below as soon as the source code has been released._\n"
 
     return f"""
 # IC-OS Verification
@@ -39,6 +41,7 @@ class ReleaseLoader:
     def __init__(self, release_index_dir: pathlib.Path):
         """Create a new ReleaseLoader."""
         self.release_index_dir = release_index_dir
+        self._logger = LOGGER.getChild(self.__class__.__name__)
 
     def index(self) -> release_index.Model:
         """Load the release index from the RELEASE_INDEX_FILE."""
@@ -59,7 +62,9 @@ class ReleaseLoader:
         """Return the changelog for the given version."""
         version_changelog_path = self.release_index_dir / self.changelog_path(version)
         if version_changelog_path.exists():
+            self._logger.debug("Changelog for %s exists.", version)
             return open(version_changelog_path, "r").read()
+        self._logger.debug("Changelog for %s does not exist.", version)
         return None
 
     def proposal_summary(self, version: str, security_fix: bool) -> str | None:

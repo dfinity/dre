@@ -165,19 +165,36 @@ branch = "master"
 
 
 # https://stackoverflow.com/a/34482761
-def progressbar(it, prefix="", size=60, out=sys.stdout):  # Python3.6+
+def progressbar(it, prefix="", out=sys.stderr):  # Python3.6+
     count = len(it)
     start = time.time()
 
+    def termsize() -> int:
+        try:
+            size = os.get_terminal_size()[0]
+        except Exception:
+            size = 79
+        return size
+
     def show(j, item):
-        x = int(size * j / count)
+        size = termsize()
+
+        progress = j / count
+        done = 1 - progress
         remaining = ((time.time() - start) / j) * (count - j)
 
         mins, sec = divmod(remaining, 60)
         time_str = f"{int(mins):02}:{sec:05.2f}"
 
+        pre = f"{prefix}{item} "
+        if not pre.strip():
+            pre = ""
+        post = f" {j}/{count} Est wait {time_str}"
+        size = size - len(pre) - len(post) - 2
+        progress_width = int(round(progress * size))
+        done_width = int(round(done * size))
         print(
-            f"{prefix}{item} [{'█'*x}{('.'*(size-x))}] {j}/{count} Est wait {time_str}",
+            f"{pre}[{'█'*progress_width}{('.'*done_width)}]{post}",
             end="\r",
             file=out,
             flush=True,
@@ -186,7 +203,7 @@ def progressbar(it, prefix="", size=60, out=sys.stdout):  # Python3.6+
     for i, item in enumerate(it):
         yield i, item
         show(i + 1, item)
-    print("\n", flush=True, file=out)
+    print(f"\r{' '*(termsize())}", end="\r", flush=True, file=out)
 
 
 def branch_strip_remote(branch: str):
@@ -274,10 +291,11 @@ def release_changes(
         print("WARNING: max commits limit reached, increase depth")
         exit(1)
 
-    if "KUBERNETES_SERVICE_HOST" not in os.environ:
-        commit_iter = progressbar([i[0] for i in commits], "Processing commit: ", 80)
+    if sys.stderr.isatty():
+        prefix = "Commit "
+        commit_iter = progressbar([i[:8] for i in commits], prefix)
     else:
-        commit_iter = enumerate([i[0] for i in commits])
+        commit_iter = enumerate([i[:8] for i in commits])
     for i, _ in commit_iter:
         change = get_change_description_for_commit(
             commit_hash=commits[i],

@@ -58,7 +58,6 @@ Reconciler is responsible for generating release notes (1), publishing them as g
 
   It's important to note that forum logic depends on finding alredy created blog posts by querying posts from authenticated user (@DRETeam). For those reasons, it won't be able to find manually created posts by other users.
 
-
 ## Resolving issues
 
 ### Google Docs generation was wrong for particular commit
@@ -157,3 +156,45 @@ Make sure also that few minutes have passed and that public dashboard still does
   ```
   rm /state/<full_commit_hash>
   ```
+
+## Development
+
+### Running the reconciler in dry-run mode:
+
+```sh
+bazel run //release-controller:release-controller -- --dry-run --verbose
+```
+
+No credentials of any kind are required by this mode.  By default everything the
+reconciler does in this mode has no outward effect.
+
+All the operations it executes are volatile as well.
+
+If you want the release notes this mock mode stores to be persisted in a folder
+so they are not regenerated on every run:
+
+```sh
+export DRY_RUN_RELEASE_NOTES_STORAGE=/tmp/folder
+bazel run //release-controller:release-controller \
+  --action_env=DRY_RUN_RELEASE_NOTES_STORAGE \
+  -- --dry-run --verbose
+```
+
+### Tests
+
+Unit tests:
+
+```sh
+bazel test //release-controller:pytest
+```
+
+Mypy typing tests:
+
+```sh
+bazel test \
+  --enable_bzlmod \
+  --aspects //tools:aspects.bzl%mypy_aspect \
+  --experimental_ui_max_stdouterr_bytes=10485760 \
+  --output_groups=+mypy \
+  //release-controller:release-controller
+```

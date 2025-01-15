@@ -38,13 +38,13 @@ class ReleaseNotesClient:
         gauth.ServiceAuth()
         self.drive = GoogleDrive(gauth)
 
-    def has_release_notes(self, release_commit) -> bool:
-        return self.file(release_commit)
+    def has_release_notes(self, release_commit: str) -> bool:
+        return bool(self._file(release_commit))
 
     def ensure(
         self,
-        release_tag,
-        release_commit,
+        release_tag: str,
+        release_commit: str,
         content: PreparedReleaseNotes,
     ):
         """
@@ -53,7 +53,7 @@ class ReleaseNotesClient:
         No changes are effected if the document mapped to this release commit
         already exists.
         """
-        existing_file = self.file(release_commit)
+        existing_file = self._file(release_commit)
         if existing_file:
             return existing_file
         htmldoc = md.convert(content)
@@ -70,7 +70,7 @@ class ReleaseNotesClient:
         gdoc.Upload()
         return gdoc
 
-    def file(self, version: str):
+    def _file(self, version: str):
         """Get the file for the given version."""
         release_notes = self.drive.ListFile(
             {"q": "'{}' in parents".format(self.release_notes_folder)}
@@ -82,7 +82,7 @@ class ReleaseNotesClient:
 
     def markdown_file(self, version):
         """Get the markdown content of the release notes for the given version."""
-        f = self.file(version)
+        f = self._file(version)
         if not f:
             return None
         with tempfile.TemporaryDirectory() as d:
