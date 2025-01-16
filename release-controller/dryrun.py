@@ -5,17 +5,18 @@ import sys
 import tempfile
 import pathlib
 import typing
-import git_repo
-import dre_cli
 import json
 
-from release_notes import PreparedReleaseNotes
-from release_index import Release
+from binascii import crc32
 
 me = os.path.join(os.path.dirname(__file__))
 if me not in sys.path:
     sys.path.append(me)
 
+import git_repo  # noqa: E402
+import dre_cli  # noqa: E402
+from release_notes import PreparedReleaseNotes  # noqa: E402
+from release_index import Release  # noqa: E402
 
 import forum  # noqa: E402
 import pydiscourse  # noqa: E402
@@ -59,8 +60,8 @@ class DiscourseClient(object):
         self.host = "fakediscourse.com.internal"
         self._logger = LOGGER.getChild(self.__class__.__name__)
 
-        if f := os.environ.get("DRY_RUN_FORUM_STORAGE"):
-            self.forum_storage: pathlib.PosixPath | None = pathlib.PosixPath(f)
+        if f := os.environ.get("RECONCILER_DRY_RUN_FORUM_STORAGE"):
+            self.forum_storage: pathlib.Path | None = pathlib.Path(f)
             os.makedirs(self.forum_storage, exist_ok=True)
             try:
                 with open(self.forum_storage / "mock-posts.json", "rb") as fdata:
@@ -70,13 +71,20 @@ class DiscourseClient(object):
         else:
             self.forum_storage = None
 
-    def _persist(self):
-        for topic in self.topics:
-            print(f"* Topic {topic['id']} titled {topic['title']}")
-            print(f"  Content {topic['content'].splitlines()[0].strip()}")
-            for reply in topic["replies"]:
-                print(f"  * Reply {reply['id']} {reply['topic_id']}")
-                print(f"    Content {reply['content'].splitlines()[0].strip()}")
+    def _persist(self) -> None:
+        if 0:
+            for topic in self.topics:
+                self._logger.debug(f"* Topic {topic['id']} titled {topic['title']}")
+                self._logger.debug(
+                    f"  Content {topic['content'].splitlines()[0].strip()}"
+                )
+                for reply in topic["replies"]:
+                    self._logger.debug(
+                        f"  * Reply {reply['id']} (topic ID {reply['topic_id']})"
+                    )
+                    self._logger.debug(
+                        f"    Content {reply['content'].splitlines()[0].strip()}"
+                    )
         if self.forum_storage:
             with open(self.forum_storage / "mock-posts.json", "w") as fdata:
                 json.dump(self.topics, fdata, indent=4)
@@ -109,7 +117,7 @@ class DiscourseClient(object):
         self._persist()
         return kwargs
 
-    def update_post(self, post_id: int, content: str):
+    def update_post(self, post_id: int, content: str) -> None:
         post = self.post_by_id(post_id)
         assert post
         if content != post["content"]:
@@ -163,18 +171,17 @@ class Github(object):
 
 
 class ReleaseNotesClient(object):
-    def __init__(self):
-        if f := os.environ.get("DRY_RUN_RELEASE_NOTES_STORAGE"):
-            self.release_notes_folder = pathlib.PosixPath(f)
+    def __init__(self) -> None:
+        if f := os.environ.get("RECONCILER_DRY_RUN_RELEASE_NOTES_STORAGE"):
+            self.release_notes_folder = pathlib.Path(f)
             os.makedirs(self.release_notes_folder, exist_ok=True)
             self.release_notes_folder_cleanup = False
         else:
-            self.release_notes_folder = pathlib.PosixPath(tempfile.mkdtemp())
+            self.release_notes_folder = pathlib.Path(
+                tempfile.mkdtemp(prefix=f"reconciler-{self.__class__.__name__}-")
+            )
             self.release_notes_folder_cleanup = True
         self._logger = LOGGER.getChild(self.__class__.__name__)
-
-    def has_release_notes(self, release_commit: str) -> bool:
-        return (self.release_notes_folder / release_commit).exists()
 
     def ensure(
         self, release_tag: str, release_commit: str, content: PreparedReleaseNotes
@@ -187,17 +194,17 @@ class ReleaseNotesClient(object):
         self._logger.warning("Stored release notes in %s", t)
         return t
 
-    def markdown_file(self, version: str) -> PreparedReleaseNotes:
+    def markdown_file(self, version: str) -> PreparedReleaseNotes | None:
         with open((self.release_notes_folder / version), "r") as f:
             return PreparedReleaseNotes(f.read())
 
-    def __del__(self):
+    def __del__(self) -> None:
         if self.release_notes_folder_cleanup:
             shutil.rmtree(self.release_notes_folder)
 
 
 class GitRepo(git_repo.GitRepo):
-    def __init__(self, repo: str, **kwargs):
+    def __init__(self, repo: str, **kwargs: typing.Any) -> None:
         super().__init__(repo, **kwargs)
         self._logger = LOGGER.getChild(self.__class__.__name__)
 
@@ -211,11 +218,11 @@ class GitRepo(git_repo.GitRepo):
 
 
 class PublishNotesClient(object):
-    def __init__(self):
+    def __init__(self) -> None:
         self._logger = LOGGER.getChild(self.__class__.__name__)
 
     def publish_if_ready(
-        self, google_doc_markdownified: PreparedReleaseNotes, version: str
+        self, google_doc_markdownified: PreparedReleaseNotes | None, version: str
     ) -> None:
         self._logger.warning(
             "Simulating that notes for release %s are not ready", version
@@ -223,20 +230,20 @@ class PublishNotesClient(object):
 
 
 class DRECli(dre_cli.DRECli):
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
         self._logger = LOGGER.getChild(self.__class__.__name__)
 
     def place_proposal(
         self,
-        changelog,
+        changelog: str,
         version: str,
         forum_post_url: str,
         unelect_versions: list[str],
         package_checksum: str,
         package_urls: list[str],
-        dry_run=False,
-    ):
+        dry_run: bool = False,
+    ) -> int:
         super().place_proposal(
             changelog,
             version,
@@ -246,10 +253,12 @@ class DRECli(dre_cli.DRECli):
             package_urls,
             dry_run=True,
         )
+        # Now mock the proposal ID using an integer derived from the version.
+        return crc32(version.encode("utf-8"))
 
 
 class MockSlackAnnouncer(object):
-    def __init__(self):
+    def __init__(self) -> None:
         self._logger = LOGGER.getChild(self.__class__.__name__)
 
     def announce_release(

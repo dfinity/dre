@@ -1,5 +1,6 @@
 import pathlib
 import tempfile
+import typing
 
 import mammoth
 import markdown
@@ -24,7 +25,7 @@ class ReleaseNotesClient:
         self,
         credentials_file: pathlib.Path,
         release_notes_folder="1y-nuH29Gd5Err3pazYH6-LzcDShcOIFf",
-    ):
+    ) -> None:
         """Create a new ReleaseNotesClient."""
         settings = {
             "client_config_backend": "service",
@@ -37,9 +38,6 @@ class ReleaseNotesClient:
         gauth = GoogleAuth(settings=settings)
         gauth.ServiceAuth()
         self.drive = GoogleDrive(gauth)
-
-    def has_release_notes(self, release_commit: str) -> bool:
-        return bool(self._file(release_commit))
 
     def ensure(
         self,
@@ -80,7 +78,7 @@ class ReleaseNotesClient:
                 return file
         return None
 
-    def markdown_file(self, version):
+    def markdown_file(self, version: str) -> PreparedReleaseNotes | None:
         """Get the markdown content of the release notes for the given version."""
         f = self._file(version)
         if not f:
@@ -91,7 +89,7 @@ class ReleaseNotesClient:
             return google_doc_to_markdown(release_docx)
 
 
-def google_doc_to_markdown(release_docx: pathlib.Path) -> str:
+def google_doc_to_markdown(release_docx: pathlib.Path) -> PreparedReleaseNotes:
     # google docs will convert the document to docx format first time it's saved
     # before that, it should be in html
     try:
@@ -99,14 +97,14 @@ def google_doc_to_markdown(release_docx: pathlib.Path) -> str:
             release_docx, "tr", encoding="utf8"
         ) as f:  # try open file in text mode
             release_html = f.read()
-    except:  # if fail then file is non-text (binary)  # noqa: E722  # pylint: disable=bare-except
+    except Exception:  # if fail then file is non-text (binary)  # noqa: E722  # pylint: disable=bare-except
         release_html = mammoth.convert_to_html(open(release_docx, "rb")).value
 
     release_md = markdownify(release_html)
-    return release_md
+    return typing.cast(PreparedReleaseNotes, release_md)
 
 
-def main():
+def main() -> None:
     client = ReleaseNotesClient(
         credentials_file=pathlib.Path(__file__).parent.resolve() / "credentials.json",
         release_notes_folder="1zOPwbYdOREhhLv-spRIRRMaFaAQlOVvF",

@@ -7,6 +7,7 @@ from dotenv import load_dotenv
 from pydiscourse import DiscourseClient
 from release_index import Release
 from util import version_name
+import reconciler_state
 
 
 LOGGER = logging.getLogger(__name__)
@@ -15,9 +16,11 @@ LOGGER = logging.getLogger(__name__)
 def _post_template(
     changelog: str | None,
     version_name: str,
-    proposal: int | None = None,
-):
-    if not proposal:
+    proposal: reconciler_state.NoProposal
+    | reconciler_state.DREMalfunction
+    | reconciler_state.SubmittedProposal,
+) -> str:
+    if isinstance(proposal, reconciler_state.NoProposal):
         return f"We're preparing [a new IC release](https://github.com/dfinity/ic/tree/{version_name}). The changelog will be announced soon."
 
     return textwrap.dedent(
@@ -41,7 +44,9 @@ class ReleaseCandidateForumPost:
         self,
         version_name: str,
         changelog: str | None,
-        proposal: int | None,
+        proposal: reconciler_state.NoProposal
+        | reconciler_state.DREMalfunction
+        | reconciler_state.SubmittedProposal,
         security_fix: bool = False,
     ):
         """Create a new post."""
@@ -52,7 +57,6 @@ class ReleaseCandidateForumPost:
 
 
 SummaryRetriever = Callable[[str, bool], str | None]
-ProposalRetriever = Callable[[str], int | None]
 
 
 class ReleaseCandidateForumTopic:
@@ -112,8 +116,8 @@ class ReleaseCandidateForumTopic:
     def update(
         self,
         summary_retriever: SummaryRetriever,
-        proposal_id_retriever: ProposalRetriever,
-    ):
+        proposal_id_retriever: reconciler_state.ProposalRetriever,
+    ) -> None:
         """Update the topic with the latest release information."""
         posts = [
             ReleaseCandidateForumPost(
@@ -154,7 +158,7 @@ class ReleaseCandidateForumTopic:
                     ),
                 )
 
-    def post_url(self, version: str):
+    def post_url(self, version: str) -> str:
         """Return the URL of the post for the given version."""
         post_index = [
             i for i, v in enumerate(self.release.versions) if v.version == version
@@ -164,12 +168,12 @@ class ReleaseCandidateForumTopic:
             raise RuntimeError("failed to find post")
         return self.post_to_url(post)
 
-    def post_to_url(self, post: dict):
+    def post_to_url(self, post: dict) -> str:
         """Return the complete URL of the given post."""
         host = self.client.host.removesuffix("/")
         return f"{host}/t/{post['topic_slug']}/{post['topic_id']}/{post['post_number']}"
 
-    def add_version(self, content: str):
+    def add_version(self, content: str) -> None:
         """Add a new version to the topic."""
         self.client.create_post(
             topic_id=self.topic_id,
@@ -203,7 +207,7 @@ class ReleaseCandidateForumClient:
         )
 
 
-def main():
+def main() -> None:
     load_dotenv()
 
     discourse_client = DiscourseClient(

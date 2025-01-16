@@ -174,11 +174,33 @@ If you want the release notes this mock mode stores to be persisted in a folder
 so they are not regenerated on every run:
 
 ```sh
-export DRY_RUN_RELEASE_NOTES_STORAGE=/tmp/folder
+export RECONCILER_DRY_RUN_RELEASE_NOTES_STORAGE=/tmp/dryrun/relnotes
 bazel run //release-controller:release-controller \
-  --action_env=DRY_RUN_RELEASE_NOTES_STORAGE \
+  --action_env=RECONCILER_DRY_RUN_RELEASE_NOTES_STORAGE \
   -- --dry-run --verbose
 ```
+
+If you want the mock forum interactions to be remembered between runs:
+
+```sh
+export RECONCILER_DRY_RUN_FORUM_STORAGE=/tmp/dryrun/forum
+bazel run //release-controller:release-controller \
+  --action_env=RECONCILER_DRY_RUN_FORUM_STORAGE \
+  -- --dry-run --verbose
+```
+
+Custom path for the reconciler state?
+
+
+```sh
+export RECONCILER_STATE_DIR=/tmp/dryrun/reconciler-state
+bazel run //release-controller:release-controller \
+  --action_env=RECONCILER_STATE_DIR \
+  -- --dry-run --verbose
+```
+
+Typing errors preventing you from running it, because you are editing code and
+testing your changes?  Add `--output_groups=-mypy` right after `bazel run`.
 
 ### Tests
 
@@ -191,10 +213,5 @@ bazel test //release-controller:pytest
 Mypy typing tests:
 
 ```sh
-bazel build \
-  --enable_bzlmod \
-  --aspects //tools:aspects.bzl%mypy_aspect \
-  --experimental_ui_max_stdouterr_bytes=10485760 \
-  --output_groups=+mypy \
-  //release-controller:release-controller
+bazel build //release-controller:release-controller
 ```

@@ -30,8 +30,8 @@ def post_process_release_notes(release_notes: str) -> str:
     changelog = "\n".join([line for line in lines if "~~" not in line])
     excluded_lines = [line for line in lines if "~~" in line]
     excluded_changes = [
-        l
-        for l in [
+        ln
+        for ln in [
             re.sub(
                 # remove whitespace after *
                 r"(?<=^\* )\s+",
@@ -41,7 +41,7 @@ def post_process_release_notes(release_notes: str) -> str:
             ).strip()
             for line in excluded_lines
         ]
-        if l.startswith("* [")
+        if ln.startswith("* [")
     ]
 
     EXCLUSION_REGEX = r"\\*\[AUTO\\*-EXCLUDED:([^]]+)\]"
@@ -81,7 +81,7 @@ class PublishNotesClient:
         """Initialize the client with the given repository."""
         self.repo = repo
 
-    def ensure_published(self, version: str, changelog: str):
+    def ensure_published(self, version: str, changelog: str) -> None:
         """Publish the release notes for the given version."""
         published_releases = self.repo.get_contents(f"/{REPLICA_RELEASES_DIR}")
         if not isinstance(published_releases, list):
@@ -121,8 +121,8 @@ class PublishNotesClient:
         )
 
     def publish_if_ready(
-        self, google_doc_markdownified: PreparedReleaseNotes, version: str
-    ):
+        self, google_doc_markdownified: PreparedReleaseNotes | None, version: str
+    ) -> None:
         """Publish the release notes if they are ready."""
         if not isinstance(google_doc_markdownified, str):
             logging.warning("didn't get markdown notes for %s, skipping", version)
@@ -176,7 +176,7 @@ def check_number_of_changes(changelog: str) -> int:
     return num_changes
 
 
-def main():
+def main() -> None:
     load_dotenv()
     github_client = Github(auth=Auth.Token(os.environ["GITHUB_TOKEN"]))
     client = PublishNotesClient(github_client.get_repo("dfinity/dre-testing"))
