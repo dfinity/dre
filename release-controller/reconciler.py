@@ -161,11 +161,14 @@ def version_package_checksum(version: str) -> str:
         f"https://download.dfinity.systems/ic/{version}/guest-os/update-img/SHA256SUMS"
     )
     response = requests.get(hashurl, timeout=10)
-    checksum = [
-        line
-        for line in response.content.decode("utf-8").splitlines()
-        if line.strip().endswith("update-img.tar.zst")
-    ][0].split(" ")[0]
+    checksum = typing.cast(
+        str,
+        [
+            line
+            for line in response.content.decode("utf-8").splitlines()
+            if line.strip().endswith("update-img.tar.zst")
+        ][0].split(" ")[0],
+    )
 
     for u in version_package_urls(version):
         LOGGER.getChild("version_package_checksum").debug("fetching package %s", u)
@@ -190,16 +193,6 @@ class ReplicaVersionProposalProvider(typing.Protocol):
     def replica_version_proposals(self) -> dict[str, int]: ...
 
 
-class SlackAnnouncerProtocol(typing.Protocol):
-    def announce_release(
-        self,
-        slack_url: str,
-        version_name: str,
-        google_doc_url: str,
-        tag_all_teams: bool,
-    ) -> None: ...
-
-
 class Reconciler:
     """Reconcile the state of the network with the release index, and create a forum post if needed."""
 
@@ -215,7 +208,7 @@ class Reconciler:
         active_version_provider: ActiveVersionProvider,
         replica_version_proposal_provider: ReplicaVersionProposalProvider,
         dre: dre_cli.DRECli,
-        slack_announcer: SlackAnnouncerProtocol,
+        slack_announcer: slack_announce.SlackAnnouncerProtocol,
         ignore_releases: list[str] | None = None,
     ):
         """Create a new reconciler."""
@@ -481,7 +474,7 @@ def main() -> None:
     )
     ic_repo = (
         GitRepo(
-            f"https://oauth2:{os.environ["GITHUB_TOKEN"]}@github.com/dfinity/ic.git",
+            f"https://oauth2:{os.environ['GITHUB_TOKEN']}@github.com/dfinity/ic.git",
             main_branch="master",
         )
         if not dry_run
@@ -512,7 +505,7 @@ def main() -> None:
         dre.get_past_election_proposals(),
     )
     slack_announcer = (
-        slack_announce.announce_release if not dry_run else dryrun.MockSlackAnnouncer()
+        slack_announce.SlackAnnouncer() if not dry_run else dryrun.MockSlackAnnouncer()
     )
 
     reconciler = Reconciler(
