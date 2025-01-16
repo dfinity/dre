@@ -7,13 +7,13 @@ use axum_otel_metrics::HttpMetricsLayerBuilder;
 use clap::Parser;
 use humantime::parse_duration;
 use ic_management_types::Network;
+use service_discovery::shutdown_signal;
 use slog::{error, info, o, Drain, Logger};
 use tokio::runtime::Runtime;
 use tokio::sync::oneshot::{self};
 use url::Url;
 
 use definition::{Definition, DefinitionsSupervisor, StartMode};
-use ic_async_utils::shutdown_signal;
 
 use crate::definition::{RunningDefinition, TargetFilterSpec, TestDefinition};
 use crate::metrics::{MSDMetrics, RunningDefinitionsMetrics};

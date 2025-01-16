@@ -12,7 +12,6 @@ config-writer-common = { path = "../config-writer-common" }
 crossbeam = { workspace = true }
 futures-util = { workspace = true }
 humantime = { workspace = true }
-ic-async-utils = { workspace = true }
 ic-config = { workspace = true }
 ic-crypto-utils-threshold-sig-der = { workspace = true }
 ic-http-endpoints-metrics = { workspace = true }
