@@ -1,6 +1,6 @@
 # Mypy support.
 # Targets with tag "typecheck" will get type-checked when built, run or tested.
-# common --enable_bzlmod --aspects //tools:aspects.bzl%mypy_aspect --output_groups=+mypy
+common --enable_bzlmod --aspects //tools:aspects.bzl%mypy_aspect --output_groups=+mypy
 
 build --workspace_status_command=$(pwd)/bazel/workspace_status.sh --stamp
 

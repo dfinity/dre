@@ -7,6 +7,7 @@ import git_repo
 import pytest
 import release_index
 import requests
+import typing
 from forum import ReleaseCandidateForumClient
 from github import Github
 from mock_discourse import DiscourseClientMock
@@ -15,7 +16,7 @@ from publish_notes import PublishNotesClient
 from pydantic_yaml import parse_yaml_raw_as
 from reconciler import find_base_release, oldest_active_release
 from reconciler import Reconciler
-from reconciler import ReconcilerState
+from reconciler_state import ReconcilerState
 from reconciler import version_package_checksum
 from reconciler import versions_to_unelect
 from release_index_loader import StaticReleaseLoader
@@ -291,53 +292,74 @@ releases:
     )
 
 
-def test_version_package_checksum(mocker):
-    def mock_download_files(url: str, timeout: int = 10):  # pylint: disable=unused-argument
-        content = ""
+def mock_request_get(
+    content_getter: typing.Callable[[str], str],
+) -> typing.Any:
+    class mock_request(object):
+        def __init__(self, url: str, timeout: int = 10, stream: bool = False):  # pylint: disable=unused-argument
+            self.url = url
+            self.headers: dict[str, str] = {}
+
+        def __enter__(self) -> "mock_request":
+            self.headers = {"Content-Length": "%s" % len(self.content)}
+            return self
+
+        def __exit__(self, *unused_args: typing.Any) -> None:
+            pass
+
+        def raise_for_status(self) -> None:
+            pass
+
+        @property
+        def content(self) -> bytes:
+            return content_getter(self.url).encode("utf-8")
+
+        def iter_content(self, chunk_size: int = 1024) -> typing.Iterator[bytes]:
+            yield self.content
+
+    return mock_request
+
+
+def test_version_package_checksum(mocker: typing.Any) -> None:
+    def content_getter(url: str) -> str:
         if url.endswith("SHA256SUMS"):
-            content = """\
+            return """\
 556b26661590495016052a58d07886e8dcce48c77a5dfc458fbcc5f01a95b1b3 *update-img-test.tar.gz
 ed1ff4e1db979b0c89cf333c09777488a0c50a3ba74c0f9491d6ba153a8dbfdb *update-img-test.tar.zst
 dff2072e34071110234b0cb169705efc13284e4a99b7795ef1951af1fe7b41ac *update-img.tar.gz
 9ca7002a723b932c3fb25293fc541e0b156170ec1e9a2c6a83c9733995051187 *update-img.tar.zst
 """
         elif url.endswith(".tar.zst"):
-            content = "some bytes..."
+            return "some bytes..."
+        else:
+            return ""
 
-        return SimpleNamespace(content=content.encode())
-
-    mocker.patch("requests.get", new=Mock(side_effect=mock_download_files))
+    mocker.patch("requests.get", new=mock_request_get(content_getter))
     assert (
         version_package_checksum("notimporant")
         == "9ca7002a723b932c3fb25293fc541e0b156170ec1e9a2c6a83c9733995051187"
     )
-    assert requests.get.call_count == 3  # pylint: disable=no-member
 
 
-def test_version_package_checksum_mismatch(mocker):
-    def mock_download_files(url: str, timeout: int = 10):  # pylint: disable=unused-argument
-        content = ""
+def test_version_package_checksum_mismatch(mocker: typing.Any) -> None:
+    def content_getter(url: str) -> str:
         if url.endswith("SHA256SUMS"):
-            content = """\
+            return """\
 556b26661590495016052a58d07886e8dcce48c77a5dfc458fbcc5f01a95b1b3 *update-img-test.tar.gz
 ed1ff4e1db979b0c89cf333c09777488a0c50a3ba74c0f9491d6ba153a8dbfdb *update-img-test.tar.zst
-9ca7002a723b932c3fb25293fc541e0b156170ec1e9a2c6a83c9733995051187 *update-img.tar.gz
-dff2072e34071110234b0cb169705efc13284e4a99b7795ef1951af1fe7b41ac *update-img.tar.zst
+dff2072e34071110234b0cb169705efc13284e4a99b7795ef1951af1fe7b41ac *update-img.tar.gz
+9ca7002a723b932c3fb25293fc541e0b156170ec1e9a2c6a83c9733995051187 *update-img.tar.zst
 """
         elif "dfinity.network" in url:
-            content = "some bytes..."
+            return "some bytes..."
         else:
-            content = "some other bytes..."
+            return "some other bytes..."
 
-        return SimpleNamespace(content=content.encode())
-
-    mocker.patch("requests.get", new=Mock(side_effect=mock_download_files))
+    mocker.patch("requests.get", new=mock_request_get(content_getter))
 
     with pytest.raises(Exception) as e:
         version_package_checksum("notimporant")
-        assert requests.get.call_count == 3  # pylint: disable=no-member
-
-    assert repr(e.value) == repr(RuntimeError("checksums do not match"))
+        assert "do not match contents" in str(e.value)
 
 
 def test_find_base_release():

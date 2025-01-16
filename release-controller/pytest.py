@@ -5,4 +5,9 @@ if __name__ == "__main__":
 
     dir_path = os.path.dirname(__file__)
     if hasattr(pytest, "main"):
-        raise SystemExit(pytest.main(args=[dir_path, "-vv", "-n=8"], plugins=["xdist"]))
+        raise SystemExit(
+            pytest.main(
+                args=[dir_path, "-vv", "-n=8"],
+                plugins=["xdist"],
+            )
+        )
