@@ -7,8 +7,6 @@ repo_url: https://github.com/dfinity/dre/
 edit_uri: edit/main/docs/
 
 nav:
-  - "ICP Support":
-      - Chatbot: "chat/icp-support.md"
   - "General":
       - index.md
       - Getting started: getting-started.md
