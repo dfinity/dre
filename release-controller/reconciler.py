@@ -549,7 +549,7 @@ def main():
     )
     ic_repo = (
         GitRepo(
-            f"https://oauth2:{os.environ["GITHUB_TOKEN"]}@github.com/dfinity/ic.git",
+            f"https://oauth2:{os.environ['GITHUB_TOKEN']}@github.com/dfinity/ic.git",
             main_branch="master",
         )
         if not dry_run
@@ -574,7 +574,7 @@ def main():
         else dryrun.DRECli()
     )
     slack_announcer = (
-        slack_announce.announce_release if not dry_run else dryrun.MockSlackAnnouncer()
+        slack_announce.SlackAnnouncer() if not dry_run else dryrun.MockSlackAnnouncer()
     )
 
     reconciler = Reconciler(
