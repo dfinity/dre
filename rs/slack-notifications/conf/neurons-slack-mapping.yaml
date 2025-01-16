@@ -26,7 +26,7 @@
 - neuron_id: 43
   slack_id: U01F2AZLZBL  # Ryan Croote
 - neuron_id: 44
-  slack_id: U01L52P04HW  # Paul Meeusen
+  slack_id: U050JEB66LT  # Sion Hoang
 - neuron_id: 45
   slack_id: UJU6XENEQ    # Mamiko Inoue
 # - neuron_id: 46
@@ -49,8 +49,8 @@
   slack_id: U02RZR7PDK4  # Björn Assmann
 - neuron_id: 55
   slack_id: U02UZQSG468  # Maximilian Summe
-# - neuron_id: 56
-#   slack_id:
+- neuron_id: 56
+  slack_id: U07QU79GX0T  # Thomas Gladdines
 - neuron_id: 57
   slack_id: U010G9RRJ4A  # Shuo Wang
 - neuron_id: 58
@@ -77,14 +77,14 @@
   slack_id: U02L4JU6E6T  # David Dal Busco
 - neuron_id: 69
   slack_id: UK6PJFR9A    # Nicolas Mattia
-# - neuron_id: 70
-#   slack_id:
+- neuron_id: 70
+  slack_id: UFWTXMBB2    # Bas van Dijk
 - neuron_id: 71
   slack_id: U01Q0ED6SDB  # Leon Tan
-# - neuron_id: 72
-#   slack_id:
-# - neuron_id: 73
-#   slack_id:
+- neuron_id: 72
+  slack_id: U0574S1N1BP  # Jason Zhu
+- neuron_id: 73
+  slack_id: U07QU4DNV5Y  # Andri Schatz
 # - neuron_id: 74
 #   slack_id:
 # - neuron_id: 75
