@@ -3,14 +3,36 @@ import os
 from dotenv import load_dotenv
 from slack_sdk.http_retry.handler import RetryHandler
 from slack_sdk.webhook import WebhookClient
+import typing
 
 from release_notes import RELEASE_NOTES_REVIEWERS
 
 
-def announce_release(slack_url, version_name, google_doc_url, tag_all_teams):
-    slack = WebhookClient(url=slack_url, retry_handlers=[RetryHandler(max_retry_count=2)])
+class SlackAnnouncerProtocol(typing.Protocol):
+    def announce_release(
+        self, webhook: str, version_name: str, google_doc_url: str, tag_all_teams: bool
+    ) -> None: ...
+
+
+class SlackAnnouncer(SlackAnnouncerProtocol):
+    def announce_release(
+        self, webhook: str, version_name: str, google_doc_url: str, tag_all_teams: bool
+    ) -> None:
+        announce_release_on_slack(webhook, version_name, google_doc_url, tag_all_teams)
+
+
+def announce_release_on_slack(slack_url, version_name, google_doc_url, tag_all_teams):
+    slack = WebhookClient(
+        url=slack_url, retry_handlers=[RetryHandler(max_retry_count=2)]
+    )
     notify_line = (
-        " ".join([f"<!subteam^{t.slack_id}>" for t in RELEASE_NOTES_REVIEWERS if t.send_announcement])
+        " ".join(
+            [
+                f"<!subteam^{t.slack_id}>"
+                for t in RELEASE_NOTES_REVIEWERS
+                if t.send_announcement
+            ]
+        )
         if tag_all_teams
         else "everyone"
     )
@@ -26,13 +48,13 @@ Please adjust the release notes to make sure we appropriately covered all change
 def main():
     load_dotenv()
 
-    announce_release(
+    announce_release_on_slack(
         os.environ["SLACK_WEBHOOK_URL"],
         "release-2024-03-06_23-01-base",
         "https://docs.google.com/document/d/1gCPmYxoq9_IccdChRzjoblAggTOdZ_IfTMukRbODO1I/edit#heading=h.7dcpz3fj7xrh",
         True,
     )
-    announce_release(
+    announce_release_on_slack(
         os.environ["SLACK_WEBHOOK_URL"],
         "release-2024-03-06_23-01-p2p",
         "https://docs.google.com/document/d/1gCPmYxoq9_IccdChRzjoblAggTOdZ_IfTMukRbODO1I/edit#heading=h.7dcpz3fj7xrh",
