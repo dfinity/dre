@@ -36,10 +36,7 @@ py_binary(
     main = "reconciler.py",
     srcs = glob(
         ["*.py"],
-        exclude = [
-            "test_*.py",
-            "pytest.py",
-        ],
+        exclude=["pytest.py"]
     ),
     tags = ["typecheck"],
     env = env,
@@ -51,10 +48,6 @@ py_binary(
     main = "commit_annotator.py",
     srcs = glob(
         ["*.py"],
-        exclude = [
-            "test_*.py",
-            "pytest.py",
-        ],
     ),
     data = [":bazelisk", ":target_determinator"],
     env = env,
@@ -78,29 +71,28 @@ native_binary(
 )
 
 long_tests = [
-    "test_commit_annotator.py",
+    "tests/test_commit_annotator.py",
 ]
 
 py_test(
     name = "pytest",
-    srcs = ["pytest.py"],
-    data = glob(["*.py"], exclude = long_tests) + glob(["test_data/*"]),
+    srcs = ["pytest.py"] + glob(["tests/*.py"], exclude = long_tests + ["tests/test_reconciler.py"]) + glob(["*.py"], exclude = ["pytest.py"]),
+    data = glob(["tests/test_data/*"]),
     env = env,
-    tags = ["no-sandbox", "typecheck"],
+    tags = ["no-sandbox"],
     deps = deps + dev_deps,
     env_inherit = ["HOME"],
 )
 
 py_test(
-    name = "pytest_enormous",
-    srcs = ["pytest.py"],
+    name = "test_reconciler",
+    srcs = ["pytest.py"] + ["tests/test_reconciler.py"] + glob(["*.py"], exclude = ["pytest.py"]),
+    data = glob(["tests/test_data/*"]),
     main = "pytest.py",
-    data = long_tests + glob(["*.py"], exclude = ["test*.py"]) + [":bazelisk", ":target_determinator"],
     env = env,
-    tags = ["no-sandbox", "manual"],
+    tags = ["no-sandbox", "typecheck"],
     deps = deps + dev_deps,
     env_inherit = ["HOME"],
-    size = "enormous",
 )
 
 tar(

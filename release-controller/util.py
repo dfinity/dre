@@ -106,7 +106,9 @@ class HTTPGenerator(object):
         return int(math.ceil((self.len / self.chunk_size)))
 
     def __iter__(self) -> typing.Iterator[bytes]:
-        return self.resp.iter_content(chunk_size=self.chunk_size)
+        return typing.cast(
+            typing.Iterator[bytes], self.resp.iter_content(chunk_size=self.chunk_size)
+        )
 
     def __contains__(self, item: typing.Any) -> bool:
         return False

@@ -159,6 +159,9 @@ Make sure also that few minutes have passed and that public dashboard still does
 
 ## Development
 
+Please see the parent folder's `README.md` for virtual environment setup.
+Follow the whole *Contributing* section to the letter.
+
 ### Running the reconciler in dry-run mode:
 
 ```sh
@@ -204,13 +207,22 @@ testing your changes?  Add `--output_groups=-mypy` right after `bazel run`.
 
 ### Tests
 
-Unit tests:
+#### Unit tests
 
 ```sh
 bazel test //release-controller:pytest
 ```
 
-Mypy typing tests:
+With the .venv setup, you can also run (with varying levels of success):
+
+```sh
+.venv/bin/python3 -m pytest release-controller/
+```
+
+The above runs all tests.  If you want to run a specific test file,
+specify it as a path instead of the folder specified above.
+
+#### Typing correctness
 
 ```sh
 bazel build //release-controller:release-controller

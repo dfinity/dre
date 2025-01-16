@@ -458,7 +458,7 @@ pyparsing==3.1.4
     # via matplotlib
 pyreadline3==3.4.1 ; sys_platform == 'win32'
     # via humanfriendly
-pytest==8.3.2
+pytest==8.3.4
     # via pytest-asyncio
     # via pytest-mock
     # via pytest-xdist
@@ -608,6 +608,7 @@ urllib3==2.2.2
     # via elastic-transport
     # via pygithub
     # via requests
+uv==0.5.20
 virtualenv==20.26.3
     # via pre-commit
 waiter==1.5

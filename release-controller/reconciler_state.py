@@ -74,7 +74,7 @@ class ReconcilerState:
     def __init__(
         self,
         path: pathlib.Path,
-        known_proposals: list[dre_cli.ElectionProposal] | None,
+        known_proposals: list[dre_cli.ElectionProposal] | None = None,
     ):
         """
         Create a new state object.

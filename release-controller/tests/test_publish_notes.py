@@ -14,7 +14,9 @@ def test_publish_if_ready__ready(mocker):
 
     publish_client.publish_if_ready(
         google_doc_to_markdown(
-            pathlib.Path(os.path.dirname(__file__)) / "test_data" / "b0ade55f7e8999e2842fe3f49df163ba224b71a2.docx"
+            pathlib.Path(os.path.dirname(__file__))
+            / "test_data"
+            / "b0ade55f7e8999e2842fe3f49df163ba224b71a2.docx"
         ),
         "b0ade55f7e8999e2842fe3f49df163ba224b71a2",
     )
@@ -347,6 +349,7 @@ Features:
 
     assert publish_client.ensure_published.call_count == 0  # pylint: disable=no-member
 
+
 def test_publish_if_ready__ready_no_changes(mocker):
     github_client = Github()
     mocker.patch.object(github_client, "get_repo")
@@ -390,7 +393,7 @@ To see a full list of commits added since last release, compare the revisions on
 * ~~author: Leo Eich |~~ [e76c5a374](https://github.com/dfinity/ic/commit/e76c5a374) Consensus(ecdsa): Stop relaying tECDSA signature shares
 * ~~author: Leo Eich |~~ [2d63da24c](https://github.com/dfinity/ic/commit/2d63da24c) Consensus(ecdsa): Add optional kappa\\_unmasked config to QuadrupleInCreation
 """,
-        "2e921c9adfc71f3edc96a9eb5d85fc742e7d8a9f"
+        "2e921c9adfc71f3edc96a9eb5d85fc742e7d8a9f",
     )
 
     assert publish_client.ensure_published.call_count == 0  # pylint: disable=no-member

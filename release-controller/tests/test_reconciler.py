@@ -1,12 +1,16 @@
 import pathlib
 import tempfile
-from types import SimpleNamespace
 from unittest.mock import Mock
+import pytest_mock.plugin
+
+import os
+import sys
+
+sys.path.append(os.path.join(os.path.dirname(__file__), os.path.pardir))
 
 import git_repo
 import pytest
 import release_index
-import requests
 import typing
 from forum import ReleaseCandidateForumClient
 from github import Github
@@ -22,16 +26,14 @@ from reconciler import versions_to_unelect
 from release_index_loader import StaticReleaseLoader
 
 
-class TestReconcilerState(ReconcilerState):
+class AmnesiacReconcilerState(ReconcilerState):
     """Reconciler state that uses a temporary directory for storage."""
 
-    def __init__(self):
-        """Create a new TestReconcilerState."""
+    def __init__(self) -> None:
         self.tempdir = tempfile.TemporaryDirectory()
         super().__init__(pathlib.Path(self.tempdir.name))
 
-    def __del__(self):
-        """Clean up the temporary directory."""
+    def __del__(self) -> None:
         self.tempdir.cleanup()
 
 
@@ -53,8 +55,8 @@ class MockReplicaVersionProposalProvider(object):
         return self.rep
 
 
-@pytest.mark.skip(reason="not finished")
-def test_e2e_mock_new_release(mocker):
+@pytest.mark.skip(reason="not finished")  # type: ignore
+def test_e2e_mock_new_release(mocker: pytest_mock.plugin.MockerFixture) -> None:
     """Test the workflow when a new release is added to the index."""
     discourse_client = DiscourseClientMock()
     forum_client = ReleaseCandidateForumClient(discourse_client)
@@ -84,7 +86,7 @@ releases:
         loader=StaticReleaseLoader(config),
         publish_client=PublishNotesClient(repo),
         nns_url="",
-        state=TestReconcilerState(),
+        state=AmnesiacReconcilerState(),
         ic_repo=ic_repo_mock,
         ignore_releases=[""],
         # FIXME: mock next two lines properly
@@ -165,7 +167,7 @@ releases:
     assert len(discourse_client.created_topics) == 1
 
 
-def test_versions_to_unelect():
+def test_versions_to_unelect() -> None:
     index = parse_yaml_raw_as(
         release_index.Model,
         """
@@ -248,7 +250,7 @@ releases:
     ]
 
 
-def test_oldest_active_release():
+def test_oldest_active_release() -> None:
     index = parse_yaml_raw_as(
         release_index.Model,
         """
@@ -320,7 +322,7 @@ def mock_request_get(
     return mock_request
 
 
-def test_version_package_checksum(mocker: typing.Any) -> None:
+def test_version_package_checksum(mocker: pytest_mock.plugin.MockerFixture) -> None:
     def content_getter(url: str) -> str:
         if url.endswith("SHA256SUMS"):
             return """\
@@ -341,7 +343,9 @@ dff2072e34071110234b0cb169705efc13284e4a99b7795ef1951af1fe7b41ac *update-img.tar
     )
 
 
-def test_version_package_checksum_mismatch(mocker: typing.Any) -> None:
+def test_version_package_checksum_mismatch(
+    mocker: pytest_mock.plugin.MockerFixture,
+) -> None:
     def content_getter(url: str) -> str:
         if url.endswith("SHA256SUMS"):
             return """\
@@ -357,12 +361,12 @@ dff2072e34071110234b0cb169705efc13284e4a99b7795ef1951af1fe7b41ac *update-img.tar
 
     mocker.patch("requests.get", new=mock_request_get(content_getter))
 
-    with pytest.raises(Exception) as e:
+    with pytest.raises(Exception) as e:  # type: ignore
         version_package_checksum("notimporant")
         assert "do not match contents" in str(e.value)
 
 
-def test_find_base_release():
+def test_find_base_release() -> None:
     with tempfile.TemporaryDirectory() as repo_cache_dir:
         ic_repo = git_repo.GitRepo(
             "https://github.com/dfinity/ic.git",
