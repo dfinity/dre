@@ -73,7 +73,9 @@ impl DiscourseClientImp {
     }
 
     async fn get_category_id(&self, category_name: String) -> anyhow::Result<u64> {
-        let response: serde_json::Value = self.request("categories.json".to_string(), Method::GET, None).await?;
+        let response: serde_json::Value = self
+            .request("categories.json?include_subcategories=true".to_string(), Method::GET, None)
+            .await?;
 
         let categories = response
             .get("category_list")
@@ -85,19 +87,11 @@ impl DiscourseClientImp {
             .as_array()
             .ok_or(anyhow::anyhow!("Expected `categories` to be an array"))?;
 
+        let categories = serde_json::from_value::<Vec<CategoryResponse>>(serde_json::to_value(categories)?)?;
+
         categories
             .iter()
-            .find_map(|category| match (category.get("id"), category.get("name")) {
-                (Some(id), Some(name)) => {
-                    let name = name.as_str().unwrap();
-                    let id = id.as_u64().unwrap();
-                    if name == category_name {
-                        return Some(id);
-                    }
-                    None
-                }
-                _ => None,
-            })
+            .find_map(|category| category.contains(&category_name).map(|category| category.id))
             .ok_or(anyhow::anyhow!("Failed to find category with name `{}`", category_name))
     }
 
@@ -209,8 +203,33 @@ impl DiscourseClientImp {
     }
 }
 
-const GOVERNANCE_TOPIC: &str = "Governance";
+const NNS_PROPOSAL_DISCUSSION: &str = "NNS proposal discussions";
 const SUBNET_MANAGEMENT_TAG: &str = "Subnet-management";
+
+#[derive(Debug, Deserialize, Clone)]
+struct CategoryResponse {
+    id: u64,
+    name: String,
+    subcategory_list: Option<Vec<CategoryResponse>>,
+}
+
+impl CategoryResponse {
+    fn contains(&self, category_name: &str) -> Option<&Self> {
+        if self.name == category_name {
+            return Some(self);
+        }
+
+        if let Some(subcategories) = &self.subcategory_list {
+            for subcategory in subcategories {
+                if let Some(category) = subcategory.contains(category_name) {
+                    return Some(category);
+                }
+            }
+        }
+
+        None
+    }
+}
 
 #[derive(Deserialize)]
 struct SubnetTopicInfo {
@@ -282,7 +301,7 @@ impl DiscourseClient for DiscourseClientImp {
             title: "Updating the list of public subnets".to_string(),
             content: body,
             tags: vec![SUBNET_MANAGEMENT_TAG.to_string()],
-            category: GOVERNANCE_TOPIC.to_string(),
+            category: NNS_PROPOSAL_DISCUSSION.to_string(),
         };
         let post_clone = post.clone();
 
