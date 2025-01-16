@@ -266,12 +266,6 @@ class ReplicaVersionProposalProvider(typing.Protocol):
     def replica_version_proposals(self) -> dict[str, int]: ...
 
 
-class SlackAnnouncerProtocol(typing.Protocol):
-    def announce_release(
-        self, webhook: str, version_name: str, google_doc_url: str, tag_all_teams: bool
-    ) -> None: ...
-
-
 class Reconciler:
     """Reconcile the state of the network with the release index, and create a forum post if needed."""
 
@@ -287,7 +281,7 @@ class Reconciler:
         active_version_provider: ActiveVersionProvider,
         replica_version_proposal_provider: ReplicaVersionProposalProvider,
         dre: dre_cli.DRECli,
-        slack_announcer: SlackAnnouncerProtocol,
+        slack_announcer: slack_announce.SlackAnnouncerProtocol,
         ignore_releases=None,
     ):
         """Create a new reconciler."""

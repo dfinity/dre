@@ -3,9 +3,15 @@ import os
 from dotenv import load_dotenv
 from slack_sdk.http_retry.handler import RetryHandler
 from slack_sdk.webhook import WebhookClient
+import typing
 
 from release_notes import RELEASE_NOTES_REVIEWERS
-from reconciler import SlackAnnouncerProtocol
+
+
+class SlackAnnouncerProtocol(typing.Protocol):
+    def announce_release(
+        self, webhook: str, version_name: str, google_doc_url: str, tag_all_teams: bool
+    ) -> None: ...
 
 
 class SlackAnnouncer(SlackAnnouncerProtocol):
