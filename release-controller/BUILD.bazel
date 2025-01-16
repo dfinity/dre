@@ -32,7 +32,7 @@ env = {
 }
 
 py_binary(
-    name = "release_controller",
+    name = "release-controller",
     main = "reconciler.py",
     srcs = glob(
         ["*.py"],
@@ -41,6 +41,7 @@ py_binary(
             "pytest.py",
         ],
     ),
+    tags = ["typecheck"],
     env = env,
     deps = deps,
 )
@@ -115,7 +116,7 @@ tar(
 py_oci_image(
     name = "oci_image",
     base = "@bazel_image_6_5_0",
-    binary = ":release_controller",
+    binary = ":release-controller",
     tars = [":bins_release_controller_tar"]
 )
 

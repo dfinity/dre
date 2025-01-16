@@ -34,6 +34,24 @@ class TestReconcilerState(ReconcilerState):
         self.tempdir.cleanup()
 
 
+class MockActiveVersionProvider(object):
+    def __init__(self, active_versions: list[str] | None = None):
+        self.vers = active_versions if active_versions else []
+
+    def active_versions(self) -> list[str]:
+        return self.vers
+
+
+class MockReplicaVersionProposalProvider(object):
+    def __init__(self, proposal_to_version_map: dict[str, int] | None = None):
+        self.rep: dict[str, int] = (
+            proposal_to_version_map if proposal_to_version_map else {}
+        )
+
+    def replica_version_proposals(self) -> dict[str, int]:
+        return self.rep
+
+
 @pytest.mark.skip(reason="not finished")
 def test_e2e_mock_new_release(mocker):
     """Test the workflow when a new release is added to the index."""
@@ -68,6 +86,9 @@ releases:
         state=TestReconcilerState(),
         ic_repo=ic_repo_mock,
         ignore_releases=[""],
+        # FIXME: mock next two lines properly
+        active_version_provider=MockActiveVersionProvider(),
+        replica_version_proposal_provider=MockReplicaVersionProposalProvider(),
     )
     mocker.patch.object(reconciler.publish_client, "ensure_published")
 
@@ -79,7 +100,9 @@ releases:
 
     reconciler.reconcile()
 
-    created_changelog = notes_client.markdown_file("2e921c9adfc71f3edc96a9eb5d85fc742e7d8a9f")
+    created_changelog = notes_client.markdown_file(
+        "2e921c9adfc71f3edc96a9eb5d85fc742e7d8a9f"
+    )
     assert "TODO:" == created_changelog
     assert discourse_client.created_posts == []
     assert discourse_client.created_topics == []
@@ -126,7 +149,9 @@ releases:
         "replica_version_proposals",
         return_value={"2e921c9adfc71f3edc96a9eb5d85fc742e7d8a9f": [{"id": 12345}]},
     )
-    reconciler.loader = StaticReleaseLoader(config, changelogs={"2e921c9adfc71f3edc96a9eb5d85fc742e7d8a9f": "TODO:"})
+    reconciler.loader = StaticReleaseLoader(
+        config, changelogs={"2e921c9adfc71f3edc96a9eb5d85fc742e7d8a9f": "TODO:"}
+    )
     reconciler.reconcile()
 
     # TODO: change to not called
@@ -177,7 +202,10 @@ releases:
     ]
     assert versions_to_unelect(
         index,
-        active_versions=["31e9076fb99dfc36eb27fb3a2edc68885e6163ac", "799e8401952ae9188242585cb9d52e19a8296a71"],
+        active_versions=[
+            "31e9076fb99dfc36eb27fb3a2edc68885e6163ac",
+            "799e8401952ae9188242585cb9d52e19a8296a71",
+        ],
         elected_versions=[
             "2e921c9adfc71f3edc96a9eb5d85fc742e7d8a9f",
             "31e9076fb99dfc36eb27fb3a2edc68885e6163ac",
@@ -203,7 +231,10 @@ releases:
     # version not in release index
     assert versions_to_unelect(
         index,
-        active_versions=["799e8401952ae9188242585cb9d52e19a8296a71", "9979097df5672caa85c5eec9f9878453a9f2deae"],
+        active_versions=[
+            "799e8401952ae9188242585cb9d52e19a8296a71",
+            "9979097df5672caa85c5eec9f9878453a9f2deae",
+        ],
         elected_versions=[
             "2e921c9adfc71f3edc96a9eb5d85fc742e7d8a9f",
             "31e9076fb99dfc36eb27fb3a2edc68885e6163ac",
@@ -237,18 +268,25 @@ releases:
     )
 
     assert (
-        oldest_active_release(index, active_versions=["2e921c9adfc71f3edc96a9eb5d85fc742e7d8a9f"]).rc_name
+        oldest_active_release(
+            index, active_versions=["2e921c9adfc71f3edc96a9eb5d85fc742e7d8a9f"]
+        ).rc_name
         == "rc--2024-02-21_23-01"
     )
     assert (
         oldest_active_release(
             index,
-            active_versions=["2e921c9adfc71f3edc96a9eb5d85fc742e7d8a9f", "31e9076fb99dfc36eb27fb3a2edc68885e6163ac"],
+            active_versions=[
+                "2e921c9adfc71f3edc96a9eb5d85fc742e7d8a9f",
+                "31e9076fb99dfc36eb27fb3a2edc68885e6163ac",
+            ],
         ).rc_name
         == "rc--2024-02-14_23-01"
     )
     assert (
-        oldest_active_release(index, active_versions=["31e9076fb99dfc36eb27fb3a2edc68885e6163ac"]).rc_name
+        oldest_active_release(
+            index, active_versions=["31e9076fb99dfc36eb27fb3a2edc68885e6163ac"]
+        ).rc_name
         == "rc--2024-02-14_23-01"
     )
 
@@ -269,7 +307,10 @@ dff2072e34071110234b0cb169705efc13284e4a99b7795ef1951af1fe7b41ac *update-img.tar
         return SimpleNamespace(content=content.encode())
 
     mocker.patch("requests.get", new=Mock(side_effect=mock_download_files))
-    assert version_package_checksum("notimporant") == "9ca7002a723b932c3fb25293fc541e0b156170ec1e9a2c6a83c9733995051187"
+    assert (
+        version_package_checksum("notimporant")
+        == "9ca7002a723b932c3fb25293fc541e0b156170ec1e9a2c6a83c9733995051187"
+    )
     assert requests.get.call_count == 3  # pylint: disable=no-member
 
 
@@ -302,7 +343,9 @@ dff2072e34071110234b0cb169705efc13284e4a99b7795ef1951af1fe7b41ac *update-img.tar
 def test_find_base_release():
     with tempfile.TemporaryDirectory() as repo_cache_dir:
         ic_repo = git_repo.GitRepo(
-            "https://github.com/dfinity/ic.git", main_branch="master", repo_cache_dir=pathlib.Path(repo_cache_dir)
+            "https://github.com/dfinity/ic.git",
+            main_branch="master",
+            repo_cache_dir=pathlib.Path(repo_cache_dir),
         )
         index = parse_yaml_raw_as(
             release_index.Model,
@@ -417,27 +460,39 @@ releases:
 """,
         )
 
-        assert find_base_release(ic_repo, index, "48c500d1501e4165fc183e508872a2ef13fd0bef") == (
+        assert find_base_release(
+            ic_repo, index, "48c500d1501e4165fc183e508872a2ef13fd0bef"
+        ) == (
             "246d0ce0784d9990c06904809722ce5c2c816269",
             "release-2024-06-12_23-01-base",
         )
-        assert find_base_release(ic_repo, index, "246d0ce0784d9990c06904809722ce5c2c816269") == (
+        assert find_base_release(
+            ic_repo, index, "246d0ce0784d9990c06904809722ce5c2c816269"
+        ) == (
             "d19fa446ab35780b2c6d8b82ea32d808cca558d5",
             "release-2024-06-05_23-01-base",
         )
-        assert find_base_release(ic_repo, index, "9866a6f5cb43c54e3d87fa02a4eb80d0f159dddb") == (
+        assert find_base_release(
+            ic_repo, index, "9866a6f5cb43c54e3d87fa02a4eb80d0f159dddb"
+        ) == (
             "2c4566b7b7af453167785504ba3c563e09f38504",
             "release-2024-05-09_23-02-base",
         )
-        assert find_base_release(ic_repo, index, "63acf4f88b20ec0c6384f4e18f0f6f69fc5d9b9f") == (
+        assert find_base_release(
+            ic_repo, index, "63acf4f88b20ec0c6384f4e18f0f6f69fc5d9b9f"
+        ) == (
             "0a51fd74f08b2e6f23d6e1d60f1f52eb73b40ccc",
             "release-2024-04-17_23-01-query-stats",
         )
-        assert find_base_release(ic_repo, index, "0d2b3965c813cd3a39ceedacd97fa2eee8760074") == (
+        assert find_base_release(
+            ic_repo, index, "0d2b3965c813cd3a39ceedacd97fa2eee8760074"
+        ) == (
             "a3831c87440df4821b435050c8a8fcb3745d86f6",
             "release-2024-07-10_23-01-base",
         )
-        assert find_base_release(ic_repo, index, "ec35ebd252d4ffb151d2cfceba3a86c4fb87c6d6") == (
+        assert find_base_release(
+            ic_repo, index, "ec35ebd252d4ffb151d2cfceba3a86c4fb87c6d6"
+        ) == (
             "5ba1412f9175d987661ae3c0d8dbd1ac3e092b7d",
             "release-2024-05-15_23-02-base",
         )

@@ -7,3 +7,4 @@ replica-releases.*
 Cargo.Bazel.lock
 pyproject.toml
 requirements.*lock
+VERSION

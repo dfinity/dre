@@ -6,6 +6,7 @@ exports_files([
     "rustfmt.toml",
     "cordoned_features.yaml",
     "WORKSPACE.bazel",
+    "mypy.ini",
 ])
 
 alias(

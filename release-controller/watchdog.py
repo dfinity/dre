@@ -22,6 +22,7 @@ class Watchdog:
     def start(self):
         """Start the watchdog timer."""
         self._timer = threading.Timer(self.timeout, self._handle_timeout)
+        self._timer.setDaemon(True)
         self._timer.start()
 
     def report_healthy(self):

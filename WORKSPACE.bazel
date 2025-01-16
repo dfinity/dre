@@ -17,6 +17,7 @@ load("@bazel_skylib//:workspace.bzl", "bazel_skylib_workspace")
 
 bazel_skylib_workspace()
 
+# Overridden in MODULE.bazel when running with --enable_bzlmod.
 http_archive(
     name = "rules_python",
     sha256 = "c285495ee02df843a337c78617c196b7a87ea11da8961b7dd5ae28d43f9a1d85",
@@ -60,9 +61,9 @@ install_deps()
 
 http_archive(
     name = "aspect_bazel_lib",
-    sha256 = "3e0a430ada9b8f0f845767a267cf584bc94b8ec642d6093f31dca3938b18f6a1",
-    strip_prefix = "bazel-lib-2.6.0",
-    url = "https://github.com/aspect-build/bazel-lib/releases/download/v2.6.0/bazel-lib-v2.6.0.tar.gz",
+    sha256 = "c96db69dd2714a37f3298338a1a42b27e3a2696c3b36dd4441b9bf7a1a12bee0",
+    strip_prefix = "bazel-lib-2.11.0",
+    url = "https://github.com/bazel-contrib/bazel-lib/releases/download/v2.11.0/bazel-lib-v2.11.0.tar.gz",
 )
 
 load("@aspect_bazel_lib//lib:repositories.bzl", "aspect_bazel_lib_dependencies", "aspect_bazel_lib_register_toolchains")
@@ -100,7 +101,7 @@ rust_analyzer_dependencies()
 rust_register_toolchains(
     edition = "2021",
     versions = [
-        "1.80.0",
+        "1.82.0",
     ],
 )
 
