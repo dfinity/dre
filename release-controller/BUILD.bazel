@@ -33,13 +33,12 @@ env = {
     "BAZEL": "true",
 }
 
+reconciler_deps = glob(["*.py"], exclude = ["pytest.py", "commit_annotator.py", "ci_check.py"])
+
 py_binary(
     name = "release-controller",
     main = "reconciler.py",
-    srcs = glob(
-        ["*.py"],
-        exclude=["pytest.py", "ci_check.py"]
-    ),
+    srcs = reconciler_deps,
     tags = ["typecheck"],
     env = env,
     deps = deps,
@@ -88,7 +87,7 @@ py_test(
 
 py_test(
     name = "test_reconciler",
-    srcs = ["pytest.py"] + ["tests/test_reconciler.py"] + glob(["tests/mock_*.py"]) + glob(["*.py"], exclude = ["pytest.py"]),
+    srcs = ["pytest.py"] + ["tests/test_reconciler.py"] + glob(["tests/mock_*.py"]) + reconciler_deps,
     data = glob(["tests/test_data/*"]),
     main = "pytest.py",
     env = env,

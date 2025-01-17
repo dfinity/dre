@@ -10,7 +10,7 @@ import typing
 
 from dataclasses import dataclass
 
-from commit_annotator import GUESTOS_CHANGED_NOTES_NAMESPACE
+from const import GUESTOS_CHANGED_NOTES_NAMESPACE
 from git_repo import GitRepo
 from util import auto_progressbar
 
