@@ -148,7 +148,7 @@ class PublishNotesClient:
             return
 
         if not re.match(
-            r"^Review checklist=+Please cross\\-out your team once you finished the review\s*$",
+            r"^Review checklist=+Please cross(\\|)-out your team once you finished the review\s*$",
             changelog[:release_notes_start].replace("\n", ""),
         ):
             logging.info("release notes for version %s not yet ready", version)

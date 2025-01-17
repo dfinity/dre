@@ -9,7 +9,13 @@ if __name__ == "__main__":
     sys.path.append(os.path.join(dir_path, "tests"))
 
     if hasattr(pytest, "main") or os.getenv("RUN_ANYWAY"):
-        args = ["-vv", "-n=8"] + (sys.argv[1:] if sys.argv[1:] else [dir_path])
+        import logging
+
+        logging.basicConfig(level=logging.INFO)
+
+        args = ["-vv", "--show-capture=all", "-n=8"] + (
+            sys.argv[1:] if sys.argv[1:] else [dir_path]
+        )
         raise SystemExit(
             pytest.main(
                 args=args,

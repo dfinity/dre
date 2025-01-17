@@ -1,7 +1,6 @@
 # type: ignore
 
 import httpretty.utils
-from forum import ReleaseCandidateForumClient
 from release_index import Release
 from release_index import Version
 import dryrun

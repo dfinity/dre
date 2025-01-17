@@ -77,7 +77,10 @@ long_tests = [
 
 py_test(
     name = "pytest",
-    srcs = ["tester.py"] + glob(["tests/*.py"], exclude = long_tests + ["tests/test_reconciler.py"]) + glob(["*.py"], exclude = ["tester.py"]),
+    srcs = ["tester.py"] + glob(
+        ["tests/*.py"],
+        exclude = long_tests + ["tests/test_reconciler.py", "tests/test_forum.py", "tests/test_publish_notes.py"]
+    ) + glob(["*.py"], exclude = ["tester.py"]),
     data = glob(["tests/test_data/*"]),
     main = "tester.py",
     env = env,
@@ -100,6 +103,17 @@ py_test(
 py_test(
     name = "test_forum",
     srcs = ["tester.py"] + ["tests/test_forum.py"] + glob(["tests/mock_*.py"]) + reconciler_deps,
+    data = glob(["tests/test_data/*"]),
+    main = "tester.py",
+    env = env,
+    tags = ["no-sandbox", "typecheck"],
+    deps = deps + dev_deps,
+    env_inherit = ["HOME"],
+)
+
+py_test(
+    name = "test_publish_notes",
+    srcs = ["tester.py"] + ["tests/test_publish_notes.py"] + glob(["tests/mock_*.py"]) + reconciler_deps,
     data = glob(["tests/test_data/*"]),
     main = "tester.py",
     env = env,

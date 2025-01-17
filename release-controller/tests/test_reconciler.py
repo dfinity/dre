@@ -7,9 +7,8 @@ import git_repo
 import pytest
 import release_index
 import typing
-from forum import ReleaseCandidateForumClient
+import dryrun
 from github import Github
-from mock_discourse import DiscourseClientMock  # type: ignore[import-not-found]
 from dryrun import ReleaseNotesClient as ReleaseNotesClientMock
 from publish_notes import PublishNotesClient
 from pydantic_yaml import parse_yaml_raw_as
@@ -53,8 +52,8 @@ class MockReplicaVersionProposalProvider(object):
 @pytest.mark.skip(reason="not finished")
 def test_e2e_mock_new_release(mocker: pytest_mock.plugin.MockerFixture) -> None:
     """Test the workflow when a new release is added to the index."""
-    discourse_client = DiscourseClientMock()
-    forum_client = ReleaseCandidateForumClient(discourse_client)
+    discourse_client = dryrun.StubDiscourseClient()
+    forum_client = dryrun.ForumClient(discourse_client)
     notes_client = ReleaseNotesClientMock()
     github_client = Github()
     mocker.patch.object(github_client, "get_repo")
@@ -96,8 +95,7 @@ releases:
     )
 
     assert not notes_client.markdown_file("2e921c9adfc71f3edc96a9eb5d85fc742e7d8a9f")
-    assert discourse_client.created_posts == []
-    assert discourse_client.created_topics == []
+    assert discourse_client.topics == []
     # This test is out of date.
     # The logic of the following two lines is not valid anymore:
     # assert reconciler.publish_client.ensure_published.call_count == 0
@@ -109,8 +107,7 @@ releases:
         "2e921c9adfc71f3edc96a9eb5d85fc742e7d8a9f"
     )
     assert "TODO:" == created_changelog
-    assert discourse_client.created_posts == []
-    assert discourse_client.created_topics == []
+    assert discourse_client.topics == []
     # This test is out of date.
     # The logic of the following lines is not valid anymore:
     # assert reconciler.publish_client.ensure_published.call_count == 0
@@ -147,8 +144,7 @@ releases:
     #    version="2e921c9adfc71f3edc96a9eb5d85fc742e7d8a9f",
     #    changelog="TODO:",
     # )
-    assert discourse_client.created_posts == []
-    assert discourse_client.created_topics == []
+    assert discourse_client.topics == []
 
     # Changelog merged into main
     mocker.patch.object(reconciler.publish_client, "ensure_published")
@@ -168,8 +164,8 @@ releases:
     # TODO: governance canister should be called
     # TODO: ic-admin should be executed with certain arguments, also with forum link
     # TODO: forum post should have been updated with proposal linked
-    assert len(discourse_client.created_posts) == 1
-    assert len(discourse_client.created_topics) == 1
+    assert len(discourse_client.topics) == 1
+    assert len(discourse_client.topics[0]["post_stream"]["posts"]) == 1
 
 
 def test_versions_to_unelect() -> None:
