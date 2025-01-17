@@ -38,7 +38,7 @@ py_binary(
     main = "reconciler.py",
     srcs = glob(
         ["*.py"],
-        exclude=["pytest.py"]
+        exclude=["pytest.py", "ci_check.py"]
     ),
     tags = ["typecheck"],
     env = env,
@@ -88,7 +88,7 @@ py_test(
 
 py_test(
     name = "test_reconciler",
-    srcs = ["pytest.py"] + ["tests/test_reconciler.py"] + glob(["*.py"], exclude = ["pytest.py"]),
+    srcs = ["pytest.py"] + ["tests/test_reconciler.py"] + glob(["tests/mock_*.py"]) + glob(["*.py"], exclude = ["pytest.py"]),
     data = glob(["tests/test_data/*"]),
     main = "pytest.py",
     env = env,

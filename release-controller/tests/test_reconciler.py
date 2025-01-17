@@ -3,11 +3,6 @@ import tempfile
 from unittest.mock import Mock
 import pytest_mock.plugin
 
-import os
-import sys
-
-sys.path.append(os.path.join(os.path.dirname(__file__), os.path.pardir))
-
 import git_repo
 import pytest
 import release_index

@@ -1,6 +1,6 @@
 import httpretty.utils
 from forum import ReleaseCandidateForumClient
-from mock_discourse import DiscourseClientMock
+from tests.mock_discourse import DiscourseClientMock
 from release_index import Release
 from release_index import Version
 
