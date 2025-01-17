@@ -13,6 +13,7 @@ from release_notes import PreparedReleaseNotes
 import pathlib
 
 REPLICA_RELEASES_DIR = "replica-releases"
+LOGGER = logging.getLogger(__name__)
 
 
 def post_process_release_notes(release_notes: str) -> str:
@@ -168,13 +169,13 @@ def check_number_of_changes(changelog: str) -> int:
     num_changes = 0
     found_beginning = False
     for line in changelog.splitlines():
-        print("Processing line whole:", line)
+        LOGGER.debug("Processing line whole: %s", line)
         if not found_beginning and line.startswith(BEGINNING_MARKER):
             found_beginning = True
             continue
 
         if found_beginning:
-            print("Processing line:", line)
+            LOGGER.debug("Processing line: %s", line)
             if line.startswith(ENDING_MARKER):
                 break
             if line.startswith("*"):
