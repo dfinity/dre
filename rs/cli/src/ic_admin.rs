@@ -18,7 +18,7 @@ use strum::Display;
 const MAX_SUMMARY_CHAR_COUNT: usize = 29000;
 
 #[automock]
-// If we allow this lint, automock complains
+// automock complains without the explicit allow below
 #[allow(elided_named_lifetimes)]
 pub trait IcAdmin: Send + Sync + Debug {
     fn ic_admin_path(&self) -> Option<String>;
