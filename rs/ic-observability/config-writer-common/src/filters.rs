@@ -40,7 +40,7 @@ impl TargetGroupFilter for TargetGroupFilterList {
         if self.filters.is_empty() {
             true
         } else {
-            self.filters.iter().map(|f| f.filter(target_group.clone())).all(|status| status)
+            self.filters.iter().all(|f| f.filter(target_group.clone()))
         }
     }
 }

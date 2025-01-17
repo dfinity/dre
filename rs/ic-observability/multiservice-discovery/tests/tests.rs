@@ -101,6 +101,9 @@ mod tests {
             const REQWEST_TIMEOUT: Duration = Duration::from_secs(240);
 
             let args = vec!["--targets-dir", registry_dir.path().to_str().unwrap()];
+            #[allow(clippy::zombie_processes)]
+            // This test should be refactored to use something like
+            // the following example: https://github.com/tokio-rs/axum/blob/main/examples/testing/src/main.rs
             let mut sd_server = self.command.args(args).spawn().unwrap();
             let targets: Vec<PrometheusStaticConfig> = reqwest_retry(TARGETS_URL, REQWEST_TIMEOUT).await?.json().await?;
             sd_server.kill().unwrap();

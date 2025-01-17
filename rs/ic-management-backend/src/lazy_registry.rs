@@ -611,7 +611,7 @@ impl LazyRegistry for LazyRegistryImpl {
                     let principal = PrincipalId::from_str(p).expect("Invalid subnet principal id");
                     let subnet_nodes = all_nodes
                         .iter()
-                        .filter(|(_, n)| n.subnet_id.map_or(false, |s| s == principal))
+                        .filter(|(_, n)| (n.subnet_id == Some(principal)))
                         .map(|(_, n)| n)
                         .cloned()
                         .collect_vec();

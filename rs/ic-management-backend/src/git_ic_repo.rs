@@ -74,7 +74,8 @@ impl IcRepo {
                 .status()?;
         }
 
-        lock_file.unlock()?;
+        // To avoid something like: #[allow(unstable_name_collisions)]
+        fs2::FileExt::unlock(&lock_file)?;
 
         repo.load_commit_branch_cache()?;
 
