@@ -50,7 +50,7 @@ class MockReplicaVersionProposalProvider(object):
         return self.rep
 
 
-@pytest.mark.skip(reason="not finished")  # type: ignore
+@pytest.mark.skip(reason="not finished")
 def test_e2e_mock_new_release(mocker: pytest_mock.plugin.MockerFixture) -> None:
     """Test the workflow when a new release is added to the index."""
     discourse_client = DiscourseClientMock()
@@ -366,7 +366,7 @@ dff2072e34071110234b0cb169705efc13284e4a99b7795ef1951af1fe7b41ac *update-img.tar
 
     mocker.patch("requests.get", new=mock_request_get(content_getter))
 
-    with pytest.raises(Exception) as e:  # type: ignore
+    with pytest.raises(Exception) as e:
         version_package_checksum("notimporant")
         assert "do not match contents" in str(e.value)
 

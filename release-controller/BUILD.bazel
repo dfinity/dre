@@ -33,7 +33,7 @@ env = {
     "BAZEL": "true",
 }
 
-reconciler_deps = glob(["*.py"], exclude = ["pytest.py", "commit_annotator.py", "ci_check.py"])
+reconciler_deps = glob(["*.py"], exclude = ["tester.py", "commit_annotator.py", "ci_check.py"])
 
 py_binary(
     name = "release-controller",
@@ -77,8 +77,9 @@ long_tests = [
 
 py_test(
     name = "pytest",
-    srcs = ["pytest.py"] + glob(["tests/*.py"], exclude = long_tests + ["tests/test_reconciler.py"]) + glob(["*.py"], exclude = ["pytest.py"]),
+    srcs = ["tester.py"] + glob(["tests/*.py"], exclude = long_tests + ["tests/test_reconciler.py"]) + glob(["*.py"], exclude = ["tester.py"]),
     data = glob(["tests/test_data/*"]),
+    main = "tester.py",
     env = env,
     tags = ["no-sandbox"],
     deps = deps + dev_deps,
@@ -87,9 +88,20 @@ py_test(
 
 py_test(
     name = "test_reconciler",
-    srcs = ["pytest.py"] + ["tests/test_reconciler.py"] + glob(["tests/mock_*.py"]) + reconciler_deps,
+    srcs = ["tester.py"] + ["tests/test_reconciler.py"] + glob(["tests/mock_*.py"]) + reconciler_deps,
     data = glob(["tests/test_data/*"]),
-    main = "pytest.py",
+    main = "tester.py",
+    env = env,
+    tags = ["no-sandbox", "typecheck"],
+    deps = deps + dev_deps,
+    env_inherit = ["HOME"],
+)
+
+py_test(
+    name = "test_forum",
+    srcs = ["tester.py"] + ["tests/test_forum.py"] + glob(["tests/mock_*.py"]) + reconciler_deps,
+    data = glob(["tests/test_data/*"]),
+    main = "tester.py",
     env = env,
     tags = ["no-sandbox", "typecheck"],
     deps = deps + dev_deps,

@@ -211,16 +211,23 @@ class ReleaseCandidateForumClient:
     def __init__(self, discourse_client: DiscourseClient):
         """Create a new client."""
         self.discourse_client = discourse_client
-        self.nns_proposal_discussions_category_id: int = next(
-            (
-                c
-                for c in self.discourse_client.categories(include_subcategories="true")  # type: ignore[no-untyped-call]
-                if c["name"] == "NNS proposal discussions"
-            ),
-            self.discourse_client.category(76)[  # type: ignore[no-untyped-call]
+        existing_categories = [
+            c
+            for c in self.discourse_client.categories(include_subcategories="true")  # type: ignore[no-untyped-call]
+            if c["name"] == "NNS proposal discussions"
+        ]
+        if existing_categories:
+            self.nns_proposal_discussions_category_id: int = existing_categories[0][
+                "id"
+            ]
+        else:
+            self.nns_proposal_discussions_category_id = self.discourse_client.category(
+                76
+            )[  # type: ignore[no-untyped-call]
                 "category"
-            ],  # hardcoded category id, seems like "include_subcategories" is not working
-        )["id"]
+            ][  # hardcoded category id, seems like "include_subcategories" is not working
+                "id"
+            ]
 
     def get_or_create(self, release: Release) -> ReleaseCandidateForumTopic:
         """Get or create a forum topic for the given release."""
