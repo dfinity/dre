@@ -3,6 +3,7 @@ import os
 import pathlib
 import subprocess
 import tempfile
+import time
 import typing
 
 from dotenv import load_dotenv
@@ -33,6 +34,8 @@ class Commit:
 class GitRepo:
     """Class for interacting with a git repository."""
 
+    _last_notes_frequency = 30.0
+
     def __init__(
         self,
         repo: str,
@@ -57,6 +60,7 @@ class GitRepo:
         )
         self.cache: dict[str, Commit] = {}
         self.fetch()
+        self._last_notes_fetch = 0.0
 
     def __del__(self) -> None:
         """Clean up the temporary directory."""
@@ -346,8 +350,9 @@ class GitRepo:
         self._push_notes(namespace=namespace)
 
     def get_note(self, namespace: str, object: str) -> typing.Optional[str]:
-        # FIXME: This is exceedingly wasteful and slow.
-        self._fetch_notes()
+        if time.time() - self._last_notes_fetch > self._last_notes_frequency:
+            self._fetch_notes()
+            self._last_notes_fetch = time.time()
         if (
             subprocess.check_output(
                 ["git", "rev-parse", object],
