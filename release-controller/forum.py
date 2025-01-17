@@ -23,18 +23,16 @@ def _post_template(
     if isinstance(proposal, reconciler_state.NoProposal):
         return f"We're preparing [a new IC release](https://github.com/dfinity/ic/tree/{version_name}). The changelog will be announced soon."
 
-    return textwrap.dedent(
-        f"""\
-        Hello there!
+    return f"""\
+Hello there!
 
-        We are happy to announce that voting is now open for [a new IC release](https://github.com/dfinity/ic/tree/{version_name}).
-        The NNS proposal is here: [IC NNS Proposal {proposal}](https://dashboard.internetcomputer.org/proposal/{proposal}).
+We are happy to announce that voting is now open for [a new IC release](https://github.com/dfinity/ic/tree/{version_name}).
+The NNS proposal is here: [IC NNS Proposal {proposal}](https://dashboard.internetcomputer.org/proposal/{proposal}).
 
-        Here is a summary of the changes since the last release:
+Here is a summary of the changes since the last release:
 
-        {changelog}
-        """
-    )
+{changelog}
+"""
 
 
 class ReleaseCandidateForumPost:
