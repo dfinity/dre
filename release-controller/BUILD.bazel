@@ -25,6 +25,8 @@ deps = [
 dev_deps = [
     requirement("httpretty"),
     requirement("pytest-xdist"),
+    requirement("types-requests"),
+    requirement("mypy"),
 ]
 
 env = {
@@ -90,7 +92,7 @@ py_test(
     data = glob(["tests/test_data/*"]),
     main = "pytest.py",
     env = env,
-    tags = ["no-sandbox", "typecheck"],
+    tags = ["no-sandbox"],
     deps = deps + dev_deps,
     env_inherit = ["HOME"],
 )
