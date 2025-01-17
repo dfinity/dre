@@ -3,6 +3,7 @@ import os
 import pathlib
 import subprocess
 import tempfile
+import time
 import typing
 
 from dotenv import load_dotenv
@@ -33,12 +34,14 @@ class Commit:
 class GitRepo:
     """Class for interacting with a git repository."""
 
+    _last_notes_frequency = 30.0
+
     def __init__(
         self,
         repo: str,
-        repo_cache_dir=pathlib.Path.home() / ".cache/git",
-        main_branch="main",
-    ):
+        repo_cache_dir: pathlib.Path = pathlib.Path.home() / ".cache/git",
+        main_branch: str = "main",
+    ) -> None:
         """Create a new GitRepo object."""
         if not repo.startswith("https://"):
             raise ValueError("invalid repo")
@@ -57,13 +60,14 @@ class GitRepo:
         )
         self.cache: dict[str, Commit] = {}
         self.fetch()
+        self._last_notes_fetch = 0.0
 
-    def __del__(self):
+    def __del__(self) -> None:
         """Clean up the temporary directory."""
         if hasattr(self, "cache_temp_dir"):
             self.cache_temp_dir.cleanup()
 
-    def ensure_branches(self, branches: list[str]):
+    def ensure_branches(self, branches: list[str]) -> None:
         """Ensure that the given branches exist."""
         for branch in branches:
             try:
@@ -134,7 +138,7 @@ class GitRepo:
 
         return commit
 
-    def fetch(self):
+    def fetch(self) -> None:
         """Fetch the repository."""
         if (self.dir / ".git").exists():
             subprocess.check_call(
@@ -237,7 +241,7 @@ class GitRepo:
         """Get the file for the given path."""
         return self.dir / path
 
-    def file_changes_for_commit(self, commit_hash) -> list[FileChange]:
+    def file_changes_for_commit(self, commit_hash: str) -> list[FileChange]:
         cmd = [
             "git",
             "diff",
@@ -271,7 +275,7 @@ class GitRepo:
 
         return changes
 
-    def checkout(self, ref: str):
+    def checkout(self, ref: str) -> None:
         """Checkout the given ref."""
         subprocess.check_call(
             ["git", "reset", "--hard", "--quiet"],
@@ -304,7 +308,7 @@ class GitRepo:
             .strip()
         )
 
-    def branch_list(self, pattern) -> typing.List[str]:
+    def branch_list(self, pattern: str) -> typing.List[str]:
         return [
             b.strip().removeprefix("origin/")
             for b in subprocess.check_output(
@@ -315,20 +319,20 @@ class GitRepo:
             .splitlines()
         ]
 
-    def _fetch_notes(self):
+    def _fetch_notes(self) -> None:
         ref = "refs/notes/*"
         subprocess.check_call(
             ["git", "fetch", "origin", f"{ref}:{ref}", "-f", "--prune", "--quiet"],
             cwd=self.dir,
         )
 
-    def _push_notes(self, namespace: str):
+    def _push_notes(self, namespace: str) -> None:
         subprocess.check_call(
             ["git", "push", "origin", f"refs/notes/{namespace}", "-f", "--quiet"],
             cwd=self.dir,
         )
 
-    def _notes(self, namespace: str, *args) -> str:
+    def _notes(self, namespace: str, *args: str) -> str:
         return subprocess.check_output(
             ["git", "notes", f"--ref={namespace}", *args],
             cwd=self.dir,
@@ -346,7 +350,9 @@ class GitRepo:
         self._push_notes(namespace=namespace)
 
     def get_note(self, namespace: str, object: str) -> typing.Optional[str]:
-        self._fetch_notes()
+        if time.time() - self._last_notes_fetch > self._last_notes_frequency:
+            self._fetch_notes()
+            self._last_notes_fetch = time.time()
         if (
             subprocess.check_output(
                 ["git", "rev-parse", object],
@@ -370,7 +376,7 @@ class GitRepo:
         )
 
     # TODO: test
-    def push_release_tags(self, release: Release):
+    def push_release_tags(self, release: Release) -> None:
         self.fetch()
         for v in release.versions:
             subprocess.check_call(
@@ -403,11 +409,10 @@ class GitRepo:
                         f"refs/tags/{tag}",
                     ],
                     cwd=self.dir,
+                    text=True,
                 )
-                .decode("utf-8")
                 .strip()
                 .split(" ")[0]
-                != v.version
             )
             if tag_version == v.version:
                 logging.info(
@@ -430,7 +435,7 @@ class GitRepo:
                 )
 
 
-def main():
+def main() -> None:
     load_dotenv()
 
     token = os.environ["GITHUB_TOKEN"]

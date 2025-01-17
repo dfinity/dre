@@ -14,7 +14,7 @@ RELEASE_INDEX_FILE = "release-index.yaml"
 LOGGER = logging.getLogger(__name__)
 
 
-def _verify_release_instructions(version: str, security_fix: bool):
+def _verify_release_instructions(version: str, security_fix: bool) -> str:
     with_security_caveat = ""
     if security_fix:
         with_security_caveat = "\n_You will be able to follow the instructions below as soon as the source code has been released._\n"
@@ -50,7 +50,7 @@ class ReleaseLoader:
             open(self.release_index_dir / RELEASE_INDEX_FILE, "r").read(),
         )
 
-    def changelog_commit(self, _) -> str:
+    def changelog_commit(self, version: str) -> str:
         """Return the commit hash for the changelog file."""
         return ""
 
@@ -62,9 +62,12 @@ class ReleaseLoader:
         """Return the changelog for the given version."""
         version_changelog_path = self.release_index_dir / self.changelog_path(version)
         if version_changelog_path.exists():
-            self._logger.debug("Changelog for %s exists.", version)
+            self._logger.debug("Changelog for %s is ready for proposal.", version)
             return open(version_changelog_path, "r").read()
-        self._logger.debug("Changelog for %s does not exist.", version)
+        self._logger.debug(
+            "Changelog for %s is not ready for proposal; it does not exist yet.",
+            version,
+        )
         return None
 
     def proposal_summary(self, version: str, security_fix: bool) -> str | None:
@@ -84,7 +87,7 @@ class ReleaseLoader:
 class DevReleaseLoader(ReleaseLoader):
     """Load release information from the current git repository."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Create a new DevReleaseLoader."""
         dev_repo_root = (
             subprocess.check_output(
@@ -112,17 +115,17 @@ class GitReleaseLoader(ReleaseLoader):
             self.git_repo = git_repo
         super().__init__(self.git_repo.dir)
 
-    def index(self):
+    def index(self) -> release_index.Model:
         """Fetch the latest changes from the git repo and load the release index."""
         self.git_repo.fetch()
         return super().index()
 
-    def proposal_summary(self, version: str, security_fix: bool):
+    def proposal_summary(self, version: str, security_fix: bool) -> str | None:
         """Fetch the latest changes from the git repo and load the proposal summary."""
         self.git_repo.fetch()
         return super().proposal_summary(version, security_fix)
 
-    def changelog_commit(self, version) -> str:
+    def changelog_commit(self, version: str) -> str:
         """Return the commit hash for the changelog file."""
         return self.git_repo.latest_commit_for_file(self.changelog_path(version))
 
@@ -130,9 +133,11 @@ class GitReleaseLoader(ReleaseLoader):
 class StaticReleaseLoader(ReleaseLoader):
     """Load release information from static files."""
 
-    def __init__(self, config, changelogs: dict[str, str] = {}):
+    def __init__(self, config: str, changelogs: dict[str, str] = {}) -> None:
         """Create a new StaticReleaseLoader."""
-        self.tempdir = tempfile.TemporaryDirectory()
+        self.tempdir = tempfile.TemporaryDirectory(
+            prefix=f"reconciler-{self.__class__.__name__}-", delete=False
+        )
         super().__init__(pathlib.Path(self.tempdir.name))
         with open(self.release_index_dir / RELEASE_INDEX_FILE, "w") as f:
             f.write(config)
@@ -140,6 +145,6 @@ class StaticReleaseLoader(ReleaseLoader):
             with open(self.release_index_dir / f"{v}.md", "w") as f:
                 f.write(changelog)
 
-    def __del__(self):
+    def __del__(self) -> None:
         """Clean up the temporary directory."""
         self.tempdir.cleanup()

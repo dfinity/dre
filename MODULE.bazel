@@ -19,6 +19,17 @@ use_repo(pip, "python_deps")
 
 bazel_dep(name = "rules_mypy", version = "0.22.0")
 
+types = use_extension("@rules_mypy//mypy:types.bzl", "types")
+types.requirements(
+    name = "pip_types",
+    # `@pip` in the next line corresponds to the `hub_name` when using
+    # rules_python's `pip.parse(...)`.
+    pip_requirements = "@python_deps//:requirements.bzl",
+    # also legal to pass a `requirements.in` here
+    requirements_txt = "//:requirements-dev.lock",
+)
+use_repo(types, "pip_types")
+
 bazel_dep(name = "rules_pkg", version = "1.0.1")
 bazel_dep(name = "rules_oci", version = "2.0.0")
 

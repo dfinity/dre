@@ -159,6 +159,9 @@ Make sure also that few minutes have passed and that public dashboard still does
 
 ## Development
 
+Please see the parent folder's `README.md` for virtual environment setup.
+Follow the whole *Contributing* section to the letter.
+
 ### Running the reconciler in dry-run mode:
 
 ```sh
@@ -174,27 +177,59 @@ If you want the release notes this mock mode stores to be persisted in a folder
 so they are not regenerated on every run:
 
 ```sh
-export DRY_RUN_RELEASE_NOTES_STORAGE=/tmp/folder
+export RECONCILER_DRY_RUN_RELEASE_NOTES_STORAGE=/tmp/dryrun/relnotes
 bazel run //release-controller:release-controller \
-  --action_env=DRY_RUN_RELEASE_NOTES_STORAGE \
+  --action_env=RECONCILER_DRY_RUN_RELEASE_NOTES_STORAGE \
   -- --dry-run --verbose
 ```
 
+If you want the mock forum interactions to be remembered between runs:
+
+```sh
+export RECONCILER_DRY_RUN_FORUM_STORAGE=/tmp/dryrun/forum
+bazel run //release-controller:release-controller \
+  --action_env=RECONCILER_DRY_RUN_FORUM_STORAGE \
+  -- --dry-run --verbose
+```
+
+Custom path for the reconciler state?
+
+
+```sh
+export RECONCILER_STATE_DIR=/tmp/dryrun/reconciler-state
+bazel run //release-controller:release-controller \
+  --action_env=RECONCILER_STATE_DIR \
+  -- --dry-run --verbose
+```
+
+Typing errors preventing you from running it, because you are editing code and
+testing your changes?  Add `--output_groups=-mypy` right after `bazel run`.
+
+The optional argument `--skip-preloading-state` makes it so that the reconciler
+will not preload its list of known proposals by version from the governance
+canister.  It is useful (in conjunction with an empty reconciler state folder)
+to make the reconciler do all the work of submitting proposals again.  It should
+not be used without `--dry-run`, to avoid submitting proposals twice.
+
 ### Tests
 
-Unit tests:
+#### Unit tests
 
 ```sh
 bazel test //release-controller:pytest
 ```
 
-Mypy typing tests:
+With the .venv setup, you can also run (with varying levels of success):
 
 ```sh
-bazel build \
-  --enable_bzlmod \
-  --aspects //tools:aspects.bzl%mypy_aspect \
-  --experimental_ui_max_stdouterr_bytes=10485760 \
-  --output_groups=+mypy \
-  //release-controller:release-controller
+.venv/bin/python3 -m pytest release-controller/
+```
+
+The above runs all tests.  If you want to run a specific test file,
+specify it as a path instead of the folder specified above.
+
+#### Typing correctness
+
+```sh
+bazel build //release-controller:release-controller
 ```

@@ -13,8 +13,8 @@ from tenacity import retry, stop_after_attempt
 from util import resolve_binary
 from watchdog import Watchdog
 
+from const import GUESTOS_CHANGED_NOTES_NAMESPACE
 
-GUESTOS_CHANGED_NOTES_NAMESPACE = "guestos-changed"
 GUESTOS_TARGETS_NOTES_NAMESPACE = "guestos-targets"
 GUESTOS_BAZEL_TARGETS = "//ic-os/guestos/envs/prod:update-img.tar.zst union //ic-os/setupos/envs/prod:disk-img.tar.zst"
 CUTOFF_COMMIT = "8646665552677436c8a889ce970857e531fee49b"

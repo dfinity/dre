@@ -1,6 +1,7 @@
 import logging
 import os
 import re
+import typing
 
 from dotenv import load_dotenv
 from github import Auth
@@ -12,6 +13,7 @@ from release_notes import PreparedReleaseNotes
 import pathlib
 
 REPLICA_RELEASES_DIR = "replica-releases"
+LOGGER = logging.getLogger(__name__)
 
 
 def post_process_release_notes(release_notes: str) -> str:
@@ -30,8 +32,8 @@ def post_process_release_notes(release_notes: str) -> str:
     changelog = "\n".join([line for line in lines if "~~" not in line])
     excluded_lines = [line for line in lines if "~~" in line]
     excluded_changes = [
-        l
-        for l in [
+        ln
+        for ln in [
             re.sub(
                 # remove whitespace after *
                 r"(?<=^\* )\s+",
@@ -41,7 +43,7 @@ def post_process_release_notes(release_notes: str) -> str:
             ).strip()
             for line in excluded_lines
         ]
-        if l.startswith("* [")
+        if ln.startswith("* [")
     ]
 
     EXCLUSION_REGEX = r"\\*\[AUTO\\*-EXCLUDED:([^]]+)\]"
@@ -74,6 +76,12 @@ def post_process_release_notes(release_notes: str) -> str:
     return changelog
 
 
+class PublishNotesClientProtocol(typing.Protocol):
+    def publish_if_ready(
+        self, google_doc_markdownified: PreparedReleaseNotes | None, version: str
+    ) -> None: ...
+
+
 class PublishNotesClient:
     """Publishes release notes on slack."""
 
@@ -81,7 +89,7 @@ class PublishNotesClient:
         """Initialize the client with the given repository."""
         self.repo = repo
 
-    def ensure_published(self, version: str, changelog: str):
+    def ensure_published(self, version: str, changelog: str) -> None:
         """Publish the release notes for the given version."""
         published_releases = self.repo.get_contents(f"/{REPLICA_RELEASES_DIR}")
         if not isinstance(published_releases, list):
@@ -123,8 +131,8 @@ class PublishNotesClient:
         )
 
     def publish_if_ready(
-        self, google_doc_markdownified: PreparedReleaseNotes, version: str
-    ):
+        self, google_doc_markdownified: PreparedReleaseNotes | None, version: str
+    ) -> None:
         """Publish the release notes if they are ready."""
         if not isinstance(google_doc_markdownified, str):
             logging.warning("didn't get markdown notes for %s, skipping", version)
@@ -140,7 +148,7 @@ class PublishNotesClient:
             return
 
         if not re.match(
-            r"^Review checklist=+Please cross\\-out your team once you finished the review\s*$",
+            r"^Review checklist=+Please cross(\\|)-out your team once you finished the review\s*$",
             changelog[:release_notes_start].replace("\n", ""),
         ):
             logging.info("release notes for version %s not yet ready", version)
@@ -163,13 +171,13 @@ def check_number_of_changes(changelog: str) -> int:
     num_changes = 0
     found_beginning = False
     for line in changelog.splitlines():
-        print("Processing line whole:", line)
+        LOGGER.debug("Processing line whole: %s", line)
         if not found_beginning and line.startswith(BEGINNING_MARKER):
             found_beginning = True
             continue
 
         if found_beginning:
-            print("Processing line:", line)
+            LOGGER.debug("Processing line: %s", line)
             if line.startswith(ENDING_MARKER):
                 break
             if line.startswith("*"):
@@ -178,7 +186,7 @@ def check_number_of_changes(changelog: str) -> int:
     return num_changes
 
 
-def main():
+def main() -> None:
     load_dotenv()
     github_client = Github(auth=Auth.Token(os.environ["GITHUB_TOKEN"]))
     client = PublishNotesClient(github_client.get_repo("dfinity/dre-testing"))
