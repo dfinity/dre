@@ -6,6 +6,7 @@ authors = [{ name = "DRE Team", email = "dept-DRE@dfinity.org" }]
 readme = "README.md"
 dependencies = [
     "requests>=2.32.3",
+    "types-requests>=2.32.0",
     "gitpython>=3.1.43",
     "numpy>=2.1.1",
     "pandas>=2.2.2",
@@ -50,6 +51,7 @@ dependencies = [
     "httpretty>=1.1.4",
     "aiohttp>=3.10.5",
     "uv>=0.5.20",
+    "mypy==1.14.1",
 ]
 
 [tool.rye]
