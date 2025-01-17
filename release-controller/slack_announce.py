@@ -25,7 +25,9 @@ class SlackAnnouncer(SlackAnnouncerProtocol):
         announce_release_on_slack(webhook, version_name, google_doc_url, tag_all_teams)
 
 
-def announce_release_on_slack(slack_url, version_name, google_doc_url, tag_all_teams):
+def announce_release_on_slack(
+    slack_url: str, version_name: str, google_doc_url: str, tag_all_teams: bool
+) -> None:
     slack = WebhookClient(
         url=slack_url, retry_handlers=[RetryHandler(max_retry_count=2)]
     )
@@ -49,7 +51,7 @@ Please adjust the release notes to make sure we appropriately covered all change
     )
 
 
-def main():
+def main() -> None:
     load_dotenv()
 
     announce_release_on_slack(
