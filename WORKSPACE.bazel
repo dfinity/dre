@@ -41,4 +41,3 @@ openssl_repos()
 
 load("@com_github_3rdparty_bazel_rules_openssl//bazel:deps.bzl", openssl_deps="deps")
 openssl_deps()
-
