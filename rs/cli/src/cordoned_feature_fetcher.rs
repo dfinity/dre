@@ -139,45 +139,125 @@ impl CordonedFeatureFetcher for CordonedFeatureFetcherImpl {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use reqwest::Client;
+    use std::io::Write;
+    use tempfile::NamedTempFile;
+
+    #[test]
+    fn test_fetch_from_file_success() {
+        // Create a temporary file with valid content
+        let mut temp_file = NamedTempFile::new().unwrap();
+        writeln!(
+            temp_file,
+            r#"
+            features:
+                - feature: data_center
+                  value: mu1
+                - feature: node_provider
+                  value: some-np
+            "#
+        )
+        .unwrap();
+
+        // Create a fetcher instance
+        let fetcher = CordonedFeatureFetcherImpl {
+            client: Client::new(),
+            local_copy: temp_file.path().to_path_buf(),
+            use_local_file: true,
+        };
+
+        // Fetch from the file
+        let result = fetcher.fetch_from_file();
+        assert!(result.is_ok());
+        let features = result.unwrap();
+        assert_eq!(features.len(), 2);
+    }
+
+    #[test]
+    fn test_fetch_from_file_failure() {
+        // Create a fetcher instance with a non-existent file
+        let fetcher = CordonedFeatureFetcherImpl {
+            client: Client::new(),
+            local_copy: PathBuf::from("non_existent_file.yaml"),
+            use_local_file: true,
+        };
+
+        // Fetch from the file
+        let result = fetcher.fetch_from_file();
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_parse_invalid_yaml() {
+        let contents = br#"
+        invalid_yaml:
+            - feature: data_center
+              value: mu1
+        "#;
+
+        let fetcher = CordonedFeatureFetcherImpl::new(PathBuf::new(), true).unwrap();
+        let result = fetcher.parse(contents);
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_parse_missing_feature_field() {
+        let contents = br#"
+        features:
+            - value: mu1
+        "#;
+
+        let fetcher = CordonedFeatureFetcherImpl::new(PathBuf::new(), true).unwrap();
+        let result = fetcher.parse(contents);
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_parse_missing_value_field() {
+        let contents = br#"
+        features:
+            - feature: data_center
+        "#;
+
+        let fetcher = CordonedFeatureFetcherImpl::new(PathBuf::new(), true).unwrap();
+        let result = fetcher.parse(contents);
+        assert!(result.is_err());
+    }
 
     #[test]
     fn valid_parsing() {
         let contents = br#"
-features:
-    - feature: data_center
-      value: mu1
-    - feature: node_provider
-      value: some-np
-    - feature: node_operator
-      value: some-node-operator
-    - feature: data_center_owner
-      value: some-dco
-    - feature: area
-      value: some-area
-    - feature: area
-      value: another-area
-    - feature: country
-      value: some-country
-      "#;
+        features:
+            - feature: data_center
+              value: mu1
+            - feature: node_provider
+              value: some-np
+            - feature: node_operator
+              value: some-node-operator
+            - feature: data_center_owner
+              value: some-dco
+            - feature: area
+              value: some-area
+            - feature: area
+              value: another-area
+            - feature: country
+              value: some-country
+        "#;
 
         let fetcher = CordonedFeatureFetcherImpl::new(PathBuf::new(), true).unwrap();
-
         let parsed = fetcher.parse(contents).unwrap();
-
-        assert_eq!(parsed.len(), 7)
+        assert_eq!(parsed.len(), 7);
     }
 
     #[test]
     fn valid_empty_file() {
         let contents = br#"
-features:"#;
+        features:"#;
 
         let fetcher = CordonedFeatureFetcherImpl::new(PathBuf::new(), true).unwrap();
-
         let maybe_parsed = fetcher.parse(contents);
         assert!(maybe_parsed.is_ok());
         let parsed = maybe_parsed.unwrap();
-
-        assert_eq!(parsed.len(), 0)
+        assert_eq!(parsed.len(), 0);
     }
 }
