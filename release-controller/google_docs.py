@@ -7,7 +7,6 @@ import markdown
 from markdownify import markdownify
 from pydrive2.auth import GoogleAuth
 from pydrive2.drive import GoogleDrive
-from pydrive2.files import GoogleDriveFile
 
 from release_notes import PreparedReleaseNotes
 
