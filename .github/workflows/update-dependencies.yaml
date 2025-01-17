@@ -58,7 +58,7 @@ jobs:
       - name: "🆕 Create a new Pull Request with the changes"
         uses: peter-evans/create-pull-request@v7
         with:
-          commit-message: "chore: Update dependencies"
+          commit-message: "chore(deps): Update dependencies"
           branch: bot-update-deps
           title: "chore: Update dependencies"
           body: "This PR updates Python, Rust crates, and IC repository dependencies"
