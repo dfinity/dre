@@ -74,7 +74,10 @@ class ReconcilerState:
     def __init__(
         self,
         path: pathlib.Path,
-        known_proposals: list[dre_cli.ElectionProposal] | None = None,
+        known_proposal_retriever: typing.Callable[
+            [], dict[str, dre_cli.ElectionProposal]
+        ]
+        | None = None,
     ):
         """
         Create a new state object.
@@ -85,16 +88,8 @@ class ReconcilerState:
         os.makedirs(path, exist_ok=True)
         self.path = path
         self._logger = logging.getLogger(self.__class__.__name__)
-        if known_proposals:
-            for proposal in known_proposals:
-                payload = proposal["payload"]
-                if "replica_version_to_elect" not in payload:
-                    continue
-                replica_version = typing.cast(
-                    dre_cli.GuestosElectionProposalPayload, payload
-                ).get("replica_version_to_elect")
-                if not replica_version:
-                    continue
+        if known_proposal_retriever:
+            for replica_version, proposal in known_proposal_retriever().items():
                 p = self.version_proposal(replica_version)
                 if not isinstance(p, SubmittedProposal):
                     self._logger.debug(

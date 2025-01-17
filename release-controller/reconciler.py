@@ -277,13 +277,33 @@ class Reconciler:
                     revlogger.debug("%s.  Not ready to retry yet.")
                     continue
 
-                revlogger.info("%s.  Proposal needed.  Beginning process.", prop)
+                # Here we must check, if the proposal has malfunctioned before,
+                # that the proposal went through (it may have gone through!)
+                # and therefore update posts accordingly (basically everything
+                # except actual proposal submission, since it succeeded before
+                # despite the failure returned to us by governance canister).
+
+                discovered_proposal_id: int | None = None
+                if isinstance(prop, reconciler_state.DREMalfunction):
+                    existing_proposals = self.dre.get_election_proposals_by_version()
+                    if existing_proposal := existing_proposals.get(release_commit):
+                        discovered_proposal_id = existing_proposal["id"]
+                        revlogger.warning(
+                            "%s.  However, contrary to recorded failure, proposal"
+                            " to elect %s was indeed successfully submitted as ID %s.",
+                            release_commit,
+                            discovered_proposal_id,
+                        )
+                    else:
+                        revlogger.info("%s.  Retrying process.", prop)
+                else:
+                    revlogger.info("%s.  Proposal needed.  Beginning process.", prop)
 
                 # update to create posts for any releases
                 rclogger.debug("Ensuring forum post for release candidate exists.")
                 rc_forum_topic = self.forum_client.get_or_create(rc)
 
-                rclogger.debug("Updating forum posts preemptively.")
+                rclogger.debug("Updating forum post preemptively.")
                 rc_forum_topic.update(
                     summary_retriever=self.loader.proposal_summary,
                     proposal_id_retriever=self.state.version_proposal,
@@ -366,24 +386,27 @@ class Reconciler:
                         ),
                     )
 
-                checksum = version_package_checksum(release_commit)
-                urls = version_package_urls(release_commit)
+                if discovered_proposal_id is not None:
+                    prop.record_submission(discovered_proposal_id)
+                else:
+                    checksum = version_package_checksum(release_commit)
+                    urls = version_package_urls(release_commit)
 
-                try:
-                    proposal_id = self.dre.place_proposal(
-                        changelog=changelog,
-                        version=release_commit,
-                        forum_post_url=rc_forum_topic.post_url(release_commit),
-                        unelect_versions=unelect_versions,
-                        package_checksum=checksum,
-                        package_urls=urls,
-                    )
-                    success = prop.record_submission(proposal_id)
-                    revlogger.info("%s", success)
-                except Exception:
-                    fail = prop.record_malfunction()
-                    revlogger.error("%s", fail)
-                    continue
+                    try:
+                        proposal_id = self.dre.place_proposal(
+                            changelog=changelog,
+                            version=release_commit,
+                            forum_post_url=rc_forum_topic.post_url(release_commit),
+                            unelect_versions=unelect_versions,
+                            package_checksum=checksum,
+                            package_urls=urls,
+                        )
+                        success = prop.record_submission(proposal_id)
+                        revlogger.info("%s", success)
+                    except Exception:
+                        fail = prop.record_malfunction()
+                        revlogger.error("%s", fail)
+                        continue
 
                 rclogger.debug("Updating forum posts after processing versions.")
                 # Update the forum posts in case the proposal was created.
@@ -495,7 +518,7 @@ def main() -> None:
         pathlib.Path(
             os.environ.get("RECONCILER_STATE_DIR", release_controller_cache_directory())
         ),
-        dre.get_past_election_proposals(),
+        dre.get_election_proposals_by_version,
     )
     slack_announcer = (
         slack_announce.SlackAnnouncer() if not dry_run else dryrun.MockSlackAnnouncer()

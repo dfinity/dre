@@ -70,7 +70,7 @@ class DRECli:
         )
 
     def get_past_election_proposals(self) -> list[ElectionProposal]:
-        """Query the past election proposals."""
+        """Get all known GuestOS election proposals."""
         return typing.cast(
             list[ElectionProposal],
             json.loads(
@@ -80,6 +80,25 @@ class DRECli:
                 )
             ),
         )
+
+    def get_election_proposals_by_version(self) -> dict[str, ElectionProposal]:
+        """Get all GuestOS election proposals keyed by version."""
+        d: dict[str, ElectionProposal] = {}
+        known_proposals = self.get_past_election_proposals()
+        for proposal in known_proposals:
+            for proposal in known_proposals:
+                payload = proposal["payload"]
+                if "replica_version_to_elect" not in payload:
+                    continue
+                replica_version = typing.cast(
+                    GuestosElectionProposalPayload, payload
+                ).get("replica_version_to_elect")
+                if not replica_version:
+                    continue
+                if replica_version in d:
+                    continue
+                d[replica_version] = proposal
+        return d
 
     def place_proposal(
         self,
