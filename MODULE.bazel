@@ -24,13 +24,13 @@ bazel_dep(name = "rules_oci", version = "2.0.0")
 
 oci = use_extension("@rules_oci//oci:extensions.bzl", "oci")
 oci.pull(
-    name = "bazel_image_6_5_0",
-    image = "gcr.io/bazel-public/bazel@sha256:7506002de2e90431e194f8391f4600b57cf229280002b2fc473b88a95d7104bc",
+    name = "bazel_image_7_4_1",
+    image = "gcr.io/bazel-public/bazel@sha256:35c128509642f76fede4ade16e8c829781048f6a62a7b2d9cfbabd45246af81a",
     platforms = [
         "linux/amd64",
     ],
 )
-use_repo(oci, "bazel_image_6_5_0", "bazel_image_6_5_0_linux_amd64")
+use_repo(oci, "bazel_image_7_4_1", "bazel_image_7_4_1_linux_amd64")
 oci.pull(
     name = "python3",
     image = "index.docker.io/library/python@sha256:5120c734a5ba810c47b97a80cdc6e03004bd4ff7ad98e492b9ccdaf70ff2b8d6",
