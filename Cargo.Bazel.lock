@@ -1,5 +1,5 @@
 {
-  "checksum": "2e825fb9b23fe8f86771ddbcb6af709d83fbd6568dd81fa4513ffc8a8c734a43",
+  "checksum": "f6721383064220436823f40c096d21bd32e0050467f6b27ccff4f5599a6b6512",
   "crates": {
     "actix-codec 0.5.2": {
       "name": "actix-codec",
@@ -17613,13 +17613,6 @@
         "compile_data_glob": [
           "**"
         ],
-        "data": {
-          "common": [
-            "@com_google_protobuf//:protoc",
-            "@com_google_protobuf//:well_known_protos"
-          ],
-          "selects": {}
-        },
         "data_glob": [
           "**"
         ],
@@ -17634,13 +17627,6 @@
               "target": "tonic_build"
             }
           ],
-          "selects": {}
-        },
-        "build_script_env": {
-          "common": {
-            "PROTOC": "$(execpath @com_google_protobuf//:protoc)",
-            "PROTOC_INCLUDE": "../com_google_protobuf/src"
-          },
           "selects": {}
         }
       },

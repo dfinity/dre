@@ -3,22 +3,11 @@ module(name = "dre")
 bazel_dep(name = "bazel_skylib", version = "1.7.1")
 bazel_dep(name = "aspect_bazel_lib", version = "2.11.0")
 
-bazel_dep(name = "rules_foreign_cc", version = "0.12.0")
+bazel_dep(name = "rules_python", version = "0.37.0")
+python_version = "3.12"
 
-archive_override(
-    module_name = "rules_foreign_cc",
-    integrity = "sha384-bTtlZejENu+3rnOsCg1nmSZJl54++7nB0zgzWT+jtZJ1QyMRwkV4ieOaeORQTdjY",
-    patch_strip = 1,
-    patches = ["//bazel:rules_foreign_cc.patch"],
-    strip_prefix = "rules_foreign_cc-77d4483fadbb1b7bcace18ed8e8e87e8791050f6",
-    urls = ["https://github.com/bazelbuild/rules_foreign_cc/archive/77d4483fadbb1b7bcace18ed8e8e87e8791050f6.tar.gz"],
-)
-
-
-bazel_dep(name="rules_python", version="0.37.0")
 python = use_extension("@rules_python//python/extensions:python.bzl", "python")
-python_version = "3.12.2"
-python.toolchain(python_version = python_version, is_default = True)
+python.toolchain(python_version = python_version)
 
 pip = use_extension("@rules_python//python/extensions:pip.bzl", "pip")
 pip.parse(
@@ -30,20 +19,10 @@ use_repo(pip, "python_deps")
 
 bazel_dep(name = "rules_mypy", version = "0.22.0")
 
-# Protobuf dependencies
-bazel_dep(
-    name = "protobuf",
-    version = "28.2",
-    # We need to give the repository an explicit name that rules_closure
-    # can find
-    repo_name = "com_google_protobuf",
-)
-
 bazel_dep(name = "rules_pkg", version = "1.0.1")
 bazel_dep(name = "rules_oci", version = "2.0.0")
 
 oci = use_extension("@rules_oci//oci:extensions.bzl", "oci")
-
 oci.pull(
     name = "bazel_image_6_5_0",
     image = "gcr.io/bazel-public/bazel@sha256:7506002de2e90431e194f8391f4600b57cf229280002b2fc473b88a95d7104bc",
@@ -52,7 +31,6 @@ oci.pull(
     ],
 )
 use_repo(oci, "bazel_image_6_5_0", "bazel_image_6_5_0_linux_amd64")
-
 oci.pull(
     name = "python3",
     image = "index.docker.io/library/python@sha256:5120c734a5ba810c47b97a80cdc6e03004bd4ff7ad98e492b9ccdaf70ff2b8d6",
@@ -61,7 +39,6 @@ oci.pull(
     ],
 )
 use_repo(oci, "python3", "python3_linux_amd64")
-
 oci.pull(
     name = "distroless_python3",
     image = "gcr.io/distroless/python3@sha256:db34936540e7bc575cc24a318e41eae7ad8c426b8d8e20a465f0dd67843590eb",
@@ -70,7 +47,6 @@ oci.pull(
     ],
 )
 use_repo(oci, "distroless_python3", "distroless_python3_linux_amd64")
-
 oci.pull(
     # tag = bookworm-20231218-slim
     name = "debian-slim",
@@ -80,7 +56,6 @@ oci.pull(
     ],
 )
 use_repo(oci, "debian-slim", "debian-slim_linux_amd64")
-
 oci.pull(
     # tag = "2.44.0-debian-12-r2",
     name = "bitnami_git_docker_img",
@@ -91,7 +66,6 @@ oci.pull(
     ],
 )
 use_repo(oci, "bitnami_git_docker_img", "bitnami_git_docker_img_linux_amd64")
-
 oci.pull(
     # tag = 0.38.0-debian
     name = "vector-debian",
@@ -101,7 +75,6 @@ oci.pull(
     ],
 )
 use_repo(oci, "vector-debian", "vector-debian_linux_amd64")
-
 oci.pull(
     # tag = 0.34.1-distroless-libc
     name = "vector",
@@ -111,7 +84,6 @@ oci.pull(
     ],
 )
 use_repo(oci, "vector", "vector_linux_amd64")
-
 oci.pull(
     name = "distroless_cc_debian12",
     image = "gcr.io/distroless/cc-debian12@sha256:53895c8e3a37652d075d22dde58f40b310daa4a7a59d078b8a7f604d11b1adc6",
@@ -120,7 +92,7 @@ oci.pull(
         "linux/arm64",
     ],
 )
-use_repo(oci, "distroless_cc_debian12", "distroless_cc_debian12_linux_amd64")
+use_repo(oci, "bitnami_git_docker_img_linux_arm64", "distroless_cc_debian12", "distroless_cc_debian12_linux_amd64", "distroless_cc_debian12_linux_arm64")
 
 http_file = use_repo_rule("@bazel_tools//tools/build_defs/repo:http.bzl", "http_file")
 
@@ -144,7 +116,6 @@ http_file(
 )
 
 http_archive = use_repo_rule("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
-
 
 IC_REPO_VERSION = "a700085f0575a440cb44941da69cfa2efeea3ab9"
 
