@@ -7,12 +7,12 @@ use crate::commands::ExecutableCommand;
 pub struct Balance {
     /// Neuron to query, by default will use the one from configured identity
     #[clap(long)]
-    neuron: Option<u64>,
+    neuron_override: Option<u64>,
 }
 
 impl ExecutableCommand for Balance {
     fn require_auth(&self) -> crate::commands::AuthRequirement {
-        match &self.neuron {
+        match &self.neuron_override {
             Some(_) => crate::commands::AuthRequirement::Anonymous,
             None => crate::commands::AuthRequirement::Neuron,
         }
@@ -23,7 +23,7 @@ impl ExecutableCommand for Balance {
     async fn execute(&self, ctx: crate::ctx::DreContext) -> anyhow::Result<()> {
         let (neuron, client) = ctx.create_ic_agent_canister_client().await?;
         let governance = GovernanceCanisterWrapper::from(client);
-        let neuron_id = match self.neuron {
+        let neuron_id = match self.neuron_override {
             Some(n) => n,
             None => neuron.neuron_id,
         };
