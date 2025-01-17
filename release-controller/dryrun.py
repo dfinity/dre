@@ -195,8 +195,11 @@ class ReleaseNotesClient(object):
         return t
 
     def markdown_file(self, version: str) -> PreparedReleaseNotes | None:
-        with open((self.release_notes_folder / version), "r") as f:
-            return PreparedReleaseNotes(f.read())
+        try:
+            with open((self.release_notes_folder / version), "r") as f:
+                return PreparedReleaseNotes(f.read())
+        except FileNotFoundError:
+            return None
 
     def __del__(self) -> None:
         if self.release_notes_folder_cleanup:
