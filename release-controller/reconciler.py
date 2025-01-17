@@ -283,16 +283,15 @@ class Reconciler:
                 # except actual proposal submission, since it succeeded before
                 # despite the failure returned to us by governance canister).
 
-                discovered_proposal_id: int | None = None
+                discovered_proposal: dre_cli.ElectionProposal | None = None
                 if isinstance(prop, reconciler_state.DREMalfunction):
                     existing_proposals = self.dre.get_election_proposals_by_version()
-                    if existing_proposal := existing_proposals.get(release_commit):
-                        discovered_proposal_id = existing_proposal["id"]
+                    if discovered_proposal := existing_proposals.get(release_commit):
                         revlogger.warning(
                             "%s.  However, contrary to recorded failure, proposal"
                             " to elect %s was indeed successfully submitted as ID %s.",
                             release_commit,
-                            discovered_proposal_id,
+                            discovered_proposal["id"],
                         )
                     else:
                         revlogger.info("%s.  Retrying process.", prop)
@@ -386,8 +385,8 @@ class Reconciler:
                         ),
                     )
 
-                if discovered_proposal_id is not None:
-                    prop.record_submission(discovered_proposal_id)
+                if discovered_proposal is not None:
+                    prop.record_submission(discovered_proposal["id"])
                 else:
                     checksum = version_package_checksum(release_commit)
                     urls = version_package_urls(release_commit)
