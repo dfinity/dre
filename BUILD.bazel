@@ -24,7 +24,7 @@ genrule(
 
 py_console_script_binary(
     name = "mkdocs",
-    pkg = "@python_deps//mkdocs:mkdocs",
+    pkg = "@python_deps//mkdocs",
     data = [
         "mkdocs.yml",
         ":release-docs",

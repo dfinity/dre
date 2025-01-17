@@ -532,7 +532,7 @@ impl RegistryState {
                 let subnet_nodes = self
                     .nodes
                     .iter()
-                    .filter(|(_, n)| n.subnet_id.map_or(false, |s| s == principal))
+                    .filter(|(_, n)| (n.subnet_id == Some(principal)))
                     .map(|(_, n)| n.clone())
                     .collect::<Vec<Node>>();
                 let subnet_type = SubnetType::try_from(sr.subnet_type).unwrap();

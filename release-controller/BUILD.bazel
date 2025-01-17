@@ -108,14 +108,14 @@ tar(
 
 py_oci_image(
     name = "oci_image",
-    base = "@bazel_image_6_5_0",
+    base = "@bazel_image_7_4_1",
     binary = ":release-controller",
     tars = [":bins_release_controller_tar"]
 )
 
 py_oci_image(
     name = "oci_image_commit_annotator",
-    base = "@bazel_image_6_5_0",
+    base = "@bazel_image_7_4_1",
     binary = ":commit_annotator",
     tars = [":bins_commit_annotator_tar"]
 )
