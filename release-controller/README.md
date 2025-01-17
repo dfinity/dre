@@ -205,6 +205,12 @@ bazel run //release-controller:release-controller \
 Typing errors preventing you from running it, because you are editing code and
 testing your changes?  Add `--output_groups=-mypy` right after `bazel run`.
 
+The optional argument `--skip-preloading-state` makes it so that the reconciler
+will not preload its list of known proposals by version from the governance
+canister.  It is useful (in conjunction with an empty reconciler state folder)
+to make the reconciler do all the work of submitting proposals again.  It should
+not be used without `--dry-run`, to avoid submitting proposals twice.
+
 ### Tests
 
 #### Unit tests

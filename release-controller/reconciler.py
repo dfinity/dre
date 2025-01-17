@@ -420,18 +420,23 @@ class Reconciler:
 dre_repo = "dfinity/dre"
 
 
+def arg_bool(arg: str, args: list[str]) -> tuple[bool, list[str]]:
+    ret = False
+    while arg in args:
+        args.remove(arg)
+        ret = True
+    return ret, args
+
+
 def main() -> None:
     args = sys.argv[1:]
-    dry_run = False
-    while "--dry-run" in args:
-        args.remove("--dry-run")
-        dry_run = True
-
-    verbose = False
-    for v in ["--verbose", "--debug"]:
-        while v in args:
-            args.remove(v)
-            verbose = True
+    dry_run, args = arg_bool("--dry-run", args)
+    verbose, args = arg_bool("--verbose", args)
+    debug, args = arg_bool("--debug", args)
+    verbose = verbose or debug
+    skip_preloading_state, args = arg_bool("--skip-preloading-state", args)
+    if skip_preloading_state and not dry_run:
+        assert 0, "Preloading state should not be skipped if run without --dry-run"
 
     root = logging.getLogger()
     root.setLevel(logging.DEBUG if verbose else logging.INFO)
@@ -517,7 +522,7 @@ def main() -> None:
         pathlib.Path(
             os.environ.get("RECONCILER_STATE_DIR", release_controller_cache_directory())
         ),
-        dre.get_election_proposals_by_version,
+        None if skip_preloading_state else dre.get_election_proposals_by_version,
     )
     slack_announcer = (
         slack_announce.SlackAnnouncer() if not dry_run else dryrun.MockSlackAnnouncer()
@@ -548,14 +553,14 @@ def main() -> None:
             reconciler.reconcile()
             watchdog.report_healthy()
             time.sleep(60)
+        except KeyboardInterrupt:
+            LOGGER.info("Interrupted.")
+            raise
         except Exception:
             LOGGER.exception(
                 "Failed to reconcile.  Retrying in 15 seconds.  Traceback:"
             )
             time.sleep(60)
-        except KeyboardInterrupt:
-            LOGGER.info("Interrupted.")
-            raise
 
     LOGGER.info("Exiting.")
 
