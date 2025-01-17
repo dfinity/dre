@@ -364,7 +364,8 @@ def get_change_description_for_commit(
             f
             for f in file_changes
             if not any(
-                f not in INCLUDE_CHANGES and re.search(filter, f["file_path"])
+                f["file_path"] not in INCLUDE_CHANGES
+                and re.search(filter, f["file_path"])
                 for filter in EXCLUDE_CHANGES_FILTERS
             )
         )
