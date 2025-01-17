@@ -2,11 +2,12 @@ use std::{path::PathBuf, time::Duration};
 
 use clap::{ArgAction, Parser};
 use downloader_loop::run_downloader_loop;
-use futures_util::FutureExt;
 use humantime::parse_duration;
-use ic_async_utils::shutdown_signal;
 use slog::{info, o, Drain, Logger};
-use tokio::runtime::Runtime;
+use tokio::{
+    runtime::Runtime,
+    signal::unix::{signal, SignalKind},
+};
 use url::Url;
 
 mod downloader_loop;
@@ -14,7 +15,20 @@ mod downloader_loop;
 fn main() {
     let logger = make_logger();
     let rt = Runtime::new().unwrap();
-    let shutdown_signal = shutdown_signal(logger.clone()).shared();
+    let shutdown_signal = async {
+        let log = logger.clone();
+        let mut sig_int = signal(SignalKind::interrupt()).expect("failed to install SIGINT signal handler");
+        let mut sig_term = signal(SignalKind::terminate()).expect("failed to install SIGTERM signal handler");
+
+        tokio::select! {
+            _ = sig_int.recv() => {
+                info!(log, "Caught SIGINT");
+            }
+            _ = sig_term.recv() => {
+                info!(log, "Caught SIGTERM");
+            }
+        }
+    };
     let cli_args = CliArgs::parse();
     let (stop_signal_sender, stop_signal_rcv) = crossbeam::channel::bounded::<()>(0);
 
