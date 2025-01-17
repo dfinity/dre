@@ -1,5 +1,5 @@
 {
-  "checksum": "f6721383064220436823f40c096d21bd32e0050467f6b27ccff4f5599a6b6512",
+  "checksum": "79e62fa10eb8924036adeb3fb993f4037612a5221e80f0349dc225b3598543e2",
   "crates": {
     "actix-codec 0.5.2": {
       "name": "actix-codec",
@@ -3354,12 +3354,6 @@
                 "target": "gloo_timers"
               }
             ],
-            "wasm32-wasi": [
-              {
-                "id": "gloo-timers 0.3.0",
-                "target": "gloo_timers"
-              }
-            ],
             "wasm32-wasip1": [
               {
                 "id": "gloo-timers 0.3.0",
@@ -6358,10 +6352,6 @@
             ],
             "aarch64-pc-windows-msvc": [
               {
-                "id": "iana-time-zone 0.1.61",
-                "target": "iana_time_zone"
-              },
-              {
                 "id": "windows-targets 0.52.6",
                 "target": "windows_targets"
               }
@@ -6430,10 +6420,6 @@
             ],
             "i686-pc-windows-msvc": [
               {
-                "id": "iana-time-zone 0.1.61",
-                "target": "iana_time_zone"
-              },
-              {
                 "id": "windows-targets 0.52.6",
                 "target": "windows_targets"
               }
@@ -6495,10 +6481,6 @@
               }
             ],
             "x86_64-pc-windows-msvc": [
-              {
-                "id": "iana-time-zone 0.1.61",
-                "target": "iana_time_zone"
-              },
               {
                 "id": "windows-targets 0.52.6",
                 "target": "windows_targets"
@@ -14939,11 +14921,6 @@
           "selects": {
             "wasm32-unknown-unknown": [
               "custom",
-              "js",
-              "js-sys",
-              "wasm-bindgen"
-            ],
-            "wasm32-wasi": [
               "js",
               "js-sys",
               "wasm-bindgen"
@@ -41854,12 +41831,6 @@
                 "target": "libc"
               }
             ],
-            "aarch64-pc-windows-msvc": [
-              {
-                "id": "libc 0.2.167",
-                "target": "libc"
-              }
-            ],
             "aarch64-unknown-fuchsia": [
               {
                 "id": "libc 0.2.167",
@@ -41914,12 +41885,6 @@
                 "target": "libc"
               }
             ],
-            "i686-pc-windows-msvc": [
-              {
-                "id": "libc 0.2.167",
-                "target": "libc"
-              }
-            ],
             "i686-unknown-freebsd": [
               {
                 "id": "libc 0.2.167",
@@ -41957,12 +41922,6 @@
               }
             ],
             "x86_64-linux-android": [
-              {
-                "id": "libc 0.2.167",
-                "target": "libc"
-              }
-            ],
-            "x86_64-pc-windows-msvc": [
               {
                 "id": "libc 0.2.167",
                 "target": "libc"
@@ -44002,12 +43961,6 @@
                 "target": "wasm_streams"
               }
             ],
-            "wasm32-wasi": [
-              {
-                "id": "wasm-streams 0.4.2",
-                "target": "wasm_streams"
-              }
-            ],
             "wasm32-wasip1": [
               {
                 "id": "wasm-streams 0.4.2",
@@ -44489,9 +44442,6 @@
           ],
           "selects": {
             "wasm32-unknown-unknown": [
-              "wasm32_unknown_unknown_js"
-            ],
-            "wasm32-wasi": [
               "wasm32_unknown_unknown_js"
             ],
             "wasm32-wasip1": [
@@ -45204,121 +45154,225 @@
         "crate_features": {
           "common": [
             "alloc",
-            "default",
             "fs",
             "libc-extra-traits",
-            "std",
-            "termios",
-            "use-libc-auxv"
+            "std"
           ],
           "selects": {
             "aarch64-apple-darwin": [
-              "stdio"
+              "default",
+              "stdio",
+              "termios",
+              "use-libc-auxv"
             ],
             "aarch64-apple-ios": [
-              "stdio"
+              "default",
+              "stdio",
+              "termios",
+              "use-libc-auxv"
             ],
             "aarch64-apple-ios-sim": [
-              "stdio"
+              "default",
+              "stdio",
+              "termios",
+              "use-libc-auxv"
             ],
             "aarch64-linux-android": [
-              "stdio"
+              "default",
+              "stdio",
+              "termios",
+              "use-libc-auxv"
             ],
             "aarch64-unknown-fuchsia": [
-              "stdio"
+              "default",
+              "stdio",
+              "termios",
+              "use-libc-auxv"
             ],
             "aarch64-unknown-linux-gnu": [
+              "default",
               "param",
               "process",
               "stdio",
               "system",
-              "thread"
+              "termios",
+              "thread",
+              "use-libc-auxv"
             ],
             "aarch64-unknown-nixos-gnu": [
+              "default",
               "param",
               "process",
               "stdio",
               "system",
-              "thread"
+              "termios",
+              "thread",
+              "use-libc-auxv"
             ],
             "aarch64-unknown-nto-qnx710": [
-              "stdio"
+              "default",
+              "stdio",
+              "termios",
+              "use-libc-auxv"
             ],
             "arm-unknown-linux-gnueabi": [
+              "default",
               "param",
               "process",
               "stdio",
               "system",
-              "thread"
+              "termios",
+              "thread",
+              "use-libc-auxv"
             ],
             "armv7-linux-androideabi": [
-              "stdio"
+              "default",
+              "stdio",
+              "termios",
+              "use-libc-auxv"
             ],
             "armv7-unknown-linux-gnueabi": [
+              "default",
               "param",
               "process",
               "stdio",
               "system",
-              "thread"
+              "termios",
+              "thread",
+              "use-libc-auxv"
             ],
             "i686-apple-darwin": [
-              "stdio"
+              "default",
+              "stdio",
+              "termios",
+              "use-libc-auxv"
             ],
             "i686-linux-android": [
-              "stdio"
+              "default",
+              "stdio",
+              "termios",
+              "use-libc-auxv"
             ],
             "i686-unknown-freebsd": [
-              "stdio"
+              "default",
+              "stdio",
+              "termios",
+              "use-libc-auxv"
             ],
             "i686-unknown-linux-gnu": [
+              "default",
               "param",
               "process",
               "stdio",
               "system",
-              "thread"
+              "termios",
+              "thread",
+              "use-libc-auxv"
             ],
             "powerpc-unknown-linux-gnu": [
+              "default",
               "param",
               "process",
               "stdio",
               "system",
-              "thread"
+              "termios",
+              "thread",
+              "use-libc-auxv"
+            ],
+            "riscv32imc-unknown-none-elf": [
+              "default",
+              "termios",
+              "use-libc-auxv"
+            ],
+            "riscv64gc-unknown-none-elf": [
+              "default",
+              "termios",
+              "use-libc-auxv"
             ],
             "s390x-unknown-linux-gnu": [
+              "default",
               "param",
               "process",
               "stdio",
               "system",
-              "thread"
+              "termios",
+              "thread",
+              "use-libc-auxv"
+            ],
+            "thumbv7em-none-eabi": [
+              "default",
+              "termios",
+              "use-libc-auxv"
+            ],
+            "thumbv8m.main-none-eabi": [
+              "default",
+              "termios",
+              "use-libc-auxv"
+            ],
+            "wasm32-unknown-unknown": [
+              "default",
+              "termios",
+              "use-libc-auxv"
+            ],
+            "wasm32-wasip1": [
+              "default",
+              "termios",
+              "use-libc-auxv"
             ],
             "x86_64-apple-darwin": [
-              "stdio"
+              "default",
+              "stdio",
+              "termios",
+              "use-libc-auxv"
             ],
             "x86_64-apple-ios": [
-              "stdio"
+              "default",
+              "stdio",
+              "termios",
+              "use-libc-auxv"
             ],
             "x86_64-linux-android": [
-              "stdio"
+              "default",
+              "stdio",
+              "termios",
+              "use-libc-auxv"
             ],
             "x86_64-unknown-freebsd": [
-              "stdio"
+              "default",
+              "stdio",
+              "termios",
+              "use-libc-auxv"
             ],
             "x86_64-unknown-fuchsia": [
-              "stdio"
+              "default",
+              "stdio",
+              "termios",
+              "use-libc-auxv"
             ],
             "x86_64-unknown-linux-gnu": [
+              "default",
               "param",
               "process",
               "stdio",
               "system",
-              "thread"
+              "termios",
+              "thread",
+              "use-libc-auxv"
             ],
             "x86_64-unknown-nixos-gnu": [
+              "default",
               "param",
               "process",
               "stdio",
               "system",
-              "thread"
+              "termios",
+              "thread",
+              "use-libc-auxv"
+            ],
+            "x86_64-unknown-none": [
+              "default",
+              "termios",
+              "use-libc-auxv"
             ]
           }
         },
@@ -45383,10 +45437,6 @@
                 "id": "errno 0.3.9",
                 "target": "errno",
                 "alias": "libc_errno"
-              },
-              {
-                "id": "libc 0.2.167",
-                "target": "libc"
               }
             ],
             "aarch64-unknown-fuchsia": [
@@ -45400,40 +45450,7 @@
                 "target": "libc"
               }
             ],
-            "aarch64-unknown-linux-gnu": [
-              {
-                "id": "errno 0.3.9",
-                "target": "errno",
-                "alias": "libc_errno"
-              },
-              {
-                "id": "libc 0.2.167",
-                "target": "libc"
-              }
-            ],
-            "aarch64-unknown-nixos-gnu": [
-              {
-                "id": "errno 0.3.9",
-                "target": "errno",
-                "alias": "libc_errno"
-              },
-              {
-                "id": "libc 0.2.167",
-                "target": "libc"
-              }
-            ],
             "aarch64-unknown-nto-qnx710": [
-              {
-                "id": "errno 0.3.9",
-                "target": "errno",
-                "alias": "libc_errno"
-              },
-              {
-                "id": "libc 0.2.167",
-                "target": "libc"
-              }
-            ],
-            "arm-unknown-linux-gnueabi": [
               {
                 "id": "errno 0.3.9",
                 "target": "errno",
@@ -45516,24 +45533,9 @@
                 "id": "errno 0.3.9",
                 "target": "errno",
                 "alias": "libc_errno"
-              },
-              {
-                "id": "libc 0.2.167",
-                "target": "libc"
               }
             ],
             "i686-unknown-freebsd": [
-              {
-                "id": "errno 0.3.9",
-                "target": "errno",
-                "alias": "libc_errno"
-              },
-              {
-                "id": "libc 0.2.167",
-                "target": "libc"
-              }
-            ],
-            "i686-unknown-linux-gnu": [
               {
                 "id": "errno 0.3.9",
                 "target": "errno",
@@ -45621,17 +45623,6 @@
                 "target": "libc"
               }
             ],
-            "wasm32-wasi": [
-              {
-                "id": "errno 0.3.9",
-                "target": "errno",
-                "alias": "libc_errno"
-              },
-              {
-                "id": "libc 0.2.167",
-                "target": "libc"
-              }
-            ],
             "wasm32-wasip1": [
               {
                 "id": "errno 0.3.9",
@@ -45681,10 +45672,6 @@
                 "id": "errno 0.3.9",
                 "target": "errno",
                 "alias": "libc_errno"
-              },
-              {
-                "id": "libc 0.2.167",
-                "target": "libc"
               }
             ],
             "x86_64-unknown-freebsd": [
@@ -45699,28 +45686,6 @@
               }
             ],
             "x86_64-unknown-fuchsia": [
-              {
-                "id": "errno 0.3.9",
-                "target": "errno",
-                "alias": "libc_errno"
-              },
-              {
-                "id": "libc 0.2.167",
-                "target": "libc"
-              }
-            ],
-            "x86_64-unknown-linux-gnu": [
-              {
-                "id": "errno 0.3.9",
-                "target": "errno",
-                "alias": "libc_errno"
-              },
-              {
-                "id": "libc 0.2.167",
-                "target": "libc"
-              }
-            ],
-            "x86_64-unknown-nixos-gnu": [
               {
                 "id": "errno 0.3.9",
                 "target": "errno",
@@ -52595,14 +52560,6 @@
             ],
             "aarch64-pc-windows-msvc": [
               {
-                "id": "libc 0.2.167",
-                "target": "libc"
-              },
-              {
-                "id": "signal-hook-registry 1.4.2",
-                "target": "signal_hook_registry"
-              },
-              {
                 "id": "socket2 0.5.7",
                 "target": "socket2"
               },
@@ -52745,14 +52702,6 @@
             ],
             "i686-pc-windows-msvc": [
               {
-                "id": "libc 0.2.167",
-                "target": "libc"
-              },
-              {
-                "id": "signal-hook-registry 1.4.2",
-                "target": "signal_hook_registry"
-              },
-              {
                 "id": "socket2 0.5.7",
                 "target": "socket2"
               },
@@ -52884,14 +52833,6 @@
               }
             ],
             "x86_64-pc-windows-msvc": [
-              {
-                "id": "libc 0.2.167",
-                "target": "libc"
-              },
-              {
-                "id": "signal-hook-registry 1.4.2",
-                "target": "signal_hook_registry"
-              },
               {
                 "id": "socket2 0.5.7",
                 "target": "socket2"
@@ -60033,7 +59974,6 @@
       "thumbv7em-none-eabi",
       "thumbv8m.main-none-eabi",
       "wasm32-unknown-unknown",
-      "wasm32-wasi",
       "wasm32-wasip1",
       "x86_64-apple-darwin",
       "x86_64-apple-ios",
@@ -60213,7 +60153,6 @@
       "i686-unknown-linux-gnu",
       "powerpc-unknown-linux-gnu",
       "s390x-unknown-linux-gnu",
-      "wasm32-wasi",
       "wasm32-wasip1",
       "x86_64-apple-darwin",
       "x86_64-apple-ios",
@@ -60250,7 +60189,6 @@
       "i686-unknown-linux-gnu",
       "powerpc-unknown-linux-gnu",
       "s390x-unknown-linux-gnu",
-      "wasm32-wasi",
       "wasm32-wasip1",
       "x86_64-apple-darwin",
       "x86_64-apple-ios",
@@ -60313,7 +60251,6 @@
       "riscv64gc-unknown-none-elf",
       "s390x-unknown-linux-gnu",
       "wasm32-unknown-unknown",
-      "wasm32-wasi",
       "wasm32-wasip1",
       "x86_64-apple-darwin",
       "x86_64-apple-ios",
@@ -60349,7 +60286,6 @@
       "s390x-unknown-linux-gnu",
       "thumbv7em-none-eabi",
       "thumbv8m.main-none-eabi",
-      "wasm32-wasi",
       "wasm32-wasip1",
       "x86_64-apple-darwin",
       "x86_64-apple-ios",
@@ -60385,7 +60321,6 @@
       "s390x-unknown-linux-gnu",
       "thumbv7em-none-eabi",
       "thumbv8m.main-none-eabi",
-      "wasm32-wasi",
       "wasm32-wasip1",
       "x86_64-apple-darwin",
       "x86_64-apple-ios",
@@ -60420,7 +60355,6 @@
       "thumbv7em-none-eabi",
       "thumbv8m.main-none-eabi",
       "wasm32-unknown-unknown",
-      "wasm32-wasi",
       "wasm32-wasip1",
       "x86_64-apple-darwin",
       "x86_64-apple-ios",
@@ -60522,7 +60456,6 @@
       "thumbv7em-none-eabi",
       "thumbv8m.main-none-eabi",
       "wasm32-unknown-unknown",
-      "wasm32-wasi",
       "wasm32-wasip1",
       "x86_64-apple-darwin",
       "x86_64-apple-ios",
@@ -60547,7 +60480,6 @@
     "cfg(target_arch = \"spirv\")": [],
     "cfg(target_arch = \"wasm32\")": [
       "wasm32-unknown-unknown",
-      "wasm32-wasi",
       "wasm32-wasip1"
     ],
     "cfg(target_arch = \"x86_64\")": [
@@ -60614,7 +60546,6 @@
     ],
     "cfg(target_os = \"redox\")": [],
     "cfg(target_os = \"wasi\")": [
-      "wasm32-wasi",
       "wasm32-wasip1"
     ],
     "cfg(target_os = \"windows\")": [
@@ -60691,9 +60622,6 @@
     ],
     "wasm32-unknown-unknown": [
       "wasm32-unknown-unknown"
-    ],
-    "wasm32-wasi": [
-      "wasm32-wasi"
     ],
     "wasm32-wasip1": [
       "wasm32-wasip1"
@@ -60855,5 +60783,6 @@
     "actix-rt 2.10.0",
     "assert_cmd 2.0.16",
     "wiremock 0.6.2"
-  ]
+  ],
+  "unused_patches": []
 }

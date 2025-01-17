@@ -47,6 +47,7 @@ def external_crates_repository():
             "//rs/dre-canisters/node-provider-rewards-lib:Cargo.toml",
             "//rs/dre-canisters/trustworthy-node-metrics/src/trustworthy-node-metrics:Cargo.toml",
             "//rs/dre-canisters/trustworthy-node-metrics/src/trustworthy-node-metrics-types:Cargo.toml",
+            "//rs:dre-canisters/node_status_canister/src/node_status_canister_backend/Cargo.toml"
         ],
         splicing_config = splicing_config(
             resolver_version = "2",
