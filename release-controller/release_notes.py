@@ -12,7 +12,7 @@ from dataclasses import dataclass
 
 from const import GUESTOS_CHANGED_NOTES_NAMESPACE
 from git_repo import GitRepo
-from util import auto_progressbar
+from util import auto_progressbar_with_item_descriptions
 
 import markdown
 
@@ -250,8 +250,11 @@ def release_changes(
         print("WARNING: max commits limit reached, increase depth")
         exit(1)
 
-    commit_iter = enumerate(auto_progressbar([(i[:8], i) for i in commits], "Commit "))
-    for i, _ in commit_iter:
+    for i, _ in enumerate(
+        auto_progressbar_with_item_descriptions(
+            [(i[:8], i) for i in commits], "Commit "
+        )
+    ):
         change = get_change_description_for_commit(
             commit_hash=commits[i],
             ic_repo=ic_repo,

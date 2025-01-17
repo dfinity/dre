@@ -1,3 +1,4 @@
+import collections.abc
 import hashlib
 import math
 import os
@@ -35,19 +36,19 @@ T = typing.TypeVar("T")
 
 
 # https://stackoverflow.com/a/34482761
-def auto_progressbar(
-    it: typing.Collection[tuple[str, T] | T],
+def auto_progressbar_with_item_descriptions(
+    it: collections.abc.Collection[tuple[str, T]],
     prefix: str = "",
     out: typing.TextIO = sys.stderr,
 ) -> typing.Generator[T, None, None]:
     """
-    Produces a progress bar on standard error if the console is a tty.  Otherwise
-    it remains silent.
+    Produces a progress bar on standard error if the console is a tty,
+    increasing for every item.
+    Otherwise it remains silent.
 
-    The iterator passed to this function must be a collection (len() must be valid).
-    Elements of the collection must be either a tuple (description of the item, item)
-    or just plain items without being tuples.  If they are tuples with description,
-    then the progress bar will display that description when processing that item.
+    `it` must be a collection of items (supports __iter__ and __len__).
+    Items within `it` must a tuple (description of the item, item)
+    The progress bar will display that description when processing that specific item.  Keep the descriptions short.
     """
     count = len(it)
     start = time.time()
@@ -94,6 +95,41 @@ def auto_progressbar(
             show(i + 1, desc, item)
     if sys.stderr.isatty():
         print(f"\r{' '*(termsize())}", end="\r", flush=True, file=out)
+
+
+def auto_progressbar(
+    it: collections.abc.Collection[T],
+    prefix: str = "",
+    out: typing.TextIO = sys.stderr,
+) -> typing.Generator[T, None, None]:
+    """
+    Produces a progress bar on standard error if the console is a tty,
+    increasing for every item.
+    Otherwise it remains silent.
+
+    `it` must be a collection of items (supports __iter__ and __len__).
+    """
+
+    class adapt(object):
+        def __init__(self, inner: collections.abc.Collection[T]):
+            self.inner = inner
+            self.len = len(inner)
+
+        def __len__(self) -> int:
+            return self.len
+
+        def __iter__(self) -> typing.Iterator[tuple[str, T]]:
+            for it in self.inner:
+                yield "", it
+
+        def __contains__(self, object: typing.Any) -> bool:
+            return self.inner.__contains__(object)
+
+    return auto_progressbar_with_item_descriptions(
+        adapt(it),
+        prefix,
+        out,
+    )
 
 
 class HTTPGenerator(object):
