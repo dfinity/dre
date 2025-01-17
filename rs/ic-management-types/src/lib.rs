@@ -382,8 +382,9 @@ impl Node {
                         .map(|d| d.name.clone())
                         .unwrap_or_else(|| "unknown".to_string()),
                 ),
-                (NodeFeature::NodeOperator, self.operator.principal.to_string()),
                 (NodeFeature::NodeProvider, self.operator.provider.principal.to_string()),
+                (NodeFeature::NodeOperator, self.operator.principal.to_string()),
+                (NodeFeature::NodeId, self.principal.to_string()),
             ])
         };
 
@@ -471,8 +472,9 @@ impl Eq for Node {}
 #[strum(serialize_all = "snake_case")]
 #[serde(rename_all = "snake_case")]
 pub enum NodeFeature {
-    NodeProvider,
+    NodeId,
     NodeOperator,
+    NodeProvider,
     DataCenter,
     DataCenterOwner,
     Area,    // Represents smaller geographic entities like cities and states
@@ -485,7 +487,7 @@ impl NodeFeature {
         // Generally skip the continent feature as it is not used in the Nakamoto score calculation
         NodeFeature::VARIANTS
             .iter()
-            .filter(|f| **f != "continent")
+            .filter(|f| **f != "continent" && **f != "node_id")
             .map(|f| NodeFeature::from_str(f).unwrap())
             .collect()
     }

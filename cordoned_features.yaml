@@ -50,3 +50,36 @@ features:
   - feature: data_center
     value: zh5
     explanation: "offboarding ZH5 DC after 48 months; https://forum.dfinity.org/t/proposal-update-interim-gen-1-node-provider-remuneration-after-48-months/35001/117 and https://forum.dfinity.org/t/proposal-update-interim-gen-1-node-provider-remuneration-after-48-months/35001/118"
+  - feature: node_id
+    value: c2dnc-3ozfd-ew52a-yvmrc-mjyss-edoch-k7cki-f7vzk-zqapg-aw44i-mqe
+    explanation: "offboarding the second rack of nodes in the GE1 DC after 48 months; https://forum.dfinity.org/t/proposal-update-interim-gen-1-node-provider-remuneration-after-48-months/35001/148 and https://forum.dfinity.org/t/proposal-update-interim-gen-1-node-provider-remuneration-after-48-months/35001/150"
+  - feature: node_id
+    value: ag3bm-tdrfp-kki7m-yfwop-aoc4g-f4sjz-grd33-7zy3x-xq3tr-hpbuh-zqe
+    explanation: "offboarding the second rack of nodes in the GE1 DC after 48 months; https://forum.dfinity.org/t/proposal-update-interim-gen-1-node-provider-remuneration-after-48-months/35001/148 and https://forum.dfinity.org/t/proposal-update-interim-gen-1-node-provider-remuneration-after-48-months/35001/150"
+  - feature: node_id
+    value: h5hs5-veobj-ft6ms-fr24y-efxzg-fcidc-s2dbn-pcnke-siz2k-bejcm-uqe
+    explanation: "offboarding the second rack of nodes in the GE1 DC after 48 months; https://forum.dfinity.org/t/proposal-update-interim-gen-1-node-provider-remuneration-after-48-months/35001/148 and https://forum.dfinity.org/t/proposal-update-interim-gen-1-node-provider-remuneration-after-48-months/35001/150"
+  - feature: node_id
+    value: dndht-2fce7-aze7e-coa4j-yvyuw-ut4hw-gn5dj-xvxox-whdhg-txikb-yae
+    explanation: "offboarding the second rack of nodes in the GE1 DC after 48 months; https://forum.dfinity.org/t/proposal-update-interim-gen-1-node-provider-remuneration-after-48-months/35001/148 and https://forum.dfinity.org/t/proposal-update-interim-gen-1-node-provider-remuneration-after-48-months/35001/150"
+  - feature: node_id
+    value: 7mwzk-chbqh-ydgzb-j3bvh-3l7fh-xc7xm-aud2g-hxyx2-bqcop-st67c-dae
+    explanation: "offboarding the second rack of nodes in the GE1 DC after 48 months; https://forum.dfinity.org/t/proposal-update-interim-gen-1-node-provider-remuneration-after-48-months/35001/148 and https://forum.dfinity.org/t/proposal-update-interim-gen-1-node-provider-remuneration-after-48-months/35001/150"
+  - feature: node_id
+    value: p5h3q-2pght-vje5y-2jmsf-cmdfi-52txk-qkrux-mnvmj-zzira-nugjd-dae
+    explanation: "offboarding the second rack of nodes in the GE1 DC after 48 months; https://forum.dfinity.org/t/proposal-update-interim-gen-1-node-provider-remuneration-after-48-months/35001/148 and https://forum.dfinity.org/t/proposal-update-interim-gen-1-node-provider-remuneration-after-48-months/35001/150"
+  - feature: node_id
+    value: gtjga-mlpu7-5vz4f-knn5w-i2fea-cy3r4-vq245-ip62r-fosvm-7w3ck-2qe
+    explanation: "offboarding the second rack of nodes in the GE1 DC after 48 months; https://forum.dfinity.org/t/proposal-update-interim-gen-1-node-provider-remuneration-after-48-months/35001/148 and https://forum.dfinity.org/t/proposal-update-interim-gen-1-node-provider-remuneration-after-48-months/35001/150"
+  - feature: node_id
+    value: d52j3-6vwb2-ij2ul-sqxhg-wmck4-bh4ce-eabt4-3eqqx-djb6m-n4sd5-xae
+    explanation: "offboarding the second rack of nodes in the GE1 DC after 48 months; https://forum.dfinity.org/t/proposal-update-interim-gen-1-node-provider-remuneration-after-48-months/35001/148 and https://forum.dfinity.org/t/proposal-update-interim-gen-1-node-provider-remuneration-after-48-months/35001/150"
+  - feature: node_id
+    value: kte5g-iwzok-3epfk-lovgf-cylc5-57lmu-olhwg-w4jsn-dquju-5xun6-uae
+    explanation: "offboarding the second rack of nodes in the GE1 DC after 48 months; https://forum.dfinity.org/t/proposal-update-interim-gen-1-node-provider-remuneration-after-48-months/35001/148 and https://forum.dfinity.org/t/proposal-update-interim-gen-1-node-provider-remuneration-after-48-months/35001/150"
+  - feature: node_id
+    value: tybza-gyple-63wq2-qsgwo-w6fqw-6trwu-awukb-skekh-67bqu-qsoeo-aae
+    explanation: "offboarding the second rack of nodes in the GE1 DC after 48 months; https://forum.dfinity.org/t/proposal-update-interim-gen-1-node-provider-remuneration-after-48-months/35001/148 and https://forum.dfinity.org/t/proposal-update-interim-gen-1-node-provider-remuneration-after-48-months/35001/150"
+  - feature: node_id
+    value: t7u3k-tw44d-sewhz-oyy7d-jvial-tci2j-avcj3-3rayz-7jydr-33scr-yqe
+    explanation: "offboarding the second rack of nodes in the GE1 DC after 48 months; https://forum.dfinity.org/t/proposal-update-interim-gen-1-node-provider-remuneration-after-48-months/35001/148 and https://forum.dfinity.org/t/proposal-update-interim-gen-1-node-provider-remuneration-after-48-months/35001/150"
