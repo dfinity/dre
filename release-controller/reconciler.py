@@ -1,3 +1,4 @@
+import argparse
 import logging
 import os
 import pathlib
@@ -420,23 +421,46 @@ class Reconciler:
 dre_repo = "dfinity/dre"
 
 
-def arg_bool(arg: str, args: list[str]) -> tuple[bool, list[str]]:
-    ret = False
-    while arg in args:
-        args.remove(arg)
-        ret = True
-    return ret, args
-
-
 def main() -> None:
-    args = sys.argv[1:]
-    dry_run, args = arg_bool("--dry-run", args)
-    verbose, args = arg_bool("--verbose", args)
-    debug, args = arg_bool("--debug", args)
-    verbose = verbose or debug
-    skip_preloading_state, args = arg_bool("--skip-preloading-state", args)
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "--dry-run",
+        action="store_true",
+        dest="dry_run",
+        help="Make no changes anywhere, including but not limited to proposals, forum posts, or Google documents.",
+    )
+    parser.add_argument("--verbose", "--debug", action="store_true", dest="verbose")
+    parser.add_argument(
+        "--loop-every",
+        action="store",
+        type=int,
+        dest="loop_every",
+        default=60,
+        help="Time to wait between loop executions.  If 0 or less, exit immediately after the first loop.  Defaults to %(default)s seconds.",
+    )
+    parser.add_argument(
+        "--skip-preloading-state",
+        action="store_true",
+        dest="skip_preloading_state",
+        help="Do not fill the reconciler state upon startup with the known proposals from the governance canister.",
+    )
+    parser.add_argument(
+        "dotenv_file",
+        nargs="?",
+    )
+    opts = parser.parse_args()
+
+    dry_run = opts.dry_run
+    verbose = opts.verbose
+    skip_preloading_state = opts.skip_preloading_state
+
     if skip_preloading_state and not dry_run:
-        assert 0, "Preloading state should not be skipped if run without --dry-run"
+        assert 0, "To prevent double submission of proposals, preloading state must not be skipped when run without --dry-run"
+
+    if opts.dotenv_file:
+        load_dotenv(opts.dotenv_file)
+    else:
+        load_dotenv()
 
     root = logging.getLogger()
     root.setLevel(logging.DEBUG if verbose else logging.INFO)
@@ -452,13 +476,8 @@ def main() -> None:
     # Prep the program for longer timeouts.
     socket.setdefaulttimeout(60)
 
-    if len(args) == 1:
-        load_dotenv(args[0])
-    else:
-        load_dotenv()
-
-    # Watchdog needs to be fed (to report healthy progress) every 10 minutes
-    watchdog = Watchdog(timeout_seconds=600)
+    # Watchdog needs to be fed (to report healthy progress) every 10 minutes at the least.
+    watchdog = Watchdog(timeout_seconds=max([600, opts.loop_every * 2]))
     watchdog.start()
 
     config_loader = (
@@ -550,17 +569,24 @@ def main() -> None:
 
     while True:
         try:
+            now = time.time()
             reconciler.reconcile()
             watchdog.report_healthy()
-            time.sleep(60)
+            if opts.loop_every <= 0:
+                break
+            else:
+                time.sleep(opts.loop_every - (time.time() - now))
         except KeyboardInterrupt:
             LOGGER.info("Interrupted.")
             raise
         except Exception:
-            LOGGER.exception(
-                "Failed to reconcile.  Retrying in 15 seconds.  Traceback:"
-            )
-            time.sleep(60)
+            if opts.loop_every <= 0:
+                raise
+            else:
+                LOGGER.exception(
+                    f"Failed to reconcile.  Retrying in {opts.loop_every} seconds.  Traceback:"
+                )
+                time.sleep(opts.loop_every)
 
     LOGGER.info("Exiting.")
 

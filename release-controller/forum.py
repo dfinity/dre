@@ -1,6 +1,5 @@
 import logging
 import os
-import textwrap
 from typing import cast, Callable, TypedDict, Protocol
 
 from dotenv import load_dotenv
