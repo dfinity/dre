@@ -1,3 +1,5 @@
+# type: ignore
+
 import re
 from pydiscourse import DiscourseClient
 

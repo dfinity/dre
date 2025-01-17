@@ -91,7 +91,7 @@ py_test(
     data = glob(["tests/test_data/*"]),
     main = "pytest.py",
     env = env,
-    tags = ["no-sandbox"],
+    tags = ["no-sandbox", "typecheck"],
     deps = deps + dev_deps,
     env_inherit = ["HOME"],
 )
