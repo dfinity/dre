@@ -435,7 +435,7 @@ def main() -> None:
     watchdog.start()
 
     discourse_client = (
-        DiscourseClient(
+        DiscourseClient(  # type: ignore[no-untyped-call]
             host=os.environ["DISCOURSE_URL"],
             api_username=os.environ["DISCOURSE_USER"],
             api_key=os.environ["DISCOURSE_KEY"],
