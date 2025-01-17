@@ -2,6 +2,7 @@
 import argparse
 import fnmatch
 import os
+import pathlib
 import re
 import subprocess
 import tempfile
@@ -197,7 +198,7 @@ def get_rc_branch(repo_dir: str, commit_hash: str) -> str:
     return ""
 
 
-def parse_codeowners(codeowners_path):
+def parse_codeowners(codeowners_path: str | pathlib.Path) -> dict[str, list[str]]:
     with open(codeowners_path, encoding="utf8") as f:
         codeowners = f.readlines()
         filtered = [line.strip() for line in codeowners]
@@ -215,7 +216,15 @@ def parse_codeowners(codeowners_path):
         return parsed
 
 
-def parse_conventional_commit(message, pattern):
+class ConventionalCommit(typing.TypedDict):
+    type: str
+    scope: str | None
+    message: str
+
+
+def parse_conventional_commit(
+    message: str, pattern: re.Pattern[str]
+) -> ConventionalCommit:
     match = pattern.match(message)
 
     if match:
@@ -226,13 +235,13 @@ def parse_conventional_commit(message, pattern):
     return {"type": "other", "scope": None, "message": message}
 
 
-def matched_patterns(file_path, patterns):
-    matches = [(p, fnmatch.fnmatch(file_path, p)) for p in patterns]
-    matches = [match for match in matches if match[1]]
-    if len(matches) == 0:
-        return None
-    matches = list(reversed([match[0] for match in matches]))
-    return matches[0]
+def matched_patterns(file_path: str, patterns: typing.Iterator[str]) -> str | None:
+    matches = [
+        match
+        for match, did_match in [(p, fnmatch.fnmatch(file_path, p)) for p in patterns]
+        if did_match
+    ]
+    return matches[-1] if matches else None
 
 
 def release_changes(
@@ -299,7 +308,7 @@ class PreparedReleaseNotes(str):
 
 def prepare_release_notes(
     request: SecurityReleaseNotesRequest | OrdinaryReleaseNotesRequest,
-    max_commits=1000,
+    max_commits: int = 1000,
 ) -> PreparedReleaseNotes:
     if isinstance(request, SecurityReleaseNotesRequest):
         # Special case to avoid generation of any release notes in the case of security fixes.
