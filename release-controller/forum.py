@@ -1,7 +1,7 @@
 import logging
 import os
 import textwrap
-from typing import cast, Callable, TypedDict
+from typing import cast, Callable, TypedDict, Protocol
 
 from dotenv import load_dotenv
 from pydiscourse import DiscourseClient
@@ -202,6 +202,10 @@ class ReleaseCandidateForumTopic:
             topic_id=self.topic_id,
             content=content,
         )
+
+
+class ForumClientProtocol(Protocol):
+    def get_or_create(self, release: Release) -> ReleaseCandidateForumTopic: ...
 
 
 class ReleaseCandidateForumClient:

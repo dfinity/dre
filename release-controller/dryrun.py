@@ -15,11 +15,11 @@ if me not in sys.path:
 
 import git_repo  # noqa: E402
 import dre_cli  # noqa: E402
+from google_docs import DocInfo  # noqa: E402
 from release_notes import PreparedReleaseNotes  # noqa: E402
 from release_index import Release  # noqa: E402
 
 import forum  # noqa: E402
-import pydiscourse  # noqa: E402
 
 
 # FIXME: types in callsites for the bottom classes (in particular reconciler.py)
@@ -28,7 +28,7 @@ import pydiscourse  # noqa: E402
 LOGGER = logging.getLogger(__name__)
 
 
-class DiscourseClient(object):
+class StubDiscourseClient(object):
     def __init__(self) -> None:
         self.topics: list[forum.Topic] = []
         self.api_username = "doesntmatter"
@@ -153,8 +153,8 @@ class DiscourseClient(object):
 
 
 class ForumClient(forum.ReleaseCandidateForumClient):
-    def __init__(self, discourse_client: pydiscourse.DiscourseClient):
-        self.discourse_client = discourse_client
+    def __init__(self, discourse_client: StubDiscourseClient):
+        self.discourse_client = discourse_client  # type: ignore[assignment]
         self.nns_proposal_discussions_category_id = 0
 
 
@@ -177,14 +177,14 @@ class ReleaseNotesClient(object):
 
     def ensure(
         self, release_tag: str, release_commit: str, content: PreparedReleaseNotes
-    ) -> typing.Any:
+    ) -> DocInfo:
         t = self.release_notes_folder / release_commit
         if t.exists():
-            return t
+            return {"alternateLink": str(t)}
         with open(t, "w") as f:
             f.write(f"{content}")
         self._logger.warning("Stored release notes in %s", t)
-        return t
+        return {"alternateLink": str(t)}
 
     def markdown_file(self, version: str) -> PreparedReleaseNotes | None:
         try:

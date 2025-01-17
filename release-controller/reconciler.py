@@ -17,14 +17,14 @@ import slack_announce
 import reconciler_state
 import util
 from dotenv import load_dotenv
-from forum import ReleaseCandidateForumClient
+from forum import ReleaseCandidateForumClient, ForumClientProtocol
 from git_repo import GitRepo
 from github import Auth
 from github import Github
-from google_docs import ReleaseNotesClient
+from google_docs import ReleaseNotesClient, ReleaseNotesClientProtocol
 from governance import GovernanceCanister
 from prometheus import ICPrometheus
-from publish_notes import PublishNotesClient
+from publish_notes import PublishNotesClient, PublishNotesClientProtocol
 from pydiscourse import DiscourseClient
 from release_index_loader import DevReleaseLoader
 from release_index_loader import GitReleaseLoader
@@ -198,10 +198,10 @@ class Reconciler:
 
     def __init__(
         self,
-        forum_client: ReleaseCandidateForumClient,
+        forum_client: ForumClientProtocol,
         loader: ReleaseLoader,
-        notes_client: ReleaseNotesClient,
-        publish_client: PublishNotesClient,
+        notes_client: ReleaseNotesClientProtocol,
+        publish_client: PublishNotesClientProtocol,
         nns_url: str,
         state: reconciler_state.ReconcilerState,
         ic_repo: GitRepo,
@@ -434,15 +434,6 @@ def main() -> None:
     watchdog = Watchdog(timeout_seconds=600)
     watchdog.start()
 
-    discourse_client = (
-        DiscourseClient(  # type: ignore[no-untyped-call]
-            host=os.environ["DISCOURSE_URL"],
-            api_username=os.environ["DISCOURSE_USER"],
-            api_key=os.environ["DISCOURSE_KEY"],
-        )
-        if not dry_run
-        else dryrun.DiscourseClient()
-    )
     config_loader = (
         GitReleaseLoader(f"https://github.com/{dre_repo}.git")
         if "dev" not in os.environ
@@ -450,15 +441,14 @@ def main() -> None:
     )
     forum_client = (
         ReleaseCandidateForumClient(
-            discourse_client,
+            DiscourseClient(  # type: ignore[no-untyped-call]
+                host=os.environ["DISCOURSE_URL"],
+                api_username=os.environ["DISCOURSE_USER"],
+                api_key=os.environ["DISCOURSE_KEY"],
+            )
         )
         if not dry_run
-        else dryrun.ForumClient(discourse_client)
-    )
-    github_client = (
-        Github(auth=Auth.Token(os.environ["GITHUB_TOKEN"]))
-        if not dry_run
-        else dryrun.Github()
+        else dryrun.ForumClient(dryrun.StubDiscourseClient())
     )
     release_notes_client = (
         ReleaseNotesClient(
@@ -483,11 +473,14 @@ def main() -> None:
             main_branch="master",
         )
     )
-    publish_notes_client = (
-        PublishNotesClient(github_client.get_repo(dre_repo))
+    publish_notes_client: PublishNotesClientProtocol = (
+        PublishNotesClient(
+            Github(auth=Auth.Token(os.environ["GITHUB_TOKEN"])).get_repo(dre_repo)
+        )
         if not dry_run
         else dryrun.PublishNotesClient()
     )
+
     dre = (
         dre_cli.DRECli(
             dre_cli.Auth(

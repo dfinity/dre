@@ -1,6 +1,7 @@
 import logging
 import os
 import re
+import typing
 
 from dotenv import load_dotenv
 from github import Auth
@@ -72,6 +73,12 @@ def post_process_release_notes(release_notes: str) -> str:
     changelog = re.sub(r"[^\n]+\n-+\n(?!\s*\*)", "", changelog, flags=re.S)
     changelog = re.sub(r"\n{3,}", "\n\n", changelog, flags=re.S)
     return changelog
+
+
+class PublishNotesClientProtocol(typing.Protocol):
+    def publish_if_ready(
+        self, google_doc_markdownified: PreparedReleaseNotes | None, version: str
+    ) -> None: ...
 
 
 class PublishNotesClient:

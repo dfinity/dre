@@ -22,6 +22,14 @@ class DocInfo(typing.TypedDict):
     alternateLink: str
 
 
+class ReleaseNotesClientProtocol(typing.Protocol):
+    def ensure(
+        self, release_tag: str, release_commit: str, content: PreparedReleaseNotes
+    ) -> DocInfo: ...
+
+    def markdown_file(self, version: str) -> PreparedReleaseNotes | None: ...
+
+
 class ReleaseNotesClient:
     """Client for managing release notes in Google Drive."""
 
