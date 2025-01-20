@@ -22,6 +22,10 @@ build --@rules_rust//:rustfmt.toml=//:rustfmt.toml
 # lockfile for MODULE.bazel
 common --lockfile_mode=off
 
+# Mypy support.
+# Targets with tag "typecheck" will get type-checked when built, run or tested.
+common --aspects //tools:aspects.bzl%mypy_aspect --output_groups=+mypy
+
 # Use hermetic JDK
 # See https://bazel.build/docs/bazel-and-java#hermetic-testing
 build --java_runtime_version=remotejdk_17

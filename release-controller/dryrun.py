@@ -5,20 +5,21 @@ import sys
 import tempfile
 import pathlib
 import typing
-import git_repo
-import dre_cli
 import json
 
-from release_notes import PreparedReleaseNotes
-from release_index import Release
+from binascii import crc32
 
 me = os.path.join(os.path.dirname(__file__))
 if me not in sys.path:
     sys.path.append(me)
 
+import git_repo  # noqa: E402
+import dre_cli  # noqa: E402
+from google_docs import DocInfo  # noqa: E402
+from release_notes import PreparedReleaseNotes  # noqa: E402
+from release_index import Release  # noqa: E402
 
 import forum  # noqa: E402
-import pydiscourse  # noqa: E402
 
 
 # FIXME: types in callsites for the bottom classes (in particular reconciler.py)
@@ -27,40 +28,15 @@ import pydiscourse  # noqa: E402
 LOGGER = logging.getLogger(__name__)
 
 
-class FakePost(typing.TypedDict):
-    id: int
-    topic_id: int
-    posts_count: int
-    yours: bool
-    topic_slug: str
-    raw: str
-    content: str
-    can_edit: bool
-    title: str
-    post_number: int
-
-
-class FakeTopic(FakePost):
-    replies: list[FakePost]
-
-
-class PostsList(typing.TypedDict):
-    posts: list[FakePost]
-
-
-class PostStream(typing.TypedDict):
-    post_stream: PostsList
-
-
-class DiscourseClient(object):
+class StubDiscourseClient(object):
     def __init__(self) -> None:
-        self.topics: list[FakeTopic] = []
+        self.topics: list[forum.Topic] = []
         self.api_username = "doesntmatter"
         self.host = "fakediscourse.com.internal"
         self._logger = LOGGER.getChild(self.__class__.__name__)
 
-        if f := os.environ.get("DRY_RUN_FORUM_STORAGE"):
-            self.forum_storage: pathlib.PosixPath | None = pathlib.PosixPath(f)
+        if f := os.environ.get("RECONCILER_DRY_RUN_FORUM_STORAGE"):
+            self.forum_storage: pathlib.Path | None = pathlib.Path(f)
             os.makedirs(self.forum_storage, exist_ok=True)
             try:
                 with open(self.forum_storage / "mock-posts.json", "rb") as fdata:
@@ -70,91 +46,115 @@ class DiscourseClient(object):
         else:
             self.forum_storage = None
 
-    def _persist(self):
-        for topic in self.topics:
-            print(f"* Topic {topic['id']} titled {topic['title']}")
-            print(f"  Content {topic['content'].splitlines()[0].strip()}")
-            for reply in topic["replies"]:
-                print(f"  * Reply {reply['id']} {reply['topic_id']}")
-                print(f"    Content {reply['content'].splitlines()[0].strip()}")
+    def _persist(self) -> None:
+        if 0:
+            for topic in self.topics:
+                self._logger.debug(f"* Topic {topic['id']} titled {topic['title']}")
+                for reply in topic["post_stream"]["posts"]:
+                    self._logger.debug(
+                        f"  * Reply {reply['id']} (topic ID {reply['topic_id']})"
+                    )
+                    self._logger.debug(
+                        f"    Content {reply['raw'].splitlines()[0].strip()}"
+                    )
         if self.forum_storage:
             with open(self.forum_storage / "mock-posts.json", "w") as fdata:
                 json.dump(self.topics, fdata, indent=4)
 
-    def topics_by(self, username: str) -> list[FakeTopic]:
+    def topics_by(self, username: str) -> list[forum.Topic]:
         return self.topics
 
-    def create_post(self, **kwargs: typing.Any) -> dict[str, typing.Any]:
-        post = typing.cast(FakeTopic, kwargs)
-        post["id"] = len(self.topics)
-        self._logger.warning(
-            "Creating post %s with title %r and content %r",
-            post["id"],
-            post.get("title", "(no title)"),
-            post["content"],
-        )
-        post["posts_count"] = 1
-        post["yours"] = True
-        post["post_number"] = post["id"]
-        post["topic_slug"] = "slug-of-topic-" + str(post["id"])
-        post["raw"] = post["content"]
-        post["can_edit"] = True
-        if "topic_id" in post:
-            topic = [p for p in self.topics if p["id"] == post["topic_id"]][0]
-            topic["replies"].append(post)
+    def create_post(
+        self,
+        content: str,
+        topic_id: int | None = None,
+        title: str | None = None,
+        tags: list[str] | None = None,
+        category_id: int | None = None,
+    ) -> forum.Post:
+        if topic_id is None:
+            assert title, "Topic ID but no title in call"
+            # Caller wants entirely new topic.
+            topic = forum.Topic(
+                post_stream={"posts": []},
+                title=title,
+                id=len(self.topics),
+                posts_count=0,
+                slug=title.replace(" ", "-"),
+            )
+            self.topics.append(topic)
+            self._logger.warning(
+                "Creating topic %s with title %r",
+                topic["id"],
+                topic["title"],
+            )
         else:
-            post["replies"] = []
-            self.topics.append(post)
-            post["topic_id"] = post["id"]
-        self._persist()
-        return kwargs
+            topic = self.topics[topic_id]
 
-    def update_post(self, post_id: int, content: str):
+        post_id = 1000 + topic["id"] * 1000 + len(topic["post_stream"]["posts"])
+        post = forum.Post(
+            id=post_id,
+            topic_slug=topic["slug"],
+            topic_id=topic["id"],
+            post_number=post_id,
+            yours=True,
+            raw=content,
+            cooked=content,
+            can_edit=True,
+            reply_count=0,
+        )
+        topic["post_stream"]["posts"].append(post)
+        topic["posts_count"] = len(topic["post_stream"]["posts"])
+
+        self._logger.warning(
+            "Creating post %s under topic %s with content %r",
+            post["id"],
+            post["topic_id"],
+            post["raw"].strip()[:40],
+        )
+
+        self._persist()
+        return post
+
+    def update_post(self, post_id: int, content: str) -> None:
         post = self.post_by_id(post_id)
         assert post
-        if content != post["content"]:
+        if content != post["raw"]:
             self._logger.warning(
-                "Updating post %s titled %r",
+                "Updating post %s in topic %s",
                 post["id"],
-                post.get("title", "(no title)"),
+                post["topic_id"],
             )
-            self._logger.warning("* Old content: %r", post["content"][:40])
-            self._logger.warning("* New content: %r", content[:40])
-            post["content"] = content
+            self._logger.warning("* Old content: %r", post["raw"].strip()[:40])
+            self._logger.warning("* New content: %r", content.strip()[:40])
             post["raw"] = content
+            post["cooked"] = content
         self._persist()
 
-    def _get(self, api_url: str, page: int) -> PostStream | None:
+    def _get(self, api_url: str, page: int) -> forum.Topic:
         topic_id = int(api_url.split("/")[2].split(".")[0])
-        if page < 2:
-            return {
-                "post_stream": {
-                    "posts": [t for t in self.topics if t["topic_id"] == topic_id]
-                    + [
-                        r
-                        for t in self.topics
-                        for r in t["replies"]
-                        if r["topic_id"] == topic_id
-                    ]
-                }
-            }
-        return None
-
-    def post_by_id(self, post_id: int) -> FakePost | None:
+        if page > 1:
+            raise RuntimeError("Mock DiscourseClient class does not support pages > 2")
         try:
-            return [t for t in self.topics if t["id"] == post_id][0]
+            return [t for t in self.topics if t["id"] == topic_id][0]
         except IndexError:
-            try:
-                return [
-                    r for t in self.topics for r in t["replies"] if r["id"] == post_id
-                ][0]
-            except IndexError:
-                return None
+            raise RuntimeError(f"Topic {topic_id} does not exist")
+
+    def post_by_id(self, post_id: int) -> forum.Post | None:
+        try:
+            return [
+                p
+                for t in self.topics
+                for p in t["post_stream"]["posts"]
+                if p["id"] == post_id
+            ][0]
+        except IndexError:
+            return None
 
 
 class ForumClient(forum.ReleaseCandidateForumClient):
-    def __init__(self, discourse_client: pydiscourse.DiscourseClient):
-        self.discourse_client = discourse_client
+    def __init__(self, discourse_client: StubDiscourseClient):
+        self.discourse_client = discourse_client  # type: ignore[assignment]
         self.nns_proposal_discussions_category_id = 0
 
 
@@ -163,41 +163,43 @@ class Github(object):
 
 
 class ReleaseNotesClient(object):
-    def __init__(self):
-        if f := os.environ.get("DRY_RUN_RELEASE_NOTES_STORAGE"):
-            self.release_notes_folder = pathlib.PosixPath(f)
+    def __init__(self) -> None:
+        if f := os.environ.get("RECONCILER_DRY_RUN_RELEASE_NOTES_STORAGE"):
+            self.release_notes_folder = pathlib.Path(f)
             os.makedirs(self.release_notes_folder, exist_ok=True)
             self.release_notes_folder_cleanup = False
         else:
-            self.release_notes_folder = pathlib.PosixPath(tempfile.mkdtemp())
+            self.release_notes_folder = pathlib.Path(
+                tempfile.mkdtemp(prefix=f"reconciler-{self.__class__.__name__}-")
+            )
             self.release_notes_folder_cleanup = True
         self._logger = LOGGER.getChild(self.__class__.__name__)
 
-    def has_release_notes(self, release_commit: str) -> bool:
-        return (self.release_notes_folder / release_commit).exists()
-
     def ensure(
         self, release_tag: str, release_commit: str, content: PreparedReleaseNotes
-    ) -> typing.Any:
+    ) -> DocInfo:
         t = self.release_notes_folder / release_commit
         if t.exists():
-            return t
+            return {"alternateLink": str(t)}
         with open(t, "w") as f:
             f.write(f"{content}")
         self._logger.warning("Stored release notes in %s", t)
-        return t
+        return {"alternateLink": str(t)}
 
-    def markdown_file(self, version: str) -> PreparedReleaseNotes:
-        with open((self.release_notes_folder / version), "r") as f:
-            return PreparedReleaseNotes(f.read())
+    def markdown_file(self, version: str) -> PreparedReleaseNotes | None:
+        try:
+            with open((self.release_notes_folder / version), "r") as f:
+                return PreparedReleaseNotes(f.read())
+        except FileNotFoundError:
+            return None
 
-    def __del__(self):
+    def __del__(self) -> None:
         if self.release_notes_folder_cleanup:
             shutil.rmtree(self.release_notes_folder)
 
 
 class GitRepo(git_repo.GitRepo):
-    def __init__(self, repo: str, **kwargs):
+    def __init__(self, repo: str, **kwargs: typing.Any) -> None:
         super().__init__(repo, **kwargs)
         self._logger = LOGGER.getChild(self.__class__.__name__)
 
@@ -211,11 +213,11 @@ class GitRepo(git_repo.GitRepo):
 
 
 class PublishNotesClient(object):
-    def __init__(self):
+    def __init__(self) -> None:
         self._logger = LOGGER.getChild(self.__class__.__name__)
 
     def publish_if_ready(
-        self, google_doc_markdownified: PreparedReleaseNotes, version: str
+        self, google_doc_markdownified: PreparedReleaseNotes | None, version: str
     ) -> None:
         self._logger.warning(
             "Simulating that notes for release %s are not ready", version
@@ -223,20 +225,20 @@ class PublishNotesClient(object):
 
 
 class DRECli(dre_cli.DRECli):
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
         self._logger = LOGGER.getChild(self.__class__.__name__)
 
     def place_proposal(
         self,
-        changelog,
+        changelog: str,
         version: str,
         forum_post_url: str,
         unelect_versions: list[str],
         package_checksum: str,
         package_urls: list[str],
-        dry_run=False,
-    ):
+        dry_run: bool = False,
+    ) -> int:
         super().place_proposal(
             changelog,
             version,
@@ -246,10 +248,12 @@ class DRECli(dre_cli.DRECli):
             package_urls,
             dry_run=True,
         )
+        # Now mock the proposal ID using an integer derived from the version.
+        return crc32(version.encode("utf-8"))
 
 
 class MockSlackAnnouncer(object):
-    def __init__(self):
+    def __init__(self) -> None:
         self._logger = LOGGER.getChild(self.__class__.__name__)
 
     def announce_release(

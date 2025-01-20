@@ -5,7 +5,7 @@ from git_repo import GitRepo
 from release_index_loader import GitReleaseLoader
 
 
-def test_remove_excluded_changes():
+def test_remove_excluded_changes() -> None:
     with tempfile.TemporaryDirectory() as d:
         loader = GitReleaseLoader(
             GitRepo(
@@ -122,6 +122,6 @@ While not required for this NNS proposal, as we are only electing a new GuestOS 
     res = loader.proposal_summary(
         "35bfcadd0f2a474057e42393917b8b3ac269627a", security_fix=True
     )
-    assert (
+    assert res is not None and (
         "You will be able to follow" in res
     ), f"'You will be able to follow' signifying security fix not found in\n\n{res}"

@@ -32,6 +32,10 @@ rye run <command>
 
 to run the `<command>` with all expected dependencies.
 
+### IDE setup
+
+Point your IDE to the Python interpreter inside `.venv/bin`.
+
 ### Troubleshooting rye
 
 If you face problems in `rye sync`, such as `unknown version cpython@...`, you can try to
