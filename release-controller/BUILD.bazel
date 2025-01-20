@@ -90,34 +90,34 @@ py_test(
 
 py_test(
     name = "test_reconciler",
-    srcs = ["tester.py"] + ["tests/test_reconciler.py"] + glob(["tests/mock_*.py"]) + reconciler_deps,
+    srcs = ["tester.py"] + ["tests/test_reconciler.py"] + glob(["tests/mock_*.py"]),
     data = glob(["tests/test_data/*"]),
     main = "tester.py",
     env = env,
     tags = ["no-sandbox", "typecheck"],
-    deps = deps + dev_deps,
+    deps = deps + dev_deps + ["release-controller"],
     env_inherit = ["HOME"],
 )
 
 py_test(
     name = "test_forum",
-    srcs = ["tester.py"] + ["tests/test_forum.py"] + glob(["tests/mock_*.py"]) + reconciler_deps,
+    srcs = ["tester.py"] + ["tests/test_forum.py"] + glob(["tests/mock_*.py"]),
     data = glob(["tests/test_data/*"]),
     main = "tester.py",
     env = env,
     tags = ["no-sandbox", "typecheck"],
-    deps = deps + dev_deps,
+    deps = deps + dev_deps + ["release-controller"],
     env_inherit = ["HOME"],
 )
 
 py_test(
     name = "test_publish_notes",
-    srcs = ["tester.py"] + ["tests/test_publish_notes.py"] + glob(["tests/mock_*.py"]) + reconciler_deps,
+    srcs = ["tester.py"] + ["tests/test_publish_notes.py"] + glob(["tests/mock_*.py"]),
     data = glob(["tests/test_data/*"]),
     main = "tester.py",
     env = env,
     tags = ["no-sandbox", "typecheck"],
-    deps = deps + dev_deps,
+    deps = deps + dev_deps + ["release-controller"],
     env_inherit = ["HOME"],
 )
 
