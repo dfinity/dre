@@ -22,6 +22,7 @@ nav:
       - Decentralization: decentralization.md
       - Release controller: release.md
       - Subnet decentralization: subnet-decentralization-whatif.md
+      - Be a true Dr DRE: be-dr-dre.md
   - "Trustworthy metrics":
       - General: trustworthy-metrics/trustworthy-metrics.md
       - Architecture: trustworthy-metrics/architecture.md
