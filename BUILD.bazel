@@ -34,5 +34,4 @@ py_console_script_binary(
         requirement("mkdocs-git-revision-date-localized-plugin"),
         requirement("mkdocs-git-committers-plugin-2"),
     ],
-    args = ["build"],
 )
