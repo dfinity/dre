@@ -166,7 +166,7 @@ rstest = { version = "0.23.0", default-features = false }
 rust_decimal = "1.36.0"
 rust_decimal_macros = "1.36.0"
 serde = { version = "1.0", features = ["derive"] }
-serde_json = { version = "1.0.135", default-features = false, features = [
+serde_json = { version = "1.0.137", default-features = false, features = [
     "preserve_order",
 ] }
 serde_yaml = "0.9.34"
@@ -203,7 +203,7 @@ dfn_core = { git = "https://github.com/dfinity/ic.git", rev = "ac71086bf4d6854e8
 node-provider-rewards-lib = { path = "rs/dre-canisters/node-provider-rewards-lib" }
 
 # dre-airflow deps, should be replaced with dre-airflow once
-indexmap = { version = "2.7.0", features = ["serde"] }
+indexmap = { version = "2.7.1", features = ["serde"] }
 
 [profile.release]
 # Add debug information to the release build (does NOT reduce the level of optimization!)
