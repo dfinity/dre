@@ -67,24 +67,28 @@ native_binary(
     out = "target-determinator",
 )
 
-long_tests = [
-    "tests/test_commit_annotator.py",
-]
+# Add file here if you do not want to run the test automatically.
+long_tests = ["tests/test_commit_annotator.py"]
 
 [
-    py_test(
-        name = t[6:-3],
-        srcs = ["tests/runner.py"] + [t] + glob(["tests/mock_*.py"]),
-        data = glob(["tests/test_data/*"]),
-        main = "tests/runner.py",
-        env = env,
-        tags = ["no-sandbox", "typecheck"],
-        deps = deps + dev_deps + ["release-controller"],
-        env_inherit = ["HOME"],
-    )
-    for t in glob(["tests/test_*.py"], exclude=["tests/test_commit_annotator.py"])
+    [
+        py_test(
+            name = target[6:-3],
+            srcs = ["tests/runner.py"] + [target] + glob(["tests/mock_*.py"]),
+            data = glob(["tests/test_data/*"]),
+            main = "tests/runner.py",
+            env = env,
+            tags = ["no-sandbox"] + group["tags"],
+            deps = deps + dev_deps + ["release-controller"],
+            env_inherit = ["HOME"],
+        )
+        for target in group["targets"]
+    ]
+    for group in [
+        {"targets": glob(["tests/test_*.py"], exclude=long_tests), "tags": ["typecheck"]},
+        {"targets": long_tests, "tags": ["manual"]},
+    ]
 ]
-
 
 tar(
     name = "bins_release_controller_tar",
