@@ -14,6 +14,7 @@ use regex::Regex;
 use reqwest::{Client, Method};
 use serde::{de::DeserializeOwned, Deserialize};
 use serde_json::json;
+use url::Url;
 
 #[automock]
 pub trait DiscourseClient: Sync + Send {
@@ -174,10 +175,23 @@ impl DiscourseClientImp {
             .map(|_resp| ())
     }
 
+    fn format_url_for_automatic_topic_creation(&self, topic: DiscourseTopic) -> anyhow::Result<Url> {
+        let url: Url = self.forum_url.parse()?;
+        let mut url = url.join("new-topic")?;
+        url.query_pairs_mut()
+            .append_pair("title", &topic.title)
+            .append_pair("body", &topic.content)
+            .append_pair("category", &topic.category)
+            .append_pair("tags", &topic.tags.join(","));
+        Ok(url)
+    }
+
     fn request_from_user_topic(&self, err: anyhow::Error, topic: DiscourseTopic) -> anyhow::Result<Option<DiscourseResponse>> {
+        let url = self.format_url_for_automatic_topic_creation(topic)?;
+
         warn!("Received error: {:?}", err);
-        warn!("Please create a topic with the following information");
-        println!("{}", topic);
+        warn!("Please create a topic on the following link: {}", url);
+
         let forum_post_link = dialoguer::Input::<String>::new()
             .with_prompt("Forum post link")
             .allow_empty(true)
@@ -390,5 +404,22 @@ proposal 123456
         let text = "Proposal id 123456".to_string();
         let parsed = parse_proposal_id_from_ic_admin_response(text).unwrap();
         assert_eq!(parsed, 123456)
+    }
+
+    #[test]
+    fn generate_link_topic_creation() {
+        let discourse_client =
+            DiscourseClientImp::new("https://forum.dfinity.org".to_string(), "".to_string(), "".to_string(), true, false, None).unwrap();
+
+        let link = discourse_client
+            .format_url_for_automatic_topic_creation(DiscourseTopic {
+                category: NNS_PROPOSAL_DISCUSSION.to_string(),
+                content: "Test content".to_string(),
+                tags: vec!["tag1".to_string(), "tag2".to_string()],
+                title: "Test automatic forum post creation".to_string(),
+            })
+            .unwrap();
+
+        assert_eq!(link.to_string(), "https://forum.dfinity.org/new-topic?title=Test+automatic+forum+post+creation&body=Test+content&category=NNS+proposal+discussions&tags=tag1%2Ctag2")
     }
 }
