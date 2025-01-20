@@ -36,7 +36,7 @@ env = {
 py_binary(
     name = "release-controller",
     main = "reconciler.py",
-    srcs = glob(["*.py"], exclude = ["tester.py", "commit_annotator.py", "ci_check.py"]),
+    srcs = glob(["*.py"], exclude = ["commit_annotator.py", "ci_check.py"]),
     tags = ["typecheck"],
     env = env,
     deps = deps,
@@ -45,7 +45,7 @@ py_binary(
 py_binary(
     name = "commit_annotator",
     main = "commit_annotator.py",
-    srcs = glob(["*.py"], exclude = ["tester.py", "reconciler.py", "ci_check.py"]),
+    srcs = glob(["*.py"], exclude = ["reconciler.py", "ci_check.py"]),
     data = [":bazelisk", ":target_determinator"],
     env = env,
     deps = deps,
@@ -71,52 +71,20 @@ long_tests = [
     "tests/test_commit_annotator.py",
 ]
 
-py_test(
-    name = "pytest",
-    srcs = ["tester.py"] + glob(
-        ["tests/*.py"],
-        exclude = long_tests + ["tests/test_reconciler.py", "tests/test_forum.py", "tests/test_publish_notes.py"]
-    ) + glob(["*.py"], exclude = ["tester.py"]),
-    data = glob(["tests/test_data/*"]),
-    main = "tester.py",
-    env = env,
-    tags = ["no-sandbox"],
-    deps = deps + dev_deps,
-    env_inherit = ["HOME"],
-)
+[
+    py_test(
+        name = t[6:-3],
+        srcs = ["tests/runner.py"] + [t] + glob(["tests/mock_*.py"]),
+        data = glob(["tests/test_data/*"]),
+        main = "tests/runner.py",
+        env = env,
+        tags = ["no-sandbox", "typecheck"],
+        deps = deps + dev_deps + ["release-controller"],
+        env_inherit = ["HOME"],
+    )
+    for t in glob(["tests/test_*.py"], exclude=["tests/test_commit_annotator.py"])
+]
 
-py_test(
-    name = "test_reconciler",
-    srcs = ["tester.py"] + ["tests/test_reconciler.py"] + glob(["tests/mock_*.py"]),
-    data = glob(["tests/test_data/*"]),
-    main = "tester.py",
-    env = env,
-    tags = ["no-sandbox", "typecheck"],
-    deps = deps + dev_deps + ["release-controller"],
-    env_inherit = ["HOME"],
-)
-
-py_test(
-    name = "test_forum",
-    srcs = ["tester.py"] + ["tests/test_forum.py"] + glob(["tests/mock_*.py"]),
-    data = glob(["tests/test_data/*"]),
-    main = "tester.py",
-    env = env,
-    tags = ["no-sandbox", "typecheck"],
-    deps = deps + dev_deps + ["release-controller"],
-    env_inherit = ["HOME"],
-)
-
-py_test(
-    name = "test_publish_notes",
-    srcs = ["tester.py"] + ["tests/test_publish_notes.py"] + glob(["tests/mock_*.py"]),
-    data = glob(["tests/test_data/*"]),
-    main = "tester.py",
-    env = env,
-    tags = ["no-sandbox", "typecheck"],
-    deps = deps + dev_deps + ["release-controller"],
-    env_inherit = ["HOME"],
-)
 
 tar(
     name = "bins_release_controller_tar",
