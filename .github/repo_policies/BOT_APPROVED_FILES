@@ -3,7 +3,7 @@
 
 replica-releases/*
 *Cargo.toml*
-*Cargo.lock.*
+*Cargo.lock*
 Cargo.Bazel.lock
 pyproject.toml
 requirements*lock
