@@ -33,13 +33,10 @@ env = {
     "BAZEL": "true",
 }
 
-reconciler_srcs = glob(["*.py"], exclude = ["tester.py", "commit_annotator.py", "ci_check.py"])
-commit_annotator_srcs = glob(["*.py"], exclude = ["tester.py", "reconciler.py", "ci_check.py"])
-
 py_binary(
     name = "release-controller",
     main = "reconciler.py",
-    srcs = reconciler_srcs,
+    srcs = glob(["*.py"], exclude = ["tester.py", "commit_annotator.py", "ci_check.py"]),
     tags = ["typecheck"],
     env = env,
     deps = deps,
@@ -48,7 +45,7 @@ py_binary(
 py_binary(
     name = "commit_annotator",
     main = "commit_annotator.py",
-    srcs = commit_annotator_srcs,
+    srcs = glob(["*.py"], exclude = ["tester.py", "reconciler.py", "ci_check.py"]),
     data = [":bazelisk", ":target_determinator"],
     env = env,
     deps = deps,
