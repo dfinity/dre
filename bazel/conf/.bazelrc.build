@@ -24,7 +24,7 @@ common --lockfile_mode=off
 
 # Mypy support.
 # Targets with tag "typecheck" will get type-checked when built, run or tested.
-common --enable_bzlmod --aspects //tools:aspects.bzl%mypy_aspect --output_groups=+mypy
+common --aspects //tools:aspects.bzl%mypy_aspect --output_groups=+mypy
 
 # Use hermetic JDK
 # See https://bazel.build/docs/bazel-and-java#hermetic-testing
