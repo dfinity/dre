@@ -203,6 +203,10 @@ impl DreContext {
         Ok(neuron)
     }
 
+    pub fn neuron_id(&self) -> Option<u64> {
+        self.neuron_opts.neuron_id
+    }
+
     pub async fn readonly_ic_admin_for_other_network(&self, network: Network) -> anyhow::Result<impl IcAdmin> {
         let ic_admin = self.ic_admin().await?;
         Ok(IcAdminImpl::new(
