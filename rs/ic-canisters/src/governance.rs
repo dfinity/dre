@@ -197,24 +197,24 @@ impl GovernanceCanisterWrapper {
     }
 
     pub async fn list_neurons(&self) -> anyhow::Result<ListNeuronsResponse> {
-        let mut start_from_neuron_id = None;
+        let mut page_number = 0;
         let mut acc = ListNeuronsResponse::default();
         loop {
-            let current = self.list_neurons_inner(start_from_neuron_id).await?;
+            let current = self.list_neurons_inner(page_number).await?;
             acc.full_neurons.extend(current.full_neurons);
             acc.neuron_infos.extend(current.neuron_infos);
-            start_from_neuron_id = acc.next_start_from_neuron_id;
 
-            if start_from_neuron_id.is_none() {
-                // No more neurons to list
+            if acc.total_pages_available() == page_number + 1 {
                 break;
             }
+
+            page_number += 1;
         }
 
         Ok(acc)
     }
 
-    async fn list_neurons_inner(&self, start_from_neuron_id: Option<u64>) -> anyhow::Result<ListNeuronsResponse> {
+    async fn list_neurons_inner(&self, page: u64) -> anyhow::Result<ListNeuronsResponse> {
         self.query(
             "list_neurons",
             candid::encode_one(ListNeurons {
@@ -222,7 +222,8 @@ impl GovernanceCanisterWrapper {
                 include_neurons_readable_by_caller: true,
                 include_empty_neurons_readable_by_caller: None,
                 include_public_neurons_in_full_neurons: None,
-                start_from_neuron_id,
+                page_number: Some(page),
+                page_size: None,
             })?,
         )
         .await
