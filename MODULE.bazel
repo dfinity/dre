@@ -1,18 +1,129 @@
-module(name = "dre", version = "0.0.1")
+module(name = "dre")
 
-bazel_dep(name="rules_python", version="0.37.0")
+bazel_dep(name = "bazel_skylib", version = "1.7.1")
+bazel_dep(name = "aspect_bazel_lib", version = "2.11.0")
+
+bazel_dep(name = "rules_python", version = "0.37.0")
+python_version = "3.12"
+
 python = use_extension("@rules_python//python/extensions:python.bzl", "python")
-python.toolchain(python_version = "3.12.2", is_default = True)
+python.toolchain(python_version = python_version)
+
+pip = use_extension("@rules_python//python/extensions:pip.bzl", "pip")
+pip.parse(
+    hub_name = "python_deps",
+    python_version = python_version,
+    requirements_lock = "//:requirements.lock",
+)
+use_repo(pip, "python_deps")
 
 bazel_dep(name = "rules_mypy", version = "0.22.0")
 
-#types = use_extension("@rules_mypy//mypy:types.bzl", "types")
-#types.requirements(
-#    name = "pip_types",
-#    # `@pip` in the next line corresponds to the `hub_name` when using
-#    # rules_python's `pip.parse(...)`.
-#    # pip_requirements = "@pip//:requirements.bzl",
-#    # also legal to pass a `requirements.in` here
-#    requirements_txt = "//:requirements.lock",
-#)
-#use_repo(types, "pip_types")
+bazel_dep(name = "rules_pkg", version = "1.0.1")
+bazel_dep(name = "rules_oci", version = "2.0.0")
+
+oci = use_extension("@rules_oci//oci:extensions.bzl", "oci")
+oci.pull(
+    name = "bazel_image_7_4_1",
+    image = "gcr.io/bazel-public/bazel@sha256:35c128509642f76fede4ade16e8c829781048f6a62a7b2d9cfbabd45246af81a",
+    platforms = [
+        "linux/amd64",
+    ],
+)
+use_repo(oci, "bazel_image_7_4_1", "bazel_image_7_4_1_linux_amd64")
+oci.pull(
+    name = "python3",
+    image = "index.docker.io/library/python@sha256:5120c734a5ba810c47b97a80cdc6e03004bd4ff7ad98e492b9ccdaf70ff2b8d6",
+    platforms = [
+        "linux/amd64",
+    ],
+)
+use_repo(oci, "python3", "python3_linux_amd64")
+oci.pull(
+    name = "distroless_python3",
+    image = "gcr.io/distroless/python3@sha256:db34936540e7bc575cc24a318e41eae7ad8c426b8d8e20a465f0dd67843590eb",
+    platforms = [
+        "linux/amd64",
+    ],
+)
+use_repo(oci, "distroless_python3", "distroless_python3_linux_amd64")
+oci.pull(
+    # tag = bookworm-20231218-slim
+    name = "debian-slim",
+    image = "index.docker.io/library/debian@sha256:45287d89d96414e57c7705aa30cb8f9836ef30ae8897440dd8f06c4cff801eec",
+    platforms = [
+        "linux/amd64",
+    ],
+)
+use_repo(oci, "debian-slim", "debian-slim_linux_amd64")
+oci.pull(
+    # tag = "2.44.0-debian-12-r2",
+    name = "bitnami_git_docker_img",
+    image = "index.docker.io/bitnami/git@sha256:bbd4ffc32f62b2b7bb2b85f289803d564a0381a2c75fd61f19f8bfc0815791e4",
+    platforms = [
+        "linux/amd64",
+        "linux/arm64",
+    ],
+)
+use_repo(oci, "bitnami_git_docker_img", "bitnami_git_docker_img_linux_amd64")
+oci.pull(
+    # tag = 0.38.0-debian
+    name = "vector-debian",
+    image = "index.docker.io/timberio/vector@sha256:f33f11c554d522fb9a3d1725c9212725da8f1eee70a3971e587e78d46e72a779",
+    platforms = [
+        "linux/amd64",
+    ],
+)
+use_repo(oci, "vector-debian", "vector-debian_linux_amd64")
+oci.pull(
+    # tag = 0.34.1-distroless-libc
+    name = "vector",
+    image = "index.docker.io/timberio/vector@sha256:4447025bc3a99b3a96ed0352e990c44040784590de5a1ea8e4e5b75b76a16665",
+    platforms = [
+        "linux/amd64",
+    ],
+)
+use_repo(oci, "vector", "vector_linux_amd64")
+oci.pull(
+    name = "distroless_cc_debian12",
+    image = "gcr.io/distroless/cc-debian12@sha256:53895c8e3a37652d075d22dde58f40b310daa4a7a59d078b8a7f604d11b1adc6",
+    platforms = [
+        "linux/amd64",
+        "linux/arm64",
+    ],
+)
+use_repo(oci, "bitnami_git_docker_img_linux_arm64", "distroless_cc_debian12", "distroless_cc_debian12_linux_amd64", "distroless_cc_debian12_linux_arm64")
+
+http_file = use_repo_rule("@bazel_tools//tools/build_defs/repo:http.bzl", "http_file")
+
+http_file(
+    name = "ic-icrc1-archive",
+    downloaded_file_path = "ic-icrc1-archive.wasm.gz",
+    sha256 = "6e9869a0d51a4e0f6b6f111958c06fbca0a6476483d6048a512d4df845ebe0ae",
+    url = "https://download.dfinity.systems/ic/778d2bb870f858952ca9fbe69324f9864e3cf5e7/canisters/ic-icrc1-archive.wasm.gz",
+)
+
+http_file(
+    name = "target_determinator",
+    sha256 = "306071a0037fd9074d7b878a9a489597878b6035606f8ed60ef9baaf81074228",
+    url = "https://github.com/bazel-contrib/target-determinator/releases/download/v0.28.0/target-determinator.linux.amd64",
+    executable = True
+)
+
+http_file(
+    name = "bazelisk_linux",
+    sha256 = "d9af1fa808c0529753c3befda75123236a711d971d3485a390507122148773a3",
+    url = "https://github.com/bazelbuild/bazelisk/releases/download/v1.20.0/bazelisk-linux-amd64",
+    executable = True
+)
+
+http_archive = use_repo_rule("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
+
+IC_REPO_VERSION = "a700085f0575a440cb44941da69cfa2efeea3ab9"
+
+http_archive(
+    name = "ic_repo",
+    sha256 = "34426b59612b23357799be48aed82870d298f7dbee96c9792ee3fe744ad2c2e3",
+    strip_prefix = "ic-{}".format(IC_REPO_VERSION),
+    url = "https://github.com/dfinity/ic/archive/{}.tar.gz".format(IC_REPO_VERSION),
+)

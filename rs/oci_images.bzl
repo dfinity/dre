@@ -2,7 +2,7 @@
 rules for creating oci images from rust binaries
 """
 
-load("@rules_oci//oci:defs.bzl", "oci_image", "oci_push", "oci_tarball")
+load("@rules_oci//oci:defs.bzl", "oci_image", "oci_push", "oci_load")
 load("@rules_pkg//:pkg.bzl", "pkg_tar")
 
 def rust_binary_oci_image_rules(name, src, base_image = "@distroless_cc_debian12", other_layers = []):
@@ -31,7 +31,7 @@ def rust_binary_oci_image_rules(name, src, base_image = "@distroless_cc_debian12
     )
 
     tarball_name = "tarball"
-    oci_tarball(
+    oci_load(
         name = tarball_name,
         image = image_rule_name,
         repo_tags = ["localhost/{}:latest".format(binary.name)]

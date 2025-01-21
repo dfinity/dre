@@ -18,6 +18,8 @@ use strum::Display;
 const MAX_SUMMARY_CHAR_COUNT: usize = 29000;
 
 #[automock]
+// automock complains without the explicit allow below
+#[allow(elided_named_lifetimes)]
 pub trait IcAdmin: Send + Sync + Debug {
     fn ic_admin_path(&self) -> Option<String>;
 
@@ -59,7 +61,7 @@ impl IcAdmin for IcAdminImpl {
         Box::pin(async move { self.propose_run_inner(cmd, opts, self.dry_run).await })
     }
 
-    fn run<'a>(&'a self, command: &'a str, args: &'a [String], silent: bool) -> BoxFuture<'_, anyhow::Result<String>> {
+    fn run<'a>(&'a self, command: &'a str, args: &'a [String], silent: bool) -> BoxFuture<'a, anyhow::Result<String>> {
         let ic_admin_args = [&[command.to_string()], args].concat();
         Box::pin(async move { self._run_ic_admin_with_args(&ic_admin_args, silent).await })
     }
@@ -84,7 +86,7 @@ impl IcAdmin for IcAdminImpl {
     }
 
     /// Run an `ic-admin get-*` command directly, and without an HSM
-    fn run_passthrough_get<'a>(&'a self, args: &'a [String], silent: bool) -> BoxFuture<'_, anyhow::Result<String>> {
+    fn run_passthrough_get<'a>(&'a self, args: &'a [String], silent: bool) -> BoxFuture<'a, anyhow::Result<String>> {
         if args.is_empty() {
             println!("List of available ic-admin 'get' sub-commands:\n");
             for subcmd in self.grep_subcommands(r"\s+get-(.+?)\s") {
@@ -115,7 +117,7 @@ impl IcAdmin for IcAdminImpl {
     }
 
     /// Run an `ic-admin propose-to-*` command directly
-    fn run_passthrough_propose<'a>(&'a self, args: &'a [String]) -> BoxFuture<'_, anyhow::Result<String>> {
+    fn run_passthrough_propose<'a>(&'a self, args: &'a [String]) -> BoxFuture<'a, anyhow::Result<String>> {
         if args.is_empty() {
             println!("List of available ic-admin 'propose' sub-commands:\n");
             for subcmd in self.grep_subcommands(r"\s+propose-to-(.+?)\s") {

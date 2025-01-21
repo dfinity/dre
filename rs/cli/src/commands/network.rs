@@ -74,6 +74,11 @@ impl ExecutableCommand for Network {
                             omit_nodes.extend(node_ids_remove.iter().map(|node_id| node_id.to_string()));
                             Some(omit_nodes)
                         }
+                        crate::ic_admin::ProposeCommand::AddApiBoundaryNodes { nodes, version: _version } => {
+                            let mut omit_nodes = vec![];
+                            omit_nodes.extend(nodes.iter().map(|node| node.to_string()));
+                            Some(omit_nodes)
+                        }
                         _ => None,
                     })
                     .flatten()

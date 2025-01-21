@@ -106,7 +106,7 @@ class PublishNotesClient:
             logging.info("creating version %s file on branch %s", version, branch_name)
             self.repo.create_file(
                 path=version_path,
-                message=f"Elect version {version}",
+                message=f"chore(release): Elect version {version}",
                 content=changelog,
                 branch=branch_name,
             )
@@ -117,7 +117,9 @@ class PublishNotesClient:
 
         logging.info("creating pull request for %s, branch %s", version, branch_name)
         self.repo.create_pull(
-            title=f"Elect version {version}", base="main", head=pull_head
+            title=f"chore(release): Elect version {version}",
+            base="main",
+            head=pull_head,
         )
 
     def publish_if_ready(
