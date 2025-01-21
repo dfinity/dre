@@ -53,7 +53,7 @@ The release process [is documented here](https://www.notion.so/dfinityorg/IC-OS-
     - Evaluate the alert based on its severity and the affected cluster to determine if further action is required.
     - Escalate or address issues as needed to ensure operations continue smoothly.
 
-### 3. **Answer in our team's slack channel**
+### 3. **Answer all questions asked in the team's slack channels**
     
 * [`#eng-dre`](https://dfinity.enterprise.slack.com/archives/C05LD0CEAHY): General channel for activities
 * [`#eng-release`](https://dfinity.enterprise.slack.com/archives/C01DB8MQ5M1): Questions related to release process
@@ -87,7 +87,9 @@ The release process [is documented here](https://www.notion.so/dfinityorg/IC-OS-
 
    - Review and address any issues with the generated pull request.  
    - Ensure the fixes are implemented and attempt to merge the PR into the repository.  
-   - Maintaining compatibility between the IC repo and our repo reduces friction and ensures our tooling operates smoothly.  
+   - Maintaining compatibility between the IC repo and our repo reduces friction and ensures our tooling operates smoothly. 
+   - Mainnet topology proposals, such as `dre network --heal --optimize --ensure-operator-nodes-unassigned --ensure-operator-nodes-assigned --remove-cordoned-nodes` or a subset of these operations. The operations are still not polished enough to be run automatically.
+   - Provider reward adjustment proposals, if any are needed that week. Please ask in `#eng-dre` if you don't know if any are needed.
 
 ### 6. **Handover operations**  
 
