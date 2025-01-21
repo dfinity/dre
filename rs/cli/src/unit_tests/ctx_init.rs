@@ -50,7 +50,7 @@ async fn get_context(network: &Network, version: IcAdminVersion) -> anyhow::Resu
         Store::new(false)?,
         crate::commands::DiscourseOpts {
             discourse_api_key: None,
-            discourse_api_url: None,
+            discourse_api_url: "".to_string(),
             discourse_api_user: None,
             discourse_skip_post_creation: true,
             discourse_subnet_topic_override_file_path: None,
@@ -194,7 +194,7 @@ async fn get_ctx_for_neuron_test(
         Store::new(offline)?,
         crate::commands::DiscourseOpts {
             discourse_api_key: None,
-            discourse_api_url: None,
+            discourse_api_url: "".to_string(),
             discourse_api_user: None,
             discourse_skip_post_creation: false,
             discourse_subnet_topic_override_file_path: None,
