@@ -162,6 +162,11 @@ impl IcAdmin for IcAdminImpl {
         Box::pin(async move {
             let _ = self._exec(cmd, opts, true, false, false).await;
 
+            if self.dry_run {
+                // Same as if someone said "Do you want to continue? [Y/n] n"
+                return Ok(false);
+            }
+
             if self.proceed_without_confirmation {
                 // Don't ask for confirmation, allow to proceed
                 return Ok(true);
