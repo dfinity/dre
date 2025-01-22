@@ -138,8 +138,8 @@ pub struct DiscourseOpts {
     pub(crate) discourse_api_user: Option<String>,
 
     /// Api url used to interact with the forum
-    #[clap(long, env = "DISCOURSE_API_URL", global = true)]
-    pub(crate) discourse_api_url: Option<String>,
+    #[clap(long, env = "DISCOURSE_API_URL", global = true, default_value = "https://forum.dfinity.org")]
+    pub(crate) discourse_api_url: String,
 
     /// Skip forum post creation all together, also will not
     /// prompt user for the link
