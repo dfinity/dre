@@ -69,6 +69,21 @@ class DRECli:
             )["value"]["blessed_version_ids"],
         )
 
+    def get_blessed_hostos_versions(self) -> set[str]:
+        """Query the blessed versions."""
+        return set(
+            typing.cast(
+                list[str],
+                [
+                    n["hostos_version_id"]
+                    for n in json.loads(
+                        subprocess.check_output([self.cli, "registry"], env=self.env)
+                    )["nodes"]
+                    if "hostos_version_id" in n and n["hostos_version_id"].strip()
+                ],
+            )
+        )
+
     def get_past_election_proposals(self) -> list[ElectionProposal]:
         """Get all known GuestOS election proposals."""
         return typing.cast(
@@ -144,3 +159,8 @@ class DRECli:
             # We will not parse the text here.  We dry-ran the thing, after all,
             # so there will be no proposal ID to parse.
             return 0
+
+
+if __name__ == "__main__":
+    cli = DRECli()
+    print(cli.get_blessed_hostos_versions())
