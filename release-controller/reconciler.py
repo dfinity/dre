@@ -575,7 +575,9 @@ def main() -> None:
             if opts.loop_every <= 0:
                 break
             else:
-                time.sleep(opts.loop_every - (time.time() - now))
+                sleepytime = opts.loop_every - (time.time() - now)
+                if sleepytime > 0.0:
+                    time.sleep(sleepytime)
         except KeyboardInterrupt:
             LOGGER.info("Interrupted.")
             raise
