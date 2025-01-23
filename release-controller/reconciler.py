@@ -353,7 +353,7 @@ class Reconciler:
                         # This should have never been in the Google Docs code.
                         revlogger.info("Announcing release notes")
                         self.slack_announcer.announce_release(
-                            slack_url=os.environ["SLACK_WEBHOOK_URL"],
+                            webhook=os.environ["SLACK_WEBHOOK_URL"],
                             version_name=release_tag,
                             google_doc_url=gdoc["alternateLink"],
                             tag_all_teams=v_idx == 0,
