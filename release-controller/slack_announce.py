@@ -11,7 +11,7 @@ from release_notes import RELEASE_NOTES_REVIEWERS
 class SlackAnnouncerProtocol(typing.Protocol):
     def announce_release(
         self,
-        slack_url: str,
+        webhook: str,
         version_name: str,
         google_doc_url: str,
         tag_all_teams: bool,
