@@ -1,12 +1,12 @@
 import logging
 import os
-import textwrap
-from typing import Callable
+from typing import cast, Callable, TypedDict, Protocol
 
 from dotenv import load_dotenv
 from pydiscourse import DiscourseClient
 from release_index import Release
 from util import version_name
+import reconciler_state
 
 
 LOGGER = logging.getLogger(__name__)
@@ -15,9 +15,11 @@ LOGGER = logging.getLogger(__name__)
 def _post_template(
     changelog: str | None,
     version_name: str,
-    proposal: int | None = None,
-):
-    if not proposal:
+    proposal: reconciler_state.NoProposal
+    | reconciler_state.DREMalfunction
+    | reconciler_state.SubmittedProposal,
+) -> str:
+    if isinstance(proposal, reconciler_state.NoProposal):
         return f"We're preparing [a new IC release](https://github.com/dfinity/ic/tree/{version_name}). The changelog will be announced soon."
 
     return f"""\
@@ -39,7 +41,9 @@ class ReleaseCandidateForumPost:
         self,
         version_name: str,
         changelog: str | None,
-        proposal: int | None,
+        proposal: reconciler_state.NoProposal
+        | reconciler_state.DREMalfunction
+        | reconciler_state.SubmittedProposal,
         security_fix: bool = False,
     ):
         """Create a new post."""
@@ -50,7 +54,30 @@ class ReleaseCandidateForumPost:
 
 
 SummaryRetriever = Callable[[str, bool], str | None]
-ProposalRetriever = Callable[[str], int | None]
+
+
+class Post(TypedDict):
+    id: int
+    topic_id: int
+    topic_slug: str
+    reply_count: int
+    post_number: int
+    yours: bool
+    raw: str
+    cooked: str
+    can_edit: bool
+
+
+class PostStream(TypedDict):
+    posts: list[Post]
+
+
+class Topic(TypedDict):
+    post_stream: PostStream
+    title: str
+    id: int
+    posts_count: int
+    slug: str
 
 
 class ReleaseCandidateForumTopic:
@@ -71,7 +98,7 @@ class ReleaseCandidateForumTopic:
         topic = next(
             (
                 t
-                for t in client.topics_by(self.client.api_username)
+                for t in client.topics_by(self.client.api_username)  # type: ignore[no-untyped-call]
                 if self.release.rc_name in t.get("title", "")
             ),
             None,
@@ -80,7 +107,7 @@ class ReleaseCandidateForumTopic:
             self.topic_id = topic["id"]
             self.posts_count = topic["posts_count"]
         else:
-            post = client.create_post(
+            post = client.create_post(  # type: ignore[no-untyped-call]
                 category_id=nns_proposal_discussions_category_id,
                 content="The proposal for the next release will be announced soon.",
                 tags=["IC-OS-election", "release"],
@@ -91,27 +118,26 @@ class ReleaseCandidateForumTopic:
             else:
                 raise RuntimeError("post not created")
 
-    def created_posts(self):
+    def created_posts(self) -> list[Post]:
         """Return a list of posts created by the current user."""
-        results = []
-        for p in range((self.posts_count - 1) // 20 + 1):
-            topic_posts = self.client._get(f"/t/{self.topic_id}.json", page=p + 1)
-            if not topic_posts:
-                raise RuntimeError("failed to list topic posts")
-            results.extend(
-                [
-                    p
-                    for p in topic_posts.get("post_stream", {}).get("posts", [])
-                    if p["yours"]
-                ]
-            )
+        results = [
+            post
+            for page in range((self.posts_count - 1) // 20 + 1)
+            for post in cast(
+                Topic,
+                self.client._get(f"/t/{self.topic_id}.json", page=page + 1),  # type: ignore[no-untyped-call]
+            )["post_stream"]["posts"]
+            if post["yours"]
+        ]
+        if not results:
+            raise RuntimeError("failed to list topic posts")
         return results
 
     def update(
         self,
         summary_retriever: SummaryRetriever,
-        proposal_id_retriever: ProposalRetriever,
-    ):
+        proposal_id_retriever: reconciler_state.ProposalRetriever,
+    ) -> None:
         """Update the topic with the latest release information."""
         posts = [
             ReleaseCandidateForumPost(
@@ -132,18 +158,18 @@ class ReleaseCandidateForumTopic:
                     changelog=p.changelog,
                     proposal=p.proposal,
                 )
-                post = self.client.post_by_id(post_id)
+                post = cast(Post, self.client.post_by_id(post_id))  # type: ignore[no-untyped-call]
                 if post["raw"] == content_expected:
                     # log the complete URL of the post
                     self._logger.debug("Post up to date: %s.", self.post_to_url(post))
                     continue
                 elif post["can_edit"]:
                     self._logger.info("Updating post %s.", post_id)
-                    self.client.update_post(post_id=post_id, content=content_expected)
+                    self.client.update_post(post_id=post_id, content=content_expected)  # type: ignore[no-untyped-call]
                 else:
                     self._logger.warning("Post %s is not editable.  Ignoring.", post_id)
             else:
-                self.client.create_post(
+                self.client.create_post(  # type: ignore[no-untyped-call]
                     topic_id=self.topic_id,
                     content=_post_template(
                         version_name=p.version_name,
@@ -152,27 +178,31 @@ class ReleaseCandidateForumTopic:
                     ),
                 )
 
-    def post_url(self, version: str):
+    def post_url(self, version: str) -> str:
         """Return the URL of the post for the given version."""
         post_index = [
             i for i, v in enumerate(self.release.versions) if v.version == version
         ][0]
-        post = self.client.post_by_id(post_id=self.created_posts()[post_index]["id"])
+        post = self.client.post_by_id(post_id=self.created_posts()[post_index]["id"])  # type: ignore[no-untyped-call]
         if not post:
             raise RuntimeError("failed to find post")
         return self.post_to_url(post)
 
-    def post_to_url(self, post: dict):
+    def post_to_url(self, post: Post) -> str:
         """Return the complete URL of the given post."""
         host = self.client.host.removesuffix("/")
         return f"{host}/t/{post['topic_slug']}/{post['topic_id']}/{post['post_number']}"
 
-    def add_version(self, content: str):
+    def add_version(self, content: str) -> None:
         """Add a new version to the topic."""
-        self.client.create_post(
+        self.client.create_post(  # type: ignore[no-untyped-call]
             topic_id=self.topic_id,
             content=content,
         )
+
+
+class ForumClientProtocol(Protocol):
+    def get_or_create(self, release: Release) -> ReleaseCandidateForumTopic: ...
 
 
 class ReleaseCandidateForumClient:
@@ -181,16 +211,23 @@ class ReleaseCandidateForumClient:
     def __init__(self, discourse_client: DiscourseClient):
         """Create a new client."""
         self.discourse_client = discourse_client
-        self.nns_proposal_discussions_category_id: int = next(
-            (
-                c
-                for c in self.discourse_client.categories(include_subcategories="true")
-                if c["name"] == "NNS proposal discussions"
-            ),
-            self.discourse_client.category(76)[
+        existing_categories = [
+            c
+            for c in self.discourse_client.categories(include_subcategories="true")  # type: ignore[no-untyped-call]
+            if c["name"] == "NNS proposal discussions"
+        ]
+        if existing_categories:
+            self.nns_proposal_discussions_category_id: int = existing_categories[0][
+                "id"
+            ]
+        else:
+            self.nns_proposal_discussions_category_id = self.discourse_client.category(
+                76
+            )[  # type: ignore[no-untyped-call]
                 "category"
-            ],  # hardcoded category id, seems like "include_subcategories" is not working
-        )["id"]
+            ][  # hardcoded category id, seems like "include_subcategories" is not working
+                "id"
+            ]
 
     def get_or_create(self, release: Release) -> ReleaseCandidateForumTopic:
         """Get or create a forum topic for the given release."""
@@ -201,10 +238,10 @@ class ReleaseCandidateForumClient:
         )
 
 
-def main():
+def main() -> None:
     load_dotenv()
 
-    discourse_client = DiscourseClient(
+    discourse_client = DiscourseClient(  # type: ignore[no-untyped-call]
         host=os.environ["DISCOURSE_URL"],
         api_username=os.environ["DISCOURSE_USER"],
         api_key=os.environ["DISCOURSE_KEY"],

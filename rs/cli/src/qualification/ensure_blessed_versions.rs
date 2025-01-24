@@ -54,7 +54,8 @@ impl Step for EnsureBlessedRevisions {
                     ProposeOptions {
                         title: Some(format!("Blessing version: {}", &self.version)),
                         summary: Some("Some updates".to_string()),
-                        ..Default::default()
+                        forum_post_link: ctx.dre_ctx().forum_post_link(),
+                        motivation: None,
                     },
                 )
                 .await

@@ -2,16 +2,18 @@
 import argparse
 import fnmatch
 import os
+import pathlib
 import re
 import subprocess
-import sys
 import tempfile
 import textwrap
-import time
 import typing
+
 from dataclasses import dataclass
+
+from const import GUESTOS_CHANGED_NOTES_NAMESPACE
 from git_repo import GitRepo
-from commit_annotator import GUESTOS_CHANGED_NOTES_NAMESPACE
+from util import auto_progressbar_with_item_descriptions
 
 import markdown
 
@@ -164,53 +166,11 @@ MAX_OWNERSHIP_AREA = 0.5
 branch = "master"
 
 
-# https://stackoverflow.com/a/34482761
-def progressbar(it, prefix="", out=sys.stderr):  # Python3.6+
-    count = len(it)
-    start = time.time()
-
-    def termsize() -> int:
-        try:
-            size = os.get_terminal_size()[0]
-        except Exception:
-            size = 79
-        return size
-
-    def show(j, item):
-        size = termsize()
-
-        progress = j / count
-        done = 1 - progress
-        remaining = ((time.time() - start) / j) * (count - j)
-
-        mins, sec = divmod(remaining, 60)
-        time_str = f"{int(mins):02}:{sec:05.2f}"
-
-        pre = f"{prefix}{item} "
-        if not pre.strip():
-            pre = ""
-        post = f" {j}/{count} Est wait {time_str}"
-        size = size - len(pre) - len(post) - 2
-        progress_width = int(round(progress * size))
-        done_width = int(round(done * size))
-        print(
-            f"{pre}[{'█'*progress_width}{('.'*done_width)}]{post}",
-            end="\r",
-            file=out,
-            flush=True,
-        )
-
-    for i, item in enumerate(it):
-        yield i, item
-        show(i + 1, item)
-    print(f"\r{' '*(termsize())}", end="\r", flush=True, file=out)
-
-
-def branch_strip_remote(branch: str):
+def branch_strip_remote(branch: str) -> str:
     return branch.split("/", 1)[1]
 
 
-def get_rc_branch(repo_dir, commit_hash):
+def get_rc_branch(repo_dir: str, commit_hash: str) -> str:
     """Get the branch name for a commit hash."""
     all_branches = (
         subprocess.check_output(
@@ -238,7 +198,7 @@ def get_rc_branch(repo_dir, commit_hash):
     return ""
 
 
-def parse_codeowners(codeowners_path):
+def parse_codeowners(codeowners_path: str | pathlib.Path) -> dict[str, list[str]]:
     with open(codeowners_path, encoding="utf8") as f:
         codeowners = f.readlines()
         filtered = [line.strip() for line in codeowners]
@@ -256,7 +216,15 @@ def parse_codeowners(codeowners_path):
         return parsed
 
 
-def parse_conventional_commit(message, pattern):
+class ConventionalCommit(typing.TypedDict):
+    type: str
+    scope: str | None
+    message: str
+
+
+def parse_conventional_commit(
+    message: str, pattern: re.Pattern[str]
+) -> ConventionalCommit:
     match = pattern.match(message)
 
     if match:
@@ -267,20 +235,20 @@ def parse_conventional_commit(message, pattern):
     return {"type": "other", "scope": None, "message": message}
 
 
-def matched_patterns(file_path, patterns):
-    matches = [(p, fnmatch.fnmatch(file_path, p)) for p in patterns]
-    matches = [match for match in matches if match[1]]
-    if len(matches) == 0:
-        return None
-    matches = list(reversed([match[0] for match in matches]))
-    return matches[0]
+def matched_patterns(file_path: str, patterns: typing.Iterator[str]) -> str | None:
+    matches = [
+        match
+        for match, did_match in [(p, fnmatch.fnmatch(file_path, p)) for p in patterns]
+        if did_match
+    ]
+    return matches[-1] if matches else None
 
 
 def release_changes(
     ic_repo: GitRepo,
-    base_release_commit,
-    release_commit,
-    max_commits=1000,
+    base_release_commit: str,
+    release_commit: str,
+    max_commits: int = 1000,
 ) -> dict[str, list[Change]]:
     changes: dict[str, list[Change]] = {}
 
@@ -291,12 +259,11 @@ def release_changes(
         print("WARNING: max commits limit reached, increase depth")
         exit(1)
 
-    if sys.stderr.isatty():
-        prefix = "Commit "
-        commit_iter = progressbar([i[:8] for i in commits], prefix)
-    else:
-        commit_iter = enumerate([i[:8] for i in commits])
-    for i, _ in commit_iter:
+    for i, _ in enumerate(
+        auto_progressbar_with_item_descriptions(
+            [(i[:8], i) for i in commits], "Commit "
+        )
+    ):
         change = get_change_description_for_commit(
             commit_hash=commits[i],
             ic_repo=ic_repo,
@@ -341,7 +308,7 @@ class PreparedReleaseNotes(str):
 
 def prepare_release_notes(
     request: SecurityReleaseNotesRequest | OrdinaryReleaseNotesRequest,
-    max_commits=1000,
+    max_commits: int = 1000,
 ) -> PreparedReleaseNotes:
     if isinstance(request, SecurityReleaseNotesRequest):
         # Special case to avoid generation of any release notes in the case of security fixes.
@@ -406,7 +373,8 @@ def get_change_description_for_commit(
             f
             for f in file_changes
             if not any(
-                f not in INCLUDE_CHANGES and re.search(filter, f["file_path"])
+                f["file_path"] not in INCLUDE_CHANGES
+                and re.search(filter, f["file_path"])
                 for filter in EXCLUDE_CHANGES_FILTERS
             )
         )
@@ -503,7 +471,7 @@ def get_change_description_for_commit(
     )
 
 
-def release_notes_html(notes_markdown):
+def release_notes_html(notes_markdown: str) -> None:
     """Generate release notes in HTML format, typically for local testing."""
     import webbrowser
 
@@ -519,12 +487,12 @@ def release_notes_html(notes_markdown):
 
 def release_notes_markdown(
     ic_repo: GitRepo,
-    base_release_tag,
-    base_release_commit,
-    release_tag,
-    release_commit,
+    base_release_tag: str,
+    base_release_commit: str,
+    release_tag: str,
+    release_commit: str,
     change_infos: dict[str, list[Change]],
-):
+) -> str:
     """Generate release notes in markdown format."""
     merge_base = ic_repo.merge_base(base_release_commit, release_commit)
 
@@ -567,7 +535,7 @@ Changes [were removed](https://github.com/dfinity/ic/compare/{release_tag}...{ba
             base_release_tag=base_release_tag,
         )
 
-    def format_change(change: Change):
+    def format_change(change: Change) -> str:
         commit_part = "[`{0}`](https://github.com/dfinity/ic/commit/{0})".format(
             change["commit"][:9]
         )
@@ -633,7 +601,7 @@ def is_guestos_change(ic_repo: GitRepo, commit: str) -> bool:
         raise ValueError(f"Invalid value for changed note {changed}")
 
 
-def main():
+def main() -> None:
     parser = argparse.ArgumentParser(description="Generate release notes")
     parser.add_argument("base_release_tag", type=str, help="base release tag")
     parser.add_argument("base_release_commit", type=str, help="base release commit")
@@ -647,11 +615,12 @@ def main():
     args = parser.parse_args()
 
     release_notes = prepare_release_notes(
-        args.base_release_tag,
-        args.base_release_commit,
-        args.release_tag,
-        args.release_commit,
-        False,
+        OrdinaryReleaseNotesRequest(
+            args.release_tag,
+            args.release_commit,
+            args.base_release_tag,
+            args.base_release_commit,
+        ),
         max_commits=args.max_commits,
     )
     print(release_notes)

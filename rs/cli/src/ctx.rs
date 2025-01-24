@@ -264,21 +264,27 @@ impl DreContext {
             return Ok(client.clone());
         }
 
+        let placeholder_key = "placeholder_key".to_string();
+        let placeholder_user = "placeholder_user".to_string();
+        let placeholder_url = "https://placeholder_url.com".to_string();
+
         let (api_key, api_user, forum_url) = match (
             self.discourse_opts.discourse_api_key.clone(),
             self.discourse_opts.discourse_api_user.clone(),
             self.discourse_opts.discourse_api_url.clone(),
         ) {
-            (Some(api_key), Some(api_user), Some(forum_url)) => (api_key, api_user, forum_url),
             // Actual api won't be called so these values don't matter
-            _ if self.discourse_opts.discourse_skip_post_creation => (
-                "placeholder_key".to_string(),
-                "placeholder_user".to_string(),
-                "https://placeholder_url.com".to_string(),
-            ),
-            _ => anyhow::bail!(
-                "Expected to have `api_key`, `forum_url` and `api_user`. Instead found: {:?}",
-                self.discourse_opts
+            _ if self.discourse_opts.discourse_skip_post_creation => (placeholder_key, placeholder_user, placeholder_url),
+            (api_key, api_user, forum_url) => (
+                api_key.unwrap_or_else(|| {
+                    warn!("Will use placeholder_key for discourse api key since it was not provided");
+                    placeholder_key
+                }),
+                api_user.unwrap_or_else(|| {
+                    warn!("Will use placeholder_user for discourse api user since it was not provided");
+                    placeholder_user
+                }),
+                forum_url,
             ),
         };
 
@@ -366,7 +372,7 @@ pub mod tests {
             store: Store::new(false).unwrap(),
             discourse_opts: DiscourseOpts {
                 discourse_api_key: None,
-                discourse_api_url: None,
+                discourse_api_url: "".to_string(),
                 discourse_api_user: None,
                 discourse_skip_post_creation: true,
                 discourse_subnet_topic_override_file_path: None,

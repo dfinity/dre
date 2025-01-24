@@ -25,6 +25,8 @@ deps = [
 dev_deps = [
     requirement("httpretty"),
     requirement("pytest-xdist"),
+    requirement("types-requests"),
+    requirement("mypy"),
 ]
 
 env = {
@@ -34,13 +36,7 @@ env = {
 py_binary(
     name = "release-controller",
     main = "reconciler.py",
-    srcs = glob(
-        ["*.py"],
-        exclude = [
-            "test_*.py",
-            "pytest.py",
-        ],
-    ),
+    srcs = glob(["*.py"], exclude = ["commit_annotator.py", "ci_check.py"]),
     tags = ["typecheck"],
     env = env,
     deps = deps,
@@ -49,13 +45,7 @@ py_binary(
 py_binary(
     name = "commit_annotator",
     main = "commit_annotator.py",
-    srcs = glob(
-        ["*.py"],
-        exclude = [
-            "test_*.py",
-            "pytest.py",
-        ],
-    ),
+    srcs = glob(["*.py"], exclude = ["reconciler.py", "ci_check.py"]),
     data = [":bazelisk", ":target_determinator"],
     env = env,
     deps = deps,
@@ -77,31 +67,28 @@ native_binary(
     out = "target-determinator",
 )
 
-long_tests = [
-    "test_commit_annotator.py",
+# Add file here if you do not want to run the test automatically.
+long_tests = ["tests/test_commit_annotator.py"]
+
+[
+    [
+        py_test(
+            name = target[6:-3],
+            srcs = ["tests/runner.py"] + [target] + glob(["tests/mock_*.py"]),
+            data = glob(["tests/test_data/*"]),
+            main = "tests/runner.py",
+            env = env,
+            tags = ["no-sandbox"] + group["tags"],
+            deps = deps + dev_deps + ["release-controller"],
+            env_inherit = ["HOME"],
+        )
+        for target in group["targets"]
+    ]
+    for group in [
+        {"targets": glob(["tests/test_*.py"], exclude=long_tests), "tags": ["typecheck"]},
+        {"targets": long_tests, "tags": ["manual"]},
+    ]
 ]
-
-py_test(
-    name = "pytest",
-    srcs = ["pytest.py"],
-    data = glob(["*.py"], exclude = long_tests) + glob(["test_data/*"]),
-    env = env,
-    tags = ["no-sandbox"],
-    deps = deps + dev_deps,
-    env_inherit = ["HOME"],
-)
-
-py_test(
-    name = "pytest_enormous",
-    srcs = ["pytest.py"],
-    main = "pytest.py",
-    data = long_tests + glob(["*.py"], exclude = ["test*.py"]) + [":bazelisk", ":target_determinator"],
-    env = env,
-    tags = ["no-sandbox", "manual"],
-    deps = deps + dev_deps,
-    env_inherit = ["HOME"],
-    size = "enormous",
-)
 
 tar(
     name = "bins_release_controller_tar",

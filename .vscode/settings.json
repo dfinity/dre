@@ -13,4 +13,5 @@
         "editor.defaultFormatter": "charliermarsh.ruff",
         "editor.formatOnSave": true
     },
+    "mypy-type-checker.importStrategy": "fromEnvironment",
 }

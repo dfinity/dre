@@ -10,7 +10,7 @@ from release_notes import (
 from git_repo import GitRepo
 
 
-def test_get_change_description_for_commit():
+def test_get_change_description_for_commit() -> None:
     with tempfile.TemporaryDirectory() as repo_cache_dir:
         ic_repo = GitRepo(
             "https://github.com/dfinity/ic.git",
@@ -211,7 +211,7 @@ def test_get_change_description_for_commit():
         )
 
 
-def test_release_notes():
+def test_release_notes() -> None:
     assert (
         prepare_release_notes(
             OrdinaryReleaseNotesRequest(

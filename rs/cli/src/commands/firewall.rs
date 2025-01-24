@@ -104,7 +104,8 @@ impl ExecutableCommand for Firewall {
                     ProposeOptions {
                         title: self.title.clone(),
                         summary: self.summary.clone(),
-                        ..Default::default()
+                        forum_post_link: ctx.forum_post_link(),
+                        motivation: None,
                     },
                     &self.rules_scope,
                 )
