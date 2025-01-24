@@ -8,17 +8,18 @@ use ic_nns_governance::pb::v1::manage_neuron::ClaimOrRefresh;
 use ic_nns_governance::pb::v1::manage_neuron::Command::ClaimOrRefresh as CoR;
 use ic_nns_governance::pb::v1::manage_neuron::RegisterVote;
 use ic_nns_governance::pb::v1::GovernanceError;
-use ic_nns_governance::pb::v1::ListNeurons;
-use ic_nns_governance::pb::v1::ListNeuronsResponse;
 use ic_nns_governance::pb::v1::ListProposalInfo;
 use ic_nns_governance::pb::v1::ListProposalInfoResponse;
 use ic_nns_governance::pb::v1::ManageNeuron;
-use ic_nns_governance::pb::v1::ManageNeuronResponse;
 use ic_nns_governance::pb::v1::Neuron;
 use ic_nns_governance::pb::v1::NeuronInfo;
 use ic_nns_governance::pb::v1::NodeProvider as PbNodeProvider;
 use ic_nns_governance::pb::v1::ProposalInfo;
+use ic_nns_governance_api::pb::v1::manage_neuron_response::Command;
+use ic_nns_governance_api::pb::v1::ListNeurons;
+use ic_nns_governance_api::pb::v1::ListNeuronsResponse;
 use ic_nns_governance_api::pb::v1::ListNodeProvidersResponse;
+use ic_nns_governance_api::pb::v1::ManageNeuronResponse;
 use serde::{self, Serialize};
 use std::str::FromStr;
 use std::time::Duration;
@@ -137,12 +138,10 @@ impl GovernanceCanisterWrapper {
         .await?;
 
         match response.command {
-            Some(ic_nns_governance::pb::v1::manage_neuron_response::Command::RegisterVote(response)) => {
-                Ok(format!("Successfully voted on proposal {} {:?}", proposal_id, response))
-            }
-            Some(ic_nns_governance::pb::v1::manage_neuron_response::Command::Error(err))
+            Some(Command::RegisterVote(response)) => Ok(format!("Successfully voted on proposal {} {:?}", proposal_id, response)),
+            Some(Command::Error(err))
                 if err
-                    == ic_nns_governance::pb::v1::GovernanceError {
+                    == ic_nns_governance_api::pb::v1::GovernanceError {
                         error_type: ic_nns_governance::pb::v1::governance_error::ErrorTypeDesc::PreconditionFailed as i32,
                         error_message: "Neuron already voted on proposal.".to_string(),
                     } =>
