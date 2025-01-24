@@ -100,10 +100,16 @@ impl ExecutableCommand for Network {
             );
         };
 
-        if network_heal || self.optimize_decentralization {
-            info!("Healing the network by replacing unhealthy nodes and optimizing decentralization in subnets that have unhealthy nodes");
+        if network_heal || self.optimize_decentralization || self.remove_cordoned_nodes {
+            info!("Healing the network by replacing unhealthy nodes, removing cordoned nodes, and optimizing decentralization in subnets");
             let maybe_proposals = runner
-                .network_heal(ctx.forum_post_link(), &omit_subnets, &omit_nodes, self.optimize_decentralization)
+                .network_heal(
+                    ctx.forum_post_link(),
+                    &omit_subnets,
+                    &omit_nodes,
+                    self.optimize_decentralization,
+                    self.remove_cordoned_nodes,
+                )
                 .await;
             match maybe_proposals {
                 Ok(heal_proposals) => {
@@ -167,29 +173,6 @@ impl ExecutableCommand for Network {
             }
         } else {
             info!("No network ensure operator nodes unassigned requested");
-        }
-
-        if self.remove_cordoned_nodes {
-            info!("Removing cordoned nodes from their subnets");
-            let maybe_proposals = runner
-                .network_remove_cordoned_nodes(ctx.forum_post_link(), &omit_subnets, &omit_nodes)
-                .await;
-            match maybe_proposals {
-                Ok(remove_cordoned_nodes_proposals) => {
-                    update_omit_subnets(&remove_cordoned_nodes_proposals, &mut omit_subnets);
-                    update_omit_nodes(&remove_cordoned_nodes_proposals, &mut omit_nodes);
-                    proposals.extend(remove_cordoned_nodes_proposals);
-                }
-                Err(e) => errors.push(DetailedError {
-                    proposal: None,
-                    error: anyhow::anyhow!(
-                        "Failed to calculate proposals for removing cordoned nodes and they won't be submitted. Error received: {:?}",
-                        e
-                    ),
-                }),
-            }
-        } else {
-            info!("No network remove cordoned nodes requested");
         }
 
         if proposals.is_empty() {

@@ -511,6 +511,7 @@ impl Runner {
         omit_subnets: &[String],
         omit_nodes: &[String],
         optimize_decentralization: bool,
+        remove_cordoned_nodes: bool,
     ) -> anyhow::Result<Vec<RunnerProposal>> {
         let mut errors = vec![];
 
@@ -534,17 +535,20 @@ impl Runner {
             .filter(|n| !omit_nodes.iter().any(|s| n.principal.to_string().contains(s)))
             .collect::<Vec<Node>>();
 
+        let cordoned_features = self.cordoned_features_fetcher.fetch().await.unwrap_or_else(|e| {
+            warn!("Failed to fetch cordoned features with error: {:?}", e);
+            warn!("Will continue running as if no features were cordoned");
+            vec![]
+        });
+
         let subnets_change_responses = NetworkHealRequest::new(subnets_without_proposals)
             .heal_and_optimize(
                 available_nodes,
                 &health_of_nodes,
-                self.cordoned_features_fetcher.fetch().await.unwrap_or_else(|e| {
-                    warn!("Failed to fetch cordoned features with error: {:?}", e);
-                    warn!("Will continue running as if no features were cordoned");
-                    vec![]
-                }),
+                cordoned_features,
                 &all_nodes,
                 optimize_decentralization,
+                remove_cordoned_nodes,
             )
             .await?;
 
@@ -884,103 +888,6 @@ impl Runner {
         omit_nodes: &[String],
     ) -> anyhow::Result<Vec<RunnerProposal>> {
         self.network_ensure_operator_nodes(forum_post_link, omit_subnets, omit_nodes, false).await
-    }
-
-    pub async fn network_remove_cordoned_nodes(
-        &self,
-        forum_post_link: Option<String>,
-        omit_subnets: &[String],
-        omit_nodes: &[String],
-    ) -> anyhow::Result<Vec<RunnerProposal>> {
-        let subnets_not_skipped = self.get_subnets(omit_subnets).await?;
-        let subnets_that_have_no_proposals = filter_subnets_without_proposals(subnets_not_skipped);
-        let cordoned_features = self.cordoned_features_fetcher.fetch().await.unwrap_or_else(|e| {
-            warn!("Failed to fetch cordoned features with error: {:?}", e);
-            warn!("Will continue running as if no features were cordoned");
-            vec![]
-        });
-        let (available_nodes, health_of_nodes) = self.get_available_and_healthy_nodes(&cordoned_features).await?;
-        let mut available_nodes = available_nodes
-            .into_iter()
-            .filter(|n| !omit_nodes.iter().any(|s| n.principal.to_string().contains(s)))
-            .collect::<Vec<Node>>();
-        let all_nodes = self.registry.nodes().await?;
-        let all_nodes = all_nodes.values().cloned().collect::<Vec<Node>>();
-        let all_nodes_map = self.registry.nodes().await?;
-
-        let mut changes = vec![];
-        // Iterate through all subnets and then through all nodes of each subnet, and check if any of the nodes matches the cordoned features
-        for (_subnet_id, subnet) in &subnets_that_have_no_proposals {
-            let subnet = DecentralizedSubnet::from(subnet);
-            let subnet_id_short = subnet.id.to_string().split_once('-').unwrap().0.to_string();
-
-            let mut nodes_to_remove_with_explanations = vec![];
-            // If more than 1/3 nodes do not have the latest subnet state, subnet will stall until >2/3 nodes sync state.
-            // From those 1/2 are added and 1/2 removed -> nodes_in_subnet/3 * 1/2 = nodes_in_subnet/6
-            let max_replaceable_nodes = subnet.nodes.len() / 6;
-            for node in &subnet.nodes {
-                let node = all_nodes_map.get(&node.principal).expect("Node should exist");
-                if let Some(explanation) = cordoned_features.iter().find_map(|cf| {
-                    if node.get_feature(&cf.feature).as_ref() == Some(&cf.value) {
-                        Some(cf.explanation.as_ref().map(|e| format!(": {}", e)).unwrap_or_default())
-                    } else {
-                        None
-                    }
-                }) {
-                    nodes_to_remove_with_explanations.push((node.clone(), explanation));
-                    if nodes_to_remove_with_explanations.len() >= max_replaceable_nodes {
-                        break;
-                    }
-                }
-            }
-
-            if !nodes_to_remove_with_explanations.is_empty() {
-                let change_request = SubnetChangeRequest::new(
-                    subnet,
-                    available_nodes.clone(),
-                    vec![],
-                    nodes_to_remove_with_explanations.iter().map(|(n, _)| n.clone()).collect_vec(),
-                    vec![],
-                )
-                .resize(
-                    nodes_to_remove_with_explanations.len(),
-                    0,
-                    0,
-                    &health_of_nodes,
-                    cordoned_features.clone(),
-                    &all_nodes,
-                );
-
-                if let Ok(change) = change_request {
-                    let change_response = SubnetChangeResponse::new(
-                        &change,
-                        &health_of_nodes,
-                        Some(format!(
-                            "The following nodes in subnet `{}` have been cordoned and need to be removed from the subnet:\n{}",
-                            subnet_id_short,
-                            nodes_to_remove_with_explanations
-                                .iter()
-                                .map(|(n, e)| format!("- {}{}", n.principal.to_string().split_once('-').unwrap().0, e))
-                                .join("\n"),
-                        )),
-                    );
-
-                    if change_response.node_ids_added.is_empty() && change_response.node_ids_removed.is_empty() {
-                        continue;
-                    }
-
-                    changes.push(
-                        self.run_membership_change(
-                            change_response.clone(),
-                            replace_proposal_options(&change_response, forum_post_link.clone()).await?,
-                        )
-                        .await?,
-                    );
-                    available_nodes.retain(|n| !change_response.node_ids_added.contains(&n.principal));
-                }
-            }
-        }
-        Ok(changes)
     }
 
     pub async fn decentralization_change(
