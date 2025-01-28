@@ -12,18 +12,19 @@ use ic_nns_governance::pb::v1::manage_neuron::RegisterVote;
 use ic_nns_governance::pb::v1::manage_neuron_response::Command as CommandResponse;
 use ic_nns_governance::pb::v1::manage_neuron_response::MakeProposalResponse;
 use ic_nns_governance::pb::v1::GovernanceError;
-use ic_nns_governance::pb::v1::ListNeurons;
-use ic_nns_governance::pb::v1::ListNeuronsResponse;
 use ic_nns_governance::pb::v1::ListProposalInfo;
 use ic_nns_governance::pb::v1::ListProposalInfoResponse;
 use ic_nns_governance::pb::v1::ManageNeuron;
-use ic_nns_governance::pb::v1::ManageNeuronResponse;
 use ic_nns_governance::pb::v1::Neuron;
 use ic_nns_governance::pb::v1::NeuronInfo;
 use ic_nns_governance::pb::v1::NodeProvider as PbNodeProvider;
 use ic_nns_governance::pb::v1::Proposal;
 use ic_nns_governance::pb::v1::ProposalInfo;
+use ic_nns_governance_api::pb::v1::manage_neuron_response::Command;
+use ic_nns_governance_api::pb::v1::ListNeurons;
+use ic_nns_governance_api::pb::v1::ListNeuronsResponse;
 use ic_nns_governance_api::pb::v1::ListNodeProvidersResponse;
+use ic_nns_governance_api::pb::v1::ManageNeuronResponse;
 use serde::{self, Serialize};
 use std::str::FromStr;
 use std::time::Duration;
@@ -142,12 +143,10 @@ impl GovernanceCanisterWrapper {
         .await?;
 
         match response.command {
-            Some(ic_nns_governance::pb::v1::manage_neuron_response::Command::RegisterVote(response)) => {
-                Ok(format!("Successfully voted on proposal {} {:?}", proposal_id, response))
-            }
-            Some(ic_nns_governance::pb::v1::manage_neuron_response::Command::Error(err))
+            Some(Command::RegisterVote(response)) => Ok(format!("Successfully voted on proposal {} {:?}", proposal_id, response)),
+            Some(Command::Error(err))
                 if err
-                    == ic_nns_governance::pb::v1::GovernanceError {
+                    == ic_nns_governance_api::pb::v1::GovernanceError {
                         error_type: ic_nns_governance::pb::v1::governance_error::ErrorTypeDesc::PreconditionFailed as i32,
                         error_message: "Neuron already voted on proposal.".to_string(),
                     } =>
@@ -223,6 +222,24 @@ impl GovernanceCanisterWrapper {
     }
 
     pub async fn list_neurons(&self) -> anyhow::Result<ListNeuronsResponse> {
+        let mut page_number = 0;
+        let mut acc = ListNeuronsResponse::default();
+        loop {
+            let current = self.list_neurons_inner(page_number).await?;
+            acc.full_neurons.extend(current.full_neurons);
+            acc.neuron_infos.extend(current.neuron_infos);
+
+            if acc.total_pages_available() == page_number + 1 {
+                break;
+            }
+
+            page_number += 1;
+        }
+
+        Ok(acc)
+    }
+
+    async fn list_neurons_inner(&self, page: u64) -> anyhow::Result<ListNeuronsResponse> {
         self.query(
             "list_neurons",
             candid::encode_one(ListNeurons {
@@ -230,6 +247,8 @@ impl GovernanceCanisterWrapper {
                 include_neurons_readable_by_caller: true,
                 include_empty_neurons_readable_by_caller: None,
                 include_public_neurons_in_full_neurons: None,
+                page_number: Some(page),
+                page_size: None,
             })?,
         )
         .await
