@@ -46,21 +46,30 @@ pub struct Motion {
 }
 
 impl Motion {
-    fn extract_title_and_text(&self, text: &str) -> (Option<String>, String) {
-        let mytext = text.trim_start();
-        let (title, text) = if mytext.starts_with("#") && (mytext.starts_with("# ") || !mytext.starts_with("##")) {
-            let mut it = text.lines();
-            let title = it.next();
-            let text = it.collect::<Vec<_>>().join("\n").trim_start().into();
-            (title, text)
+    fn extract_title_and_text(&self, raw_text: &str) -> (Option<String>, String) {
+        // Step 1: Remove leading/trailing empty lines (including lines with only whitespace).
+        let lines: Vec<&str> = raw_text.lines().skip_while(|line| line.trim().is_empty()).collect();
+        let lines: Vec<&str> = lines.into_iter().rev().skip_while(|line| line.trim().is_empty()).collect();
+        let lines: Vec<&str> = lines.into_iter().rev().collect();
+
+        // Step 2: Parse the first line as a title if it starts with '# '
+        if lines.is_empty() {
+            // If no lines remain after trimming, there's no title or body
+            return (None, "".to_string());
+        }
+
+        let first_line = lines[0];
+        // CommonMark-compliant H1 headings MUST start with "# ", so starts_with("# ") would be enough.
+        // To tolerate other “flavors” of Markdown that allow #Title without a space, we use a more complex check.
+        let (title, body) = if first_line.starts_with('#') && !first_line.starts_with("##") {
+            // Strip out '#' plus any extra leading space
+            let stripped_title = first_line.trim_start_matches('#').trim_start();
+            let body = lines[1..].join("\n"); // Join the remaining lines
+            (Some(stripped_title.to_owned()), body)
         } else {
-            (None, text.to_owned())
+            (None, lines.join("\n"))
         };
-        let title = title.map(|s| {
-            // Strip Markdown markers on the title.
-            s.strip_prefix("#").unwrap_or(s).trim_start().to_string()
-        });
-        (title, text)
+        (title, body)
     }
 }
 
