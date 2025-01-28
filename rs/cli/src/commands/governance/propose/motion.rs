@@ -33,7 +33,7 @@ pub struct Motion {
 }
 
 impl Motion {
-    fn extract_title_and_text(&self, text: &String) -> (Option<String>, String) {
+    fn extract_title_and_text(&self, text: &str) -> (Option<String>, String) {
         let mytext = text.trim_start();
         let (title, text) = if mytext.starts_with("#") && (mytext.starts_with("# ") || !mytext.starts_with("##")) {
             let mut it = text.lines();
@@ -41,7 +41,7 @@ impl Motion {
             let text = it.collect::<Vec<_>>().join("\n").trim_start().into();
             (title, text)
         } else {
-            (None, text.clone())
+            (None, text.to_owned())
         };
         let title = title.map(|s| s.into());
         (title, text)
