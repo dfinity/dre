@@ -9,8 +9,6 @@ use ic_nns_governance::pb::v1::manage_neuron::Command;
 use ic_nns_governance::pb::v1::manage_neuron::Command::ClaimOrRefresh as CoR;
 use ic_nns_governance::pb::v1::manage_neuron::NeuronIdOrSubaccount;
 use ic_nns_governance::pb::v1::manage_neuron::RegisterVote;
-use ic_nns_governance::pb::v1::manage_neuron_response::Command as CommandResponse;
-use ic_nns_governance::pb::v1::manage_neuron_response::MakeProposalResponse;
 use ic_nns_governance::pb::v1::GovernanceError;
 use ic_nns_governance::pb::v1::ListProposalInfo;
 use ic_nns_governance::pb::v1::ListProposalInfoResponse;
@@ -20,6 +18,8 @@ use ic_nns_governance::pb::v1::NeuronInfo;
 use ic_nns_governance::pb::v1::NodeProvider as PbNodeProvider;
 use ic_nns_governance::pb::v1::Proposal;
 use ic_nns_governance::pb::v1::ProposalInfo;
+use ic_nns_governance_api::pb::v1::manage_neuron_response::Command as CommandResponse;
+use ic_nns_governance_api::pb::v1::manage_neuron_response::MakeProposalResponse;
 use ic_nns_governance_api::pb::v1::ListNeurons;
 use ic_nns_governance_api::pb::v1::ListNeuronsResponse;
 use ic_nns_governance_api::pb::v1::ListNodeProvidersResponse;
@@ -142,8 +142,9 @@ impl GovernanceCanisterWrapper {
         .await?;
 
         match response.command {
-            Some(Command::RegisterVote(response)) => Ok(format!("Successfully voted on proposal {} {:?}", proposal_id, response)),
-            Some(Command::Error(err))
+            None => Err(anyhow::anyhow!("No command in response")),
+            Some(CommandResponse::RegisterVote(response)) => Ok(format!("Successfully voted on proposal {} {:?}", proposal_id, response)),
+            Some(CommandResponse::Error(err))
                 if err
                     == ic_nns_governance_api::pb::v1::GovernanceError {
                         error_type: ic_nns_governance::pb::v1::governance_error::ErrorTypeDesc::PreconditionFailed as i32,
@@ -189,16 +190,10 @@ impl GovernanceCanisterWrapper {
         };
         let resp = self.manage_neuron(&mng).await?;
         match resp.command {
-            None => Err(anyhow::anyhow!("No command associated to response")),
-            Some(cmd) => {
-                if let CommandResponse::MakeProposal(resp) = cmd {
-                    Ok(resp)
-                } else if let CommandResponse::Error(resp) = cmd {
-                    Err(anyhow::anyhow!("{:?}", resp))
-                } else {
-                    Err(anyhow::anyhow!("Unexpected command response to proposal request: {:?}", cmd))
-                }
-            }
+            None => Err(anyhow::anyhow!("No command in response")),
+            Some(CommandResponse::MakeProposal(resp)) => Ok(resp),
+            Some(CommandResponse::Error(resp)) => Err(anyhow::anyhow!("{:?}", resp)),
+            Some(_) => Err(anyhow::anyhow!("Unexpected command response to proposal request: {:?}", resp.command)),
         }
     }
 
