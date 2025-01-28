@@ -5,8 +5,12 @@ use ic_nns_common::pb::v1::ProposalId;
 use ic_nns_constants::GOVERNANCE_CANISTER_ID;
 use ic_nns_governance::pb::v1::manage_neuron::claim_or_refresh::By;
 use ic_nns_governance::pb::v1::manage_neuron::ClaimOrRefresh;
+use ic_nns_governance::pb::v1::manage_neuron::Command;
 use ic_nns_governance::pb::v1::manage_neuron::Command::ClaimOrRefresh as CoR;
+use ic_nns_governance::pb::v1::manage_neuron::NeuronIdOrSubaccount;
 use ic_nns_governance::pb::v1::manage_neuron::RegisterVote;
+use ic_nns_governance::pb::v1::manage_neuron_response::Command as CommandResponse;
+use ic_nns_governance::pb::v1::manage_neuron_response::MakeProposalResponse;
 use ic_nns_governance::pb::v1::GovernanceError;
 use ic_nns_governance::pb::v1::ListNeurons;
 use ic_nns_governance::pb::v1::ListNeuronsResponse;
@@ -17,6 +21,7 @@ use ic_nns_governance::pb::v1::ManageNeuronResponse;
 use ic_nns_governance::pb::v1::Neuron;
 use ic_nns_governance::pb::v1::NeuronInfo;
 use ic_nns_governance::pb::v1::NodeProvider as PbNodeProvider;
+use ic_nns_governance::pb::v1::Proposal;
 use ic_nns_governance::pb::v1::ProposalInfo;
 use ic_nns_governance_api::pb::v1::ListNodeProvidersResponse;
 use serde::{self, Serialize};
@@ -176,6 +181,27 @@ impl GovernanceCanisterWrapper {
             .map_err(anyhow::Error::from)?;
 
         Decode!(resp.as_slice(), ManageNeuronResponse).map_err(anyhow::Error::from)
+    }
+
+    pub async fn make_proposal(&self, proposer_id: NeuronId, proposal: Proposal) -> anyhow::Result<MakeProposalResponse> {
+        let mng = ManageNeuron {
+            id: None,
+            neuron_id_or_subaccount: Some(NeuronIdOrSubaccount::NeuronId(proposer_id)),
+            command: Some(Command::MakeProposal(proposal.into())),
+        };
+        let resp = self.manage_neuron(&mng).await?;
+        match resp.command {
+            None => Err(anyhow::anyhow!("No command associated to response")),
+            Some(cmd) => {
+                if let CommandResponse::MakeProposal(resp) = cmd {
+                    Ok(resp)
+                } else if let CommandResponse::Error(resp) = cmd {
+                    Err(anyhow::anyhow!("{:?}", resp))
+                } else {
+                    Err(anyhow::anyhow!("Unexpected command response to proposal request: {:?}", cmd))
+                }
+            }
+        }
     }
 
     pub async fn list_proposals(&self, contract: ListProposalInfo) -> anyhow::Result<Vec<ProposalInfo>> {

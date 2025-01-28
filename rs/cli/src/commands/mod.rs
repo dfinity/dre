@@ -9,6 +9,7 @@ use completions::Completions;
 use der_to_principal::DerToPrincipal;
 use firewall::Firewall;
 use get::Get;
+use governance::Governance;
 use hostos::HostOs;
 use ic_canisters::parallel_hardware_identity::KeyIdVec;
 use network::Network;
@@ -32,6 +33,7 @@ pub(crate) mod completions;
 pub(crate) mod der_to_principal;
 pub(crate) mod firewall;
 pub mod get;
+pub(crate) mod governance;
 pub mod hostos;
 pub(crate) mod network;
 pub(crate) mod neuron;
@@ -283,7 +285,7 @@ macro_rules! impl_executable_command_for_enums {
 }
 pub(crate) use impl_executable_command_for_enums;
 
-impl_executable_command_for_enums! { Args, DerToPrincipal, Network, Subnet, Get, Propose, UpdateUnassignedNodes, Version, NodeMetrics, HostOs, Nodes, ApiBoundaryNodes, Vote, Registry, Firewall, Upgrade, Proposals, Completions, Qualify, UpdateAuthorizedSubnets, Neuron }
+impl_executable_command_for_enums! { Args, DerToPrincipal, Network, Subnet, Get, Propose, UpdateUnassignedNodes, Version, NodeMetrics, HostOs, Nodes, ApiBoundaryNodes, Vote, Registry, Firewall, Upgrade, Proposals, Completions, Qualify, UpdateAuthorizedSubnets, Neuron, Governance }
 
 pub trait ExecutableCommand {
     fn require_auth(&self) -> AuthRequirement;
