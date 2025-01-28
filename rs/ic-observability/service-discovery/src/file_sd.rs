@@ -39,7 +39,7 @@ impl FileSd {
         }
         let job_path = self.base_directory.join(job.to_string());
         if !job_path.is_dir() {
-            std::fs::create_dir(&job_path)?;
+            fs_err::create_dir(&job_path)?;
         }
         let target_path = job_path.join("ic_service_discovery.json");
 

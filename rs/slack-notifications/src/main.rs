@@ -72,7 +72,7 @@ impl ProposalCheckpointStore {
     pub fn new(name: &str) -> anyhow::Result<Self> {
         let file_path = format!("checkpoint_{name}.json");
         if std::path::Path::new(&file_path).exists() {
-            let checkpoint = serde_json::from_str::<ProposalCheckpoint>(&std::fs::read_to_string(file_path)?)?;
+            let checkpoint = serde_json::from_str::<ProposalCheckpoint>(&fs_err::read_to_string(file_path)?)?;
             Ok(Self {
                 file_path: format!("checkpoint_{name}.json"),
                 checkpoint,
@@ -92,7 +92,7 @@ impl ProposalCheckpointStore {
     fn save(&mut self, checkpoint: ProposalCheckpoint) -> anyhow::Result<()> {
         self.checkpoint = checkpoint;
         retry::retry(retry::delay::Exponential::from_millis(10).take(5), || {
-            std::fs::OpenOptions::new()
+            fs_err::OpenOptions::new()
                 .create(true)
                 .truncate(true)
                 .write(true)

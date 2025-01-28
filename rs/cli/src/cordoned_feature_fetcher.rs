@@ -50,7 +50,7 @@ impl CordonedFeatureFetcherImpl {
             .bytes()
             .await?;
 
-        if let Err(e) = std::fs::write(&self.local_copy, &bytes) {
+        if let Err(e) = fs_err::write(&self.local_copy, &bytes) {
             warn!(
                 "Failed to update cordoned features cache on path `{}` due to: {:?}",
                 self.local_copy.display(),
@@ -63,7 +63,7 @@ impl CordonedFeatureFetcherImpl {
     }
 
     fn fetch_from_file(&self) -> anyhow::Result<Vec<CordonedFeature>> {
-        let contents = std::fs::read(&self.local_copy)?;
+        let contents = fs_err::read(&self.local_copy)?;
 
         self.parse(&contents)
     }

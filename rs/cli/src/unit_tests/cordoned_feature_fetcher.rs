@@ -8,7 +8,7 @@ use serde_yaml::Mapping;
 use crate::store::Store;
 
 fn ensure_empty(file: PathBuf) {
-    std::fs::write(file, "").unwrap();
+    fs_err::write(file, "").unwrap();
 }
 
 fn write_to_cache(contents: &[CordonedFeature], path: PathBuf) {
@@ -16,7 +16,7 @@ fn write_to_cache(contents: &[CordonedFeature], path: PathBuf) {
     mapping.insert("features".into(), serde_yaml::to_value(contents).unwrap());
     let root = serde_yaml::Value::Mapping(mapping);
 
-    std::fs::write(path, serde_yaml::to_string(&root).unwrap()).unwrap()
+    fs_err::write(path, serde_yaml::to_string(&root).unwrap()).unwrap()
 }
 
 #[derive(Debug)]
@@ -122,7 +122,7 @@ fn cordoned_feature_fetcher_tests() {
         }
 
         let cordoned_features = maybe_cordoned_features.unwrap();
-        let cache_contents = std::fs::read_to_string(store.cordoned_features_file_outer().unwrap()).unwrap();
+        let cache_contents = fs_err::read_to_string(store.cordoned_features_file_outer().unwrap()).unwrap();
         let cordoned_features_from_cache = cordoned_feature_fetcher.parse_outer(cache_contents.as_bytes()).unwrap();
 
         if !cordoned_features.eq(&cordoned_features_from_cache) {

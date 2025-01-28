@@ -20,7 +20,7 @@ fn status_file_path() -> PathBuf {
 fn get_deleted_status_file() -> PathBuf {
     let status_file = status_file_path();
     if status_file.exists() {
-        std::fs::remove_file(&status_file).unwrap()
+        fs_err::remove_file(&status_file).unwrap()
     }
     status_file
 }

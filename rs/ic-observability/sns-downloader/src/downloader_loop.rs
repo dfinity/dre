@@ -129,9 +129,9 @@ pub async fn run_downloader_loop(logger: Logger, cli: CliArgs, stop_signal: Rece
 }
 
 fn generate_config(cli: &CliArgs, targets: Vec<Sns>, logger: Logger) {
-    if std::fs::metadata(&cli.output_dir).is_err() {
-        std::fs::create_dir_all(cli.output_dir.parent().unwrap()).unwrap();
-        std::fs::File::create(&cli.output_dir).unwrap();
+    if fs_err::metadata(&cli.output_dir).is_err() {
+        fs_err::create_dir_all(cli.output_dir.parent().unwrap()).unwrap();
+        fs_err::File::create(&cli.output_dir).unwrap();
     }
 
     let config = SnsCanisterConfigStructure {
@@ -142,7 +142,7 @@ fn generate_config(cli: &CliArgs, targets: Vec<Sns>, logger: Logger) {
     }
     .build(targets);
     let path = cli.output_dir.join("canisters.json");
-    match std::fs::write(path, config) {
+    match fs_err::write(path, config) {
         Ok(_) => {}
         Err(e) => debug!(logger, "Failed to write config to file"; "err" => format!("{}", e)),
     }

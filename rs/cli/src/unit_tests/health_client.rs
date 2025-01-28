@@ -101,8 +101,8 @@ fn health_client_tests() {
         let cache_path = store.node_health_file_outer(&network).unwrap();
 
         match &scenario.cache {
-            Some(cache) => std::fs::write(&cache_path, serde_json::to_string_pretty(cache).unwrap()).unwrap(),
-            None => std::fs::write(&cache_path, "").unwrap(),
+            Some(cache) => fs_err::write(&cache_path, serde_json::to_string_pretty(cache).unwrap()).unwrap(),
+            None => fs_err::write(&cache_path, "").unwrap(),
         }
 
         let health_client = store.health_client(&network).unwrap();
@@ -122,7 +122,7 @@ fn health_client_tests() {
         }
 
         let nodes_info = maybe_nodes_info.unwrap();
-        let contents = std::fs::read_to_string(&cache_path).unwrap();
+        let contents = fs_err::read_to_string(&cache_path).unwrap();
         let cached: Vec<ShortNodeInfo> = serde_json::from_str(&contents).unwrap();
 
         if !PartialEq::eq(&cached, &nodes_info) {

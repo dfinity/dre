@@ -1,5 +1,3 @@
-use std::{io::Read, os::unix::fs::PermissionsExt, path::PathBuf, sync::Arc, time::Duration};
-
 use flate2::bufread::GzDecoder;
 use ic_canisters::governance::governance_canister_version;
 use ic_management_backend::{
@@ -11,6 +9,8 @@ use ic_management_backend::{
 use ic_management_types::Network;
 use ic_registry_local_registry::LocalRegistry;
 use log::{debug, info, warn};
+use std::os::unix::fs::PermissionsExt;
+use std::{io::Read, path::PathBuf, sync::Arc, time::Duration};
 
 use crate::{
     auth::Neuron,

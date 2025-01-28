@@ -11,6 +11,7 @@ base64 = { workspace = true }
 clap = { workspace = true }
 crossbeam = { workspace = true }
 crossbeam-channel = { workspace = true }
+fs-err = { workspace = true }
 futures-util = { workspace = true }
 humantime = { workspace = true }
 ic-crypto-utils-threshold-sig-der = { workspace = true }

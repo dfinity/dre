@@ -99,9 +99,9 @@ fn generate_config(cli: &CliArgs, targets: Vec<TargetDto>, logger: Logger) {
         crate::Generator::Metric => JobType::all_for_ic_nodes(),
     };
 
-    if std::fs::metadata(&cli.output_dir).is_err() {
-        std::fs::create_dir_all(cli.output_dir.parent().unwrap()).unwrap();
-        std::fs::File::create(&cli.output_dir).unwrap();
+    if fs_err::metadata(&cli.output_dir).is_err() {
+        fs_err::create_dir_all(cli.output_dir.parent().unwrap()).unwrap();
+        fs_err::File::create(&cli.output_dir).unwrap();
     }
 
     for job in &jobs {
@@ -156,7 +156,7 @@ fn generate_config(cli: &CliArgs, targets: Vec<TargetDto>, logger: Logger) {
 
         let path = cli.output_dir.join(format!("{}.json", job));
 
-        match std::fs::write(&path, config) {
+        match fs_err::write(&path, config) {
             Ok(_) => {}
             Err(e) => debug!(logger, "Failed to write config to file"; "err" => format!("{}", e)),
         }

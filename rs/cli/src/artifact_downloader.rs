@@ -38,7 +38,7 @@ pub trait ArtifactDownloader: Sync + Send {
             let download_dir = format!("{}/tmp/ic/{}", dirs::home_dir().expect("home_dir is not set").as_path().display(), subdir);
             let download_dir = Path::new(&download_dir);
 
-            std::fs::create_dir_all(download_dir).unwrap_or_else(|_| panic!("create_dir_all failed for {}", download_dir.display()));
+            fs_err::create_dir_all(download_dir).unwrap_or_else(|_| panic!("create_dir_all failed for {}", download_dir.display()));
 
             let download_image = format!("{}/update-img.tar.gz", download_dir.to_str().unwrap());
             let download_image = Path::new(&download_image);

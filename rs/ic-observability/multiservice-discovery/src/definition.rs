@@ -20,7 +20,6 @@ use std::collections::HashSet;
 use std::error::Error;
 use std::fmt::Debug;
 use std::fmt::{Display, Error as FmtError, Formatter};
-use std::fs;
 use std::io::Write;
 use std::net::SocketAddr;
 use std::sync::Arc;
@@ -86,8 +85,8 @@ impl PartialEq for Definition {
 
 impl From<FSDefinition> for Definition {
     fn from(fs_definition: FSDefinition) -> Self {
-        if std::fs::metadata(&fs_definition.registry_path).is_err() {
-            std::fs::create_dir_all(fs_definition.registry_path.clone()).unwrap();
+        if fs_err::metadata(&fs_definition.registry_path).is_err() {
+            fs_err::create_dir_all(fs_definition.registry_path.clone()).unwrap();
         }
         let log = make_logger();
         Self {
@@ -203,12 +202,12 @@ impl Definition {
         poll_interval: Duration,
         registry_query_timeout: Duration,
     ) -> Self {
-        let global_registry_path = std::fs::canonicalize(global_registry_path).expect("Invalid global registry path");
+        let global_registry_path = fs_err::canonicalize(global_registry_path).expect("Invalid global registry path");
         // The path needs to be sanitized otherwise any file in the environment can be overwritten,
         let sanitized_name = name.replace(['.', '/'], "_");
         let registry_path = global_registry_path.join(sanitized_name);
-        if std::fs::metadata(&registry_path).is_err() {
-            std::fs::create_dir_all(registry_path.clone()).unwrap();
+        if fs_err::metadata(&registry_path).is_err() {
+            fs_err::create_dir_all(registry_path.clone()).unwrap();
         }
         Self {
             nns_urls,
@@ -511,7 +510,7 @@ impl DefinitionsSupervisor {
     pub(crate) async fn load_or_create_defs(&self, metrics: RunningDefinitionsMetrics) -> Result<(), Box<dyn Error>> {
         if let Some(networks_state_file) = self.networks_state_file.clone() {
             if networks_state_file.exists() {
-                let file_content = fs::read_to_string(networks_state_file.clone())?;
+                let file_content = fs_err::read_to_string(networks_state_file.clone())?;
                 let initial_definitions: Vec<FSDefinition> = serde_json::from_str(&file_content)?;
                 let names = initial_definitions.iter().map(|def| def.name.clone()).collect::<Vec<_>>();
                 info!(self.log, "Definitions loaded from {:?}:\n{:?}", networks_state_file.as_path(), names);
@@ -532,7 +531,7 @@ impl DefinitionsSupervisor {
     pub(crate) async fn persist_defs(&self, existing: &mut BTreeMap<String, RunningDefinition>) -> Result<(), Box<dyn Error>> {
         if let Some(networks_state_file) = self.networks_state_file.clone() {
             retry::retry(retry::delay::Exponential::from_millis(10).take(5), || {
-                std::fs::OpenOptions::new()
+                fs_err::OpenOptions::new()
                     .create(true)
                     .truncate(true)
                     .write(true)
