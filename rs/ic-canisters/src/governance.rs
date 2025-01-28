@@ -223,7 +223,7 @@ impl GovernanceCanisterWrapper {
             acc.full_neurons.extend(current.full_neurons);
             acc.neuron_infos.extend(current.neuron_infos);
 
-            if acc.total_pages_available() == page_number + 1 {
+            if page_number >= acc.total_pages_available() {
                 break;
             }
 
