@@ -20,7 +20,6 @@ use ic_nns_governance::pb::v1::NeuronInfo;
 use ic_nns_governance::pb::v1::NodeProvider as PbNodeProvider;
 use ic_nns_governance::pb::v1::Proposal;
 use ic_nns_governance::pb::v1::ProposalInfo;
-use ic_nns_governance_api::pb::v1::manage_neuron_response::Command;
 use ic_nns_governance_api::pb::v1::ListNeurons;
 use ic_nns_governance_api::pb::v1::ListNeuronsResponse;
 use ic_nns_governance_api::pb::v1::ListNodeProvidersResponse;
