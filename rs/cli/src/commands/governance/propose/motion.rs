@@ -65,7 +65,7 @@ impl Motion {
             // Strip out '#' plus any extra leading space
             let stripped_title = first_line.trim_start_matches('#').trim_start();
             let body = lines[1..].join("\n"); // Join the remaining lines
-            (Some(stripped_title.to_owned()), body)
+            (Some(stripped_title.to_owned()), body.trim_start().to_string())
         } else {
             (None, lines.join("\n"))
         };
