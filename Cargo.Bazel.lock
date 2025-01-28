@@ -1,5 +1,5 @@
 {
-  "checksum": "601d274f5413afdb0d91d2bc6012fa2ee15de9b5f6b3cff8d89c08768cdd4184",
+  "checksum": "cc45b1bfc5914f24e89a7c8c6021bf9e0959d61987b2904e57c93991572fa7c8",
   "crates": {
     "actix-codec 0.5.2": {
       "name": "actix-codec",
@@ -34716,6 +34716,10 @@
               "target": "crossbeam_channel"
             },
             {
+              "id": "fs-err 3.0.0",
+              "target": "fs_err"
+            },
+            {
               "id": "futures 0.3.31",
               "target": "futures"
             },
@@ -34836,6 +34840,10 @@
             {
               "id": "crossbeam-channel 0.5.14",
               "target": "crossbeam_channel"
+            },
+            {
+              "id": "fs-err 3.0.0",
+              "target": "fs_err"
             },
             {
               "id": "futures-util 0.3.31",
@@ -47498,6 +47506,10 @@
               "target": "crossbeam_channel"
             },
             {
+              "id": "fs-err 3.0.0",
+              "target": "fs_err"
+            },
+            {
               "id": "futures 0.3.31",
               "target": "futures"
             },
@@ -48223,6 +48235,10 @@
             {
               "id": "env_logger 0.11.6",
               "target": "env_logger"
+            },
+            {
+              "id": "fs-err 3.0.0",
+              "target": "fs_err"
             },
             {
               "id": "futures 0.3.31",
@@ -48991,6 +49007,10 @@
             {
               "id": "crossbeam-channel 0.5.14",
               "target": "crossbeam_channel"
+            },
+            {
+              "id": "fs-err 3.0.0",
+              "target": "fs_err"
             },
             {
               "id": "futures-util 0.3.31",
