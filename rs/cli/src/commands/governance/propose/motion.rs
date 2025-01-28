@@ -33,9 +33,9 @@ struct MotionParameters {
     #[arg(long, help_heading = "Command parameters", conflicts_with = "motion_text_file")]
     pub motion_text: Option<String>,
 
-    /// URL for discussion of the proposal; defaults to no the DFINITY forum governance topic.
+    /// URL for discussion of the proposal; defaults to the DFINITY forum governance topic list if unspecified
     #[arg(long, help_heading = "Command parameters", default_value = "https://forum.dfinity.org/c/governance/27")]
-    pub url: url::Url,
+    pub proposal_url: url::Url,
 }
 
 #[derive(Args, Debug)]
@@ -98,7 +98,7 @@ impl ExecutableCommand for Motion {
         let proposal = MakeProposalRequest {
             title,
             summary,
-            url: self.parameters.url.to_string(),
+            url: self.parameters.proposal_url.to_string(),
             action: Some(ProposalActionRequest::Motion(MotionPayload { motion_text })),
         };
         if ctx.is_dry_run() {
