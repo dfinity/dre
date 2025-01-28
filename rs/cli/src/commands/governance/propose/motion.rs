@@ -33,8 +33,8 @@ struct MotionParameters {
     #[arg(long, help_heading = "Command parameters", conflicts_with = "motion_text_file")]
     pub motion_text: Option<String>,
 
-    /// URL typically used to discuss the proposal; defaults to the DFINITY forum governance topic list if unspecified
-    #[arg(long, help_heading = "Command parameters", default_value = "https://forum.dfinity.org/c/governance/27")]
+    /// URL typically used to discuss the proposal; proposals risk being rejected without a valid venue to discuss them
+    #[arg(long, help_heading = "Command parameters")]
     pub proposal_url: url::Url,
 }
 
