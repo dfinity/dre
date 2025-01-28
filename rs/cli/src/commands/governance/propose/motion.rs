@@ -84,13 +84,9 @@ impl ExecutableCommand for Motion {
             println!("Proposal that would have been sent:\n{:#?}", proposal);
             return Ok(());
         }
-        match governance.make_proposal(NeuronId { id: neuron.neuron_id }, proposal.into()).await {
-            Ok(propresp) => {
-                println!("{:?}", propresp);
-                Ok(())
-            }
-            Err(e) => Err(e),
-        }
+        let propresp = governance.make_proposal(NeuronId { id: neuron.neuron_id }, proposal.into()).await?;
+        println!("{:?}", propresp);
+        Ok(())
     }
 
     fn validate(&self, _args: &crate::commands::Args, _cmd: &mut clap::Command) {}
