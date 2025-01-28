@@ -910,7 +910,7 @@ pub fn local_cache_path() -> PathBuf {
     }
     .join("ic-registry-cache");
     if !path.exists() {
-        std::fs::create_dir_all(&path).expect("failed to create local cache directory");
+        fs_err::create_dir_all(&path).expect("failed to create local cache directory");
     }
     path
 }
@@ -918,7 +918,7 @@ pub fn local_cache_path() -> PathBuf {
 pub fn local_registry_path(network: &Network) -> PathBuf {
     let path = local_cache_path().join(Path::new(network.name.as_str())).join("local_registry");
     if !path.exists() {
-        std::fs::create_dir_all(&path).expect("failed to create local registry directory");
+        fs_err::create_dir_all(&path).expect("failed to create local registry directory");
     }
     path
 }
@@ -981,7 +981,7 @@ pub async fn sync_local_store_with_path(target_network: &Network, local_registry
                         target_network.name,
                         local_registry_path.display()
                     );
-                    std::fs::remove_dir_all(local_registry_path)?;
+                    fs_err::remove_dir_all(local_registry_path)?;
                     panic!(
                         "Registry version local {} > remote {}, this should never happen",
                         local_latest_version, remote_version

@@ -257,7 +257,7 @@ fn get_subnet_topics_map() -> BTreeMap<PrincipalId, SubnetTopicInfo> {
 }
 
 fn get_subnet_topics_from_path(path: &Path) -> anyhow::Result<BTreeMap<PrincipalId, SubnetTopicInfo>> {
-    let file = std::fs::File::open(path)?;
+    let file = fs_err::File::open(path)?;
     serde_json::from_reader(file).map_err(anyhow::Error::from)
 }
 

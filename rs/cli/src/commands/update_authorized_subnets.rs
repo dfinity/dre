@@ -183,7 +183,7 @@ impl ExecutableCommand for UpdateAuthorizedSubnets {
 impl UpdateAuthorizedSubnets {
     fn parse_csv(&self) -> anyhow::Result<Vec<(String, String)>> {
         let contents = match &self.path {
-            Some(p) => std::fs::read_to_string(p)?,
+            Some(p) => fs_err::read_to_string(p)?,
             None => {
                 info!("Using embedded version of authorized subnets csv that is added during build time");
                 DEFAULT_AUTHORIZED_SUBNETS_CSV.to_string()

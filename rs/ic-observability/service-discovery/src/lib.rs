@@ -155,7 +155,7 @@ impl IcServiceDiscoveryImpl {
     ///   lifetime of a service instance. I.e., removing an IC as a scrape target
     ///   requires rebooting the service.
     pub fn load_new_ics(&self, log: Logger) -> Result<(), IcServiceDiscoveryError> {
-        let paths = std::fs::read_dir(&self.ic_scraping_targets_dir)?;
+        let paths = fs_err::read_dir(&self.ic_scraping_targets_dir)?;
         let mut registries_lock_guard = self.registries.write().unwrap();
         for path in paths {
             let path = path?;

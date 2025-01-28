@@ -207,13 +207,13 @@ impl Neuron {
 
         let parent = path.parent().ok_or(anyhow::anyhow!("Expected parent to exist"))?;
         if !parent.exists() {
-            std::fs::create_dir_all(parent)?
+            fs_err::create_dir_all(parent)?
         }
 
         let key_pair = rosetta_core::models::Ed25519KeyPair::generate(42);
 
         if !path.exists() {
-            std::fs::write(&path, key_pair.to_pem())?;
+            fs_err::write(&path, key_pair.to_pem())?;
         }
         Ok(path)
     }

@@ -10,6 +10,7 @@ license.workspace = true
 clap = { workspace = true }
 crossbeam-channel = { workspace = true }
 crossbeam = { workspace = true }
+fs-err = { workspace = true }
 futures-util = { workspace = true }
 humantime = { workspace = true }
 multiservice-discovery-shared = { path = "../multiservice-discovery-shared" }

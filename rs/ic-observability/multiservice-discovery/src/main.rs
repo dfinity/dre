@@ -96,7 +96,7 @@ fn main() {
             Err(e) => {
                 error!(log, "Failed to load or create definitions, deleting the state file.");
                 if let Some(file) = &cli_args.networks_state_file {
-                    if let Err(e) = std::fs::remove_file(file) {
+                    if let Err(e) = fs_err::remove_file(file) {
                         error!(log, "Failed to delete the state file"; "error" => format!("{:?}", e));
                     }
                 }

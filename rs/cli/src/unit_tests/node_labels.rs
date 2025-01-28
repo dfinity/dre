@@ -7,7 +7,7 @@ use itertools::Itertools;
 use crate::store::Store;
 
 fn ensure_empty(path: PathBuf) {
-    std::fs::write(path, "").unwrap()
+    fs_err::write(path, "").unwrap()
 }
 
 fn write_cache(guests: &[Guest], path: PathBuf) {
@@ -24,7 +24,7 @@ fn write_cache(guests: &[Guest], path: PathBuf) {
     let mut root = serde_yaml::Mapping::new();
     root.insert("data".into(), data.into());
 
-    std::fs::write(path, serde_yaml::to_string(&root).unwrap()).unwrap()
+    fs_err::write(path, serde_yaml::to_string(&root).unwrap()).unwrap()
 }
 
 #[derive(Debug)]
@@ -146,7 +146,7 @@ fn test_node_labels() {
         }
 
         let labels = maybe_labels.unwrap();
-        let content = std::fs::read_to_string(labels_path.clone()).unwrap();
+        let content = fs_err::read_to_string(labels_path.clone()).unwrap();
         let labels_from_cache = node_labels::parse_data(content).unwrap();
         if !labels.eq(&labels_from_cache) {
             failed_scenarios.push((labels, scenario));
