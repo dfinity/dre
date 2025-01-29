@@ -136,17 +136,18 @@ impl Registry {
                 let nodes = nodes_by_health.entry(health).or_insert_with(Vec::new);
                 nodes.push(node_id);
             }
-            node_operator.nodes_health = nodes_by_health;
-            node_operator.total_up_nodes = nodes
+            node_operator.computed.nodes_health = nodes_by_health;
+            node_operator.computed.total_up_nodes = nodes
                 .iter()
                 .filter(|n| {
                     n.node_operator_id == node_operator.node_operator_principal_id
                         && (n.status == HealthStatus::Healthy || n.status == HealthStatus::Degraded)
                 })
                 .count() as u32;
+            node_operator.computed.node_allowance_total = node_operator.node_allowance + node_operator.computed.total_up_nodes as u64;
 
-            if node_operator.total_up_nodes == node_operator.rewardable_nodes.iter().map(|n| n.1).sum::<u32>() {
-                node_operator.rewards_correct = true;
+            if node_operator.computed.total_up_nodes == node_operator.rewardable_nodes.iter().map(|n| n.1).sum::<u32>() {
+                node_operator.computed.rewards_correct = true;
             }
         }
         let node_rewards_table = get_node_rewards_table(&local_registry, ctx.network());
@@ -202,18 +203,21 @@ async fn get_node_operators(local_registry: &Arc<dyn LazyRegistry>, network: &Ne
                 record.principal,
                 NodeOperator {
                     node_operator_principal_id: *k,
-                    node_allowance_remaining: record.allowance,
-                    node_allowance_total: record.allowance + operator_registered_nodes_num,
                     node_provider_principal_id: record.provider.principal,
-                    node_provider_name,
                     dc_id: record.datacenter.as_ref().map(|d| d.name.to_owned()).unwrap_or_default(),
                     rewardable_nodes: record.rewardable_nodes.clone(),
+                    node_allowance: record.node_allowance,
                     ipv6: Some(record.ipv6.to_string()),
-                    total_up_nodes: 0,
-                    nodes_health: Default::default(),
-                    rewards_correct: false,
-                    nodes_in_subnets,
-                    nodes_in_registry,
+                    computed: NodeOperatorComputed {
+                        node_provider_name,
+                        node_allowance_remaining: record.node_allowance,
+                        node_allowance_total: record.node_allowance + operator_registered_nodes_num,
+                        total_up_nodes: 0,
+                        nodes_health: Default::default(),
+                        rewards_correct: false,
+                        nodes_in_subnets,
+                        nodes_in_registry,
+                    },
                 },
             )
         })
@@ -552,13 +556,19 @@ struct SubnetRecord {
 #[derive(Clone, Debug, Serialize)]
 struct NodeOperator {
     node_operator_principal_id: PrincipalId,
-    node_allowance_remaining: u64,
-    node_allowance_total: u64,
     node_provider_principal_id: PrincipalId,
-    node_provider_name: String,
     dc_id: String,
     rewardable_nodes: BTreeMap<String, u32>,
+    node_allowance: u64,
     ipv6: Option<String>,
+    computed: NodeOperatorComputed,
+}
+
+#[derive(Clone, Debug, Serialize)]
+struct NodeOperatorComputed {
+    node_provider_name: String,
+    node_allowance_remaining: u64,
+    node_allowance_total: u64,
     total_up_nodes: u32,
     nodes_health: IndexMap<String, Vec<PrincipalId>>,
     rewards_correct: bool,

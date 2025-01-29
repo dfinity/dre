@@ -442,7 +442,7 @@ impl LazyRegistry for LazyRegistryImpl {
                                     maybe_provider.unwrap_or_default()
                                 })
                                 .unwrap(),
-                            allowance: or.node_allowance,
+                            node_allowance: or.node_allowance,
                             datacenter: data_centers.get(&or.dc_id).map(|dc| {
                                 let (continent, country, area): (_, _, _) = dc
                                     .region
