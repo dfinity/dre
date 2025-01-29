@@ -696,7 +696,7 @@ pub mod test {
                         name: None,
                         website: None,
                     },
-                    allowance: 23933,
+                    node_allowance: 23933,
                     datacenter: None,
                     rewardable_nodes: BTreeMap::new(),
                     ipv6: "".to_string(),

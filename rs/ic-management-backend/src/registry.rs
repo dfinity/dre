@@ -409,7 +409,7 @@ impl RegistryState {
                                 principal: p,
                             })
                             .expect("provider missing from operator record"),
-                        allowance: or.node_allowance,
+                        node_allowance: or.node_allowance,
                         datacenter: data_center_records.get(&or.dc_id).map(|dc| {
                             let (continent, country, area): (_, _, _) = dc.region.splitn(3, ',').map(|s| s.to_string()).collect_tuple().unwrap_or((
                                 "Unknown".to_string(),

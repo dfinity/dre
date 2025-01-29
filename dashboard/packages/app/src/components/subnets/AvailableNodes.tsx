@@ -210,7 +210,7 @@ function TabPanel({
               <Grid item>
                 <Typography variant='h5'>Missing guests</Typography>
                 <Typography variant='subtitle1'>Guests which need to be added to the network</Typography>
-                <Typography variant="subtitle2">Total allowed: {operators.reduce((r, c) => r + c.allowance, 0)}</Typography>
+                <Typography variant="subtitle2">Total allowed: {operators.reduce((r, c) => r + c.node_allowance, 0)}</Typography>
               </Grid>
               <Grid item>
               </Grid>

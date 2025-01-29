@@ -594,7 +594,7 @@ pub struct CreateSubnetProposalInfo {
 pub struct Operator {
     pub principal: PrincipalId,
     pub provider: Provider,
-    pub allowance: u64,
+    pub node_allowance: u64,
 
     #[serde(skip_serializing_if = "Option::is_none")]
     pub datacenter: Option<Datacenter>,

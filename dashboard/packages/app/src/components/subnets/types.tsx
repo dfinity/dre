@@ -20,7 +20,7 @@ export interface Datacenter {
 export interface Operator {
   principal: string;
   provider: Provider;
-  allowance: number;
+  node_allowance: number;
   datacenter?: Datacenter;
 }
 
