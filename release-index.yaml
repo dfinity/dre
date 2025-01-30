@@ -3,6 +3,15 @@ releases:
   - rc_name: rc--2025-01-23_03-04
     versions:
       # Qualification pipeline:
+      # https://github.com/dfinity/ic/actions/runs/13044839910
+      - name: base
+        version: 35f39480fe28485694743dc3ef15ac37ea000c74
+      # https://github.com/dfinity/ic/actions/runs/13049641718
+      - name: hashes-in-blocks
+        version: fb162931586aeea5f21cb19ec6c73382f5fa4fd6
+  - rc_name: rc--2025-01-23_03-04
+    versions:
+      # Qualification pipeline:
       # https://github.com/dfinity/ic/actions/runs/12813102877
       - name: base
         version: 550209a750be0575cc4afff5e23c04b03048c08e
