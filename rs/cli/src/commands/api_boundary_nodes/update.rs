@@ -3,6 +3,7 @@ use ic_types::PrincipalId;
 
 use crate::{
     commands::{AuthRequirement, ExecutableCommand},
+    forum::{ic_admin::forum_enabled_proposer, ForumParameters, ForumPostKind},
     ic_admin::{self},
 };
 
@@ -18,6 +19,9 @@ pub struct Update {
     /// Motivation for creating the subnet
     #[clap(short, long, aliases = ["summary"], required = true)]
     pub motivation: Option<String>,
+
+    #[clap(flatten)]
+    pub forum_parameters: ForumParameters,
 }
 
 impl ExecutableCommand for Update {
@@ -26,9 +30,7 @@ impl ExecutableCommand for Update {
     }
 
     async fn execute(&self, ctx: crate::ctx::DreContext) -> anyhow::Result<()> {
-        let ic_admin = ctx.ic_admin().await?;
-
-        ic_admin
+        forum_enabled_proposer(&self.forum_parameters, &ctx, ctx.ic_admin().await?)
             .propose_run(
                 ic_admin::ProposeCommand::DeployGuestosToSomeApiBoundaryNodes {
                     nodes: self.nodes.to_vec(),
@@ -38,12 +40,11 @@ impl ExecutableCommand for Update {
                     title: Some(format!("Update {} API boundary node(s) to {}", self.nodes.len(), &self.version)),
                     summary: Some(format!("Update {} API boundary node(s) to {}", self.nodes.len(), &self.version)),
                     motivation: self.motivation.clone(),
-                    forum_post_link: ctx.forum_post_link(),
+                    forum_post_link: None,
                 },
+                ForumPostKind::Generic,
             )
-            .await?;
-
-        Ok(())
+            .await
     }
 
     fn validate(&self, _args: &crate::commands::Args, _cmd: &mut clap::Command) {}

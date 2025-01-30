@@ -3,8 +3,11 @@ use ic_types::PrincipalId;
 
 use crate::{
     commands::{AuthRequirement, ExecutableCommand},
+    forum::{ic_admin::forum_enabled_proposer, ForumPostKind},
     ic_admin::{self},
 };
+
+use crate::forum::ForumParameters;
 
 #[derive(Args, Debug)]
 pub struct Add {
@@ -19,6 +22,9 @@ pub struct Add {
     /// Motivation for creating the subnet
     #[clap(short, long, aliases = ["summary"], required = true)]
     pub motivation: Option<String>,
+
+    #[clap(flatten)]
+    pub forum_parameters: ForumParameters,
 }
 
 impl ExecutableCommand for Add {
@@ -27,9 +33,7 @@ impl ExecutableCommand for Add {
     }
 
     async fn execute(&self, ctx: crate::ctx::DreContext) -> anyhow::Result<()> {
-        let ic_admin = ctx.ic_admin().await?;
-
-        ic_admin
+        forum_enabled_proposer(&self.forum_parameters, &ctx, ctx.ic_admin().await?)
             .propose_run(
                 ic_admin::ProposeCommand::AddApiBoundaryNodes {
                     nodes: self.nodes.to_vec(),
@@ -39,12 +43,11 @@ impl ExecutableCommand for Add {
                     title: Some(format!("Add {} API boundary node(s)", self.nodes.len())),
                     summary: Some(format!("Add {} API boundary node(s)", self.nodes.len())),
                     motivation: self.motivation.clone(),
-                    forum_post_link: ctx.forum_post_link(),
+                    forum_post_link: None,
                 },
+                ForumPostKind::Generic,
             )
-            .await?;
-
-        Ok(())
+            .await
     }
 
     fn validate(&self, _args: &crate::commands::Args, _cmd: &mut clap::Command) {}

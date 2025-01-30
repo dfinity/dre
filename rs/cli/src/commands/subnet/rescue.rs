@@ -2,7 +2,10 @@ use clap::Args;
 
 use ic_types::PrincipalId;
 
-use crate::commands::{AuthRequirement, ExecutableCommand};
+use crate::{
+    commands::{AuthRequirement, ExecutableCommand},
+    forum::{ic_admin::forum_enabled_proposer, ForumParameters, ForumPostKind},
+};
 
 #[derive(Args, Debug)]
 pub struct Rescue {
@@ -13,6 +16,9 @@ pub struct Rescue {
     /// The ID of the subnet.
     #[clap(long, short)]
     pub id: PrincipalId,
+
+    #[clap(flatten)]
+    pub forum_parameters: ForumParameters,
 }
 
 impl ExecutableCommand for Rescue {
@@ -21,14 +27,13 @@ impl ExecutableCommand for Rescue {
     }
 
     async fn execute(&self, ctx: crate::ctx::DreContext) -> anyhow::Result<()> {
-        let runner = ctx.runner().await?;
-
-        if let Some(runner_proposal) = runner.subnet_rescue(&self.id, self.keep_nodes.clone(), ctx.forum_post_link()).await? {
-            let ic_admin = ctx.ic_admin().await?;
-            ic_admin.propose_run(runner_proposal.cmd, runner_proposal.opts).await?;
-        }
-
-        Ok(())
+        let runner_proposal = match ctx.runner().await?.subnet_rescue(&self.id, self.keep_nodes.clone(), None).await? {
+            Some(runner_proposal) => runner_proposal,
+            None => return Ok(()),
+        };
+        forum_enabled_proposer(&self.forum_parameters, &ctx, ctx.ic_admin().await?)
+            .propose_run(runner_proposal.cmd, runner_proposal.opts, ForumPostKind::Generic)
+            .await
     }
 
     fn validate(&self, _args: &crate::commands::Args, _cmd: &mut clap::Command) {}

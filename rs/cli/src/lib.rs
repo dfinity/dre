@@ -5,7 +5,7 @@ pub mod commands;
 mod cordoned_feature_fetcher;
 pub mod ctx;
 mod desktop_notify;
-pub mod discourse_client;
+pub mod forum;
 pub mod ic_admin;
 mod operations;
 mod qualification;

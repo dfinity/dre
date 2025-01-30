@@ -13,7 +13,11 @@ use log::{info, warn};
 use serde::Serialize;
 use tempfile::NamedTempFile;
 
-use crate::ic_admin::{IcAdmin, ProposeCommand, ProposeOptions};
+use crate::{
+    ctx::DreContext,
+    forum::{ic_admin::forum_enabled_proposer, ForumParameters, ForumPostKind},
+    ic_admin::{IcAdmin, ProposeCommand, ProposeOptions},
+};
 
 use super::{AuthRequirement, ExecutableCommand};
 
@@ -28,6 +32,9 @@ pub struct Firewall {
     /// Ruleset scope: "global", "replica_nodes", "api_boundary_nodes", "subnet(SUBNET_ID)", "node(NODE_ID)"
     #[clap(long, default_value = None, required = true)]
     pub rules_scope: FirewallRulesScope,
+
+    #[clap(flatten)]
+    pub forum_parameters: ForumParameters,
 }
 
 impl ExecutableCommand for Firewall {
@@ -104,9 +111,11 @@ impl ExecutableCommand for Firewall {
                     ProposeOptions {
                         title: self.title.clone(),
                         summary: self.summary.clone(),
-                        forum_post_link: ctx.forum_post_link(),
+                        forum_post_link: None,
                         motivation: None,
                     },
+                    &self.forum_parameters,
+                    &ctx,
                     &self.rules_scope,
                 )
                 .await
@@ -123,6 +132,8 @@ impl Firewall {
         admin: Arc<dyn IcAdmin>,
         modifications: Vec<FirewallRuleModification>,
         propose_options: ProposeOptions,
+        forum_parameters: &ForumParameters,
+        ctx: &DreContext,
         firewall_rules_scope: &FirewallRulesScope,
     ) -> anyhow::Result<()> {
         let positions = modifications.iter().map(|modif| modif.position).join(",");
@@ -186,8 +197,10 @@ impl Firewall {
             command: format!("{}-firewall-rules", change_type),
             args: final_args,
         };
-        let _ = admin.propose_run(cmd, propose_options.clone()).await?;
-        Ok(())
+
+        forum_enabled_proposer(forum_parameters, ctx, admin)
+            .propose_run(cmd, propose_options.clone(), ForumPostKind::Generic)
+            .await
     }
 }
 

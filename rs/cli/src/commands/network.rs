@@ -3,7 +3,11 @@ use ic_types::PrincipalId;
 use itertools::Itertools;
 use log::info;
 
-use crate::{discourse_client::parse_proposal_id_from_ic_admin_response, ic_admin::ProposeOptions, runner::RunnerProposal};
+use crate::{
+    forum::{ForumParameters, ForumPostKind},
+    ic_admin::ProposeOptions,
+    runner::RunnerProposal,
+};
 
 use super::{AuthRequirement, ExecutableCommand};
 
@@ -43,6 +47,9 @@ pub struct Network {
     /// Remove cordoned nodes from their subnets.
     #[clap(long)]
     pub remove_cordoned_nodes: bool,
+
+    #[clap(flatten)]
+    pub forum_parameters: ForumParameters,
 }
 
 impl ExecutableCommand for Network {
@@ -104,7 +111,7 @@ impl ExecutableCommand for Network {
             info!("Healing the network by replacing unhealthy nodes, removing cordoned nodes, and optimizing decentralization in subnets");
             let maybe_proposals = runner
                 .network_heal(
-                    ctx.forum_post_link(),
+                    None,
                     &omit_subnets,
                     &omit_nodes,
                     self.optimize_decentralization,
@@ -131,9 +138,7 @@ impl ExecutableCommand for Network {
 
         if self.ensure_operator_nodes_assigned {
             info!("Ensuring some operator nodes are assigned, for every node operator");
-            let maybe_proposals = runner
-                .network_ensure_operator_nodes_assigned(ctx.forum_post_link(), &omit_subnets, &omit_nodes)
-                .await;
+            let maybe_proposals = runner.network_ensure_operator_nodes_assigned(None, &omit_subnets, &omit_nodes).await;
             match maybe_proposals {
                 Ok(operator_assigned_proposals) => {
                     update_omit_subnets(&operator_assigned_proposals, &mut omit_subnets);
@@ -154,9 +159,7 @@ impl ExecutableCommand for Network {
 
         if self.ensure_operator_nodes_unassigned {
             info!("Ensuring some operator nodes are unassigned, for every node operator");
-            let maybe_proposals = runner
-                .network_ensure_operator_nodes_unassigned(ctx.forum_post_link(), &omit_subnets, &omit_nodes)
-                .await;
+            let maybe_proposals = runner.network_ensure_operator_nodes_unassigned(None, &omit_subnets, &omit_nodes).await;
             match maybe_proposals {
                 Ok(operator_unassigned_proposals) => {
                     update_omit_subnets(&operator_unassigned_proposals, &mut omit_subnets);
@@ -176,16 +179,17 @@ impl ExecutableCommand for Network {
         }
 
         if proposals.is_empty() {
+            info!("No proposals are required to enforce the requested state.");
             return Ok(());
         }
 
         let ic_admin = ctx.ic_admin().await?;
-        let discourse_client = ctx.discourse_client()?;
+        let forum_client = crate::forum::client(&self.forum_parameters, &ctx)?;
         let is_fake_neuron = ctx.neuron().await?.is_fake_neuron();
 
         for proposal in proposals {
             if let crate::ic_admin::ProposeCommand::ChangeSubnetMembership { subnet_id, .. } = &proposal.cmd {
-                if let Err(e) = process_proposal(&*ic_admin, &*discourse_client, &proposal, subnet_id, is_fake_neuron).await {
+                if let Err(e) = process_proposal(&*ic_admin, &*forum_client, &proposal, subnet_id, is_fake_neuron).await {
                     errors.push(e);
                 }
             } else {
@@ -244,7 +248,7 @@ fn format_error((i, detailed_error): (usize, &DetailedError)) -> String {
 
 async fn process_proposal(
     ic_admin: &dyn crate::ic_admin::IcAdmin,
-    discourse_client: &dyn crate::discourse_client::DiscourseClient,
+    forum_client: &dyn crate::forum::ForumClient,
     proposal: &RunnerProposal,
     subnet_id: &PrincipalId,
     is_fake_neuron: bool,
@@ -281,11 +285,11 @@ async fn process_proposal(
         }
     };
 
-    let maybe_topic = if is_fake_neuron {
+    let maybe_forum_post = if is_fake_neuron {
         None
     } else {
-        match discourse_client.create_replace_nodes_forum_post(*subnet_id, body).await {
-            Ok(maybe_topic) => maybe_topic,
+        match forum_client.forum_post(ForumPostKind::ReplaceNodes { subnet_id: *subnet_id, body }).await {
+            Ok(maybe_topic) => Some(maybe_topic),
             Err(e) => {
                 return Err(DetailedError {
                     proposal: Some(proposal.clone()),
@@ -299,10 +303,10 @@ async fn process_proposal(
         .propose_submit(
             proposal.cmd.clone(),
             ProposeOptions {
-                forum_post_link: maybe_topic
-                    .as_ref()
-                    .map(|topic| topic.url.clone())
-                    .or_else(|| proposal.opts.forum_post_link.clone()),
+                forum_post_link: match &maybe_forum_post {
+                    Some(topic) => topic.url().map(|s| s.into()),
+                    None => None,
+                },
                 ..proposal.opts.clone()
             },
         )
@@ -317,17 +321,8 @@ async fn process_proposal(
         }
     };
 
-    if let Some(topic) = maybe_topic {
-        if let Err(e) = discourse_client
-            .add_proposal_url_to_post(
-                topic.update_id,
-                parse_proposal_id_from_ic_admin_response(proposal_response).map_err(|e| DetailedError {
-                    proposal: Some(proposal.clone()),
-                    error: anyhow::anyhow!("Error parsing proposal id from ic_admin output: {:?}", e),
-                })?,
-            )
-            .await
-        {
+    if let Some(topic) = maybe_forum_post {
+        if let Err(e) = topic.update_by_parsing_ic_admin_response(proposal_response).await {
             return Err(DetailedError {
                 proposal: Some(proposal.clone()),
                 error: anyhow::anyhow!("Error when updating forum post: {:?}", e),

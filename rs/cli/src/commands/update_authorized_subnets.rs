@@ -10,7 +10,7 @@ use itertools::Itertools;
 use log::info;
 
 use crate::{
-    discourse_client::parse_proposal_id_from_ic_admin_response,
+    forum::{ic_admin::forum_enabled_proposer, ForumParameters, ForumPostKind},
     ic_admin::{ProposeCommand, ProposeOptions},
 };
 
@@ -38,6 +38,9 @@ pub struct UpdateAuthorizedSubnets {
     /// Number of verified subnets to open that weren't open before
     #[clap(long, default_value_t = 1)]
     open_verified_subnets: i32,
+
+    #[clap(flatten)]
+    pub forum_parameters: ForumParameters,
 }
 
 impl ExecutableCommand for UpdateAuthorizedSubnets {
@@ -135,7 +138,7 @@ impl ExecutableCommand for UpdateAuthorizedSubnets {
             }
         }
 
-        let summary = construct_summary(&subnets, &excluded_subnets, public_subnets, ctx.forum_post_link())?;
+        let summary = construct_summary(&subnets, &excluded_subnets, public_subnets)?;
 
         let authorized = subnets
             .keys()
@@ -153,30 +156,14 @@ impl ExecutableCommand for UpdateAuthorizedSubnets {
             forum_post_link: Some("[comment]: <> (Link will be added on actual execution)".to_string()),
         };
 
+        // Reviewers / @nikola: why do we do this here?  Everywhere else we just propose_run.
         if !ic_admin.propose_print_and_confirm(cmd.clone(), opts.clone()).await? {
             return Ok(());
         }
 
-        let discourse_client = ctx.discourse_client()?;
-        let maybe_topic = discourse_client.create_authorized_subnets_update_forum_post(summary).await?;
-
-        let proposal_response = ic_admin
-            .propose_submit(
-                cmd,
-                ProposeOptions {
-                    forum_post_link: maybe_topic.as_ref().map(|resp| resp.url.clone()),
-                    ..opts
-                },
-            )
-            .await?;
-
-        if let Some(topic) = maybe_topic {
-            discourse_client
-                .add_proposal_url_to_post(topic.update_id, parse_proposal_id_from_ic_admin_response(proposal_response)?)
-                .await?;
-        }
-
-        Ok(())
+        forum_enabled_proposer(&self.forum_parameters, &ctx, ic_admin)
+            .propose_submit(cmd, opts, ForumPostKind::AuthorizedSubnetsUpdate { body: summary })
+            .await
     }
 }
 
@@ -204,18 +191,20 @@ impl UpdateAuthorizedSubnets {
     }
 }
 
+/// FIXME probably should be moved to the Discourse post creation code.
+/// also it would be wise to divorce the Discourse machinery from the kind of post
+/// we want to compose, so that composing the post and posting the post are separate activities,
+/// which they are.
 fn construct_summary(
     subnets: &Arc<IndexMap<PrincipalId, Subnet>>,
     excluded_subnets: &IndexMap<PrincipalId, String>,
     current_public_subnets: Vec<PrincipalId>,
-    forum_post_link: Option<String>,
 ) -> anyhow::Result<String> {
     Ok(format!(
         "Updating the list of authorized subnets to:
 
 | Subnet id | Subnet Type | Public | Description |
 | --------- | ----------- | ------ | ----------- |
-{}
 {}
 ",
         subnets
@@ -240,10 +229,6 @@ fn construct_summary(
                     excluded_desc.map(|s| s.to_string()).unwrap_or_default()
                 )
             })
-            .join("\n"),
-        match forum_post_link {
-            Some(link) => format!("\nForum post link: {}", link),
-            None => "".to_string(),
-        }
+            .join("\n")
     ))
 }

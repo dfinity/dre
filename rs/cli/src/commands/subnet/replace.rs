@@ -2,11 +2,10 @@ use clap::{error::ErrorKind, Args};
 
 use ic_types::PrincipalId;
 use itertools::Itertools;
-use log::warn;
 
 use crate::{
     commands::{AuthRequirement, ExecutableCommand},
-    discourse_client::parse_proposal_id_from_ic_admin_response,
+    forum::{ic_admin::forum_enabled_proposer, ForumParameters, ForumPostKind},
     ic_admin::ProposeOptions,
     subnet_manager::SubnetTarget,
 };
@@ -44,6 +43,9 @@ pub struct Replace {
     /// The ID of the subnet.
     #[clap(long, short, alias = "subnet-id")]
     pub id: Option<PrincipalId>,
+
+    #[clap(flatten)]
+    pub forum_parameters: ForumParameters,
 }
 
 impl ExecutableCommand for Replace {
@@ -77,73 +79,64 @@ impl ExecutableCommand for Replace {
 
         let subnet_id = subnet_change_response.subnet_id;
         // Should be refactored to not require forum post links like this.
-        if let Some(runner_proposal) = runner.propose_subnet_change(subnet_change_response, ctx.forum_post_link()).await? {
-            let ic_admin = ctx.ic_admin().await?;
-            if !ic_admin
-                .propose_print_and_confirm(
-                    runner_proposal.cmd.clone(),
-                    ProposeOptions {
-                        forum_post_link: Some("[comment]: <> (Link will be added on actual execution)".to_string()),
-                        ..runner_proposal.opts.clone()
-                    },
-                )
-                .await?
-            {
-                return Ok(());
-            }
 
-            let discourse_client = ctx.discourse_client()?;
-            let maybe_topic = if let Some(id) = subnet_id {
-                let body = match (&runner_proposal.opts.motivation, &runner_proposal.opts.summary) {
-                    (Some(motivation), None) => motivation.to_string(),
-                    (Some(motivation), Some(summary)) => format!("{}\nMotivation:\n{}", summary, motivation),
-                    (None, Some(summary)) => summary.to_string(),
-                    (None, None) => anyhow::bail!("Expected to have `motivation` or `summary` for this proposal"),
-                };
+        let runner_proposal = match runner.propose_subnet_change(subnet_change_response, None).await? {
+            Some(runner_proposal) => runner_proposal,
+            None => return Ok(()),
+        };
 
-                discourse_client.create_replace_nodes_forum_post(id, body).await?
-            } else {
-                None
-            };
+        let ic_admin = ctx.ic_admin().await?;
+        if !ic_admin
+            .propose_print_and_confirm(
+                runner_proposal.cmd.clone(),
+                ProposeOptions {
+                    forum_post_link: Some("[comment]: <> (Link will be added on actual execution)".to_string()),
+                    ..runner_proposal.opts.clone()
+                },
+            )
+            .await?
+        {
+            return Ok(());
+        }
 
-            let proposal_response = ic_admin
-                .propose_submit(
-                    runner_proposal.cmd,
-                    ProposeOptions {
-                        forum_post_link: match (maybe_topic.as_ref(), runner_proposal.opts.forum_post_link.as_ref()) {
-                            (Some(discourse_response), _) => Some(discourse_response.url.clone()),
-                            (None, Some(from_cli_or_auto_formated)) => Some(from_cli_or_auto_formated.clone()),
-                            _ => {
-                                warn!("Didn't find a link to forum post from discourse or cli and couldn't auto-format it.");
-                                warn!("Will not add forum post to the proposal");
-                                None
-                            }
+        let proxy = forum_enabled_proposer(&self.forum_parameters, &ctx, ic_admin);
+        match subnet_id {
+            Some(id) => {
+                proxy
+                    .propose_submit(
+                        runner_proposal.cmd,
+                        runner_proposal.opts.clone(),
+                        ForumPostKind::ReplaceNodes {
+                            subnet_id: id,
+                            body: match (&runner_proposal.opts.motivation, &runner_proposal.opts.summary) {
+                                (Some(motivation), None) => motivation.to_string(),
+                                (Some(motivation), Some(summary)) => format!("{}\nMotivation:\n{}", summary, motivation),
+                                (None, Some(summary)) => summary.to_string(),
+                                (None, None) => anyhow::bail!("Expected to have `motivation` or `summary` for this proposal"),
+                            },
                         },
-                        ..runner_proposal.opts
-                    },
-                )
-                .await?;
-
-            if let Some(topic) = maybe_topic {
-                discourse_client
-                    .add_proposal_url_to_post(topic.update_id, parse_proposal_id_from_ic_admin_response(proposal_response)?)
-                    .await?
+                    )
+                    .await
+            }
+            None => {
+                proxy
+                    .propose_submit(runner_proposal.cmd, runner_proposal.opts, ForumPostKind::Generic)
+                    .await
             }
         }
-        Ok(())
     }
 
     fn validate(&self, _args: &crate::commands::Args, cmd: &mut clap::Command) {
         if !self.nodes.is_empty() && self.id.is_some() {
             cmd.error(
                 ErrorKind::ArgumentConflict,
-                "Both subnet id and a list of nodes to replace are provided. Only one of the two is allowed.",
+                "Both subnet ID and a list of nodes to replace are provided. Only one of the two is allowed.",
             )
             .exit()
         } else if self.nodes.is_empty() && self.id.is_none() {
             cmd.error(
                 ErrorKind::MissingRequiredArgument,
-                "Specify either a subnet id or a list of nodes to replace",
+                "Specify either a subnet ID or a list of nodes to replace",
             )
             .exit()
         } else if !self.nodes.is_empty() && self.motivation.is_none() {

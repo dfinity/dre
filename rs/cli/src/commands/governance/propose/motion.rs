@@ -5,7 +5,10 @@ use ic_nns_common::pb::v1::NeuronId;
 use ic_nns_governance_api::pb::v1::{MakeProposalRequest, Motion as MotionPayload, ProposalActionRequest};
 use tokio::io::AsyncReadExt;
 
-use crate::commands::{AuthRequirement, ExecutableCommand};
+use crate::{
+    commands::{AuthRequirement, ExecutableCommand},
+    forum::ForumParameters,
+};
 use ic_canisters::governance::GovernanceCanisterWrapper;
 
 #[derive(Args, Debug, Clone)]
@@ -15,27 +18,26 @@ struct MotionParameters {
     /// File containing summary of the proposal, customarily written in Markdown format, max 30 KiB; if "-", read the summary from standard input;
     /// if no explicit --title is specified, the first line found in the text will be stripped from the summary if it is a Markdown
     /// level-1 heading
-    #[arg(num_args(1), help_heading = "Command parameters")]
+    #[arg(num_args(1), help_heading = "Motion parameters")]
     pub summary_file: PathBuf,
 
     /// Title to give to the proposal; defaults to the first Markdown level-1 heading of the summary, which will be stripped from
     /// the summary in the default case.  For this default to kick in, the heading must be at the top of the summary
-    #[arg(long, help_heading = "Command parameters")]
+    #[arg(long, help_heading = "Motion parameters")]
     pub title: Option<String>,
 
     /// File containing text for the motion text field, customarily written in Markdown format, max 100 KiB; if no option is specified, a brief
     /// blurb asking the reader to refer to the summary is placed instead
-    #[arg(long, help_heading = "Command parameters", conflicts_with = "motion_text")]
+    #[arg(long, help_heading = "Motion parameters", conflicts_with = "motion_text")]
     pub motion_text_file: Option<PathBuf>,
 
     /// Text for the motion text field, customarily written in Markdown format, max 100 KiB; if no option is specified, a brief
     /// blurb asking the reader to refer to the summary is placed instead
-    #[arg(long, help_heading = "Command parameters", conflicts_with = "motion_text_file")]
+    #[arg(long, help_heading = "Motion parameters", conflicts_with = "motion_text_file")]
     pub motion_text: Option<String>,
 
-    /// URL typically used to discuss the proposal; proposals risk being rejected without a valid venue to discuss them
-    #[arg(long, help_heading = "Command parameters")]
-    pub proposal_url: url::Url,
+    #[clap(flatten)]
+    pub forum_parameters: ForumParameters,
 }
 
 #[derive(Args, Debug)]
@@ -79,8 +81,6 @@ impl ExecutableCommand for Motion {
     }
 
     async fn execute(&self, ctx: crate::ctx::DreContext) -> anyhow::Result<()> {
-        let (neuron, client) = ctx.create_ic_agent_canister_client().await?;
-        let governance = GovernanceCanisterWrapper::from(client);
         let summary = match self.parameters.summary_file.as_path().as_os_str().to_str() {
             Some("-") => {
                 let mut ret: String = "".to_string();
@@ -104,19 +104,48 @@ impl ExecutableCommand for Motion {
             }
             (None, None) => "Please refer to the summary of the proposal for the contents of the motion.".to_string(),
         };
-        let proposal = MakeProposalRequest {
+
+        let (neuron, client) = ctx.create_ic_agent_canister_client().await?;
+        let governance = GovernanceCanisterWrapper::from(client);
+
+        let forum_post = crate::forum::client(&self.parameters.forum_parameters, &ctx)?
+            .forum_post(crate::forum::ForumPostKind::Motion {
+                title: title.clone(),
+                summary: summary.clone(),
+            })
+            .await?;
+
+        let request = MakeProposalRequest {
             title,
             summary,
-            url: self.parameters.proposal_url.to_string(),
+            url: forum_post.url().map(|s| s.to_string()).unwrap_or_default(),
             action: Some(ProposalActionRequest::Motion(MotionPayload { motion_text })),
         };
         if ctx.is_dry_run() {
-            println!("Proposal that would have been sent:\n{:#?}", proposal);
+            println!("Proposal that would have been sent:\n{:#?}", request);
             return Ok(());
         }
-        let propresp = governance.make_proposal(NeuronId { id: neuron.neuron_id }, proposal.into()).await?;
-        println!("{:?}", propresp);
-        Ok(())
+
+        let response = governance.make_proposal(NeuronId { id: neuron.neuron_id }, request.into()).await?;
+        forum_post
+            .add_proposal_url(match (response.proposal_id, response.message) {
+                (Some(proposal_id), Some(message)) => {
+                    println!("{}\n", message.trim_end());
+                    println!("proposal {}", proposal_id.id);
+                    proposal_id.id
+                }
+                (Some(proposal_id), None) => {
+                    println!("proposal {}", proposal_id.id);
+                    proposal_id.id
+                }
+                (None, Some(message)) => return Err(anyhow::anyhow!("Proposal submission failed: {}", message)),
+                (None, None) => {
+                    return Err(anyhow::anyhow!(
+                        "Proposal submission failed; no failure message was provided by the governance canister."
+                    ))
+                }
+            })
+            .await
     }
 
     fn validate(&self, _args: &crate::commands::Args, _cmd: &mut clap::Command) {}

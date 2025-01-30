@@ -43,18 +43,10 @@ async fn get_context(network: &Network, version: IcAdminVersion) -> anyhow::Resu
         false,
         true,
         crate::commands::AuthRequirement::Anonymous,
-        None,
         version,
         Arc::new(MockCordonedFeatureFetcher::new()),
         Arc::new(MockHealthStatusQuerier::new()),
         Store::new(false)?,
-        crate::commands::DiscourseOpts {
-            discourse_api_key: None,
-            discourse_api_url: "".to_string(),
-            discourse_api_user: None,
-            discourse_skip_post_creation: true,
-            discourse_subnet_topic_override_file_path: None,
-        },
         None,
     )
     .await
@@ -187,18 +179,10 @@ async fn get_ctx_for_neuron_test(
         false,
         dry_run,
         requirement,
-        None,
         IcAdminVersion::Strict("Shouldn't get to here".to_string()),
         Arc::new(MockCordonedFeatureFetcher::new()),
         Arc::new(MockHealthStatusQuerier::new()),
         Store::new(offline)?,
-        crate::commands::DiscourseOpts {
-            discourse_api_key: None,
-            discourse_api_url: "".to_string(),
-            discourse_api_user: None,
-            discourse_skip_post_creation: false,
-            discourse_subnet_topic_override_file_path: None,
-        },
         None,
     )
     .await

@@ -54,7 +54,7 @@ impl Step for EnsureBlessedRevisions {
                     ProposeOptions {
                         title: Some(format!("Blessing version: {}", &self.version)),
                         summary: Some("Some updates".to_string()),
-                        forum_post_link: ctx.dre_ctx().forum_post_link(),
+                        forum_post_link: None, // Qualification step, no forum post.
                         motivation: None,
                     },
                 )

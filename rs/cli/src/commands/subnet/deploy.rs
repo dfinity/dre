@@ -5,6 +5,7 @@ use ic_types::PrincipalId;
 use crate::{
     auth::get_automation_neuron_default_path,
     commands::{AuthRequirement, ExecutableCommand},
+    forum::{ic_admin::forum_enabled_proposer, ForumParameters, ForumPostKind},
 };
 
 #[derive(Args, Debug)]
@@ -17,6 +18,9 @@ pub struct Deploy {
     /// The ID of the subnet.
     #[clap(long, short)]
     pub id: PrincipalId,
+
+    #[clap(flatten)]
+    pub forum_parameters: ForumParameters,
 }
 
 impl ExecutableCommand for Deploy {
@@ -25,11 +29,10 @@ impl ExecutableCommand for Deploy {
     }
 
     async fn execute(&self, ctx: crate::ctx::DreContext) -> anyhow::Result<()> {
-        let runner = ctx.runner().await?;
-        let runner_proposal = runner.deploy(&self.id, &self.version, ctx.forum_post_link()).await?;
-        let ic_admin = ctx.ic_admin().await?;
-        ic_admin.propose_run(runner_proposal.cmd, runner_proposal.opts).await?;
-        Ok(())
+        let runner_proposal = ctx.runner().await?.deploy(&self.id, &self.version, None).await?;
+        forum_enabled_proposer(&self.forum_parameters, &ctx, ctx.ic_admin().await?)
+            .propose_run(runner_proposal.cmd, runner_proposal.opts, ForumPostKind::Generic)
+            .await
     }
 
     fn validate(&self, _args: &crate::commands::Args, _cmd: &mut clap::Command) {}

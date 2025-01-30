@@ -1,5 +1,3 @@
-use std::path::PathBuf;
-
 use crate::commands::subnet::Subnet;
 use api_boundary_nodes::ApiBoundaryNodes;
 use clap::Args as ClapArgs;
@@ -129,37 +127,11 @@ impl TryFrom<String> for AuthOpts {
     }
 }
 
-#[derive(ClapArgs, Debug, Clone)]
-pub struct DiscourseOpts {
-    /// Api key used to interact with the forum
-    #[clap(long, env = "DISCOURSE_API_KEY", global = true, hide_env_values = true)]
-    pub(crate) discourse_api_key: Option<String>,
-
-    /// Api user that will interact with the forum
-    #[clap(long, env = "DISCOURSE_API_USER", global = true, default_value = "DRE-Team")]
-    pub(crate) discourse_api_user: Option<String>,
-
-    /// Api url used to interact with the forum
-    #[clap(long, env = "DISCOURSE_API_URL", global = true, default_value = "https://forum.dfinity.org")]
-    pub(crate) discourse_api_url: String,
-
-    /// Skip forum post creation all together, also will not
-    /// prompt user for the link
-    #[clap(long, env = "DISCOURSE_SKIP_POST_CREATION", global = true)]
-    pub(crate) discourse_skip_post_creation: bool,
-
-    #[clap(long, env = "DISCOURSE_SUBNET_TOPIC_OVERRIDE_FILE_PATH", global = true)]
-    pub(crate) discourse_subnet_topic_override_file_path: Option<PathBuf>,
-}
-
 #[derive(Parser, Debug)]
 #[clap(version = env!("CARGO_PKG_VERSION"), about, author)]
 pub struct Args {
     #[clap(flatten)]
     pub(crate) auth_opts: AuthOpts,
-
-    #[clap(flatten)]
-    pub(crate) discourse_opts: DiscourseOpts,
 
     /// Neuron ID
     #[clap(long, global = true, env = "NEURON_ID", visible_aliases = &["neuron", "proposer"])]
@@ -213,10 +185,6 @@ The argument is mandatory for testnets, and is optional for mainnet and staging"
     #[clap(long)]
     pub offline: bool,
 
-    /// Link to the related forum post, where proposal details can be discussed
-    #[clap(long, global = true, visible_aliases = &["forum-link", "forum"])]
-    pub forum_post_link: Option<String>,
-
     /// Path to file which contains cordoned features
     #[clap(long, global = true, visible_aliases = &["cf-file", "cfff"])]
     pub cordoned_features_file: Option<String>,
@@ -267,12 +235,13 @@ macro_rules! impl_executable_command_for_enums {
                 self.subcommands.execute(ctx).await
             }
 
-            /// Validate the command line arguments. You can return an error with something like:
-            /// ```rust
-            /// if args.neuron_id.is_none() {
-            ///    cmd.error(ErrorKind::MissingRequiredArgument, "Neuron ID is required for this command.")).exit();
-            /// }
-            /// ```
+            // Validate the command line arguments. You can return an error with something like:
+            // ```rust
+            // use clap::error::ErrorKind;
+            // if args.neuron_id.is_none() {
+            //    cmd.error(ErrorKind::MissingRequiredArgument, "Neuron ID is required for this command.").exit();
+            // }
+            // ```
             fn validate(&self, args: &crate::commands::Args, cmd: &mut Command) {
                 self.subcommands.validate(args, cmd)
             }

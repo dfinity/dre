@@ -1,4 +1,4 @@
-use crate::discourse_client::MockDiscourseClient;
+use crate::forum::{ForumParameters, ForumPostLinkVariant};
 use indexmap::IndexMap;
 use std::sync::{Arc, RwLock};
 
@@ -16,6 +16,16 @@ use crate::{
     ic_admin::{MockIcAdmin, ProposeCommand, ProposeOptions},
     runner::{format_regular_version_upgrade_summary, format_security_hotfix},
 };
+
+fn mock_forum_parameters() -> ForumParameters {
+    ForumParameters::disable_forum()
+}
+
+fn fake_forum_parameters() -> ForumParameters {
+    let mut parms = mock_forum_parameters();
+    parms.forum_post_link = ForumPostLinkVariant::Url(url::Url::parse("https://forum.dfinity.org/t/123").unwrap());
+    parms
+}
 
 #[tokio::test]
 async fn guest_os_elect_version_tests() {
@@ -73,7 +83,6 @@ async fn guest_os_elect_version_tests() {
         Arc::new(artifact_downloader),
         Arc::new(MockCordonedFeatureFetcher::new()),
         Arc::new(MockHealthStatusQuerier::new()),
-        Arc::new(MockDiscourseClient::new()),
     );
 
     for (name, expected_title, cmd) in [
@@ -85,6 +94,7 @@ async fn guest_os_elect_version_tests() {
                 release_tag: Some("rel_tag".to_string()),
                 ignore_missing_urls: false,
                 security_fix: false,
+                forum_parameters: fake_forum_parameters(),
             },
         ),
         (
@@ -95,6 +105,7 @@ async fn guest_os_elect_version_tests() {
                 release_tag: Some("rel_tag".to_string()),
                 ignore_missing_urls: false,
                 security_fix: true,
+                forum_parameters: fake_forum_parameters(),
             },
         ),
     ] {

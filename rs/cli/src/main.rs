@@ -13,7 +13,7 @@ mod commands;
 mod cordoned_feature_fetcher;
 mod ctx;
 mod desktop_notify;
-mod discourse_client;
+mod forum;
 mod ic_admin;
 mod operations;
 mod qualification;

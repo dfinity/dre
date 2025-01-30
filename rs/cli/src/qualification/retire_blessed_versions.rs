@@ -50,7 +50,7 @@ impl Step for RetireBlessedVersions {
                         title: Some("Retire replica versions".to_string()),
                         summary: Some("Unelecting a version".to_string()),
                         motivation: Some("Unelecting a version".to_string()),
-                        forum_post_link: ctx.dre_ctx().forum_post_link(),
+                        forum_post_link: None, // Qualification step, no forum post.,
                     },
                 )
                 .await
