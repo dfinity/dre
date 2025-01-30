@@ -1,5 +1,14 @@
 releases:
   # NOTE: Make sure to mark security hotfixes with the `security_fix: true` flag.
+  - rc_name: rc--2025-01-30_03-03
+    versions:
+      # Qualification pipeline:
+      # https://github.com/dfinity/ic/actions/runs/13044839910
+      - name: base
+        version: 35f39480fe28485694743dc3ef15ac37ea000c74
+      # https://github.com/dfinity/ic/actions/runs/13049641718
+      - name: hashes-in-blocks
+        version: fb162931586aeea5f21cb19ec6c73382f5fa4fd6
   - rc_name: rc--2025-01-23_03-04
     versions:
       # Qualification pipeline:
