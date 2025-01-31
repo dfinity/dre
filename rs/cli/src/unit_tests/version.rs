@@ -30,7 +30,7 @@ async fn guest_os_elect_version_tests() {
     let captured_opts: Arc<RwLock<Option<ProposeOptions>>> = Arc::new(RwLock::new(None));
     let captured_cmd_clone = captured_cmd.clone();
     let captured_opts_clone = captured_opts.clone();
-    ic_admin.expect_proceed_without_confirmation().returning(|| true);
+    ic_admin.expect_propose_print_and_confirm().returning(|_, _| Box::pin(async { Ok(true) }));
     ic_admin.expect_propose_submit().returning(move |cmd, opts| {
         *captured_cmd_clone.write().unwrap() = Some(cmd.clone());
         *captured_opts_clone.write().unwrap() = Some(opts.clone());

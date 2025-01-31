@@ -166,10 +166,12 @@ impl Firewall {
         let cmd = ProposeCommand::Raw {
             command: format!("{}-firewall-rules", change_type),
             args: test_args.clone(),
+            print_ic_admin_output: false,
         };
 
+        // The following code does NOT submit a proposal willy-nilly.
         let output = admin
-            .propose_run(cmd, propose_options.clone())
+            .propose_submit(cmd, propose_options.clone())
             .await
             .map_err(|e| anyhow::anyhow!("Couldn't execute test for {}-firewall-rules: {:?}", change_type, e))?;
 
@@ -196,6 +198,7 @@ impl Firewall {
         let cmd = ProposeCommand::Raw {
             command: format!("{}-firewall-rules", change_type),
             args: final_args,
+            print_ic_admin_output: false,
         };
 
         forum_enabled_proposer(forum_parameters, ctx, admin)

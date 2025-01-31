@@ -5,6 +5,7 @@ use dialoguer::Confirm;
 use futures::future::BoxFuture;
 use ic_base_types::PrincipalId;
 use ic_management_types::{Artifact, Network};
+use log::debug;
 use log::{error, info};
 use mockall::automock;
 use regex::Regex;
@@ -31,8 +32,6 @@ pub trait IcAdmin: Send + Sync + Debug {
     /// confirmation if not automatically confirmed.
     fn propose_print_and_confirm(&self, cmd: ProposeCommand, opts: ProposeOptions) -> BoxFuture<'_, anyhow::Result<bool>>;
 
-    fn proceed_without_confirmation(&self) -> bool;
-
     /// Runs the ic-admin with specified args.
     fn propose_submit(&self, cmd: ProposeCommand, opts: ProposeOptions) -> BoxFuture<'_, anyhow::Result<String>>;
 
@@ -57,10 +56,6 @@ pub struct IcAdminImpl {
 impl IcAdmin for IcAdminImpl {
     fn ic_admin_path(&self) -> Option<String> {
         self.ic_admin_bin_path.clone()
-    }
-
-    fn proceed_without_confirmation(&self) -> bool {
-        self.proceed_without_confirmation
     }
 
     fn propose_run(&self, cmd: ProposeCommand, opts: ProposeOptions) -> BoxFuture<'_, anyhow::Result<String>> {
@@ -159,6 +154,7 @@ impl IcAdmin for IcAdminImpl {
         let cmd = ProposeCommand::Raw {
             command: args[0].clone(),
             args: args.iter().skip(1).cloned().collect::<Vec<_>>(),
+            print_ic_admin_output: true,
         };
         let dry_run = self.dry_run || cmd.args().contains(&String::from("--dry-run"));
         Box::pin(async move { self.propose_run_inner(cmd, Default::default(), dry_run).await })
@@ -166,15 +162,18 @@ impl IcAdmin for IcAdminImpl {
 
     fn propose_print_and_confirm(&self, cmd: ProposeCommand, opts: ProposeOptions) -> BoxFuture<'_, anyhow::Result<bool>> {
         Box::pin(async move {
+            debug!("Executing command in simulation mode.");
             let _ = self._exec(cmd, opts, true, false, false).await;
 
             if self.dry_run {
                 // Same as if someone said "Do you want to continue? [Y/n] n"
+                debug!("Returning after executing command in simulation mode.");
                 return Ok(false);
             }
 
             if self.proceed_without_confirmation {
                 // Don't ask for confirmation, allow to proceed
+                debug!("Proceeding without confirmation because the user asked us via parameter.");
                 return Ok(true);
             }
 
@@ -188,7 +187,16 @@ impl IcAdmin for IcAdminImpl {
     }
 
     fn propose_submit(&self, cmd: ProposeCommand, opts: ProposeOptions) -> BoxFuture<'_, anyhow::Result<String>> {
-        Box::pin(async move { self._exec(cmd, opts, false, true, true).await })
+        let print_ic_admin_output = match &cmd {
+            ProposeCommand::Raw {
+                command: _,
+                args: _,
+                print_ic_admin_output,
+            } => *print_ic_admin_output,
+            _ => true,
+        };
+        debug!("Submitting proposal (print out result: {}).", print_ic_admin_output);
+        Box::pin(async move { self._exec(cmd, opts, false, true, print_ic_admin_output).await })
     }
 }
 
@@ -429,6 +437,7 @@ pub enum ProposeCommand {
     Raw {
         command: String,
         args: Vec<String>,
+        print_ic_admin_output: bool,
     },
     RemoveNodes {
         nodes: Vec<PrincipalId>,
@@ -464,7 +473,11 @@ impl ProposeCommand {
         format!(
             "{PROPOSE_CMD_PREFIX}{}",
             match self {
-                Self::Raw { command, args: _ } => command.trim_start_matches(PROPOSE_CMD_PREFIX).to_string(),
+                Self::Raw {
+                    command,
+                    args: _,
+                    print_ic_admin_output: _,
+                } => command.trim_start_matches(PROPOSE_CMD_PREFIX).to_string(),
                 Self::ReviseElectedVersions { release_artifact, args: _ } => format!("revise-elected-{}-versions", release_artifact),
                 Self::DeployGuestosToAllUnassignedNodes { replica_version: _ } => "deploy-guestos-to-all-unassigned-nodes".to_string(),
                 _ => self.to_string(),
@@ -505,7 +518,11 @@ impl ProposeCommand {
             Self::DeployGuestosToAllSubnetNodes { subnet, version } => {
                 vec![subnet.to_string(), version.clone()]
             }
-            Self::Raw { command: _, args } => args.clone(),
+            Self::Raw {
+                command: _,
+                args,
+                print_ic_admin_output: _,
+            } => args.clone(),
             Self::DeployHostosToSomeNodes { nodes, version } => [
                 nodes.iter().map(|n| n.to_string()).collect::<Vec<_>>(),
                 vec!["--hostos-version-id".to_string(), version.to_string()],
