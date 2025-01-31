@@ -56,7 +56,7 @@ impl IcAdminProxy {
         {
             Ok(res) => {
                 if self.simulate {
-                    info!("Simulating that the proposal returned by ic-admin is 123456");
+                    info!("Simulating that the proposal returned by ic-admin has ID 123456 for the purposes of the forum post.  No changes will be made anywhere since this is a simulation.");
                     forum_post.add_proposal_url(123456).await
                 } else {
                     forum_post.update_by_parsing_ic_admin_response(res).await
