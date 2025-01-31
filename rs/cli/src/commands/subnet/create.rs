@@ -86,7 +86,7 @@ impl ExecutableCommand for Create {
             None => return Ok(()),
         };
         forum_enabled_proposer(&self.forum_parameters, &ctx, ctx.ic_admin().await?)
-            .propose_run(runner_proposal.cmd, runner_proposal.opts, ForumPostKind::Generic) // FIXME why pass these two separately?  It's absurd.  Just pass the fuckin struct.
+            .propose_with_possible_confirmation(runner_proposal.cmd, runner_proposal.opts, ForumPostKind::Generic) // FIXME why pass these two separately?  It's absurd.  Just pass the fuckin struct.
             .await
     }
 

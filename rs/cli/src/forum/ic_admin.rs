@@ -75,11 +75,15 @@ impl IcAdminProxy {
             }
         }
     }
-    pub async fn propose_run(&self, cmd: ProposeCommand, opts: ProposeOptions, kind: ForumPostKind) -> anyhow::Result<()> {
+
+    /// Submits a proposal (maybe in dry-run mode) with confirmation from the user, unless the user
+    /// specifies in the command line that he wants no confirmation (--yes).
+    pub async fn propose_with_possible_confirmation(&self, cmd: ProposeCommand, opts: ProposeOptions, kind: ForumPostKind) -> anyhow::Result<()> {
         self.propose(cmd, opts, kind, false).await
     }
 
-    pub async fn propose_submit(&self, cmd: ProposeCommand, opts: ProposeOptions, kind: ForumPostKind) -> anyhow::Result<()> {
+    /// Submits a proposal (maybe in dry-run mode) without requiring any confirmation from the user.
+    pub async fn propose_without_confirmation(&self, cmd: ProposeCommand, opts: ProposeOptions, kind: ForumPostKind) -> anyhow::Result<()> {
         self.propose(cmd, opts, kind, true).await
     }
 }

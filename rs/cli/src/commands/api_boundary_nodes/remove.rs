@@ -28,7 +28,7 @@ impl ExecutableCommand for Remove {
 
     async fn execute(&self, ctx: crate::ctx::DreContext) -> anyhow::Result<()> {
         forum_enabled_proposer(&self.forum_parameters, &ctx, ctx.ic_admin().await?)
-            .propose_run(
+            .propose_with_possible_confirmation(
                 ic_admin::ProposeCommand::RemoveApiBoundaryNodes { nodes: self.nodes.to_vec() },
                 ic_admin::ProposeOptions {
                     title: Some(format!("Remove {} API boundary node(s)", self.nodes.len())),

@@ -157,7 +157,7 @@ impl ExecutableCommand for UpdateAuthorizedSubnets {
         };
 
         forum_enabled_proposer(&self.forum_parameters, &ctx, ic_admin)
-            .propose_run(cmd, opts, ForumPostKind::AuthorizedSubnetsUpdate { body: summary })
+            .propose_with_possible_confirmation(cmd, opts, ForumPostKind::AuthorizedSubnetsUpdate { body: summary })
             .await
     }
 }

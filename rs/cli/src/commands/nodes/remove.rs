@@ -50,7 +50,7 @@ impl ExecutableCommand for Remove {
             })
             .await?;
         forum_enabled_proposer(&self.forum_parameters, &ctx, ctx.ic_admin().await?)
-            .propose_run(runner_proposal.cmd, runner_proposal.opts, ForumPostKind::Generic)
+            .propose_with_possible_confirmation(runner_proposal.cmd, runner_proposal.opts, ForumPostKind::Generic)
             .await
     }
 

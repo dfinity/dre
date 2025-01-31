@@ -202,7 +202,7 @@ impl Firewall {
         };
 
         forum_enabled_proposer(forum_parameters, ctx, admin)
-            .propose_run(cmd, propose_options.clone(), ForumPostKind::Generic)
+            .propose_with_possible_confirmation(cmd, propose_options.clone(), ForumPostKind::Generic)
             .await
     }
 }

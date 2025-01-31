@@ -103,7 +103,7 @@ impl ExecutableCommand for Replace {
         match subnet_id {
             Some(id) => {
                 proxy
-                    .propose_submit(
+                    .propose_without_confirmation(
                         runner_proposal.cmd,
                         runner_proposal.opts.clone(),
                         ForumPostKind::ReplaceNodes {
@@ -120,7 +120,7 @@ impl ExecutableCommand for Replace {
             }
             None => {
                 proxy
-                    .propose_submit(runner_proposal.cmd, runner_proposal.opts, ForumPostKind::Generic)
+                    .propose_without_confirmation(runner_proposal.cmd, runner_proposal.opts, ForumPostKind::Generic)
                     .await
             }
         }

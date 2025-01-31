@@ -28,7 +28,7 @@ impl ExecutableCommand for Rollout {
     async fn execute(&self, ctx: crate::ctx::DreContext) -> anyhow::Result<()> {
         let runner_proposal = ctx.runner().await?.hostos_rollout(self.nodes.clone(), &self.version, None, None)?;
         forum_enabled_proposer(&self.forum_parameters, &ctx, ctx.ic_admin().await?)
-            .propose_run(runner_proposal.cmd, runner_proposal.opts, ForumPostKind::Generic)
+            .propose_with_possible_confirmation(runner_proposal.cmd, runner_proposal.opts, ForumPostKind::Generic)
             .await
     }
 

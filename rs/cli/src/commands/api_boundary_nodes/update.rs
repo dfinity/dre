@@ -31,7 +31,7 @@ impl ExecutableCommand for Update {
 
     async fn execute(&self, ctx: crate::ctx::DreContext) -> anyhow::Result<()> {
         forum_enabled_proposer(&self.forum_parameters, &ctx, ctx.ic_admin().await?)
-            .propose_run(
+            .propose_with_possible_confirmation(
                 ic_admin::ProposeCommand::DeployGuestosToSomeApiBoundaryNodes {
                     nodes: self.nodes.to_vec(),
                     version: self.version.to_string(),
