@@ -156,13 +156,8 @@ impl ExecutableCommand for UpdateAuthorizedSubnets {
             forum_post_link: Some("[comment]: <> (Link will be added on actual execution)".to_string()),
         };
 
-        // Reviewers / @nikola: why do we do this here?  Everywhere else we just propose_run.
-        if !ic_admin.propose_print_and_confirm(cmd.clone(), opts.clone()).await? {
-            return Ok(());
-        }
-
         forum_enabled_proposer(&self.forum_parameters, &ctx, ic_admin)
-            .propose_submit(cmd, opts, ForumPostKind::AuthorizedSubnetsUpdate { body: summary })
+            .propose_run(cmd, opts, ForumPostKind::AuthorizedSubnetsUpdate { body: summary })
             .await
     }
 }
