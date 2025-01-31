@@ -37,8 +37,12 @@ impl FromStr for ForumPostLinkVariant {
 
 #[derive(ClapArgs, Debug, Clone)]
 pub struct ForumParameters {
-    /// Link to the related forum post, where proposal details can be discussed, or "discourse", or "ask"; the magic value "discourse" causes a forum post to be created on Discourse automatically in some cases, or may ask you to create a post yourself on Discourse, and will update the post after the proposal, but it requires the Discourse API key and user parameters to be specified; the magic value "ask" (the default) causes DRE to interactively prompt you for a forum post link, which will not be updated; the magic value "omit" causes DRE to omit any forum post link
-    #[clap(long, env = "FORUM_POST_LINK", help_heading = "Proposal URL parameters", visible_aliases = &["forum-link", "forum", "proposal-url"], default_value = "ask", value_parser = clap::value_parser!(ForumPostLinkVariant))]
+    #[clap(long, env = "FORUM_POST_LINK", help_heading = "Proposal URL parameters", visible_aliases = &["forum-link", "forum", "proposal-url"], default_value = "ask", value_parser = clap::value_parser!(ForumPostLinkVariant), help = r#"Forum link post
+Options:
+    * the word 'discourse', to use the embedded Discourse client (see Discourse forum interaction parameters) to auto create a post or a topic, and update the forum post after proposal submission
+    * a plain URL or the word 'ask' to prompt you for a link; note that the IC will reject links not under forum.dfinity.org, and you are on the hook for updating the URL to reflect any proposal submission
+    * the word 'omit' to omit the link
+"#)]
     pub forum_post_link: ForumPostLinkVariant,
 
     /// Api key used to interact with the forum
