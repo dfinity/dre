@@ -31,6 +31,8 @@ pub trait IcAdmin: Send + Sync + Debug {
     /// confirmation if not automatically confirmed.
     fn propose_print_and_confirm(&self, cmd: ProposeCommand, opts: ProposeOptions) -> BoxFuture<'_, anyhow::Result<bool>>;
 
+    fn proceed_without_confirmation(&self) -> bool;
+
     /// Runs the ic-admin with specified args.
     fn propose_submit(&self, cmd: ProposeCommand, opts: ProposeOptions) -> BoxFuture<'_, anyhow::Result<String>>;
 
@@ -55,6 +57,10 @@ pub struct IcAdminImpl {
 impl IcAdmin for IcAdminImpl {
     fn ic_admin_path(&self) -> Option<String> {
         self.ic_admin_bin_path.clone()
+    }
+
+    fn proceed_without_confirmation(&self) -> bool {
+        self.proceed_without_confirmation
     }
 
     fn propose_run(&self, cmd: ProposeCommand, opts: ProposeOptions) -> BoxFuture<'_, anyhow::Result<String>> {

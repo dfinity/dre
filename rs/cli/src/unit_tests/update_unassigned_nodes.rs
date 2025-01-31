@@ -124,8 +124,13 @@ async fn should_update_unassigned_nodes() {
         .returning(|| Box::pin(async { Ok(Arc::new("other".to_string())) }));
 
     // Should be called since versions differ
+    ic_admin.expect_proceed_without_confirmation().returning(|| false);
     ic_admin
-        .expect_propose_run()
+        .expect_propose_print_and_confirm()
+        .once()
+        .returning(|_, _| Box::pin(async { Ok(true) }));
+    ic_admin
+        .expect_propose_submit()
         .once()
         .returning(|_, _| Box::pin(async { Ok("Proposal 1".to_string()) }));
 

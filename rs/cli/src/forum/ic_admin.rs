@@ -11,20 +11,22 @@ use crate::{
 pub struct IcAdminProxy {
     ic_admin: Arc<dyn IcAdmin>,
     simulate: bool,
+    proceed_without_confirmation: bool,
     forum_parameters: ForumParameters,
 }
 
 pub fn forum_enabled_proposer(forum_parameters: &ForumParameters, ctx: &DreContext, ic_admin: Arc<dyn IcAdmin>) -> IcAdminProxy {
     IcAdminProxy {
-        ic_admin,
+        ic_admin: ic_admin.clone(),
         simulate: ctx.is_dry_run() || ctx.is_offline(),
+        proceed_without_confirmation: ic_admin.proceed_without_confirmation(),
         forum_parameters: forum_parameters.clone(),
     }
 }
 
 impl IcAdminProxy {
-    async fn propose_or_submit(&self, cmd: ProposeCommand, opts: ProposeOptions, kind: ForumPostKind, directly_submit: bool) -> anyhow::Result<()> {
-        if !directly_submit
+    async fn propose(&self, cmd: ProposeCommand, opts: ProposeOptions, kind: ForumPostKind, skip_confirmation: bool) -> anyhow::Result<()> {
+        if !skip_confirmation
             && !self
                 .ic_admin
                 .propose_print_and_confirm(
@@ -76,10 +78,10 @@ impl IcAdminProxy {
         }
     }
     pub async fn propose_run(&self, cmd: ProposeCommand, opts: ProposeOptions, kind: ForumPostKind) -> anyhow::Result<()> {
-        self.propose_or_submit(cmd, opts, kind, false).await
+        self.propose(cmd, opts, kind, self.proceed_without_confirmation).await
     }
 
     pub async fn propose_submit(&self, cmd: ProposeCommand, opts: ProposeOptions, kind: ForumPostKind) -> anyhow::Result<()> {
-        self.propose_or_submit(cmd, opts, kind, true).await
+        self.propose(cmd, opts, kind, true).await
     }
 }
