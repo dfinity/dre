@@ -15,15 +15,15 @@ use serde::{de::DeserializeOwned, Deserialize};
 use serde_json::json;
 use url::Url;
 
-use super::{ForumClient, ForumParameters, ForumPost, ForumPostKind};
+use super::{ForumParameters, ForumPost, ForumPostHandler, ForumPostKind};
 
 /// Type of "forum post client" for user-supplied links.
-pub(crate) struct OptionalLinkClient {
+pub(crate) struct UserSuppliedLink {
     pub(crate) url: Option<url::Url>,
 }
 
 /// This forum post type does not create or update anything.
-impl ForumClient for OptionalLinkClient {
+impl ForumPostHandler for UserSuppliedLink {
     fn forum_post(&self, _kind: ForumPostKind) -> BoxFuture<'_, anyhow::Result<Box<dyn ForumPost>>> {
         FutureExt::boxed(async { Ok(Box::new(OptionalFixedLink { url: self.url.clone() }) as Box<dyn ForumPost>) })
     }
@@ -51,9 +51,9 @@ impl ForumPost for OptionalFixedLink {
 }
 
 /// A "forum post client" that just interactively prompts the user for a link.
-pub(crate) struct PromptClient {}
+pub(crate) struct Prompter {}
 
-impl PromptClient {
+impl Prompter {
     fn get_url_from_user(&self) -> BoxFuture<'_, anyhow::Result<Box<dyn ForumPost>>> {
         FutureExt::boxed(async {
             let forum_post_link = dialoguer::Input::<String>::new()
@@ -68,21 +68,21 @@ impl PromptClient {
 }
 
 /// This forum post type does not update anything because the user interactively supplied a link.
-impl ForumClient for PromptClient {
+impl ForumPostHandler for Prompter {
     fn forum_post(&self, _kind: ForumPostKind) -> BoxFuture<'_, anyhow::Result<Box<dyn ForumPost>>> {
         self.get_url_from_user()
     }
 }
 
 /// Type of forum post client that manages the creation and update of forum posts on Discourse.
-pub(crate) struct DiscourseClient {
+pub(crate) struct Discourse {
     client: DiscourseClientImp,
     simulate: bool,
     skip_forum_post_creation: bool,
     subnet_topic_file_override: Option<PathBuf>,
 }
 
-impl DiscourseClient {
+impl Discourse {
     pub(crate) fn new(forum_opts: ForumParameters, simulate: bool) -> anyhow::Result<Self> {
         // FIXME: move me to the DiscourseClientImp struct.
         let placeholder_key = "placeholder_key".to_string();
@@ -117,9 +117,86 @@ impl DiscourseClient {
             subnet_topic_file_override: forum_opts.discourse_subnet_topic_override_file_path.clone(),
         })
     }
+
+    async fn request_from_user_topic_or_post(&self) -> anyhow::Result<DiscourseResponse> {
+        // FIXME: this should move to caller.
+        let forum_post_link = dialoguer::Input::<String>::new()
+            .with_prompt("Forum post link")
+            .allow_empty(false)
+            .interact()?;
+
+        let (update_id, is_topic) = self.get_post_update_id_from_url(forum_post_link.as_str()).await?;
+        Ok(DiscourseResponse {
+            url: forum_post_link,
+            update_id,
+            is_topic,
+        })
+    }
+
+    async fn get_post_update_id_from_url(&self, url: &str) -> anyhow::Result<(u64, bool)> {
+        let topic_and_post_number_re = regex::Regex::new("/([0-9])+/([0-9])+(/|)$").unwrap();
+        let topic_re = regex::Regex::new("/([0-9])+(/|)$").unwrap();
+
+        let (topic_id, post_number, is_topic) = if let Some(captures) = topic_and_post_number_re.captures(url) {
+            (
+                u64::from_str(captures.get(1).unwrap().as_str()).unwrap(),
+                u64::from_str(captures.get(2).unwrap().as_str()).unwrap(),
+                false,
+            )
+        } else if let Some(captures) = topic_re.captures(url) {
+            (u64::from_str(captures.get(1).unwrap().as_str()).unwrap(), 1, true)
+        } else {
+            return Err(anyhow::anyhow!(
+                "The provided URL does not have any topic or post ID this tool can use to locate the post for later editing.",
+            ));
+        };
+        Ok((self.client.get_post_id_for_topic_and_post_number(topic_id, post_number).await?, is_topic))
+    }
+
+    async fn request_from_user_topic(&self, err: Option<anyhow::Error>, topic: DiscourseTopic) -> anyhow::Result<DiscourseResponse> {
+        // FIXME: this should move to caller.
+        if let Some(e) = err {
+            warn!("While creating a new topic, Discourse returned an error: {:?}", e);
+        }
+        let url = self.client.format_url_for_automatic_topic_creation(topic)?;
+
+        warn!("Please create a topic on the following link: {}", url);
+
+        let forum_post_link = dialoguer::Input::<String>::new()
+            .with_prompt("Forum post link")
+            .allow_empty(false)
+            .interact()?;
+
+        let (update_id, is_topic) = self.get_post_update_id_from_url(forum_post_link.as_str()).await?;
+        Ok(DiscourseResponse {
+            url: forum_post_link,
+            update_id,
+            is_topic,
+        })
+    }
+
+    async fn request_from_user_post(&self, err: Option<anyhow::Error>, body: String, topic_url: String) -> anyhow::Result<DiscourseResponse> {
+        // FIXME: this should move to caller.
+        if let Some(e) = err {
+            warn!("While creating a new post in topic {}, Discourse returned an error: {:?}", topic_url, e);
+        }
+        warn!("Please create a post in topic {} with the following content", topic_url);
+        println!("{}", body);
+        let forum_post_link = dialoguer::Input::<String>::new()
+            .with_prompt("Forum post link")
+            .allow_empty(false)
+            .interact()?;
+
+        let (update_id, is_topic) = self.get_post_update_id_from_url(forum_post_link.as_str()).await?;
+        Ok(DiscourseResponse {
+            url: forum_post_link,
+            update_id,
+            is_topic,
+        })
+    }
 }
 
-impl ForumClient for DiscourseClient {
+impl ForumPostHandler for Discourse {
     fn forum_post(&self, kind: ForumPostKind) -> BoxFuture<'_, anyhow::Result<Box<dyn ForumPost>>> {
         if self.simulate {
             info!("Not creating any forum post because simulation was requested (perhaps offline or dry-run mode)");
@@ -141,7 +218,7 @@ impl ForumClient for DiscourseClient {
                     put_original_post_behind_details_discloser: false,
                 }),
                 Err(e) => {
-                    let poast = client.request_from_user_topic(Some(e), topic).await?;
+                    let poast = self.request_from_user_topic(Some(e), topic).await?;
                     Ok(DiscoursePost {
                         client,
                         post_url: url::Url::from_str(poast.url.as_str())?,
@@ -155,7 +232,7 @@ impl ForumClient for DiscourseClient {
             let res = match kind {
                 ForumPostKind::Generic => {
                     warn!("Discourse does not support creating forum posts for this kind of proposal.  Please create a post yourself and supply the link for it to be updated afterwards.");
-                    let poast = client.request_from_user_topic_or_post().await?;
+                    let poast = self.request_from_user_topic_or_post().await?;
                     Ok(DiscoursePost {
                         client,
                         post_url: url::Url::from_str(poast.url.as_str())?,
@@ -190,7 +267,7 @@ impl ForumClient for DiscourseClient {
                             put_original_post_behind_details_discloser: !poast.is_topic,
                         }),
                         Err(e) => {
-                            let poast = client
+                            let poast = self
                                 .request_from_user_post(Some(e), body, self.client.format_topic_url(&topic_info.slug, topic_info.topic_id))
                                 .await?;
                             Ok(DiscoursePost {
@@ -528,83 +605,6 @@ impl DiscourseClientImp {
             .append_pair("category", &topic.category)
             .append_pair("tags", &topic.tags.join(","));
         Ok(url)
-    }
-
-    async fn get_post_update_id_from_url(&self, url: &str) -> anyhow::Result<(u64, bool)> {
-        let topic_and_post_number_re = regex::Regex::new("/([0-9])+/([0-9])+(/|)$").unwrap();
-        let topic_re = regex::Regex::new("/([0-9])+(/|)$").unwrap();
-
-        let (topic_id, post_number, is_topic) = if let Some(captures) = topic_and_post_number_re.captures(url) {
-            (
-                u64::from_str(captures.get(1).unwrap().as_str()).unwrap(),
-                u64::from_str(captures.get(2).unwrap().as_str()).unwrap(),
-                false,
-            )
-        } else if let Some(captures) = topic_re.captures(url) {
-            (u64::from_str(captures.get(1).unwrap().as_str()).unwrap(), 1, true)
-        } else {
-            return Err(anyhow::anyhow!(
-                "The provided URL does not have any topic or post ID this tool can use to locate the post for later editing.",
-            ));
-        };
-        Ok((self.get_post_id_for_topic_and_post_number(topic_id, post_number).await?, is_topic))
-    }
-
-    async fn request_from_user_topic_or_post(&self) -> anyhow::Result<DiscourseResponse> {
-        // FIXME: this should move to caller.
-        let forum_post_link = dialoguer::Input::<String>::new()
-            .with_prompt("Forum post link")
-            .allow_empty(false)
-            .interact()?;
-
-        let (update_id, is_topic) = self.get_post_update_id_from_url(forum_post_link.as_str()).await?;
-        Ok(DiscourseResponse {
-            url: forum_post_link,
-            update_id,
-            is_topic,
-        })
-    }
-
-    async fn request_from_user_topic(&self, err: Option<anyhow::Error>, topic: DiscourseTopic) -> anyhow::Result<DiscourseResponse> {
-        // FIXME: this should move to caller.
-        if let Some(e) = err {
-            warn!("While creating a new topic, Discourse returned an error: {:?}", e);
-        }
-        let url = self.format_url_for_automatic_topic_creation(topic)?;
-
-        warn!("Please create a topic on the following link: {}", url);
-
-        let forum_post_link = dialoguer::Input::<String>::new()
-            .with_prompt("Forum post link")
-            .allow_empty(false)
-            .interact()?;
-
-        let (update_id, is_topic) = self.get_post_update_id_from_url(forum_post_link.as_str()).await?;
-        Ok(DiscourseResponse {
-            url: forum_post_link,
-            update_id,
-            is_topic,
-        })
-    }
-
-    async fn request_from_user_post(&self, err: Option<anyhow::Error>, body: String, topic_url: String) -> anyhow::Result<DiscourseResponse> {
-        // FIXME: this should move to caller.
-        if let Some(e) = err {
-            warn!("While creating a new post in topic {}, Discourse returned an error: {:?}", topic_url, e);
-        }
-        warn!("Please create a post in topic {} with the following content", topic_url);
-        println!("{}", body);
-        let forum_post_link = dialoguer::Input::<String>::new()
-            .with_prompt("Forum post link")
-            .allow_empty(false)
-            .interact()?;
-
-        let (update_id, is_topic) = self.get_post_update_id_from_url(forum_post_link.as_str()).await?;
-        Ok(DiscourseResponse {
-            url: forum_post_link,
-            update_id,
-            is_topic,
-        })
     }
 }
 

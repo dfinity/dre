@@ -102,7 +102,7 @@ pub enum ForumPostKind {
 }
 
 #[automock]
-pub trait ForumClient: Sync + Send {
+pub trait ForumPostHandler: Sync + Send {
     #[must_use = "You must not forget to update the proposal URL using the forum post this returns"]
     fn forum_post(&self, kind: ForumPostKind) -> BoxFuture<'_, anyhow::Result<Box<dyn ForumPost>>>;
 }
@@ -123,7 +123,7 @@ impl dyn ForumPost {
     }
 }
 
-pub fn client(forum_parameters: &ForumParameters, ctx: &DreContext) -> anyhow::Result<Box<dyn ForumClient>> {
+pub fn handler(forum_parameters: &ForumParameters, ctx: &DreContext) -> anyhow::Result<Box<dyn ForumPostHandler>> {
     ForumContext::from_opts(forum_parameters, ctx.is_dry_run() || ctx.is_offline()).client()
 }
 
@@ -143,13 +143,13 @@ impl ForumContext {
         Self::new(simulate, opts.clone())
     }
 
-    pub fn client(&self) -> anyhow::Result<Box<dyn ForumClient>> {
+    pub fn client(&self) -> anyhow::Result<Box<dyn ForumPostHandler>> {
         match &self.forum_opts.forum_post_link {
-            ForumPostLinkVariant::Url(u) => Ok(Box::new(impls::OptionalLinkClient { url: Some(u.clone()) }) as Box<dyn ForumClient>),
-            ForumPostLinkVariant::Omit => Ok(Box::new(impls::OptionalLinkClient { url: None }) as Box<dyn ForumClient>),
-            ForumPostLinkVariant::Ask => Ok(Box::new(impls::PromptClient {}) as Box<dyn ForumClient>),
+            ForumPostLinkVariant::Url(u) => Ok(Box::new(impls::UserSuppliedLink { url: Some(u.clone()) }) as Box<dyn ForumPostHandler>),
+            ForumPostLinkVariant::Omit => Ok(Box::new(impls::UserSuppliedLink { url: None }) as Box<dyn ForumPostHandler>),
+            ForumPostLinkVariant::Ask => Ok(Box::new(impls::Prompter {}) as Box<dyn ForumPostHandler>),
             ForumPostLinkVariant::ManageOnDiscourse => {
-                Ok(Box::new(impls::DiscourseClient::new(self.forum_opts.clone(), self.simulate)?) as Box<dyn ForumClient>)
+                Ok(Box::new(impls::Discourse::new(self.forum_opts.clone(), self.simulate)?) as Box<dyn ForumPostHandler>)
             }
         }
     }

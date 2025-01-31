@@ -184,7 +184,7 @@ impl ExecutableCommand for Network {
         }
 
         let ic_admin = ctx.ic_admin().await?;
-        let forum_client = crate::forum::client(&self.forum_parameters, &ctx)?;
+        let forum_client = crate::forum::handler(&self.forum_parameters, &ctx)?;
         let is_fake_neuron = ctx.neuron().await?.is_fake_neuron();
 
         for proposal in proposals {
@@ -248,7 +248,7 @@ fn format_error((i, detailed_error): (usize, &DetailedError)) -> String {
 
 async fn process_proposal(
     ic_admin: &dyn crate::ic_admin::IcAdmin,
-    forum_client: &dyn crate::forum::ForumClient,
+    forum_client: &dyn crate::forum::ForumPostHandler,
     proposal: &RunnerProposal,
     subnet_id: &PrincipalId,
     is_fake_neuron: bool,

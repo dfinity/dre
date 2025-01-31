@@ -108,7 +108,7 @@ impl ExecutableCommand for Motion {
         let (neuron, client) = ctx.create_ic_agent_canister_client().await?;
         let governance = GovernanceCanisterWrapper::from(client);
 
-        let forum_post = crate::forum::client(&self.parameters.forum_parameters, &ctx)?
+        let forum_post = crate::forum::handler(&self.parameters.forum_parameters, &ctx)?
             .forum_post(crate::forum::ForumPostKind::Motion {
                 title: title.clone(),
                 summary: summary.clone(),
