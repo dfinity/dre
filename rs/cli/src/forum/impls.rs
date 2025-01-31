@@ -267,7 +267,14 @@ impl ForumPost for DiscoursePost {
                     proposal_id, orig_content
                 )
             };
-            self.client.update_post_content(self.post_id, new_content).await
+
+            let res = self.client.update_post_content(self.post_id, new_content).await;
+
+            if let Err(e) = res {
+                warn!("While updating forum post #{}, Discourse returned an error: {:?}", self.post_id, e);
+                warn!("Please update the forum post manually to reference proposal {}.", proposal_id);
+            }
+            Ok(())
         })
     }
 }
@@ -544,6 +551,7 @@ impl DiscourseClientImp {
     }
 
     async fn request_from_user_topic_or_post(&self) -> anyhow::Result<DiscourseResponse> {
+        // FIXME: this should move to caller.
         let forum_post_link = dialoguer::Input::<String>::new()
             .with_prompt("Forum post link")
             .allow_empty(false)
@@ -558,6 +566,7 @@ impl DiscourseClientImp {
     }
 
     async fn request_from_user_topic(&self, err: Option<anyhow::Error>, topic: DiscourseTopic) -> anyhow::Result<DiscourseResponse> {
+        // FIXME: this should move to caller.
         if let Some(e) = err {
             warn!("While creating a new topic, Discourse returned an error: {:?}", e);
         }
@@ -579,6 +588,7 @@ impl DiscourseClientImp {
     }
 
     async fn request_from_user_post(&self, err: Option<anyhow::Error>, body: String, topic_url: String) -> anyhow::Result<DiscourseResponse> {
+        // FIXME: this should move to caller.
         if let Some(e) = err {
             warn!("While creating a new post in topic {}, Discourse returned an error: {:?}", topic_url, e);
         }
