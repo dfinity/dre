@@ -17,12 +17,8 @@ use crate::{
     runner::{format_regular_version_upgrade_summary, format_security_hotfix},
 };
 
-fn mock_forum_parameters() -> ForumParameters {
-    ForumParameters::disable_forum()
-}
-
 fn fake_forum_parameters() -> ForumParameters {
-    let mut parms = mock_forum_parameters();
+    let mut parms = ForumParameters::disable_forum();
     parms.forum_post_link = ForumPostLinkVariant::Url(url::Url::parse("https://forum.dfinity.org/t/123").unwrap());
     parms
 }
@@ -138,14 +134,8 @@ async fn guest_os_elect_version_tests() {
         assert!(opts.title.as_ref().unwrap().starts_with(expected_title));
         assert_eq!(
             match cmd.security_fix {
-                true => format_security_hotfix("https://forum.dfinity.org/t/123".to_string()),
-                false => format_regular_version_upgrade_summary(
-                    &cmd.version,
-                    &Artifact::GuestOs,
-                    &cmd.release_tag,
-                    "https://forum.dfinity.org/t/123".to_string()
-                )
-                .unwrap(),
+                true => format_security_hotfix(),
+                false => format_regular_version_upgrade_summary(&cmd.version, &Artifact::GuestOs, &cmd.release_tag,).unwrap(),
             },
             *opts.summary.as_ref().unwrap(),
         );

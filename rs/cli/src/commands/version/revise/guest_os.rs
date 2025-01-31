@@ -41,7 +41,6 @@ impl ExecutableCommand for GuestOs {
                 &self.version,
                 &self.release_tag,
                 self.ignore_missing_urls,
-                "overridden below".to_string(), // checked in validate()
                 self.security_fix,
             )
             .await?;
