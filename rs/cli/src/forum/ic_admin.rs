@@ -23,17 +23,18 @@ pub fn forum_enabled_proposer(forum_parameters: &ForumParameters, ctx: &DreConte
 }
 
 impl IcAdminProxy {
-    async fn propose(&self, cmd: ProposeCommand, opts: ProposeOptions, kind: ForumPostKind) -> anyhow::Result<()> {
-        if !self
-            .ic_admin
-            .propose_print_and_confirm(
-                cmd.clone(),
-                ProposeOptions {
-                    forum_post_link: Some("<forum post URL will be supplied once you confirm>".into()),
-                    ..opts.clone()
-                },
-            )
-            .await?
+    async fn propose(&self, cmd: ProposeCommand, opts: ProposeOptions, kind: ForumPostKind, skip_confirmation: bool) -> anyhow::Result<()> {
+        if !skip_confirmation
+            && !self
+                .ic_admin
+                .propose_print_and_confirm(
+                    cmd.clone(),
+                    ProposeOptions {
+                        forum_post_link: Some("<forum post URL will be supplied once you confirm>".into()),
+                        ..opts.clone()
+                    },
+                )
+                .await?
         {
             return Ok(());
         };
@@ -75,10 +76,10 @@ impl IcAdminProxy {
         }
     }
     pub async fn propose_run(&self, cmd: ProposeCommand, opts: ProposeOptions, kind: ForumPostKind) -> anyhow::Result<()> {
-        self.propose(cmd, opts, kind).await
+        self.propose(cmd, opts, kind, false).await
     }
 
     pub async fn propose_submit(&self, cmd: ProposeCommand, opts: ProposeOptions, kind: ForumPostKind) -> anyhow::Result<()> {
-        self.propose(cmd, opts, kind).await
+        self.propose(cmd, opts, kind, true).await
     }
 }
