@@ -3,7 +3,10 @@ use clap::{error::ErrorKind, Args};
 use ic_management_types::requests::SubnetCreateRequest;
 use ic_types::PrincipalId;
 
-use crate::commands::{AuthRequirement, ExecutableCommand};
+use crate::{
+    commands::{AuthRequirement, ExecutableCommand},
+    forum::{ic_admin::forum_enabled_proposer, ForumParameters, ForumPostKind},
+};
 
 #[derive(Args, Debug)]
 pub struct Create {
@@ -38,6 +41,9 @@ regardless of the decentralization coefficients"#)]
     /// Provide the list of all arguments that ic-admin accepts for subnet creation
     #[clap(long)]
     pub help_other_args: bool,
+
+    #[clap(flatten)]
+    pub forum_parameters: ForumParameters,
 }
 
 impl ExecutableCommand for Create {
@@ -46,7 +52,6 @@ impl ExecutableCommand for Create {
     }
 
     async fn execute(&self, ctx: crate::ctx::DreContext) -> anyhow::Result<()> {
-        let runner = ctx.runner().await?;
         let motivation = match &self.motivation {
             Some(m) => m,
             None if self.help_other_args => &"help for options".to_string(),
@@ -60,7 +65,9 @@ impl ExecutableCommand for Create {
             return Ok(());
         }
 
-        if let Some(runner_proposal) = runner
+        let runner_proposal = match ctx
+            .runner()
+            .await?
             .subnet_create(
                 SubnetCreateRequest {
                     size: self.size,
@@ -69,16 +76,18 @@ impl ExecutableCommand for Create {
                     include: self.include.clone().into(),
                 },
                 motivation.to_string(),
-                ctx.forum_post_link(),
+                None,
                 self.replica_version.clone(),
                 self.other_args.to_owned(),
             )
             .await?
         {
-            let ic_admin = ctx.ic_admin().await?;
-            ic_admin.propose_run(runner_proposal.cmd, runner_proposal.opts).await?;
-        }
-        Ok(())
+            Some(runner_proposal) => runner_proposal,
+            None => return Ok(()),
+        };
+        forum_enabled_proposer(&self.forum_parameters, &ctx, ctx.ic_admin().await?)
+            .propose_with_possible_confirmation(runner_proposal.cmd, runner_proposal.opts, ForumPostKind::Generic) // FIXME why pass these two separately?  It's absurd.  Just pass the fuckin struct.
+            .await
     }
 
     fn validate(&self, _args: &crate::commands::Args, cmd: &mut clap::Command) {

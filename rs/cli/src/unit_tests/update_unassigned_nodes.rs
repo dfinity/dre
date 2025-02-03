@@ -4,7 +4,7 @@ use crate::artifact_downloader::MockArtifactDownloader;
 use crate::auth::Neuron;
 use crate::commands::{update_unassigned_nodes::UpdateUnassignedNodes, ExecutableCommand};
 use crate::cordoned_feature_fetcher::MockCordonedFeatureFetcher;
-use crate::discourse_client::MockDiscourseClient;
+use crate::forum::ForumParameters;
 use crate::ic_admin::MockIcAdmin;
 use ic_management_backend::health::MockHealthStatusQuerier;
 use ic_management_backend::{lazy_git::MockLazyGit, lazy_registry::MockLazyRegistry, proposal::MockProposalAgent};
@@ -24,6 +24,10 @@ fn registry_with_subnets(subnets: Vec<Subnet>) -> MockLazyRegistry {
     });
 
     registry
+}
+
+fn mock_forum_parameters() -> ForumParameters {
+    ForumParameters::disable_forum()
 }
 
 #[tokio::test]
@@ -54,10 +58,12 @@ async fn should_skip_update_same_version_nns_not_provided() {
         Arc::new(MockArtifactDownloader::new()),
         Arc::new(MockCordonedFeatureFetcher::new()),
         Arc::new(MockHealthStatusQuerier::new()),
-        Arc::new(MockDiscourseClient::new()),
     );
 
-    let cmd = UpdateUnassignedNodes { nns_subnet_id: None };
+    let cmd = UpdateUnassignedNodes {
+        nns_subnet_id: None,
+        forum_parameters: mock_forum_parameters(),
+    };
     let response = cmd.execute(ctx).await;
     assert!(response.is_ok(), "Respose was: {:?}", response)
 }
@@ -91,11 +97,11 @@ async fn should_skip_update_same_version_nns_provided() {
         Arc::new(MockArtifactDownloader::new()),
         Arc::new(MockCordonedFeatureFetcher::new()),
         Arc::new(MockHealthStatusQuerier::new()),
-        Arc::new(MockDiscourseClient::new()),
     );
 
     let cmd = UpdateUnassignedNodes {
         nns_subnet_id: Some(principal.to_string()),
+        forum_parameters: mock_forum_parameters(),
     };
 
     assert!(cmd.execute(ctx).await.is_ok())
@@ -119,7 +125,11 @@ async fn should_update_unassigned_nodes() {
 
     // Should be called since versions differ
     ic_admin
-        .expect_propose_run()
+        .expect_propose_print_and_confirm()
+        .once()
+        .returning(|_, _| Box::pin(async { Ok(true) }));
+    ic_admin
+        .expect_propose_submit()
         .once()
         .returning(|_, _| Box::pin(async { Ok("Proposal 1".to_string()) }));
 
@@ -133,11 +143,11 @@ async fn should_update_unassigned_nodes() {
         Arc::new(MockArtifactDownloader::new()),
         Arc::new(MockCordonedFeatureFetcher::new()),
         Arc::new(MockHealthStatusQuerier::new()),
-        Arc::new(MockDiscourseClient::new()),
     );
 
     let cmd = UpdateUnassignedNodes {
         nns_subnet_id: Some(principal.to_string()),
+        forum_parameters: mock_forum_parameters(),
     };
 
     assert!(cmd.execute(ctx).await.is_ok())
@@ -173,11 +183,11 @@ async fn should_fail_nns_not_found() {
         Arc::new(MockArtifactDownloader::new()),
         Arc::new(MockCordonedFeatureFetcher::new()),
         Arc::new(MockHealthStatusQuerier::new()),
-        Arc::new(MockDiscourseClient::new()),
     );
 
     let cmd = UpdateUnassignedNodes {
         nns_subnet_id: Some(other_principal.to_string()),
+        forum_parameters: mock_forum_parameters(),
     };
 
     assert!(cmd.execute(ctx).await.is_err())

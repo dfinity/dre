@@ -4,6 +4,8 @@ use clap::Args;
 use ic_canisters::registry::RegistryCanisterWrapper;
 use ic_types::PrincipalId;
 
+use crate::forum::{ic_admin::forum_enabled_proposer, ForumParameters, ForumPostKind};
+
 use super::{AuthRequirement, ExecutableCommand};
 
 #[derive(Args, Debug)]
@@ -11,6 +13,9 @@ pub struct UpdateUnassignedNodes {
     /// NNS subnet id
     #[clap(long)]
     pub nns_subnet_id: Option<String>,
+
+    #[clap(flatten)]
+    pub forum_parameters: ForumParameters,
 }
 
 impl ExecutableCommand for UpdateUnassignedNodes {
@@ -34,14 +39,17 @@ impl ExecutableCommand for UpdateUnassignedNodes {
         };
 
         let runner = ctx.runner().await?;
-        if let Some(runner_proposal) = runner
-            .update_unassigned_nodes(&PrincipalId::from_str(&nns_subnet_id)?, ctx.forum_post_link())
-            .await?
-        {
-            let ic_admin = ctx.ic_admin().await?;
-            ic_admin.propose_run(runner_proposal.cmd, runner_proposal.opts).await?;
-        }
-        Ok(())
+        // FIXME I think the solution to the mut runner_proposal thing
+        // is to create a different type (structural type) of proposal
+        // and change the type of the propose_run thing to require
+        // the URL via structural types.
+        let runner_proposal = match runner.update_unassigned_nodes(&PrincipalId::from_str(&nns_subnet_id)?, None).await? {
+            Some(runner_proposal) => runner_proposal,
+            None => return Ok(()),
+        };
+        forum_enabled_proposer(&self.forum_parameters, &ctx, ctx.ic_admin().await?)
+            .propose_with_possible_confirmation(runner_proposal.cmd, runner_proposal.opts, ForumPostKind::Generic)
+            .await
     }
 
     fn validate(&self, _args: &crate::commands::Args, _cmd: &mut clap::Command) {}

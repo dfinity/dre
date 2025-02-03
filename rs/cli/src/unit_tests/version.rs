@@ -1,4 +1,4 @@
-use crate::discourse_client::MockDiscourseClient;
+use crate::forum::{ForumParameters, ForumPostLinkVariant};
 use indexmap::IndexMap;
 use std::sync::{Arc, RwLock};
 
@@ -17,6 +17,12 @@ use crate::{
     runner::{format_regular_version_upgrade_summary, format_security_hotfix},
 };
 
+fn fake_forum_parameters() -> ForumParameters {
+    let mut parms = ForumParameters::disable_forum();
+    parms.forum_post_link = ForumPostLinkVariant::Url(url::Url::parse("https://forum.dfinity.org/t/123").unwrap());
+    parms
+}
+
 #[tokio::test]
 async fn guest_os_elect_version_tests() {
     let mut ic_admin = MockIcAdmin::new();
@@ -24,7 +30,8 @@ async fn guest_os_elect_version_tests() {
     let captured_opts: Arc<RwLock<Option<ProposeOptions>>> = Arc::new(RwLock::new(None));
     let captured_cmd_clone = captured_cmd.clone();
     let captured_opts_clone = captured_opts.clone();
-    ic_admin.expect_propose_run().returning(move |cmd, opts| {
+    ic_admin.expect_propose_print_and_confirm().returning(|_, _| Box::pin(async { Ok(true) }));
+    ic_admin.expect_propose_submit().returning(move |cmd, opts| {
         *captured_cmd_clone.write().unwrap() = Some(cmd.clone());
         *captured_opts_clone.write().unwrap() = Some(opts.clone());
         Box::pin(ok("Proposal 123".to_string()))
@@ -73,7 +80,6 @@ async fn guest_os_elect_version_tests() {
         Arc::new(artifact_downloader),
         Arc::new(MockCordonedFeatureFetcher::new()),
         Arc::new(MockHealthStatusQuerier::new()),
-        Arc::new(MockDiscourseClient::new()),
     );
 
     for (name, expected_title, cmd) in [
@@ -85,6 +91,7 @@ async fn guest_os_elect_version_tests() {
                 release_tag: Some("rel_tag".to_string()),
                 ignore_missing_urls: false,
                 security_fix: false,
+                forum_parameters: fake_forum_parameters(),
             },
         ),
         (
@@ -95,6 +102,7 @@ async fn guest_os_elect_version_tests() {
                 release_tag: Some("rel_tag".to_string()),
                 ignore_missing_urls: false,
                 security_fix: true,
+                forum_parameters: fake_forum_parameters(),
             },
         ),
     ] {
@@ -127,14 +135,8 @@ async fn guest_os_elect_version_tests() {
         assert!(opts.title.as_ref().unwrap().starts_with(expected_title));
         assert_eq!(
             match cmd.security_fix {
-                true => format_security_hotfix("https://forum.dfinity.org/t/123".to_string()),
-                false => format_regular_version_upgrade_summary(
-                    &cmd.version,
-                    &Artifact::GuestOs,
-                    &cmd.release_tag,
-                    "https://forum.dfinity.org/t/123".to_string()
-                )
-                .unwrap(),
+                true => format_security_hotfix(),
+                false => format_regular_version_upgrade_summary(&cmd.version, &Artifact::GuestOs, &cmd.release_tag,).unwrap(),
             },
             *opts.summary.as_ref().unwrap(),
         );

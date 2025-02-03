@@ -256,7 +256,6 @@ impl Runner {
         version: &str,
         release_tag: &Option<String>,
         ignore_missing_urls: bool,
-        forum_post_link: String,
         security_fix: bool,
     ) -> anyhow::Result<RunnerProposal> {
         let update_version = self
@@ -267,7 +266,6 @@ impl Runner {
                 ignore_missing_urls,
                 self.prepare_versions_to_retire(release_artifact, false).await.map(|r| r.1)?,
                 security_fix,
-                forum_post_link.clone(),
             )
             .await?;
 
@@ -280,7 +278,7 @@ impl Runner {
                 title: Some(update_version.title),
                 summary: Some(update_version.summary.clone()),
                 motivation: None,
-                forum_post_link: Some(forum_post_link),
+                forum_post_link: None,
             },
         })
     }
@@ -293,7 +291,6 @@ impl Runner {
         ignore_missing_urls: bool,
         retire_versions: Option<Vec<String>>,
         security_fix: bool,
-        forum_post_link: String,
     ) -> anyhow::Result<UpdateVersion> {
         let (update_urls, expected_hash) = self
             .artifact_downloader
@@ -301,8 +298,8 @@ impl Runner {
             .await?;
 
         let summary = match security_fix {
-            true => format_security_hotfix(forum_post_link),
-            false => format_regular_version_upgrade_summary(version, release_artifact, release_tag, forum_post_link)?,
+            true => format_security_hotfix(),
+            false => format_regular_version_upgrade_summary(version, release_artifact, release_tag)?,
         };
         if summary.contains("Remove this block of text from the proposal.") {
             Err(anyhow::anyhow!("The edited proposal text has not been edited to add release notes."))
@@ -1231,12 +1228,7 @@ impl UpdateVersion {
     }
 }
 
-pub fn format_regular_version_upgrade_summary(
-    version: &str,
-    release_artifact: &Artifact,
-    release_tag: &Option<String>,
-    forum_post_link: String,
-) -> anyhow::Result<String> {
+pub fn format_regular_version_upgrade_summary(version: &str, release_artifact: &Artifact, release_tag: &Option<String>) -> anyhow::Result<String> {
     let release_tag = match release_tag {
         Some(git_tag) => git_tag,
         None => return Err(anyhow::anyhow!("Release tag is required for non-security versions")),
@@ -1244,28 +1236,26 @@ pub fn format_regular_version_upgrade_summary(
     let template = format!(
         r#"Elect new {release_artifact} binary revision [{version}](https://github.com/dfinity/ic/tree/{release_tag})
 
-    # Release Notes:
+# Release Notes:
 
-    [comment]: <> Remove this block of text from the proposal.
-    [comment]: <> Then, add the {release_artifact} binary release notes as bullet points here.
-    [comment]: <> Any [commit ID] within square brackets will auto-link to the specific changeset.
+[comment]: <> Remove this block of text from the proposal.
+[comment]: <> Then, add the {release_artifact} binary release notes as bullet points here.
+[comment]: <> Any [commit ID] within square brackets will auto-link to the specific changeset.
 
-    # IC-OS Verification
+# IC-OS Verification
 
-    To build and verify the IC-OS disk image, run:
+To build and verify the IC-OS disk image, run:
 
-    ```
-    # From https://github.com/dfinity/ic#verifying-releases
-    sudo apt-get install -y curl && curl --proto '=https' --tlsv1.2 -sSLO https://raw.githubusercontent.com/dfinity/ic/{version}/ci/tools/repro-check.sh && chmod +x repro-check.sh && ./repro-check.sh -c {version} --guestos
-    ```
+```
+# From https://github.com/dfinity/ic#verifying-releases
+sudo apt-get install -y curl && curl --proto '=https' --tlsv1.2 -sSLO https://raw.githubusercontent.com/dfinity/ic/{version}/ci/tools/repro-check.sh && chmod +x repro-check.sh && ./repro-check.sh -c {version} --guestos
+```
 
-    The two SHA256 sums printed above from a) the downloaded CDN image and b) the locally built image,
-    must be identical, and must match the SHA256 from the payload of the NNS proposal.
+The two SHA256 sums printed above from a) the downloaded CDN image and b) the locally built image,
+must be identical, and must match the SHA256 from the payload of the NNS proposal.
 
-    While not required for this NNS proposal, as we are only electing a new GuestOS version here, you have the option to verify the build reproducibility of the HostOS by passing `--hostos` to the script above instead of `--guestos`, or the SetupOS by passing `--setupos`.
-
-    Forum post link: {forum_post_link}
-    "#
+While not required for this NNS proposal, as we are only electing a new GuestOS version here, you have the option to verify the build reproducibility of the HostOS by passing `--hostos` to the script above instead of `--guestos`, or the SetupOS by passing `--setupos`.
+"#
     );
 
     // Remove <!--...--> from the commit
@@ -1303,11 +1293,9 @@ pub fn format_regular_version_upgrade_summary(
     .join("\n"))
 }
 
-pub fn format_security_hotfix(forum_post_link: String) -> String {
-    format!(r#"In accordance with the Security Patch Policy and Procedure that was adopted in proposal [48792](https://dashboard.internetcomputer.org/proposal/48792), the source code that was used to build this release will be exposed at the latest 10 days after the fix is rolled out to all subnets.
+pub fn format_security_hotfix() -> String {
+    r#"In accordance with the Security Patch Policy and Procedure that was adopted in proposal [48792](https://dashboard.internetcomputer.org/proposal/48792), the source code that was used to build this release will be exposed at the latest 10 days after the fix is rolled out to all subnets.
 
-    The community will be able to retroactively verify the binaries that were rolled out.
-
-    Forum post link: {forum_post_link}
-"#).lines().map(|l| l.trim()).join("\n")
+The community will be able to retroactively verify the binaries that were rolled out.
+"#.lines().map(|l| l.trim()).join("\n")
 }

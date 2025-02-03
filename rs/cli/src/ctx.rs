@@ -13,9 +13,8 @@ use log::warn;
 use crate::{
     artifact_downloader::{ArtifactDownloader, ArtifactDownloaderImpl},
     auth::Neuron,
-    commands::{Args, AuthOpts, AuthRequirement, DiscourseOpts, ExecutableCommand, IcAdminVersion},
+    commands::{Args, AuthOpts, AuthRequirement, ExecutableCommand, IcAdminVersion},
     cordoned_feature_fetcher::CordonedFeatureFetcher,
-    discourse_client::{DiscourseClient, DiscourseClientImp},
     ic_admin::{IcAdmin, IcAdminImpl},
     runner::Runner,
     store::Store,
@@ -39,7 +38,6 @@ pub struct DreContext {
     ic_repo: RefCell<Option<Arc<dyn LazyGit>>>,
     proposal_agent: Arc<dyn ProposalAgent>,
     verbose_runner: bool,
-    forum_post_link: Option<String>,
     dry_run: bool,
     artifact_downloader: Arc<dyn ArtifactDownloader>,
     neuron: RefCell<Option<Neuron>>,
@@ -49,8 +47,6 @@ pub struct DreContext {
     cordoned_features_fetcher: Arc<dyn CordonedFeatureFetcher>,
     health_client: Arc<dyn HealthStatusQuerier>,
     store: Store,
-    discourse_opts: DiscourseOpts,
-    discourse_client: RefCell<Option<Arc<dyn DiscourseClient>>>,
 }
 
 #[allow(clippy::too_many_arguments)]
@@ -63,12 +59,10 @@ impl DreContext {
         yes: bool,
         dry_run: bool,
         auth_requirement: AuthRequirement,
-        forum_post_link: Option<String>,
         ic_admin_version: IcAdminVersion,
         cordoned_features_fetcher: Arc<dyn CordonedFeatureFetcher>,
         health_client: Arc<dyn HealthStatusQuerier>,
         store: Store,
-        discourse_opts: DiscourseOpts,
         neuron_override: Option<Neuron>,
     ) -> anyhow::Result<Self> {
         Ok(Self {
@@ -78,7 +72,6 @@ impl DreContext {
             ic_admin: RefCell::new(None),
             runner: RefCell::new(None),
             verbose_runner: verbose,
-            forum_post_link: forum_post_link.clone(),
             ic_repo: RefCell::new(None),
             dry_run,
             artifact_downloader: Arc::new(ArtifactDownloaderImpl {}) as Arc<dyn ArtifactDownloader>,
@@ -94,8 +87,6 @@ impl DreContext {
             cordoned_features_fetcher,
             health_client,
             store,
-            discourse_opts,
-            discourse_client: RefCell::new(None),
         })
     }
 
@@ -117,12 +108,10 @@ impl DreContext {
             args.yes,
             args.dry_run,
             args.subcommands.require_auth(),
-            args.forum_post_link.clone(),
             args.ic_admin_version.clone(),
             store.cordoned_features_fetcher(args.cordoned_features_file.clone())?,
             store.health_client(&network)?,
             store,
-            args.discourse_opts.clone(),
             args.neuron_override(),
         )
         .await
@@ -141,8 +130,13 @@ impl DreContext {
         &self.network
     }
 
+    #[must_use]
     pub fn is_dry_run(&self) -> bool {
         self.dry_run
+    }
+
+    pub fn is_offline(&self) -> bool {
+        self.store.is_offline()
     }
 
     /// Uses `ic_agent::Agent`
@@ -251,55 +245,8 @@ impl DreContext {
         Ok(runner)
     }
 
-    pub fn forum_post_link(&self) -> Option<String> {
-        self.forum_post_link.clone()
-    }
-
     pub fn health_client(&self) -> Arc<dyn HealthStatusQuerier> {
         self.health_client.clone()
-    }
-
-    pub fn discourse_client(&self) -> anyhow::Result<Arc<dyn DiscourseClient>> {
-        if let Some(client) = self.discourse_client.borrow().as_ref() {
-            return Ok(client.clone());
-        }
-
-        let placeholder_key = "placeholder_key".to_string();
-        let placeholder_user = "placeholder_user".to_string();
-        let placeholder_url = "https://placeholder_url.com".to_string();
-
-        let (api_key, api_user, forum_url) = match (
-            self.discourse_opts.discourse_api_key.clone(),
-            self.discourse_opts.discourse_api_user.clone(),
-            self.discourse_opts.discourse_api_url.clone(),
-        ) {
-            // Actual api won't be called so these values don't matter
-            _ if self.discourse_opts.discourse_skip_post_creation => (placeholder_key, placeholder_user, placeholder_url),
-            (api_key, api_user, forum_url) => (
-                api_key.unwrap_or_else(|| {
-                    warn!("Will use placeholder_key for discourse api key since it was not provided");
-                    placeholder_key
-                }),
-                api_user.unwrap_or_else(|| {
-                    warn!("Will use placeholder_user for discourse api user since it was not provided");
-                    placeholder_user
-                }),
-                forum_url,
-            ),
-        };
-
-        let client = Arc::new(DiscourseClientImp::new(
-            forum_url,
-            api_key,
-            api_user,
-            // `offline` for discourse client means that it shouldn't try and create posts.
-            // It can happen because the tool runs in offline mode, or if its a dry run.
-            self.store.is_offline() || self.dry_run,
-            self.discourse_opts.discourse_skip_post_creation,
-            self.discourse_opts.discourse_subnet_topic_override_file_path.clone(),
-        )?);
-        *self.discourse_client.borrow_mut() = Some(client.clone());
-        Ok(client)
     }
 }
 
@@ -314,9 +261,8 @@ pub mod tests {
     use crate::{
         artifact_downloader::ArtifactDownloader,
         auth::Neuron,
-        commands::{AuthOpts, DiscourseOpts, HsmOpts, HsmParams},
+        commands::{AuthOpts, /*DiscourseOpts,*/ HsmOpts, HsmParams},
         cordoned_feature_fetcher::CordonedFeatureFetcher,
-        discourse_client::DiscourseClient,
         ic_admin::IcAdmin,
         store::Store,
     };
@@ -333,7 +279,6 @@ pub mod tests {
         artifact_downloader: Arc<dyn ArtifactDownloader>,
         cordoned_features_fetcher: Arc<dyn CordonedFeatureFetcher>,
         health_client: Arc<dyn HealthStatusQuerier>,
-        discourse_client: Arc<dyn DiscourseClient>,
     ) -> DreContext {
         DreContext {
             network,
@@ -343,7 +288,6 @@ pub mod tests {
             ic_repo: RefCell::new(Some(git)),
             proposal_agent,
             verbose_runner: true,
-            forum_post_link: "https://forum.dfinity.org/t/123".to_string().into(),
             dry_run: true,
             artifact_downloader,
             neuron: RefCell::new(Some(neuron.clone())),
@@ -370,14 +314,6 @@ pub mod tests {
             cordoned_features_fetcher,
             health_client,
             store: Store::new(false).unwrap(),
-            discourse_opts: DiscourseOpts {
-                discourse_api_key: None,
-                discourse_api_url: "".to_string(),
-                discourse_api_user: None,
-                discourse_skip_post_creation: true,
-                discourse_subnet_topic_override_file_path: None,
-            },
-            discourse_client: RefCell::new(Some(discourse_client)),
         }
     }
 }
