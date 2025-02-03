@@ -229,7 +229,7 @@ class DRECli(dre_cli.DRECli):
         super().__init__()
         self._logger = LOGGER.getChild(self.__class__.__name__)
 
-    def place_proposal(
+    def propose_to_revise_elected_guestos_versions(
         self,
         changelog: str,
         version: str,
@@ -239,7 +239,7 @@ class DRECli(dre_cli.DRECli):
         package_urls: list[str],
         dry_run: bool = False,
     ) -> int:
-        super().place_proposal(
+        super().propose_to_revise_elected_guestos_versions(
             changelog,
             version,
             forum_post_url,
@@ -260,3 +260,21 @@ class MockSlackAnnouncer(object):
         self, webhook: str, version_name: str, google_doc_url: str, tag_all_teams: bool
     ) -> None:
         self._logger.warning("Simulating announcement of %s in slack", version_name)
+
+
+def oneoff_dre_place_proposal() -> None:
+    changelog = "Fake changelog"
+    dre = DRECli()
+    dre.propose_to_revise_elected_guestos_versions(
+        changelog=changelog,
+        version="0" * 40,
+        forum_post_url="https://forum.dfinity.org/t/proposal-to-elect-new-release-rc-2024-03-27-23-01/29042/7",
+        unelect_versions=[],
+        package_checksum="0" * 40,
+        package_urls=["https://doesntmatter.com/"],
+    )
+
+
+if __name__ == "__main__":
+    # FIXME make formatter not output ANSI when stderr is not console
+    oneoff_dre_place_proposal()
