@@ -4,11 +4,8 @@ use clap::Args as ClapArgs;
 use futures::future::BoxFuture;
 use ic_types::PrincipalId;
 use mockall::automock;
-use regex::Regex;
 
-use crate::ctx::DreContext;
-
-pub mod ic_admin;
+pub mod executor;
 pub mod impls;
 
 #[derive(Debug, Clone)]
@@ -98,8 +95,20 @@ impl ForumParameters {
             discourse_subnet_topic_override_file_path: None,
         }
     }
+
+    pub fn forum_post_link_mandatory(&self) -> anyhow::Result<()> {
+        if let ForumPostLinkVariant::Omit = self.forum_post_link {
+            return Err(anyhow::anyhow!("Forum post link cannot be omitted for this subcommand.",));
+        }
+        Ok(())
+    }
 }
 
+// FIXME: this should become part of the ProposableViaIcAdmin trait,
+// so that we don't have to have a separate kind here, this just
+// becomes a trait or an impl, and the intelligence needed to compose
+// the forum post can be decentralized to the right places in the code,
+// instead of living divorced from the proposal type itself.
 pub enum ForumPostKind {
     ReplaceNodes { subnet_id: PrincipalId, body: String },
     AuthorizedSubnetsUpdate { body: String },
@@ -122,31 +131,24 @@ pub trait ForumPost: Sync + Send {
     fn add_proposal_url(&self, proposal_id: u64) -> BoxFuture<'_, anyhow::Result<()>>;
 }
 
-impl dyn ForumPost {
-    pub async fn update_by_parsing_ic_admin_response(&self, ic_admin_response: String) -> anyhow::Result<()> {
-        let proposal_id = parse_proposal_id_from_ic_admin_response(ic_admin_response)?;
-        self.add_proposal_url(proposal_id).await
-    }
-}
-
-pub fn handler(forum_parameters: &ForumParameters, ctx: &DreContext) -> anyhow::Result<Box<dyn ForumPostHandler>> {
-    ForumContext::from_opts(forum_parameters, ctx.is_dry_run() || ctx.is_offline()).client()
+pub fn handler(forum_parameters: &ForumParameters) -> anyhow::Result<Box<dyn ForumPostHandler>> {
+    ForumContext::from_opts(forum_parameters).client()
 }
 
 #[derive(Clone)]
 struct ForumContext {
-    simulate: bool,
     forum_opts: ForumParameters,
 }
 
 #[allow(clippy::too_many_arguments)]
 impl ForumContext {
-    fn new(simulate: bool, forum_opts: ForumParameters) -> Self {
-        Self { simulate, forum_opts }
+    fn new(forum_opts: ForumParameters) -> Self {
+        Self { forum_opts }
     }
 
-    fn from_opts(opts: &ForumParameters, simulate: bool) -> Self {
-        Self::new(simulate, opts.clone())
+    // FIXME: turn into impl From.
+    fn from_opts(opts: &ForumParameters) -> Self {
+        Self::new(opts.clone())
     }
 
     pub fn client(&self) -> anyhow::Result<Box<dyn ForumPostHandler>> {
@@ -154,55 +156,7 @@ impl ForumContext {
             ForumPostLinkVariant::Url(u) => Ok(Box::new(impls::UserSuppliedLink { url: Some(u.clone()) }) as Box<dyn ForumPostHandler>),
             ForumPostLinkVariant::Omit => Ok(Box::new(impls::UserSuppliedLink { url: None }) as Box<dyn ForumPostHandler>),
             ForumPostLinkVariant::Ask => Ok(Box::new(impls::Prompter {}) as Box<dyn ForumPostHandler>),
-            ForumPostLinkVariant::ManageOnDiscourse => {
-                Ok(Box::new(impls::Discourse::new(self.forum_opts.clone(), self.simulate)?) as Box<dyn ForumPostHandler>)
-            }
+            ForumPostLinkVariant::ManageOnDiscourse => Ok(Box::new(impls::Discourse::new(self.forum_opts.clone())?) as Box<dyn ForumPostHandler>),
         }
-    }
-}
-
-fn parse_proposal_id_from_ic_admin_response(response: String) -> anyhow::Result<u64> {
-    // To ensure we capture just the line with "proposal xyz"
-    let last_line = response
-        .lines()
-        .filter(|line| !line.trim().is_empty())
-        .last()
-        .ok_or(anyhow::anyhow!("Expected at least one line in the response"))?;
-    let re = Regex::new(r"\s*(\d+)\s*")?;
-
-    re.captures(&last_line.to_lowercase())
-        .ok_or(anyhow::anyhow!("Expected some captures while parsing id from governance canister"))?
-        .iter()
-        .last()
-        .ok_or(anyhow::anyhow!(
-            "Expected at least one captures while parsing id from governance canister"
-        ))?
-        .ok_or(anyhow::anyhow!("Expected last element to be of type `Some()`"))?
-        .as_str()
-        .parse()
-        .map_err(anyhow::Error::from)
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn parse_proposal_id_test() {
-        let text = r#" some text blah 111
-proposal 123456
-
-"#
-        .to_string();
-        let parsed = parse_proposal_id_from_ic_admin_response(text).unwrap();
-        assert_eq!(parsed, 123456);
-
-        let text = "222222".to_string();
-        let parsed = parse_proposal_id_from_ic_admin_response(text).unwrap();
-        assert_eq!(parsed, 222222);
-
-        let text = "Proposal id 123456".to_string();
-        let parsed = parse_proposal_id_from_ic_admin_response(text).unwrap();
-        assert_eq!(parsed, 123456)
     }
 }

@@ -3,7 +3,7 @@ use ic_types::PrincipalId;
 
 use crate::{
     commands::{AuthRequirement, ExecutableCommand},
-    forum::{ic_admin::forum_enabled_proposer, ForumPostKind},
+    forum::{executor::ForumEnabledProposalExecutor, ForumPostKind},
     ic_admin::{self},
 };
 
@@ -33,18 +33,19 @@ impl ExecutableCommand for Add {
     }
 
     async fn execute(&self, ctx: crate::ctx::DreContext) -> anyhow::Result<()> {
-        forum_enabled_proposer(&self.forum_parameters, &ctx, ctx.ic_admin().await?)
-            .propose_with_possible_confirmation(
-                ic_admin::ProposeCommand::AddApiBoundaryNodes {
-                    nodes: self.nodes.to_vec(),
-                    version: self.version.clone(),
-                },
-                ic_admin::ProposeOptions {
-                    title: Some(format!("Add {} API boundary node(s)", self.nodes.len())),
-                    summary: Some(format!("Add {} API boundary node(s)", self.nodes.len())),
-                    motivation: self.motivation.clone(),
-                    forum_post_link: None,
-                },
+        ForumEnabledProposalExecutor::from_executor_and_mode(&self.forum_parameters, ctx.mode.clone(), ctx.executor().await?)
+            .propose(
+                ic_admin::IcAdminProposal::new(
+                    ic_admin::IcAdminProposalCommand::AddApiBoundaryNodes {
+                        nodes: self.nodes.to_vec(),
+                        version: self.version.clone(),
+                    },
+                    ic_admin::IcAdminProposalOptions {
+                        title: Some(format!("Add {} API boundary node(s)", self.nodes.len())),
+                        summary: Some(format!("Add {} API boundary node(s)", self.nodes.len())),
+                        motivation: self.motivation.clone(),
+                    },
+                ),
                 ForumPostKind::Generic,
             )
             .await

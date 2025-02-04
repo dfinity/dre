@@ -3,7 +3,7 @@ use ic_types::PrincipalId;
 
 use crate::{
     commands::{AuthRequirement, ExecutableCommand},
-    forum::{ic_admin::forum_enabled_proposer, ForumParameters, ForumPostKind},
+    forum::{executor::ForumEnabledProposalExecutor, ForumParameters, ForumPostKind},
     ic_admin::{self},
 };
 
@@ -27,15 +27,16 @@ impl ExecutableCommand for Remove {
     }
 
     async fn execute(&self, ctx: crate::ctx::DreContext) -> anyhow::Result<()> {
-        forum_enabled_proposer(&self.forum_parameters, &ctx, ctx.ic_admin().await?)
-            .propose_with_possible_confirmation(
-                ic_admin::ProposeCommand::RemoveApiBoundaryNodes { nodes: self.nodes.to_vec() },
-                ic_admin::ProposeOptions {
-                    title: Some(format!("Remove {} API boundary node(s)", self.nodes.len())),
-                    summary: Some(format!("Remove {} API boundary node(s)", self.nodes.len())),
-                    motivation: self.motivation.clone(),
-                    forum_post_link: None,
-                },
+        ForumEnabledProposalExecutor::from_executor_and_mode(&self.forum_parameters, ctx.mode.clone(), ctx.executor().await?)
+            .propose(
+                ic_admin::IcAdminProposal::new(
+                    ic_admin::IcAdminProposalCommand::RemoveApiBoundaryNodes { nodes: self.nodes.to_vec() },
+                    ic_admin::IcAdminProposalOptions {
+                        title: Some(format!("Remove {} API boundary node(s)", self.nodes.len())),
+                        summary: Some(format!("Remove {} API boundary node(s)", self.nodes.len())),
+                        motivation: self.motivation.clone(),
+                    },
+                ),
                 ForumPostKind::Generic,
             )
             .await
