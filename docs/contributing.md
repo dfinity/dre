@@ -1,16 +1,23 @@
 # Contributing to DRE
 
+[![Contributions Welcome](https://img.shields.io/badge/contributions-welcome-brightgreen.svg)](https://github.com/dfinity/dre/issues)
+[![Rye](https://img.shields.io/badge/python_manager-rye-blue)](https://rye.astral.sh/)
+[![Pre-commit](https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit&logoColor=white)](https://pre-commit.com/)
+
 Thank you for your interest in contributing to the Decentralized Reliability Engineering (DRE) project. This guide will help you set up your development environment and understand our contribution process.
 
-## Table of Contents
+## 📚 Table of Contents
 
 1. [Development Environment Setup](#development-environment-setup)
 2. [Project Structure](#project-structure)
-3. [Development Workflow](#development-workflow)
-4. [Running Tests](#running-tests)
-5. [Submitting Changes](#submitting-changes)
+3. [Code Style Guidelines](#code-style-guidelines)
+4. [Development Workflow](#development-workflow)
+5. [Pull Request Process](#pull-request-process)
+6. [Running Tests](#running-tests)
+7. [Common Issues](#common-issues)
+8. [Getting Help](#getting-help)
 
-## Development Environment Setup
+## 🛠 Development Environment Setup
 
 ### 1. Python Environment (Rye)
 
@@ -111,7 +118,7 @@ nvm use 14
 npm install --global yarn
 ```
 
-## Project Structure
+## 📂 Project Structure
 
 The DRE repository is organized into several key components:
 
@@ -122,14 +129,69 @@ The DRE repository is organized into several key components:
 - `/k8s` - Kubernetes configurations
 - `/scripts` - Utility scripts
 
-## Development Workflow
+## 📝 Code Style Guidelines
 
-1. Create a new branch for your feature/fix
-2. Make your changes
-3. Ensure all tests pass
-4. Submit a pull request
+### Python
+- Follow [PEP 8](https://www.python.org/dev/peps/pep-0008/) style guide
+- Use type hints for function arguments and return values
+- Document functions and classes using docstrings
+- Maximum line length: 100 characters
 
-## Running Tests
+### Rust
+- Follow the official [Rust Style Guide](https://rust-lang.github.io/api-guidelines/)
+- Use `rustfmt` for code formatting
+- Run `clippy` for linting
+
+### JavaScript/TypeScript
+- Follow the project's ESLint configuration
+- Use TypeScript for new code
+- Follow the [Angular commit message format](https://github.com/angular/angular/blob/master/CONTRIBUTING.md#commit)
+
+## 🔄 Development Workflow
+
+1. Fork the repository and create your branch from `main`:
+   ```bash
+   git checkout -b feature/your-feature-name
+   ```
+
+2. Set up development environment:
+   ```bash
+   rye sync
+   rye run pre-commit install
+   ```
+
+3. Make your changes:
+   - Write tests for new functionality
+   - Update documentation as needed
+   - Follow code style guidelines
+
+4. Commit your changes:
+   ```bash
+   git commit -m "feat: add new feature"
+   ```
+   Follow the [conventional commits](https://www.conventionalcommits.org/) specification
+
+5. Push to your fork and create a pull request
+
+## 🔍 Pull Request Process
+
+1. Ensure all tests pass locally
+2. Update documentation if needed
+3. Add a clear description of the changes
+4. Link any related issues
+5. Request review from maintainers
+6. Address review feedback
+7. Ensure CI checks pass
+
+### PR Title Format
+- feat: Add new feature
+- fix: Fix bug
+- docs: Update documentation
+- test: Add tests
+- refactor: Code refactoring
+- chore: Maintenance tasks
+
+## ⚡ Running Tests
 
 ### Backend Tests
 ```bash
@@ -142,7 +204,7 @@ cd dashboard
 yarn test
 ```
 
-## IC Network Internal Dashboard
+## 🖥 IC Network Internal Dashboard
 
 ### Setup
 ```bash
@@ -160,7 +222,7 @@ yarn dev  # Starts development server
 dre --dev subnet replace --id <subnet-id> -o1
 ```
 
-## Common Issues
+## ❗ Common Issues
 
 ### Linux: "No disk space left" with Bazel
 
@@ -169,8 +231,36 @@ If you encounter inotify issues:
 sudo sysctl -w fs.inotify.max_user_watches=1048576
 ```
 
-## Need Help?
+### Other Common Issues
+
+1. **Permission Denied Errors**
+   ```bash
+   sudo chown -R $(whoami) .
+   ```
+
+2. **Node Version Mismatch**
+   ```bash
+   nvm use 14  # Ensure correct Node version
+   ```
+
+3. **Bazel Cache Issues**
+   ```bash
+   bazel clean --expunge
+   ```
+
+## 🤝 Getting Help
 
 - Check existing [GitHub Issues](https://github.com/dfinity/dre/issues)
 - Join our developer community
 - Review our [documentation](https://dfinity.github.io/dre/)
+- Reach out to maintainers on Discord
+
+### Before Asking for Help
+
+1. Search existing issues
+2. Check the documentation
+3. Try troubleshooting steps
+4. Provide relevant details when asking
+
+---
+Remember: Good code is not just about functionality—it's about maintainability, readability, and collaboration. Thank you for contributing to DRE! 🚀
