@@ -16,7 +16,7 @@ use crate::{
     auth::Neuron,
     commands::IcAdminVersion,
     cordoned_feature_fetcher::{CordonedFeatureFetcher, CordonedFeatureFetcherImpl},
-    ic_admin::{IcAdmin, IcAdminImpl},
+    ic_admin::IcAdminImpl,
 };
 
 #[derive(Clone)]
@@ -180,14 +180,7 @@ impl Store {
         Ok(())
     }
 
-    async fn init_ic_admin(
-        &self,
-        version: &str,
-        network: &Network,
-        proceed_without_confirmation: bool,
-        neuron: Neuron,
-        dry_run: bool,
-    ) -> anyhow::Result<Arc<dyn IcAdmin>> {
+    async fn init_ic_admin(&self, version: &str, network: &Network, neuron: Neuron) -> anyhow::Result<Arc<IcAdminImpl>> {
         let path = self.ic_admin_path_for_version(version)?;
 
         if !path.exists() {
@@ -202,26 +195,14 @@ impl Store {
                     .ok_or(anyhow::anyhow!("Failed to convert ic-admin path to str"))?
                     .to_string(),
             ),
-            proceed_without_confirmation,
             neuron,
-            dry_run,
-        )) as Arc<dyn IcAdmin>)
+        )))
     }
 
-    pub async fn ic_admin(
-        &self,
-        version: &IcAdminVersion,
-        network: &Network,
-        proceed_without_confirmation: bool,
-        neuron: Neuron,
-        dry_run: bool,
-    ) -> anyhow::Result<Arc<dyn IcAdmin>> {
+    pub async fn ic_admin(&self, version: &IcAdminVersion, network: &Network, neuron: Neuron) -> anyhow::Result<Arc<IcAdminImpl>> {
         match version {
-            IcAdminVersion::Fallback => {
-                self.init_ic_admin(FALLBACK_IC_ADMIN_VERSION, network, proceed_without_confirmation, neuron, dry_run)
-                    .await
-            }
-            IcAdminVersion::Strict(ver) => self.init_ic_admin(ver, network, proceed_without_confirmation, neuron, dry_run).await,
+            IcAdminVersion::Fallback => self.init_ic_admin(FALLBACK_IC_ADMIN_VERSION, network, neuron).await,
+            IcAdminVersion::Strict(ver) => self.init_ic_admin(ver, network, neuron).await,
             // This is the most probable way of running
             IcAdminVersion::FromGovernance => {
                 let mut status_file = fs_err::File::open(&self.ic_admin_status_file()?)?;
@@ -270,9 +251,7 @@ impl Store {
                     }
                 };
 
-                let ic_admin = self
-                    .init_ic_admin(&version, network, proceed_without_confirmation, neuron, dry_run)
-                    .await?;
+                let ic_admin = self.init_ic_admin(&version, network, neuron).await?;
 
                 // Only update file when the sync
                 // with governance has been performed

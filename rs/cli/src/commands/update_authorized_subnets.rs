@@ -10,8 +10,8 @@ use itertools::Itertools;
 use log::info;
 
 use crate::{
-    forum::{ic_admin::forum_enabled_proposer, ForumParameters, ForumPostKind},
-    ic_admin::{ProposeCommand, ProposeOptions},
+    forum::{ForumParameters, ForumPostKind, Submitter},
+    ic_admin::{IcAdminProposal, IcAdminProposalCommand, IcAdminProposalOptions},
 };
 
 use super::{AuthRequirement, ExecutableCommand};
@@ -146,18 +146,17 @@ impl ExecutableCommand for UpdateAuthorizedSubnets {
             .cloned()
             .collect();
 
-        let ic_admin = ctx.ic_admin().await?;
+        let prop = IcAdminProposal::new(
+            IcAdminProposalCommand::SetAuthorizedSubnetworks { subnets: authorized },
+            IcAdminProposalOptions {
+                title: Some("Updating the list of public subnets".to_string()),
+                summary: Some(summary.clone()),
+                motivation: None,
+            },
+        );
 
-        let cmd = ProposeCommand::SetAuthorizedSubnetworks { subnets: authorized };
-        let opts = ProposeOptions {
-            title: Some("Updating the list of public subnets".to_string()),
-            summary: Some(summary.clone()),
-            motivation: None,
-            forum_post_link: Some("[comment]: <> (Link will be added on actual execution)".to_string()),
-        };
-
-        forum_enabled_proposer(&self.forum_parameters, &ctx, ic_admin)
-            .propose_with_possible_confirmation(cmd, opts, ForumPostKind::AuthorizedSubnetsUpdate { body: summary })
+        Submitter::from_executor_and_mode(&self.forum_parameters, ctx.mode.clone(), ctx.ic_admin_executor().await?.execution(prop))
+            .propose(ForumPostKind::AuthorizedSubnetsUpdate { body: summary })
             .await
     }
 }

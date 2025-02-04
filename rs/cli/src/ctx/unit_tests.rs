@@ -1,10 +1,11 @@
 use std::{path::PathBuf, sync::Arc};
 
+use crate::store::Store;
 use crate::{
     auth::{Auth, Neuron, STAGING_KEY_PATH_FROM_HOME, STAGING_NEURON_ID},
     commands::{AuthOpts, AuthRequirement, HsmOpts},
     cordoned_feature_fetcher::MockCordonedFeatureFetcher,
-    store::{Store, FALLBACK_IC_ADMIN_VERSION},
+    store::FALLBACK_IC_ADMIN_VERSION,
 };
 use ic_canisters::{governance::governance_canister_version, parallel_hardware_identity::KeyIdVec};
 use ic_management_backend::health::MockHealthStatusQuerier;
@@ -40,8 +41,7 @@ async fn get_context(network: &Network, version: IcAdminVersion) -> anyhow::Resu
         },
         None,
         false,
-        false,
-        true,
+        crate::ctx::HowToProceed::DryRun,
         crate::commands::AuthRequirement::Anonymous,
         version,
         Arc::new(MockCordonedFeatureFetcher::new()),
@@ -176,8 +176,11 @@ async fn get_ctx_for_neuron_test(
         auth,
         neuron_id,
         true,
-        false,
-        dry_run,
+        if dry_run || offline {
+            crate::ctx::HowToProceed::DryRun
+        } else {
+            crate::ctx::HowToProceed::Unconditional
+        },
         requirement,
         IcAdminVersion::Strict("Shouldn't get to here".to_string()),
         Arc::new(MockCordonedFeatureFetcher::new()),
