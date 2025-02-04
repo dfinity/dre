@@ -393,13 +393,15 @@ class Reconciler:
                     urls = version_package_urls(release_commit)
 
                     try:
-                        proposal_id = self.dre.place_proposal(
-                            changelog=changelog,
-                            version=release_commit,
-                            forum_post_url=rc_forum_topic.post_url(release_commit),
-                            unelect_versions=unelect_versions,
-                            package_checksum=checksum,
-                            package_urls=urls,
+                        proposal_id = (
+                            self.dre.propose_to_revise_elected_guestos_versions(
+                                changelog=changelog,
+                                version=release_commit,
+                                forum_post_url=rc_forum_topic.post_url(release_commit),
+                                unelect_versions=unelect_versions,
+                                package_checksum=checksum,
+                                package_urls=urls,
+                            )
                         )
                         success = prop.record_submission(proposal_id)
                         revlogger.info("%s", success)
@@ -601,7 +603,7 @@ def oneoff() -> None:
     assert changelog
 
     dre = dre_cli.DRECli()
-    dre.place_proposal(
+    dre.propose_to_revise_elected_guestos_versions(
         changelog=changelog,
         version=version,
         forum_post_url="https://forum.dfinity.org/t/proposal-to-elect-new-release-rc-2024-03-27-23-01/29042/7",
