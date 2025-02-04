@@ -5,7 +5,7 @@ use ic_types::PrincipalId;
 use crate::{
     auth::get_automation_neuron_default_path,
     commands::{AuthRequirement, ExecutableCommand},
-    forum::{ic_admin::forum_enabled_proposer, ForumParameters, ForumPostKind},
+    forum::{ForumParameters, ForumPostKind, Submitter},
 };
 
 #[derive(Args, Debug)]
@@ -29,10 +29,14 @@ impl ExecutableCommand for Deploy {
     }
 
     async fn execute(&self, ctx: crate::ctx::DreContext) -> anyhow::Result<()> {
-        let runner_proposal = ctx.runner().await?.deploy(&self.id, &self.version, None).await?;
-        forum_enabled_proposer(&self.forum_parameters, &ctx, ctx.ic_admin().await?)
-            .propose_with_possible_confirmation(runner_proposal.cmd, runner_proposal.opts, ForumPostKind::Generic)
-            .await
+        let runner_proposal = ctx.runner().await?.deploy(&self.id, &self.version).await?;
+        Submitter::from_executor_and_mode(
+            &self.forum_parameters,
+            ctx.mode.clone(),
+            ctx.ic_admin_executor().await?.execution(runner_proposal),
+        )
+        .propose(ForumPostKind::Generic)
+        .await
     }
 
     fn validate(&self, _args: &crate::commands::Args, _cmd: &mut clap::Command) {}

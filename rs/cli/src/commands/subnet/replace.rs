@@ -5,8 +5,7 @@ use itertools::Itertools;
 
 use crate::{
     commands::{AuthRequirement, ExecutableCommand},
-    forum::{ic_admin::forum_enabled_proposer, ForumParameters, ForumPostKind},
-    ic_admin::ProposeOptions,
+    forum::{ForumParameters, ForumPostKind, Submitter},
     subnet_manager::SubnetTarget,
 };
 
@@ -80,49 +79,31 @@ impl ExecutableCommand for Replace {
         let subnet_id = subnet_change_response.subnet_id;
         // Should be refactored to not require forum post links like this.
 
-        let runner_proposal = match runner.propose_subnet_change(subnet_change_response, None).await? {
+        let runner_proposal = match runner.propose_subnet_change(subnet_change_response).await? {
             Some(runner_proposal) => runner_proposal,
             None => return Ok(()),
         };
 
-        let ic_admin = ctx.ic_admin().await?;
-        if !ic_admin
-            .propose_print_and_confirm(
-                runner_proposal.cmd.clone(),
-                ProposeOptions {
-                    forum_post_link: Some("[comment]: <> (Link will be added on actual execution)".to_string()),
-                    ..runner_proposal.opts.clone()
-                },
-            )
-            .await?
-        {
-            return Ok(());
-        }
-
-        let proxy = forum_enabled_proposer(&self.forum_parameters, &ctx, ic_admin);
+        let proxy = Submitter::from_executor_and_mode(
+            &self.forum_parameters,
+            ctx.mode.clone(),
+            ctx.ic_admin_executor().await?.execution(runner_proposal.clone()),
+        );
         match subnet_id {
             Some(id) => {
                 proxy
-                    .propose_without_confirmation(
-                        runner_proposal.cmd,
-                        runner_proposal.opts.clone(),
-                        ForumPostKind::ReplaceNodes {
-                            subnet_id: id,
-                            body: match (&runner_proposal.opts.motivation, &runner_proposal.opts.summary) {
-                                (Some(motivation), None) => motivation.to_string(),
-                                (Some(motivation), Some(summary)) => format!("{}\nMotivation:\n{}", summary, motivation),
-                                (None, Some(summary)) => summary.to_string(),
-                                (None, None) => anyhow::bail!("Expected to have `motivation` or `summary` for this proposal"),
-                            },
+                    .propose(ForumPostKind::ReplaceNodes {
+                        subnet_id: id,
+                        body: match (&runner_proposal.options.motivation, &runner_proposal.options.summary) {
+                            (Some(motivation), None) => motivation.to_string(),
+                            (Some(motivation), Some(summary)) => format!("{}\nMotivation:\n{}", summary, motivation),
+                            (None, Some(summary)) => summary.to_string(),
+                            (None, None) => anyhow::bail!("Expected to have `motivation` or `summary` for this proposal"),
                         },
-                    )
+                    })
                     .await
             }
-            None => {
-                proxy
-                    .propose_without_confirmation(runner_proposal.cmd, runner_proposal.opts, ForumPostKind::Generic)
-                    .await
-            }
+            None => proxy.propose(ForumPostKind::Generic).await,
         }
     }
 

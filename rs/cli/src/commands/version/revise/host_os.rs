@@ -2,7 +2,7 @@ use clap::{error::ErrorKind, Args};
 
 use crate::{
     commands::{AuthRequirement, ExecutableCommand},
-    forum::{ic_admin::forum_enabled_proposer, ForumParameters, ForumPostKind, ForumPostLinkVariant},
+    forum::{ForumParameters, ForumPostKind, Submitter},
 };
 
 #[derive(Debug, Args)]
@@ -44,13 +44,17 @@ impl ExecutableCommand for HostOs {
                 self.security_fix,
             )
             .await?;
-        forum_enabled_proposer(&self.forum_parameters, &ctx, ctx.ic_admin().await?)
-            .propose_with_possible_confirmation(runner_proposal.cmd, runner_proposal.opts, ForumPostKind::Generic)
-            .await
+        Submitter::from_executor_and_mode(
+            &self.forum_parameters,
+            ctx.mode.clone(),
+            ctx.ic_admin_executor().await?.execution(runner_proposal),
+        )
+        .propose(ForumPostKind::Generic)
+        .await
     }
 
     fn validate(&self, _args: &crate::commands::Args, cmd: &mut clap::Command) {
-        if let ForumPostLinkVariant::Omit = self.forum_parameters.forum_post_link {
+        if self.forum_parameters.forum_post_link_mandatory().is_err() {
             cmd.error(
                 ErrorKind::MissingRequiredArgument,
                 "Forum post link cannot be omitted for this subcommand.",

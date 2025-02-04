@@ -228,19 +228,16 @@ impl Neuron {
         })
     }
 
-    pub fn is_fake_neuron(&self) -> bool {
-        self == &Self::dry_run_fake_neuron().unwrap()
-    }
-
     pub fn as_arg_vec(&self) -> Vec<String> {
         self.auth.as_arg_vec()
     }
 
-    pub fn proposer_as_arg_vec(&self) -> Vec<String> {
+    pub fn maybe_proposer(&self) -> Option<String> {
         if self.include_proposer {
-            return vec!["--proposer".to_string(), self.neuron_id.to_string()];
+            Some(self.neuron_id.to_string())
+        } else {
+            None
         }
-        vec![]
     }
 
     pub fn anonymous_neuron() -> Self {

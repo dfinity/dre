@@ -1,22 +1,26 @@
 use crate::auth::Neuron;
+use crate::proposal_executors::ProducesProposalResult;
+use crate::proposal_executors::ProposalResponseWithId;
+use crate::proposal_executors::RunnableViaIcAdmin;
+use crate::util::run_capturing_stdout;
 use anyhow::anyhow;
 use colored::Colorize;
-use dialoguer::Confirm;
 use futures::future::BoxFuture;
 use ic_base_types::PrincipalId;
 use ic_management_types::{Artifact, Network};
 use log::debug;
-use log::{error, info};
+use log::info;
 use mockall::automock;
 use regex::Regex;
 use shlex::try_quote;
 use std::fmt::Debug;
-use std::io::Read;
-use std::process::Command;
-use std::process::Stdio;
-use strum::Display;
+use strum::Display as StrumDisplay;
+use tokio::process::Command;
+use url::Url;
 
 const MAX_SUMMARY_CHAR_COUNT: usize = 29000;
+const PROPOSE_CMD_PREFIX: &str = "propose-to-";
+const GET_CMD_PREFIX: &str = "get-";
 
 #[automock]
 // automock complains without the explicit allow below
@@ -24,33 +28,29 @@ const MAX_SUMMARY_CHAR_COUNT: usize = 29000;
 pub trait IcAdmin: Send + Sync + Debug {
     fn ic_admin_path(&self) -> Option<String>;
 
-    /// Function wraps calls to `propose_print_and_confirm` and if the user
-    /// confirms, calls `propose_submit`.
-    fn propose_run(&self, cmd: ProposeCommand, opts: ProposeOptions) -> BoxFuture<'_, anyhow::Result<String>>;
+    /// Runs the proposal in simulation mode (--dry-run).  Prints out the result.
+    fn simulate_proposal(&self, cmd: Vec<String>) -> BoxFuture<'_, anyhow::Result<()>>;
 
-    /// Prints the proposal arguments and displays them to the user, asking for
-    /// confirmation if not automatically confirmed.
-    fn propose_print_and_confirm(&self, cmd: ProposeCommand, opts: ProposeOptions) -> BoxFuture<'_, anyhow::Result<bool>>;
+    /// Runs the proposal in forrealz mode.  Result is returned and logged at debug level.
+    fn submit_proposal<'a, 'b>(&'a self, cmd: Vec<String>, forum_post_link: Option<Url>) -> BoxFuture<'b, anyhow::Result<String>>
+    where
+        'a: 'b;
 
-    /// Runs the ic-admin with specified args.
-    fn propose_submit(&self, cmd: ProposeCommand, opts: ProposeOptions) -> BoxFuture<'_, anyhow::Result<String>>;
+    fn grep_subcommand_arguments(&self, subcommand: &str) -> BoxFuture<'_, anyhow::Result<String>>;
 
-    fn run<'a>(&'a self, command: &'a str, args: &'a [String], silent: bool) -> BoxFuture<'_, anyhow::Result<String>>;
+    fn grep_subcommands<'a, 'b>(&'a self, needle_regex: &'a str) -> BoxFuture<'b, anyhow::Result<Vec<String>>>
+    where
+        'a: 'b;
 
-    fn grep_subcommand_arguments(&self, subcommand: &str) -> String;
-
-    fn run_passthrough_get<'a>(&'a self, args: &'a [String], silent: bool) -> BoxFuture<'_, anyhow::Result<String>>;
-
-    fn run_passthrough_propose<'a>(&'a self, args: &'a [String]) -> BoxFuture<'_, anyhow::Result<String>>;
+    // /Runs a passthrough for an ic-admin get-* command.  Returns the result and logs it at debug level
+    fn get<'a>(&'a self, args: &'a [String]) -> BoxFuture<'_, anyhow::Result<String>>;
 }
 
 #[derive(Clone, Debug)]
 pub struct IcAdminImpl {
     network: Network,
     ic_admin_bin_path: Option<String>,
-    proceed_without_confirmation: bool,
     neuron: Neuron,
-    dry_run: bool,
 }
 
 impl IcAdmin for IcAdminImpl {
@@ -58,164 +58,164 @@ impl IcAdmin for IcAdminImpl {
         self.ic_admin_bin_path.clone()
     }
 
-    fn propose_run(&self, cmd: ProposeCommand, opts: ProposeOptions) -> BoxFuture<'_, anyhow::Result<String>> {
-        Box::pin(async move { self.propose_run_inner(cmd, opts, self.dry_run).await })
-    }
-
-    fn run<'a>(&'a self, command: &'a str, args: &'a [String], silent: bool) -> BoxFuture<'a, anyhow::Result<String>> {
-        let ic_admin_args = [&[command.to_string()], args].concat();
-        Box::pin(async move { self._run_ic_admin_with_args(&ic_admin_args, silent).await })
-    }
-
-    fn grep_subcommand_arguments(&self, subcommand: &str) -> String {
-        let ic_admin_path = self.ic_admin_bin_path.clone().unwrap_or_else(|| "ic-admin".to_string());
-        let cmd_result = Command::new(ic_admin_path).args([subcommand, "--help"]).output();
-        match cmd_result.map_err(|e| e.to_string()) {
-            Ok(output) => {
-                if output.status.success() {
-                    String::from_utf8_lossy(output.stdout.as_ref()).to_string()
-                } else {
-                    error!("Execution of ic-admin failed: {}", String::from_utf8_lossy(output.stderr.as_ref()));
-                    String::new()
-                }
-            }
-            Err(err) => {
-                error!("Error starting ic-admin process: {}", err);
-                String::new()
-            }
-        }
-    }
-
-    /// Run an `ic-admin get-*` command directly, and without an HSM
-    fn run_passthrough_get<'a>(&'a self, args: &'a [String], silent: bool) -> BoxFuture<'a, anyhow::Result<String>> {
-        if args.is_empty() {
-            println!("List of available ic-admin 'get' sub-commands:\n");
-            for subcmd in self.grep_subcommands(r"\s+get-(.+?)\s") {
-                println!("\t{}", subcmd)
-            }
-            std::process::exit(1);
-        }
-
-        // The `get` subcommand of the cli expects that "get-" prefix is not provided as
-        // the ic-admin command
-        let args = if args[0].starts_with("get-") {
-            // The user did provide the "get-" prefix, so let's just keep it and use it.
-            // This provides a convenient backward compatibility with ic-admin commands
-            // i.e., `dre get get-subnet 0` still works, although `dre get
-            // subnet 0` is preferred
-            args.to_vec()
-        } else {
-            // But since ic-admin expects these commands to include the "get-" prefix, we
-            // need to add it back Example:
-            // `dre get subnet 0` becomes
-            // `ic-admin --nns-url "http://[2600:3000:6100:200:5000:b0ff:fe8e:6b7b]:8080" get-subnet 0`
-            let mut args_with_get_prefix = vec![String::from("get-") + args[0].as_str()];
-            args_with_get_prefix.extend_from_slice(args.split_at(1).1);
-            args_with_get_prefix
-        };
-
-        Box::pin(async move { self.run(&args[0], &args.iter().skip(1).cloned().collect::<Vec<_>>(), silent).await })
-    }
-
-    /// Run an `ic-admin propose-to-*` command directly
-    fn run_passthrough_propose<'a>(&'a self, args: &'a [String]) -> BoxFuture<'a, anyhow::Result<String>> {
-        if args.is_empty() {
-            println!("List of available ic-admin 'propose' sub-commands:\n");
-            for subcmd in self.grep_subcommands(r"\s+propose-to-(.+?)\s") {
-                println!("\t{}", subcmd)
-            }
-            std::process::exit(1);
-        }
-
-        // The `propose` subcommand of the cli expects that "propose-to-" prefix is not
-        // provided as the ic-admin command
-        let args = if args[0].starts_with("propose-to-") {
-            // The user did provide the "propose-to-" prefix, so let's just keep it and use
-            // it.
-            args.to_vec()
-        } else {
-            // But since ic-admin expects these commands to include the "propose-to-"
-            // prefix, we need to add it back.
-            let mut args_with_fixed_prefix = vec![String::from("propose-to-") + args[0].as_str()];
-            args_with_fixed_prefix.extend_from_slice(args.split_at(1).1);
-            args_with_fixed_prefix
-        };
-
-        // ic-admin expects --summary and not --motivation
-        // make sure the expected argument is provided
-        let args = if !args.contains(&String::from("--summary")) && args.contains(&String::from("--motivation")) {
-            args.iter()
-                .map(|arg| if arg == "--motivation" { "--summary".to_string() } else { arg.clone() })
-                .collect::<Vec<_>>()
-        } else {
-            args.to_vec()
-        };
-
-        let cmd = ProposeCommand::Raw {
-            command: args[0].clone(),
-            args: args.iter().skip(1).cloned().collect::<Vec<_>>(),
-            print_ic_admin_output: true,
-        };
-        let dry_run = self.dry_run || cmd.args().contains(&String::from("--dry-run"));
-        Box::pin(async move { self.propose_run_inner(cmd, Default::default(), dry_run).await })
-    }
-
-    fn propose_print_and_confirm(&self, cmd: ProposeCommand, opts: ProposeOptions) -> BoxFuture<'_, anyhow::Result<bool>> {
+    /// Run ic-admin and parse sub-commands that it lists with "--help",
+    /// extract the ones matching `needle_regex` and return them as a
+    /// `Vec<String>`
+    fn grep_subcommands<'a, 'b>(&'a self, needle_regex: &'a str) -> BoxFuture<'b, anyhow::Result<Vec<String>>>
+    where
+        'a: 'b,
+    {
         Box::pin(async move {
-            debug!("Executing command in simulation mode.");
-            let _ = self._exec(cmd, opts, true, false, false).await;
-
-            if self.dry_run {
-                // Same as if someone said "Do you want to continue? [Y/n] n"
-                debug!("Returning after executing command in simulation mode.");
-                return Ok(false);
+            let ic_admin_path = self.ic_admin_bin_path.clone().unwrap_or_else(|| "ic-admin".to_string());
+            let cmd_result = Command::new(ic_admin_path).args(["--help"]).output().await;
+            match cmd_result.map_err(|e| e.to_string()) {
+                Ok(output) => {
+                    if output.status.success() {
+                        let cmd_stdout = String::from_utf8_lossy(output.stdout.as_ref());
+                        let re = Regex::new(needle_regex).unwrap();
+                        Ok(re
+                            .captures_iter(cmd_stdout.as_ref())
+                            .map(|capt| String::from(capt.get(1).expect("group 1 not found").as_str().trim()))
+                            .collect())
+                    } else {
+                        Err(anyhow::anyhow!(
+                            "Execution of ic-admin failed: {}",
+                            String::from_utf8_lossy(output.stderr.as_ref())
+                        ))
+                    }
+                }
+                Err(err) => Err(anyhow::anyhow!("Error starting ic-admin process: {}", err)),
             }
-
-            if self.proceed_without_confirmation {
-                // Don't ask for confirmation, allow to proceed
-                debug!("Proceeding without confirmation because the user asked us via parameter.");
-                return Ok(true);
-            }
-
-            // Ask for confirmation
-            Confirm::new()
-                .with_prompt("Do you want to continue?")
-                .default(false)
-                .interact()
-                .map_err(anyhow::Error::from)
         })
     }
 
-    fn propose_submit(&self, cmd: ProposeCommand, opts: ProposeOptions) -> BoxFuture<'_, anyhow::Result<String>> {
-        let print_ic_admin_output = match &cmd {
-            ProposeCommand::Raw {
-                command: _,
-                args: _,
-                print_ic_admin_output,
-            } => *print_ic_admin_output,
-            _ => true,
-        };
-        debug!("Submitting proposal (print out result: {}).", print_ic_admin_output);
-        Box::pin(async move { self._exec(cmd, opts, false, true, print_ic_admin_output).await })
+    fn grep_subcommand_arguments<'a>(&'a self, subcommand: &str) -> BoxFuture<'a, anyhow::Result<String>> {
+        let subcommand = subcommand.to_string();
+        Box::pin(async move {
+            let ic_admin_path = self.ic_admin_bin_path.clone().unwrap_or_else(|| "ic-admin".to_string());
+            let output = Command::new(ic_admin_path).args([subcommand.as_str(), "--help"]).output().await?;
+            if output.status.success() {
+                Ok(String::from_utf8_lossy(output.stdout.as_ref()).to_string())
+            } else {
+                Err(anyhow::anyhow!(
+                    "Execution of ic-admin failed: {}",
+                    String::from_utf8_lossy(output.stderr.as_ref())
+                ))
+            }
+        })
+    }
+
+    /// Run an `ic-admin get-*` command directly, and without an HSM
+    fn get<'a>(&'a self, args: &'a [String]) -> BoxFuture<'a, anyhow::Result<String>> {
+        Box::pin(async move {
+            debug!("Running get {:?}.", args);
+            if args.is_empty() {
+                println!("List of available ic-admin 'get' sub-commands:\n");
+                for subcmd in self.grep_subcommands(format!(r"\s+{}(.+?)\s", GET_CMD_PREFIX).as_str()).await? {
+                    println!("\t{}", subcmd)
+                }
+                std::process::exit(0);
+            }
+
+            let nonoption_args = args.iter().enumerate().filter(|(_, arg)| !arg.starts_with("--")).collect::<Vec<_>>();
+            // The `get` subcommand of the cli expects that "get-" prefix is not provided as
+            // the ic-admin command
+            let args = match nonoption_args.first() {
+                None => args.to_vec(),
+                Some(f) => {
+                    if f.1.starts_with(GET_CMD_PREFIX) {
+                        // The user did provide the "get-" prefix, so let's just keep it and use it.
+                        // This provides a convenient backward compatibility with ic-admin commands
+                        // i.e., `dre get get-subnet 0` still works, although `dre get
+                        // subnet 0` is preferred
+                        args.to_vec()
+                    } else {
+                        // But since ic-admin expects these commands to include the "get-" prefix, we
+                        // need to add it back Example:
+                        // `dre get subnet 0` becomes
+                        // `ic-admin --nns-url "http://[2600:3000:6100:200:5000:b0ff:fe8e:6b7b]:8080" get-subnet 0`
+                        let mut modified_args = args.to_vec();
+                        modified_args[f.0] = String::from(GET_CMD_PREFIX) + f.1.as_str();
+                        modified_args
+                    }
+                }
+            };
+
+            self.run(&args, false).await
+        })
+    }
+
+    fn simulate_proposal(&self, cmd: Vec<String>) -> BoxFuture<'_, anyhow::Result<()>> {
+        Box::pin(async move {
+            debug!("Simulating proposal {:?}.", cmd);
+            let mut args = self.add_proposer(cmd);
+            // Make sure there is no more than one `--dry-run` argument, or else ic-admin will complain.
+            if !args.contains(&String::from("--dry-run")) {
+                args.push("--dry-run".into())
+            };
+            self.run(args.as_slice(), true).await.map(|r| r.trim().to_string())?;
+            Ok(())
+        })
+    }
+
+    fn submit_proposal<'a, 'b>(&'a self, cmd: Vec<String>, forum_post_link: Option<Url>) -> BoxFuture<'b, anyhow::Result<String>>
+    where
+        'a: 'b,
+    {
+        Box::pin(async move {
+            debug!("Submitting proposal {:?}.", cmd);
+            let args = self.add_proposal_url(self.add_proposer(cmd), forum_post_link);
+            self.run(args.as_slice(), false).await.map(|r| r.trim().to_string())
+        })
     }
 }
 
 impl IcAdminImpl {
-    pub fn new(network: Network, ic_admin_bin_path: Option<String>, proceed_without_confirmation: bool, neuron: Neuron, dry_run: bool) -> Self {
+    pub fn new(network: Network, ic_admin_bin_path: Option<String>, neuron: Neuron) -> Self {
         Self {
             network,
             ic_admin_bin_path,
-            proceed_without_confirmation,
             neuron,
-            dry_run,
         }
+    }
+
+    // Run ic-admin command with the arguments specified, passing through standard output and error
+    // to the calling process' standard output and error.  Standard input is unaffected.
+    // If the command succeeds in running and returns 0 as exit code, it returns the standard output
+    // as a (lossily-decoded) UTF-8 string as part of the Result returned by this function.
+    fn run<'a>(&'a self, args: &'a [String], print_stdout: bool) -> BoxFuture<'a, anyhow::Result<String>> {
+        let ic_admin_path = self.ic_admin_bin_path.clone().unwrap_or_else(|| "ic-admin".to_string());
+        let auth_options = self.neuron.as_arg_vec();
+        let root_options = [auth_options, vec!["--nns-urls".to_string(), self.network.get_nns_urls_string()]].concat();
+
+        Box::pin(async move {
+            let mut cmd = Command::new(ic_admin_path);
+            cmd.args([&root_options, args].concat());
+            cmd.kill_on_drop(true);
+            self.print_ic_admin_command_line(&cmd).await;
+            let (output, result) = run_capturing_stdout(&mut cmd, print_stdout).await;
+            match result {
+                Ok(s) => {
+                    if s.success() {
+                        Ok(output)
+                    } else {
+                        Err(anyhow::anyhow!(
+                            "ic-admin exited with non-zero exit code {}",
+                            s.code().map(|c| c.to_string()).unwrap_or_else(|| "<none>".to_string()),
+                        ))
+                    }
+                }
+                Err(e) => Err(anyhow::anyhow!("ic-admin execution failed before exiting: {}", e,)),
+            }
+        })
     }
 
     async fn print_ic_admin_command_line(&self, cmd: &Command) {
         info!(
-            "running ic-admin: \n$ {}{}",
-            cmd.get_program().to_str().unwrap().yellow(),
-            cmd.get_args()
+            "Running ic-admin: \n$ {}{}",
+            cmd.as_std().get_program().to_str().unwrap().yellow(),
+            cmd.as_std()
+                .get_args()
                 .map(|s| s.to_str().unwrap().to_string())
                 .fold("".to_string(), |acc, s| {
                     // If previous argument was pin it means that this one is the pin itself
@@ -243,181 +243,32 @@ impl IcAdminImpl {
         );
     }
 
-    async fn _exec(
-        &self,
-        cmd: ProposeCommand,
-        opts: ProposeOptions,
-        as_simulation: bool,
-        print_out_command: bool,
-        print_ic_admin_out: bool,
-    ) -> anyhow::Result<String> {
-        if let Some(summary) = opts.clone().summary {
-            let summary_count = summary.chars().count();
-            if summary_count > MAX_SUMMARY_CHAR_COUNT {
-                return Err(anyhow!(
-                    "Summary length {} exceeded MAX_SUMMARY_CHAR_COUNT {}",
-                    summary_count,
-                    MAX_SUMMARY_CHAR_COUNT,
-                ));
-            }
-        }
-
-        let cmd_out = self
-            .run(
-                &cmd.get_command_name(),
-                [
-                    // Make sure there is no more than one `--dry-run` argument, or else ic-admin will complain.
-                    if as_simulation && !cmd.args().contains(&String::from("--dry-run")) {
-                        vec!["--dry-run".to_string()]
-                    } else {
-                        Default::default()
-                    },
-                    vec!["--silence-notices".to_string()], // Do not print notices since we are running from the automation
-                    opts.title.map(|t| vec!["--proposal-title".to_string(), t]).unwrap_or_default(),
-                    opts.summary
-                        .map(|s| {
-                            vec![
-                                "--summary".to_string(),
-                                format!(
-                                    "{}{}",
-                                    s,
-                                    opts.motivation
-                                        .map(|m| format!(
-                                            "\n\nMotivation: {m}{}",
-                                            match &opts.forum_post_link {
-                                                Some(link) => format!("\n\nForum post link: {}\n", link),
-                                                None => "".to_string(),
-                                            }
-                                        ))
-                                        .unwrap_or_default(),
-                                ),
-                            ]
-                        })
-                        .unwrap_or_default(),
-                    cmd.args(),
-                    self.neuron.proposer_as_arg_vec(),
-                    match &opts.forum_post_link {
-                        Some(link) if link.to_lowercase().starts_with("https://") => vec!["--proposal-url".to_string(), link.clone()],
-                        _ => vec![],
-                    },
-                ]
-                .concat()
-                .as_slice(),
-                print_out_command,
-            )
-            .await?;
-
-        if print_ic_admin_out {
-            println!("{}", cmd_out)
-        }
-
-        Ok(cmd_out)
-    }
-
-    async fn propose_run_inner(&self, cmd: ProposeCommand, opts: ProposeOptions, dry_run: bool) -> anyhow::Result<String> {
-        // Dry run, or --help executions run immediately and do not proceed.
-        if dry_run || cmd.args().contains(&String::from("--help")) || cmd.args().contains(&String::from("--dry-run")) {
-            return self._exec(cmd, opts, true, false, false).await;
-        }
-
-        // If --yes was specified, don't ask the user if they want to proceed
-        if !self.proceed_without_confirmation {
-            self._exec(cmd.clone(), opts.clone(), true, false, true).await?;
-        }
-
-        if self.proceed_without_confirmation || Confirm::new().with_prompt("Do you want to continue?").default(false).interact()? {
-            // User confirmed the desire to submit the proposal and no obvious problems were
-            // found. Proceeding!
-            self._exec(cmd, opts, false, true, true).await
-        } else {
-            Err(anyhow::anyhow!("Action aborted"))
-        }
-    }
-
-    async fn _run_ic_admin_with_args(&self, ic_admin_args: &[String], silent: bool) -> anyhow::Result<String> {
-        let ic_admin_path = self.ic_admin_bin_path.clone().unwrap_or_else(|| "ic-admin".to_string());
-        let mut cmd = Command::new(ic_admin_path);
-        let auth_options = self.neuron.as_arg_vec();
-        let root_options = [auth_options, vec!["--nns-urls".to_string(), self.network.get_nns_urls_string()]].concat();
-        let cmd = cmd.args([&root_options, ic_admin_args].concat());
-
-        if silent {
-            cmd.stderr(Stdio::piped());
-        } else {
-            self.print_ic_admin_command_line(cmd).await;
-        }
-        cmd.stdout(Stdio::piped());
-
-        match cmd.spawn() {
-            Ok(mut child) => match child.wait() {
-                Ok(s) => {
-                    if s.success() {
-                        if let Some(mut output) = child.stdout {
-                            let mut readbuf = vec![];
-                            output
-                                .read_to_end(&mut readbuf)
-                                .map_err(|e| anyhow::anyhow!("Error reading output: {:?}", e))?;
-                            let converted = String::from_utf8_lossy(&readbuf).trim().to_string();
-                            if !silent {
-                                println!("{}", converted);
-                            }
-                            return Ok(converted);
-                        }
-                        Ok("".to_string())
-                    } else {
-                        let readbuf = match child.stderr {
-                            Some(mut stderr) => {
-                                let mut readbuf = String::new();
-                                stderr
-                                    .read_to_string(&mut readbuf)
-                                    .map_err(|e| anyhow::anyhow!("Error reading output: {:?}", e))?;
-                                readbuf
-                            }
-                            None => "".to_string(),
-                        };
-                        Err(anyhow::anyhow!(
-                            "ic-admin failed with non-zero exit code {} stderr ==>\n{}",
-                            s.code().map(|c| c.to_string()).unwrap_or_else(|| "<none>".to_string()),
-                            readbuf
-                        ))
-                    }
-                }
-                Err(err) => Err(anyhow::format_err!("ic-admin wasn't running: {}", err.to_string())),
+    fn add_proposer(&self, args: Vec<String>) -> Vec<String> {
+        [
+            args,
+            match self.neuron.maybe_proposer() {
+                Some(proposer) => vec!["--proposer".to_string(), proposer],
+                None => vec![],
             },
-            Err(e) => Err(anyhow::format_err!("failed to run ic-admin: {}", e.to_string())),
-        }
+        ]
+        .concat()
     }
 
-    /// Run ic-admin and parse sub-commands that it lists with "--help",
-    /// extract the ones matching `needle_regex` and return them as a
-    /// `Vec<String>`
-    fn grep_subcommands(&self, needle_regex: &str) -> Vec<String> {
-        let ic_admin_path = self.ic_admin_bin_path.clone().unwrap_or_else(|| "ic-admin".to_string());
-        let cmd_result = Command::new(ic_admin_path).args(["--help"]).output();
-        match cmd_result.map_err(|e| e.to_string()) {
-            Ok(output) => {
-                if output.status.success() {
-                    let cmd_stdout = String::from_utf8_lossy(output.stdout.as_ref());
-                    let re = Regex::new(needle_regex).unwrap();
-                    re.captures_iter(cmd_stdout.as_ref())
-                        .map(|capt| String::from(capt.get(1).expect("group 1 not found").as_str().trim()))
-                        .collect()
-                } else {
-                    error!("Execution of ic-admin failed: {}", String::from_utf8_lossy(output.stderr.as_ref()));
-                    vec![]
-                }
-            }
-            Err(err) => {
-                error!("Error starting ic-admin process: {}", err);
-                vec![]
-            }
-        }
+    fn add_proposal_url(&self, args: Vec<String>, proposal_url: Option<Url>) -> Vec<String> {
+        [
+            args,
+            match &proposal_url {
+                Some(link) => vec!["--proposal-url".to_string(), link.to_string()],
+                _ => vec![],
+            },
+        ]
+        .concat()
     }
 }
 
-#[derive(Display, Clone, Debug)]
+#[derive(StrumDisplay, Clone, Debug)]
 #[strum(serialize_all = "kebab-case")]
-pub enum ProposeCommand {
+pub enum IcAdminProposalCommand {
     ChangeSubnetMembership {
         subnet_id: PrincipalId,
         node_ids_add: Vec<PrincipalId>,
@@ -434,11 +285,7 @@ pub enum ProposeCommand {
         nodes: Vec<PrincipalId>,
         version: String,
     },
-    Raw {
-        command: String,
-        args: Vec<String>,
-        print_ic_admin_output: bool,
-    },
+    Raw(Vec<String>),
     RemoveNodes {
         nodes: Vec<PrincipalId>,
     },
@@ -467,28 +314,19 @@ pub enum ProposeCommand {
     },
 }
 
-impl ProposeCommand {
-    fn get_command_name(&self) -> String {
-        const PROPOSE_CMD_PREFIX: &str = "propose-to-";
-        format!(
-            "{PROPOSE_CMD_PREFIX}{}",
-            match self {
-                Self::Raw {
-                    command,
-                    args: _,
-                    print_ic_admin_output: _,
-                } => command.trim_start_matches(PROPOSE_CMD_PREFIX).to_string(),
-                Self::ReviseElectedVersions { release_artifact, args: _ } => format!("revise-elected-{}-versions", release_artifact),
-                Self::DeployGuestosToAllUnassignedNodes { replica_version: _ } => "deploy-guestos-to-all-unassigned-nodes".to_string(),
-                _ => self.to_string(),
-            }
-        )
-    }
-}
-
-impl ProposeCommand {
-    fn args(&self) -> Vec<String> {
-        match &self {
+impl IcAdminProposalCommand {
+    fn args(&self) -> (String, Vec<String>) {
+        let head: String = match &self {
+            Self::Raw(args) => args
+                .first()
+                .map(|s| s.strip_prefix(PROPOSE_CMD_PREFIX).unwrap_or(s))
+                .unwrap_or("")
+                .to_string(),
+            Self::ReviseElectedVersions { release_artifact, .. } => format!("revise-elected-{}-versions", release_artifact),
+            Self::DeployGuestosToAllUnassignedNodes { .. } => "deploy-guestos-to-all-unassigned-nodes".to_string(),
+            _ => self.to_string(),
+        };
+        let tail: Vec<String> = match &self {
             Self::ChangeSubnetMembership {
                 subnet_id,
                 node_ids_add: nodes_ids_add,
@@ -518,18 +356,17 @@ impl ProposeCommand {
             Self::DeployGuestosToAllSubnetNodes { subnet, version } => {
                 vec![subnet.to_string(), version.clone()]
             }
-            Self::Raw {
-                command: _,
-                args,
-                print_ic_admin_output: _,
-            } => args.clone(),
+            Self::Raw(command_and_args) => match command_and_args.len() {
+                0 => vec![],
+                _ => command_and_args[1..].to_vec().clone(),
+            },
             Self::DeployHostosToSomeNodes { nodes, version } => [
                 nodes.iter().map(|n| n.to_string()).collect::<Vec<_>>(),
                 vec!["--hostos-version-id".to_string(), version.to_string()],
             ]
             .concat(),
             Self::RemoveNodes { nodes } => nodes.iter().map(|n| n.to_string()).collect(),
-            Self::ReviseElectedVersions { release_artifact: _, args } => args.clone(),
+            Self::ReviseElectedVersions { args, .. } => args.clone(),
             Self::CreateSubnet {
                 node_ids,
                 replica_version,
@@ -546,9 +383,7 @@ impl ProposeCommand {
                 args.extend(other_args.to_vec());
                 args
             }
-            Self::DeployGuestosToAllUnassignedNodes { replica_version } => {
-                vec!["--replica-version-id".to_string(), replica_version.clone()]
-            }
+            Self::DeployGuestosToAllUnassignedNodes { replica_version } => vec!["--replica-version-id".to_string(), replica_version.clone()],
             Self::AddApiBoundaryNodes { nodes, version } => [
                 nodes.iter().flat_map(|n| ["--nodes".to_string(), n.to_string()]).collect::<Vec<_>>(),
                 vec!["--version".to_string(), version.to_string()],
@@ -561,14 +396,89 @@ impl ProposeCommand {
             ]
             .concat(),
             Self::SetAuthorizedSubnetworks { subnets } => subnets.iter().flat_map(|s| ["--subnets".to_string(), s.to_string()]).collect::<Vec<_>>(),
-        }
+        };
+        (head, tail)
     }
 }
 
 #[derive(Default, Clone, Debug)]
-pub struct ProposeOptions {
+pub struct IcAdminProposalOptions {
     pub title: Option<String>,
     pub summary: Option<String>,
     pub motivation: Option<String>,
-    pub forum_post_link: Option<String>,
+}
+
+#[derive(Debug, Clone)]
+pub struct IcAdminProposal {
+    pub command: IcAdminProposalCommand,
+    pub options: IcAdminProposalOptions,
+}
+
+impl IcAdminProposal {
+    pub fn new(command: IcAdminProposalCommand, opts: IcAdminProposalOptions) -> Self {
+        Self { command, options: opts }
+    }
+}
+
+impl RunnableViaIcAdmin for IcAdminProposal {
+    type Output = ProposalResponseWithId;
+
+    fn to_ic_admin_arguments(&self) -> anyhow::Result<Vec<String>> {
+        self.to_args()
+    }
+}
+
+impl ProducesProposalResult for IcAdminProposal {
+    type ProposalResult = ProposalResponseWithId;
+}
+
+impl IcAdminProposal {
+    fn to_args(&self) -> anyhow::Result<Vec<String>> {
+        if let Some(summary) = &self.options.summary {
+            let summary_count = summary.chars().count();
+            if summary_count > MAX_SUMMARY_CHAR_COUNT {
+                return Err(anyhow!(
+                    "Summary length {} exceeded MAX_SUMMARY_CHAR_COUNT {}",
+                    summary_count,
+                    MAX_SUMMARY_CHAR_COUNT,
+                ));
+            }
+        }
+
+        let (head, tail) = self.command.args();
+        let head = match head.as_str() {
+            "" => vec![],
+            _ => vec![format!("{PROPOSE_CMD_PREFIX}{}", head)],
+        };
+
+        Ok([
+            head,
+            vec!["--silence-notices".to_string()], // Do not print notices since we are running from the automation
+            self.options
+                .clone()
+                .title
+                .map(|t| vec!["--proposal-title".to_string(), t])
+                .unwrap_or_default(),
+            self.options
+                .clone()
+                .summary
+                .map(|s| {
+                    vec![
+                        "--summary".to_string(),
+                        format!(
+                            "{}{}",
+                            s,
+                            self.options
+                                .clone()
+                                .motivation
+                                .map(|m| format!("\n\nMotivation: {m}"))
+                                .unwrap_or_default(),
+                        ),
+                    ]
+                })
+                .unwrap_or_default(),
+            tail,
+        ]
+        .concat())
+    }
 }

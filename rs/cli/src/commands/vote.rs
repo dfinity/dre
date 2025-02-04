@@ -8,7 +8,7 @@ use log::info;
 use spinners::{Spinner, Spinners};
 
 use super::{AuthRequirement, ExecutableCommand};
-use crate::desktop_notify::DesktopNotifier;
+use crate::{ctx::HowToProceed, desktop_notify::DesktopNotifier, util::yesno};
 
 #[derive(Args, Debug)]
 pub struct Vote {
@@ -87,26 +87,31 @@ impl ExecutableCommand for Vote {
                         );
 
                         let prop_id = proposal.id.unwrap().id;
-                        if !ctx.is_dry_run() {
-                            match wrapper.register_vote(neuron.neuron_id, proposal.id.unwrap().id).await {
-                                Ok(response) => {
-                                    info!("Voted successfully: {}", response);
+                        match &ctx.mode {
+                            HowToProceed::Confirm | HowToProceed::Unconditional | HowToProceed::UnitTests => {
+                                if ctx.mode != HowToProceed::Confirm
+                                    || (ctx.mode == HowToProceed::Confirm && !yesno("Do you want to vote?", true).await??)
+                                {
+                                    match wrapper.register_vote(neuron.neuron_id, proposal.id.unwrap().id).await {
+                                        Ok(response) => {
+                                            info!("Voted successfully: {}", response);
+                                        }
+                                        Err(e) => {
+                                            DesktopNotifier::send_critical(
+                                                "DRE vote: error",
+                                                &format!(
+                                                    "Error voting on proposal {} (topic {:?}, proposer {}) -> {}",
+                                                    prop_id,
+                                                    proposal.topic(),
+                                                    proposal.proposer.unwrap_or_default().id,
+                                                    e
+                                                ),
+                                            );
+                                        }
+                                    }
                                 }
-                                Err(e) => {
-                                    DesktopNotifier::send_critical(
-                                        "DRE vote: error",
-                                        &format!(
-                                            "Error voting on proposal {} (topic {:?}, proposer {}) -> {}",
-                                            prop_id,
-                                            proposal.topic(),
-                                            proposal.proposer.unwrap_or_default().id,
-                                            e
-                                        ),
-                                    );
-                                }
-                            };
-                        } else {
-                            info!("Would have voted for proposal {}", prop_id)
+                            }
+                            HowToProceed::DryRun => info!("Would have voted for proposal {}", prop_id),
                         }
                         voted_proposals.insert(prop_id);
                     }
