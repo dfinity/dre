@@ -1,167 +1,176 @@
-# Pre-requisites
+# Contributing to DRE
 
-## Rye installation
+Thank you for your interest in contributing to the Decentralized Reliability Engineering (DRE) project. This guide will help you set up your development environment and understand our contribution process.
 
-Rye is a comprehensive project and package management solution for Python.
-Rye provides a unified experience to install and manages Python installations,
-pyproject.toml based projects, dependencies and virtualenvs seamlessly.
+## Table of Contents
 
-Run the following from the repo root:
+1. [Development Environment Setup](#development-environment-setup)
+2. [Project Structure](#project-structure)
+3. [Development Workflow](#development-workflow)
+4. [Running Tests](#running-tests)
+5. [Submitting Changes](#submitting-changes)
+
+## Development Environment Setup
+
+### 1. Python Environment (Rye)
+
+[Rye](https://rye.astral.sh/) is our preferred Python environment manager. It provides a unified experience for managing Python installations, dependencies, and virtual environments.
+
+#### Installation
 
 ```bash
 curl -sSf https://rye.astral.sh/get | bash
+source "$HOME/.rye/env"  # Add to your shell's RC file
 ```
 
-Follow the instructions on screen. Once the install is done,
-reopen your shell or run `source "$HOME/.rye/env"`.
-
-You can make sure all dependencies are installed by running
+#### Project Setup
 
 ```bash
-rye sync
+rye sync  # Install all dependencies
 ```
 
-And you can enter the `venv` manually if needed by running `. .venv/bin/activate`.
-This is typically not needed.
-
-It's sufficient to prefix any command with the following:
+#### Common Rye Commands
 
 ```bash
-rye run <command>
+rye run <command>  # Run a command with project dependencies
+rye show           # Show current environment info
+rye toolchain list --include-downloadable  # List available Python versions
 ```
 
-to run the `<command>` with all expected dependencies.
+### 2. IDE Configuration
 
-### IDE setup
+Configure your IDE to use the Python interpreter from `.venv/bin/python`. This ensures consistent development settings across the team.
 
-Point your IDE to the Python interpreter inside `.venv/bin`.
+#### Troubleshooting Rye
 
-### Troubleshooting rye
+If you encounter issues:
+1. Update Rye: `rye self update`
+2. Verify Python path: `which python3`
+3. Check environment: `rye show`
+4. List toolchains: `rye toolchain list --include-downloadable`
 
-If you face problems in `rye sync`, such as `unknown version cpython@...`, you can try to
+### 3. Pre-commit Hooks
 
-* List all available toolchains
-```
-rye toolchain list --include-downloadable
-```
+We use pre-commit hooks to ensure code quality and consistency.
 
-* Upgrade rye itself
-```
-rye self update
-```
-
-* Ensure rye python is in path
-```
-which python3
-```
-
-* Show the actively used rye environment in the project
-```
-rye show
-```
-
-
-### 3. Install pre-commit
-
-Install and enable pre-commit. It's highly recommended in order to prevent pushing code to github that will surely cause failures.
-
-```
-# cd ~/src/dre
+```bash
 rye run pre-commit install
 ```
 
-More detailed instructions at https://pre-commit.com/#installation .
+For more information, visit the [pre-commit documentation](https://pre-commit.com/#installation).
 
-### 4.a Install cargo (optional)
+### 4. Rust Development Setup (Optional)
 
-If you build with cargo, and not with bazel, you need an installation of `rustup` and `cargo`. You can follow the instructions from https://www.rust-lang.org/tools/install
-This is typically as simple as running
+If you plan to work on Rust components:
 
-```sh
+#### Install Rust Toolchain
+```bash
 curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 ```
-#### On Linux
-```sh
-command -v apt && sudo apt install -y clang mold protobuf-compiler || true
-```
-#### On Mac OS
-No need to install Clang for Mac OS user since it comes with Xcode.
-```sh
-brew install mold protobuff
-```
-Make sure you add `$HOME/.cargo/bin` to your PATH, as written in the page above.
-> In the Rust development environment, all tools are installed to the ~/.cargo/bin directory, and this is where you will find the Rust toolchain, including rustc, cargo, and rustup.
 
-### Check the Rust / Cargo installation
+#### System Dependencies
 
-To check if your Rust tooling is set up correctly, you can go to the repo root and then
-```sh
+For Linux:
+```bash
+sudo apt install -y clang mold protobuf-compiler
+```
+
+For macOS:
+```bash
+brew install mold protobuf
+```
+
+Add Cargo to your PATH:
+```bash
+export PATH="$HOME/.cargo/bin:$PATH"  # Add to your shell's RC file
+```
+
+#### Verify Rust Setup
+```bash
 cd rs
 cargo check
 ```
 
-This should succeed.
+### 5. Node.js and Yarn
 
-### 4.b Install bazel
+Required for frontend development:
 
-To install bazel, do not use the version provided by your OS package manager. Please make sure you use [bazelisk](https://bazel.build/install/bazelisk).
+1. Install NVM:
+```bash
+curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.0/install.sh | bash
+```
 
-## 5. Install nvm, node, yarn
-
-### 1. Install nvm
-
-https://github.com/nvm-sh/nvm#installing-and-updating
-
-### 2. Install node
-
-```sh
+2. Install Node.js:
+```bash
 nvm install 14
 nvm use 14
 ```
 
-### 3. Install yarn
-
-```sh
+3. Install Yarn:
+```bash
 npm install --global yarn
 ```
 
-### "No disk space left" when building with Bazel on Linux?
+## Project Structure
 
+The DRE repository is organized into several key components:
+
+- `/dashboard` - Internal DRE dashboard (frontend and backend)
+- `/rs` - Rust implementations
+- `/pylib` - Python libraries
+- `/docs` - Project documentation
+- `/k8s` - Kubernetes configurations
+- `/scripts` - Utility scripts
+
+## Development Workflow
+
+1. Create a new branch for your feature/fix
+2. Make your changes
+3. Ensure all tests pass
+4. Submit a pull request
+
+## Running Tests
+
+### Backend Tests
+```bash
+rye run pytest
 ```
-sudo sysctl -w fs.inotify.max_user_watches=1048576
+
+### Frontend Tests
+```bash
+cd dashboard
+yarn test
 ```
 
-Bazel eats up a lot of inotify user watches.
+## IC Network Internal Dashboard
 
-# IC Network Internal Dashboard
-
-## Pre-requisites
-
-### 1. Install cargo-watch
-
-```sh
-cargo install cargo-watch
-```
-
-### 2. Install yarn dependencies
-
-```
+### Setup
+```bash
 cd dashboard
 yarn install
 ```
 
-## Running
-
-To start the release dashboard locally, run the following from dashboard folder
-
-```sh
-yarn dev
+### Development
+```bash
+yarn dev  # Starts development server
 ```
 
-To use the `dre` CLI tool with the local dashboard instance run it with `--dev` flag.
-
-E.g.
-
-```sh
+### Using DRE CLI with Local Dashboard
+```bash
 dre --dev subnet replace --id <subnet-id> -o1
 ```
+
+## Common Issues
+
+### Linux: "No disk space left" with Bazel
+
+If you encounter inotify issues:
+```bash
+sudo sysctl -w fs.inotify.max_user_watches=1048576
+```
+
+## Need Help?
+
+- Check existing [GitHub Issues](https://github.com/dfinity/dre/issues)
+- Join our developer community
+- Review our [documentation](https://dfinity.github.io/dre/)
