@@ -1,5 +1,15 @@
 releases:
   # NOTE: Make sure to mark security hotfixes with the `security_fix: true` flag.
+  - rc_name: rc--2025-02-06_12-26
+    versions:
+      # Qualification pipeline:
+      # https://github.com/dfinity/ic/actions/runs/13178748447
+      - name: base
+        version: 0206830a658fc51c35d9ccb005e86a22adf3b5be
+      # Qualification pipeline:
+      # https://github.com/dfinity/ic/actions/runs/13182065458
+      - name: revert-hashes-in-blocks
+        version: 37c059a6e705f4be9bdc0984ab68283aace5fea9
   - rc_name: rc--2025-01-30_03-03
     versions:
       # Qualification pipeline:
