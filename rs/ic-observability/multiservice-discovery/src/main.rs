@@ -283,7 +283,7 @@ exist, it will be created.
         long = "gc-timeout",
         value_parser = parse_duration,
         help = r#"
-If set, networks that cannot be scraped for `Duration` will be removed.
+If set, networks unreachable for at least the provided `Duration` will be automatically removed.
 
     "#
         )]
