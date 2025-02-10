@@ -281,7 +281,6 @@ exist, it will be created.
 
     #[clap(
         long = "gc-timeout",
-        default_value = "None",
         value_parser = parse_duration,
         help = r#"
 If set, networks that cannot be scraped for `Duration` will be removed.
