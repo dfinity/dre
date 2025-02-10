@@ -1,5 +1,5 @@
 {
-  "checksum": "b61f52d685daaf2581f4691ed7edbf28ec1a4169fda001c4caf2cb7be7417b44",
+  "checksum": "55c5e4269e509b3f5aa829fe24ffb58855dad9f9a3c9af6eaf192e0a204c5750",
   "crates": {
     "actix-codec 0.5.2": {
       "name": "actix-codec",
@@ -7286,14 +7286,14 @@
       ],
       "license_file": "LICENSE"
     },
-    "comfy-table 7.1.3": {
+    "comfy-table 7.1.4": {
       "name": "comfy-table",
-      "version": "7.1.3",
+      "version": "7.1.4",
       "package_url": "https://github.com/nukesor/comfy-table",
       "repository": {
         "Http": {
-          "url": "https://static.crates.io/crates/comfy-table/7.1.3/download",
-          "sha256": "24f165e7b643266ea80cb858aed492ad9280e3e05ce24d4a99d7d7b889b6a4d9"
+          "url": "https://static.crates.io/crates/comfy-table/7.1.4/download",
+          "sha256": "4a65ebfec4fb190b6f90e944a817d60499ee0744e582530e2c9900a22e591d9a"
         }
       },
       "targets": [
@@ -7317,7 +7317,6 @@
         ],
         "crate_features": {
           "common": [
-            "crossterm",
             "default",
             "tty"
           ],
@@ -7330,8 +7329,8 @@
               "target": "crossterm"
             },
             {
-              "id": "strum 0.26.3",
-              "target": "strum"
+              "id": "unicode-segmentation 1.12.0",
+              "target": "unicode_segmentation"
             },
             {
               "id": "unicode-width 0.2.0",
@@ -7341,16 +7340,7 @@
           "selects": {}
         },
         "edition": "2021",
-        "proc_macro_deps": {
-          "common": [
-            {
-              "id": "strum_macros 0.26.4",
-              "target": "strum_macros"
-            }
-          ],
-          "selects": {}
-        },
-        "version": "7.1.3"
+        "version": "7.1.4"
       },
       "license": "MIT",
       "license_ids": [
@@ -11886,7 +11876,7 @@
               "target": "colored"
             },
             {
-              "id": "comfy-table 7.1.3",
+              "id": "comfy-table 7.1.4",
               "target": "comfy_table"
             },
             {
@@ -13330,7 +13320,7 @@
             ],
             "cfg(windows)": [
               {
-                "id": "windows-sys 0.59.0",
+                "id": "windows-sys 0.52.0",
                 "target": "windows_sys"
               }
             ]
@@ -41135,7 +41125,7 @@
                 "target": "once_cell"
               },
               {
-                "id": "windows-sys 0.59.0",
+                "id": "windows-sys 0.52.0",
                 "target": "windows_sys"
               }
             ]
@@ -45019,7 +45009,7 @@
                 "alias": "libc_errno"
               },
               {
-                "id": "windows-sys 0.59.0",
+                "id": "windows-sys 0.52.0",
                 "target": "windows_sys"
               }
             ],
@@ -49519,7 +49509,7 @@
           "selects": {
             "cfg(windows)": [
               {
-                "id": "windows-sys 0.59.0",
+                "id": "windows-sys 0.52.0",
                 "target": "windows_sys"
               }
             ]
@@ -50942,7 +50932,7 @@
             ],
             "cfg(windows)": [
               {
-                "id": "windows-sys 0.59.0",
+                "id": "windows-sys 0.52.0",
                 "target": "windows_sys"
               }
             ],
@@ -56943,6 +56933,8 @@
             "Wdk_System_IO",
             "Win32",
             "Win32_Foundation",
+            "Win32_NetworkManagement",
+            "Win32_NetworkManagement_IpHelper",
             "Win32_Networking",
             "Win32_Networking_WinSock",
             "Win32_Security",
@@ -56950,6 +56942,8 @@
             "Win32_Storage_FileSystem",
             "Win32_System",
             "Win32_System_Console",
+            "Win32_System_Diagnostics",
+            "Win32_System_Diagnostics_Debug",
             "Win32_System_Environment",
             "Win32_System_IO",
             "Win32_System_LibraryLoader",
@@ -57016,10 +57010,6 @@
           "common": [
             "Win32",
             "Win32_Foundation",
-            "Win32_NetworkManagement",
-            "Win32_NetworkManagement_IpHelper",
-            "Win32_Networking",
-            "Win32_Networking_WinSock",
             "Win32_Security",
             "Win32_Security_Authentication",
             "Win32_Security_Authentication_Identity",
@@ -57030,12 +57020,9 @@
             "Win32_System",
             "Win32_System_Com",
             "Win32_System_Console",
-            "Win32_System_Diagnostics",
-            "Win32_System_Diagnostics_Debug",
             "Win32_System_LibraryLoader",
             "Win32_System_Memory",
             "Win32_System_SystemInformation",
-            "Win32_System_Threading",
             "Win32_UI",
             "Win32_UI_Input",
             "Win32_UI_Input_KeyboardAndMouse",
@@ -60458,7 +60445,7 @@
     "clap-num 1.2.0",
     "clap_complete 4.5.44",
     "colored 2.2.0",
-    "comfy-table 7.1.3",
+    "comfy-table 7.1.4",
     "crossbeam 0.8.4",
     "crossbeam-channel 0.5.14",
     "cryptoki 0.7.0",
