@@ -5,6 +5,7 @@ use std::vec;
 
 use axum_otel_metrics::HttpMetricsLayerBuilder;
 use clap::Parser;
+use crossbeam_channel::{bounded, unbounded};
 use humantime::parse_duration;
 use ic_management_types::Network;
 use service_discovery::shutdown_signal;
@@ -29,6 +30,7 @@ fn main() {
     let log = make_logger();
     let shutdown_signal = shutdown_signal(log.clone());
     let cli_args = CliArgs::parse();
+    info!(log, "Running server with args: {:?}", cli_args);
 
     fn get_mainnet_definition(cli_args: &CliArgs, log: Logger) -> Definition {
         Definition::new(
@@ -58,7 +60,7 @@ fn main() {
     if cli_args.render_prom_targets_to_stdout {
         async fn sync(cli_args: &CliArgs, log: &Logger, shutdown_signal: impl futures_util::Future<Output = ()>) -> Option<RunningDefinition> {
             let def = get_mainnet_definition(cli_args, log.clone());
-            let test_def = TestDefinition::new(def, RunningDefinitionsMetrics::new());
+            let mut test_def = TestDefinition::new(def, RunningDefinitionsMetrics::new());
             let sync_fut = test_def.sync_and_stop(cli_args.skip_update_local_registry);
             tokio::select! {
                 _ = sync_fut => {
@@ -78,13 +80,25 @@ fn main() {
             print!("{}", text);
         }
     } else {
+        let (remove_request_sender, remove_request_receiver) = unbounded();
+        let (end_sender, end_receiver) = bounded(1);
         let supervisor = DefinitionsSupervisor::new(
             rt.handle().clone(),
             cli_args.start_without_mainnet,
             cli_args.networks_state_file.clone(),
             make_logger(),
+            cli_args.garbage_collection_timeout,
+            remove_request_sender,
         );
         let (server_stop, server_stop_receiver) = oneshot::channel();
+
+        // Spawn the thread for removing stale targets
+        let supervisor_clone = supervisor.clone();
+        let watcher_handle = std::thread::spawn(move || {
+            supervisor_clone
+                .rt
+                .block_on(supervisor_clone.watch_for_removal_requests(remove_request_receiver, end_receiver))
+        });
 
         // Initialize the metrics layer because in the build method the `global::provider`
         // is set. We can use global::meter only after that call.
@@ -146,6 +160,10 @@ fn main() {
 
         // Signal server to stop.  Stop happens in parallel with supervisor stop.
         server_stop.send(()).unwrap();
+
+        // Stop the watcher thread
+        end_sender.send(()).unwrap();
+        watcher_handle.join().unwrap();
 
         //Stop all definitions.  End happens in parallel with server stop.
         rt.block_on(supervisor.end());
@@ -260,4 +278,15 @@ exist, it will be created.
 "#
     )]
     networks_state_file: Option<PathBuf>,
+
+    #[clap(
+        long = "gc-timeout",
+        default_value = "None",
+        value_parser = parse_duration,
+        help = r#"
+If set, networks that cannot be scraped for `Duration` will be removed.
+
+    "#
+        )]
+    garbage_collection_timeout: Option<Duration>,
 }

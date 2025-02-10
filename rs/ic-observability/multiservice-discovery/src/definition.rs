@@ -1,3 +1,4 @@
+use crossbeam_channel::unbounded;
 use crossbeam_channel::Receiver;
 use crossbeam_channel::Sender;
 use futures_util::future::join_all;
@@ -23,6 +24,7 @@ use std::fmt::{Display, Error as FmtError, Formatter};
 use std::io::Write;
 use std::net::SocketAddr;
 use std::sync::Arc;
+use std::time::SystemTime;
 use std::{
     path::PathBuf,
     time::{Duration, Instant},
@@ -141,6 +143,12 @@ pub struct RunningDefinition {
     stop_signal: Receiver<()>,
     ender: Arc<Mutex<Option<Ender>>>,
     metrics: RunningDefinitionsMetrics,
+    // Used to determine if it should be garbage collected
+    last_successful_scrape: u64,
+    // Maximum duration to wait until ending the definition
+    garbage_collection_timeout: Option<Duration>,
+    // Send the stop request to the supervisor,
+    remove_request_sender: Sender<String>,
 }
 
 pub struct TestDefinition {
@@ -151,18 +159,22 @@ impl TestDefinition {
     pub(crate) fn new(definition: Definition, metrics: RunningDefinitionsMetrics) -> Self {
         let (_, stop_signal) = crossbeam::channel::bounded::<()>(0);
         let ender: Arc<Mutex<Option<Ender>>> = Arc::new(Mutex::new(None));
+        let (remove_request_sender, _) = unbounded();
         Self {
             running_def: RunningDefinition {
                 definition,
                 stop_signal,
                 ender,
                 metrics,
+                last_successful_scrape: 0,
+                garbage_collection_timeout: None,
+                remove_request_sender,
             },
         }
     }
 
     /// Syncs the registry update the in-memory cache then stops.
-    pub async fn sync_and_stop(&self, skip_update_local_registry: bool) {
+    pub async fn sync_and_stop(&mut self, skip_update_local_registry: bool) {
         // If skip_update_local_registry is true, first try and use the existing one
         if skip_update_local_registry {
             match self.running_def.initial_registry_sync(true).await {
@@ -222,8 +234,14 @@ impl Definition {
         }
     }
 
-    pub(crate) async fn run(self, rt: tokio::runtime::Handle, metrics: RunningDefinitionsMetrics) -> RunningDefinition {
-        fn wrap(definition: RunningDefinition, rt: tokio::runtime::Handle) -> impl FnMut() {
+    pub(crate) async fn run(
+        self,
+        rt: tokio::runtime::Handle,
+        metrics: RunningDefinitionsMetrics,
+        garbage_collection_timeout: Option<Duration>,
+        remove_request_sender: Sender<String>,
+    ) -> RunningDefinition {
+        fn wrap(mut definition: RunningDefinition, rt: tokio::runtime::Handle) -> impl FnMut() {
             move || {
                 rt.block_on(definition.run());
             }
@@ -237,6 +255,9 @@ impl Definition {
             stop_signal,
             ender: ender.clone(),
             metrics,
+            last_successful_scrape: 0,
+            garbage_collection_timeout,
+            remove_request_sender,
         };
         let join_handle = std::thread::spawn(wrap(d.clone(), rt));
         ender.lock().await.replace(Ender {
@@ -255,7 +276,12 @@ impl RunningDefinition {
             // all senders will have been dropped, and no more messages can be sent.
             // https://docs.rs/crossbeam/latest/crossbeam/channel/index.html#disconnection
             info!(self.definition.log, "Sending termination signal to definition {}", self.definition.name);
-            s.stop_signal_sender.send(()).unwrap();
+            if let Err(e) = s.stop_signal_sender.send(()) {
+                warn!(
+                    self.definition.log,
+                    "Failed to send termination signal to definition {}: {:?}", self.definition.name, e
+                );
+            };
             info!(self.definition.log, "Joining definition {} thread", self.definition.name);
             s.join_handle.join().unwrap();
         }
@@ -265,7 +291,7 @@ impl RunningDefinition {
         self.definition.ic_discovery.get_target_groups(job_type, self.definition.log.clone())
     }
 
-    async fn initial_registry_sync(&self, use_current_version: bool) -> Result<(), SyncError> {
+    async fn initial_registry_sync(&mut self, use_current_version: bool) -> Result<(), SyncError> {
         info!(
             self.definition.log,
             "Syncing local registry for {} (to local registry path {}) started",
@@ -286,6 +312,7 @@ impl RunningDefinition {
             Ok(_) => {
                 info!(self.definition.log, "Syncing local registry for {} completed", self.definition.name,);
                 self.metrics.observe_sync(self.name(), true);
+                self.update_last_successful_scrape();
                 Ok(())
             }
             Err(e) => {
@@ -304,7 +331,7 @@ impl RunningDefinition {
         }
     }
 
-    async fn poll_loop(&self) {
+    async fn poll_loop(&mut self) {
         let interval = crossbeam::channel::tick(self.definition.poll_interval);
         let mut tick = Instant::now();
         loop {
@@ -327,8 +354,22 @@ impl RunningDefinition {
                     self.definition.log,
                     "Failed to sync registry for {} @ interval {:?}: {:?}", self.definition.name, tick, e
                 );
-                self.metrics.observe_sync(self.name(), false)
+                self.metrics.observe_sync(self.name(), false);
+                // Check if it should be garbage collected
+                if self.cancel_if_gc_timeout_elapsed() {
+                    info!(self.definition.log, "Sending request so shutdown {} to supervisor", self.definition.name);
+                    if let Err(e) = self.remove_request_sender.send(self.name()) {
+                        warn!(self.definition.log, "Failed to send remove request to the supervisor: {:?}", e);
+                    } else {
+                        // Only stop if the supervisor was notified
+                        break;
+                    }
+                }
+                if self.garbage_collection_timeout.is_some() {
+                    warn!(self.definition.log, "It could soon be garbage collected")
+                }
             } else {
+                self.update_last_successful_scrape();
                 self.metrics.observe_sync(self.name(), true)
             }
 
@@ -340,11 +381,51 @@ impl RunningDefinition {
                 recv(interval) -> msg => msg.expect("tick failed!")
             }
         }
+
+        crossbeam::select! {
+            recv(self.stop_signal) -> _ => {
+                info!(self.definition.log, "Received shutdown signal after being garbage collected for {}", self.definition.name);
+                return;
+            }
+        }
+    }
+
+    fn update_last_successful_scrape(&mut self) {
+        self.last_successful_scrape = SystemTime::now().duration_since(SystemTime::UNIX_EPOCH).unwrap().as_secs();
+    }
+
+    fn cancel_if_gc_timeout_elapsed(&self) -> bool {
+        let gc_timeout = match &self.garbage_collection_timeout {
+            Some(t) => t,
+            // No gc timeout set, never garbage collect
+            None => return false,
+        };
+
+        let last_scrape = match SystemTime::UNIX_EPOCH.checked_add(Duration::from_secs(self.last_successful_scrape)) {
+            Some(t) => t,
+            // Overflow
+            // Undefined behaviour, should not happen in
+            // the near future
+            None => return false,
+        };
+
+        let difference = match SystemTime::now().duration_since(last_scrape) {
+            Ok(diff) => diff,
+            // Difference earlier than 1970,
+            // Undefined behaviour, should not happen
+            Err(_) => return false,
+        };
+
+        if difference.ge(gc_timeout) {
+            return true;
+        }
+
+        false
     }
 
     // Syncs the registry and keeps running, syncing as new
     // registry versions come in.
-    async fn run(&self) {
+    async fn run(&mut self) {
         // Loop to do retries of initial sync and handle cancellation.
         // We keep retries outside the callee to make the callee easier
         // to test and more solid state.
@@ -489,21 +570,33 @@ pub(crate) enum StartMode {
 
 #[derive(Clone)]
 pub(super) struct DefinitionsSupervisor {
-    rt: tokio::runtime::Handle,
+    pub(super) rt: tokio::runtime::Handle,
     pub(super) definitions: Arc<Mutex<BTreeMap<String, RunningDefinition>>>,
     allow_mercury_deletion: bool,
     networks_state_file: Option<PathBuf>,
     log: Logger,
+    garbage_collection_timeout: Option<Duration>,
+
+    remove_request_sender: Sender<String>,
 }
 
 impl DefinitionsSupervisor {
-    pub(crate) fn new(rt: tokio::runtime::Handle, allow_mercury_deletion: bool, networks_state_file: Option<PathBuf>, log: Logger) -> Self {
+    pub(crate) fn new(
+        rt: tokio::runtime::Handle,
+        allow_mercury_deletion: bool,
+        networks_state_file: Option<PathBuf>,
+        log: Logger,
+        garbage_collection_timeout: Option<Duration>,
+        remove_request_sender: Sender<String>,
+    ) -> Self {
         DefinitionsSupervisor {
             rt,
             definitions: Arc::new(Mutex::new(BTreeMap::new())),
             allow_mercury_deletion,
             networks_state_file,
             log,
+            garbage_collection_timeout,
+            remove_request_sender,
         }
     }
 
@@ -610,13 +703,47 @@ impl DefinitionsSupervisor {
         drop(ic_names_to_end);
         // Now we add the incoming definitions.
         for definition in definitions.into_iter() {
-            existing.insert(definition.name.clone(), definition.run(self.rt.clone(), metrics.clone()).await);
+            existing.insert(
+                definition.name.clone(),
+                definition
+                    .run(
+                        self.rt.clone(),
+                        metrics.clone(),
+                        self.garbage_collection_timeout.clone(),
+                        self.remove_request_sender.clone(),
+                    )
+                    .await,
+            );
         }
         // Now we rewrite definitions to disk.
         if let Err(e) = self.persist_defs(existing).await {
             warn!(self.log, "Error while peristing definitions to disk '{}'", e);
         }
         Ok(())
+    }
+
+    pub async fn watch_for_removal_requests(&self, remove_request_receiver: Receiver<String>, end_receiver: Receiver<()>) {
+        loop {
+            crossbeam::select! {
+                recv(remove_request_receiver) -> maybe_definition_name => {
+                    match maybe_definition_name {
+                        Ok(name) => {
+                            info!(self.log, "Received request to shutdown {}", name);
+                            if let Err(e) = self.stop(vec![name.clone()]).await {
+                                warn!(self.log, "Failed to stop {} due to: {:?}", name, e);
+                            } else {
+                                info!(self.log, "Removed network: {}", name);
+                            }
+                        },
+                        Err(_) => {}
+                    }
+                }
+                recv(end_receiver) -> _ => {
+                    info!(self.log, "Received stop signal in watcher loop");
+                    return;
+                }
+            }
+        }
     }
 
     /// Start a list of definitions.
