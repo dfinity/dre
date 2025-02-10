@@ -942,6 +942,7 @@ pub fn boundary_nodes_from_definitions(definitions: &BTreeMap<String, RunningDef
 mod tests {
     use super::{Definition, TestDefinition};
     use crate::{definition::DefinitionsSupervisor, make_logger, metrics::RunningDefinitionsMetrics};
+    use crossbeam_channel::unbounded;
     use ic_management_types::Network;
     use std::{collections::BTreeMap, str::FromStr, time::Duration};
     use tempfile::tempdir;
@@ -952,7 +953,8 @@ mod tests {
         let definitions_dir = tempdir().unwrap();
         let definitions_path = definitions_dir.path().join(String::from("definitions.json"));
         let log = make_logger();
-        let supervisor = DefinitionsSupervisor::new(handle.clone(), false, Some(definitions_path.clone()), log.clone());
+        let (sender, _) = unbounded();
+        let supervisor = DefinitionsSupervisor::new(handle.clone(), false, Some(definitions_path.clone()), log.clone(), None, sender);
 
         let mocked_definition = Definition::new(
             vec![url::Url::from_str("http://[2a00:fb01:400:42:5000:3cff:fe45:6c61]:8080").unwrap()],
