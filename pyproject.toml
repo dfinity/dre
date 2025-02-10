@@ -52,7 +52,7 @@ dependencies = [
     "httpretty>=1.1.4",
     "aiohttp>=3.10.5",
     "uv>=0.5.20",
-    "mypy==1.14.1",
+    "mypy==1.15.0",
 ]
 
 [tool.rye]
