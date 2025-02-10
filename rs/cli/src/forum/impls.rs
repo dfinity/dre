@@ -77,13 +77,12 @@ impl ForumPostHandler for Prompter {
 /// Type of forum post client that manages the creation and update of forum posts on Discourse.
 pub(crate) struct Discourse {
     client: DiscourseClientImp,
-    simulate: bool,
     skip_forum_post_creation: bool,
     subnet_topic_file_override: Option<PathBuf>,
 }
 
 impl Discourse {
-    pub(crate) fn new(forum_opts: ForumParameters, simulate: bool) -> anyhow::Result<Self> {
+    pub(crate) fn new(forum_opts: ForumParameters) -> anyhow::Result<Self> {
         // FIXME: move me to the DiscourseClientImp struct.
         let placeholder_key = "placeholder_key".to_string();
         let placeholder_user = "placeholder_user".to_string();
@@ -111,8 +110,6 @@ impl Discourse {
 
         Ok(Self {
             client: DiscourseClientImp::new(forum_url, api_key, api_user)?,
-            // `simulate` for discourse client means that it shouldn't try and create posts or update them.
-            simulate,
             skip_forum_post_creation: forum_opts.discourse_skip_post_creation,
             subnet_topic_file_override: forum_opts.discourse_subnet_topic_override_file_path.clone(),
         })
@@ -198,10 +195,6 @@ impl Discourse {
 
 impl ForumPostHandler for Discourse {
     fn forum_post(&self, kind: ForumPostKind) -> BoxFuture<'_, anyhow::Result<Box<dyn ForumPost>>> {
-        if self.simulate {
-            info!("Not creating any forum post because simulation was requested (perhaps offline or dry-run mode)");
-            return FutureExt::boxed(async { Ok(Box::new(OptionalFixedLink { url: None }) as Box<dyn ForumPost>) });
-        }
         if self.skip_forum_post_creation {
             info!("Not creating any forum post because user requested to skip creating forum post.");
             return FutureExt::boxed(async { Ok(Box::new(OptionalFixedLink { url: None }) as Box<dyn ForumPost>) });

@@ -15,11 +15,14 @@ use crate::{
     auth::Neuron,
     commands::{Args, AuthOpts, AuthRequirement, ExecutableCommand, IcAdminVersion},
     cordoned_feature_fetcher::CordonedFeatureFetcher,
-    ic_admin::{IcAdmin, IcAdminImpl},
+    ic_admin::{IcAdmin, IcAdminImpl, ProposalExecutor},
     runner::Runner,
     store::Store,
     subnet_manager::SubnetManager,
 };
+
+#[cfg(test)]
+mod unit_tests;
 
 #[derive(Clone)]
 struct NeuronOpts {
@@ -27,6 +30,19 @@ struct NeuronOpts {
     requirement: AuthRequirement,
     neuron_id: Option<u64>,
     neuron_override: Option<Neuron>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum HowToProceed {
+    Confirm,
+    Unconditional,
+    DryRun,
+    #[allow(dead_code)]
+    UnitTests, // Necessary for unit tests, otherwise confirmation is requested.
+               // Generally this is hit when DreContext (created by get_mocked_ctx) has
+               // both dry_run and proceed_without_confirmation set to true.
+               // The net effect is that both the dry run and the final command are run.
+               // FIXME we should probably rename this to "DuringTesting".
 }
 
 #[derive(Clone)]
@@ -38,10 +54,9 @@ pub struct DreContext {
     ic_repo: RefCell<Option<Arc<dyn LazyGit>>>,
     proposal_agent: Arc<dyn ProposalAgent>,
     verbose_runner: bool,
-    dry_run: bool,
+    pub mode: HowToProceed,
     artifact_downloader: Arc<dyn ArtifactDownloader>,
     neuron: RefCell<Option<Neuron>>,
-    proceed_without_confirmation: bool,
     version: IcAdminVersion,
     neuron_opts: NeuronOpts,
     cordoned_features_fetcher: Arc<dyn CordonedFeatureFetcher>,
@@ -56,8 +71,7 @@ impl DreContext {
         auth: AuthOpts,
         neuron_id: Option<u64>,
         verbose: bool,
-        yes: bool,
-        dry_run: bool,
+        mode: HowToProceed,
         auth_requirement: AuthRequirement,
         ic_admin_version: IcAdminVersion,
         cordoned_features_fetcher: Arc<dyn CordonedFeatureFetcher>,
@@ -73,10 +87,9 @@ impl DreContext {
             runner: RefCell::new(None),
             verbose_runner: verbose,
             ic_repo: RefCell::new(None),
-            dry_run,
+            mode,
             artifact_downloader: Arc::new(ArtifactDownloaderImpl {}) as Arc<dyn ArtifactDownloader>,
             neuron: RefCell::new(None),
-            proceed_without_confirmation: yes,
             version: ic_admin_version,
             neuron_opts: NeuronOpts {
                 auth_opts: auth,
@@ -100,13 +113,22 @@ impl DreContext {
                 .map_err(|e| anyhow::anyhow!(e))?,
             true => Network::new_unchecked(args.network.clone(), &args.nns_urls)?,
         };
+        let mode = match (args.dry_run || args.offline, args.yes) {
+            (false, true) => HowToProceed::Unconditional,
+            (true, false) => HowToProceed::DryRun,
+            (false, false) => HowToProceed::Confirm,
+            (true, true) => {
+                return Err(anyhow::anyhow!(
+                    "Conflicting request: cannot specify --yes and --dry-run (or any variant) in the same command."
+                ))
+            }
+        };
         Self::new(
             network.clone(),
             args.auth_opts.clone(),
             args.neuron_id,
             args.verbose,
-            args.yes,
-            args.dry_run,
+            mode,
             args.subcommands.require_auth(),
             args.ic_admin_version.clone(),
             store.cordoned_features_fetcher(args.cordoned_features_file.clone())?,
@@ -130,15 +152,6 @@ impl DreContext {
         &self.network
     }
 
-    #[must_use]
-    pub fn is_dry_run(&self) -> bool {
-        self.dry_run
-    }
-
-    pub fn is_offline(&self) -> bool {
-        self.store.is_offline()
-    }
-
     /// Uses `ic_agent::Agent`
     pub async fn create_ic_agent_canister_client(&self) -> anyhow::Result<(Neuron, IcAgentCanisterClient)> {
         let neuron = self.neuron().await?;
@@ -146,23 +159,37 @@ impl DreContext {
         Ok((neuron, canister_client))
     }
 
-    pub async fn ic_admin(&self) -> anyhow::Result<Arc<dyn IcAdmin>> {
+    async fn ic_admin(&self) -> anyhow::Result<Arc<dyn IcAdmin>> {
         if let Some(a) = self.ic_admin.borrow().as_ref() {
             return Ok(a.clone());
         }
 
-        let ic_admin = self
-            .store
-            .ic_admin(
-                &self.version,
-                self.network(),
-                self.proceed_without_confirmation,
-                self.neuron().await?,
-                self.dry_run,
-            )
-            .await?;
+        let ic_admin = self.store.ic_admin(&self.version, self.network(), self.neuron().await?).await?;
         *self.ic_admin.borrow_mut() = Some(ic_admin.clone());
         Ok(ic_admin)
+    }
+
+    pub async fn help_propose(&self, specific_subcommand: Option<&str>) -> anyhow::Result<()> {
+        let ic_admin = self.ic_admin().await?;
+        match &specific_subcommand {
+            None => {
+                println!("List of available ic-admin 'propose' sub-commands:\n");
+                for subcmd in ic_admin.grep_subcommands(r"\s+propose-to-(.+?)\s").await? {
+                    println!("\t{}", subcmd)
+                }
+            }
+            Some(subcmd) => print!("{}", ic_admin.grep_subcommand_arguments(subcmd).await?),
+        }
+        Ok(())
+    }
+
+    pub async fn get(&self, args: &[String]) -> anyhow::Result<()> {
+        print!("{}", self.ic_admin().await?.get(args).await?);
+        Ok(())
+    }
+
+    pub async fn executor(&self) -> anyhow::Result<ProposalExecutor> {
+        Ok(ProposalExecutor::from(self.ic_admin().await?))
     }
 
     pub async fn neuron(&self) -> anyhow::Result<Neuron> {
@@ -203,13 +230,7 @@ impl DreContext {
 
     pub async fn readonly_ic_admin_for_other_network(&self, network: Network) -> anyhow::Result<impl IcAdmin> {
         let ic_admin = self.ic_admin().await?;
-        Ok(IcAdminImpl::new(
-            network,
-            ic_admin.ic_admin_path(),
-            true,
-            Neuron::anonymous_neuron(),
-            false,
-        ))
+        Ok(IcAdminImpl::new(network, ic_admin.ic_admin_path(), Neuron::anonymous_neuron()))
     }
 
     pub async fn subnet_manager(&self) -> anyhow::Result<SubnetManager> {
@@ -267,7 +288,7 @@ pub mod tests {
         store::Store,
     };
 
-    use super::DreContext;
+    use super::{DreContext, HowToProceed};
 
     pub fn get_mocked_ctx(
         network: Network,
@@ -288,10 +309,9 @@ pub mod tests {
             ic_repo: RefCell::new(Some(git)),
             proposal_agent,
             verbose_runner: true,
-            dry_run: true,
+            mode: HowToProceed::UnitTests,
             artifact_downloader,
             neuron: RefCell::new(Some(neuron.clone())),
-            proceed_without_confirmation: true,
             version: crate::commands::IcAdminVersion::Strict("Shouldn't reach this because of mock".to_string()),
             neuron_opts: super::NeuronOpts {
                 auth_opts: AuthOpts {

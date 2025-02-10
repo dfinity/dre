@@ -13,7 +13,7 @@ use crate::{
     commands::ExecutableCommand,
     cordoned_feature_fetcher::MockCordonedFeatureFetcher,
     ctx::tests::get_mocked_ctx,
-    ic_admin::{MockIcAdmin, ProposeCommand, ProposeOptions},
+    ic_admin::MockIcAdmin,
     runner::{format_regular_version_upgrade_summary, format_security_hotfix},
 };
 
@@ -25,15 +25,14 @@ fn fake_forum_parameters() -> ForumParameters {
 
 #[tokio::test]
 async fn guest_os_elect_version_tests() {
-    let mut ic_admin = MockIcAdmin::new();
-    let captured_cmd: Arc<RwLock<Option<ProposeCommand>>> = Arc::new(RwLock::new(None));
-    let captured_opts: Arc<RwLock<Option<ProposeOptions>>> = Arc::new(RwLock::new(None));
+    let captured_cmd: Arc<RwLock<Option<Vec<String>>>> = Arc::new(RwLock::new(None));
     let captured_cmd_clone = captured_cmd.clone();
-    let captured_opts_clone = captured_opts.clone();
-    ic_admin.expect_propose_print_and_confirm().returning(|_, _| Box::pin(async { Ok(true) }));
-    ic_admin.expect_propose_submit().returning(move |cmd, opts| {
+
+    let mut ic_admin = MockIcAdmin::new();
+    ic_admin.expect_simulate_proposal().returning(|_| Box::pin(async { Ok(()) }));
+    let captured_cmd_clone = captured_cmd_clone.clone();
+    ic_admin.expect_submit_proposal().returning(move |cmd, _forum_post| {
         *captured_cmd_clone.write().unwrap() = Some(cmd.clone());
-        *captured_opts_clone.write().unwrap() = Some(opts.clone());
         Box::pin(ok("Proposal 123".to_string()))
     });
 
@@ -110,20 +109,15 @@ async fn guest_os_elect_version_tests() {
         assert!(resp.is_ok(), "Test {} failed, command finished with err: {:?}", name, resp.err().unwrap());
 
         let mut captured_cmd = captured_cmd.write().unwrap();
-        let mut captured_opts = captured_opts.write().unwrap();
-        assert!(
-            captured_cmd.is_some() && captured_opts.is_some(),
-            "Test {} failed, ic-admin not called but expected to be",
+        assert!(captured_cmd.is_some(), "Test {} failed, ic-admin not called but expected to be", name);
+
+        let args = captured_cmd.as_ref().unwrap();
+
+        assert_eq!(
+            args[0], "propose-to-revise-elected-guestos-versions",
+            "Test {} received an unexpected artifact",
             name
         );
-        let (artifact, args) = match captured_cmd.as_ref().unwrap() {
-            ProposeCommand::ReviseElectedVersions { release_artifact, args } => (release_artifact, args),
-            _ => panic!("Test {} captured an unexpected proposal command", name),
-        };
-
-        let opts = captured_opts.as_ref().unwrap();
-
-        assert_eq!(*artifact, Artifact::GuestOs, "Test {} received an unexpected artifact", name);
         assert!(
             args.contains(&sha) && args.contains(&cmd.version),
             "Test {} arguments don't contain correct sha `{}` or version `{}`. Got [{}]",
@@ -132,17 +126,16 @@ async fn guest_os_elect_version_tests() {
             name,
             args.iter().join(", ")
         );
-        assert!(opts.title.as_ref().unwrap().starts_with(expected_title));
+        assert!(args[3].starts_with(expected_title));
         assert_eq!(
             match cmd.security_fix {
                 true => format_security_hotfix(),
                 false => format_regular_version_upgrade_summary(&cmd.version, &Artifact::GuestOs, &cmd.release_tag,).unwrap(),
             },
-            *opts.summary.as_ref().unwrap(),
+            args[5],
         );
 
         // Prepare for next test
         *captured_cmd = None;
-        *captured_opts = None;
     }
 }

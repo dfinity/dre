@@ -22,6 +22,7 @@ mod store;
 mod subnet_manager;
 #[cfg(test)]
 mod unit_tests;
+mod util;
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
