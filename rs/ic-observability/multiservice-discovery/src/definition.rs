@@ -385,7 +385,6 @@ impl RunningDefinition {
         crossbeam::select! {
             recv(self.stop_signal) -> _ => {
                 info!(self.definition.log, "Received shutdown signal after being garbage collected for {}", self.definition.name);
-                return;
             }
         }
     }
@@ -709,7 +708,7 @@ impl DefinitionsSupervisor {
                     .run(
                         self.rt.clone(),
                         metrics.clone(),
-                        self.garbage_collection_timeout.clone(),
+                        self.garbage_collection_timeout,
                         self.remove_request_sender.clone(),
                     )
                     .await,
@@ -735,7 +734,9 @@ impl DefinitionsSupervisor {
                                 info!(self.log, "Removed network: {}", name);
                             }
                         },
-                        Err(_) => {}
+                        Err(e) => {
+                            warn!(self.log, "Received error on request to remove a definition: {:?}", e)
+                        }
                     }
                 }
                 recv(end_receiver) -> _ => {
