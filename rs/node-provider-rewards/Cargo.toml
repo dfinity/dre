@@ -1,0 +1,27 @@
+[package]
+name = "node-provider-rewards"
+version.workspace = true
+authors.workspace = true
+description.workspace = true
+documentation.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+ahash = { version = "0.8.11", default-features = false, features = [
+"compile-time-rng",
+] }
+ic-types = { workspace = true }
+ic-base-types = { workspace = true }
+itertools = { workspace = true }
+num-traits = { workspace = true }
+rust_decimal = { workspace = true }
+rust_decimal_macros = { workspace = true }
+ic-management-canister-types = { workspace = true }
+
+[dev-dependencies]
+chrono = { workspace = true }
+
+[lib]
+name = "node_provider_rewards"
+path = "src/lib.rs"
