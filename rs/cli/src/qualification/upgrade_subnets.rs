@@ -9,7 +9,7 @@ use itertools::Itertools;
 use reqwest::ClientBuilder;
 
 use crate::{
-    ic_admin::{ProposeCommand, ProposeOptions},
+    ic_admin::{IcAdminProposal, IcAdminProposalCommand, IcAdminProposalOptions},
     qualification::comfy_table_util::Table,
 };
 
@@ -90,19 +90,21 @@ impl Step for UpgradeSubnets {
                 // Place proposal
                 let place_proposal = || async {
                     ctx.dre_ctx()
-                        .ic_admin()
+                        .ic_admin_executor()
                         .await?
-                        .propose_run(
-                            ProposeCommand::DeployGuestosToAllSubnetNodes {
-                                subnet: subnet.principal,
-                                version: self.to_version.clone(),
-                            },
-                            ProposeOptions {
-                                title: Some(format!("Propose to upgrade subnet {} to {}", subnet.principal, &self.to_version)),
-                                summary: Some("Qualification testing".to_string()),
-                                motivation: Some("Qualification testing".to_string()),
-                                forum_post_link: None,
-                            },
+                        .submit(
+                            &IcAdminProposal::new(
+                                IcAdminProposalCommand::DeployGuestosToAllSubnetNodes {
+                                    subnet: subnet.principal,
+                                    version: self.to_version.clone(),
+                                },
+                                IcAdminProposalOptions {
+                                    title: Some(format!("Propose to upgrade subnet {} to {}", subnet.principal, &self.to_version)),
+                                    summary: Some("Qualification testing".to_string()),
+                                    motivation: Some("Qualification testing".to_string()),
+                                },
+                            ),
+                            None,
                         )
                         .await
                 };
@@ -134,18 +136,20 @@ impl Step for UpgradeSubnets {
 
             let place_proposal = || async {
                 ctx.dre_ctx()
-                    .ic_admin()
+                    .ic_admin_executor()
                     .await?
-                    .propose_run(
-                        ProposeCommand::DeployGuestosToAllUnassignedNodes {
-                            replica_version: self.to_version.clone(),
-                        },
-                        ProposeOptions {
-                            title: Some("Upgrading unassigned nodes".to_string()),
-                            summary: Some("Upgrading unassigned nodes".to_string()),
-                            motivation: Some("Upgrading unassigned nodes".to_string()),
-                            forum_post_link: None,
-                        },
+                    .submit(
+                        &IcAdminProposal::new(
+                            IcAdminProposalCommand::DeployGuestosToAllUnassignedNodes {
+                                replica_version: self.to_version.clone(),
+                            },
+                            IcAdminProposalOptions {
+                                title: Some("Upgrading unassigned nodes".to_string()),
+                                summary: Some("Upgrading unassigned nodes".to_string()),
+                                motivation: Some("Upgrading unassigned nodes".to_string()),
+                            },
+                        ),
+                        None,
                     )
                     .await
             };
