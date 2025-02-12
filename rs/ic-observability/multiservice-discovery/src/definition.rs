@@ -362,6 +362,11 @@ impl RunningDefinition {
                         warn!(self.definition.log, "Failed to send remove request to the supervisor: {:?}", e);
                     } else {
                         // Only stop if the supervisor was notified
+
+                        if let Err(e) = std::fs::remove_dir_all(&self.definition.registry_path) {
+                            warn!(self.definition.log, "Failed to remove directory holding the targets: {:?}", e);
+                        }
+
                         break;
                     }
                 }
