@@ -47,14 +47,23 @@ class DRECli:
             ]
         else:
             self.auth = []
-        self.cli = resolve_binary("dre")
+        self.cli = resolve_binary("old-dre")
 
-    def _run(self, *args: str) -> str:
+    def _run(self, *args: str, **subprocess_kwargs: typing.Any) -> str:
         """Run the dre CLI."""
-        return subprocess.check_output(
-            [self.cli, *(["--yes"] if "propose" in args else []), *self.auth, *args],
-            env=self.env,
-            text=True,
+        return typing.cast(
+            str,
+            subprocess.check_output(
+                [
+                    self.cli,
+                    *(["--yes"] if "propose" in args else []),
+                    *self.auth,
+                    *args,
+                ],
+                env=self.env,
+                text=True,
+                **subprocess_kwargs,
+            ),
         )
 
     def get_blessed_versions(self) -> list[str]:
@@ -115,7 +124,7 @@ class DRECli:
                 d[replica_version] = proposal
         return d
 
-    def place_proposal(
+    def propose_to_revise_elected_guestos_versions(
         self,
         changelog: str,
         version: str,
@@ -125,15 +134,73 @@ class DRECli:
         package_urls: list[str],
         dry_run: bool = False,
     ) -> int:
+        try:
+            self._run(
+                "propose",
+                "revise-elected-guestos-versions",
+                "--help",
+                stderr=subprocess.STDOUT,
+            )
+            subcommand_name: (
+                typing.Literal["update-elected-replica-versions"]
+                | typing.Literal["revise-elected-guestos-versions"]
+            ) = "revise-elected-guestos-versions"
+            # New style of proposal naming is now active in ic-admin.
+        except subprocess.CalledProcessError:
+            # Old style of proposal naming is still active in ic-admin.
+            try:
+                self._run(
+                    "propose",
+                    "revise-elected-guestos-versions",
+                    "--help",
+                    stderr=subprocess.STDOUT,
+                )
+            except subprocess.CalledProcessError:
+                raise RuntimeError(
+                    "No variant of the dre propose command "
+                    "can be used to revise elected GuestOS versions"
+                )
+            subcommand_name = "update-elected-replica-versions"
+
+        return self._propose_to_update_elected_replica_versions(
+            subcommand_name,
+            changelog,
+            version,
+            forum_post_url,
+            unelect_versions,
+            package_checksum,
+            package_urls,
+            dry_run,
+        )
+
+    def _propose_to_update_elected_replica_versions(
+        self,
+        subcommand_name: typing.Literal["update-elected-replica-versions"]
+        | typing.Literal["revise-elected-guestos-versions"],
+        changelog: str,
+        version: str,
+        forum_post_url: str,
+        unelect_versions: list[str],
+        package_checksum: str,
+        package_urls: list[str],
+        dry_run: bool = False,
+    ) -> int:
         unelect_versions_args = []
+        if subcommand_name == "revise-elected-guestos-versions":
+            proposal_url_args: list[str] = ["--proposal-url", forum_post_url]
+            summary = changelog
+        else:
+            proposal_url_args = []
+            summary = changelog + f"\n\nLink to the forum post: {forum_post_url}"
+
         if len(unelect_versions) > 0:
             unelect_versions_args.append("--replica-versions-to-unelect")
             unelect_versions_args.extend(unelect_versions)
-        summary = changelog + f"\n\nLink to the forum post: {forum_post_url}"
+
         self._logger.info("Submitting proposal for version %s", version)
         text = self._run(
             "propose",
-            "update-elected-replica-versions",
+            subcommand_name,
             "--proposal-title",
             f"Elect new IC/Replica revision (commit {version[:7]})",
             "--summary",
@@ -146,6 +213,7 @@ class DRECli:
             "--replica-version-to-elect",
             version,
             *unelect_versions_args,
+            *proposal_url_args,
         )
         if not dry_run:
             try:
