@@ -1,5 +1,15 @@
 releases:
   # NOTE: Make sure to mark security hotfixes with the `security_fix: true` flag.
+  - rc_name: rc--2025-02-13_03-06
+    versions:
+      # Qualification pipeline:
+      # https://github.com/dfinity/ic/actions/runs/13299556269
+      - name: base
+        version: 2008d47a169c4984631c87f2efaa88798e6f14dc
+      # Qualification pipeline:
+      # https://github.com/dfinity/ic/actions/runs/13309323056
+      - name: disable-best-effort-messaging
+        version: d781ef0aa1ada11964394bd9269675ebe84a7b86
   - rc_name: rc--2025-02-06_12-26
     versions:
       # Qualification pipeline:
