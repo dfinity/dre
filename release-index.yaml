@@ -1,6 +1,6 @@
 releases:
   # NOTE: Make sure to mark security hotfixes with the `security_fix: true` flag.
-  - rc_name: 2025-02-13_03-06
+  - rc_name: rc--2025-02-13_03-06
     versions:
       # Qualification pipeline:
       # https://github.com/dfinity/ic/actions/runs/13299556269
