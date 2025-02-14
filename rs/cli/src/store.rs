@@ -109,7 +109,12 @@ impl Store {
         Ok(path)
     }
 
-    pub async fn registry(&self, network: &Network, proposal_agent: Arc<dyn ProposalAgent>) -> anyhow::Result<Arc<dyn LazyRegistry>> {
+    pub async fn registry(
+        &self,
+        network: &Network,
+        proposal_agent: Arc<dyn ProposalAgent>,
+        version_height: Option<u64>,
+    ) -> anyhow::Result<Arc<dyn LazyRegistry>> {
         let registry_path = self.local_store_for_network(network)?;
 
         info!("Using local registry path for network {}: {}", network.name, registry_path.display());
@@ -128,6 +133,7 @@ impl Store {
             proposal_agent,
             self.guest_labels_cache_path(network)?,
             self.health_client(network)?,
+            version_height,
         )))
     }
 

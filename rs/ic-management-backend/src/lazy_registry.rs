@@ -174,6 +174,7 @@ where
     proposal_agent: Arc<dyn ProposalAgent>,
     guest_labels_cache_path: PathBuf,
     health_client: Arc<dyn HealthStatusQuerier>,
+    version_height: Option<u64>,
 }
 
 pub trait LazyRegistryEntry: RegistryValue {
@@ -265,7 +266,9 @@ impl LazyRegistryFamilyEntries for LazyRegistryImpl {
     }
 
     fn get_latest_version(&self) -> RegistryVersion {
-        self.local_registry.get_latest_version()
+        self.version_height
+            .map(RegistryVersion::new)
+            .unwrap_or_else(|| self.local_registry.get_latest_version())
     }
 }
 
@@ -277,6 +280,7 @@ impl LazyRegistryImpl {
         proposal_agent: Arc<dyn ProposalAgent>,
         guest_labels_cache_path: PathBuf,
         health_client: Arc<dyn HealthStatusQuerier>,
+        version_height: Option<u64>,
     ) -> Self {
         Self {
             local_registry,
@@ -293,6 +297,7 @@ impl LazyRegistryImpl {
             proposal_agent,
             guest_labels_cache_path,
             health_client,
+            version_height,
         }
     }
 
