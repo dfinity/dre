@@ -18,6 +18,8 @@ num-traits = { workspace = true }
 rust_decimal = { workspace = true }
 rust_decimal_macros = { workspace = true }
 ic-management-canister-types = { workspace = true }
+tabled = { workspace = true }
+tabular = { workspace = true }
 
 [dev-dependencies]
 chrono = { workspace = true }

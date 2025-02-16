@@ -52,8 +52,8 @@ impl UnalignedTimestamp {
 // with the invariant defined in [`ic_replicated_state::metadata_state::BlockmakerMetricsTimeSeries`].
 #[derive(Debug, Clone, PartialEq)]
 pub struct RewardPeriod {
-    start_ts: TimestampNanos,
-    end_ts: TimestampNanos,
+    pub start_ts: TimestampNanos,
+    pub end_ts: TimestampNanos,
 }
 
 impl Display for RewardPeriod {

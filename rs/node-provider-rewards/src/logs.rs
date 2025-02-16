@@ -1,16 +1,18 @@
-use std::collections::HashMap;
-use ic_base_types::{NodeId, PrincipalId, SubnetId};
+use std::cell::RefCell;
+use ic_base_types::NodeId;
 use itertools::Itertools;
 use rust_decimal::{prelude::Zero, Decimal};
+use std::collections::HashMap;
 use std::fmt;
-use chrono::NaiveDate;
-use crate::types::SystematicFailureRate;
+use std::rc::Rc;
+use std::sync::Arc;
+use tabular::Table;
 
 fn round_dp_4(dec: &Decimal) -> Decimal {
     dec.round_dp(4)
 }
 
-#[derive(Clone, PartialEq, Eq, Debug)]
+#[derive(Debug)]
 pub enum Operation {
     Sum(Vec<Decimal>),
     Avg(Vec<Decimal>),
@@ -18,14 +20,9 @@ pub enum Operation {
     Multiply(Decimal, Decimal),
     Divide(Decimal, Decimal),
     Set(Decimal),
-    SumOps(Vec<Operation>),
 }
 
 impl Operation {
-    fn sum(operators: &[Decimal]) -> Decimal {
-        operators.iter().fold(Decimal::zero(), |acc, val| acc + val)
-    }
-
     fn format_values<T: fmt::Display>(items: &[T], prefix: &str) -> String {
         if items.is_empty() {
             "0".to_string()
@@ -40,20 +37,14 @@ impl Operation {
 
     fn execute(&self) -> Decimal {
         match self {
-            Operation::Sum(operators) => Self::sum(operators),
+            Operation::Sum(operators) => operators.iter().sum(),
             Operation::Avg(operators) => {
-                Self::sum(operators) / Decimal::from(operators.len().max(1))
+                operators.iter().sum::<Decimal>() / Decimal::from(operators.len().max(1))
             }
             Operation::Subtract(o1, o2) => o1 - o2,
             Operation::Divide(o1, o2) => o1 / o2,
             Operation::Multiply(o1, o2) => o1 * o2,
-            Operation::Set(o1) => *o1,
-            Operation::SumOps(operations) => Self::sum(
-                &operations
-                    .iter()
-                    .map(|operation| operation.execute())
-                    .collect_vec(),
-            ),
+            Operation::Set(o1) => *o1
         }
     }
 }
@@ -67,9 +58,6 @@ impl fmt::Display for Operation {
                     "{}",
                     Operation::format_values(&values.iter().map(round_dp_4).collect_vec(), "sum")
                 )
-            }
-            Operation::SumOps(operations) => {
-                return write!(f, "{}", Operation::format_values(operations, "sum"))
             }
             Operation::Avg(values) => {
                 return write!(
@@ -88,39 +76,24 @@ impl fmt::Display for Operation {
     }
 }
 
-#[derive(PartialEq, Eq, Debug)]
-pub enum FailureRateStatus {
-    Undefined,
-    Extrapolated {
-        failure_rate: Decimal,
-    },
-    Defined{
-        subnet_assigned: SubnetId,
-        failure_rate: Decimal,
-    },
-    DefinedRelative {
-        subnet_assigned: SubnetId,
-        original_failure_rate: Decimal,
-        systematic_failure_rate: Decimal,
-        relative_failure_rate: Decimal,
-    }
-}
 
-#[derive(PartialEq, Eq, Debug)]
-pub struct DailyFailureRate {
-    pub ts: u64,
-    pub status: FailureRateStatus
-}
-
-
-#[derive(PartialEq, Eq, Debug)]
 pub enum LogEntry {
     Execute {
         reason: String,
         operation: Operation,
         result: Decimal,
     },
-    ComputeRelativeFailureRates(HashMap<NodeId, Vec<DailyFailureRate>>),
+    RewardsReductionPercent {
+        failure_rate: Decimal,
+        min_fr: Decimal,
+        max_fr: Decimal,
+        max_rr: Decimal,
+        rewards_reduction: Decimal,
+    },
+    FinalExtrapolatedFailureRates(Table),
+    ComputeNodeMultiplier(NodeId),
+    FinalNodesMultiplier(HashMap<NodeId, Decimal>),
+    ComputeFailureRateExtrapolation,
 }
 
 impl fmt::Display for LogEntry {
@@ -132,73 +105,7 @@ impl fmt::Display for LogEntry {
                 result,
             } => {
                 write!(f, "{}: {} = {}", reason, operation, round_dp_4(result))
-            }
-            LogEntry::RewardsXDRTotal(rewards_xdr_total, rewards_xdr_total_adjusted) => {
-                write!(
-                    f,
-                    "Total rewards XDR permyriad: {}\nTotal rewards XDR permyriad not adjusted: {}",
-                    round_dp_4(rewards_xdr_total),
-                    round_dp_4(rewards_xdr_total_adjusted)
-                )
-            }
-            LogEntry::RateNotFoundInRewardTable { node_type, region } => {
-                write!(
-                    f,
-                    "RateNotFoundInRewardTable | node_type: {}, region: {}",
-                    node_type, region
-                )
-            }
-            LogEntry::RewardTableEntry {
-                node_type,
-                region,
-                coeff,
-                base_rewards,
-                node_count,
-            } => {
-                write!(
-                    f,
-                    "node_type: {}, region: {}, coeff: {}, base_rewards: {}, node_count: {}",
-                    node_type, region, coeff, base_rewards, node_count
-                )
-            }
-            LogEntry::ActiveIdiosyncraticFailureRates {
-                node_id,
-                failure_rates,
-            } => {
-                write!(
-                    f,
-                    "ActiveIdiosyncraticFailureRates | node_id={}, failure_rates_discounted={:?}",
-                    node_id, failure_rates
-                )
-            }
-            LogEntry::ComputeRewardsForNode {
-                node_id,
-                node_type,
-                region,
-            } => {
-                write!(
-                    f,
-                    "Compute Rewards For Node | node_id={}, node_type={}, region={}",
-                    node_id, node_type, region
-                )
-            }
-            LogEntry::CalculateRewardsForNodeProvider(node_provider_id) => {
-                write!(
-                    f,
-                    "CalculateRewardsForNodeProvider | node_provider_id={}",
-                    node_provider_id
-                )
-            }
-            LogEntry::BaseRewards(rewards_xdr) => {
-                write!(f, "Base rewards XDRs: {}", round_dp_4(rewards_xdr))
-            }
-            LogEntry::IdiosyncraticFailureRates(failure_rates) => {
-                write!(
-                    f,
-                    "Idiosyncratic daily failure rates : {}",
-                    failure_rates.iter().join(",")
-                )
-            }
+            },
             LogEntry::RewardsReductionPercent {
                 failure_rate,
                 min_fr,
@@ -216,53 +123,57 @@ impl fmt::Display for LogEntry {
                     max_rr,
                     round_dp_4(rewards_reduction)
                 )
-            }
-            LogEntry::ComputeBaseRewardsForRegionNodeType => {
-                write!(f, "Compute Base Rewards For RegionNodeType")
-            }
-            LogEntry::ComputeUnassignedFailureRate => {
-                write!(f, "Compute Unassigned Days Failure Rate")
-            }
-            LogEntry::NodeStatusAssigned => {
-                write!(f, "Node status: Assigned")
-            }
-            LogEntry::NodeStatusUnassigned => {
-                write!(f, "Node status: Unassigned")
-            }
+            },
+            LogEntry::FinalExtrapolatedFailureRates(_) => write!(f, "FinalExtrapolatedFailureRates"),
+            LogEntry::ComputeNodeMultiplier(_) => write!(f, "ComputeNodeMultiplier"),
+            LogEntry::FinalNodesMultiplier(_) => write!(f, "FinalNodesMultiplier"),
+            LogEntry::ComputeFailureRateExtrapolation => write!(f, "ComputeFailureRateExtrapolation"),
         }
     }
 }
 
-
-#[derive(Default, PartialEq, Eq, Debug)]
-pub struct NodeProviderRewardsLog {
-    entries: Vec<(LogLevel, LogEntry)>,
+#[derive(Default)]
+pub struct Logger {
+    entries: Rc<RefCell<Vec<LogEntry>>>,
 }
 
-impl NodeProviderRewardsLog {
-    pub fn add_entry(&mut self, entry: LogEntry) {
-        self.entries.push((log_level, entry));
+impl Logger {
+    pub fn log(&self, entry: LogEntry) {
+        self.entries.borrow_mut().push(entry);
     }
 
-    pub fn execute(&mut self, reason: &str, operation: Operation) -> Decimal {
+    pub fn get_logs(&self) -> Vec<String> {
+        self.entries.borrow().iter().map(|entry| format!("{}", entry)).collect()
+    }
+}
+
+pub struct OperationCalculator {
+    logger: Option<Rc<Logger>>,
+}
+
+
+impl OperationCalculator {
+    pub fn new() -> Self {
+        Self {
+            logger: None,
+        }
+    }
+    pub fn with_logger(&self, logger: Rc<Logger>) -> Self {
+        Self {
+            logger: Some(logger),
+        }
+    }
+
+    pub fn run(&self, reason: &str, operation: Operation) -> Decimal {
         let result = operation.execute();
-        let entry = LogEntry::Execute {
-            reason: reason.to_string(),
-            operation,
-            result,
-        };
-        self.add_entry(LogLevel::Mid, entry);
-        result
-    }
+        if let Some(logger) = self.logger.as_ref() {
+            logger.log(LogEntry::Execute {
+                reason: reason.to_string(),
+                operation,
+                result,
+            });
+        }
 
-    pub fn get_log(&self) -> Vec<String> {
-        self.entries
-            .iter()
-            .map(|(log_level, entry)| match log_level {
-                LogLevel::High => format!("{}", entry),
-                LogLevel::Mid => format!("    - {}", entry),
-                LogLevel::Low => format!("        - {}", entry),
-            })
-            .collect_vec()
+        result
     }
 }

@@ -1,16 +1,11 @@
 use crate::logs::NodeProviderRewardsLog;
-use crate::reward_period::RewardPeriod;
 use ic_base_types::{NodeId, PrincipalId, SubnetId};
-use ic_management_canister_types::NodeMetricsHistoryResponse;
 use num_traits::FromPrimitive;
 use rust_decimal::Decimal;
 use std::collections::HashMap;
 use std::fmt;
-use chrono::NaiveDate;
 
-pub type RegionNodeTypeCategory = (String, String);
 pub type TimestampNanos = u64;
-pub type SubnetMetricsHistory = (PrincipalId, Vec<NodeMetricsHistoryResponse>);
 
 #[derive(Clone, Hash, Eq, PartialEq)]
 pub struct NodeRewardsMultiplier {
@@ -23,6 +18,30 @@ pub struct NodeRewardsMultiplierResult {
     pub nodes_multiplier: Vec<NodeRewardsMultiplier>,
 }
 
+#[derive(Debug)]
+pub enum FailureRate {
+    Defined{
+        subnet_assigned: SubnetId,
+        value: Decimal,
+    },
+    DefinedRelative {
+        subnet_assigned: SubnetId,
+        original_failure_rate: Decimal,
+        systematic_failure_rate: Decimal,
+        value: Decimal,
+    },
+    Undefined,
+    Extrapolated {
+        value: Decimal,
+    },
+}
+
+pub struct DailyFailureRate {
+    pub ts: TimestampNanos,
+    pub value: FailureRate,
+}
+
+
 #[derive(Clone, Hash, Eq, PartialEq, Debug)]
 pub struct DailyMetrics {
     pub ts: u64,
@@ -30,35 +49,6 @@ pub struct DailyMetrics {
     pub num_blocks_proposed: u64,
     pub num_blocks_failed: u64,
     pub failure_rate: Decimal,
-}
-
-#[derive(Clone)]
-pub struct SystematicFailureRate(pub Decimal);
-impl SystematicFailureRate {
-    const PERCENTILE: f64 = 0.75;
-
-    pub fn from_failure_rates(failure_rates: Vec<Decimal>) -> Self {
-        let mut failure_rates = failure_rates;
-        failure_rates.sort();
-
-        let len = failure_rates.len();
-        if len == 0 {
-            return Self(Decimal::ZERO);
-        }
-        let idx = ((len as f64) * Self::PERCENTILE).ceil() as usize - 1;
-
-        Self(failure_rates[idx])
-    }
-
-    pub fn get_relative_failure_rate(&self, failure_rate: Decimal) -> Decimal {
-        let relative_failure_rate = if failure_rate < self.0 {
-            Decimal::ZERO
-        } else {
-            failure_rate - self.0
-        };
-
-        relative_failure_rate
-    }
 }
 
 impl Default for DailyMetrics {
@@ -101,41 +91,6 @@ impl DailyMetrics {
             num_blocks_failed,
             subnet_assigned,
             failure_rate,
-        }
-    }
-}
-
-#[derive(Debug, PartialEq)]
-pub enum RewardCalculationError {
-    SubnetMetricsOutOfRange {
-        subnet_id: SubnetId,
-        timestamp: TimestampNanos,
-        reward_period: RewardPeriod,
-    },
-    EmptyRewardables,
-    NodeNotInRewardables(NodeId),
-}
-
-impl fmt::Display for RewardCalculationError {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self {
-            RewardCalculationError::SubnetMetricsOutOfRange {
-                subnet_id,
-                timestamp,
-                reward_period,
-            } => {
-                write!(
-                    f,
-                    "Subnet {} has metrics outside the reward period: timestamp: {} not in {}",
-                    subnet_id, timestamp, reward_period
-                )
-            }
-            RewardCalculationError::EmptyRewardables => {
-                write!(f, "No rewardable nodes were provided")
-            }
-            RewardCalculationError::NodeNotInRewardables(node_id) => {
-                write!(f, "Node {} has metrics in rewarding period but it is not part of rewardable_nodes", node_id)
-            }
         }
     }
 }

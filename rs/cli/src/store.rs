@@ -191,7 +191,7 @@ impl Store {
         let path = self.ic_admin_path_for_version(version)?;
 
         if !path.exists() {
-            self.download_ic_admin(version, &path).await?;
+            self.download_ic_admin("d4ee25b0865e89d3eaac13a60f0016d5e3296b31", &path).await?;
         }
 
         info!("Using ic-admin: {}", path.display());
