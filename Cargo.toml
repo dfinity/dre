@@ -186,7 +186,7 @@ strum = { version = "0.26.3", features = ["derive"] }
 strum_macros = "0.26.4"
 tabled = "0.16.0"
 tabular = "0.2"
-tempfile = "3.16.0"
+tempfile = "3.17.0"
 thiserror = "2.0.11"
 tokio = { version = "1.43.0", features = ["full"] }
 tokio-util = "0.7.13"
