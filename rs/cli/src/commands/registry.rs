@@ -48,6 +48,10 @@ pub struct Registry {
     /// Filters in `key=value` format
     #[clap(long, short, alias = "filter")]
     pub filters: Vec<Filter>,
+
+    /// Specify the height for the registry
+    #[clap(long, visible_aliases = ["registry-height", "version"])]
+    pub height: Option<u64>,
 }
 
 #[derive(Debug, Clone)]
@@ -114,7 +118,7 @@ impl ExecutableCommand for Registry {
 
 impl Registry {
     async fn get_registry(&self, ctx: DreContext) -> anyhow::Result<RegistryDump> {
-        let local_registry = ctx.registry().await;
+        let local_registry = ctx.registry_with_version(self.height).await;
 
         let elected_guest_os_versions = get_elected_guest_os_versions(&local_registry)?;
         let elected_host_os_versions = get_elected_host_os_versions(&local_registry)?;
