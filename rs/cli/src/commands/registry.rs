@@ -50,7 +50,7 @@ pub struct Registry {
     pub filters: Vec<Filter>,
 
     /// Specify the height for the registry
-    #[clap(long, alias = "registry-height")]
+    #[clap(long, visible_aliases = ["registry-height", "version"])]
     pub height: Option<u64>,
 }
 
