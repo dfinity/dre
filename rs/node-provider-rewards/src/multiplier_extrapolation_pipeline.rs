@@ -1,233 +1,355 @@
-use std::cell::{Ref, RefCell, RefMut};
-use std::collections::HashMap;
-use std::rc::Rc;
-use ic_base_types::{NodeId, SubnetId};
-use rust_decimal::Decimal;
-use rust_decimal_macros::dec;
-use tabular::{Row, Table};
 use crate::logs::{LogEntry, Logger, Operation, OperationCalculator};
 use crate::types::{DailyFailureRate, FailureRate, TimestampNanos};
+use ic_base_types::{NodeId, SubnetId};
+use itertools::Itertools;
+use rust_decimal::Decimal;
+use rust_decimal_macros::dec;
+use std::collections::HashMap;
+use std::fmt;
+use tabular::{Row, Table};
 
 const MIN_FAILURE_RATE: Decimal = dec!(0.1);
 const MAX_FAILURE_RATE: Decimal = dec!(0.6);
 const MAX_REWARDS_REDUCTION: Decimal = dec!(0.8);
-const RF: &str = "Linear Reduction factor";
 
-pub type NodesMultiplier = HashMap<NodeId, Decimal>;
-
-pub struct MultiplierExtrapolationPipeline<'a> {
-    logger: Rc<Logger>,
+pub struct ExecutionContext<'a> {
+    logger: Logger,
     calculator: OperationCalculator,
-    nodes_failure_rates: Rc<RefCell<HashMap<NodeId, Vec<DailyFailureRate>>>>,
-    subnets_failure_rate: &'a HashMap<(SubnetId, TimestampNanos), Decimal>,
+    provider_nodes_failure_rates: HashMap<NodeId, Vec<DailyFailureRate>>,
+    subnets_failure_rate: Option<&'a HashMap<(SubnetId, TimestampNanos), Decimal>>,
 }
 
-impl<'a> MultiplierExtrapolationPipeline<'a> {
-    pub fn new(
-        nodes_failure_rates: HashMap<NodeId, Vec<DailyFailureRate>>,
-        subnets_failure_rate: &'a HashMap<(SubnetId, TimestampNanos), Decimal>,
-    ) -> Self {
-        let logger = Rc::new(Logger::default());
-        let calculator = OperationCalculator::new()
-            .with_logger(Rc::clone(&logger));
-        let nodes_failure_rates = Rc::new(RefCell::new(nodes_failure_rates));
+impl<'a> fmt::Display for ExecutionContext<'a> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(
+            f,
+            "ExecutionContext {{
+                subnets_failure_rate: {:?}
+            }}",
+            self.subnets_failure_rate
+        )
+    }
+}
 
+impl<'a> ExecutionContext<'a> {
+    pub fn new(
+        provider_nodes_failure_rates: HashMap<NodeId, Vec<DailyFailureRate>>,
+        subnets_failure_rate: Option<&'a HashMap<(SubnetId, TimestampNanos), Decimal>>,
+    ) -> Self {
         Self {
-            logger,
-            calculator,
-            nodes_failure_rates,
+            logger: Logger::default(),
+            calculator: OperationCalculator,
+            provider_nodes_failure_rates,
             subnets_failure_rate,
         }
     }
+}
 
-    fn nodes_failure_rates(&self) -> Ref<HashMap<NodeId, Vec<DailyFailureRate>>> {
-        self.nodes_failure_rates.borrow()
-    }
+type NodesMultiplier = HashMap<NodeId, Decimal>;
+type AvgFailureRatePerNode = HashMap<NodeId, Decimal>;
+type FailureRateExtrapolated = Decimal;
 
-    fn nodes_failure_rates_mut(&self) -> RefMut<HashMap<NodeId, Vec<DailyFailureRate>>> {
-        self.nodes_failure_rates.borrow_mut()
-    }
+#[derive(Debug)]
+enum PipelineStep {
+    Start,
+    ComputeRelativeFailureRates,
+    ComputeFailureRateExtrapolated,
+    ReplaceUndefinedFailureRates(FailureRateExtrapolated),
+    ComputeAverageFailureRatePerNode,
+    ComputeRewardsMultiplierPerNode(AvgFailureRatePerNode),
+}
 
-    /// Computes the daily relative node failure rates in the period
-    fn step_1_calculate_relative_failure_rates(&self) {
-        for daily_rate in self.nodes_failure_rates_mut().values_mut().flatten() {
-            match daily_rate.value {
-                FailureRate::Defined { subnet_assigned, value } => {
-                    let systematic_failure_rate = self.subnets_failure_rate
-                        .get(&(subnet_assigned, daily_rate.ts))
-                        .cloned()
-                        .expect("Systematic failure rate not found");
+enum PipelineOutcome {
+    Continue(PipelineStep),
+    Finished(NodesMultiplier),
+}
 
-                    let relative_failure_rate = if systematic_failure_rate < value {
-                        Decimal::ZERO
-                    } else {
-                        systematic_failure_rate - value
-                    };
+impl PipelineStep {
+    fn execute(&self, ctx: &mut ExecutionContext) -> PipelineOutcome {
+        match (self, ctx) {
+            (PipelineStep::Start, _) => PipelineOutcome::Continue(PipelineStep::ComputeRelativeFailureRates),
 
-                    daily_rate.value = FailureRate::DefinedRelative {
-                        subnet_assigned,
-                        systematic_failure_rate,
-                        original_failure_rate: value,
-                        value: relative_failure_rate,
-                    };
+            // Compute the relative failure rates for each node
+            (
+                PipelineStep::ComputeRelativeFailureRates,
+                ExecutionContext {
+                    provider_nodes_failure_rates,
+                    subnets_failure_rate,
+                    ..
                 },
-                _ => continue,
-            }
-        }
-    }
+            ) => {
+                for daily_rate in provider_nodes_failure_rates.values_mut().flatten() {
+                    match daily_rate.failure_rate {
+                        FailureRate::Defined { subnet_assigned, value } => match subnets_failure_rate {
+                            Some(subnets_failure_rate) => {
+                                let subnet_failure_rate = subnets_failure_rate
+                                    .get(&(subnet_assigned, daily_rate.ts))
+                                    .cloned()
+                                    .unwrap_or_else(|| panic!("Subnet failure rate not found for {:?}", (subnet_assigned, daily_rate.ts)));
 
-    fn step_2_extrapolate_failure_rate(&self) -> Decimal {
-        self.logger.log(LogEntry::ComputeFailureRateExtrapolation);
-        let calculator = self.calculator();
-        let node_failure_rates = self.nodes_failure_rates();
-
-        if node_failure_rates.is_empty() {
-            return calculator.run("No nodes assigned", Operation::Set(dec!(1)));
-        }
-
-        let avg_rates: Vec<Decimal> = node_failure_rates
-            .values()
-            .map(|failure_rates| {
-                // Include only the failure rates that are explicitly defined
-                failure_rates.iter()
-                    .filter_map(|rate| {
-                        match rate.value {
-                            FailureRate::DefinedRelative { value, .. } => Some(value),
-                            _ => None,
+                                daily_rate.failure_rate = FailureRate::DefinedRelative {
+                                    subnet_assigned,
+                                    subnet_failure_rate,
+                                    original_failure_rate: value,
+                                    value: value - subnet_failure_rate,
+                                }
+                            }
+                            None => {
+                                daily_rate.failure_rate = FailureRate::DefinedRelative {
+                                    subnet_assigned,
+                                    subnet_failure_rate: Decimal::ZERO,
+                                    original_failure_rate: value,
+                                    value,
+                                };
+                            }
+                        },
+                        FailureRate::Undefined => continue,
+                        _ => {
+                            panic!("Expected Defined/Undefined failure rate got: {:?}", daily_rate.failure_rate);
                         }
-                    })
-                    .collect::<Vec<_>>()
-            })
-            .map(|filtered_rates| calculator.run("Average failure rate", Operation::Avg(filtered_rates)))
-            .collect();
+                    }
+                }
+                PipelineOutcome::Continue(PipelineStep::ComputeFailureRateExtrapolated)
+            }
 
-        calculator.run("Unassigned days failure rate:", Operation::Avg(avg_rates))
-    }
-
-    /// Computes the daily relative node failure rates in the period
-    fn step_3_replace_undefined_failure_rates(&self, extrapolated_failure_rate: Decimal) {
-        for daily_rate in self.nodes_failure_rates_mut().values_mut().flatten() {
-            match daily_rate.value {
-                FailureRate::Undefined => {
-                    daily_rate.value = FailureRate::Extrapolated {
-                        value: extrapolated_failure_rate,
-                    };
+            // Compute the failure rate extrapolated for unassigned days
+            (
+                PipelineStep::ComputeFailureRateExtrapolated,
+                ExecutionContext {
+                    provider_nodes_failure_rates,
+                    logger,
+                    calculator,
+                    ..
                 },
-                _ => continue,
+            ) => {
+                logger.log(LogEntry::ComputeFailureRateExtrapolated);
+
+                let failure_rate_extrapolated: Decimal = if provider_nodes_failure_rates.is_empty() {
+                    calculator.run_and_log("No nodes assigned", Operation::Set(dec!(1)), logger)
+                } else {
+                    let avg_rates: Vec<Decimal> = provider_nodes_failure_rates
+                        .iter()
+                        .map(|(node_id, failure_rates)| {
+                            // Include only the failure rates that are explicitly defined
+                            let defined_failure_rates = failure_rates
+                                .iter()
+                                .filter_map(|daily_failure_rate| match daily_failure_rate.failure_rate {
+                                    FailureRate::DefinedRelative { value, .. } => Some(value),
+                                    FailureRate::Undefined => None,
+                                    _ => panic!("Expected DefinedRelative/Undefined failure rate"),
+                                })
+                                .collect::<Vec<_>>();
+
+                            calculator.run_and_log(
+                                &format!("Average failure rate for node: {}", node_id),
+                                Operation::Avg(defined_failure_rates),
+                                logger,
+                            )
+                        })
+                        .collect();
+
+                    calculator.run_and_log("Unassigned days failure rate:", Operation::Avg(avg_rates), logger)
+                };
+
+                PipelineOutcome::Continue(PipelineStep::ReplaceUndefinedFailureRates(failure_rate_extrapolated))
+            }
+
+            // Replace the undefined failure rates with the extrapolated value
+            (
+                PipelineStep::ReplaceUndefinedFailureRates(failure_rate_extrapolated),
+                ExecutionContext {
+                    provider_nodes_failure_rates,
+                    ..
+                },
+            ) => {
+                for daily_rate in provider_nodes_failure_rates.values_mut().flatten() {
+                    match daily_rate.failure_rate {
+                        FailureRate::Undefined => {
+                            daily_rate.failure_rate = FailureRate::Extrapolated {
+                                value: *failure_rate_extrapolated,
+                            };
+                        }
+                        FailureRate::DefinedRelative { .. } => continue,
+                        _ => {
+                            panic!("Expected Defined/Undefined failure rate got: {:?}", daily_rate.failure_rate);
+                        }
+                    }
+                }
+
+                PipelineOutcome::Continue(PipelineStep::ComputeAverageFailureRatePerNode)
+            }
+
+            // Compute the average failure rate for each node
+            (
+                PipelineStep::ComputeAverageFailureRatePerNode,
+                ExecutionContext {
+                    provider_nodes_failure_rates,
+                    logger,
+                    calculator,
+                    ..
+                },
+            ) => {
+                let nodes_avg_failure_rate = provider_nodes_failure_rates
+                    .iter()
+                    .map(|(node_id, daily_failure_rates)| {
+                        logger.log(LogEntry::ComputeNodeMultiplier(*node_id));
+
+                        let failure_rates = daily_failure_rates
+                            .iter()
+                            .map(|rate| match rate.failure_rate {
+                                FailureRate::DefinedRelative { value, .. } | FailureRate::Extrapolated { value } => value,
+                                _ => panic!("Expected DefinedRelative or Extrapolated failure rate"),
+                            })
+                            .collect::<Vec<_>>();
+
+                        let avg_failure_rate = calculator.run_and_log("Failure rate average", Operation::Avg(failure_rates), logger);
+                        (*node_id, avg_failure_rate)
+                    })
+                    .collect();
+                PipelineOutcome::Continue(PipelineStep::ComputeRewardsMultiplierPerNode(nodes_avg_failure_rate))
+            }
+
+            // Compute the rewards multiplier for each node
+            (PipelineStep::ComputeRewardsMultiplierPerNode(nodes_avg_failure_rate), ExecutionContext { logger, calculator, .. }) => {
+                let multiplier_per_node = nodes_avg_failure_rate
+                    .iter()
+                    .map(|(node_id, failure_rate)| {
+                        let rewards_reduction = {
+                            if failure_rate < &MIN_FAILURE_RATE {
+                                calculator.run_and_log(
+                                    &format!(
+                                        "No Reduction applied because {} is less than {} failure rate.\n{}",
+                                        failure_rate.round_dp(4),
+                                        MIN_FAILURE_RATE,
+                                        "Linear Reduction factor"
+                                    ),
+                                    Operation::Set(dec!(0)),
+                                    logger,
+                                )
+                            } else if failure_rate > &MAX_FAILURE_RATE {
+                                calculator.run_and_log(
+                                    &format!(
+                                        "Max reduction applied because {} is over {} failure rate.\n{}",
+                                        failure_rate.round_dp(4),
+                                        MAX_FAILURE_RATE,
+                                        "Linear Reduction factor"
+                                    ),
+                                    Operation::Set(dec!(0.8)),
+                                    logger,
+                                )
+                            } else {
+                                let rewards_reduction =
+                                    (*failure_rate - MIN_FAILURE_RATE) / (MAX_FAILURE_RATE - MIN_FAILURE_RATE) * MAX_REWARDS_REDUCTION;
+                                logger.log(LogEntry::RewardsReductionPercent {
+                                    failure_rate: *failure_rate,
+                                    min_fr: MIN_FAILURE_RATE,
+                                    max_fr: MAX_FAILURE_RATE,
+                                    max_rr: MAX_REWARDS_REDUCTION,
+                                    rewards_reduction,
+                                });
+
+                                rewards_reduction
+                            }
+                        };
+
+                        let multiplier = calculator.run_and_log("Rewards Multiplier", Operation::Subtract(dec!(1), rewards_reduction), logger);
+                        (*node_id, multiplier)
+                    })
+                    .collect();
+                PipelineOutcome::Finished(multiplier_per_node)
             }
         }
     }
+}
 
-    fn step_4_compute_multiplier_per_node(&self) -> HashMap<NodeId, Decimal> {
-        self
-            .nodes_failure_rates_mut()
-            .iter()
-            .map(|(node_id, rates)| {
-                self.logger.log(LogEntry::ComputeNodeMultiplier(*node_id));
+pub struct MultiplierExtrapolationPipeline {
+    nodes_failure_rates: HashMap<NodeId, Vec<DailyFailureRate>>,
+    subnets_failure_rate: HashMap<(SubnetId, TimestampNanos), Decimal>,
+}
 
-                let failure_rates = rates.iter().map(|rate| {
-                    match rate.value {
-                        FailureRate::DefinedRelative { value, .. } | FailureRate::Extrapolated { value } => value,
-                        _ => panic!("Expected DefinedRelative or Extrapolated failure rate"),
-                    }
-                }).collect::<Vec<_>>();
+impl MultiplierExtrapolationPipeline {
+    pub fn new(nodes_failure_rates: HashMap<NodeId, Vec<DailyFailureRate>>) -> Self {
+        Self {
+            subnets_failure_rate: Self::compute_subnets_failure_rates(&nodes_failure_rates),
+            nodes_failure_rates,
+        }
+    }
 
-                let avg_rate = self.calculator().run("Failure rate average", Operation::Avg(failure_rates));
-                let reduction = self.rewards_reduction_percent(&avg_rate);
-                let multiplier =
-                    self.calculator().run("Reward Multiplier", Operation::Subtract(dec!(1), reduction));
+    fn compute_subnets_failure_rates(nodes_failure_rates: &HashMap<NodeId, Vec<DailyFailureRate>>) -> HashMap<(SubnetId, TimestampNanos), Decimal> {
+        const PERCENTILE: f64 = 0.75;
 
-                (*node_id, multiplier)
+        nodes_failure_rates
+            .values()
+            .flatten()
+            .filter_map(|metric| match metric.failure_rate {
+                FailureRate::Defined { subnet_assigned, value } => Some((subnet_assigned, metric.ts, value)),
+                _ => None,
+            })
+            .chunk_by(|(subnet_assigned, ts, _)| (*subnet_assigned, *ts))
+            .into_iter()
+            .map(|(key, group)| {
+                let subnet_failure_rates: Vec<Decimal> = group.map(|(_, _, failure_rate)| failure_rate).sorted().collect();
+                let len = subnet_failure_rates.len();
+                if len == 0 {
+                    return (key, Decimal::ZERO);
+                }
+
+                let idx = ((len as f64) * PERCENTILE).ceil() as usize - 1;
+                let failure_rate_percentile = subnet_failure_rates[idx];
+
+                (key, failure_rate_percentile)
             })
             .collect()
     }
 
-    /// Calculates the rewards reduction based on the failure rate.
-    ///
-    /// if `failure_rate` is:
-    /// - Below the `MIN_FAILURE_RATE`, no reduction in rewards applied.
-    /// - Above the `MAX_FAILURE_RATE`, maximum reduction in rewards applied.
-    /// - Within the defined range (`MIN_FAILURE_RATE` to `MAX_FAILURE_RATE`),
-    ///   the function calculates the reduction from the linear reduction function.
-    fn rewards_reduction_percent(&self, failure_rate: &Decimal) -> Decimal {
-        if failure_rate < &MIN_FAILURE_RATE {
-            self.calculator.run(
-                &format!(
-                    "No Reduction applied because {} is less than {} failure rate.\n{}",
-                    failure_rate.round_dp(4),
-                    MIN_FAILURE_RATE,
-                    RF
-                ),
-                Operation::Set(dec!(0)),
-            )
-        } else if failure_rate > &MAX_FAILURE_RATE {
-            self.calculator.run(
-                &format!(
-                    "Max reduction applied because {} is over {} failure rate.\n{}",
-                    failure_rate.round_dp(4),
-                    MAX_FAILURE_RATE,
-                    RF
-                ),
-                Operation::Set(dec!(0.8)),
-            )
-        } else {
-            let rewards_reduction = (*failure_rate - MIN_FAILURE_RATE)
-                / (MAX_FAILURE_RATE - MIN_FAILURE_RATE)
-                * MAX_REWARDS_REDUCTION;
-            self.logger.log(LogEntry::RewardsReductionPercent {
-                failure_rate: *failure_rate,
-                min_fr: MIN_FAILURE_RATE,
-                max_fr: MAX_FAILURE_RATE,
-                max_rr: MAX_REWARDS_REDUCTION,
-                rewards_reduction,
-            });
+    pub fn run(&self, provider_nodes: Vec<NodeId>) -> (NodesMultiplier, Logger) {
+        let provider_nodes_failure_rates = provider_nodes
+            .iter()
+            .map(|node_id| {
+                (
+                    *node_id,
+                    self.nodes_failure_rates.get(node_id).cloned().expect("Node failure rates not found"),
+                )
+            })
+            .collect::<HashMap<_, _>>();
 
-            rewards_reduction
+        let mut ctx = ExecutionContext::new(provider_nodes_failure_rates, Some(&self.subnets_failure_rate));
+        let mut current_step = PipelineStep::Start;
+        loop {
+            match current_step.execute(&mut ctx) {
+                PipelineOutcome::Continue(next_step) => current_step = next_step,
+                PipelineOutcome::Finished(nodes_multiplier) => {
+                    let table = generate_table(&ctx.provider_nodes_failure_rates);
+
+                    ctx.logger.log(LogEntry::FinalNodesMultiplier(nodes_multiplier.clone()));
+                    ctx.logger.log(LogEntry::FinalExtrapolatedFailureRates(table));
+
+                    return (nodes_multiplier, ctx.logger);
+                }
+            }
         }
-    }
-
-
-    /// Calculates node multipliers for this provider.
-    pub fn run(self) -> (NodesMultiplier, Logger) {
-
-        self.step_1_calculate_relative_failure_rates();
-
-        let extrapolated_failure_rate = self.step_2_extrapolate_failure_rate();
-
-        self.step_3_replace_undefined_failure_rates(extrapolated_failure_rate);
-
-        self.logger.log(
-            LogEntry::FinalExtrapolatedFailureRates(
-                print_failure_rates(&self.nodes_failure_rates())
-            ),
-        );
-
-        let multiplier_per_node: HashMap<NodeId, Decimal> = self.step_4_compute_multiplier_per_node();
-
-        drop(self.calculator);
-        (multiplier_per_node, Rc::unwrap_or_clone(self.logger))
     }
 }
 
-fn print_failure_rates(failure_rates: &HashMap<NodeId, Vec<DailyFailureRate>>) -> Table {
+fn generate_table(failure_rates: &HashMap<NodeId, Vec<DailyFailureRate>>) -> Table {
     let mut table = Table::new("{:<} {:<} {:<}");
 
-    table.add_row(Row::new()
-        .with_cell("Node ID")
-        .with_cell("Timestamp")
-        .with_cell("Failure Rate")
-    );
+    table.add_row(Row::new().with_cell("Node ID").with_cell("Timestamp").with_cell("Failure Rate"));
 
     // Data Rows
     for (node_id, rates) in failure_rates {
         for rate in rates {
-            table.add_row(Row::new()
-                .with_cell(node_id.to_string())
-                .with_cell(rate.ts)
-                .with_cell(format!("{:?}", rate.value))
+            table.add_row(
+                Row::new()
+                    .with_cell(node_id.to_string())
+                    .with_cell(rate.ts)
+                    .with_cell(format!("{:?}", rate.failure_rate)),
             );
         }
     }
 
     table.to_owned()
 }
+
+#[cfg(test)]
+mod tests;

@@ -1,4 +1,4 @@
-use crate::logs::NodeProviderRewardsLog;
+use crate::logs::Logger;
 use ic_base_types::{NodeId, PrincipalId, SubnetId};
 use num_traits::FromPrimitive;
 use rust_decimal::Decimal;
@@ -13,21 +13,16 @@ pub struct NodeRewardsMultiplier {
     pub multiplier: Decimal,
 }
 
-pub struct NodeRewardsMultiplierResult {
-    pub log_per_node_provider: HashMap<PrincipalId, NodeProviderRewardsLog>,
-    pub nodes_multiplier: Vec<NodeRewardsMultiplier>,
-}
-
-#[derive(Debug)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum FailureRate {
-    Defined{
+    Defined {
         subnet_assigned: SubnetId,
         value: Decimal,
     },
     DefinedRelative {
         subnet_assigned: SubnetId,
         original_failure_rate: Decimal,
-        systematic_failure_rate: Decimal,
+        subnet_failure_rate: Decimal,
         value: Decimal,
     },
     Undefined,
@@ -36,11 +31,22 @@ pub enum FailureRate {
     },
 }
 
+#[derive(Clone)]
 pub struct DailyFailureRate {
     pub ts: TimestampNanos,
-    pub value: FailureRate,
+    pub failure_rate: FailureRate,
 }
 
+impl From<FailureRate> for Decimal {
+    fn from(failure_rate: FailureRate) -> Decimal {
+        match failure_rate {
+            FailureRate::Defined { value, .. } => value,
+            FailureRate::DefinedRelative { value, .. } => value,
+            FailureRate::Undefined => panic!("Cannot convert undefined failure rate to Decimal"),
+            FailureRate::Extrapolated { value } => value,
+        }
+    }
+}
 
 #[derive(Clone, Hash, Eq, PartialEq, Debug)]
 pub struct DailyMetrics {
@@ -73,12 +79,7 @@ impl fmt::Display for DailyMetrics {
 }
 
 impl DailyMetrics {
-    pub fn new(
-        ts: u64,
-        subnet_assigned: SubnetId,
-        num_blocks_proposed: u64,
-        num_blocks_failed: u64,
-    ) -> Self {
+    pub fn new(ts: u64, subnet_assigned: SubnetId, num_blocks_proposed: u64, num_blocks_failed: u64) -> Self {
         let daily_total = num_blocks_proposed + num_blocks_failed;
         let failure_rate = if daily_total == 0 {
             Decimal::ZERO

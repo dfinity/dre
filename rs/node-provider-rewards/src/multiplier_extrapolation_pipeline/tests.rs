@@ -1,69 +1,136 @@
 use super::*;
+use crate::reward_period::NANOS_PER_DAY;
 use ic_base_types::{PrincipalId, SubnetId};
 use rust_decimal::Decimal;
 use std::collections::HashMap;
 
-#[derive(Clone)]
-struct MockedMetrics {
-    days: u64,
-    proposed_blocks: u64,
-    failed_blocks: u64,
+fn subnet_id(index: u64) -> SubnetId {
+    SubnetId::from(PrincipalId::new_subnet_test_id(index))
 }
 
-impl MockedMetrics {
-    fn new(days: u64, proposed_blocks: u64, failed_blocks: u64) -> Self {
-        MockedMetrics {
-            days,
-            proposed_blocks,
-            failed_blocks,
+// Helper to create node IDs with optional override
+fn node_id(index: u64) -> NodeId {
+    NodeId::from(PrincipalId::new_node_test_id(index))
+}
+
+// Builder for daily failure rates
+struct DailyFailureRateBuilder {
+    rates: HashMap<NodeId, Vec<DailyFailureRate>>,
+    default_ts: TimestampNanos,
+}
+
+impl DailyFailureRateBuilder {
+    fn new(default_ts: TimestampNanos) -> Self {
+        Self {
+            rates: HashMap::new(),
+            default_ts,
         }
+    }
+
+    fn new_default(default_ts: TimestampNanos) -> Self {
+        Self {
+            rates: HashMap::new(),
+            default_ts,
+        }
+    }
+
+    // Add multiple entries from tuples (subnet_id, node_id, fr)
+    fn add_entries(mut self, entries: Vec<(SubnetId, u64, Decimal)>) -> Self {
+        for (subnet_id, node_id, fr) in entries {
+            self = self.add_entry(subnet_id, node_id, fr);
+        }
+        self
+    }
+
+    // Add single entry with optional timestamp override
+    fn add_entry(mut self, subnet_id: SubnetId, node_id: u64, fr: Decimal) -> Self {
+        let node_id = NodeId::from(PrincipalId::new_node_test_id(node_id));
+        self.rates.entry(node_id).or_default().push(DailyFailureRate {
+            ts: self.default_ts,
+            failure_rate: FailureRate::Defined {
+                subnet_assigned: subnet_id,
+                value: fr,
+            },
+        });
+        self
+    }
+
+    fn build(self) -> HashMap<NodeId, Vec<DailyFailureRate>> {
+        self.rates
     }
 }
 
-impl DailyFailureRate {
-    fn defined_dummy(ts: u64, subnet_assigned: SubnetId, failure_rate: Decimal) -> Self {
-        DailyFailureRate {
-            ts,
-            value: FailureRate::Defined {
-                subnet_assigned,
-                value: failure_rate
-            }
-        }
-    }
+fn get_first_fr(node_id: NodeId, ctx: &ExecutionContext) -> FailureRate {
+    ctx.provider_nodes_failure_rates
+        .get(&node_id)
+        .unwrap()
+        .first()
+        .cloned()
+        .unwrap()
+        .failure_rate
 }
 
 #[test]
-fn test_relative_failure_rates() {
-    let node1 = NodeId::from(PrincipalId::new_user_test_id(1));
-    let node2 = NodeId::from(PrincipalId::new_user_test_id(2));
-    let subnet1 = SubnetId::from(PrincipalId::new_user_test_id(10));
+fn test_compute_relative_failure_rates() {
+    let subnet_1 = SubnetId::from(PrincipalId::new_user_test_id(100));
+    let subnet_1_fr = dec!(0.2);
 
-    let mut assigned_metrics = HashMap::from([
-        (
-            node1,
-            vec![
-                DailyFailureRate::defined_dummy(1 * NANOS_PER_DAY, subnet1, dec!(0.2)),
-                DailyFailureRate::defined_dummy(2 * NANOS_PER_DAY, subnet1, dec!(0.5)),
-                DailyFailureRate::defined_dummy(3 * NANOS_PER_DAY, subnet1, dec!(0.849)),
-            ],
-        ),
-        (
-            node2,
-            vec![DailyFailureRate::defined_dummy(1 * NANOS_PER_DAY, subnet1, dec!(0.5))],
-        ),
-    ]);
+    let subnet_2 = SubnetId::from(PrincipalId::new_user_test_id(200));
+    let subnet_2_fr = dec!(0.4);
 
-    print_failure_rates(&assigned_metrics);
+    let node_1 = 1;
+    let node_1_node_id = NodeId::from(PrincipalId::new_user_test_id(node_1));
+    let node_1_fr = dec!(0.3);
 
-    let subnets_fr = HashMap::from([
-        ((subnet1, 1 * NANOS_PER_DAY), dec!(0.1)),
-        ((subnet1, 2 * NANOS_PER_DAY), dec!(0.2)),
-        ((subnet1, 3 * NANOS_PER_DAY), dec!(0.1)),
-    ]);
+    let node_5 = 5;
+    let node_5_node_id = NodeId::from(PrincipalId::new_user_test_id(node_5));
+    let node_5_fr = dec!(0.5);
 
-    calculate_relative_failure_rates(&mut assigned_metrics, &subnets_fr);
+    let mut daily_failure_rates: HashMap<NodeId, Vec<DailyFailureRate>> = HashMap::new();
+    let data = vec![
+        (subnet_1, node_1, node_1_fr),
+        (subnet_1, 2, dec!(0.5)),
+        (subnet_1, 3, dec!(0.7)),
+        (subnet_2, 4, dec!(0.2)),
+        (subnet_2, node_5, node_5_fr),
+        (subnet_2, 6, dec!(0.6)),
+    ];
 
-    assert!(false)
+    for (subnet_id, node_id, fr) in data {
+        let node_id = NodeId::from(PrincipalId::new_user_test_id(node_id));
+        let daily_fr = DailyFailureRate {
+            ts: NANOS_PER_DAY,
+            failure_rate: FailureRate::Defined {
+                subnet_assigned: subnet_id,
+                value: fr,
+            },
+        };
+        daily_failure_rates.entry(node_id).or_default().push(daily_fr);
+    }
+
+    let subnets_failure_rate = HashMap::from([((subnet_1, NANOS_PER_DAY), subnet_1_fr), ((subnet_2, NANOS_PER_DAY), subnet_2_fr)]);
+
+    let mut ctx = ExecutionContext::new(daily_failure_rates.clone(), Some(&subnets_failure_rate));
+
+    PipelineStep::ComputeRelativeFailureRates.execute(&mut ctx);
+
+    let expected_node_1_relative = FailureRate::DefinedRelative {
+        subnet_assigned: subnet_1,
+        original_failure_rate: node_1_fr,
+        subnet_failure_rate: subnet_1_fr,
+        value: node_1_fr - subnet_1_fr,
+    };
+
+    assert_eq!(get_first_fr(node_1_node_id, &ctx), expected_node_1_relative);
+
+    let expected_node_5_relative = FailureRate::DefinedRelative {
+        subnet_assigned: subnet_2,
+        original_failure_rate: node_5_fr,
+        subnet_failure_rate: subnet_2_fr,
+        value: node_5_fr - subnet_2_fr,
+    };
+
+    assert_eq!(get_first_fr(node_5_node_id, &ctx), expected_node_5_relative);
 }
 
 //
@@ -323,4 +390,3 @@ fn test_relative_failure_rates() {
 //
 //     assert_eq!(result, expected);
 // }
-

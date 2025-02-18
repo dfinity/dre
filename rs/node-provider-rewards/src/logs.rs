@@ -1,11 +1,8 @@
-use std::cell::RefCell;
 use ic_base_types::NodeId;
 use itertools::Itertools;
-use rust_decimal::{prelude::Zero, Decimal};
+use rust_decimal::Decimal;
 use std::collections::HashMap;
 use std::fmt;
-use std::rc::Rc;
-use std::sync::Arc;
 use tabular::Table;
 
 fn round_dp_4(dec: &Decimal) -> Decimal {
@@ -27,24 +24,18 @@ impl Operation {
         if items.is_empty() {
             "0".to_string()
         } else {
-            format!(
-                "{}({})",
-                prefix,
-                items.iter().map(|item| format!("{}", item)).join(","),
-            )
+            format!("{}({})", prefix, items.iter().map(|item| format!("{}", item)).join(","),)
         }
     }
 
     fn execute(&self) -> Decimal {
         match self {
             Operation::Sum(operators) => operators.iter().sum(),
-            Operation::Avg(operators) => {
-                operators.iter().sum::<Decimal>() / Decimal::from(operators.len().max(1))
-            }
+            Operation::Avg(operators) => operators.iter().sum::<Decimal>() / Decimal::from(operators.len().max(1)),
             Operation::Subtract(o1, o2) => o1 - o2,
             Operation::Divide(o1, o2) => o1 / o2,
             Operation::Multiply(o1, o2) => o1 * o2,
-            Operation::Set(o1) => *o1
+            Operation::Set(o1) => *o1,
         }
     }
 }
@@ -52,20 +43,8 @@ impl Operation {
 impl fmt::Display for Operation {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         let (symbol, o1, o2) = match self {
-            Operation::Sum(values) => {
-                return write!(
-                    f,
-                    "{}",
-                    Operation::format_values(&values.iter().map(round_dp_4).collect_vec(), "sum")
-                )
-            }
-            Operation::Avg(values) => {
-                return write!(
-                    f,
-                    "{}",
-                    Operation::format_values(&values.iter().map(round_dp_4).collect_vec(), "avg")
-                )
-            }
+            Operation::Sum(values) => return write!(f, "{}", Operation::format_values(&values.iter().map(round_dp_4).collect_vec(), "sum")),
+            Operation::Avg(values) => return write!(f, "{}", Operation::format_values(&values.iter().map(round_dp_4).collect_vec(), "avg")),
             Operation::Subtract(o1, o2) => ("-", o1, o2),
             Operation::Divide(o1, o2) => ("/", o1, o2),
             Operation::Multiply(o1, o2) => ("*", o1, o2),
@@ -75,7 +54,6 @@ impl fmt::Display for Operation {
         write!(f, "{} {} {}", round_dp_4(o1), symbol, round_dp_4(o2))
     }
 }
-
 
 pub enum LogEntry {
     Execute {
@@ -93,19 +71,15 @@ pub enum LogEntry {
     FinalExtrapolatedFailureRates(Table),
     ComputeNodeMultiplier(NodeId),
     FinalNodesMultiplier(HashMap<NodeId, Decimal>),
-    ComputeFailureRateExtrapolation,
+    ComputeFailureRateExtrapolated,
 }
 
 impl fmt::Display for LogEntry {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            LogEntry::Execute {
-                reason,
-                operation,
-                result,
-            } => {
+            LogEntry::Execute { reason, operation, result } => {
                 write!(f, "{}: {} = {}", reason, operation, round_dp_4(result))
-            },
+            }
             LogEntry::RewardsReductionPercent {
                 failure_rate,
                 min_fr,
@@ -123,56 +97,38 @@ impl fmt::Display for LogEntry {
                     max_rr,
                     round_dp_4(rewards_reduction)
                 )
-            },
-            LogEntry::FinalExtrapolatedFailureRates(_) => write!(f, "FinalExtrapolatedFailureRates"),
-            LogEntry::ComputeNodeMultiplier(_) => write!(f, "ComputeNodeMultiplier"),
-            LogEntry::FinalNodesMultiplier(_) => write!(f, "FinalNodesMultiplier"),
-            LogEntry::ComputeFailureRateExtrapolation => write!(f, "ComputeFailureRateExtrapolation"),
+            }
+            LogEntry::FinalExtrapolatedFailureRates(table) => write!(f, "FinalExtrapolatedFailureRates:\n{}", table),
+            LogEntry::ComputeNodeMultiplier(node_id) => write!(f, "ComputeNodeMultiplier for node: {}", node_id),
+            LogEntry::FinalNodesMultiplier(multipliers) => write!(f, "FinalNodesMultipliers:\n{:?}", multipliers),
+            LogEntry::ComputeFailureRateExtrapolated => write!(f, "ComputeFailureRateExtrapolation"),
         }
     }
 }
 
 #[derive(Default)]
 pub struct Logger {
-    entries: Rc<RefCell<Vec<LogEntry>>>,
+    entries: Vec<LogEntry>,
 }
-
 impl Logger {
-    pub fn log(&self, entry: LogEntry) {
-        self.entries.borrow_mut().push(entry);
+    pub fn log(&mut self, entry: LogEntry) {
+        self.entries.push(entry);
     }
 
     pub fn get_logs(&self) -> Vec<String> {
-        self.entries.borrow().iter().map(|entry| format!("{}", entry)).collect()
+        self.entries.iter().map(|entry| format!("{}", entry)).collect()
     }
 }
 
-pub struct OperationCalculator {
-    logger: Option<Rc<Logger>>,
-}
-
-
+pub struct OperationCalculator;
 impl OperationCalculator {
-    pub fn new() -> Self {
-        Self {
-            logger: None,
-        }
-    }
-    pub fn with_logger(&self, logger: Rc<Logger>) -> Self {
-        Self {
-            logger: Some(logger),
-        }
-    }
-
-    pub fn run(&self, reason: &str, operation: Operation) -> Decimal {
+    pub fn run_and_log(&self, reason: &str, operation: Operation, logger: &mut Logger) -> Decimal {
         let result = operation.execute();
-        if let Some(logger) = self.logger.as_ref() {
-            logger.log(LogEntry::Execute {
-                reason: reason.to_string(),
-                operation,
-                result,
-            });
-        }
+        logger.log(LogEntry::Execute {
+            reason: reason.to_string(),
+            operation,
+            result,
+        });
 
         result
     }
