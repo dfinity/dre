@@ -88,26 +88,23 @@ impl ExecutableCommand for Vote {
 
                         let prop_id = proposal.id.unwrap().id;
                         match &ctx.mode {
+                            // Confirm mode in this command does not ask for confirmation.  It just votes.
                             HowToProceed::Confirm | HowToProceed::Unconditional | HowToProceed::UnitTests => {
-                                if ctx.mode != HowToProceed::Confirm
-                                    || (ctx.mode == HowToProceed::Confirm && !yesno("Do you want to vote?", true).await??)
-                                {
-                                    match wrapper.register_vote(neuron.neuron_id, proposal.id.unwrap().id).await {
-                                        Ok(response) => {
-                                            info!("Voted successfully: {}", response);
-                                        }
-                                        Err(e) => {
-                                            DesktopNotifier::send_critical(
-                                                "DRE vote: error",
-                                                &format!(
-                                                    "Error voting on proposal {} (topic {:?}, proposer {}) -> {}",
-                                                    prop_id,
-                                                    proposal.topic(),
-                                                    proposal.proposer.unwrap_or_default().id,
-                                                    e
-                                                ),
-                                            );
-                                        }
+                                match wrapper.register_vote(neuron.neuron_id, proposal.id.unwrap().id).await {
+                                    Ok(response) => {
+                                        info!("Voted successfully: {}", response);
+                                    }
+                                    Err(e) => {
+                                        DesktopNotifier::send_critical(
+                                            "DRE vote: error",
+                                            &format!(
+                                                "Error voting on proposal {} (topic {:?}, proposer {}) -> {}",
+                                                prop_id,
+                                                proposal.topic(),
+                                                proposal.proposer.unwrap_or_default().id,
+                                                e
+                                            ),
+                                        );
                                     }
                                 }
                             }
