@@ -122,7 +122,7 @@ impl ForumParameters {
 }
 
 // FIXME: this should become part of a new composite trait
-// that builds on the ProducesProposalResults trait,
+// that builds on the Proposable trait,
 // so that we don't have to have a separate kind here, this just
 // becomes a trait or an impl, and the intelligence needed to compose
 // the forum post can be decentralized to the right places in the code,
