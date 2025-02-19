@@ -7,47 +7,6 @@ use std::fmt;
 
 pub type TimestampNanos = u64;
 
-#[derive(Clone, Hash, Eq, PartialEq)]
-pub struct NodeRewardsMultiplier {
-    pub node_id: NodeId,
-    pub multiplier: Decimal,
-}
-
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub enum FailureRate {
-    Defined {
-        subnet_assigned: SubnetId,
-        value: Decimal,
-    },
-    DefinedRelative {
-        subnet_assigned: SubnetId,
-        original_failure_rate: Decimal,
-        subnet_failure_rate: Decimal,
-        value: Decimal,
-    },
-    Undefined,
-    Extrapolated {
-        value: Decimal,
-    },
-}
-
-#[derive(Clone)]
-pub struct DailyFailureRate {
-    pub ts: TimestampNanos,
-    pub failure_rate: FailureRate,
-}
-
-impl From<FailureRate> for Decimal {
-    fn from(failure_rate: FailureRate) -> Decimal {
-        match failure_rate {
-            FailureRate::Defined { value, .. } => value,
-            FailureRate::DefinedRelative { value, .. } => value,
-            FailureRate::Undefined => panic!("Cannot convert undefined failure rate to Decimal"),
-            FailureRate::Extrapolated { value } => value,
-        }
-    }
-}
-
 #[derive(Clone, Hash, Eq, PartialEq, Debug)]
 pub struct DailyMetrics {
     pub ts: u64,

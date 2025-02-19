@@ -1,12 +1,14 @@
-use crate::multiplier_extrapolation_pipeline::MultiplierExtrapolationPipeline;
-use crate::reward_period::{RewardPeriod, UnalignedTimestamp, NANOS_PER_DAY};
-use crate::types::{DailyFailureRate, DailyMetrics, FailureRate, TimestampNanos};
+use crate::failure_rates::{FailureRatesInPeriod, NodeDailyFailureRate, SubnetDailyFailureRate};
+use crate::nodes_multiplier_calculator::NodesMultiplierCalculator;
+use crate::reward_period::{RewardPeriod, NANOS_PER_DAY};
+use crate::types::{DailyMetrics, TimestampNanos};
 use ic_base_types::{NodeId, PrincipalId, SubnetId};
 use std::collections::{HashMap, HashSet};
 use std::fmt;
 
+mod failure_rates;
 mod logs;
-mod multiplier_extrapolation_pipeline;
+mod nodes_multiplier_calculator;
 mod reward_period;
 mod types;
 
@@ -17,12 +19,15 @@ pub fn calculate_rewards(
 ) -> Result<(), RewardCalculationError> {
     validate_input(&reward_period, &daily_metrics_per_node, &nodes_per_node_provider)?;
 
-    let nodes = nodes_per_node_provider.values().flatten().collect::<HashSet<_>>();
-    let nodes_failure_rates: HashMap<NodeId, Vec<DailyFailureRate>> = nodes_failure_rates(nodes, &daily_metrics_per_node, &reward_period);
-    let multiplier_extrapolation_pipeline = MultiplierExtrapolationPipeline::new(nodes_failure_rates);
+    let failure_rates_in_period = FailureRatesInPeriod {
+        daily_metrics_per_node,
+        reward_period,
+    };
+    let subnets_failure_rates = failure_rates_in_period.of_all_subnets();
 
     for (_provider_id, provider_nodes) in nodes_per_node_provider {
-        let (_nodes_multiplier, _provider_log) = multiplier_extrapolation_pipeline.run(provider_nodes);
+        let provider_nodes_failure_rates = failure_rates_in_period.of_nodes(&provider_nodes);
+        let _nodes_multiplier = NodesMultiplierCalculator::new(provider_nodes_failure_rates, &subnets_failure_rates).run();
     }
 
     Ok(())
@@ -60,40 +65,6 @@ fn validate_input(
     }
 
     Ok(())
-}
-
-fn nodes_failure_rates(
-    nodes: HashSet<&NodeId>,
-    daily_metrics_per_node: &HashMap<NodeId, Vec<DailyMetrics>>,
-    reward_period: &RewardPeriod,
-) -> HashMap<NodeId, Vec<DailyFailureRate>> {
-    let days_in_period = reward_period.days_between();
-    nodes
-        .into_iter()
-        .map(|node_id| {
-            let daily_failure_rates: Vec<_> = (0..days_in_period)
-                .map(|day| {
-                    let ts = reward_period.start_ts + day * NANOS_PER_DAY;
-                    let metrics_for_day = daily_metrics_per_node
-                        .get(node_id)
-                        .and_then(|metrics| metrics.iter().find(|m| UnalignedTimestamp::new(m.ts).align_to_day_start() == ts));
-                    let failure_rate = match metrics_for_day {
-                        Some(metrics) => FailureRate::Defined {
-                            subnet_assigned: metrics.subnet_assigned,
-                            value: metrics.failure_rate,
-                        },
-                        None => FailureRate::Undefined,
-                    };
-
-                    DailyFailureRate {
-                        ts,
-                        failure_rate: failure_rate,
-                    }
-                })
-                .collect();
-            (*node_id, daily_failure_rates)
-        })
-        .collect()
 }
 
 #[derive(Debug, PartialEq)]
