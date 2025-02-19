@@ -57,8 +57,8 @@
   slack_id: U047B65SPB3  # Nikola Milosavljevic
 - neuron_id: 59
   slack_id: U02TEQHKV35  # Llorenç Muntaner Perello
-- neuron_id: 60
-  slack_id: U03JW41V810  # Andre Popovitch
+# - neuron_id: 60
+#   slack_id: 
 - neuron_id: 61
   slack_id: U04JSKAH6L8  # Manuel Amador
 - neuron_id: 62
