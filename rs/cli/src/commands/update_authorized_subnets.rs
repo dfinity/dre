@@ -10,7 +10,7 @@ use itertools::Itertools;
 use log::info;
 
 use crate::{
-    forum::{ForumParameters, ForumPostKind, Submitter},
+    forum::{ForumPostKind, SubmissionParameters, Submitter},
     ic_admin::{IcAdminProposal, IcAdminProposalCommand, IcAdminProposalOptions},
 };
 
@@ -40,7 +40,7 @@ pub struct UpdateAuthorizedSubnets {
     open_verified_subnets: i32,
 
     #[clap(flatten)]
-    pub forum_parameters: ForumParameters,
+    pub submission_parameters: SubmissionParameters,
 }
 
 impl ExecutableCommand for UpdateAuthorizedSubnets {
@@ -155,8 +155,11 @@ impl ExecutableCommand for UpdateAuthorizedSubnets {
             },
         );
 
-        Submitter::from_executor_and_mode(&self.forum_parameters, ctx.mode.clone(), ctx.ic_admin_executor().await?.execution(prop))
-            .propose(ForumPostKind::AuthorizedSubnetsUpdate { body: summary })
+        Submitter::from(&self.submission_parameters)
+            .propose(
+                ctx.ic_admin_executor().await?.execution(prop),
+                ForumPostKind::AuthorizedSubnetsUpdate { body: summary },
+            )
             .await
     }
 }

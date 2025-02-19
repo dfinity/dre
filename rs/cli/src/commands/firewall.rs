@@ -14,7 +14,7 @@ use tempfile::NamedTempFile;
 
 use crate::{
     ctx::DreContext,
-    forum::{ForumParameters, ForumPostKind, Submitter},
+    forum::{ForumPostKind, SubmissionParameters, Submitter},
     ic_admin::{IcAdminProposal, IcAdminProposalCommand, IcAdminProposalOptions},
     proposal_executors::{ProducesProposalResult, ProposalResponseWithId, RunnableViaIcAdmin},
 };
@@ -34,7 +34,7 @@ pub struct Firewall {
     pub rules_scope: FirewallRulesScope,
 
     #[clap(flatten)]
-    pub forum_parameters: ForumParameters,
+    pub submission_parameters: SubmissionParameters,
 }
 
 impl ExecutableCommand for Firewall {
@@ -110,7 +110,7 @@ impl ExecutableCommand for Firewall {
                     mods,
                     self.title.clone(),
                     self.summary.clone(),
-                    &self.forum_parameters,
+                    &self.submission_parameters,
                     &self.rules_scope,
                 )
                 .await
@@ -216,7 +216,7 @@ impl Firewall {
         modifications: Vec<FirewallRuleModification>,
         title: Option<String>,
         summary: Option<String>,
-        forum_parameters: &ForumParameters,
+        submission_parameters: &SubmissionParameters,
         firewall_rules_scope: &FirewallRulesScope,
     ) -> anyhow::Result<()> {
         let positions = modifications.iter().map(|modif| modif.position).join(",");
@@ -234,18 +234,17 @@ impl Firewall {
         let hash = parsed.hash;
         info!("Computed hash for firewall rule at position '{}': {}", positions, hash);
 
-        Submitter::from_executor_and_mode(
-            forum_parameters,
-            ctx.mode.clone(),
-            ctx.ic_admin_executor().await?.execution(FirewallModifyCommand {
-                test_command,
-                hash,
-                summary,
-                title,
-            }),
-        )
-        .propose(ForumPostKind::Generic)
-        .await
+        Submitter::from(submission_parameters)
+            .propose(
+                ctx.ic_admin_executor().await?.execution(FirewallModifyCommand {
+                    test_command,
+                    hash,
+                    summary,
+                    title,
+                }),
+                ForumPostKind::Generic,
+            )
+            .await
     }
 }
 

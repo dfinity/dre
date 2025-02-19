@@ -1,4 +1,4 @@
-use std::{cell::RefCell, fmt::Debug, rc::Rc, sync::Arc};
+use std::{cell::RefCell, rc::Rc, sync::Arc};
 
 use ic_canisters::{governance::GovernanceCanisterWrapper, IcAgentCanisterClient};
 use ic_management_backend::{
@@ -33,19 +33,6 @@ struct NeuronOpts {
     neuron_override: Option<Neuron>,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub enum HowToProceed {
-    Confirm,
-    Unconditional,
-    DryRun,
-    #[allow(dead_code)]
-    UnitTests, // Necessary for unit tests, otherwise confirmation is requested.
-               // Generally this is hit when DreContext (created by get_mocked_ctx) has
-               // both dry_run and proceed_without_confirmation set to true.
-               // The net effect is that both the dry run and the final command are run.
-               // FIXME we should probably rename this to "DuringTesting".
-}
-
 #[derive(Clone)]
 pub struct DreContext {
     network: Network,
@@ -55,7 +42,6 @@ pub struct DreContext {
     ic_repo: RefCell<Option<Arc<dyn LazyGit>>>,
     proposal_agent: Arc<dyn ProposalAgent>,
     verbose_runner: bool,
-    pub mode: HowToProceed,
     artifact_downloader: Arc<dyn ArtifactDownloader>,
     neuron: RefCell<Option<Neuron>>,
     version: IcAdminVersion,
@@ -72,7 +58,6 @@ impl DreContext {
         auth: AuthOpts,
         neuron_id: Option<u64>,
         verbose: bool,
-        mode: HowToProceed,
         auth_requirement: AuthRequirement,
         ic_admin_version: IcAdminVersion,
         cordoned_features_fetcher: Arc<dyn CordonedFeatureFetcher>,
@@ -88,7 +73,6 @@ impl DreContext {
             runner: RefCell::new(None),
             verbose_runner: verbose,
             ic_repo: RefCell::new(None),
-            mode,
             artifact_downloader: Arc::new(ArtifactDownloaderImpl {}) as Arc<dyn ArtifactDownloader>,
             neuron: RefCell::new(None),
             version: ic_admin_version,
@@ -114,22 +98,12 @@ impl DreContext {
                 .map_err(|e| anyhow::anyhow!(e))?,
             true => Network::new_unchecked(args.network.clone(), &args.nns_urls)?,
         };
-        let mode = match (args.dry_run || args.offline, args.yes) {
-            (false, true) => HowToProceed::Unconditional,
-            (true, false) => HowToProceed::DryRun,
-            (false, false) => HowToProceed::Confirm,
-            (true, true) => {
-                return Err(anyhow::anyhow!(
-                    "Conflicting request: cannot specify --yes and --dry-run (or any variant) in the same command."
-                ))
-            }
-        };
+
         Self::new(
             network.clone(),
             args.auth_opts.clone(),
             args.neuron_id,
             args.verbose,
-            mode,
             args.subcommands.require_auth(),
             args.ic_admin_version.clone(),
             store.cordoned_features_fetcher(args.cordoned_features_file.clone())?,
@@ -286,7 +260,7 @@ impl DreContext {
 #[cfg(test)]
 #[allow(dead_code)]
 pub mod tests {
-    use super::{DreContext, HowToProceed};
+    use super::DreContext;
     use std::{cell::RefCell, sync::Arc};
 
     use ic_management_backend::{health::HealthStatusQuerier, lazy_git::LazyGit, lazy_registry::LazyRegistry, proposal::ProposalAgent};
@@ -320,7 +294,6 @@ pub mod tests {
             ic_repo: RefCell::new(Some(git)),
             proposal_agent,
             verbose_runner: true,
-            mode: HowToProceed::UnitTests,
             artifact_downloader,
             neuron: RefCell::new(Some(neuron.clone())),
             version: crate::commands::IcAdminVersion::Strict("Shouldn't reach this because of mock".to_string()),

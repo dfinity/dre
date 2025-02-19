@@ -6,7 +6,7 @@ use ic_types::PrincipalId;
 use log::warn;
 use mockall::automock;
 
-use crate::{ctx::HowToProceed, proposal_executors::Execution, util::yesno};
+use crate::{proposal_executors::ProposalExecution, util::yesno};
 
 mod impls;
 
@@ -36,6 +36,7 @@ impl FromStr for ForumPostLinkVariant {
 
 #[derive(ClapArgs, Debug, Clone)]
 pub struct ForumParameters {
+    // FIXME can we hide this structure altogether?
     #[clap(long, env = "FORUM_POST_LINK", help_heading = "Proposal URL parameters", visible_aliases = &["forum-link", "forum", "proposal-url"], default_value = "ask", value_parser = clap::value_parser!(ForumPostLinkVariant), help = r#"Forum link post handling method. Options:
 * The word 'discourse' to ask the embedded Discourse client to auto create a post or a topic, and update the forum post after proposal submission.
     See Discourse forum interaction parameters for information on how to authenticate.
@@ -44,7 +45,7 @@ pub struct ForumParameters {
 * The word 'omit' to omit the link.
     While you can submit proposals without a link, this is highly discouraged.
 "#)]
-    pub forum_post_link: ForumPostLinkVariant,
+    pub(crate) forum_post_link: ForumPostLinkVariant,
 
     /// Api key used to interact with the forum
     #[clap(
@@ -53,7 +54,7 @@ pub struct ForumParameters {
         help_heading = "Discourse forum interaction parameters",
         hide_env_values = true
     )]
-    pub(crate) discourse_api_key: Option<String>,
+    discourse_api_key: Option<String>,
 
     /// Api user that will interact with the forum
     #[clap(
@@ -62,7 +63,7 @@ pub struct ForumParameters {
         help_heading = "Discourse forum interaction parameters",
         default_value = "DRE-Team"
     )]
-    pub(crate) discourse_api_user: Option<String>,
+    discourse_api_user: Option<String>,
 
     /// Api url used to interact with the forum
     #[clap(
@@ -71,19 +72,19 @@ pub struct ForumParameters {
         help_heading = "Discourse forum interaction parameters",
         default_value = "https://forum.dfinity.org"
     )]
-    pub(crate) discourse_api_url: String,
+    discourse_api_url: String,
 
     /// Skip forum post creation all together, also will not
     /// prompt user for the link
     #[clap(long, env = "DISCOURSE_SKIP_POST_CREATION", help_heading = "Discourse forum interaction parameters")]
-    pub(crate) discourse_skip_post_creation: bool,
+    discourse_skip_post_creation: bool,
 
     #[clap(
         long,
         env = "DISCOURSE_SUBNET_TOPIC_OVERRIDE_FILE_PATH",
         help_heading = "Discourse forum interaction parameters"
     )]
-    pub(crate) discourse_subnet_topic_override_file_path: Option<PathBuf>,
+    discourse_subnet_topic_override_file_path: Option<PathBuf>,
 }
 
 impl ForumParameters {
@@ -104,6 +105,66 @@ impl ForumParameters {
         }
         Ok(())
     }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum HowToProceed {
+    Confirm,
+    Unconditional,
+    DryRun,
+    #[allow(dead_code)]
+    UnitTests, // Necessary for unit tests, otherwise confirmation is requested.
+               // Generally this is hit when DreContext (created by get_mocked_ctx) has
+               // both dry_run and proceed_without_confirmation set to true.
+               // The net effect is that both the dry run and the final command are run.
+               // FIXME we should probably rename this to "DuringTesting".
+}
+
+#[derive(ClapArgs, Debug, Clone)]
+
+/// Options for commands that may require confirmation.
+pub struct ConfirmationModeOptions {
+    /// To skip the confirmation prompt
+    #[clap(
+        short,
+        long,
+        global = true,
+        env = "YES",
+        conflicts_with = "dry_run",
+        help_heading = "Options on how to proceed",
+        help = "Do not ask for confirmation. If specified, the operation will be performed without requesting any confirmation from you."
+    )]
+    yes: bool,
+
+    #[clap(long, aliases = [ "dry-run", "dryrun", "simulate", "no"], env = "DRY_RUN", global = true, conflicts_with = "yes", help = r#"Dry-run, or simulate operation. If specified will not make any changes; instead, it will show what would be done or submitted."#,help_heading = "Options on how to proceed")]
+    dry_run: bool,
+}
+
+impl ConfirmationModeOptions {
+    /// Return an option set for unit tests, not instantiable via command line due to conflict.
+    pub fn for_unit_tests() -> Self {
+        ConfirmationModeOptions { yes: true, dry_run: true }
+    }
+}
+
+impl From<&ConfirmationModeOptions> for HowToProceed {
+    fn from(o: &ConfirmationModeOptions) -> Self {
+        match (o.dry_run, o.yes) {
+            (false, true) => Self::Unconditional,
+            (true, false) => Self::DryRun,
+            (false, false) => Self::Confirm,
+            (true, true) => Self::UnitTests, // This variant cannot be instantiated via the command line.
+        }
+    }
+}
+
+#[derive(ClapArgs, Debug, Clone)]
+pub struct SubmissionParameters {
+    #[clap(flatten)]
+    pub forum_parameters: ForumParameters,
+
+    #[clap(flatten)]
+    pub confirmation_mode: ConfirmationModeOptions,
 }
 
 // FIXME: this should become part of a new composite trait
@@ -163,28 +224,26 @@ impl ForumContext {
 /// Helps the caller preview and then submit a proposal automatically,
 /// handling the forum post part of the work as smoothly as possible.
 pub struct Submitter {
-    executor: Box<dyn Execution>,
     mode: HowToProceed,
     forum_parameters: ForumParameters,
 }
 
-impl Submitter {
-    pub fn from_executor_and_mode(forum_parameters: &ForumParameters, mode: HowToProceed, executor: Box<dyn Execution>) -> Self {
+impl From<&SubmissionParameters> for Submitter {
+    fn from(other: &SubmissionParameters) -> Self {
         Self {
-            executor,
-            mode,
-            forum_parameters: forum_parameters.clone(),
+            mode: (&other.confirmation_mode).into(),
+            forum_parameters: other.forum_parameters.clone(),
         }
     }
+}
 
+impl Submitter {
     /// Submits a proposal (maybe in dry-run mode) with confirmation from the user, unless the user
     /// specifies in the command line that he wants no confirmation (--yes).
-    pub async fn propose(&self, kind: ForumPostKind) -> anyhow::Result<()> {
-        let executor = &self.executor;
-
+    pub async fn propose(&self, execution: Box<dyn ProposalExecution>, kind: ForumPostKind) -> anyhow::Result<()> {
         if let HowToProceed::Unconditional = self.mode {
         } else {
-            executor.simulate().await?;
+            execution.simulate().await?;
         };
 
         if let HowToProceed::Confirm = self.mode {
@@ -198,7 +257,7 @@ impl Submitter {
             Ok(())
         } else {
             let forum_post = ForumContext::from_opts(&self.forum_parameters).client()?.forum_post(kind).await?;
-            let res = executor.submit(forum_post.url()).await;
+            let res = execution.submit(forum_post.url()).await;
             match res {
                 Ok(res) => forum_post.add_proposal_url(res.into()).await,
                 Err(e) => {

@@ -124,7 +124,7 @@ impl From<Arc<dyn IcAdmin>> for IcAdminProposalExecutor {
 }
 
 impl IcAdminProposalExecutor {
-    pub fn execution<T>(self, p: T) -> Box<dyn Execution>
+    pub fn execution<T>(self, p: T) -> Box<dyn ProposalExecution>
     where
         T: 'static,
         T: RunnableViaIcAdmin<Output = ProposalResponseWithId>,
@@ -191,7 +191,7 @@ impl From<(u64, GovernanceCanisterWrapper)> for GovernanceCanisterProposalExecut
 }
 
 impl GovernanceCanisterProposalExecutor {
-    pub fn execution<T>(self, p: T) -> Box<dyn Execution>
+    pub fn execution<T>(self, p: T) -> Box<dyn ProposalExecution>
     where
         T: 'static,
         T: ProposableViaGovernanceCanister<ProposalResult = ProposalResponseWithId>,
@@ -243,8 +243,8 @@ impl GovernanceCanisterProposalExecutor {
 
 /// Represents a single execution (either simulation or submission or both)
 /// of a proposal (any object that implements either RunnableViaIcAdmin or
-/// ProposableViaGovernanceCanister and produces a ProposalResponseWithId).
-pub trait Execution: Send + Sync {
+/// ProposableViaGovernanceCanister, and produces a ProposalResponseWithId).
+pub trait ProposalExecution: Send + Sync {
     fn simulate(&self) -> BoxFuture<'_, anyhow::Result<()>>;
 
     /// Runs the proposal in forrealz mode.  Result is returned and logged at debug level.
@@ -258,7 +258,7 @@ struct ProposalExecutionViaIcAdmin<T> {
     proposal: T,
 }
 
-impl<T> Execution for ProposalExecutionViaIcAdmin<T>
+impl<T> ProposalExecution for ProposalExecutionViaIcAdmin<T>
 where
     T: RunnableViaIcAdmin<Output = ProposalResponseWithId>,
     T: ProducesProposalResult<ProposalResult = ProposalResponseWithId>,
@@ -280,7 +280,7 @@ struct ProposalExecutionViaGovernanceCanister<T> {
     proposal: T,
 }
 
-impl<T> Execution for ProposalExecutionViaGovernanceCanister<T>
+impl<T> ProposalExecution for ProposalExecutionViaGovernanceCanister<T>
 where
     T: ProposableViaGovernanceCanister<ProposalResult = ProposalResponseWithId>,
 {

@@ -41,7 +41,6 @@ async fn get_context(network: &Network, version: IcAdminVersion) -> anyhow::Resu
         },
         None,
         false,
-        crate::ctx::HowToProceed::DryRun,
         crate::commands::AuthRequirement::Anonymous,
         version,
         Arc::new(MockCordonedFeatureFetcher::new()),
@@ -168,7 +167,6 @@ async fn get_ctx_for_neuron_test(
     neuron_id: Option<u64>,
     requirement: AuthRequirement,
     network: String,
-    dry_run: bool,
     offline: bool,
 ) -> anyhow::Result<DreContext> {
     DreContext::new(
@@ -176,11 +174,6 @@ async fn get_ctx_for_neuron_test(
         auth,
         neuron_id,
         true,
-        if dry_run || offline {
-            crate::ctx::HowToProceed::DryRun
-        } else {
-            crate::ctx::HowToProceed::Unconditional
-        },
         requirement,
         IcAdminVersion::Strict("Shouldn't get to here".to_string()),
         Arc::new(MockCordonedFeatureFetcher::new()),
@@ -201,7 +194,6 @@ struct NeuronAuthTestScenarion<'a> {
     requirement: AuthRequirement,
     network: String,
     want: anyhow::Result<Neuron>,
-    dry_run: bool,
     offline: bool,
 }
 
@@ -219,16 +211,8 @@ impl<'a> NeuronAuthTestScenarion<'a> {
             requirement: AuthRequirement::Anonymous,
             network: "".to_string(),
             want: Ok(Neuron::anonymous_neuron()),
-            dry_run: false,
             offline: false,
         }
-    }
-
-    // It really is self so that we can use
-    // `test.is_dry_run().with_neuron_id(...)`
-    #[allow(clippy::wrong_self_convention)]
-    fn dry_run(self) -> Self {
-        Self { dry_run: true, ..self }
     }
 
     fn offline(self) -> Self {
@@ -286,7 +270,7 @@ impl<'a> NeuronAuthTestScenarion<'a> {
     }
 
     async fn get_neuron(&self) -> anyhow::Result<Neuron> {
-        let ctx = get_ctx_for_neuron_test(
+        get_ctx_for_neuron_test(
             AuthOpts {
                 private_key_pem: self.private_key_pem.clone(),
                 hsm_opts: HsmOpts {
@@ -300,11 +284,11 @@ impl<'a> NeuronAuthTestScenarion<'a> {
             self.neuron_id,
             self.requirement.clone(),
             self.network.clone(),
-            self.dry_run,
             self.offline,
         )
-        .await?;
-        ctx.neuron().await
+        .await?
+        .neuron()
+        .await
     }
 }
 
@@ -357,7 +341,6 @@ fn init_test_neuron_and_auth() {
             .when_requirement(AuthRequirement::Neuron),
         NeuronAuthTestScenarion::new("Dry running commands shouldn't fail if neuron cannot be detected")
             .with_network("mainnet")
-            .dry_run()
             .want(Ok(Neuron::dry_run_fake_neuron().unwrap()))
             .when_requirement(AuthRequirement::Neuron),
     ];

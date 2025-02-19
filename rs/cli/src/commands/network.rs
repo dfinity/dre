@@ -3,7 +3,7 @@ use itertools::Itertools;
 use log::info;
 
 use crate::{
-    forum::{ForumParameters, ForumPostKind, Submitter},
+    forum::{ForumPostKind, SubmissionParameters, Submitter},
     ic_admin::IcAdminProposal,
 };
 
@@ -47,7 +47,7 @@ pub struct Network {
     pub remove_cordoned_nodes: bool,
 
     #[clap(flatten)]
-    pub forum_parameters: ForumParameters,
+    pub submission_parameters: SubmissionParameters,
 }
 
 impl ExecutableCommand for Network {
@@ -189,13 +189,12 @@ impl ExecutableCommand for Network {
                         continue;
                     }
                 };
-                if let Err(e) = Submitter::from_executor_and_mode(
-                    &self.forum_parameters,
-                    ctx.mode.clone(),
-                    ctx.ic_admin_executor().await?.execution(proposal.clone()),
-                )
-                .propose(ForumPostKind::ReplaceNodes { subnet_id: *subnet_id, body })
-                .await
+                if let Err(e) = Submitter::from(&self.submission_parameters)
+                    .propose(
+                        ctx.ic_admin_executor().await?.execution(proposal.clone()),
+                        ForumPostKind::ReplaceNodes { subnet_id: *subnet_id, body },
+                    )
+                    .await
                 {
                     errors.push(DetailedError {
                         proposal: Some(proposal),

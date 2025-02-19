@@ -4,7 +4,7 @@ use clap::Args;
 use ic_canisters::registry::RegistryCanisterWrapper;
 use ic_types::PrincipalId;
 
-use crate::forum::{ForumParameters, ForumPostKind, Submitter};
+use crate::forum::{ForumPostKind, SubmissionParameters, Submitter};
 
 use super::{AuthRequirement, ExecutableCommand};
 
@@ -15,7 +15,7 @@ pub struct UpdateUnassignedNodes {
     pub nns_subnet_id: Option<String>,
 
     #[clap(flatten)]
-    pub forum_parameters: ForumParameters,
+    pub submission_parameters: SubmissionParameters,
 }
 
 impl ExecutableCommand for UpdateUnassignedNodes {
@@ -47,13 +47,9 @@ impl ExecutableCommand for UpdateUnassignedNodes {
             Some(runner_proposal) => runner_proposal,
             None => return Ok(()),
         };
-        Submitter::from_executor_and_mode(
-            &self.forum_parameters,
-            ctx.mode.clone(),
-            ctx.ic_admin_executor().await?.execution(runner_proposal),
-        )
-        .propose(ForumPostKind::Generic)
-        .await
+        Submitter::from(&self.submission_parameters)
+            .propose(ctx.ic_admin_executor().await?.execution(runner_proposal), ForumPostKind::Generic)
+            .await
     }
 
     fn validate(&self, _args: &crate::commands::Args, _cmd: &mut clap::Command) {}

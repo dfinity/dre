@@ -3,9 +3,10 @@ use clap::{error::ErrorKind, Args};
 use ic_types::PrincipalId;
 use itertools::Itertools;
 
+use crate::forum::{ForumPostKind, SubmissionParameters};
 use crate::{
     commands::{AuthRequirement, ExecutableCommand},
-    forum::{ForumParameters, ForumPostKind, Submitter},
+    forum::Submitter,
     subnet_manager::SubnetTarget,
 };
 
@@ -44,7 +45,7 @@ pub struct Replace {
     pub id: Option<PrincipalId>,
 
     #[clap(flatten)]
-    pub forum_parameters: ForumParameters,
+    pub submission_parameters: SubmissionParameters,
 }
 
 impl ExecutableCommand for Replace {
@@ -84,26 +85,26 @@ impl ExecutableCommand for Replace {
             None => return Ok(()),
         };
 
-        let proxy = Submitter::from_executor_and_mode(
-            &self.forum_parameters,
-            ctx.mode.clone(),
-            ctx.ic_admin_executor().await?.execution(runner_proposal.clone()),
-        );
+        let proxy = Submitter::from(&self.submission_parameters);
+        let execution = ctx.ic_admin_executor().await?.execution(runner_proposal.clone());
         match subnet_id {
             Some(id) => {
                 proxy
-                    .propose(ForumPostKind::ReplaceNodes {
-                        subnet_id: id,
-                        body: match (&runner_proposal.options.motivation, &runner_proposal.options.summary) {
-                            (Some(motivation), None) => motivation.to_string(),
-                            (Some(motivation), Some(summary)) => format!("{}\nMotivation:\n{}", summary, motivation),
-                            (None, Some(summary)) => summary.to_string(),
-                            (None, None) => anyhow::bail!("Expected to have `motivation` or `summary` for this proposal"),
+                    .propose(
+                        execution,
+                        ForumPostKind::ReplaceNodes {
+                            subnet_id: id,
+                            body: match (&runner_proposal.options.motivation, &runner_proposal.options.summary) {
+                                (Some(motivation), None) => motivation.to_string(),
+                                (Some(motivation), Some(summary)) => format!("{}\nMotivation:\n{}", summary, motivation),
+                                (None, Some(summary)) => summary.to_string(),
+                                (None, None) => anyhow::bail!("Expected to have `motivation` or `summary` for this proposal"),
+                            },
                         },
-                    })
+                    )
                     .await
             }
-            None => proxy.propose(ForumPostKind::Generic).await,
+            None => proxy.propose(execution, ForumPostKind::Generic).await,
         }
     }
 

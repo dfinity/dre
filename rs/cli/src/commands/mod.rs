@@ -148,14 +148,6 @@ Options:
     3. <commit> => specific commit"#)]
     pub ic_admin_version: IcAdminVersion,
 
-    /// To skip the confirmation prompt
-    #[clap(short, long, global = true, env = "YES", conflicts_with = "dry_run")]
-    pub yes: bool,
-
-    #[clap(long, aliases = [ "dry-run", "dryrun", "simulate", "no"], global = true, conflicts_with = "yes", help = r#"Dry-run, or simulate proposal submission. If specified will not submit the proposal
-but will show the ic-admin command and the proposal payload"#)]
-    pub dry_run: bool,
-
     #[clap(
         long,
         env = "NETWORK",

@@ -3,7 +3,7 @@ use ic_types::PrincipalId;
 
 use crate::{
     commands::{AuthRequirement, ExecutableCommand},
-    forum::{ForumParameters, ForumPostKind, Submitter},
+    forum::{ForumPostKind, SubmissionParameters, Submitter},
     ic_admin::{self},
 };
 
@@ -18,7 +18,7 @@ pub struct Remove {
     pub motivation: Option<String>,
 
     #[clap(flatten)]
-    pub forum_parameters: ForumParameters,
+    pub submission_parameters: SubmissionParameters,
 }
 
 impl ExecutableCommand for Remove {
@@ -27,20 +27,19 @@ impl ExecutableCommand for Remove {
     }
 
     async fn execute(&self, ctx: crate::ctx::DreContext) -> anyhow::Result<()> {
-        Submitter::from_executor_and_mode(
-            &self.forum_parameters,
-            ctx.mode.clone(),
-            ctx.ic_admin_executor().await?.execution(ic_admin::IcAdminProposal::new(
-                ic_admin::IcAdminProposalCommand::RemoveApiBoundaryNodes { nodes: self.nodes.to_vec() },
-                ic_admin::IcAdminProposalOptions {
-                    title: Some(format!("Remove {} API boundary node(s)", self.nodes.len())),
-                    summary: Some(format!("Remove {} API boundary node(s)", self.nodes.len())),
-                    motivation: self.motivation.clone(),
-                },
-            )),
-        )
-        .propose(ForumPostKind::Generic)
-        .await
+        Submitter::from(&self.submission_parameters)
+            .propose(
+                ctx.ic_admin_executor().await?.execution(ic_admin::IcAdminProposal::new(
+                    ic_admin::IcAdminProposalCommand::RemoveApiBoundaryNodes { nodes: self.nodes.to_vec() },
+                    ic_admin::IcAdminProposalOptions {
+                        title: Some(format!("Remove {} API boundary node(s)", self.nodes.len())),
+                        summary: Some(format!("Remove {} API boundary node(s)", self.nodes.len())),
+                        motivation: self.motivation.clone(),
+                    },
+                )),
+                ForumPostKind::Generic,
+            )
+            .await
     }
 
     fn validate(&self, _args: &crate::commands::Args, _cmd: &mut clap::Command) {}

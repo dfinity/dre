@@ -3,7 +3,7 @@ use ic_types::PrincipalId;
 
 use crate::{
     commands::{AuthRequirement, ExecutableCommand},
-    forum::{ForumParameters, ForumPostKind, Submitter},
+    forum::{ForumPostKind, SubmissionParameters, Submitter},
     ic_admin::{self},
 };
 
@@ -21,7 +21,7 @@ pub struct Update {
     pub motivation: Option<String>,
 
     #[clap(flatten)]
-    pub forum_parameters: ForumParameters,
+    pub submission_parameters: SubmissionParameters,
 }
 
 impl ExecutableCommand for Update {
@@ -30,23 +30,22 @@ impl ExecutableCommand for Update {
     }
 
     async fn execute(&self, ctx: crate::ctx::DreContext) -> anyhow::Result<()> {
-        Submitter::from_executor_and_mode(
-            &self.forum_parameters,
-            ctx.mode.clone(),
-            ctx.ic_admin_executor().await?.execution(ic_admin::IcAdminProposal::new(
-                ic_admin::IcAdminProposalCommand::DeployGuestosToSomeApiBoundaryNodes {
-                    nodes: self.nodes.to_vec(),
-                    version: self.version.to_string(),
-                },
-                ic_admin::IcAdminProposalOptions {
-                    title: Some(format!("Update {} API boundary node(s) to {}", self.nodes.len(), &self.version)),
-                    summary: Some(format!("Update {} API boundary node(s) to {}", self.nodes.len(), &self.version)),
-                    motivation: self.motivation.clone(),
-                },
-            )),
-        )
-        .propose(ForumPostKind::Generic)
-        .await
+        Submitter::from(&self.submission_parameters)
+            .propose(
+                ctx.ic_admin_executor().await?.execution(ic_admin::IcAdminProposal::new(
+                    ic_admin::IcAdminProposalCommand::DeployGuestosToSomeApiBoundaryNodes {
+                        nodes: self.nodes.to_vec(),
+                        version: self.version.to_string(),
+                    },
+                    ic_admin::IcAdminProposalOptions {
+                        title: Some(format!("Update {} API boundary node(s) to {}", self.nodes.len(), &self.version)),
+                        summary: Some(format!("Update {} API boundary node(s) to {}", self.nodes.len(), &self.version)),
+                        motivation: self.motivation.clone(),
+                    },
+                )),
+                ForumPostKind::Generic,
+            )
+            .await
     }
 
     fn validate(&self, _args: &crate::commands::Args, _cmd: &mut clap::Command) {}

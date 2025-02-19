@@ -4,7 +4,7 @@ use crate::artifact_downloader::MockArtifactDownloader;
 use crate::auth::Neuron;
 use crate::commands::{update_unassigned_nodes::UpdateUnassignedNodes, ExecutableCommand};
 use crate::cordoned_feature_fetcher::MockCordonedFeatureFetcher;
-use crate::forum::ForumParameters;
+use crate::forum::{ConfirmationModeOptions, ForumParameters, SubmissionParameters};
 use crate::ic_admin::MockIcAdmin;
 use ic_management_backend::health::MockHealthStatusQuerier;
 use ic_management_backend::{lazy_git::MockLazyGit, lazy_registry::MockLazyRegistry, proposal::MockProposalAgent};
@@ -28,6 +28,10 @@ fn registry_with_subnets(subnets: Vec<Subnet>) -> MockLazyRegistry {
 
 fn mock_forum_parameters() -> ForumParameters {
     ForumParameters::disable_forum()
+}
+
+fn mock_confirmation_mode() -> ConfirmationModeOptions {
+    ConfirmationModeOptions::for_unit_tests()
 }
 
 #[tokio::test]
@@ -61,7 +65,10 @@ async fn should_skip_update_same_version_nns_not_provided() {
 
     let cmd = UpdateUnassignedNodes {
         nns_subnet_id: None,
-        forum_parameters: mock_forum_parameters(),
+        submission_parameters: SubmissionParameters {
+            forum_parameters: mock_forum_parameters(),
+            confirmation_mode: mock_confirmation_mode(),
+        },
     };
     let response = cmd.execute(ctx).await;
     assert!(response.is_ok(), "Respose was: {:?}", response)
@@ -99,7 +106,10 @@ async fn should_skip_update_same_version_nns_provided() {
 
     let cmd = UpdateUnassignedNodes {
         nns_subnet_id: Some(principal.to_string()),
-        forum_parameters: mock_forum_parameters(),
+        submission_parameters: SubmissionParameters {
+            forum_parameters: mock_forum_parameters(),
+            confirmation_mode: mock_confirmation_mode(),
+        },
     };
 
     assert!(cmd.execute(ctx).await.is_ok())
@@ -141,7 +151,10 @@ async fn should_update_unassigned_nodes() {
 
     let cmd = UpdateUnassignedNodes {
         nns_subnet_id: Some(principal.to_string()),
-        forum_parameters: mock_forum_parameters(),
+        submission_parameters: SubmissionParameters {
+            forum_parameters: mock_forum_parameters(),
+            confirmation_mode: mock_confirmation_mode(),
+        },
     };
 
     assert!(cmd.execute(ctx).await.is_ok())
@@ -180,7 +193,10 @@ async fn should_fail_nns_not_found() {
 
     let cmd = UpdateUnassignedNodes {
         nns_subnet_id: Some(other_principal.to_string()),
-        forum_parameters: mock_forum_parameters(),
+        submission_parameters: SubmissionParameters {
+            forum_parameters: mock_forum_parameters(),
+            confirmation_mode: mock_confirmation_mode(),
+        },
     };
 
     assert!(cmd.execute(ctx).await.is_err())

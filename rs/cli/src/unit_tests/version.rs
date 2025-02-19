@@ -1,4 +1,4 @@
-use crate::forum::{ForumParameters, ForumPostLinkVariant};
+use crate::forum::{ConfirmationModeOptions, ForumParameters, ForumPostLinkVariant, SubmissionParameters};
 use indexmap::IndexMap;
 use std::sync::{Arc, RwLock};
 
@@ -21,6 +21,10 @@ fn fake_forum_parameters() -> ForumParameters {
     let mut parms = ForumParameters::disable_forum();
     parms.forum_post_link = ForumPostLinkVariant::Url(url::Url::parse("https://forum.dfinity.org/t/123").unwrap());
     parms
+}
+
+fn mock_confirmation_mode() -> ConfirmationModeOptions {
+    ConfirmationModeOptions::for_unit_tests()
 }
 
 #[tokio::test]
@@ -90,7 +94,10 @@ async fn guest_os_elect_version_tests() {
                 release_tag: Some("rel_tag".to_string()),
                 ignore_missing_urls: false,
                 security_fix: false,
-                forum_parameters: fake_forum_parameters(),
+                submission_parameters: SubmissionParameters {
+                    forum_parameters: fake_forum_parameters(),
+                    confirmation_mode: mock_confirmation_mode(),
+                },
             },
         ),
         (
@@ -101,7 +108,10 @@ async fn guest_os_elect_version_tests() {
                 release_tag: Some("rel_tag".to_string()),
                 ignore_missing_urls: false,
                 security_fix: true,
-                forum_parameters: fake_forum_parameters(),
+                submission_parameters: SubmissionParameters {
+                    forum_parameters: fake_forum_parameters(),
+                    confirmation_mode: mock_confirmation_mode(),
+                },
             },
         ),
     ] {
