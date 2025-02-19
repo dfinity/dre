@@ -1,31 +1,13 @@
-use clap::{CommandFactory, Parser};
-use commands::{
+use clap::CommandFactory;
+use clap::Parser;
+use dotenv::dotenv;
+use dre::commands::{
+    self,
     upgrade::{UpdateStatus, Upgrade},
     Args, ExecutableCommand,
 };
-use ctx::DreContext;
-use dotenv::dotenv;
+use dre::ctx::DreContext;
 use log::{info, warn};
-
-mod artifact_downloader;
-mod auth;
-mod commands;
-mod confirm;
-mod cordoned_feature_fetcher;
-mod ctx;
-mod desktop_notify;
-mod forum;
-mod ic_admin;
-mod operations;
-mod proposal_executors;
-mod qualification;
-mod runner;
-mod store;
-mod submitter;
-mod subnet_manager;
-#[cfg(test)]
-mod unit_tests;
-mod util;
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {

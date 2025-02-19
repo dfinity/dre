@@ -94,6 +94,7 @@ pub struct ForumParameters {
 }
 
 impl ForumParameters {
+    #[cfg(test)]
     pub fn disable_forum() -> Self {
         Self {
             forum_post_link: ForumPostLinkVariant::Omit,

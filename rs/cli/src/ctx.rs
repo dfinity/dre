@@ -90,7 +90,7 @@ impl DreContext {
 
     // Method that will be called from `main.rs` and
     // will return real implementations of services
-    pub(crate) async fn from_args(args: &Args) -> anyhow::Result<Self> {
+    pub async fn from_args(args: &Args) -> anyhow::Result<Self> {
         let store = Store::new(args.offline)?;
         let network = match store.is_offline() {
             false => ic_management_types::Network::new(args.network.clone(), &args.nns_urls)
