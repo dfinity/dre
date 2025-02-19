@@ -10,7 +10,6 @@ pub enum HowToProceed {
                // Generally this is hit when DreContext (created by get_mocked_ctx) has
                // both dry_run and proceed_without_confirmation set to true.
                // The net effect is that both the dry run and the final command are run.
-               // FIXME we should probably rename this to "DuringTesting".
 }
 
 #[derive(ClapArgs, Debug, Clone)]
@@ -33,6 +32,7 @@ pub struct ConfirmationModeOptions {
     dry_run: bool,
 }
 
+#[cfg(test)]
 impl ConfirmationModeOptions {
     /// Return an option set for unit tests, not instantiable via command line due to conflict.
     pub fn for_unit_tests() -> Self {
