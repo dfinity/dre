@@ -2,6 +2,7 @@
 pub mod artifact_downloader;
 pub mod auth;
 pub mod commands;
+mod confirm;
 mod cordoned_feature_fetcher;
 pub mod ctx;
 mod desktop_notify;

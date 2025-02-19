@@ -1,4 +1,5 @@
-use crate::forum::{ConfirmationModeOptions, ForumParameters, ForumPostLinkVariant, SubmissionParameters};
+use crate::confirm::ConfirmationModeOptions;
+use crate::forum::{ForumParameters, ForumPostLinkVariant, SubmissionParameters};
 use indexmap::IndexMap;
 use std::sync::{Arc, RwLock};
 

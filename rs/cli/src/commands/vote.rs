@@ -9,8 +9,8 @@ use spinners::{Spinner, Spinners};
 
 use super::{AuthRequirement, ExecutableCommand};
 use crate::{
+    confirm::{ConfirmationModeOptions, HowToProceed},
     desktop_notify::DesktopNotifier,
-    forum::{ConfirmationModeOptions, HowToProceed},
 };
 
 #[derive(Args, Debug)]

@@ -10,6 +10,7 @@ use log::{info, warn};
 mod artifact_downloader;
 mod auth;
 mod commands;
+mod confirm;
 mod cordoned_feature_fetcher;
 mod ctx;
 mod desktop_notify;
