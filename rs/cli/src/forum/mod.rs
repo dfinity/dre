@@ -41,7 +41,7 @@ impl FromStr for ForumPostLinkVariant {
 #[derive(ClapArgs, Debug, Clone)]
 pub struct ForumParameters {
     // FIXME can we hide this structure altogether?
-    #[clap(long, env = "FORUM_POST_LINK", help_heading = "Proposal URL parameters", visible_aliases = &["forum-link", "forum", "proposal-url"], default_value = "ask", value_parser = clap::value_parser!(ForumPostLinkVariant), help = r#"Forum link post handling method. Options:
+    #[clap(long, global=true, env = "FORUM_POST_LINK", help_heading = "Proposal URL parameters", visible_aliases = &["forum-link", "forum", "proposal-url"], default_value = "ask", value_parser = clap::value_parser!(ForumPostLinkVariant), help = r#"Forum link post handling method. Options:
 * The word 'discourse' to ask the embedded Discourse client to auto create a post or a topic, and update the forum post after proposal submission.
     See Discourse forum interaction parameters for information on how to authenticate.
 * A plain URL or the word 'ask' to prompt you for a link.
@@ -54,6 +54,7 @@ pub struct ForumParameters {
     /// Api key used to interact with the forum
     #[clap(
         long,
+        global = true,
         env = "DISCOURSE_API_KEY",
         help_heading = "Discourse forum interaction parameters",
         hide_env_values = true
@@ -63,6 +64,7 @@ pub struct ForumParameters {
     /// Api user that will interact with the forum
     #[clap(
         long,
+        global = true,
         env = "DISCOURSE_API_USER",
         help_heading = "Discourse forum interaction parameters",
         default_value = "DRE-Team"
@@ -72,6 +74,7 @@ pub struct ForumParameters {
     /// Api url used to interact with the forum
     #[clap(
         long,
+        global = true,
         env = "DISCOURSE_API_URL",
         help_heading = "Discourse forum interaction parameters",
         default_value = "https://forum.dfinity.org"
@@ -80,11 +83,17 @@ pub struct ForumParameters {
 
     /// Skip forum post creation all together, also will not
     /// prompt user for the link
-    #[clap(long, env = "DISCOURSE_SKIP_POST_CREATION", help_heading = "Discourse forum interaction parameters")]
+    #[clap(
+        long,
+        global = true,
+        env = "DISCOURSE_SKIP_POST_CREATION",
+        help_heading = "Discourse forum interaction parameters"
+    )]
     discourse_skip_post_creation: bool,
 
     #[clap(
         long,
+        global = true,
         env = "DISCOURSE_SUBNET_TOPIC_OVERRIDE_FILE_PATH",
         help_heading = "Discourse forum interaction parameters"
     )]
