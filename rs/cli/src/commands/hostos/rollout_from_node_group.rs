@@ -4,7 +4,7 @@ use clap::{Args, ValueEnum};
 
 use crate::{
     commands::{AuthRequirement, ExecutableCommand},
-    forum::{ic_admin::forum_enabled_proposer, ForumParameters, ForumPostKind},
+    forum::{ForumParameters, ForumPostKind, Submitter},
     operations::hostos_rollout::{NodeGroupUpdate, NumberOfNodes},
 };
 
@@ -96,10 +96,14 @@ impl ExecutableCommand for RolloutFromNodeGroup {
             None => return Ok(()),
         };
 
-        let runner_proposal = runner.hostos_rollout(nodes_to_update, &self.version, Some(summary), None)?;
-        forum_enabled_proposer(&self.forum_parameters, &ctx, ctx.ic_admin().await?)
-            .propose_with_possible_confirmation(runner_proposal.cmd, runner_proposal.opts, ForumPostKind::Generic)
-            .await
+        let runner_proposal = runner.hostos_rollout(nodes_to_update, &self.version, Some(summary))?;
+        Submitter::from_executor_and_mode(
+            &self.forum_parameters,
+            ctx.mode.clone(),
+            ctx.ic_admin_executor().await?.execution(runner_proposal),
+        )
+        .propose(ForumPostKind::Generic)
+        .await
     }
 
     fn validate(&self, _args: &crate::commands::Args, _cmd: &mut clap::Command) {}

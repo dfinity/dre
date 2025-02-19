@@ -1,15 +1,14 @@
 use std::path::PathBuf;
 
 use clap::Args;
-use ic_nns_common::pb::v1::NeuronId;
 use ic_nns_governance_api::pb::v1::{MakeProposalRequest, Motion as MotionPayload, ProposalActionRequest};
 use tokio::io::AsyncReadExt;
 
 use crate::{
     commands::{AuthRequirement, ExecutableCommand},
-    forum::ForumParameters,
+    forum::{ForumParameters, ForumPostKind, Submitter},
+    util::{extract_title_and_text, utf8},
 };
-use ic_canisters::governance::GovernanceCanisterWrapper;
 
 #[derive(Args, Debug, Clone)]
 #[group(multiple = true)]
@@ -47,33 +46,7 @@ pub struct Motion {
     parameters: MotionParameters,
 }
 
-impl Motion {
-    fn extract_title_and_text(&self, raw_text: &str) -> (Option<String>, String) {
-        // Step 1: Remove leading/trailing empty lines (including lines with only whitespace).
-        let lines: Vec<&str> = raw_text.lines().skip_while(|line| line.trim().is_empty()).collect();
-        let lines: Vec<&str> = lines.into_iter().rev().skip_while(|line| line.trim().is_empty()).collect();
-        let lines: Vec<&str> = lines.into_iter().rev().collect();
-
-        // Step 2: Parse the first line as a title if it starts with '# '
-        if lines.is_empty() {
-            // If no lines remain after trimming, there's no title or body
-            return (None, "".to_string());
-        }
-
-        let first_line = lines[0];
-        // CommonMark-compliant H1 headings MUST start with "# ", so starts_with("# ") would be enough.
-        // To tolerate other “flavors” of Markdown that allow #Title without a space, we use a more complex check.
-        let (title, body) = if first_line.starts_with('#') && !first_line.starts_with("##") {
-            // Strip out '#' plus any extra leading space
-            let stripped_title = first_line.trim_start_matches('#').trim_start();
-            let body = lines[1..].join("\n"); // Join the remaining lines
-            (Some(stripped_title.to_owned()), body.trim_start().to_string())
-        } else {
-            (None, lines.join("\n"))
-        };
-        (title, body)
-    }
-}
+// FIXME: the meat of this command could be turned into a ProposableViaMakeProposal such that the forum code can be reused here.  All Proposals have a URL field, we can leverage that to make the code reusable and expand the ability to make more proposals of this kind.  The ProposalExecutor trait can be genericized to work this way, gaining additional submit and simulate methods for the trait-to-be.
 
 impl ExecutableCommand for Motion {
     fn require_auth(&self) -> AuthRequirement {
@@ -87,65 +60,35 @@ impl ExecutableCommand for Motion {
                 tokio::io::stdin().read_to_string(&mut ret).await?;
                 ret
             }
-            _ => {
-                let res = tokio::fs::read(&self.parameters.summary_file).await?;
-                String::from_utf8(res).map_err(|e| anyhow::anyhow!("Summary must be valid UTF-8: {}", e))?
-            }
+            _ => utf8(tokio::fs::read(&self.parameters.summary_file).await?, "Summary must be valid UTF-8")?,
         };
         let (title, summary) = match &self.parameters.title {
             Some(s) => (Some(s.clone()), summary.clone()),
-            None => self.extract_title_and_text(&summary),
+            None => extract_title_and_text(&summary),
         };
         let motion_text = match (&self.parameters.motion_text, &self.parameters.motion_text_file) {
             (Some(motion_text), _) => motion_text.clone(),
-            (_, Some(motion_text_file)) => {
-                let res = tokio::fs::read(&motion_text_file).await?;
-                String::from_utf8(res).map_err(|e| anyhow::anyhow!("Summary must be valid UTF-8: {}", e))?
-            }
+            (_, Some(motion_text_file)) => utf8(tokio::fs::read(&motion_text_file).await?, "Motion text must be valid UTF-8")?,
             (None, None) => "Please refer to the summary of the proposal for the contents of the motion.".to_string(),
         };
 
-        let (neuron, client) = ctx.create_ic_agent_canister_client().await?;
-        let governance = GovernanceCanisterWrapper::from(client);
-
-        let forum_post = crate::forum::handler(&self.parameters.forum_parameters, &ctx)?
-            .forum_post(crate::forum::ForumPostKind::Motion {
-                title: title.clone(),
-                summary: summary.clone(),
-            })
-            .await?;
-
         let request = MakeProposalRequest {
-            title,
-            summary,
-            url: forum_post.url().map(|s| s.to_string()).unwrap_or_default(),
+            title: title.clone(),
+            summary: summary.clone(),
+            url: "<to be supplied or generated later>".into(),
             action: Some(ProposalActionRequest::Motion(MotionPayload { motion_text })),
         };
-        if ctx.is_dry_run() {
-            println!("Proposal that would have been sent:\n{:#?}", request);
-            return Ok(());
-        }
 
-        let response = governance.make_proposal(NeuronId { id: neuron.neuron_id }, request.into()).await?;
-        forum_post
-            .add_proposal_url(match (response.proposal_id, response.message) {
-                (Some(proposal_id), Some(message)) => {
-                    println!("{}\n", message.trim_end());
-                    println!("proposal {}", proposal_id.id);
-                    proposal_id.id
-                }
-                (Some(proposal_id), None) => {
-                    println!("proposal {}", proposal_id.id);
-                    proposal_id.id
-                }
-                (None, Some(message)) => return Err(anyhow::anyhow!("Proposal submission failed: {}", message)),
-                (None, None) => {
-                    return Err(anyhow::anyhow!(
-                        "Proposal submission failed; no failure message was provided by the governance canister."
-                    ))
-                }
-            })
-            .await
+        Submitter::from_executor_and_mode(
+            &self.parameters.forum_parameters,
+            ctx.mode.clone(),
+            ctx.governance_executor().await?.execution(request),
+        )
+        .propose(ForumPostKind::Motion {
+            title: title.clone(),
+            summary: summary.clone(),
+        })
+        .await
     }
 
     fn validate(&self, _args: &crate::commands::Args, _cmd: &mut clap::Command) {}

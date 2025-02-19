@@ -5,7 +5,7 @@ use ic_types::PrincipalId;
 
 use crate::{
     commands::{AuthRequirement, ExecutableCommand},
-    forum::{ic_admin::forum_enabled_proposer, ForumParameters, ForumPostKind},
+    forum::{ForumParameters, ForumPostKind, Submitter},
 };
 
 #[derive(Args, Debug)]
@@ -60,9 +60,7 @@ impl ExecutableCommand for Create {
 
         if self.help_other_args {
             // Just print help
-            let ic_admin = ctx.ic_admin().await?;
-            ic_admin.grep_subcommand_arguments("propose-to-create-subnet");
-            return Ok(());
+            return ctx.help_propose(Some("propose-to-create-subnet")).await;
         }
 
         let runner_proposal = match ctx
@@ -76,7 +74,6 @@ impl ExecutableCommand for Create {
                     include: self.include.clone().into(),
                 },
                 motivation.to_string(),
-                None,
                 self.replica_version.clone(),
                 self.other_args.to_owned(),
             )
@@ -85,9 +82,13 @@ impl ExecutableCommand for Create {
             Some(runner_proposal) => runner_proposal,
             None => return Ok(()),
         };
-        forum_enabled_proposer(&self.forum_parameters, &ctx, ctx.ic_admin().await?)
-            .propose_with_possible_confirmation(runner_proposal.cmd, runner_proposal.opts, ForumPostKind::Generic) // FIXME why pass these two separately?  It's absurd.  Just pass the fuckin struct.
-            .await
+        Submitter::from_executor_and_mode(
+            &self.forum_parameters,
+            ctx.mode.clone(),
+            ctx.ic_admin_executor().await?.execution(runner_proposal),
+        )
+        .propose(ForumPostKind::Generic) // FIXME why pass these two separately?  It's absurd.  Just pass the fuckin struct.
+        .await
     }
 
     fn validate(&self, _args: &crate::commands::Args, cmd: &mut clap::Command) {

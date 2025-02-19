@@ -4,7 +4,7 @@ use ic_types::PrincipalId;
 
 use crate::{
     commands::{AuthRequirement, ExecutableCommand},
-    forum::{ic_admin::forum_enabled_proposer, ForumParameters, ForumPostKind},
+    forum::{ForumParameters, ForumPostKind, Submitter},
 };
 
 #[derive(Args, Debug)]
@@ -27,13 +27,17 @@ impl ExecutableCommand for Rescue {
     }
 
     async fn execute(&self, ctx: crate::ctx::DreContext) -> anyhow::Result<()> {
-        let runner_proposal = match ctx.runner().await?.subnet_rescue(&self.id, self.keep_nodes.clone(), None).await? {
+        let runner_proposal = match ctx.runner().await?.subnet_rescue(&self.id, self.keep_nodes.clone()).await? {
             Some(runner_proposal) => runner_proposal,
             None => return Ok(()),
         };
-        forum_enabled_proposer(&self.forum_parameters, &ctx, ctx.ic_admin().await?)
-            .propose_with_possible_confirmation(runner_proposal.cmd, runner_proposal.opts, ForumPostKind::Generic)
-            .await
+        Submitter::from_executor_and_mode(
+            &self.forum_parameters,
+            ctx.mode.clone(),
+            ctx.ic_admin_executor().await?.execution(runner_proposal),
+        )
+        .propose(ForumPostKind::Generic)
+        .await
     }
 
     fn validate(&self, _args: &crate::commands::Args, _cmd: &mut clap::Command) {}

@@ -16,12 +16,14 @@ mod desktop_notify;
 mod forum;
 mod ic_admin;
 mod operations;
+mod proposal_executors;
 mod qualification;
 mod runner;
 mod store;
 mod subnet_manager;
 #[cfg(test)]
 mod unit_tests;
+mod util;
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {

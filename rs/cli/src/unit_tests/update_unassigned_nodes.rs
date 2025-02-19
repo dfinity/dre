@@ -33,6 +33,8 @@ fn mock_forum_parameters() -> ForumParameters {
 #[tokio::test]
 async fn should_skip_update_same_version_nns_not_provided() {
     let mut ic_admin = MockIcAdmin::new();
+    // In this test this function shouldn't be called
+    ic_admin.expect_submit_proposal().never();
     let principal = PrincipalId::from_str("tdb26-jop6k-aogll-7ltgs-eruif-6kk7m-qpktf-gdiqx-mxtrf-vb5e6-eqe").unwrap();
 
     let mut registry = registry_with_subnets(vec![Subnet {
@@ -45,14 +47,11 @@ async fn should_skip_update_same_version_nns_not_provided() {
         .expect_unassigned_nodes_replica_version()
         .returning(|| Box::pin(async { Ok(Arc::new("version".to_string())) }));
 
-    // In this test this function shouldn't be called
-    ic_admin.expect_propose_run().never();
-
     let ctx = get_mocked_ctx(
         Network::mainnet_unchecked().unwrap(),
         Neuron::anonymous_neuron(),
         Arc::new(registry),
-        Arc::new(MockIcAdmin::new()),
+        Arc::new(ic_admin),
         Arc::new(MockLazyGit::new()),
         Arc::new(MockProposalAgent::new()),
         Arc::new(MockArtifactDownloader::new()),
@@ -71,6 +70,8 @@ async fn should_skip_update_same_version_nns_not_provided() {
 #[tokio::test]
 async fn should_skip_update_same_version_nns_provided() {
     let mut ic_admin = MockIcAdmin::new();
+    // In this test this function shouldn't be called
+    ic_admin.expect_submit_proposal().never();
 
     let principal = PrincipalId::new_anonymous();
 
@@ -83,9 +84,6 @@ async fn should_skip_update_same_version_nns_provided() {
     registry
         .expect_unassigned_nodes_replica_version()
         .returning(|| Box::pin(async { Ok(Arc::new("version".to_string())) }));
-
-    // In this test this function shouldn't be called
-    ic_admin.expect_propose_run().never();
 
     let ctx = get_mocked_ctx(
         Network::mainnet_unchecked().unwrap(),
@@ -110,6 +108,12 @@ async fn should_skip_update_same_version_nns_provided() {
 #[tokio::test]
 async fn should_update_unassigned_nodes() {
     let mut ic_admin = MockIcAdmin::new();
+    // Should be called since versions differ
+    ic_admin.expect_simulate_proposal().once().returning(|_| Box::pin(async { Ok(()) }));
+    ic_admin
+        .expect_submit_proposal()
+        .once()
+        .returning(|_, _| Box::pin(async { Ok("Proposal 1".to_string()) }));
 
     let principal = PrincipalId::new_anonymous();
 
@@ -122,16 +126,6 @@ async fn should_update_unassigned_nodes() {
     registry
         .expect_unassigned_nodes_replica_version()
         .returning(|| Box::pin(async { Ok(Arc::new("other".to_string())) }));
-
-    // Should be called since versions differ
-    ic_admin
-        .expect_propose_print_and_confirm()
-        .once()
-        .returning(|_, _| Box::pin(async { Ok(true) }));
-    ic_admin
-        .expect_propose_submit()
-        .once()
-        .returning(|_, _| Box::pin(async { Ok("Proposal 1".to_string()) }));
 
     let ctx = get_mocked_ctx(
         Network::mainnet_unchecked().unwrap(),
@@ -156,6 +150,8 @@ async fn should_update_unassigned_nodes() {
 #[tokio::test]
 async fn should_fail_nns_not_found() {
     let mut ic_admin = MockIcAdmin::new();
+    // Should not be called
+    ic_admin.expect_submit_proposal().never();
 
     let principal = PrincipalId::new_subnet_test_id(0);
     let other_principal = PrincipalId::new_subnet_test_id(1);
@@ -169,9 +165,6 @@ async fn should_fail_nns_not_found() {
     registry
         .expect_unassigned_nodes_replica_version()
         .returning(|| Box::pin(async { Ok(Arc::new("other".to_string())) }));
-
-    // Should not be called
-    ic_admin.expect_propose_run().never();
 
     let ctx = get_mocked_ctx(
         Network::mainnet_unchecked().unwrap(),
