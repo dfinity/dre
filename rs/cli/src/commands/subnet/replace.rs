@@ -5,10 +5,7 @@ use itertools::Itertools;
 
 use crate::forum::ForumPostKind;
 use crate::submitter::{SubmissionParameters, Submitter};
-use crate::{
-    auth::{AuthRequirement}, ctx::exe::ExecutableCommand,
-    subnet_manager::SubnetTarget,
-};
+use crate::{auth::AuthRequirement, ctx::exe::ExecutableCommand, subnet_manager::SubnetTarget};
 
 #[derive(Args, Debug)]
 pub struct Replace {

@@ -3,9 +3,11 @@ use std::str::FromStr;
 use clap::{Args, ValueEnum};
 
 use crate::{
-    auth::{AuthRequirement}, ctx::exe::ExecutableCommand,
-    forum::ForumPostKind, submitter::{SubmissionParameters, Submitter},
+    auth::AuthRequirement,
+    ctx::exe::ExecutableCommand,
+    forum::ForumPostKind,
     operations::hostos_rollout::{NodeGroupUpdate, NumberOfNodes},
+    submitter::{SubmissionParameters, Submitter},
 };
 
 #[derive(ValueEnum, Copy, Clone, Debug, Ord, Eq, PartialEq, PartialOrd, Default, Hash)]

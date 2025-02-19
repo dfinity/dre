@@ -1,8 +1,10 @@
 use clap::{error::ErrorKind, Args};
 
 use crate::{
-    auth::{AuthRequirement}, ctx::exe::ExecutableCommand,
-    forum::ForumPostKind, submitter::{SubmissionParameters, Submitter},
+    auth::AuthRequirement,
+    ctx::exe::ExecutableCommand,
+    forum::ForumPostKind,
+    submitter::{SubmissionParameters, Submitter},
 };
 
 #[derive(Debug, Args)]

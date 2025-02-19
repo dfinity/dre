@@ -2,8 +2,10 @@ use clap::{error::ErrorKind, Args};
 use decentralization::subnets::NodesRemover;
 
 use crate::{
-    auth::{AuthRequirement}, ctx::exe::ExecutableCommand,
-    forum::ForumPostKind, submitter::{SubmissionParameters, Submitter},
+    auth::AuthRequirement,
+    ctx::exe::ExecutableCommand,
+    forum::ForumPostKind,
+    submitter::{SubmissionParameters, Submitter},
 };
 
 #[derive(Args, Debug)]
