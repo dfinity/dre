@@ -8,7 +8,7 @@ use log::info;
 use spinners::{Spinner, Spinners};
 
 use super::{AuthRequirement, ExecutableCommand};
-use crate::{ctx::HowToProceed, desktop_notify::DesktopNotifier, util::yesno};
+use crate::{ctx::HowToProceed, desktop_notify::DesktopNotifier};
 
 #[derive(Args, Debug)]
 pub struct Vote {
