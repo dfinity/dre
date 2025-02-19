@@ -2,7 +2,7 @@ use clap::Args;
 use execute::Execute;
 use list::List;
 
-use super::{impl_executable_command_for_enums, AuthRequirement, ExecutableCommand};
+use crate::ctx::exe::impl_executable_command_for_enums;
 
 pub mod execute;
 mod list;

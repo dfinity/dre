@@ -5,7 +5,7 @@ use ic_nns_governance_api::pb::v1::{MakeProposalRequest, Motion as MotionPayload
 use tokio::io::AsyncReadExt;
 
 use crate::{
-    commands::{AuthRequirement, ExecutableCommand},
+    auth::{AuthRequirement}, ctx::exe::ExecutableCommand,
     forum::ForumPostKind, submitter::{SubmissionParameters, Submitter},
     util::{extract_title_and_text, utf8},
 };

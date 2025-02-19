@@ -1,4 +1,5 @@
 use crate::confirm::ConfirmationModeOptions;
+use crate::ctx::exe::ExecutableCommand;
 use crate::forum::{ForumParameters, ForumPostLinkVariant};
 use crate::submitter::SubmissionParameters;
 use indexmap::IndexMap;
@@ -12,7 +13,6 @@ use itertools::Itertools;
 use crate::{
     artifact_downloader::MockArtifactDownloader,
     auth::Neuron,
-    commands::ExecutableCommand,
     cordoned_feature_fetcher::MockCordonedFeatureFetcher,
     ctx::tests::get_mocked_ctx,
     ic_admin::MockIcAdmin,

@@ -1,9 +1,9 @@
 use std::{path::PathBuf, sync::Arc};
 
+use crate::auth::{AuthRequirement, HsmParams};
 use crate::store::Store;
 use crate::{
-    auth::{Auth, Neuron, STAGING_KEY_PATH_FROM_HOME, STAGING_NEURON_ID},
-    commands::{AuthOpts, AuthRequirement, HsmOpts},
+    auth::{Auth, AuthOpts, HsmOpts, Neuron, STAGING_KEY_PATH_FROM_HOME, STAGING_NEURON_ID},
     cordoned_feature_fetcher::MockCordonedFeatureFetcher,
     store::FALLBACK_IC_ADMIN_VERSION,
 };
@@ -31,9 +31,9 @@ async fn get_context(network: &Network, version: IcAdminVersion) -> anyhow::Resu
         network.clone(),
         AuthOpts {
             private_key_pem: None,
-            hsm_opts: crate::commands::HsmOpts {
+            hsm_opts: HsmOpts {
                 hsm_pin: None,
-                hsm_params: crate::commands::HsmParams {
+                hsm_params: HsmParams {
                     hsm_slot: None,
                     hsm_key_id: None,
                 },
@@ -41,7 +41,7 @@ async fn get_context(network: &Network, version: IcAdminVersion) -> anyhow::Resu
         },
         None,
         false,
-        crate::commands::AuthRequirement::Anonymous,
+        AuthRequirement::Anonymous,
         version,
         Arc::new(MockCordonedFeatureFetcher::new()),
         Arc::new(MockHealthStatusQuerier::new()),
@@ -275,7 +275,7 @@ impl<'a> NeuronAuthTestScenarion<'a> {
                 private_key_pem: self.private_key_pem.clone(),
                 hsm_opts: HsmOpts {
                     hsm_pin: self.hsm_pin.clone(),
-                    hsm_params: crate::commands::HsmParams {
+                    hsm_params: HsmParams {
                         hsm_slot: self.hsm_slot,
                         hsm_key_id: self.hsm_key_id.clone(),
                     },

@@ -2,7 +2,7 @@ use clap::{error::ErrorKind, Args};
 use decentralization::subnets::NodesRemover;
 
 use crate::{
-    commands::{AuthRequirement, ExecutableCommand},
+    auth::{AuthRequirement}, ctx::exe::ExecutableCommand,
     forum::ForumPostKind, submitter::{SubmissionParameters, Submitter},
 };
 

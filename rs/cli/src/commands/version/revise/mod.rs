@@ -1,7 +1,6 @@
-use super::{impl_executable_command_for_enums, ExecutableCommand};
+use crate::ctx::exe::impl_executable_command_for_enums;
 use crate::commands::version::revise::guest_os::GuestOs;
 use crate::commands::version::revise::host_os::HostOs;
-use crate::commands::AuthRequirement;
 use clap::Args;
 use ic_management_types::Artifact;
 

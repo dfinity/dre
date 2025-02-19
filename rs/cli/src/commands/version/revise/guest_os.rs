@@ -1,7 +1,7 @@
 use clap::{error::ErrorKind, Args};
 
 use crate::{
-    commands::{AuthRequirement, ExecutableCommand},
+    auth::{AuthRequirement}, ctx::exe::ExecutableCommand,
     forum::ForumPostKind, submitter::{SubmissionParameters, Submitter},
 };
 

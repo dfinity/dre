@@ -6,7 +6,7 @@ use itertools::Itertools;
 use crate::forum::ForumPostKind;
 use crate::submitter::{SubmissionParameters, Submitter};
 use crate::{
-    commands::{AuthRequirement, ExecutableCommand},
+    auth::{AuthRequirement}, ctx::exe::ExecutableCommand,
     subnet_manager::SubnetTarget,
 };
 

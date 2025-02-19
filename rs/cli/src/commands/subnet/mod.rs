@@ -6,7 +6,7 @@ use rescue::Rescue;
 use resize::Resize;
 use whatif::WhatifDecentralization;
 
-use super::{impl_executable_command_for_enums, AuthRequirement, ExecutableCommand};
+use crate::ctx::exe::impl_executable_command_for_enums;
 
 mod create;
 mod deploy;

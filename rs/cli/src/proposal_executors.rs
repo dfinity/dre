@@ -1,16 +1,9 @@
-use std::{
-    fmt::{Debug, Display},
-    sync::Arc,
-};
+use std::fmt::Debug;
 
 use futures::future::BoxFuture;
-use ic_canisters::governance::GovernanceCanisterWrapper;
-use ic_nns_common::pb::v1::NeuronId;
 use ic_nns_governance_api::pb::v1::{manage_neuron_response::MakeProposalResponse, MakeProposalRequest};
 use regex::Regex;
 use url::Url;
-
-use crate::ic_admin::IcAdmin;
 
 /// A struct representing a response to a submitted proposal,
 /// of the kind of responses that contain a proposal ID.
@@ -108,139 +101,6 @@ impl ProposableViaGovernanceCanister for MakeProposalRequest {
     type ProposalResult = ProposalResponseWithId;
 }
 
-/// Knows how to simulate any RunnableViaIcAdmin, and submit any
-/// of them too, returning the deserialized response based on the
-/// ProducesProposalResult::Output type.
-/// This is a higher-level construct than the IcAdmin trait, which
-/// only concerns itself with raw proposal submission from arguments.
-pub struct IcAdminProposalExecutor {
-    ic_admin: Arc<dyn IcAdmin>,
-}
-
-impl From<Arc<dyn IcAdmin>> for IcAdminProposalExecutor {
-    fn from(arg: Arc<dyn IcAdmin>) -> Self {
-        Self { ic_admin: arg.clone() }
-    }
-}
-
-impl IcAdminProposalExecutor {
-    pub fn execution<T>(self, p: T) -> Box<dyn ProposalExecution>
-    where
-        T: 'static,
-        T: RunnableViaIcAdmin<Output = ProposalResponseWithId>,
-        T: ProducesProposalResult<ProposalResult = ProposalResponseWithId>,
-    {
-        Box::new(ProposalExecutionViaIcAdmin { executor: self, proposal: p })
-    }
-
-    pub fn run<'c, 'd, T: RunnableViaIcAdmin + 'c>(&'d self, cmd: &'c T, forum_post_link: Option<Url>) -> BoxFuture<'c, anyhow::Result<T::Output>>
-    where
-        'd: 'c,
-        <<T as RunnableViaIcAdmin>::Output as TryFrom<String>>::Error: Display,
-    {
-        Box::pin(async move {
-            let propose_command = cmd.to_ic_admin_arguments()?;
-            let res = self.ic_admin.submit_proposal(propose_command, forum_post_link).await?;
-            let parsed = T::Output::try_from(res.clone());
-            parsed.map_err(|e| anyhow::anyhow!("Failed to deserialize result of proposal execution {}: {}", res, e))
-        })
-    }
-
-    pub fn simulate<'c, 'd, T: RunnableViaIcAdmin + 'c>(&'d self, cmd: &'c T) -> BoxFuture<'c, anyhow::Result<()>>
-    where
-        'd: 'c,
-    {
-        Box::pin(async move {
-            let propose_command = cmd.to_ic_admin_arguments()?;
-            self.ic_admin.simulate_proposal(propose_command).await?;
-            Ok(())
-        })
-    }
-
-    pub fn submit<'c, 'd, U: ProducesProposalResult + RunnableViaIcAdmin + 'c>(
-        &'d self,
-        cmd: &'c U,
-        forum_post_link: Option<Url>,
-    ) -> BoxFuture<'c, anyhow::Result<ProposalResponseWithId>>
-    where
-        'd: 'c,
-        <U as ProducesProposalResult>::ProposalResult: TryInto<ProposalResponseWithId>,
-        <U as ProducesProposalResult>::ProposalResult: TryFrom<String>,
-    {
-        Box::pin(async move {
-            let propose_command = cmd.to_ic_admin_arguments()?;
-            let res = self.ic_admin.submit_proposal(propose_command, forum_post_link).await?;
-            let parsed: anyhow::Result<ProposalResponseWithId> = ProposalResponseWithId::try_from(res.clone());
-            parsed.map_err(|e| anyhow::anyhow!("Failed to deserialize result of proposal execution {}: {}", res, e))
-        })
-    }
-}
-
-pub struct GovernanceCanisterProposalExecutor {
-    neuron_id: u64,
-    governance_canister: GovernanceCanisterWrapper,
-}
-
-impl From<(u64, GovernanceCanisterWrapper)> for GovernanceCanisterProposalExecutor {
-    fn from(args: (u64, GovernanceCanisterWrapper)) -> Self {
-        Self {
-            neuron_id: args.0,
-            governance_canister: args.1,
-        }
-    }
-}
-
-impl GovernanceCanisterProposalExecutor {
-    pub fn execution<T>(self, p: T) -> Box<dyn ProposalExecution>
-    where
-        T: 'static,
-        T: ProposableViaGovernanceCanister<ProposalResult = ProposalResponseWithId>,
-    {
-        Box::new(ProposalExecutionViaGovernanceCanister { executor: self, proposal: p })
-    }
-
-    pub fn simulate<'c, 'd, W: ProposableViaGovernanceCanister + 'c>(&'d self, cmd: &'c W) -> BoxFuture<'c, anyhow::Result<()>>
-    where
-        'd: 'c,
-    {
-        Box::pin(async move {
-            println!("Proposal that would be submitted:\n{:#?}", cmd);
-            Ok(())
-        })
-    }
-
-    pub fn submit<'c, 'd, W: ProposableViaGovernanceCanister + 'c>(
-        &'d self,
-        cmd: &'c W,
-        forum_post_link: Option<Url>,
-    ) -> BoxFuture<'c, anyhow::Result<ProposalResponseWithId>>
-    where
-        'd: 'c,
-        <W as ProposableViaGovernanceCanister>::ProposalResult: TryInto<ProposalResponseWithId>,
-        <W as ProposableViaGovernanceCanister>::ProposalResult: TryFrom<u64>,
-    {
-        Box::pin(async move {
-            let response = self
-                .governance_canister
-                .make_proposal(
-                    NeuronId { id: self.neuron_id },
-                    MakeProposalRequest {
-                        url: forum_post_link.map(|s| s.to_string()).unwrap_or_default(),
-                        ..cmd.clone().into()
-                    }
-                    .into(),
-                )
-                .await?;
-            let maybe_msg = response.message.clone();
-            let pid: ProposalResponseWithId = response.try_into()?;
-            if let Some(message) = maybe_msg {
-                println!("{}", message);
-            }
-            Ok(pid)
-        })
-    }
-}
-
 /// Represents a single execution (either simulation or submission or both)
 /// of a proposal (any object that implements either RunnableViaIcAdmin or
 /// ProposableViaGovernanceCanister, and produces a ProposalResponseWithId).
@@ -251,49 +111,6 @@ pub trait ProposalExecution: Send + Sync {
     fn submit<'a, 'b>(&'a self, forum_post_link: Option<Url>) -> BoxFuture<'b, anyhow::Result<ProposalResponseWithId>>
     where
         'a: 'b;
-}
-
-struct ProposalExecutionViaIcAdmin<T> {
-    executor: IcAdminProposalExecutor,
-    proposal: T,
-}
-
-impl<T> ProposalExecution for ProposalExecutionViaIcAdmin<T>
-where
-    T: RunnableViaIcAdmin<Output = ProposalResponseWithId>,
-    T: ProducesProposalResult<ProposalResult = ProposalResponseWithId>,
-{
-    fn simulate(&self) -> BoxFuture<'_, anyhow::Result<()>> {
-        Box::pin(async { self.executor.simulate(&self.proposal).await })
-    }
-
-    fn submit<'a, 'b>(&'a self, forum_post_link: Option<Url>) -> BoxFuture<'b, anyhow::Result<ProposalResponseWithId>>
-    where
-        'a: 'b,
-    {
-        Box::pin(async { self.executor.submit(&self.proposal, forum_post_link).await })
-    }
-}
-
-struct ProposalExecutionViaGovernanceCanister<T> {
-    executor: GovernanceCanisterProposalExecutor,
-    proposal: T,
-}
-
-impl<T> ProposalExecution for ProposalExecutionViaGovernanceCanister<T>
-where
-    T: ProposableViaGovernanceCanister<ProposalResult = ProposalResponseWithId>,
-{
-    fn simulate(&self) -> BoxFuture<'_, anyhow::Result<()>> {
-        Box::pin(async { self.executor.simulate(&self.proposal).await })
-    }
-
-    fn submit<'a, 'b>(&'a self, forum_post_link: Option<Url>) -> BoxFuture<'b, anyhow::Result<ProposalResponseWithId>>
-    where
-        'a: 'b,
-    {
-        Box::pin(async { self.executor.submit(&self.proposal, forum_post_link).await })
-    }
 }
 
 #[cfg(test)]

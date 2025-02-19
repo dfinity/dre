@@ -1,7 +1,7 @@
 use clap::Args;
 
-use super::{impl_executable_command_for_enums, AuthRequirement, ExecutableCommand};
 use crate::commands::version::revise::ReviseElectedVersions;
+use crate::ctx::exe::impl_executable_command_for_enums;
 
 pub(crate) mod revise;
 

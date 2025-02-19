@@ -1,8 +1,8 @@
 use clap::Args;
 use ic_canisters::governance::GovernanceCanisterWrapper;
 
-use crate::commands::{AuthRequirement, ExecutableCommand};
-
+use crate::auth::AuthRequirement;
+use crate::ctx::exe::ExecutableCommand;
 #[derive(Args, Debug)]
 pub struct Pending {}
 

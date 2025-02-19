@@ -3,7 +3,7 @@ use clap::Args;
 use ic_types::PrincipalId;
 
 use crate::{
-    commands::{AuthRequirement, ExecutableCommand},
+    auth::{AuthRequirement}, ctx::exe::ExecutableCommand,
     forum::ForumPostKind, submitter::{SubmissionParameters, Submitter},
 };
 

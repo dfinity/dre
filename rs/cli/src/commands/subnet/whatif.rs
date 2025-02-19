@@ -2,8 +2,8 @@ use clap::Args;
 use ic_types::PrincipalId;
 use registry_canister::mutations::do_change_subnet_membership::ChangeSubnetMembershipPayload;
 
-use crate::commands::{AuthRequirement, ExecutableCommand};
-
+use crate::auth::AuthRequirement;
+use crate::ctx::exe::ExecutableCommand;
 #[derive(Args, Debug)]
 #[clap(visible_aliases = &["analyze", "analyze-decentralization", "decentralization", "whatif", "what-if"])]
 pub struct WhatifDecentralization {

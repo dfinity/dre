@@ -4,8 +4,9 @@ use dotenv::dotenv;
 use dre::commands::{
     self,
     upgrade::{UpdateStatus, Upgrade},
-    Args, ExecutableCommand,
+    Args,
 };
+use dre::ctx::exe::ExecutableCommand;
 use dre::ctx::DreContext;
 use log::{info, warn};
 

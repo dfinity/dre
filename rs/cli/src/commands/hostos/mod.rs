@@ -2,8 +2,6 @@ use clap::Args;
 use rollout::Rollout;
 use rollout_from_node_group::RolloutFromNodeGroup;
 
-use super::{AuthRequirement, ExecutableCommand};
-
 mod rollout;
 pub mod rollout_from_node_group;
 

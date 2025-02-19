@@ -4,9 +4,9 @@ use ic_nns_common::pb::v1::ProposalId;
 use ic_nns_governance::pb::v1::ListProposalInfo;
 use itertools::Itertools;
 
-use crate::commands::{AuthRequirement, ExecutableCommand};
-
 use super::Proposal;
+use crate::auth::AuthRequirement;
+use crate::ctx::exe::ExecutableCommand;
 
 #[derive(Args, Debug)]
 pub struct List {

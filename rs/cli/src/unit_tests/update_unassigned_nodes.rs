@@ -2,9 +2,10 @@ use std::{str::FromStr, sync::Arc};
 
 use crate::artifact_downloader::MockArtifactDownloader;
 use crate::auth::Neuron;
-use crate::commands::{update_unassigned_nodes::UpdateUnassignedNodes, ExecutableCommand};
+use crate::commands::update_unassigned_nodes::UpdateUnassignedNodes;
 use crate::confirm::ConfirmationModeOptions;
 use crate::cordoned_feature_fetcher::MockCordonedFeatureFetcher;
+use crate::ctx::exe::ExecutableCommand;
 use crate::forum::ForumParameters;
 use crate::ic_admin::MockIcAdmin;
 use crate::submitter::SubmissionParameters;

@@ -1,8 +1,7 @@
 use clap::Args;
 use remove::Remove;
 
-use super::{impl_executable_command_for_enums, AuthRequirement, ExecutableCommand};
-
+use crate::ctx::exe::impl_executable_command_for_enums;
 mod remove;
 
 #[derive(Args, Debug)]

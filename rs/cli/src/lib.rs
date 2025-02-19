@@ -6,6 +6,7 @@ mod cordoned_feature_fetcher;
 pub mod ctx;
 mod desktop_notify;
 mod forum;
+mod governance;
 mod ic_admin;
 mod operations;
 mod proposal_executors;

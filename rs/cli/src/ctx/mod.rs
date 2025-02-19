@@ -1,5 +1,6 @@
 use std::{cell::RefCell, rc::Rc, sync::Arc};
 
+use exe::ExecutableCommand;
 use ic_canisters::{governance::GovernanceCanisterWrapper, IcAgentCanisterClient};
 use ic_management_backend::{
     health::HealthStatusQuerier,
@@ -12,15 +13,17 @@ use log::warn;
 
 use crate::{
     artifact_downloader::{ArtifactDownloader, ArtifactDownloaderImpl},
-    auth::Neuron,
-    commands::{Args, AuthOpts, AuthRequirement, ExecutableCommand, IcAdminVersion},
+    auth::{AuthOpts, AuthRequirement, Neuron},
+    commands::{Args, IcAdminVersion},
     cordoned_feature_fetcher::CordonedFeatureFetcher,
-    ic_admin::{IcAdmin, IcAdminImpl},
-    proposal_executors::{GovernanceCanisterProposalExecutor, IcAdminProposalExecutor},
+    governance::GovernanceCanisterProposalExecutor,
+    ic_admin::{IcAdmin, IcAdminImpl, IcAdminProposalExecutor},
     runner::Runner,
     store::Store,
     subnet_manager::SubnetManager,
 };
+
+pub mod exe;
 
 #[cfg(test)]
 mod unit_tests;
@@ -269,7 +272,7 @@ pub mod tests {
     use crate::{
         artifact_downloader::ArtifactDownloader,
         auth::Neuron,
-        commands::{AuthOpts, /*DiscourseOpts,*/ HsmOpts, HsmParams},
+        auth::{AuthOpts, AuthRequirement, HsmOpts, HsmParams},
         cordoned_feature_fetcher::CordonedFeatureFetcher,
         ic_admin::IcAdmin,
         store::Store,
@@ -309,7 +312,7 @@ pub mod tests {
                     },
                 },
                 neuron_override: None,
-                requirement: crate::commands::AuthRequirement::Neuron,
+                requirement: AuthRequirement::Neuron,
                 neuron_id: match neuron.neuron_id {
                     0 => None,
                     n => Some(n),

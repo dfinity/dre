@@ -2,9 +2,11 @@ use clap::Args;
 use ic_types::PrincipalId;
 
 use crate::{
-    commands::{AuthRequirement, ExecutableCommand},
-    forum::ForumPostKind, submitter::{SubmissionParameters, Submitter},
+    auth::AuthRequirement,
+    ctx::exe::ExecutableCommand,
+    forum::ForumPostKind,
     ic_admin::{self},
+    submitter::{SubmissionParameters, Submitter},
 };
 
 #[derive(Args, Debug)]
