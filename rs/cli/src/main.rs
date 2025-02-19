@@ -21,6 +21,7 @@ mod proposal_executors;
 mod qualification;
 mod runner;
 mod store;
+mod submitter;
 mod subnet_manager;
 #[cfg(test)]
 mod unit_tests;

@@ -6,7 +6,7 @@ use tokio::io::AsyncReadExt;
 
 use crate::{
     commands::{AuthRequirement, ExecutableCommand},
-    forum::{ForumPostKind, SubmissionParameters, Submitter},
+    forum::ForumPostKind, submitter::{SubmissionParameters, Submitter},
     util::{extract_title_and_text, utf8},
 };
 

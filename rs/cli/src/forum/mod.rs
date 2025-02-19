@@ -3,19 +3,12 @@ use std::{path::PathBuf, str::FromStr};
 use clap::Args as ClapArgs;
 use futures::future::BoxFuture;
 use ic_types::PrincipalId;
-use log::warn;
 use mockall::automock;
-
-use crate::{
-    confirm::{ConfirmationModeOptions, HowToProceed},
-    proposal_executors::ProposalExecution,
-    util::yesno,
-};
 
 mod impls;
 
 #[derive(Debug, Clone)]
-pub enum ForumPostLinkVariant {
+pub(crate) enum ForumPostLinkVariant {
     Url(url::Url),
     ManageOnDiscourse,
     Ask,
@@ -120,15 +113,6 @@ impl ForumParameters {
     }
 }
 
-#[derive(ClapArgs, Debug, Clone)]
-pub struct SubmissionParameters {
-    #[clap(flatten)]
-    pub forum_parameters: ForumParameters,
-
-    #[clap(flatten)]
-    pub confirmation_mode: ConfirmationModeOptions,
-}
-
 // FIXME: this should become part of a new composite trait
 // that builds on the ProducesProposalResults trait,
 // so that we don't have to have a separate kind here, this just
@@ -158,7 +142,7 @@ pub trait ForumPost: Sync + Send {
 }
 
 #[derive(Clone)]
-struct ForumContext {
+pub struct ForumContext {
     forum_opts: ForumParameters,
 }
 
@@ -166,11 +150,6 @@ struct ForumContext {
 impl ForumContext {
     fn new(forum_opts: ForumParameters) -> Self {
         Self { forum_opts }
-    }
-
-    // FIXME: turn into impl From.
-    fn from_opts(opts: &ForumParameters) -> Self {
-        Self::new(opts.clone())
     }
 
     pub fn client(&self) -> anyhow::Result<Box<dyn ForumPostHandler>> {
@@ -183,57 +162,8 @@ impl ForumContext {
     }
 }
 
-/// Helps the caller preview and then submit a proposal automatically,
-/// handling the forum post part of the work as smoothly as possible.
-pub struct Submitter {
-    mode: HowToProceed,
-    forum_parameters: ForumParameters,
-}
-
-impl From<&SubmissionParameters> for Submitter {
-    fn from(other: &SubmissionParameters) -> Self {
-        Self {
-            mode: (&other.confirmation_mode).into(),
-            forum_parameters: other.forum_parameters.clone(),
-        }
-    }
-}
-
-impl Submitter {
-    /// Submits a proposal (maybe in dry-run mode) with confirmation from the user, unless the user
-    /// specifies in the command line that he wants no confirmation (--yes).
-    pub async fn propose(&self, execution: Box<dyn ProposalExecution>, kind: ForumPostKind) -> anyhow::Result<()> {
-        if let HowToProceed::Unconditional = self.mode {
-        } else {
-            execution.simulate().await?;
-        };
-
-        if let HowToProceed::Confirm = self.mode {
-            // Ask for confirmation
-            if !yesno("Do you want to continue?", false).await?? {
-                return Ok(());
-            }
-        }
-
-        if let HowToProceed::DryRun = self.mode {
-            Ok(())
-        } else {
-            let forum_post = ForumContext::from_opts(&self.forum_parameters).client()?.forum_post(kind).await?;
-            let res = execution.submit(forum_post.url()).await;
-            match res {
-                Ok(res) => forum_post.add_proposal_url(res.into()).await,
-                Err(e) => {
-                    if let Some(forum_post_url) = forum_post.url() {
-                        // Here we would ask the forum post code to delete the post since
-                        // the submission has failed... that is, if we had that feature.
-                        warn!(
-                        "Forum post {} may have been created for this proposal, but proposal submission failed.  Please delete the forum post if necessary, as it now serves no purpose.",
-                        forum_post_url
-                    );
-                    };
-                    Err(e)
-                }
-            }
-        }
+impl From<&ForumParameters> for ForumContext {
+    fn from(p: &ForumParameters) -> Self {
+        Self::new(p.clone())
     }
 }

@@ -1,8 +1,9 @@
 use clap::{error::ErrorKind, Args};
 
 use crate::{
-    forum::{ForumPostKind, SubmissionParameters, Submitter},
+    forum::ForumPostKind,
     ic_admin::{IcAdminProposal, IcAdminProposalCommand},
+    submitter::{SubmissionParameters, Submitter},
 };
 
 use super::{AuthRequirement, ExecutableCommand};

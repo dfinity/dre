@@ -5,7 +5,7 @@ use ic_types::PrincipalId;
 use crate::{
     auth::get_automation_neuron_default_path,
     commands::{AuthRequirement, ExecutableCommand},
-    forum::{ForumPostKind, SubmissionParameters, Submitter},
+    forum::ForumPostKind, submitter::{SubmissionParameters, Submitter},
 };
 
 #[derive(Args, Debug)]

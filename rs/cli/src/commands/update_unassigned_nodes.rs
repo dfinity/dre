@@ -4,7 +4,8 @@ use clap::Args;
 use ic_canisters::registry::RegistryCanisterWrapper;
 use ic_types::PrincipalId;
 
-use crate::forum::{ForumPostKind, SubmissionParameters, Submitter};
+use crate::forum::ForumPostKind;
+use crate::submitter::{SubmissionParameters, Submitter};
 
 use super::{AuthRequirement, ExecutableCommand};
 

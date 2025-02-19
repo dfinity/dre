@@ -3,10 +3,10 @@ use clap::{error::ErrorKind, Args};
 use ic_types::PrincipalId;
 use itertools::Itertools;
 
-use crate::forum::{ForumPostKind, SubmissionParameters};
+use crate::forum::ForumPostKind;
+use crate::submitter::{SubmissionParameters, Submitter};
 use crate::{
     commands::{AuthRequirement, ExecutableCommand},
-    forum::Submitter,
     subnet_manager::SubnetTarget,
 };
 

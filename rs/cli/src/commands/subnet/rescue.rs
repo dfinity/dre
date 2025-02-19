@@ -4,7 +4,7 @@ use ic_types::PrincipalId;
 
 use crate::{
     commands::{AuthRequirement, ExecutableCommand},
-    forum::{ForumPostKind, SubmissionParameters, Submitter},
+    forum::ForumPostKind, submitter::{SubmissionParameters, Submitter},
 };
 
 #[derive(Args, Debug)]

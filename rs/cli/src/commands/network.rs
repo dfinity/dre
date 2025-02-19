@@ -3,8 +3,9 @@ use itertools::Itertools;
 use log::info;
 
 use crate::{
-    forum::{ForumPostKind, SubmissionParameters, Submitter},
+    forum::ForumPostKind,
     ic_admin::IcAdminProposal,
+    submitter::{SubmissionParameters, Submitter},
 };
 
 use super::{AuthRequirement, ExecutableCommand};

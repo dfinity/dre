@@ -14,9 +14,10 @@ use tempfile::NamedTempFile;
 
 use crate::{
     ctx::DreContext,
-    forum::{ForumPostKind, SubmissionParameters, Submitter},
+    forum::ForumPostKind,
     ic_admin::{IcAdminProposal, IcAdminProposalCommand, IcAdminProposalOptions},
     proposal_executors::{ProducesProposalResult, ProposalResponseWithId, RunnableViaIcAdmin},
+    submitter::{SubmissionParameters, Submitter},
 };
 
 use super::{AuthRequirement, ExecutableCommand};

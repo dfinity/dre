@@ -13,5 +13,6 @@ mod proposal_executors;
 mod qualification;
 mod runner;
 mod store;
+mod submitter;
 mod subnet_manager;
 mod util;

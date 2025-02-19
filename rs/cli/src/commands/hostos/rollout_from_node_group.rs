@@ -4,7 +4,7 @@ use clap::{Args, ValueEnum};
 
 use crate::{
     commands::{AuthRequirement, ExecutableCommand},
-    forum::{ForumPostKind, SubmissionParameters, Submitter},
+    forum::ForumPostKind, submitter::{SubmissionParameters, Submitter},
     operations::hostos_rollout::{NodeGroupUpdate, NumberOfNodes},
 };
 
