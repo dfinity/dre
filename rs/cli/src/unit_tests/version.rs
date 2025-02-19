@@ -1,6 +1,6 @@
 use crate::confirm::ConfirmationModeOptions;
 use crate::ctx::exe::ExecutableCommand;
-use crate::forum::{ForumParameters, ForumPostLinkVariant};
+use crate::forum::ForumParameters;
 use crate::submitter::SubmissionParameters;
 use indexmap::IndexMap;
 use std::sync::{Arc, RwLock};
@@ -20,9 +20,7 @@ use crate::{
 };
 
 fn fake_forum_parameters() -> ForumParameters {
-    let mut parms = ForumParameters::disable_forum();
-    parms.forum_post_link = ForumPostLinkVariant::Url(url::Url::parse("https://forum.dfinity.org/t/123").unwrap());
-    parms
+    ForumParameters::disable_forum().with_post_link(url::Url::parse("https://forum.dfinity.org/t/123").unwrap())
 }
 
 fn mock_confirmation_mode() -> ConfirmationModeOptions {

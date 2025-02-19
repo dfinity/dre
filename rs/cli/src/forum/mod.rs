@@ -33,7 +33,6 @@ impl FromStr for ForumPostLinkVariant {
 
 #[derive(ClapArgs, Debug, Clone)]
 pub struct ForumParameters {
-    // FIXME can we hide this structure altogether?
     #[clap(long, global=true, env = "FORUM_POST_LINK", help_heading = "Proposal URL parameters", visible_aliases = &["forum-link", "forum", "proposal-url"], default_value = "ask", value_parser = clap::value_parser!(ForumPostLinkVariant), help = r#"Forum link post handling method. Options:
 * The word 'discourse' to ask the embedded Discourse client to auto create a post or a topic, and update the forum post after proposal submission.
     See Discourse forum interaction parameters for information on how to authenticate.
@@ -42,7 +41,7 @@ pub struct ForumParameters {
 * The word 'omit' to omit the link.
     While you can submit proposals without a link, this is highly discouraged.
 "#)]
-    pub(crate) forum_post_link: ForumPostLinkVariant,
+    forum_post_link: ForumPostLinkVariant,
 
     /// Api key used to interact with the forum
     #[clap(
@@ -103,6 +102,14 @@ impl ForumParameters {
             discourse_api_url: "http://localhost/".to_string(),
             discourse_skip_post_creation: true,
             discourse_subnet_topic_override_file_path: None,
+        }
+    }
+
+    #[cfg(test)]
+    pub fn with_post_link(self, url: url::Url) -> Self {
+        Self {
+            forum_post_link: ForumPostLinkVariant::Url(url),
+            ..self
         }
     }
 
