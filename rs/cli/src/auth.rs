@@ -1,3 +1,5 @@
+use clap::Args as ClapArgs;
+use clap_num::maybe_hex;
 use dialoguer::{console::Term, theme::ColorfulTheme, Password, Select};
 use ic_canisters::governance::GovernanceCanisterWrapper;
 use ic_canisters::parallel_hardware_identity::{hsm_key_id_to_int, HsmPinHandler, KeyIdVec, ParallelHardwareIdentity, PinHandlerError};
@@ -9,7 +11,84 @@ use keyring::{Entry, Error};
 use log::{debug, error, info, warn};
 use std::path::PathBuf;
 
-use crate::commands::{AuthOpts, AuthRequirement, HsmOpts, HsmParams};
+/// HSM authentication parameters
+#[derive(ClapArgs, Debug, Clone)]
+pub(crate) struct HsmParams {
+    /// Slot that HSM key uses, can be read with pkcs11-tool
+    #[clap(required = false,
+        conflicts_with = "private_key_pem",
+        long, value_parser=maybe_hex::<u64>, global = true, env = "HSM_SLOT")]
+    pub(crate) hsm_slot: Option<u64>,
+
+    /// HSM Key ID, can be read with pkcs11-tool
+    #[clap(required = false, conflicts_with = "private_key_pem", long, value_parser=maybe_hex::<u8>, global = true, env = "HSM_KEY_ID")]
+    pub(crate) hsm_key_id: Option<KeyIdVec>,
+}
+
+/// HSM authentication arguments
+/// These comprise an optional PIN and optional parameters.
+/// The PIN is used during autodetection if the optional
+/// parameters are missing.
+#[derive(ClapArgs, Debug, Clone)]
+pub(crate) struct HsmOpts {
+    /// Pin for the HSM key used for submitting proposals
+    // Must be present if slot and key are specified.
+    #[clap(
+        required = false,
+        alias = "hsm-pim",
+        conflicts_with = "private_key_pem",
+        long,
+        global = true,
+        hide_env_values = true,
+        env = "HSM_PIN"
+    )]
+    pub(crate) hsm_pin: Option<String>,
+    #[clap(flatten)]
+    pub(crate) hsm_params: HsmParams,
+}
+
+// The following should ideally be defined in terms of an Enum
+// as there is no conceivable scenario in which both a PEM file
+// and a set of HSM options can be used by the program.
+// Sadly, until ticket
+//   https://github.com/clap-rs/clap/issues/2621
+// is fixed, we cannot do this, and we must use a struct instead.
+// Note that group(multiple = false) has no effect, and therefore
+// we have to use conflicts and requires to specify option deps.
+#[derive(ClapArgs, Debug, Clone)]
+#[group(multiple = false)]
+/// Authentication arguments
+pub struct AuthOpts {
+    /// Path to private key file (in PEM format)
+    #[clap(
+        long,
+        required = false,
+        global = true,
+        conflicts_with_all = ["hsm_pin", "hsm_slot", "hsm_key_id"],
+        env = "PRIVATE_KEY_PEM",
+        visible_aliases = &["pem", "key", "private-key"]
+    )]
+    pub(crate) private_key_pem: Option<String>,
+    #[clap(flatten)]
+    pub(crate) hsm_opts: HsmOpts,
+}
+
+impl TryFrom<String> for AuthOpts {
+    type Error = anyhow::Error;
+
+    fn try_from(value: String) -> std::result::Result<Self, Self::Error> {
+        Ok(AuthOpts {
+            private_key_pem: Some(value),
+            hsm_opts: HsmOpts {
+                hsm_pin: None,
+                hsm_params: HsmParams {
+                    hsm_slot: None,
+                    hsm_key_id: None,
+                },
+            },
+        })
+    }
+}
 
 #[derive(Debug, Clone)]
 pub struct Neuron {
@@ -25,6 +104,13 @@ impl PartialEq for Neuron {
 }
 
 impl Eq for Neuron {}
+
+#[derive(Clone)]
+pub enum AuthRequirement {
+    Anonymous, // for get commands
+    Signer,    // just authentication details used for signing
+    Neuron,    // Signer + neuron_id used for proposals
+}
 
 pub const STAGING_NEURON_ID: u64 = 49;
 pub const STAGING_KEY_PATH_FROM_HOME: &str = ".config/dfx/identity/bootstrap-super-leader/identity.pem";

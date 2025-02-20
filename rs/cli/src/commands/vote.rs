@@ -7,8 +7,12 @@ use ic_nns_governance::pb::v1::ProposalInfo;
 use log::info;
 use spinners::{Spinner, Spinners};
 
-use super::{AuthRequirement, ExecutableCommand};
-use crate::{ctx::HowToProceed, desktop_notify::DesktopNotifier};
+use crate::auth::AuthRequirement;
+use crate::exe::{args::GlobalArgs, ExecutableCommand};
+use crate::{
+    confirm::{ConfirmationModeOptions, HowToProceed},
+    desktop_notify::DesktopNotifier,
+};
 
 #[derive(Args, Debug)]
 pub struct Vote {
@@ -39,6 +43,9 @@ pub struct Vote {
     /// only one voting cycle will take place.
     #[clap(long, default_value = "60s", value_parser = parse_duration)]
     pub sleep_time: Duration,
+
+    #[clap(flatten)]
+    pub confirmation_mode: ConfirmationModeOptions,
 }
 
 impl ExecutableCommand for Vote {
@@ -52,6 +59,7 @@ impl ExecutableCommand for Vote {
         let wrapper: GovernanceCanisterWrapper = client.into();
         let no_duration = Duration::from_secs(0);
         let mut voted_proposals: HashSet<u64> = HashSet::new();
+        let mode: HowToProceed = (&self.confirmation_mode).into();
 
         if self.sleep_time != no_duration {
             DesktopNotifier::send_info("DRE vote: starting", "Starting the voting loop...");
@@ -87,7 +95,7 @@ impl ExecutableCommand for Vote {
                         );
 
                         let prop_id = proposal.id.unwrap().id;
-                        match &ctx.mode {
+                        match &mode {
                             // Confirm mode in this command does not ask for confirmation.  It just votes.
                             HowToProceed::Confirm | HowToProceed::Unconditional | HowToProceed::UnitTests => {
                                 match wrapper.register_vote(neuron.neuron_id, proposal.id.unwrap().id).await {
@@ -157,5 +165,5 @@ impl ExecutableCommand for Vote {
         Ok(())
     }
 
-    fn validate(&self, _args: &crate::commands::Args, _cmd: &mut clap::Command) {}
+    fn validate(&self, _args: &GlobalArgs, _cmd: &mut clap::Command) {}
 }

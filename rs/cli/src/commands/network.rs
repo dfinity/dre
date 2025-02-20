@@ -3,11 +3,13 @@ use itertools::Itertools;
 use log::info;
 
 use crate::{
-    forum::{ForumParameters, ForumPostKind, Submitter},
+    forum::ForumPostKind,
     ic_admin::IcAdminProposal,
+    submitter::{SubmissionParameters, Submitter},
 };
 
-use super::{AuthRequirement, ExecutableCommand};
+use crate::auth::AuthRequirement;
+use crate::exe::{args::GlobalArgs, ExecutableCommand};
 
 #[derive(Args, Debug)]
 #[clap(alias = "heal")]
@@ -47,7 +49,7 @@ pub struct Network {
     pub remove_cordoned_nodes: bool,
 
     #[clap(flatten)]
-    pub forum_parameters: ForumParameters,
+    pub submission_parameters: SubmissionParameters,
 }
 
 impl ExecutableCommand for Network {
@@ -189,13 +191,12 @@ impl ExecutableCommand for Network {
                         continue;
                     }
                 };
-                if let Err(e) = Submitter::from_executor_and_mode(
-                    &self.forum_parameters,
-                    ctx.mode.clone(),
-                    ctx.ic_admin_executor().await?.execution(proposal.clone()),
-                )
-                .propose(ForumPostKind::ReplaceNodes { subnet_id: *subnet_id, body })
-                .await
+                if let Err(e) = Submitter::from(&self.submission_parameters)
+                    .propose(
+                        ctx.ic_admin_executor().await?.execution(proposal.clone()),
+                        ForumPostKind::ReplaceNodes { subnet_id: *subnet_id, body },
+                    )
+                    .await
                 {
                     errors.push(DetailedError {
                         proposal: Some(proposal),
@@ -220,7 +221,7 @@ impl ExecutableCommand for Network {
         }
     }
 
-    fn validate(&self, _args: &crate::commands::Args, cmd: &mut clap::Command) {
+    fn validate(&self, _args: &GlobalArgs, cmd: &mut clap::Command) {
         // At least one of the two options must be provided
         let network_heal = self.heal || std::env::args().any(|arg| arg == "heal");
         if !network_heal && !self.ensure_operator_nodes_assigned && !self.ensure_operator_nodes_unassigned && !self.remove_cordoned_nodes {

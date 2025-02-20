@@ -1,8 +1,11 @@
 use clap::{error::ErrorKind, Args};
 
+use crate::exe::args::GlobalArgs;
 use crate::{
-    commands::{AuthRequirement, ExecutableCommand},
-    forum::{ForumParameters, ForumPostKind, Submitter},
+    auth::AuthRequirement,
+    exe::ExecutableCommand,
+    forum::ForumPostKind,
+    submitter::{SubmissionParameters, Submitter},
 };
 
 #[derive(Debug, Args)]
@@ -24,7 +27,7 @@ pub struct GuestOs {
     pub security_fix: bool,
 
     #[clap(flatten)]
-    pub forum_parameters: ForumParameters,
+    pub submission_parameters: SubmissionParameters,
 }
 
 impl ExecutableCommand for GuestOs {
@@ -44,17 +47,13 @@ impl ExecutableCommand for GuestOs {
                 self.security_fix,
             )
             .await?;
-        Submitter::from_executor_and_mode(
-            &self.forum_parameters,
-            ctx.mode.clone(),
-            ctx.ic_admin_executor().await?.execution(runner_proposal),
-        )
-        .propose(ForumPostKind::Generic)
-        .await
+        Submitter::from(&self.submission_parameters)
+            .propose(ctx.ic_admin_executor().await?.execution(runner_proposal), ForumPostKind::Generic)
+            .await
     }
 
-    fn validate(&self, _args: &crate::commands::Args, cmd: &mut clap::Command) {
-        if self.forum_parameters.forum_post_link_mandatory().is_err() {
+    fn validate(&self, _args: &GlobalArgs, cmd: &mut clap::Command) {
+        if self.submission_parameters.forum_parameters.forum_post_link_mandatory().is_err() {
             cmd.error(
                 ErrorKind::MissingRequiredArgument,
                 "Forum post link cannot be omitted for this subcommand.",

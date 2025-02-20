@@ -1,7 +1,9 @@
 use clap::Args;
 use ic_canisters::governance::GovernanceCanisterWrapper;
 
-use crate::commands::{AuthRequirement, ExecutableCommand};
+use crate::auth::AuthRequirement;
+use crate::exe::args::GlobalArgs;
+use crate::exe::ExecutableCommand;
 
 #[derive(Args, Debug)]
 pub struct Get {
@@ -21,5 +23,5 @@ impl ExecutableCommand for Get {
         Ok(())
     }
 
-    fn validate(&self, _args: &crate::commands::Args, _cmd: &mut clap::Command) {}
+    fn validate(&self, _args: &GlobalArgs, _cmd: &mut clap::Command) {}
 }

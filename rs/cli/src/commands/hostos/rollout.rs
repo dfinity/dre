@@ -2,8 +2,11 @@ use clap::Args;
 use ic_types::PrincipalId;
 
 use crate::{
-    commands::{AuthRequirement, ExecutableCommand},
-    forum::{ForumParameters, ForumPostKind, Submitter},
+    auth::AuthRequirement,
+    exe::args::GlobalArgs,
+    exe::ExecutableCommand,
+    forum::ForumPostKind,
+    submitter::{SubmissionParameters, Submitter},
 };
 
 #[derive(Args, Debug)]
@@ -17,7 +20,7 @@ pub struct Rollout {
     pub nodes: Vec<PrincipalId>,
 
     #[clap(flatten)]
-    pub forum_parameters: ForumParameters,
+    pub submission_parameters: SubmissionParameters,
 }
 
 impl ExecutableCommand for Rollout {
@@ -27,14 +30,10 @@ impl ExecutableCommand for Rollout {
 
     async fn execute(&self, ctx: crate::ctx::DreContext) -> anyhow::Result<()> {
         let runner_proposal = ctx.runner().await?.hostos_rollout(self.nodes.clone(), &self.version, None)?;
-        Submitter::from_executor_and_mode(
-            &self.forum_parameters,
-            ctx.mode.clone(),
-            ctx.ic_admin_executor().await?.execution(runner_proposal),
-        )
-        .propose(ForumPostKind::Generic)
-        .await
+        Submitter::from(&self.submission_parameters)
+            .propose(ctx.ic_admin_executor().await?.execution(runner_proposal), ForumPostKind::Generic)
+            .await
     }
 
-    fn validate(&self, _args: &crate::commands::Args, _cmd: &mut clap::Command) {}
+    fn validate(&self, _args: &GlobalArgs, _cmd: &mut clap::Command) {}
 }

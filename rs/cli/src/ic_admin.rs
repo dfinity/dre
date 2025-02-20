@@ -1,5 +1,6 @@
 use crate::auth::Neuron;
 use crate::proposal_executors::ProducesProposalResult;
+use crate::proposal_executors::ProposalExecution;
 use crate::proposal_executors::ProposalResponseWithId;
 use crate::proposal_executors::RunnableViaIcAdmin;
 use crate::util::run_capturing_stdout;
@@ -14,6 +15,8 @@ use mockall::automock;
 use regex::Regex;
 use shlex::try_quote;
 use std::fmt::Debug;
+use std::fmt::Display;
+use std::sync::Arc;
 use strum::Display as StrumDisplay;
 use tokio::process::Command;
 use url::Url;
@@ -480,5 +483,95 @@ impl IcAdminProposal {
             tail,
         ]
         .concat())
+    }
+}
+
+/// Knows how to simulate any RunnableViaIcAdmin, and submit any
+/// of them too, returning the deserialized response based on the
+/// ProducesProposalResult::Output type.
+/// This is a higher-level construct than the IcAdmin trait, which
+/// only concerns itself with raw proposal submission from arguments.
+pub struct IcAdminProposalExecutor {
+    ic_admin: Arc<dyn IcAdmin>,
+}
+
+impl From<Arc<dyn IcAdmin>> for IcAdminProposalExecutor {
+    fn from(arg: Arc<dyn IcAdmin>) -> Self {
+        Self { ic_admin: arg.clone() }
+    }
+}
+
+impl IcAdminProposalExecutor {
+    pub fn execution<T>(self, p: T) -> Box<dyn ProposalExecution>
+    where
+        T: 'static,
+        T: RunnableViaIcAdmin<Output = ProposalResponseWithId>,
+        T: ProducesProposalResult<ProposalResult = ProposalResponseWithId>,
+    {
+        Box::new(ProposalExecutionViaIcAdmin { executor: self, proposal: p })
+    }
+
+    pub fn run<'c, 'd, T: RunnableViaIcAdmin + 'c>(&'d self, cmd: &'c T, forum_post_link: Option<Url>) -> BoxFuture<'c, anyhow::Result<T::Output>>
+    where
+        'd: 'c,
+        <<T as RunnableViaIcAdmin>::Output as TryFrom<String>>::Error: Display,
+    {
+        Box::pin(async move {
+            let propose_command = cmd.to_ic_admin_arguments()?;
+            let res = self.ic_admin.submit_proposal(propose_command, forum_post_link).await?;
+            let parsed = T::Output::try_from(res.clone());
+            parsed.map_err(|e| anyhow::anyhow!("Failed to deserialize result of proposal execution {}: {}", res, e))
+        })
+    }
+
+    pub fn simulate<'c, 'd, T: RunnableViaIcAdmin + 'c>(&'d self, cmd: &'c T) -> BoxFuture<'c, anyhow::Result<()>>
+    where
+        'd: 'c,
+    {
+        Box::pin(async move {
+            let propose_command = cmd.to_ic_admin_arguments()?;
+            self.ic_admin.simulate_proposal(propose_command).await?;
+            Ok(())
+        })
+    }
+
+    pub fn submit<'c, 'd, U: ProducesProposalResult + RunnableViaIcAdmin + 'c>(
+        &'d self,
+        cmd: &'c U,
+        forum_post_link: Option<Url>,
+    ) -> BoxFuture<'c, anyhow::Result<ProposalResponseWithId>>
+    where
+        'd: 'c,
+        <U as ProducesProposalResult>::ProposalResult: TryInto<ProposalResponseWithId>,
+        <U as ProducesProposalResult>::ProposalResult: TryFrom<String>,
+    {
+        Box::pin(async move {
+            let propose_command = cmd.to_ic_admin_arguments()?;
+            let res = self.ic_admin.submit_proposal(propose_command, forum_post_link).await?;
+            let parsed: anyhow::Result<ProposalResponseWithId> = ProposalResponseWithId::try_from(res.clone());
+            parsed.map_err(|e| anyhow::anyhow!("Failed to deserialize result of proposal execution {}: {}", res, e))
+        })
+    }
+}
+
+struct ProposalExecutionViaIcAdmin<T> {
+    executor: IcAdminProposalExecutor,
+    proposal: T,
+}
+
+impl<T> ProposalExecution for ProposalExecutionViaIcAdmin<T>
+where
+    T: RunnableViaIcAdmin<Output = ProposalResponseWithId>,
+    T: ProducesProposalResult<ProposalResult = ProposalResponseWithId>,
+{
+    fn simulate(&self) -> BoxFuture<'_, anyhow::Result<()>> {
+        Box::pin(async { self.executor.simulate(&self.proposal).await })
+    }
+
+    fn submit<'a, 'b>(&'a self, forum_post_link: Option<Url>) -> BoxFuture<'b, anyhow::Result<ProposalResponseWithId>>
+    where
+        'a: 'b,
+    {
+        Box::pin(async { self.executor.submit(&self.proposal, forum_post_link).await })
     }
 }

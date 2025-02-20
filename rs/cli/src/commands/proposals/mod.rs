@@ -47,7 +47,7 @@ use registry_canister::mutations::{
 };
 use serde::{Deserialize, Serialize};
 
-use super::{impl_executable_command_for_enums, AuthRequirement, ExecutableCommand};
+use crate::exe::impl_executable_command_for_enums;
 
 mod analyze;
 mod filter;

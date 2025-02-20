@@ -2,7 +2,7 @@ use clap::Args;
 use rollout::Rollout;
 use rollout_from_node_group::RolloutFromNodeGroup;
 
-use super::{AuthRequirement, ExecutableCommand};
+use crate::exe::impl_executable_command_for_enums;
 
 mod rollout;
 pub mod rollout_from_node_group;
@@ -13,4 +13,4 @@ pub struct HostOs {
     pub subcommands: Subcommands,
 }
 
-super::impl_executable_command_for_enums! { HostOs, Rollout, RolloutFromNodeGroup }
+impl_executable_command_for_enums! { HostOs, Rollout, RolloutFromNodeGroup }

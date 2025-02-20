@@ -1,11 +1,15 @@
 use clap::{error::ErrorKind, Args};
 
+use crate::exe::args::GlobalArgs;
 use ic_management_types::requests::SubnetCreateRequest;
+
 use ic_types::PrincipalId;
 
 use crate::{
-    commands::{AuthRequirement, ExecutableCommand},
-    forum::{ForumParameters, ForumPostKind, Submitter},
+    auth::AuthRequirement,
+    exe::ExecutableCommand,
+    forum::ForumPostKind,
+    submitter::{SubmissionParameters, Submitter},
 };
 
 #[derive(Args, Debug)]
@@ -43,7 +47,7 @@ regardless of the decentralization coefficients"#)]
     pub help_other_args: bool,
 
     #[clap(flatten)]
-    pub forum_parameters: ForumParameters,
+    pub submission_parameters: SubmissionParameters,
 }
 
 impl ExecutableCommand for Create {
@@ -82,16 +86,12 @@ impl ExecutableCommand for Create {
             Some(runner_proposal) => runner_proposal,
             None => return Ok(()),
         };
-        Submitter::from_executor_and_mode(
-            &self.forum_parameters,
-            ctx.mode.clone(),
-            ctx.ic_admin_executor().await?.execution(runner_proposal),
-        )
-        .propose(ForumPostKind::Generic) // FIXME why pass these two separately?  It's absurd.  Just pass the fuckin struct.
-        .await
+        Submitter::from(&self.submission_parameters)
+            .propose(ctx.ic_admin_executor().await?.execution(runner_proposal), ForumPostKind::Generic) // FIXME once the Proposable struct gains knowledge of how to create a forum post, then it won't be necessary to pass two different structs.
+            .await
     }
 
-    fn validate(&self, _args: &crate::commands::Args, cmd: &mut clap::Command) {
+    fn validate(&self, _args: &GlobalArgs, cmd: &mut clap::Command) {
         if self.motivation.is_none() && !self.help_other_args {
             cmd.error(
                 ErrorKind::MissingRequiredArgument,

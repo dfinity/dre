@@ -3,7 +3,7 @@ use clap::Args;
 use remove::Remove;
 use update::Update;
 
-use super::{impl_executable_command_for_enums, AuthRequirement, ExecutableCommand};
+use crate::exe::impl_executable_command_for_enums;
 
 mod add;
 mod remove;

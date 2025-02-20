@@ -2,12 +2,13 @@ use clap::Args;
 use ic_types::PrincipalId;
 
 use crate::{
-    commands::{AuthRequirement, ExecutableCommand},
-    forum::{ForumPostKind, Submitter},
+    auth::AuthRequirement,
+    exe::args::GlobalArgs,
+    exe::ExecutableCommand,
+    forum::ForumPostKind,
     ic_admin::{self},
+    submitter::{SubmissionParameters, Submitter},
 };
-
-use crate::forum::ForumParameters;
 
 #[derive(Args, Debug)]
 pub struct Add {
@@ -24,7 +25,7 @@ pub struct Add {
     pub motivation: Option<String>,
 
     #[clap(flatten)]
-    pub forum_parameters: ForumParameters,
+    pub submission_parameters: SubmissionParameters,
 }
 
 impl ExecutableCommand for Add {
@@ -33,24 +34,23 @@ impl ExecutableCommand for Add {
     }
 
     async fn execute(&self, ctx: crate::ctx::DreContext) -> anyhow::Result<()> {
-        Submitter::from_executor_and_mode(
-            &self.forum_parameters,
-            ctx.mode.clone(),
-            ctx.ic_admin_executor().await?.execution(ic_admin::IcAdminProposal::new(
-                ic_admin::IcAdminProposalCommand::AddApiBoundaryNodes {
-                    nodes: self.nodes.to_vec(),
-                    version: self.version.clone(),
-                },
-                ic_admin::IcAdminProposalOptions {
-                    title: Some(format!("Add {} API boundary node(s)", self.nodes.len())),
-                    summary: Some(format!("Add {} API boundary node(s)", self.nodes.len())),
-                    motivation: self.motivation.clone(),
-                },
-            )),
-        )
-        .propose(ForumPostKind::Generic)
-        .await
+        Submitter::from(&self.submission_parameters)
+            .propose(
+                ctx.ic_admin_executor().await?.execution(ic_admin::IcAdminProposal::new(
+                    ic_admin::IcAdminProposalCommand::AddApiBoundaryNodes {
+                        nodes: self.nodes.to_vec(),
+                        version: self.version.clone(),
+                    },
+                    ic_admin::IcAdminProposalOptions {
+                        title: Some(format!("Add {} API boundary node(s)", self.nodes.len())),
+                        summary: Some(format!("Add {} API boundary node(s)", self.nodes.len())),
+                        motivation: self.motivation.clone(),
+                    },
+                )),
+                ForumPostKind::Generic,
+            )
+            .await
     }
 
-    fn validate(&self, _args: &crate::commands::Args, _cmd: &mut clap::Command) {}
+    fn validate(&self, _args: &GlobalArgs, _cmd: &mut clap::Command) {}
 }

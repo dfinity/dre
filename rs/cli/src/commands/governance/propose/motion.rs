@@ -5,8 +5,11 @@ use ic_nns_governance_api::pb::v1::{MakeProposalRequest, Motion as MotionPayload
 use tokio::io::AsyncReadExt;
 
 use crate::{
-    commands::{AuthRequirement, ExecutableCommand},
-    forum::{ForumParameters, ForumPostKind, Submitter},
+    auth::AuthRequirement,
+    exe::args::GlobalArgs,
+    exe::ExecutableCommand,
+    forum::ForumPostKind,
+    submitter::{SubmissionParameters, Submitter},
     util::{extract_title_and_text, utf8},
 };
 
@@ -34,9 +37,6 @@ struct MotionParameters {
     /// blurb asking the reader to refer to the summary is placed instead
     #[arg(long, help_heading = "Motion parameters", conflicts_with = "motion_text_file")]
     pub motion_text: Option<String>,
-
-    #[clap(flatten)]
-    pub forum_parameters: ForumParameters,
 }
 
 #[derive(Args, Debug)]
@@ -44,9 +44,10 @@ struct MotionParameters {
 pub struct Motion {
     #[command(flatten)]
     parameters: MotionParameters,
-}
 
-// FIXME: the meat of this command could be turned into a ProposableViaMakeProposal such that the forum code can be reused here.  All Proposals have a URL field, we can leverage that to make the code reusable and expand the ability to make more proposals of this kind.  The ProposalExecutor trait can be genericized to work this way, gaining additional submit and simulate methods for the trait-to-be.
+    #[clap(flatten)]
+    pub submission_parameters: SubmissionParameters,
+}
 
 impl ExecutableCommand for Motion {
     fn require_auth(&self) -> AuthRequirement {
@@ -79,17 +80,18 @@ impl ExecutableCommand for Motion {
             action: Some(ProposalActionRequest::Motion(MotionPayload { motion_text })),
         };
 
-        Submitter::from_executor_and_mode(
-            &self.parameters.forum_parameters,
-            ctx.mode.clone(),
-            ctx.governance_executor().await?.execution(request),
-        )
-        .propose(ForumPostKind::Motion {
-            title: title.clone(),
-            summary: summary.clone(),
-        })
-        .await
+        Submitter::from(&self.submission_parameters)
+            .propose(
+                ctx.governance_executor().await?.execution(request),
+                ForumPostKind::Motion {
+                    title: title.clone(),
+                    summary: summary.clone(),
+                },
+            )
+            .await
     }
 
-    fn validate(&self, _args: &crate::commands::Args, _cmd: &mut clap::Command) {}
+    fn validate(&self, _args: &GlobalArgs, _cmd: &mut clap::Command) {
+        let _ = _args;
+    }
 }

@@ -2,7 +2,8 @@ use std::path::PathBuf;
 
 use clap::Args;
 
-use super::{AuthRequirement, ExecutableCommand};
+use crate::auth::AuthRequirement;
+use crate::exe::{args::GlobalArgs, ExecutableCommand};
 
 #[derive(Args, Debug)]
 pub struct DerToPrincipal {
@@ -21,5 +22,5 @@ impl ExecutableCommand for DerToPrincipal {
         Ok(())
     }
 
-    fn validate(&self, _args: &crate::commands::Args, _cmd: &mut clap::Command) {}
+    fn validate(&self, _args: &GlobalArgs, _cmd: &mut clap::Command) {}
 }

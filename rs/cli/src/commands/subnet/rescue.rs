@@ -2,9 +2,12 @@ use clap::Args;
 
 use ic_types::PrincipalId;
 
+use crate::exe::args::GlobalArgs;
 use crate::{
-    commands::{AuthRequirement, ExecutableCommand},
-    forum::{ForumParameters, ForumPostKind, Submitter},
+    auth::AuthRequirement,
+    exe::ExecutableCommand,
+    forum::ForumPostKind,
+    submitter::{SubmissionParameters, Submitter},
 };
 
 #[derive(Args, Debug)]
@@ -18,7 +21,7 @@ pub struct Rescue {
     pub id: PrincipalId,
 
     #[clap(flatten)]
-    pub forum_parameters: ForumParameters,
+    pub submission_parameters: SubmissionParameters,
 }
 
 impl ExecutableCommand for Rescue {
@@ -31,14 +34,10 @@ impl ExecutableCommand for Rescue {
             Some(runner_proposal) => runner_proposal,
             None => return Ok(()),
         };
-        Submitter::from_executor_and_mode(
-            &self.forum_parameters,
-            ctx.mode.clone(),
-            ctx.ic_admin_executor().await?.execution(runner_proposal),
-        )
-        .propose(ForumPostKind::Generic)
-        .await
+        Submitter::from(&self.submission_parameters)
+            .propose(ctx.ic_admin_executor().await?.execution(runner_proposal), ForumPostKind::Generic)
+            .await
     }
 
-    fn validate(&self, _args: &crate::commands::Args, _cmd: &mut clap::Command) {}
+    fn validate(&self, _args: &GlobalArgs, _cmd: &mut clap::Command) {}
 }

@@ -3,15 +3,12 @@ use std::{path::PathBuf, str::FromStr};
 use clap::Args as ClapArgs;
 use futures::future::BoxFuture;
 use ic_types::PrincipalId;
-use log::warn;
 use mockall::automock;
-
-use crate::{ctx::HowToProceed, proposal_executors::Execution, util::yesno};
 
 mod impls;
 
 #[derive(Debug, Clone)]
-pub enum ForumPostLinkVariant {
+pub(crate) enum ForumPostLinkVariant {
     Url(url::Url),
     ManageOnDiscourse,
     Ask,
@@ -36,7 +33,7 @@ impl FromStr for ForumPostLinkVariant {
 
 #[derive(ClapArgs, Debug, Clone)]
 pub struct ForumParameters {
-    #[clap(long, env = "FORUM_POST_LINK", help_heading = "Proposal URL parameters", visible_aliases = &["forum-link", "forum", "proposal-url"], default_value = "ask", value_parser = clap::value_parser!(ForumPostLinkVariant), help = r#"Forum link post handling method. Options:
+    #[clap(long, global=true, env = "FORUM_POST_LINK", help_heading = "Proposal URL parameters", visible_aliases = &["forum-link", "forum", "proposal-url"], default_value = "ask", value_parser = clap::value_parser!(ForumPostLinkVariant), help = r#"Forum link post handling method. Options:
 * The word 'discourse' to ask the embedded Discourse client to auto create a post or a topic, and update the forum post after proposal submission.
     See Discourse forum interaction parameters for information on how to authenticate.
 * A plain URL or the word 'ask' to prompt you for a link.
@@ -44,49 +41,59 @@ pub struct ForumParameters {
 * The word 'omit' to omit the link.
     While you can submit proposals without a link, this is highly discouraged.
 "#)]
-    pub forum_post_link: ForumPostLinkVariant,
+    forum_post_link: ForumPostLinkVariant,
 
     /// Api key used to interact with the forum
     #[clap(
         long,
+        global = true,
         env = "DISCOURSE_API_KEY",
         help_heading = "Discourse forum interaction parameters",
         hide_env_values = true
     )]
-    pub(crate) discourse_api_key: Option<String>,
+    discourse_api_key: Option<String>,
 
     /// Api user that will interact with the forum
     #[clap(
         long,
+        global = true,
         env = "DISCOURSE_API_USER",
         help_heading = "Discourse forum interaction parameters",
         default_value = "DRE-Team"
     )]
-    pub(crate) discourse_api_user: Option<String>,
+    discourse_api_user: Option<String>,
 
     /// Api url used to interact with the forum
     #[clap(
         long,
+        global = true,
         env = "DISCOURSE_API_URL",
         help_heading = "Discourse forum interaction parameters",
         default_value = "https://forum.dfinity.org"
     )]
-    pub(crate) discourse_api_url: String,
+    discourse_api_url: String,
 
     /// Skip forum post creation all together, also will not
     /// prompt user for the link
-    #[clap(long, env = "DISCOURSE_SKIP_POST_CREATION", help_heading = "Discourse forum interaction parameters")]
-    pub(crate) discourse_skip_post_creation: bool,
+    #[clap(
+        long,
+        global = true,
+        env = "DISCOURSE_SKIP_POST_CREATION",
+        help_heading = "Discourse forum interaction parameters"
+    )]
+    discourse_skip_post_creation: bool,
 
     #[clap(
         long,
+        global = true,
         env = "DISCOURSE_SUBNET_TOPIC_OVERRIDE_FILE_PATH",
         help_heading = "Discourse forum interaction parameters"
     )]
-    pub(crate) discourse_subnet_topic_override_file_path: Option<PathBuf>,
+    discourse_subnet_topic_override_file_path: Option<PathBuf>,
 }
 
 impl ForumParameters {
+    #[cfg(test)]
     pub fn disable_forum() -> Self {
         Self {
             forum_post_link: ForumPostLinkVariant::Omit,
@@ -95,6 +102,14 @@ impl ForumParameters {
             discourse_api_url: "http://localhost/".to_string(),
             discourse_skip_post_creation: true,
             discourse_subnet_topic_override_file_path: None,
+        }
+    }
+
+    #[cfg(test)]
+    pub fn with_post_link(self, url: url::Url) -> Self {
+        Self {
+            forum_post_link: ForumPostLinkVariant::Url(url),
+            ..self
         }
     }
 
@@ -107,7 +122,7 @@ impl ForumParameters {
 }
 
 // FIXME: this should become part of a new composite trait
-// that builds on the ProducesProposalResults trait,
+// that builds on the Proposable trait,
 // so that we don't have to have a separate kind here, this just
 // becomes a trait or an impl, and the intelligence needed to compose
 // the forum post can be decentralized to the right places in the code,
@@ -135,7 +150,7 @@ pub trait ForumPost: Sync + Send {
 }
 
 #[derive(Clone)]
-struct ForumContext {
+pub struct ForumContext {
     forum_opts: ForumParameters,
 }
 
@@ -143,11 +158,6 @@ struct ForumContext {
 impl ForumContext {
     fn new(forum_opts: ForumParameters) -> Self {
         Self { forum_opts }
-    }
-
-    // FIXME: turn into impl From.
-    fn from_opts(opts: &ForumParameters) -> Self {
-        Self::new(opts.clone())
     }
 
     pub fn client(&self) -> anyhow::Result<Box<dyn ForumPostHandler>> {
@@ -160,59 +170,8 @@ impl ForumContext {
     }
 }
 
-/// Helps the caller preview and then submit a proposal automatically,
-/// handling the forum post part of the work as smoothly as possible.
-pub struct Submitter {
-    executor: Box<dyn Execution>,
-    mode: HowToProceed,
-    forum_parameters: ForumParameters,
-}
-
-impl Submitter {
-    pub fn from_executor_and_mode(forum_parameters: &ForumParameters, mode: HowToProceed, executor: Box<dyn Execution>) -> Self {
-        Self {
-            executor,
-            mode,
-            forum_parameters: forum_parameters.clone(),
-        }
-    }
-
-    /// Submits a proposal (maybe in dry-run mode) with confirmation from the user, unless the user
-    /// specifies in the command line that he wants no confirmation (--yes).
-    pub async fn propose(&self, kind: ForumPostKind) -> anyhow::Result<()> {
-        let executor = &self.executor;
-
-        if let HowToProceed::Unconditional = self.mode {
-        } else {
-            executor.simulate().await?;
-        };
-
-        if let HowToProceed::Confirm = self.mode {
-            // Ask for confirmation
-            if !yesno("Do you want to continue?", false).await?? {
-                return Ok(());
-            }
-        }
-
-        if let HowToProceed::DryRun = self.mode {
-            Ok(())
-        } else {
-            let forum_post = ForumContext::from_opts(&self.forum_parameters).client()?.forum_post(kind).await?;
-            let res = executor.submit(forum_post.url()).await;
-            match res {
-                Ok(res) => forum_post.add_proposal_url(res.into()).await,
-                Err(e) => {
-                    if let Some(forum_post_url) = forum_post.url() {
-                        // Here we would ask the forum post code to delete the post since
-                        // the submission has failed... that is, if we had that feature.
-                        warn!(
-                        "Forum post {} may have been created for this proposal, but proposal submission failed.  Please delete the forum post if necessary, as it now serves no purpose.",
-                        forum_post_url
-                    );
-                    };
-                    Err(e)
-                }
-            }
-        }
+impl From<&ForumParameters> for ForumContext {
+    fn from(p: &ForumParameters) -> Self {
+        Self::new(p.clone())
     }
 }

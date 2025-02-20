@@ -4,7 +4,8 @@ use regex::Regex;
 use serde_json::Value;
 use tokio::task::JoinHandle;
 
-use super::{AuthRequirement, ExecutableCommand};
+use crate::auth::AuthRequirement;
+use crate::exe::{args::GlobalArgs, ExecutableCommand};
 
 #[derive(Args, Debug, Default)]
 pub struct Upgrade {
@@ -155,5 +156,5 @@ impl ExecutableCommand for Upgrade {
         Ok(())
     }
 
-    fn validate(&self, _args: &crate::commands::Args, _cmd: &mut clap::Command) {}
+    fn validate(&self, _args: &GlobalArgs, _cmd: &mut clap::Command) {}
 }

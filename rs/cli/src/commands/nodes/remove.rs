@@ -1,9 +1,12 @@
+use crate::exe::args::GlobalArgs;
 use clap::{error::ErrorKind, Args};
 use decentralization::subnets::NodesRemover;
 
 use crate::{
-    commands::{AuthRequirement, ExecutableCommand},
-    forum::{ForumParameters, ForumPostKind, Submitter},
+    auth::AuthRequirement,
+    exe::ExecutableCommand,
+    forum::ForumPostKind,
+    submitter::{SubmissionParameters, Submitter},
 };
 
 #[derive(Args, Debug)]
@@ -28,7 +31,7 @@ pub struct Remove {
     pub motivation: Option<String>,
 
     #[clap(flatten)]
-    pub forum_parameters: ForumParameters,
+    pub submission_parameters: SubmissionParameters,
 }
 
 impl ExecutableCommand for Remove {
@@ -48,16 +51,12 @@ impl ExecutableCommand for Remove {
                 motivation: self.motivation.clone().unwrap_or_default(),
             })
             .await?;
-        Submitter::from_executor_and_mode(
-            &self.forum_parameters,
-            ctx.mode.clone(),
-            ctx.ic_admin_executor().await?.execution(runner_proposal),
-        )
-        .propose(ForumPostKind::Generic)
-        .await
+        Submitter::from(&self.submission_parameters)
+            .propose(ctx.ic_admin_executor().await?.execution(runner_proposal), ForumPostKind::Generic)
+            .await
     }
 
-    fn validate(&self, _args: &crate::commands::Args, cmd: &mut clap::Command) {
+    fn validate(&self, _args: &GlobalArgs, cmd: &mut clap::Command) {
         if self.motivation.is_none() && !self.extra_nodes_filter.is_empty() {
             cmd.error(ErrorKind::MissingRequiredArgument, "Required argument motivation not found")
                 .exit()

@@ -1,3 +1,4 @@
+use crate::{auth::AuthRequirement, exe::args::GlobalArgs, exe::ExecutableCommand};
 use clap::Args;
 use ic_canisters::governance::GovernanceCanisterWrapper;
 use ic_nns_common::pb::v1::ProposalId;
@@ -10,7 +11,7 @@ use std::fmt::Display;
 use clap::ValueEnum;
 use ic_nns_governance::pb::v1::{ListProposalInfo, ProposalStatus as ProposalStatusUpstream, Topic as TopicUpstream};
 
-use crate::commands::{proposals::Proposal, AuthRequirement, ExecutableCommand};
+use crate::commands::proposals::Proposal;
 #[derive(Args, Debug)]
 pub struct Filter {
     /// Limit on the number of \[ProposalInfo\] to return. If value greater than
@@ -309,5 +310,5 @@ impl ExecutableCommand for Filter {
         Ok(())
     }
 
-    fn validate(&self, _args: &crate::commands::Args, _cmd: &mut clap::Command) {}
+    fn validate(&self, _args: &GlobalArgs, _cmd: &mut clap::Command) {}
 }
