@@ -14,7 +14,7 @@ use ic_types::{CanisterId, PrincipalId};
 use itertools::Itertools;
 use log::{info, warn};
 
-use super::{AuthRequirement, ExecutableCommand};
+use crate::{auth::AuthRequirement, exe::args::GlobalArgs, exe::ExecutableCommand};
 
 type CLINodeMetrics = BTreeMap<PrincipalId, Vec<NodeMetricsHistoryResponse>>;
 
@@ -143,7 +143,7 @@ impl ExecutableCommand for NodeMetrics {
         Ok(())
     }
 
-    fn validate(&self, _args: &crate::commands::Args, cmd: &mut clap::Command) {
+    fn validate(&self, _args: &GlobalArgs, cmd: &mut clap::Command) {
         if self.trustworthy && self.wallet.is_none() {
             cmd.error(ErrorKind::MissingRequiredArgument, "Wallet is required for fetching trustworthy metrics.")
                 .exit();

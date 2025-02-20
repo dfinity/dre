@@ -1,11 +1,12 @@
 use crate::auth::AuthRequirement;
 use crate::ctx::DreContext;
 use clap::Command;
+pub mod args;
 
 pub trait ExecutableCommand {
     fn require_auth(&self) -> AuthRequirement;
 
-    fn validate(&self, args: &crate::commands::Args, cmd: &mut Command);
+    fn validate(&self, args: &args::GlobalArgs, cmd: &mut Command);
 
     fn execute(&self, ctx: DreContext) -> impl std::future::Future<Output = anyhow::Result<()>>;
 
@@ -17,8 +18,9 @@ pub trait ExecutableCommand {
 macro_rules! impl_executable_command_for_enums {
     ($str_name:ident, $($var:ident),*) => {
         use crate::ctx::DreContext;
-        use crate::ctx::exe::ExecutableCommand;
+        use crate::exe::ExecutableCommand;
         use crate::auth::AuthRequirement;
+        use crate::exe::args::GlobalArgs;
         use clap::{Subcommand, Command};
 
         #[derive(Subcommand, Debug)]
@@ -39,7 +41,7 @@ macro_rules! impl_executable_command_for_enums {
                 }
             }
 
-            fn validate(&self, args: &crate::commands::Args, cmd: &mut Command) {
+            fn validate(&self, args: &GlobalArgs, cmd: &mut Command) {
                 match &self {
                     $(Subcommands::$var(variant) => variant.validate(args, cmd),)*
                 }
@@ -68,7 +70,7 @@ macro_rules! impl_executable_command_for_enums {
             //    cmd.error(ErrorKind::MissingRequiredArgument, "Neuron ID is required for this command.").exit();
             // }
             // ```
-            fn validate(&self, args: &crate::commands::Args, cmd: &mut Command) {
+            fn validate(&self, args: &GlobalArgs, cmd: &mut Command) {
                 self.subcommands.validate(args, cmd)
             }
 

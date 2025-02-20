@@ -8,7 +8,8 @@ use crate::{
     submitter::{SubmissionParameters, Submitter},
 };
 
-use super::{AuthRequirement, ExecutableCommand};
+use crate::auth::AuthRequirement;
+use crate::exe::{args::GlobalArgs, ExecutableCommand};
 
 #[derive(Args, Debug)]
 #[clap(alias = "heal")]
@@ -220,7 +221,7 @@ impl ExecutableCommand for Network {
         }
     }
 
-    fn validate(&self, _args: &crate::commands::Args, cmd: &mut clap::Command) {
+    fn validate(&self, _args: &GlobalArgs, cmd: &mut clap::Command) {
         // At least one of the two options must be provided
         let network_heal = self.heal || std::env::args().any(|arg| arg == "heal");
         if !network_heal && !self.ensure_operator_nodes_assigned && !self.ensure_operator_nodes_unassigned && !self.remove_cordoned_nodes {

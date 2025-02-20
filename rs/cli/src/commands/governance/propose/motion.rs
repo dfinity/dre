@@ -6,7 +6,8 @@ use tokio::io::AsyncReadExt;
 
 use crate::{
     auth::AuthRequirement,
-    ctx::exe::ExecutableCommand,
+    exe::args::GlobalArgs,
+    exe::ExecutableCommand,
     forum::ForumPostKind,
     submitter::{SubmissionParameters, Submitter},
     util::{extract_title_and_text, utf8},
@@ -90,5 +91,7 @@ impl ExecutableCommand for Motion {
             .await
     }
 
-    fn validate(&self, _args: &crate::commands::Args, _cmd: &mut clap::Command) {}
+    fn validate(&self, _args: &GlobalArgs, _cmd: &mut clap::Command) {
+        let _ = _args;
+    }
 }

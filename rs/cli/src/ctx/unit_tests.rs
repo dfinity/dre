@@ -12,7 +12,7 @@ use ic_management_backend::health::MockHealthStatusQuerier;
 use ic_management_types::Network;
 use itertools::Itertools;
 
-use crate::{commands::IcAdminVersion, ctx::DreContext};
+use crate::{ctx::DreContext, exe::args::IcAdminVersion};
 
 fn status_file_path() -> PathBuf {
     Store::new(true).unwrap().ic_admin_status_file_outer().unwrap()

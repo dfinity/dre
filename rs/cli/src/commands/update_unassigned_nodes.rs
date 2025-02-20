@@ -4,10 +4,10 @@ use clap::Args;
 use ic_canisters::registry::RegistryCanisterWrapper;
 use ic_types::PrincipalId;
 
+use crate::auth::AuthRequirement;
+use crate::exe::{ExecutableCommand, args::GlobalArgs};
 use crate::forum::ForumPostKind;
 use crate::submitter::{SubmissionParameters, Submitter};
-
-use super::{AuthRequirement, ExecutableCommand};
 
 #[derive(Args, Debug)]
 pub struct UpdateUnassignedNodes {
@@ -53,5 +53,5 @@ impl ExecutableCommand for UpdateUnassignedNodes {
             .await
     }
 
-    fn validate(&self, _args: &crate::commands::Args, _cmd: &mut clap::Command) {}
+    fn validate(&self, _args: &GlobalArgs, _cmd: &mut clap::Command) {}
 }

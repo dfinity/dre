@@ -1,6 +1,6 @@
 use crate::commands::version::revise::guest_os::GuestOs;
 use crate::commands::version::revise::host_os::HostOs;
-use crate::ctx::exe::impl_executable_command_for_enums;
+use crate::exe::impl_executable_command_for_enums;
 use clap::Args;
 use ic_management_types::Artifact;
 

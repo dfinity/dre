@@ -1,7 +1,7 @@
 use clap::Args;
 
 use crate::commands::version::revise::ReviseElectedVersions;
-use crate::ctx::exe::impl_executable_command_for_enums;
+use crate::exe::impl_executable_command_for_enums;
 
 pub(crate) mod revise;
 

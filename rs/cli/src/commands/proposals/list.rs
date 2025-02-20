@@ -1,3 +1,4 @@
+use crate::exe::args::GlobalArgs;
 use clap::Args;
 use ic_canisters::governance::GovernanceCanisterWrapper;
 use ic_nns_common::pb::v1::ProposalId;
@@ -6,7 +7,7 @@ use itertools::Itertools;
 
 use super::Proposal;
 use crate::auth::AuthRequirement;
-use crate::ctx::exe::ExecutableCommand;
+use crate::exe::ExecutableCommand;
 
 #[derive(Args, Debug)]
 pub struct List {
@@ -89,5 +90,5 @@ impl ExecutableCommand for List {
         Ok(())
     }
 
-    fn validate(&self, _args: &crate::commands::Args, _cmd: &mut clap::Command) {}
+    fn validate(&self, _args: &GlobalArgs, _cmd: &mut clap::Command) {}
 }

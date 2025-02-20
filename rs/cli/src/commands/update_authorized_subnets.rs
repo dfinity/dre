@@ -2,11 +2,13 @@ use ic_canisters::cycles_minting::CyclesMintingCanisterWrapper;
 use indexmap::IndexMap;
 use std::{path::PathBuf, sync::Arc};
 
+use crate::{auth::AuthRequirement, exe::args::GlobalArgs, exe::ExecutableCommand};
 use clap::{error::ErrorKind, Args};
 use ic_management_types::Subnet;
 use ic_registry_subnet_type::SubnetType;
 use ic_types::PrincipalId;
 use itertools::Itertools;
+
 use log::info;
 
 use crate::{
@@ -14,8 +16,6 @@ use crate::{
     ic_admin::{IcAdminProposal, IcAdminProposalCommand, IcAdminProposalOptions},
     submitter::{SubmissionParameters, Submitter},
 };
-
-use super::{AuthRequirement, ExecutableCommand};
 
 const DEFAULT_CANISTER_LIMIT: u64 = 60_000;
 const DEFAULT_STATE_SIZE_BYTES_LIMIT: u64 = 400 * 1024 * 1024 * 1024; // 400GB
@@ -46,10 +46,10 @@ pub struct UpdateAuthorizedSubnets {
 
 impl ExecutableCommand for UpdateAuthorizedSubnets {
     fn require_auth(&self) -> AuthRequirement {
-        super::AuthRequirement::Neuron
+        AuthRequirement::Neuron
     }
 
-    fn validate(&self, _args: &crate::commands::Args, cmd: &mut clap::Command) {
+    fn validate(&self, _args: &GlobalArgs, cmd: &mut clap::Command) {
         if let Some(path) = &self.path {
             if !path.exists() {
                 cmd.error(ErrorKind::InvalidValue, format!("Path `{}` not found", path.display())).exit()

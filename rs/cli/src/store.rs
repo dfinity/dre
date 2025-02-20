@@ -14,8 +14,8 @@ use std::{io::Read, path::PathBuf, sync::Arc, time::Duration};
 
 use crate::{
     auth::Neuron,
-    commands::IcAdminVersion,
     cordoned_feature_fetcher::{CordonedFeatureFetcher, CordonedFeatureFetcherImpl},
+    exe::args::IcAdminVersion,
     ic_admin::IcAdminImpl,
 };
 

@@ -7,7 +7,8 @@ use ic_nns_governance::pb::v1::ProposalInfo;
 use log::info;
 use spinners::{Spinner, Spinners};
 
-use super::{AuthRequirement, ExecutableCommand};
+use crate::auth::AuthRequirement;
+use crate::exe::{ExecutableCommand, args::GlobalArgs};
 use crate::{
     confirm::{ConfirmationModeOptions, HowToProceed},
     desktop_notify::DesktopNotifier,
@@ -164,5 +165,5 @@ impl ExecutableCommand for Vote {
         Ok(())
     }
 
-    fn validate(&self, _args: &crate::commands::Args, _cmd: &mut clap::Command) {}
+    fn validate(&self, _args: &GlobalArgs, _cmd: &mut clap::Command) {}
 }

@@ -1,6 +1,9 @@
 use clap::Args;
 
-use crate::{commands::ExecutableCommand, qualification::QualificationExecutorBuilder};
+use crate::auth::AuthRequirement;
+use crate::exe::ExecutableCommand;
+use crate::exe::args::GlobalArgs;
+use crate::qualification::QualificationExecutorBuilder;
 
 #[derive(Args, Debug)]
 pub struct List {
@@ -11,11 +14,11 @@ pub struct List {
 }
 
 impl ExecutableCommand for List {
-    fn require_auth(&self) -> crate::commands::AuthRequirement {
-        crate::commands::AuthRequirement::Anonymous
+    fn require_auth(&self) -> AuthRequirement {
+        AuthRequirement::Anonymous
     }
 
-    fn validate(&self, _args: &crate::commands::Args, _cmd: &mut clap::Command) {}
+    fn validate(&self, _args: &GlobalArgs, _cmd: &mut clap::Command) {}
 
     async fn execute(&self, ctx: crate::ctx::DreContext) -> anyhow::Result<()> {
         let qualification_executor = QualificationExecutorBuilder::new(ctx)

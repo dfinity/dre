@@ -1,9 +1,10 @@
+use crate::exe::args::GlobalArgs;
 use clap::{error::ErrorKind, Args};
 use decentralization::subnets::NodesRemover;
 
 use crate::{
     auth::AuthRequirement,
-    ctx::exe::ExecutableCommand,
+    exe::ExecutableCommand,
     forum::ForumPostKind,
     submitter::{SubmissionParameters, Submitter},
 };
@@ -55,7 +56,7 @@ impl ExecutableCommand for Remove {
             .await
     }
 
-    fn validate(&self, _args: &crate::commands::Args, cmd: &mut clap::Command) {
+    fn validate(&self, _args: &GlobalArgs, cmd: &mut clap::Command) {
         if self.motivation.is_none() && !self.extra_nodes_filter.is_empty() {
             cmd.error(ErrorKind::MissingRequiredArgument, "Required argument motivation not found")
                 .exit()

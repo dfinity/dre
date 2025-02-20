@@ -3,7 +3,7 @@ use clap::Args;
 use remove::Remove;
 use update::Update;
 
-use crate::ctx::exe::impl_executable_command_for_enums;
+use crate::exe::impl_executable_command_for_enums;
 
 mod add;
 mod remove;

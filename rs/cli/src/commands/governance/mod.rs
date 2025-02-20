@@ -3,6 +3,8 @@ mod propose;
 
 use propose::Propose;
 
+use crate::exe::impl_executable_command_for_enums;
+
 #[derive(Args, Debug)]
 /// Commands and actions related to governance.
 pub struct Governance {
@@ -10,4 +12,4 @@ pub struct Governance {
     pub subcommands: Subcommands,
 }
 
-super::impl_executable_command_for_enums! { Governance, Propose }
+impl_executable_command_for_enums! { Governance, Propose }

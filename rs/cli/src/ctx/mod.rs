@@ -1,6 +1,5 @@
 use std::{cell::RefCell, rc::Rc, sync::Arc};
 
-use exe::ExecutableCommand;
 use ic_canisters::{governance::GovernanceCanisterWrapper, IcAgentCanisterClient};
 use ic_management_backend::{
     health::HealthStatusQuerier,
@@ -14,16 +13,14 @@ use log::warn;
 use crate::{
     artifact_downloader::{ArtifactDownloader, ArtifactDownloaderImpl},
     auth::{AuthOpts, AuthRequirement, Neuron},
-    commands::{Args, IcAdminVersion},
     cordoned_feature_fetcher::CordonedFeatureFetcher,
+    exe::{args::GlobalArgs, args::IcAdminVersion},
     governance::GovernanceCanisterProposalExecutor,
     ic_admin::{IcAdmin, IcAdminImpl, IcAdminProposalExecutor},
     runner::Runner,
     store::Store,
     subnet_manager::SubnetManager,
 };
-
-pub mod exe;
 
 #[cfg(test)]
 mod unit_tests;
@@ -93,7 +90,7 @@ impl DreContext {
 
     // Method that will be called from `main.rs` and
     // will return real implementations of services
-    pub async fn from_args(args: &Args) -> anyhow::Result<Self> {
+    pub async fn from_args(args: &GlobalArgs, require_auth: AuthRequirement, neuron_override: Option<Neuron>) -> anyhow::Result<Self> {
         let store = Store::new(args.offline)?;
         let network = match store.is_offline() {
             false => ic_management_types::Network::new(args.network.clone(), &args.nns_urls)
@@ -107,12 +104,12 @@ impl DreContext {
             args.auth_opts.clone(),
             args.neuron_id,
             args.verbose,
-            args.subcommands.require_auth(),
+            require_auth,
             args.ic_admin_version.clone(),
             store.cordoned_features_fetcher(args.cordoned_features_file.clone())?,
             store.health_client(&network)?,
             store,
-            args.neuron_override(),
+            neuron_override,
         )
         .await
     }
@@ -274,6 +271,7 @@ pub mod tests {
         auth::Neuron,
         auth::{AuthOpts, AuthRequirement, HsmOpts, HsmParams},
         cordoned_feature_fetcher::CordonedFeatureFetcher,
+        exe::args::IcAdminVersion,
         ic_admin::IcAdmin,
         store::Store,
     };
@@ -299,7 +297,7 @@ pub mod tests {
             verbose_runner: true,
             artifact_downloader,
             neuron: RefCell::new(Some(neuron.clone())),
-            version: crate::commands::IcAdminVersion::Strict("Shouldn't reach this because of mock".to_string()),
+            version: IcAdminVersion::Strict("Shouldn't reach this because of mock".to_string()),
             neuron_opts: super::NeuronOpts {
                 auth_opts: AuthOpts {
                     private_key_pem: None,

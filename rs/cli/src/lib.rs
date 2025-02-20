@@ -5,6 +5,7 @@ mod confirm;
 mod cordoned_feature_fetcher;
 pub mod ctx;
 mod desktop_notify;
+pub mod exe;
 mod forum;
 mod governance;
 mod ic_admin;

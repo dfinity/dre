@@ -3,9 +3,10 @@ use clap::{error::ErrorKind, Args};
 use ic_types::PrincipalId;
 use itertools::Itertools;
 
+use crate::exe::args::GlobalArgs;
 use crate::forum::ForumPostKind;
 use crate::submitter::{SubmissionParameters, Submitter};
-use crate::{auth::AuthRequirement, ctx::exe::ExecutableCommand, subnet_manager::SubnetTarget};
+use crate::{auth::AuthRequirement, exe::ExecutableCommand, subnet_manager::SubnetTarget};
 
 #[derive(Args, Debug)]
 pub struct Replace {
@@ -105,7 +106,7 @@ impl ExecutableCommand for Replace {
         }
     }
 
-    fn validate(&self, _args: &crate::commands::Args, cmd: &mut clap::Command) {
+    fn validate(&self, _args: &GlobalArgs, cmd: &mut clap::Command) {
         if !self.nodes.is_empty() && self.id.is_some() {
             cmd.error(
                 ErrorKind::ArgumentConflict,

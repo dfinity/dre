@@ -1,12 +1,13 @@
 use clap::{error::ErrorKind, Args};
 
+use crate::auth::AuthRequirement;
+use crate::exe::ExecutableCommand;
+use crate::exe::args::GlobalArgs;
 use crate::{
     forum::ForumPostKind,
     ic_admin::{IcAdminProposal, IcAdminProposalCommand},
     submitter::{SubmissionParameters, Submitter},
 };
-
-use super::{AuthRequirement, ExecutableCommand};
 
 #[derive(Args, Debug)]
 pub struct Propose {
@@ -47,19 +48,15 @@ impl ExecutableCommand for Propose {
             .await
     }
 
-    fn validate(&self, args: &crate::commands::Args, cmd: &mut clap::Command) {
-        let thisargs = match &args.subcommands {
-            super::Subcommands::Propose(p) => p.args.clone(),
-            _ => Vec::new(),
-        };
-        if thisargs.iter().any(|arg| {
-            ["--forum", "--proposal-url", "--forum-post-link"]
+    fn validate(&self, _args: &GlobalArgs, cmd: &mut clap::Command) {
+        if self.args.iter().any(|arg| {
+            ["--forum", "--proposal-url", "--forum-post-link", "--yes", "--dry-run", "--no"]
                 .iter()
                 .any(|other| other == arg || arg.starts_with((other.to_string() + "=").as_str()))
         }) {
             cmd.error(
                 ErrorKind::ValueValidation,
-                "Option --forum-post-link (or any of its variants) must appear prior to the propose verb or immediately after.",
+                "Some of the options you used must appear immediately after the `propose` verb.",
             )
             .exit()
         }

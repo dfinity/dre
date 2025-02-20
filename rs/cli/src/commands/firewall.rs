@@ -13,14 +13,14 @@ use serde::{Deserialize, Serialize};
 use tempfile::NamedTempFile;
 
 use crate::{
+    auth::AuthRequirement,
     ctx::DreContext,
+    exe::{ExecutableCommand, args::GlobalArgs},
     forum::ForumPostKind,
     ic_admin::{IcAdminProposal, IcAdminProposalCommand, IcAdminProposalOptions},
     proposal_executors::{ProducesProposalResult, ProposalResponseWithId, RunnableViaIcAdmin},
     submitter::{SubmissionParameters, Submitter},
 };
-
-use super::{AuthRequirement, ExecutableCommand};
 
 #[derive(Args, Debug)]
 pub struct Firewall {
@@ -43,7 +43,7 @@ impl ExecutableCommand for Firewall {
         AuthRequirement::Neuron
     }
 
-    async fn execute(&self, ctx: crate::ctx::DreContext) -> anyhow::Result<()> {
+    async fn execute(&self, ctx: DreContext) -> anyhow::Result<()> {
         let registry = ctx.registry().await;
         let firewall_ruleset = registry.firewall_rule_set(self.rules_scope.clone()).await?;
 
@@ -120,7 +120,7 @@ impl ExecutableCommand for Firewall {
         }
     }
 
-    fn validate(&self, _args: &crate::commands::Args, _cmd: &mut clap::Command) {}
+    fn validate(&self, _args: &GlobalArgs, _cmd: &mut clap::Command) {}
 }
 
 #[derive(Deserialize)]

@@ -1,8 +1,9 @@
 use clap::{error::ErrorKind, Args};
 
+use crate::exe::args::GlobalArgs;
 use crate::{
     auth::AuthRequirement,
-    ctx::exe::ExecutableCommand,
+    exe::ExecutableCommand,
     forum::ForumPostKind,
     submitter::{SubmissionParameters, Submitter},
 };
@@ -51,7 +52,7 @@ impl ExecutableCommand for GuestOs {
             .await
     }
 
-    fn validate(&self, _args: &crate::commands::Args, cmd: &mut clap::Command) {
+    fn validate(&self, _args: &GlobalArgs, cmd: &mut clap::Command) {
         if self.submission_parameters.forum_parameters.forum_post_link_mandatory().is_err() {
             cmd.error(
                 ErrorKind::MissingRequiredArgument,

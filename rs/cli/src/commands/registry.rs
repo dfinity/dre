@@ -6,6 +6,7 @@ use std::{
     sync::Arc,
 };
 
+use crate::{auth::AuthRequirement, exe::args::GlobalArgs, exe::ExecutableCommand};
 use clap::Args;
 use ic_canisters::governance::GovernanceCanisterWrapper;
 use ic_canisters::IcAgentCanisterClient;
@@ -30,8 +31,6 @@ use serde::Serialize;
 use serde_json::Value;
 
 use crate::ctx::DreContext;
-
-use super::{AuthRequirement, ExecutableCommand};
 
 #[derive(Args, Debug)]
 #[clap(after_help = r#"EXAMPLES:
@@ -113,7 +112,7 @@ impl ExecutableCommand for Registry {
         Ok(())
     }
 
-    fn validate(&self, _args: &crate::commands::Args, _cmd: &mut clap::Command) {}
+    fn validate(&self, _args: &GlobalArgs, _cmd: &mut clap::Command) {}
 }
 
 impl Registry {

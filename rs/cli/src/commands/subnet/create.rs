@@ -1,11 +1,13 @@
 use clap::{error::ErrorKind, Args};
 
+use crate::exe::args::GlobalArgs;
 use ic_management_types::requests::SubnetCreateRequest;
+
 use ic_types::PrincipalId;
 
 use crate::{
     auth::AuthRequirement,
-    ctx::exe::ExecutableCommand,
+    exe::ExecutableCommand,
     forum::ForumPostKind,
     submitter::{SubmissionParameters, Submitter},
 };
@@ -89,7 +91,7 @@ impl ExecutableCommand for Create {
             .await
     }
 
-    fn validate(&self, _args: &crate::commands::Args, cmd: &mut clap::Command) {
+    fn validate(&self, _args: &GlobalArgs, cmd: &mut clap::Command) {
         if self.motivation.is_none() && !self.help_other_args {
             cmd.error(
                 ErrorKind::MissingRequiredArgument,

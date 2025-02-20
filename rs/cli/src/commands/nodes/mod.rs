@@ -1,7 +1,7 @@
 use clap::Args;
 use remove::Remove;
 
-use crate::ctx::exe::impl_executable_command_for_enums;
+use crate::exe::impl_executable_command_for_enums;
 mod remove;
 
 #[derive(Args, Debug)]

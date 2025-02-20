@@ -5,7 +5,10 @@ use clap::Args;
 use ic_management_types::Network;
 use serde_json::Value;
 
-use crate::{commands::ExecutableCommand, ic_admin::IcAdmin, qualification::QualificationExecutorBuilder};
+use crate::auth::AuthRequirement;
+use crate::exe::ExecutableCommand;
+use crate::exe::args::GlobalArgs;
+use crate::{ic_admin::IcAdmin, qualification::QualificationExecutorBuilder};
 
 #[derive(Args, Debug)]
 pub struct Execute {
@@ -41,11 +44,11 @@ pub struct Execute {
 }
 
 impl ExecutableCommand for Execute {
-    fn require_auth(&self) -> crate::commands::AuthRequirement {
-        crate::commands::AuthRequirement::Neuron
+    fn require_auth(&self) -> AuthRequirement {
+        AuthRequirement::Neuron
     }
 
-    fn validate(&self, _args: &crate::commands::Args, cmd: &mut clap::Command) {
+    fn validate(&self, _args: &GlobalArgs, cmd: &mut clap::Command) {
         if self.artifacts.is_some() && self.grafana_url.is_none() {
             cmd.error(
                 clap::error::ErrorKind::InvalidValue,

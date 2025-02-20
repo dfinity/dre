@@ -1,3 +1,4 @@
+use crate::exe::args::GlobalArgs;
 use clap::Args;
 
 use ic_types::PrincipalId;
@@ -5,7 +6,7 @@ use ic_types::PrincipalId;
 use crate::{
     auth::get_automation_neuron_default_path,
     auth::AuthRequirement,
-    ctx::exe::ExecutableCommand,
+    exe::ExecutableCommand,
     forum::ForumPostKind,
     submitter::{SubmissionParameters, Submitter},
 };
@@ -37,7 +38,7 @@ impl ExecutableCommand for Deploy {
             .await
     }
 
-    fn validate(&self, _args: &crate::commands::Args, _cmd: &mut clap::Command) {}
+    fn validate(&self, _args: &GlobalArgs, _cmd: &mut clap::Command) {}
 
     fn neuron_override(&self) -> Option<crate::auth::Neuron> {
         Some(crate::auth::Neuron {

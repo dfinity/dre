@@ -3,9 +3,10 @@ use clap::Args;
 use ic_management_types::requests::SubnetResizeRequest;
 use ic_types::PrincipalId;
 
+use crate::exe::args::GlobalArgs;
 use crate::{
     auth::AuthRequirement,
-    ctx::exe::ExecutableCommand,
+    exe::ExecutableCommand,
     forum::ForumPostKind,
     submitter::{SubmissionParameters, Submitter},
 };
@@ -79,5 +80,5 @@ impl ExecutableCommand for Resize {
             .await
     }
 
-    fn validate(&self, _args: &crate::commands::Args, _cmd: &mut clap::Command) {}
+    fn validate(&self, _args: &GlobalArgs, _cmd: &mut clap::Command) {}
 }

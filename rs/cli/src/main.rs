@@ -2,12 +2,11 @@ use clap::CommandFactory;
 use clap::Parser;
 use dotenv::dotenv;
 use dre::commands::{
-    self,
+    main_command::{MainCommand, Subcommands},
     upgrade::{UpdateStatus, Upgrade},
-    Args,
 };
-use dre::ctx::exe::ExecutableCommand;
 use dre::ctx::DreContext;
+use dre::exe::ExecutableCommand;
 use log::{info, warn};
 
 #[tokio::main]
@@ -18,12 +17,12 @@ async fn main() -> anyhow::Result<()> {
 
     dotenv().ok();
 
-    let args = Args::parse();
+    let args = MainCommand::parse();
 
-    let mut cmd = Args::command();
-    args.validate(&args, &mut cmd);
+    let mut cmd = MainCommand::command();
+    args.validate(&args.global_args, &mut cmd);
 
-    if let commands::Subcommands::Upgrade(upgrade) = args.subcommands {
+    if let Subcommands::Upgrade(upgrade) = args.subcommands {
         let response = upgrade.run().await?;
         match response {
             UpdateStatus::NoUpdate => info!("Running the latest version"),
@@ -33,7 +32,7 @@ async fn main() -> anyhow::Result<()> {
         return Ok(());
     }
 
-    let ctx = DreContext::from_args(&args).await?;
+    let ctx = DreContext::from_args(&args.global_args, args.subcommands.require_auth(), args.neuron_override()).await?;
 
     let r = args.execute(ctx).await;
 

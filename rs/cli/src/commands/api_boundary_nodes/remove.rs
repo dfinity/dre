@@ -3,7 +3,8 @@ use ic_types::PrincipalId;
 
 use crate::{
     auth::AuthRequirement,
-    ctx::exe::ExecutableCommand,
+    exe::args::GlobalArgs,
+    exe::ExecutableCommand,
     forum::ForumPostKind,
     ic_admin::{self},
     submitter::{SubmissionParameters, Submitter},
@@ -44,5 +45,5 @@ impl ExecutableCommand for Remove {
             .await
     }
 
-    fn validate(&self, _args: &crate::commands::Args, _cmd: &mut clap::Command) {}
+    fn validate(&self, _args: &GlobalArgs, _cmd: &mut clap::Command) {}
 }
