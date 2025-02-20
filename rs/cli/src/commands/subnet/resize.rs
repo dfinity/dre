@@ -54,9 +54,9 @@ impl ExecutableCommand for Resize {
     async fn execute(&self, ctx: crate::ctx::DreContext) -> anyhow::Result<()> {
         let runner = ctx.runner().await?;
 
-        let subnet_manager = ctx.subnet_manager().await?;
-
-        let subnet_change_response = subnet_manager
+        let subnet_change_response = ctx
+            .subnet_manager()
+            .await?
             .subnet_resize(
                 SubnetResizeRequest {
                     subnet: self.id,
@@ -71,7 +71,7 @@ impl ExecutableCommand for Resize {
             )
             .await?;
 
-        let runner_proposal = match runner.propose_subnet_change(subnet_change_response).await? {
+        let runner_proposal = match runner.propose_subnet_change(&subnet_change_response).await? {
             Some(runner_proposal) => runner_proposal,
             None => return Ok(()),
         };
