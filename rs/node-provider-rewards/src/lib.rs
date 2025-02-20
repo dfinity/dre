@@ -1,33 +1,33 @@
-use crate::failure_rates::{FailureRatesInPeriod, NodeDailyFailureRate, SubnetDailyFailureRate};
+use crate::metrics::{DailyNodeMetrics, MetricsProcessor};
 use crate::nodes_multiplier_calculator::NodesMultiplierCalculator;
-use crate::reward_period::{RewardPeriod, NANOS_PER_DAY};
-use crate::types::{DailyMetrics, TimestampNanos};
+use crate::reward_period::{RewardPeriod, TimestampNanos, NANOS_PER_DAY};
 use ic_base_types::{NodeId, PrincipalId, SubnetId};
-use std::collections::{HashMap, HashSet};
+use std::collections::{BTreeMap, HashSet};
+use std::error::Error;
 use std::fmt;
 
-mod failure_rates;
 mod logs;
+mod metrics;
 mod nodes_multiplier_calculator;
 mod reward_period;
-mod types;
 
 pub fn calculate_rewards(
     reward_period: RewardPeriod,
-    daily_metrics_per_node: HashMap<NodeId, Vec<DailyMetrics>>,
-    nodes_per_node_provider: HashMap<PrincipalId, Vec<NodeId>>,
+    daily_metrics_per_node: BTreeMap<NodeId, Vec<DailyNodeMetrics>>,
+    nodes_per_provider: BTreeMap<PrincipalId, Vec<NodeId>>,
 ) -> Result<(), RewardCalculationError> {
-    validate_input(&reward_period, &daily_metrics_per_node, &nodes_per_node_provider)?;
+    validate_input(&reward_period, &daily_metrics_per_node, &nodes_per_provider)?;
 
-    let failure_rates_in_period = FailureRatesInPeriod {
+    let metrics_processor = MetricsProcessor {
         daily_metrics_per_node,
         reward_period,
     };
-    let subnets_failure_rates = failure_rates_in_period.of_all_subnets();
+    let subnets_failure_rates = metrics_processor.daily_failure_rates_per_subnet();
+    let multiplier_calculator = NodesMultiplierCalculator::new().with_subnets_fr_discount(subnets_failure_rates);
 
-    for (_provider_id, provider_nodes) in nodes_per_node_provider {
-        let provider_nodes_failure_rates = failure_rates_in_period.of_nodes(&provider_nodes);
-        let _nodes_multiplier = NodesMultiplierCalculator::new(provider_nodes_failure_rates, &subnets_failure_rates).run();
+    for (_provider_id, provider_nodes) in nodes_per_provider {
+        let provider_nodes_failure_rates = metrics_processor.daily_failure_rates_per_node(&provider_nodes);
+        let _nodes_multiplier = multiplier_calculator.run(provider_nodes_failure_rates);
     }
 
     Ok(())
@@ -35,19 +35,16 @@ pub fn calculate_rewards(
 
 fn validate_input(
     reward_period: &RewardPeriod,
-    daily_metrics_per_node: &HashMap<NodeId, Vec<DailyMetrics>>,
-    nodes_per_node_provider: &HashMap<PrincipalId, Vec<NodeId>>,
+    daily_metrics_per_node: &BTreeMap<NodeId, Vec<DailyNodeMetrics>>,
+    nodes_per_provider: &BTreeMap<PrincipalId, Vec<NodeId>>,
 ) -> Result<(), RewardCalculationError> {
-    let rewardable_nodes: HashSet<&NodeId> = nodes_per_node_provider.values().flatten().collect();
-    if rewardable_nodes.is_empty() {
-        return Err(RewardCalculationError::EmptyRewardables);
+    let nodes: HashSet<&NodeId> = nodes_per_provider.values().flatten().collect();
+    if nodes.is_empty() {
+        return Err(RewardCalculationError::EmptyNodes);
     }
 
     for metrics in daily_metrics_per_node.values() {
         for metric in metrics {
-            if metric.ts % NANOS_PER_DAY != 0 {
-                return Err(RewardCalculationError::TimestampNotBeginning(metric.ts));
-            }
             if !reward_period.contains(metric.ts) {
                 return Err(RewardCalculationError::SubnetMetricsOutOfRange {
                     subnet_id: metric.subnet_assigned,
@@ -59,7 +56,7 @@ fn validate_input(
     }
 
     for node_id in daily_metrics_per_node.keys() {
-        if !rewardable_nodes.contains(node_id) {
+        if !nodes.contains(node_id) {
             return Err(RewardCalculationError::NodeNotInRewardables(*node_id));
         }
     }
@@ -74,10 +71,11 @@ pub enum RewardCalculationError {
         timestamp: TimestampNanos,
         reward_period: RewardPeriod,
     },
-    EmptyRewardables,
+    EmptyNodes,
     NodeNotInRewardables(NodeId),
-    TimestampNotBeginning(TimestampNanos),
 }
+
+impl Error for RewardCalculationError {}
 
 impl fmt::Display for RewardCalculationError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
@@ -93,7 +91,7 @@ impl fmt::Display for RewardCalculationError {
                     subnet_id, timestamp, reward_period
                 )
             }
-            RewardCalculationError::EmptyRewardables => {
+            RewardCalculationError::EmptyNodes => {
                 write!(f, "No rewardable nodes were provided")
             }
             RewardCalculationError::NodeNotInRewardables(node_id) => {
@@ -102,9 +100,6 @@ impl fmt::Display for RewardCalculationError {
                     "Node {} has metrics in rewarding period but it is not part of rewardable_nodes",
                     node_id
                 )
-            }
-            RewardCalculationError::TimestampNotBeginning(ts) => {
-                write!(f, "No {}", ts)
             }
         }
     }

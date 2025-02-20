@@ -9,7 +9,7 @@ license.workspace = true
 
 [dependencies]
 ahash = { version = "0.8.11", default-features = false, features = [
-"compile-time-rng",
+    "compile-time-rng",
 ] }
 ic-types = { workspace = true }
 ic-base-types = { workspace = true }
@@ -20,9 +20,11 @@ rust_decimal_macros = { workspace = true }
 ic-management-canister-types = { workspace = true }
 tabled = { workspace = true }
 tabular = { workspace = true }
+chrono = { workspace = true }
+function_name = "0.3"
 
 [dev-dependencies]
-chrono = { workspace = true }
+maplit = "1.0.2"
 
 [lib]
 name = "node_provider_rewards"
