@@ -5,7 +5,7 @@ use serde_json::Value;
 use tokio::task::JoinHandle;
 
 use crate::auth::AuthRequirement;
-use crate::exe::{ExecutableCommand, args::GlobalArgs};
+use crate::exe::{args::GlobalArgs, ExecutableCommand};
 
 #[derive(Args, Debug, Default)]
 pub struct Upgrade {

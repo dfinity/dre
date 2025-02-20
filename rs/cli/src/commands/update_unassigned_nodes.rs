@@ -5,7 +5,7 @@ use ic_canisters::registry::RegistryCanisterWrapper;
 use ic_types::PrincipalId;
 
 use crate::auth::AuthRequirement;
-use crate::exe::{ExecutableCommand, args::GlobalArgs};
+use crate::exe::{args::GlobalArgs, ExecutableCommand};
 use crate::forum::ForumPostKind;
 use crate::submitter::{SubmissionParameters, Submitter};
 

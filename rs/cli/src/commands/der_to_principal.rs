@@ -3,7 +3,7 @@ use std::path::PathBuf;
 use clap::Args;
 
 use crate::auth::AuthRequirement;
-use crate::exe::{ExecutableCommand, args::GlobalArgs};
+use crate::exe::{args::GlobalArgs, ExecutableCommand};
 
 #[derive(Args, Debug)]
 pub struct DerToPrincipal {

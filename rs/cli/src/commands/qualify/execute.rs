@@ -6,8 +6,8 @@ use ic_management_types::Network;
 use serde_json::Value;
 
 use crate::auth::AuthRequirement;
-use crate::exe::ExecutableCommand;
 use crate::exe::args::GlobalArgs;
+use crate::exe::ExecutableCommand;
 use crate::{ic_admin::IcAdmin, qualification::QualificationExecutorBuilder};
 
 #[derive(Args, Debug)]
