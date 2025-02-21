@@ -125,3 +125,12 @@ features:
   - feature: node_id
     value: ou5js-fk2zz-pi2ra-jjavx-2ld2m-3l3rh-asgas-tof7u-gxveo-jf3bz-vqe
     explanation: "offboarding the second rack of nodes in the mb1 DC after 48 months;  https://forum.dfinity.org/t/proposal-update-interim-gen-1-node-provider-remuneration-after-48-months/35001/152"
+  - feature: node_operator
+    value: wmrev-cdq34-iqwdm-oeaak-f6kch-s4axw-ojbhe-yuolf-bazh4-rjdty-oae
+    explanation: "freeing up nodes from JV1 node operator for an HSM-less redeployment"
+  - feature: node_operator
+    value: codio-e5e6p-ol6sn-o3mgw-r7v5p-4jmch-a7exl-7pifz-cw4gn-ah47y-6ae
+    explanation: "freeing up nodes from AW1 node operator for an HSM-less redeployment"
+  - feature: data_center
+    value: an1
+    explanation: "freeing up nodes from AN1 data center for an HSM-less redeployment"
