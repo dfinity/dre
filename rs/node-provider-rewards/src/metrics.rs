@@ -1,4 +1,4 @@
-use crate::reward_period::{RewardPeriod, TimestampAtDayStart, TimestampNanos, NANOS_PER_DAY};
+use crate::reward_period::{RewardPeriod, TimestampNanos, TsNanosAtDayStart, NANOS_PER_DAY};
 use ic_base_types::{NodeId, PrincipalId, SubnetId};
 use itertools::Itertools;
 use num_traits::FromPrimitive;
@@ -101,33 +101,28 @@ pub struct MetricsProcessor {
 }
 
 impl MetricsProcessor {
-    pub fn daily_failure_rates_per_node(&self, nodes: &Vec<NodeId>) -> BTreeMap<NodeId, Vec<DailyNodeFailureRate>> {
+    pub fn daily_failure_rates_in_period(&self, node_id: &NodeId) -> Vec<DailyNodeFailureRate> {
         let days_in_period = &self.reward_period.days_between();
-        nodes
-            .into_iter()
-            .map(|node_id| {
-                let daily_failure_rates: Vec<_> = (0..*days_in_period)
-                    .map(|day| {
-                        let ts = *self.reward_period.start_ts + day * NANOS_PER_DAY;
-                        let metrics_for_day = self
-                            .daily_metrics_per_node
-                            .get(node_id)
-                            .and_then(|metrics| metrics.iter().find(|m| *TimestampAtDayStart::from(m.ts) == ts));
 
-                        let node_failure_rate = match metrics_for_day {
-                            Some(metrics) => NodeFailureRate::Defined {
-                                subnet_assigned: metrics.subnet_assigned,
-                                value: metrics.failure_rate,
-                            },
-                            None => NodeFailureRate::Undefined,
-                        };
-                        DailyNodeFailureRate {
-                            ts,
-                            value: node_failure_rate,
-                        }
-                    })
-                    .collect();
-                (*node_id, daily_failure_rates)
+        (0..*days_in_period)
+            .map(|day| {
+                let ts = *self.reward_period.start_ts + day * NANOS_PER_DAY;
+                let metrics_for_day = self
+                    .daily_metrics_per_node
+                    .get(node_id)
+                    .and_then(|metrics| metrics.iter().find(|m| *TsNanosAtDayStart::from(m.ts) == ts));
+
+                let node_failure_rate = match metrics_for_day {
+                    Some(metrics) => NodeFailureRate::Defined {
+                        subnet_assigned: metrics.subnet_assigned,
+                        value: metrics.failure_rate,
+                    },
+                    None => NodeFailureRate::Undefined,
+                };
+                DailyNodeFailureRate {
+                    ts,
+                    value: node_failure_rate,
+                }
             })
             .collect()
     }

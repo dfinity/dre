@@ -1,6 +1,4 @@
 use ic_types::Time;
-use num_traits::AsPrimitive;
-use std::cmp::{Ordering, PartialOrd};
 use std::error::Error;
 use std::fmt;
 use std::fmt::Display;
@@ -20,31 +18,30 @@ fn current_time() -> Time {
     ic_types::time::current_time()
 }
 
-/// Represents an arbitrary timestamp that has not been aligned to start/end of the day.
-/// This is useful for constructing a RewardPeriods from arbitrary timestamps.
-#[derive(Debug, Clone, Copy, PartialEq)]
-pub struct TimestampAtDayStart(TimestampNanos);
-#[derive(Debug, Clone, Copy, PartialEq)]
-pub struct TimestampAtDayEnd(TimestampNanos);
-impl From<TimestampNanos> for TimestampAtDayStart {
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct TsNanosAtDayStart(TimestampNanos);
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct TsNanosAtDayEnd(TimestampNanos);
+
+impl From<TimestampNanos> for TsNanosAtDayStart {
     fn from(ts: TimestampNanos) -> Self {
         Self((ts / NANOS_PER_DAY) * NANOS_PER_DAY)
     }
 }
-impl From<TimestampNanos> for TimestampAtDayEnd {
+impl From<TimestampNanos> for TsNanosAtDayEnd {
     fn from(ts: TimestampNanos) -> Self {
         Self(((ts / NANOS_PER_DAY) + 1) * NANOS_PER_DAY - 1)
     }
 }
 
-impl Deref for TimestampAtDayEnd {
+impl Deref for TsNanosAtDayEnd {
     type Target = TimestampNanos;
 
     fn deref(&self) -> &Self::Target {
         &self.0
     }
 }
-impl Deref for TimestampAtDayStart {
+impl Deref for TsNanosAtDayStart {
     type Target = TimestampNanos;
 
     fn deref(&self) -> &Self::Target {
@@ -52,35 +49,47 @@ impl Deref for TimestampAtDayStart {
     }
 }
 
-/// Reward period spanning over two timestamp boundaries:
-///  - `start_ts`: The first timestamp (in nanoseconds) of the day.
-///  - `end_ts`: The last timestamp (in nanoseconds) of the day.
+/// Reward period in which we want to reward the node providers
 ///
-/// This period is derived from two unaligned timestamps, which are then adjusted to align with
-/// the start and end of their respective days.
-/// This ensures that all `BlockmakerMetrics` collected during the reward period are included consistently
+/// Reward period spans over two timestamp boundaries:
+///  - `start_ts`: The first timestamp (in nanoseconds) of the first day.
+///  - `end_ts`: The last timestamp (in nanoseconds) of the last day.
+///
+/// This period ensures that all `BlockmakerMetrics` collected during the reward period are included consistently
 /// with the invariant defined in [`ic_replicated_state::metadata_state::BlockmakerMetricsTimeSeries`].
+///
+/// TODO: This should be moved to NPR canister crate.
 #[derive(Debug, Clone, PartialEq)]
 pub struct RewardPeriod {
-    pub start_ts: TimestampAtDayStart,
-    pub end_ts: TimestampAtDayEnd,
+    pub start_ts: TsNanosAtDayStart,
+    pub end_ts: TsNanosAtDayEnd,
 }
 
 impl Display for RewardPeriod {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "RewardPeriod: {:?} - {:?}", self.start_ts, self.end_ts)
+        write!(f, "RewardPeriod: {} - {}", *self.start_ts, *self.end_ts)
     }
 }
 
 impl RewardPeriod {
+    /// Creates a new `RewardPeriod` from two unaligned timestamps.
+    ///
+    /// # Arguments
+    /// * `unaligned_start_ts` - A generic timestamp (in nanoseconds) in the first (UTC) day.
+    /// * `unaligned_end_ts` - A generic timestamp (in nanoseconds) in the last (UTC) day.
+    ///
+    /// # Errors
+    /// * `RewardPeriodError::StartTimestampAfterEndTimestamp` - If `unaligned_start_ts` is greater than `unaligned_end_ts`.
+    /// * `RewardPeriodError::EndTimestampLaterThanToday` - If `unaligned_end_ts` is later than the first timestamp of today.
     pub fn new(unaligned_start_ts: TimestampNanos, unaligned_end_ts: TimestampNanos) -> Result<Self, RewardPeriodError> {
         if unaligned_start_ts >= unaligned_end_ts {
-            return Err(RewardPeriodError::FromTimestampAfterToTimestamp);
+            return Err(RewardPeriodError::StartTimestampAfterEndTimestamp);
         }
 
-        let today_ts: TimestampAtDayStart = current_time().as_nanos_since_unix_epoch().into();
-        if unaligned_end_ts >= today_ts.0 {
-            return Err(RewardPeriodError::TooRecentEndTimestamp);
+        // Metrics are collected at the end of the day, so we need to ensure that the end timestamp is not later than the first ts of today.
+        let today_first_ts: TsNanosAtDayStart = current_time().as_nanos_since_unix_epoch().into();
+        if unaligned_end_ts >= *today_first_ts {
+            return Err(RewardPeriodError::EndTimestampLaterThanToday);
         }
 
         Ok(Self {
@@ -100,17 +109,17 @@ impl RewardPeriod {
 
 #[derive(Debug, PartialEq)]
 pub enum RewardPeriodError {
-    FromTimestampAfterToTimestamp,
-    TooRecentEndTimestamp,
+    StartTimestampAfterEndTimestamp,
+    EndTimestampLaterThanToday,
 }
 
 impl fmt::Display for RewardPeriodError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            RewardPeriodError::FromTimestampAfterToTimestamp => {
+            RewardPeriodError::StartTimestampAfterEndTimestamp => {
                 write!(f, "unaligned_start_ts must be earlier than unaligned_end_ts.")
             }
-            RewardPeriodError::TooRecentEndTimestamp => {
+            RewardPeriodError::EndTimestampLaterThanToday => {
                 write!(f, "unaligned_end_ts must be earlier than today")
             }
         }
@@ -154,7 +163,7 @@ mod tests {
         let from_ts = 0;
 
         let rp = RewardPeriod::new(from_ts, to_ts);
-        assert_eq!(rp.unwrap_err(), RewardPeriodError::TooRecentEndTimestamp);
+        assert_eq!(rp.unwrap_err(), RewardPeriodError::EndTimestampLaterThanToday);
     }
 
     #[test]
@@ -164,6 +173,6 @@ mod tests {
 
         let rp = RewardPeriod::new(from_ts, to_ts);
 
-        assert_eq!(rp.unwrap_err(), RewardPeriodError::FromTimestampAfterToTimestamp);
+        assert_eq!(rp.unwrap_err(), RewardPeriodError::StartTimestampAfterEndTimestamp);
     }
 }

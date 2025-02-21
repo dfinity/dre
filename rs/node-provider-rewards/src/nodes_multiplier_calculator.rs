@@ -211,7 +211,7 @@ impl NodesMultiplierCalculator {
 
         let nodes_multiplier = self.compute_rewards_multiplier_per_node(nodes_avg_failure_rate);
 
-        self.logger().entries.insert(0, LogEntry::Summary(generate_table(&self.daily_nodes_fr())));
+        self.logger().log(LogEntry::Summary(generate_table(&self.daily_nodes_fr())));
 
         NodesMultiplier {
             logger: self.logger.replace(Logger::default()),
