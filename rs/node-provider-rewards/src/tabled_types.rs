@@ -1,4 +1,4 @@
-use crate::metrics::{DailyNodeFailureRate, NodeFailureRate};
+use crate::metrics::{NodeDailyFailureRate, NodeFailureRate};
 use crate::reward_period::TimestampNanos;
 use chrono::DateTime;
 use tabled::settings::Style;
@@ -27,8 +27,8 @@ fn timestamp_to_utc_date(ts: TimestampNanos) -> String {
         .to_string()
 }
 
-impl From<DailyNodeFailureRate> for DailyNodeFailureRateTabled {
-    fn from(value: DailyNodeFailureRate) -> Self {
+impl From<NodeDailyFailureRate> for DailyNodeFailureRateTabled {
+    fn from(value: NodeDailyFailureRate) -> Self {
         let utc_day = timestamp_to_utc_date(value.ts);
         let original_failure_rate = match &value.value {
             NodeFailureRate::DefinedRelative { original_failure_rate, .. } => original_failure_rate.round_dp(4).to_string(),
@@ -57,7 +57,7 @@ impl From<DailyNodeFailureRate> for DailyNodeFailureRateTabled {
     }
 }
 
-pub fn generate_table_summary(daily_fr: Vec<DailyNodeFailureRate>) -> Table {
+pub fn generate_table_summary(daily_fr: Vec<NodeDailyFailureRate>) -> Table {
     let data_tabled: Vec<DailyNodeFailureRateTabled> = daily_fr.into_iter().map(|fr| fr.into()).collect::<Vec<_>>();
 
     Table::new(data_tabled).with(Style::sharp()).to_owned()

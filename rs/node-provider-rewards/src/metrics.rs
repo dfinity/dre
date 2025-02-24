@@ -1,13 +1,13 @@
 use crate::reward_period::{RewardPeriod, TimestampNanos, TimestampNanosAtDayEnd, NANOS_PER_DAY};
 use ic_base_types::{NodeId, SubnetId};
-use itertools::Itertools;
 use num_traits::FromPrimitive;
 use rust_decimal::Decimal;
 use std::collections::BTreeMap;
 use std::fmt;
 
+/// Represents the daily metrics recorded for a node.
 #[derive(Clone, PartialEq, Debug)]
-pub struct DailyNodeMetrics {
+pub struct NodeDailyMetrics {
     pub ts: TimestampNanosAtDayEnd,
     pub subnet_assigned: SubnetId,
     pub num_blocks_proposed: u64,
@@ -15,25 +15,26 @@ pub struct DailyNodeMetrics {
     pub failure_rate: Decimal,
 }
 
-impl fmt::Display for DailyNodeMetrics {
+impl fmt::Display for NodeDailyMetrics {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(
             f,
-            "num_blocks_proposed: {},  num_blocks_failed: {}, failure_rate: {}",
+            "blocks_proposed: {}, blocks_failed: {}, failure_rate: {}",
             self.num_blocks_proposed, self.num_blocks_failed, self.failure_rate
         )
     }
 }
 
-impl DailyNodeMetrics {
+impl NodeDailyMetrics {
+    /// Constructs a new set of daily metrics for a node.
     pub fn new(ts: TimestampNanos, subnet_assigned: SubnetId, num_blocks_proposed: u64, num_blocks_failed: u64) -> Self {
-        let daily_total = num_blocks_proposed + num_blocks_failed;
-        let failure_rate = if daily_total == 0 {
+        let total_blocks = num_blocks_proposed + num_blocks_failed;
+        let failure_rate = if total_blocks == 0 {
             Decimal::ZERO
         } else {
-            Decimal::from_f64(num_blocks_failed as f64 / daily_total as f64).unwrap()
+            Decimal::from_f64(num_blocks_failed as f64 / total_blocks as f64).unwrap()
         };
-        DailyNodeMetrics {
+        NodeDailyMetrics {
             ts: ts.into(),
             num_blocks_proposed,
             num_blocks_failed,
@@ -43,107 +44,101 @@ impl DailyNodeMetrics {
     }
 }
 
-/// Represent the node's failure rate on a given day.
+/// Represents the failure rate status of a node for a day.
 ///
-/// - The failure rate is represented as a `Decimal` in the range [0, 1].
-/// - The enum variants are used to give explicit meaning to the nodes' failure rates at every step of the extrapolation
-///   algorithm applied in [NodesMultiplierCalculator].
+/// The failure rate is a `Decimal` in the range [0, 1]. The variants provide explicit meaning:
+/// - `Defined`: A recorded failure rate for a node assigned to a subnet.
+/// - `DefinedRelative`: A failure rate adjusted by the subnet’s failure rate.
+/// - `Extrapolated`: A computed failure rate when data is missing.
+/// - `Undefined`: Indicates that no metrics were recorded.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum NodeFailureRate {
-    /// The node is assigned to a subnet and has a defined failure rate.
-    Defined { subnet_assigned: SubnetId, value: Decimal },
-    /// The node is assigned to a subnet and its failure rate has been discounted by the subnet's failure rate.
+    Defined {
+        subnet_assigned: SubnetId,
+        value: Decimal,
+    },
     DefinedRelative {
         subnet_assigned: SubnetId,
         original_failure_rate: Decimal,
         subnet_failure_rate: Decimal,
         value: Decimal,
     },
-    /// The node's failure rate has been extrapolated.
     Extrapolated(Decimal),
-    /// The node is not assigned to a subnet.
     Undefined,
 }
 
-#[derive(Clone, Debug)]
-pub struct DailyNodeFailureRate {
+#[derive(Clone, Debug, PartialEq)]
+pub struct NodeDailyFailureRate {
     pub ts: TimestampNanos,
     pub value: NodeFailureRate,
 }
 
 #[derive(Clone, Debug, PartialEq)]
-pub struct DailySubnetFailureRate {
+pub struct SubnetDailyFailureRate {
     pub ts: TimestampNanos,
     pub value: Decimal,
 }
 
-pub struct DailyMetricsProcessor {
+pub struct DailyMetricsAggregator {
     pub reward_period: RewardPeriod,
-    pub daily_metrics_per_node: BTreeMap<NodeId, Vec<DailyNodeMetrics>>,
+    pub metrics_by_node: BTreeMap<NodeId, Vec<NodeDailyMetrics>>,
 }
 
-impl DailyMetricsProcessor {
-    /// Returns the daily failure rates for all subnets in the reward period.
+impl DailyMetricsAggregator {
+    /// Calculates daily failure rates for all subnets within the reward period.
     ///
-    /// - The failure rate of a subnet on a given day is determined as the **75th percentile**
-    ///   of the failure rates of all nodes assigned to that subnet on that day.
-    /// - If a subnet has no recorded metrics for a particular day within the reward period,
-    ///   that day will be excluded from the final result.
-    pub fn daily_failure_rates_per_subnet(&self) -> BTreeMap<SubnetId, Vec<DailySubnetFailureRate>> {
+    /// The failure rate for a subnet on a given day is defined as the **75th percentile**
+    /// of the failure rates of all nodes assigned to that subnet. Days with no recorded
+    /// metrics for a subnet are omitted.
+    pub fn calculate_subnet_failure_rates(&self) -> BTreeMap<SubnetId, Vec<SubnetDailyFailureRate>> {
         const PERCENTILE: f64 = 0.75;
-        let mut failure_rates_map: BTreeMap<(SubnetId, TimestampNanos), Vec<Decimal>> = BTreeMap::new();
+        let mut rates_map: BTreeMap<(SubnetId, TimestampNanos), Vec<Decimal>> = BTreeMap::new();
 
-        // Collect all failure rates per (subnet_id, ts)
-        for daily_metrics in self.daily_metrics_per_node.values().flatten() {
-            failure_rates_map
-                .entry((daily_metrics.subnet_assigned, *daily_metrics.ts))
+        // Aggregate failure rates by (subnet, timestamp)
+        for metrics in self.metrics_by_node.values().flatten() {
+            rates_map
+                .entry((metrics.subnet_assigned, *metrics.ts))
                 .or_default()
-                .push(daily_metrics.failure_rate);
+                .push(metrics.failure_rate);
         }
 
-        // Compute the 75th percentile for each (subnet_id, ts)
-        let mut daily_failure_rates_per_subnet: BTreeMap<SubnetId, Vec<DailySubnetFailureRate>> = BTreeMap::new();
+        let mut subnet_failure_rates: BTreeMap<SubnetId, Vec<SubnetDailyFailureRate>> = BTreeMap::new();
 
-        for ((subnet_id, ts), mut failure_rates) in failure_rates_map {
-            failure_rates.sort();
+        // Compute the 75th percentile for each (subnet, timestamp)
+        for ((subnet, ts), mut rates) in rates_map {
+            rates.sort();
 
-            let idx_percentile = ((failure_rates.len() as f64) * PERCENTILE).ceil() as usize - 1;
-            let failure_rate_percentile = DailySubnetFailureRate {
-                ts,
-                value: failure_rates[idx_percentile],
-            };
+            let index = ((rates.len() as f64) * PERCENTILE).ceil() as usize - 1;
+            let percentile_rate = SubnetDailyFailureRate { ts: ts, value: rates[index] };
 
-            daily_failure_rates_per_subnet.entry(subnet_id).or_default().push(failure_rate_percentile);
+            subnet_failure_rates.entry(subnet).or_default().push(percentile_rate);
         }
 
-        daily_failure_rates_per_subnet
+        subnet_failure_rates
     }
 
-    /// Returns the daily failure rates for a given `node_id` in the reward period.
+    /// Calculates daily failure rates for a given node over the reward period.
     ///
-    /// - If the node has no metrics for a given day, its failure rate is [NodeFailureRate::Undefined].
-    /// - If the node has metrics for a given day, its failure rate is [NodeFailureRate::Defined].
-    pub fn daily_failure_rates_in_period(&self, node_id: &NodeId) -> Vec<DailyNodeFailureRate> {
-        let days_in_period = &self.reward_period.days_between();
+    /// If a node has no metrics recorded for a day, its failure rate is marked as [NodeFailureRate::Undefined].
+    /// Otherwise, it is recorded as [NodeFailureRate::Defined].
+    pub fn calculate_node_failure_rates_for_period(&self, node_id: &NodeId) -> Vec<NodeDailyFailureRate> {
+        let days_in_period = self.reward_period.days_between();
 
-        (0..*days_in_period)
+        (0..days_in_period)
             .map(|day| {
                 let ts = TimestampNanosAtDayEnd::from(*self.reward_period.start_ts + day * NANOS_PER_DAY);
-                let metrics_for_day = self
-                    .daily_metrics_per_node
-                    .get(node_id)
-                    .and_then(|metrics| metrics.iter().find(|m| m.ts == ts));
+                let daily_metrics = self.metrics_by_node.get(node_id).and_then(|metrics| metrics.iter().find(|m| m.ts == ts));
 
-                let node_failure_rate = match metrics_for_day {
+                let failure_status = match daily_metrics {
                     Some(metrics) => NodeFailureRate::Defined {
                         subnet_assigned: metrics.subnet_assigned,
                         value: metrics.failure_rate,
                     },
                     None => NodeFailureRate::Undefined,
                 };
-                DailyNodeFailureRate {
+                NodeDailyFailureRate {
                     ts: *ts,
-                    value: node_failure_rate,
+                    value: failure_status,
                 }
             })
             .collect()

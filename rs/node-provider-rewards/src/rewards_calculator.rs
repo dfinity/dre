@@ -1,5 +1,5 @@
 use crate::logs::{LogEntry, Logger, Operation};
-use crate::metrics::{DailyNodeFailureRate, DailySubnetFailureRate, NodeFailureRate};
+use crate::metrics::{NodeDailyFailureRate, NodeFailureRate, SubnetDailyFailureRate};
 use crate::reward_period::TimestampNanos;
 use crate::tabled_types::generate_table_summary;
 use function_name::named;
@@ -25,22 +25,22 @@ pub struct RewardsMultipliers {
 
 pub struct RewardsCalculator {
     logger: RefCell<Logger>,
-    node_failure_data: RefCell<BTreeMap<NodeId, Vec<DailyNodeFailureRate>>>,
-    subnet_failure_data: Option<BTreeMap<SubnetId, Vec<DailySubnetFailureRate>>>,
+    nodes_failure_rates: RefCell<BTreeMap<NodeId, Vec<NodeDailyFailureRate>>>,
+    subnets_failure_rates: Option<BTreeMap<SubnetId, Vec<SubnetDailyFailureRate>>>,
 }
 
 impl RewardsCalculator {
     pub fn new() -> Self {
         Self {
-            subnet_failure_data: None,
+            subnets_failure_rates: None,
             logger: RefCell::new(Logger::default()),
-            node_failure_data: RefCell::new(BTreeMap::new()),
+            nodes_failure_rates: RefCell::new(BTreeMap::new()),
         }
     }
 
     /// Provides subnet failure data for discount calculations.
-    pub fn with_subnet_failure_data(mut self, data: BTreeMap<SubnetId, Vec<DailySubnetFailureRate>>) -> Self {
-        self.subnet_failure_data = Some(data);
+    pub fn with_subnets_failure_rates_discount(mut self, subnets_failure_rates: BTreeMap<SubnetId, Vec<SubnetDailyFailureRate>>) -> Self {
+        self.subnets_failure_rates = Some(subnets_failure_rates);
         self
     }
 
@@ -48,15 +48,15 @@ impl RewardsCalculator {
         self.logger.borrow_mut()
     }
 
-    fn node_failure_data_mut(&self) -> RefMut<BTreeMap<NodeId, Vec<DailyNodeFailureRate>>> {
-        self.node_failure_data.borrow_mut()
+    fn nodes_failure_rates_mut(&self) -> RefMut<BTreeMap<NodeId, Vec<NodeDailyFailureRate>>> {
+        self.nodes_failure_rates.borrow_mut()
     }
 
-    fn node_failure_data(&self) -> Ref<BTreeMap<NodeId, Vec<DailyNodeFailureRate>>> {
-        self.node_failure_data.borrow()
+    fn nodes_failure_rates(&self) -> Ref<BTreeMap<NodeId, Vec<NodeDailyFailureRate>>> {
+        self.nodes_failure_rates.borrow()
     }
 
-    fn execute_and_log(&self, description: &str, operation: Operation) -> Decimal {
+    fn run_and_log(&self, description: &str, operation: Operation) -> Decimal {
         let result = operation.execute();
         self.logger_mut().log(LogEntry::Execute {
             reason: format!("\t{}", description),
@@ -70,9 +70,9 @@ impl RewardsCalculator {
         &self,
         subnet: SubnetId,
         timestamp: TimestampNanos,
-        subnet_data: &BTreeMap<SubnetId, Vec<DailySubnetFailureRate>>,
+        subnets_failure_rates: &BTreeMap<SubnetId, Vec<SubnetDailyFailureRate>>,
     ) -> Option<Decimal> {
-        subnet_data
+        subnets_failure_rates
             .get(&subnet)
             .and_then(|rates| rates.iter().find(|rate| rate.ts == timestamp))
             .map(|rate| rate.value)
@@ -80,11 +80,11 @@ impl RewardsCalculator {
 
     /// Updates node failure rates to be relative to their subnet’s failure rate.
     fn update_relative_failure_rates(&self) {
-        for failure_entry in self.node_failure_data_mut().values_mut().flatten() {
+        for failure_entry in self.nodes_failure_rates_mut().values_mut().flatten() {
             if let NodeFailureRate::Defined { subnet_assigned, value } = failure_entry.value {
-                let subnet_failure = match &self.subnet_failure_data {
-                    Some(data) => self
-                        .lookup_subnet_failure_rate(subnet_assigned, failure_entry.ts, data)
+                let subnet_failure = match &self.subnets_failure_rates {
+                    Some(subnets_failure_rates) => self
+                        .lookup_subnet_failure_rate(subnet_assigned, failure_entry.ts, subnets_failure_rates)
                         .expect("Subnet failure rate not found"),
                     None => Decimal::ZERO,
                 };
@@ -105,12 +105,12 @@ impl RewardsCalculator {
     fn calculate_extrapolated_failure_rate(&self) -> Decimal {
         self.logger_mut().log(LogEntry::NodesMultiplierStep(function_name!()));
 
-        if self.node_failure_data().is_empty() {
-            return self.execute_and_log("No nodes assigned", Operation::Set(dec!(1)));
+        if self.nodes_failure_rates().is_empty() {
+            return self.run_and_log("No nodes assigned", Operation::Set(dec!(1)));
         }
 
         let node_relative_averages: Vec<Decimal> = self
-            .node_failure_data()
+            .nodes_failure_rates()
             .iter()
             .map(|(node_id, failure_entries)| {
                 let relative_rates: Vec<Decimal> = failure_entries
@@ -121,15 +121,15 @@ impl RewardsCalculator {
                     })
                     .collect();
 
-                self.execute_and_log(&node_id.to_string(), Operation::Avg(relative_rates))
+                self.run_and_log(&node_id.to_string(), Operation::Avg(relative_rates))
             })
             .collect();
 
-        self.execute_and_log("Extrapolated Failure Rate", Operation::Avg(node_relative_averages))
+        self.run_and_log("Extrapolated Failure Rate", Operation::Avg(node_relative_averages))
     }
 
-    fn fill_missing_failure_rates(&self, extrapolated_rate: Decimal) {
-        for failure_entry in self.node_failure_data_mut().values_mut().flatten() {
+    fn fill_undefined_failure_rates(&self, extrapolated_rate: Decimal) {
+        for failure_entry in self.nodes_failure_rates_mut().values_mut().flatten() {
             if matches!(failure_entry.value, NodeFailureRate::Undefined) {
                 failure_entry.value = NodeFailureRate::Extrapolated(extrapolated_rate);
             }
@@ -140,7 +140,7 @@ impl RewardsCalculator {
     fn calculate_average_failure_rate_by_node(&self) -> BTreeMap<NodeId, Decimal> {
         self.logger_mut().log(LogEntry::NodesMultiplierStep(function_name!()));
 
-        self.node_failure_data()
+        self.nodes_failure_rates()
             .iter()
             .map(|(node_id, failure_entries)| {
                 let rates: Vec<Decimal> = failure_entries
@@ -151,7 +151,7 @@ impl RewardsCalculator {
                     })
                     .collect();
 
-                let average_rate = self.execute_and_log(&node_id.to_string(), Operation::Avg(rates));
+                let average_rate = self.run_and_log(&node_id.to_string(), Operation::Avg(rates));
                 (*node_id, average_rate)
             })
             .collect()
@@ -187,21 +187,21 @@ impl RewardsCalculator {
     /// Computes the rewards multipliers for nodes.
     ///
     /// # Arguments
-    /// * `daily_failure_data` - A mapping from node IDs to their respective vectors of daily failure rates.
-    pub fn calculate_rewards_multipliers(&self, daily_failure_data: BTreeMap<NodeId, Vec<DailyNodeFailureRate>>) -> RewardsMultipliers {
-        self.node_failure_data.replace(daily_failure_data);
+    /// * `node_failure_data` - A mapping from node IDs to their respective vectors of daily failure rates.
+    pub fn calculate_rewards_multipliers(&self, nodes_failure_rates: BTreeMap<NodeId, Vec<NodeDailyFailureRate>>) -> RewardsMultipliers {
+        self.nodes_failure_rates.replace(nodes_failure_rates);
 
         self.update_relative_failure_rates();
 
         let extrapolated_rate = self.calculate_extrapolated_failure_rate();
 
-        self.fill_missing_failure_rates(extrapolated_rate);
+        self.fill_undefined_failure_rates(extrapolated_rate);
 
         let node_average_failure_rates = self.calculate_average_failure_rate_by_node();
 
         let node_rewards_multipliers = self.calculate_node_rewards_multiplier(&node_average_failure_rates);
 
-        for (node_id, failure_entries) in self.node_failure_data.take().into_iter() {
+        for (node_id, failure_entries) in self.nodes_failure_rates.take().into_iter() {
             self.logger_mut().log(LogEntry::Summary(node_id, generate_table_summary(failure_entries)));
         }
 
