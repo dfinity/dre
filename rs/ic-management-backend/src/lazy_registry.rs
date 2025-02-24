@@ -28,7 +28,7 @@ use ic_registry_local_registry::LocalRegistry;
 use ic_registry_subnet_type::SubnetType;
 use ic_types::{NodeId, PrincipalId, RegistryVersion};
 use itertools::Itertools;
-use log::warn;
+use log::{debug, warn};
 use mockall::mock;
 use tokio::sync::RwLock;
 use tokio::try_join;
@@ -441,8 +441,8 @@ impl LazyRegistry for LazyRegistryImpl {
                                         principal: p,
                                     });
 
-                                    if maybe_provider.is_none() && self.network.is_mainnet() && !self.offline {
-                                        warn!("Node provider not found for operator: {}", principal);
+                                    if maybe_provider.is_none() {
+                                        debug!("Node provider not found for operator: {}", principal);
                                     }
                                     maybe_provider.unwrap_or_default()
                                 })
