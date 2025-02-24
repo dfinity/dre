@@ -57,7 +57,7 @@ impl FailureRatesManager {
             rates.sort();
 
             let index = ((rates.len() as f64) * SUBNET_FAILURE_RATE_PERCENTILE).ceil() as usize - 1;
-            let percentile_rate = SubnetDailyFailureRate { ts: ts, value: rates[index] };
+            let percentile_rate = SubnetDailyFailureRate { ts, value: rates[index] };
 
             subnets_failure_rates.entry(subnet).or_default().push(percentile_rate);
         }
@@ -91,7 +91,7 @@ impl FailureRatesManager {
             })
             .collect()
     }
-    pub fn calculate_nodes_failure_rates(&self, nodes: &Vec<NodeId>) -> BTreeMap<NodeId, Vec<NodeDailyFailureRate>> {
+    pub fn calculate_nodes_failure_rates(&self, nodes: &[NodeId]) -> BTreeMap<NodeId, Vec<NodeDailyFailureRate>> {
         nodes
             .iter()
             .map(|node_id| (*node_id, self.node_failure_rates_in_period(node_id)))
@@ -101,9 +101,9 @@ impl FailureRatesManager {
 
 pub struct PerformanceMultipliers {
     /// The computed performance multiplier per node.
-    pub performance_multiplier_by_node: BTreeMap<NodeId, Decimal>,
+    pub _performance_multiplier_by_node: BTreeMap<NodeId, Decimal>,
     /// The logger capturing all the computation steps.
-    pub logger: Logger,
+    pub _logger: Logger,
 }
 
 pub struct PerformanceMultiplierCalculator {
@@ -131,7 +131,7 @@ impl PerformanceMultiplierCalculator {
         }
     }
 
-    fn update_nodes_failure_rates(&self, nodes: &Vec<NodeId>) {
+    fn update_nodes_failure_rates(&self, nodes: &[NodeId]) {
         let nodes_failure_rates = self.failure_rates_manager.calculate_nodes_failure_rates(nodes);
         self.nodes_failure_rates.replace(nodes_failure_rates);
     }
@@ -280,7 +280,7 @@ impl PerformanceMultiplierCalculator {
     ///
     /// # Arguments
     /// * `nodes` - A vector of node IDs for which the performance multipliers are calculated.
-    pub fn calculate_performance_multipliers(&self, nodes: &Vec<NodeId>) -> PerformanceMultipliers {
+    pub fn calculate_performance_multipliers(&self, nodes: &[NodeId]) -> PerformanceMultipliers {
         self.update_nodes_failure_rates(nodes);
 
         self.update_relative_failure_rates();
@@ -296,12 +296,13 @@ impl PerformanceMultiplierCalculator {
         let (logger, nodes_failure_rates) = (self.logger.take(), self.nodes_failure_rates.take());
 
         for (node_id, failure_entries) in nodes_failure_rates.into_iter() {
-            self.logger_mut().log(LogEntry::Summary(node_id, generate_table_summary(failure_entries)));
+            let failure_entries_table = generate_table_summary(failure_entries);
+            self.logger_mut().log(LogEntry::Summary(node_id, Box::new(failure_entries_table)));
         }
 
         PerformanceMultipliers {
-            logger,
-            performance_multiplier_by_node,
+            _logger: logger,
+            _performance_multiplier_by_node: performance_multiplier_by_node,
         }
     }
 }

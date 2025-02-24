@@ -2,7 +2,6 @@ use crate::metrics::NodeDailyMetrics;
 use crate::performance_calculator::{FailureRatesManager, PerformanceMultiplierCalculator};
 use crate::reward_period::{RewardPeriod, TimestampNanos};
 use ic_base_types::{NodeId, PrincipalId};
-use itertools::Itertools;
 use std::cmp::PartialEq;
 use std::collections::{BTreeMap, HashSet};
 use std::error::Error;

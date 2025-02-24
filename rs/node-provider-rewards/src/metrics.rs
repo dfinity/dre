@@ -1,8 +1,7 @@
-use crate::reward_period::{RewardPeriod, TimestampNanos, TimestampNanosAtDayEnd, NANOS_PER_DAY};
-use ic_base_types::{NodeId, SubnetId};
+use crate::reward_period::{TimestampNanos, TimestampNanosAtDayEnd};
+use ic_base_types::SubnetId;
 use num_traits::FromPrimitive;
 use rust_decimal::Decimal;
-use std::collections::BTreeMap;
 use std::fmt;
 
 /// Represents the daily metrics recorded for a node.

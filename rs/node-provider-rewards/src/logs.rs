@@ -12,11 +12,7 @@ pub fn round_dp_4(dec: &Decimal) -> Decimal {
 /// This is used to run and log the operations that are executed in the library.
 #[derive(Debug)]
 pub enum Operation {
-    Sum(Vec<Decimal>),
     Avg(Vec<Decimal>),
-    Subtract(Decimal, Decimal),
-    Multiply(Decimal, Decimal),
-    Divide(Decimal, Decimal),
     Set(Decimal),
 }
 
@@ -27,11 +23,7 @@ impl Operation {
 
     pub fn execute(&self) -> Decimal {
         match self {
-            Operation::Sum(operators) => operators.iter().sum(),
             Operation::Avg(operators) => operators.iter().sum::<Decimal>() / Decimal::from(operators.len().max(1)),
-            Operation::Subtract(o1, o2) => o1 - o2,
-            Operation::Divide(o1, o2) => o1 / o2,
-            Operation::Multiply(o1, o2) => o1 * o2,
             Operation::Set(o1) => *o1,
         }
     }
@@ -39,16 +31,10 @@ impl Operation {
 
 impl fmt::Display for Operation {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        let (symbol, o1, o2) = match self {
-            Operation::Sum(values) => return write!(f, "{}", Operation::format_values(values, "sum")),
-            Operation::Avg(values) => return write!(f, "{}", Operation::format_values(values, "avg")),
-            Operation::Subtract(o1, o2) => ("-", o1, o2),
-            Operation::Divide(o1, o2) => ("/", o1, o2),
-            Operation::Multiply(o1, o2) => ("*", o1, o2),
-            Operation::Set(o1) => return write!(f, "set {}", o1),
-        };
-
-        write!(f, "{} {} {}", round_dp_4(o1), symbol, round_dp_4(o2))
+        match self {
+            Operation::Avg(values) => write!(f, "{}", Operation::format_values(values, "avg")),
+            Operation::Set(o1) => write!(f, "set {}", o1),
+        }
     }
 }
 
@@ -60,7 +46,7 @@ pub enum LogEntry {
         result: Decimal,
     },
     NodesMultiplierStep(&'static str),
-    Summary(NodeId, Table),
+    Summary(NodeId, Box<Table>),
     RewardsMultiplier {
         node_id: NodeId,
         failure_rate_in_period: Decimal,

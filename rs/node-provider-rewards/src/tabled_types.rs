@@ -2,7 +2,6 @@ use crate::logs::round_dp_4;
 use crate::metrics::{NodeDailyFailureRate, NodeFailureRate};
 use crate::reward_period::TimestampNanos;
 use chrono::DateTime;
-use rust_decimal::Decimal;
 use tabled::settings::Style;
 use tabled::Table;
 use tabled::Tabled;
@@ -19,12 +18,6 @@ pub struct DailyNodeFailureRateTabled {
     pub subnet_failure_rate: String,
     #[tabled(rename = "Relative/Extrapolated Failure Rate")]
     pub final_failure_rate: String,
-}
-
-impl DailyNodeFailureRateTabled {
-    fn format_failure_rate(failure_rate: &Decimal) -> String {
-        failure_rate.round_dp(4).to_string()
-    }
 }
 
 fn timestamp_to_utc_date(ts: TimestampNanos) -> String {
