@@ -70,7 +70,7 @@ The release process [is documented here](https://www.notion.so/dfinityorg/IC-OS-
 
 * Help in on-boarding or off-boarding of datacenters and node providers
 * Firewall rule modifications
-* Node Rewards adjustment proposals (ask the previous from the Dr. DRE rotation)
+* Node rewards adjustment proposals (see _Handoff operations_ below)
 * Any other requested proposals
 
 ??? tip "Tooling"
@@ -99,3 +99,4 @@ The release process [is documented here](https://www.notion.so/dfinityorg/IC-OS-
 
 - If there are any pending tasks or unresolved operations, it is your responsibility to inform the next on-call team member.  
 - Provide clear details on what needs to be addressed and any context that might help them pick up where you left off.
+- Pass on information about node rewards adjustments requested to the next on-call team member.
