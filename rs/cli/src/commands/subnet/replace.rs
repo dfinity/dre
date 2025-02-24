@@ -73,37 +73,28 @@ impl ExecutableCommand for Replace {
             )
             .await?;
 
-        let runner = ctx.runner().await?;
-
-        let subnet_id = subnet_change_response.subnet_id;
-        // Should be refactored to not require forum post links like this.
-
-        let runner_proposal = match runner.propose_subnet_change(subnet_change_response).await? {
+        let runner_proposal = match ctx.runner().await?.propose_subnet_change(&subnet_change_response).await? {
             Some(runner_proposal) => runner_proposal,
             None => return Ok(()),
         };
 
-        let proxy = Submitter::from(&self.submission_parameters);
-        let execution = ctx.ic_admin_executor().await?.execution(runner_proposal.clone());
-        match subnet_id {
-            Some(id) => {
-                proxy
-                    .propose(
-                        execution,
-                        ForumPostKind::ReplaceNodes {
-                            subnet_id: id,
-                            body: match (&runner_proposal.options.motivation, &runner_proposal.options.summary) {
-                                (Some(motivation), None) => motivation.to_string(),
-                                (Some(motivation), Some(summary)) => format!("{}\nMotivation:\n{}", summary, motivation),
-                                (None, Some(summary)) => summary.to_string(),
-                                (None, None) => anyhow::bail!("Expected to have `motivation` or `summary` for this proposal"),
-                            },
+        Submitter::from(&self.submission_parameters)
+            .propose(
+                ctx.ic_admin_executor().await?.execution(runner_proposal.clone()),
+                match subnet_change_response.subnet_id {
+                    Some(id) => ForumPostKind::ReplaceNodes {
+                        subnet_id: id,
+                        body: match (&runner_proposal.options.motivation, &runner_proposal.options.summary) {
+                            (Some(motivation), None) => motivation.to_string(),
+                            (Some(motivation), Some(summary)) => format!("{}\nMotivation:\n{}", summary, motivation),
+                            (None, Some(summary)) => summary.to_string(),
+                            (None, None) => anyhow::bail!("Expected to have `motivation` or `summary` for this proposal"),
                         },
-                    )
-                    .await
-            }
-            None => proxy.propose(execution, ForumPostKind::Generic).await,
-        }
+                    },
+                    None => ForumPostKind::Generic,
+                },
+            )
+            .await
     }
 
     fn validate(&self, _args: &GlobalArgs, cmd: &mut clap::Command) {
