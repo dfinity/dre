@@ -1,7 +1,9 @@
-use crate::metrics::{DailyNodeMetrics, MetricsProcessor};
-use crate::nodes_multiplier_calculator::NodesMultiplierCalculator;
+use crate::metrics::{DailyMetricsProcessor, DailyNodeMetrics};
+use crate::nodes_multiplier_calculator::RewardsMultiplierCalculator;
 use crate::reward_period::{RewardPeriod, TimestampNanos};
 use ic_base_types::{NodeId, PrincipalId};
+use itertools::Itertools;
+use std::cmp::PartialEq;
 use std::collections::{BTreeMap, HashSet};
 use std::error::Error;
 use std::fmt;
@@ -10,6 +12,7 @@ mod logs;
 mod metrics;
 mod nodes_multiplier_calculator;
 mod reward_period;
+mod tabled_types;
 
 /// Computes rewards for node providers based on their nodes' performance during the specified `reward_period`.
 ///
@@ -22,11 +25,6 @@ mod reward_period;
 /// * daily_metrics_per_node - A collection of daily node metrics for each node.
 /// * providers_rewardable_nodes: A set of nodes eligible for rewards during the `reward_period`.
 ///
-/// # Errors
-/// - RewardCalculationError::EmptyNodes – No rewardable nodes were provided.
-/// - RewardCalculationError::NodeNotInRewardables – A node has recorded metrics but is not listed as rewardable.
-/// - RewardCalculationError::NodeMetricsOutOfRange – A node has metrics that fall outside the reward_period.
-///
 /// TODO: Implement the XDR reward calculation logic from the nodes multiplier.
 pub fn calculate_rewards(
     reward_period: RewardPeriod,
@@ -35,23 +33,23 @@ pub fn calculate_rewards(
 ) -> Result<(), RewardCalculationError> {
     validate_input(&reward_period, &daily_metrics_per_node, &providers_rewardable_nodes)?;
 
-    let metrics_processor = MetricsProcessor {
+    let daily_metrics_processor = DailyMetricsProcessor {
         daily_metrics_per_node,
         reward_period,
     };
-    let subnets_failure_rates = metrics_processor.daily_failure_rates_per_subnet();
-    let multiplier_calculator = NodesMultiplierCalculator::new().with_subnets_fr_discount(subnets_failure_rates);
+    let subnets_failure_rates = daily_metrics_processor.daily_failure_rates_per_subnet();
+    let multiplier_calculator = RewardsMultiplierCalculator::new().with_subnets_failure_rate_discount(subnets_failure_rates);
 
     for (_provider_id, provider_nodes) in providers_rewardable_nodes {
         let provider_nodes_failure_rates = provider_nodes
             .iter()
             .map(|node_id| {
-                let failure_rates_in_period = metrics_processor.daily_failure_rates_in_period(node_id);
+                let failure_rates_in_period = daily_metrics_processor.daily_failure_rates_in_period(node_id);
                 (*node_id, failure_rates_in_period)
             })
             .collect();
 
-        let _nodes_multiplier = multiplier_calculator.run(provider_nodes_failure_rates);
+        let _nodes_multiplier = multiplier_calculator.rewards_multiplier_per_node(provider_nodes_failure_rates);
     }
 
     Ok(())
@@ -74,16 +72,21 @@ fn validate_input(
         }
     }
 
-    // Check if all metrics are within the reward period
     for (node_id, all_daily_metrics) in daily_metrics_per_node {
         for daily_metrics in all_daily_metrics {
-            if !reward_period.contains(daily_metrics.ts) {
+            // Check if all metrics are within the reward period
+            if !reward_period.contains(*daily_metrics.ts) {
                 return Err(RewardCalculationError::NodeMetricsOutOfRange {
                     node_id: *node_id,
-                    timestamp: daily_metrics.ts,
+                    timestamp: *daily_metrics.ts,
                     reward_period: reward_period.clone(),
                 });
             }
+        }
+        // Check if metrics are unique for each day
+        let unique_timestamps = all_daily_metrics.iter().map(|daily_metrics| *daily_metrics.ts).collect::<HashSet<_>>();
+        if unique_timestamps.len() != all_daily_metrics.len() {
+            return Err(RewardCalculationError::DuplicateMetrics(*node_id));
         }
     }
 
@@ -99,6 +102,7 @@ pub enum RewardCalculationError {
         timestamp: TimestampNanos,
         reward_period: RewardPeriod,
     },
+    DuplicateMetrics(NodeId),
 }
 
 impl Error for RewardCalculationError {}
@@ -122,6 +126,9 @@ impl fmt::Display for RewardCalculationError {
                     "Node {} has metrics outside the reward period: timestamp: {} not in {}",
                     node_id, timestamp, reward_period
                 )
+            }
+            RewardCalculationError::DuplicateMetrics(node_id) => {
+                write!(f, "Node {} has multiple metrics for the same day", node_id)
             }
         }
     }

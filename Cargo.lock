@@ -6031,7 +6031,6 @@ dependencies = [
 name = "node-provider-rewards"
 version = "0.5.7"
 dependencies = [
- "ahash 0.8.11",
  "chrono",
  "function_name",
  "ic-base-types",

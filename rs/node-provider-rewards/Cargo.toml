@@ -8,9 +8,6 @@ edition.workspace = true
 license.workspace = true
 
 [dependencies]
-ahash = { version = "0.8.11", default-features = false, features = [
-    "compile-time-rng",
-] }
 ic-types = { workspace = true }
 ic-base-types = { workspace = true }
 itertools = { workspace = true }

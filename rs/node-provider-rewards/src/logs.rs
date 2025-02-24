@@ -2,7 +2,7 @@ use ic_base_types::NodeId;
 use itertools::Itertools;
 use rust_decimal::Decimal;
 use std::fmt;
-use tabular::Table;
+use tabled::Table;
 
 fn round_dp_4(dec: &Decimal) -> Decimal {
     dec.round_dp(4)
@@ -19,12 +19,8 @@ pub enum Operation {
 }
 
 impl Operation {
-    fn format_values<T: fmt::Display>(items: &[T], prefix: &str) -> String {
-        if items.is_empty() {
-            "0".to_string()
-        } else {
-            format!("{}({})", prefix, items.iter().map(|item| format!("{}", item)).join(","),)
-        }
+    fn format_values(items: &[Decimal], prefix: &str) -> String {
+        format!("{}({})", prefix, &items.iter().map(round_dp_4).join(","))
     }
 
     pub fn execute(&self) -> Decimal {
@@ -42,8 +38,8 @@ impl Operation {
 impl fmt::Display for Operation {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         let (symbol, o1, o2) = match self {
-            Operation::Sum(values) => return write!(f, "{}", Operation::format_values(&values.iter().map(round_dp_4).collect_vec(), "sum")),
-            Operation::Avg(values) => return write!(f, "{}", Operation::format_values(&values.iter().map(round_dp_4).collect_vec(), "avg")),
+            Operation::Sum(values) => return write!(f, "{}", Operation::format_values(values, "sum")),
+            Operation::Avg(values) => return write!(f, "{}", Operation::format_values(values, "avg")),
             Operation::Subtract(o1, o2) => ("-", o1, o2),
             Operation::Divide(o1, o2) => ("/", o1, o2),
             Operation::Multiply(o1, o2) => ("*", o1, o2),
@@ -55,16 +51,17 @@ impl fmt::Display for Operation {
 }
 
 pub enum LogEntry {
+    /// An executed [Operation] with the reason for the operation and the result.
     Execute {
         reason: String,
         operation: Operation,
         result: Decimal,
     },
     NodesMultiplierStep(&'static str),
-    Summary(Table),
+    Summary(NodeId, Table),
     RewardsMultiplier {
         node_id: NodeId,
-        failure_rate: Decimal,
+        failure_rate_in_period: Decimal,
         rewards_reduction: Decimal,
         rewards_multiplier: Decimal,
     },
@@ -76,12 +73,15 @@ impl fmt::Display for LogEntry {
             LogEntry::Execute { reason, operation, result } => {
                 write!(f, "{}: {} = {}", reason, operation, round_dp_4(result))
             }
-            LogEntry::Summary(table) => write!(f, "Summary:\n{}", table),
-            LogEntry::NodesMultiplierStep(step) => {
-                let formatted_str = step
+            LogEntry::Summary(node_id, table) => write!(f, "Summary for Node {}: \n{}", node_id, table),
+            LogEntry::NodesMultiplierStep(function_name) => {
+                // Format the function name to be more human-readable
+                // e.g. "compute_extrapolated_failure_rate" -> "Compute Extrapolated Failure Rate"
+                let formatted_str = function_name
                     .replace('_', " ")
                     .split_whitespace()
                     .map(|word| {
+                        // Capitalize the first letter of each word
                         let mut chars = word.chars();
                         chars.next().map(|c| c.to_uppercase().collect::<String>()).unwrap_or_default() + chars.as_str()
                     })
@@ -92,13 +92,13 @@ impl fmt::Display for LogEntry {
             }
             LogEntry::RewardsMultiplier {
                 node_id,
-                failure_rate,
+                failure_rate_in_period: failure_rate,
                 rewards_reduction,
                 rewards_multiplier,
             } => {
                 write!(
                     f,
-                    "Node {}: failure rate {} rewards reduction: {} REWARDS MULTIPLIER {}",
+                    "\t{}: failure rate in period: {}, rewards reduction: {} -> Rewards Multiplier: [{}]",
                     node_id,
                     round_dp_4(failure_rate),
                     round_dp_4(rewards_reduction),
@@ -116,9 +116,5 @@ pub struct Logger {
 impl Logger {
     pub fn log(&mut self, entry: LogEntry) {
         self.entries.push(entry);
-    }
-
-    pub fn get_logs(&self) -> Vec<String> {
-        self.entries.iter().map(|entry| format!("{}", entry)).collect()
     }
 }

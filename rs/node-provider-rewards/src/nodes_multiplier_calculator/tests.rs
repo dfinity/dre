@@ -1,6 +1,7 @@
 use super::*;
-use crate::reward_period::NANOS_PER_DAY;
+use crate::reward_period::{TimestampNanos, NANOS_PER_DAY};
 use ic_base_types::{PrincipalId, SubnetId};
+use itertools::Itertools;
 use maplit::btreemap;
 use rust_decimal::Decimal;
 use std::collections::BTreeMap;
@@ -112,7 +113,7 @@ fn test_discount_failure_rate_for_node_1() {
     let daily_failure_rates = get_test_input();
 
     // Initialize and process the calculator.
-    let multiplier = NodesMultiplierCalculator::new().run(daily_failure_rates);
+    let multiplier = RewardsMultiplierCalculator::new().rewards_multiplier_per_node(daily_failure_rates);
 
     multiplier.logger.entries.iter().for_each(|entry| {
         println!("{}", entry);

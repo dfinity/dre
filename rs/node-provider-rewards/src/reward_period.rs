@@ -18,30 +18,33 @@ fn current_time() -> Time {
     ic_types::time::current_time()
 }
 
-#[derive(Debug, Clone, PartialEq)]
-pub(crate) struct TsNanosAtDayStart(TimestampNanos);
-#[derive(Debug, Clone, PartialEq)]
-pub(crate) struct TsNanosAtDayEnd(TimestampNanos);
+// Wrapper types for TimestampNanos.
+// Used to ensure that the wrapped timestamp is aligned to the start/end of the day.
+#[derive(Debug, Copy, Clone, PartialEq, Eq)]
+pub struct TimestampNanosAtDayStart(TimestampNanos);
+#[derive(Debug, Copy, Clone, PartialEq, Eq)]
+pub struct TimestampNanosAtDayEnd(TimestampNanos);
 
-impl From<TimestampNanos> for TsNanosAtDayStart {
+impl From<TimestampNanos> for TimestampNanosAtDayStart {
     fn from(ts: TimestampNanos) -> Self {
         Self((ts / NANOS_PER_DAY) * NANOS_PER_DAY)
     }
 }
-impl From<TimestampNanos> for TsNanosAtDayEnd {
+
+impl From<TimestampNanos> for TimestampNanosAtDayEnd {
     fn from(ts: TimestampNanos) -> Self {
         Self(((ts / NANOS_PER_DAY) + 1) * NANOS_PER_DAY - 1)
     }
 }
 
-impl Deref for TsNanosAtDayEnd {
+impl Deref for TimestampNanosAtDayEnd {
     type Target = TimestampNanos;
 
     fn deref(&self) -> &Self::Target {
         &self.0
     }
 }
-impl Deref for TsNanosAtDayStart {
+impl Deref for TimestampNanosAtDayStart {
     type Target = TimestampNanos;
 
     fn deref(&self) -> &Self::Target {
@@ -61,8 +64,8 @@ impl Deref for TsNanosAtDayStart {
 /// TODO: This should be moved to NPR canister crate.
 #[derive(Debug, Clone, PartialEq)]
 pub struct RewardPeriod {
-    pub start_ts: TsNanosAtDayStart,
-    pub end_ts: TsNanosAtDayEnd,
+    pub start_ts: TimestampNanosAtDayStart,
+    pub end_ts: TimestampNanosAtDayEnd,
 }
 
 impl Display for RewardPeriod {
@@ -86,8 +89,9 @@ impl RewardPeriod {
             return Err(RewardPeriodError::StartTimestampAfterEndTimestamp);
         }
 
-        // Metrics are collected at the end of the day, so we need to ensure that the end timestamp is not later than the first ts of today.
-        let today_first_ts: TsNanosAtDayStart = current_time().as_nanos_since_unix_epoch().into();
+        // Metrics are collected at the end of the day, so we need to ensure that
+        // the end timestamp is not later than the first ts of today.
+        let today_first_ts: TimestampNanosAtDayStart = current_time().as_nanos_since_unix_epoch().into();
         if unaligned_end_ts >= *today_first_ts {
             return Err(RewardPeriodError::EndTimestampLaterThanToday);
         }
