@@ -83,9 +83,10 @@ The release process [is documented here](https://www.notion.so/dfinityorg/IC-OS-
 
 ### 6. **Monitor status and health of CI**  
 
-- **Weekly dependency upgrade job**:  
+- **Weekly dependency upgrade jobs**:
 
-   - A [GitHub Action](https://github.com/dfinity/dre/actions/workflows/update-dependencies.yaml) runs weekly to automatically upgrade dependencies.  Dependabot also issues PRs.
+   - A [GitHub Action](https://github.com/dfinity/dre/actions/workflows/update-dependencies.yaml) runs weekly to automatically upgrade dependencies.
+   - Dependabot also issues PRs regularly.
    - While some weeks result in straightforward updates, others may require manual intervention due to API changes or other breaking updates.
    - Review and address any issues with the generated pull request
      - Find the automation PRs [here](https://github.com/dfinity/dre/issues?q=is%3Apr+is%3Aopen+author%3Aapp%2Fpr-automation-bot-public).
