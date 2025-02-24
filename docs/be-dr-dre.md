@@ -70,6 +70,7 @@ The release process [is documented here](https://www.notion.so/dfinityorg/IC-OS-
 
 * Help in on-boarding or off-boarding of datacenters and node providers
 * Firewall rule modifications
+* Node Rewards adjustment proposals (ask the previous from the Dr. DRE rotation)
 * Any other requested proposals
 
 ??? tip "Tooling"
