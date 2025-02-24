@@ -442,7 +442,7 @@ impl LazyRegistry for LazyRegistryImpl {
                                     });
 
                                     if maybe_provider.is_none() && self.network.is_mainnet() && !self.offline {
-                                        panic!("Node provider not found for operator: {}", principal);
+                                        warn!("Node provider not found for operator: {}", principal);
                                     }
                                     maybe_provider.unwrap_or_default()
                                 })
