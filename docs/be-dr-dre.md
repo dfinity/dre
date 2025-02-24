@@ -68,30 +68,35 @@ The release process [is documented here](https://www.notion.so/dfinityorg/IC-OS-
 
 ### 4. **Submit requested proposals**
 
-* Replace dead nodes
 * Help in on-boarding or off-boarding of datacenters and node providers
 * Firewall rule modifications
+* Node rewards adjustment proposals (see _Handoff operations_ below)
 * Any other requested proposals
 
 ??? tip "Tooling"
     For all regular ops we have sufficient tooling implemented in our `dre` tool. For all new proposals and specific scenarios it is your responsibility to add them to the tooling as the new use cases come.
 
-### 5. **Monitor status and health of CI**  
+### 5. **Submit proposals conventionally submitted once a week**
 
-- **Weekly dependency upgrade job**:  
+* Replace dead nodes
+* Mainnet topology proposals, such as `dre network --heal --optimize --ensure-operator-nodes-unassigned --ensure-operator-nodes-assigned --remove-cordoned-nodes` or a subset of these operations. The operations are still not polished enough to be run automatically.
+* Provider reward adjustment proposals, if any are needed that week. Please ask in `#eng-dre` if you don't know if any are needed.
 
-   - A [GitHub Action](https://github.com/dfinity/dre/actions/workflows/update-dependencies.yaml) runs weekly to automatically upgrade dependencies.  
-   - While some weeks result in straightforward updates, others may require manual intervention due to API changes or other breaking updates.  
+### 6. **Monitor status and health of CI**  
 
-- **Your responsibility**:  
+- **Weekly dependency upgrade jobs**:
 
-   - Review and address any issues with the generated pull request.  
+   - A [GitHub Action](https://github.com/dfinity/dre/actions/workflows/update-dependencies.yaml) runs weekly to automatically upgrade dependencies.
+   - Dependabot also issues PRs regularly.
+   - While some weeks result in straightforward updates, others may require manual intervention due to API changes or other breaking updates.
+   - Review and address any issues with the generated pull request
+     - Find the automation PRs [here](https://github.com/dfinity/dre/issues?q=is%3Apr+is%3Aopen+author%3Aapp%2Fpr-automation-bot-public).
+     - Find the Dependabot PRs [here](https://github.com/dfinity/dre/issues?q=is%3Apr+is%3Aopen+author%3Aapp%2Fdependabot).  
    - Ensure the fixes are implemented and attempt to merge the PR into the repository.  
    - Maintaining compatibility between the IC repo and our repo reduces friction and ensures our tooling operates smoothly. 
-   - Mainnet topology proposals, such as `dre network --heal --optimize --ensure-operator-nodes-unassigned --ensure-operator-nodes-assigned --remove-cordoned-nodes` or a subset of these operations. The operations are still not polished enough to be run automatically.
-   - Provider reward adjustment proposals, if any are needed that week. Please ask in `#eng-dre` if you don't know if any are needed.
 
-### 6. **Handover operations**  
+### 7. **Handoff operations**  
 
 - If there are any pending tasks or unresolved operations, it is your responsibility to inform the next on-call team member.  
 - Provide clear details on what needs to be addressed and any context that might help them pick up where you left off.
+- Pass on information about node rewards adjustments requested to the next on-call team member.
