@@ -4,10 +4,12 @@ use rust_decimal::Decimal;
 use std::fmt;
 use tabled::Table;
 
-fn round_dp_4(dec: &Decimal) -> Decimal {
+pub fn round_dp_4(dec: &Decimal) -> Decimal {
     dec.round_dp(4)
 }
 
+/// Represents an operation that can be executed on Decimals.
+/// This is used to run and log the operations that are executed in the library.
 #[derive(Debug)]
 pub enum Operation {
     Sum(Vec<Decimal>),

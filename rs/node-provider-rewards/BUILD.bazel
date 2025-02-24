@@ -4,7 +4,7 @@ load("@rules_rust//rust:defs.bzl", "rust_library", "rust_test")
 package(default_visibility = ["//visibility:public"])
 
 rust_library(
-    name = "node-provider-rewards-lib",
+    name = "node-provider-rewards",
     srcs = glob(["src/**/*.rs"]),
     aliases = aliases(),
     proc_macro_deps = all_crate_deps(
@@ -21,7 +21,7 @@ rust_test(
         normal_dev = True,
         proc_macro_dev = True,
     ),
-    crate = ":node-provider-rewards-lib",
+    crate = ":node-provider-rewards",
     proc_macro_deps = all_crate_deps(
         proc_macro_dev = True,
     ),

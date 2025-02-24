@@ -37,7 +37,7 @@ pub fn calculate_rewards(
     let perf_calculator = PerformanceMultiplierCalculator::new(mgr).with_subnets_failure_rates_discount();
 
     for (_provider_id, provider_nodes) in providers_rewardable_nodes {
-        let _nodes_multiplier = perf_calculator.calculate_performance_multiplier(&provider_nodes);
+        let _nodes_multiplier = perf_calculator.calculate_performance_multipliers(&provider_nodes);
     }
 
     Ok(())

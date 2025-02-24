@@ -1,5 +1,5 @@
 {
-  "checksum": "9b114dd1f58e0ade31049e0ecd6bbc1aed942d2d1d326f2eb31404064ca5d87a",
+  "checksum": "c7df652f31a23e948d5bc4ae40a017073ed067805ec066351bd5a57fb4bc6bf4",
   "crates": {
     "actix-codec 0.5.2": {
       "name": "actix-codec",
@@ -11613,6 +11613,81 @@
         "version": "0.4.3"
       },
       "license": "MIT/Apache-2.0"
+    },
+    "function_name 0.3.0": {
+      "name": "function_name",
+      "version": "0.3.0",
+      "repository": {
+        "Http": {
+          "url": "https://static.crates.io/crates/function_name/0.3.0/download",
+          "sha256": "b1ab577a896d09940b5fe12ec5ae71f9d8211fff62c919c03a3750a9901e98a7"
+        }
+      },
+      "targets": [
+        {
+          "Library": {
+            "crate_name": "function_name",
+            "crate_root": "src/lib.rs",
+            "srcs": [
+              "**/*.rs"
+            ]
+          }
+        }
+      ],
+      "library_target_name": "function_name",
+      "common_attrs": {
+        "compile_data_glob": [
+          "**"
+        ],
+        "crate_features": {
+          "common": [
+            "default"
+          ],
+          "selects": {}
+        },
+        "edition": "2018",
+        "proc_macro_deps": {
+          "common": [
+            {
+              "id": "function_name-proc-macro 0.3.0",
+              "target": "function_name_proc_macro"
+            }
+          ],
+          "selects": {}
+        },
+        "version": "0.3.0"
+      },
+      "license": "MIT"
+    },
+    "function_name-proc-macro 0.3.0": {
+      "name": "function_name-proc-macro",
+      "version": "0.3.0",
+      "repository": {
+        "Http": {
+          "url": "https://static.crates.io/crates/function_name-proc-macro/0.3.0/download",
+          "sha256": "673464e1e314dd67a0fd9544abc99e8eb28d0c7e3b69b033bcff9b2d00b87333"
+        }
+      },
+      "targets": [
+        {
+          "ProcMacro": {
+            "crate_name": "function_name_proc_macro",
+            "crate_root": "src/lib.rs",
+            "srcs": [
+              "**/*.rs"
+            ]
+          }
+        }
+      ],
+      "library_target_name": "function_name_proc_macro",
+      "common_attrs": {
+        "compile_data_glob": [
+          "**"
+        ],
+        "edition": "2018",
+        "version": "0.3.0"
+      },
+      "license": "MIT"
     },
     "funty 2.0.0": {
       "name": "funty",
@@ -28175,29 +28250,35 @@
         ],
         "crate_features": {
           "common": [
-            "elf",
-            "errno",
             "general",
             "ioctl",
             "no_std"
           ],
           "selects": {
             "aarch64-unknown-linux-gnu": [
+              "elf",
+              "errno",
               "prctl",
               "std",
               "system"
             ],
             "arm-unknown-linux-gnueabi": [
+              "elf",
+              "errno",
               "prctl",
               "std",
               "system"
             ],
             "armv7-unknown-linux-gnueabi": [
+              "elf",
+              "errno",
               "prctl",
               "std",
               "system"
             ],
             "i686-unknown-linux-gnu": [
+              "elf",
+              "errno",
               "prctl",
               "std",
               "system"
@@ -28213,6 +28294,8 @@
               "system"
             ],
             "x86_64-unknown-linux-gnu": [
+              "elf",
+              "errno",
               "prctl",
               "std",
               "system"
@@ -29749,6 +29832,77 @@
         "version": "0.24.3"
       },
       "license": "MIT"
+    },
+    "node-provider-rewards 0.5.7": {
+      "name": "node-provider-rewards",
+      "version": "0.5.7",
+      "repository": null,
+      "targets": [
+        {
+          "Library": {
+            "crate_name": "node_provider_rewards",
+            "crate_root": "src/lib.rs",
+            "srcs": [
+              "**/*.rs"
+            ]
+          }
+        }
+      ],
+      "library_target_name": "node_provider_rewards",
+      "common_attrs": {
+        "compile_data_glob": [
+          "**"
+        ],
+        "deps": {
+          "common": [
+            {
+              "id": "chrono 0.4.38",
+              "target": "chrono"
+            },
+            {
+              "id": "function_name 0.3.0",
+              "target": "function_name"
+            },
+            {
+              "id": "ic-base-types 0.9.0",
+              "target": "ic_base_types"
+            },
+            {
+              "id": "ic-types 0.9.0",
+              "target": "ic_types"
+            },
+            {
+              "id": "itertools 0.13.0",
+              "target": "itertools"
+            },
+            {
+              "id": "num-traits 0.2.19",
+              "target": "num_traits"
+            },
+            {
+              "id": "rust_decimal 1.36.0",
+              "target": "rust_decimal"
+            },
+            {
+              "id": "tabled 0.16.0",
+              "target": "tabled"
+            }
+          ],
+          "selects": {}
+        },
+        "edition": "2021",
+        "proc_macro_deps": {
+          "common": [
+            {
+              "id": "rust_decimal_macros 1.36.0",
+              "target": "rust_decimal_macros"
+            }
+          ],
+          "selects": {}
+        },
+        "version": "0.5.7"
+      },
+      "license": "Apache-2.0"
     },
     "node-provider-rewards-lib 0.5.7": {
       "name": "node-provider-rewards-lib",
@@ -48227,6 +48381,7 @@
     "multiservice-discovery 0.5.7": "rs/ic-observability/multiservice-discovery",
     "multiservice-discovery-downloader 0.5.7": "rs/ic-observability/multiservice-discovery-downloader",
     "multiservice-discovery-shared 0.5.7": "rs/ic-observability/multiservice-discovery-shared",
+    "node-provider-rewards 0.5.7": "rs/node-provider-rewards",
     "node-provider-rewards-lib 0.5.7": "rs/dre-canisters/node-provider-rewards-lib",
     "node-status-updater 0.5.7": "rs/ic-observability/node-status-updater",
     "obs-canister-clients 0.5.7": "rs/ic-observability/obs-canister-clients",

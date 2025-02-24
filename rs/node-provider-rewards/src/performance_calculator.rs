@@ -9,11 +9,16 @@ use rust_decimal_macros::dec;
 use std::cell::{Ref, RefCell, RefMut};
 use std::collections::BTreeMap;
 
+/// The percentile used to calculate the failure rate for a subnet.
 const SUBNET_FAILURE_RATE_PERCENTILE: f64 = 0.75;
 
+/// The minimum and maximum failure rates for a node.
+/// Nodes with a failure rate below `MIN_FAILURE_RATE` will not be penalized.
+/// Nodes with a failure rate above `MAX_FAILURE_RATE` will be penalized with `MAX_REWARDS_REDUCTION`.
 const MIN_FAILURE_RATE: Decimal = dec!(0.1);
 const MAX_FAILURE_RATE: Decimal = dec!(0.6);
 
+/// The minimum and maximum rewards reduction for a node.
 const MIN_REWARDS_REDUCTION: Decimal = dec!(0);
 const MAX_REWARDS_REDUCTION: Decimal = dec!(0.8);
 
@@ -94,9 +99,8 @@ impl FailureRatesManager {
     }
 }
 
-/// The result of the rewards multiplier calculation.
-pub struct PerformanceMultiplier {
-    /// The computed rewards multipliers per node.
+pub struct PerformanceMultipliers {
+    /// The computed performance multiplier per node.
     pub performance_multiplier_by_node: BTreeMap<NodeId, Decimal>,
     /// The logger capturing all the computation steps.
     pub logger: Logger,
@@ -272,11 +276,11 @@ impl PerformanceMultiplierCalculator {
             .collect()
     }
 
-    /// Computes the rewards multipliers for nodes.
+    /// Calculates the performance multipliers for a set of nodes.
     ///
     /// # Arguments
-    /// * `node_failure_data` - A mapping from node IDs to their respective vectors of daily failure rates.
-    pub fn calculate_performance_multiplier(&self, nodes: &Vec<NodeId>) -> PerformanceMultiplier {
+    /// * `nodes` - A vector of node IDs for which the performance multipliers are calculated.
+    pub fn calculate_performance_multipliers(&self, nodes: &Vec<NodeId>) -> PerformanceMultipliers {
         self.update_nodes_failure_rates(nodes);
 
         self.update_relative_failure_rates();
@@ -295,7 +299,7 @@ impl PerformanceMultiplierCalculator {
             self.logger_mut().log(LogEntry::Summary(node_id, generate_table_summary(failure_entries)));
         }
 
-        PerformanceMultiplier {
+        PerformanceMultipliers {
             logger,
             performance_multiplier_by_node,
         }

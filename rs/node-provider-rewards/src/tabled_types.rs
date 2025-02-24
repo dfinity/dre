@@ -1,6 +1,8 @@
+use crate::logs::round_dp_4;
 use crate::metrics::{NodeDailyFailureRate, NodeFailureRate};
 use crate::reward_period::TimestampNanos;
 use chrono::DateTime;
+use rust_decimal::Decimal;
 use tabled::settings::Style;
 use tabled::Table;
 use tabled::Tabled;
@@ -19,6 +21,12 @@ pub struct DailyNodeFailureRateTabled {
     pub final_failure_rate: String,
 }
 
+impl DailyNodeFailureRateTabled {
+    fn format_failure_rate(failure_rate: &Decimal) -> String {
+        failure_rate.round_dp(4).to_string()
+    }
+}
+
 fn timestamp_to_utc_date(ts: TimestampNanos) -> String {
     DateTime::from_timestamp(ts as i64 / 1_000_000_000, 0)
         .unwrap()
@@ -31,7 +39,7 @@ impl From<NodeDailyFailureRate> for DailyNodeFailureRateTabled {
     fn from(value: NodeDailyFailureRate) -> Self {
         let utc_day = timestamp_to_utc_date(value.ts);
         let original_failure_rate = match &value.value {
-            NodeFailureRate::DefinedRelative { original_failure_rate, .. } => original_failure_rate.round_dp(4).to_string(),
+            NodeFailureRate::DefinedRelative { original_failure_rate, .. } => round_dp_4(original_failure_rate).to_string(),
             _ => "N/A".to_string(),
         };
         let subnet_assigned = match &value.value {
@@ -39,11 +47,11 @@ impl From<NodeDailyFailureRate> for DailyNodeFailureRateTabled {
             _ => "N/A".to_string(),
         };
         let subnet_failure_rate = match &value.value {
-            NodeFailureRate::DefinedRelative { subnet_failure_rate, .. } => subnet_failure_rate.round_dp(4).to_string(),
+            NodeFailureRate::DefinedRelative { subnet_failure_rate, .. } => round_dp_4(subnet_failure_rate).to_string(),
             _ => "N/A".to_string(),
         };
         let final_failure_rate = match value.value {
-            NodeFailureRate::DefinedRelative { value, .. } | NodeFailureRate::Extrapolated(value) => value.round_dp(4).to_string(),
+            NodeFailureRate::DefinedRelative { value, .. } | NodeFailureRate::Extrapolated(value) => round_dp_4(&value).to_string(),
             _ => "N/A".to_string(),
         };
 
