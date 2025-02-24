@@ -4,6 +4,7 @@ import httpretty.utils
 from release_index import Release
 from release_index import Version
 import dryrun
+import reconciler_state
 
 import pytest
 
@@ -25,8 +26,9 @@ def test_create_release_notes_on_new_release() -> None:
     def changelog(v: str, security_fix: bool):
         return f"release notes for version {v}{' (security fix)' if security_fix else ''}..."
 
-    def proposal(v: str):
-        return int(v.removeprefix("test"))
+    def proposal(v: str) -> reconciler_state.SubmittedProposal:
+        proposal_id = int(v.removeprefix("test"))
+        return reconciler_state.SubmittedProposal(None, None, proposal_id)
 
     post.update(summary_retriever=changelog, proposal_id_retriever=proposal)
     raw = """\

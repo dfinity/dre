@@ -22,11 +22,18 @@ def _post_template(
     if isinstance(proposal, reconciler_state.NoProposal):
         return f"We're preparing [a new IC release](https://github.com/dfinity/ic/tree/{version_name}). The changelog will be announced soon."
 
+    elif isinstance(proposal, reconciler_state.DREMalfunction):
+        return (
+            f"A proposal to adopt [a new IC release](https://github.com/dfinity/ic/tree/{version_name}) has been prepared,"
+            " but a temporary hiccup has taken place, preventing the proposal ID from being obtained."
+            " The proposal ID and the changelog will be announced soon."
+        )
+
     return f"""\
 Hello there!
 
 We are happy to announce that voting is now open for [a new IC release](https://github.com/dfinity/ic/tree/{version_name}).
-The NNS proposal is here: [IC NNS Proposal {proposal}](https://dashboard.internetcomputer.org/proposal/{proposal}).
+The NNS proposal is here: [IC NNS Proposal {proposal.proposal_id}](https://dashboard.internetcomputer.org/proposal/{proposal.proposal_id}).
 
 Here is a summary of the changes since the last release:
 
