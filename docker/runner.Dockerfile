@@ -100,4 +100,5 @@ ENV PATH="/home/runner/.cargo/bin:$PATH"
 ENV PATH="$PATH:/home/runner/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/lib/rustlib/x86_64-unknown-linux-gnu/bin/"
 ENV CARGO_TARGET_X86_64_APPLE_DARWIN_LINKER=rust-lld
 
-RUN cargo install --quiet cargo-zigbuild cargo-deny
+RUN cargo install --quiet cargo-zigbuild
+

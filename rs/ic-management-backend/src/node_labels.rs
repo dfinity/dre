@@ -12,14 +12,14 @@ pub async fn query_guests(network: &String, local_cache: Option<PathBuf>, offlin
             Some(path) => {
                 info!("Loading labels from cache `{}`", path.display());
 
-                let contents = std::fs::read_to_string(path)?;
+                let contents = fs_err::read_to_string(path)?;
                 parse_data(contents)
             }
         }
     } else {
         let data = fetch_data(network).await?;
         if let Some(path) = local_cache {
-            std::fs::write(path, &data)?;
+            fs_err::write(path, &data)?;
         }
         parse_data(data)
     }

@@ -2,17 +2,17 @@ use clap::Args;
 use ic_canisters::{governance::GovernanceCanisterWrapper, ledger::LedgerCanisterWrapper};
 use itertools::Itertools;
 
-use crate::commands::ExecutableCommand;
+use crate::{auth::AuthRequirement, exe::args::GlobalArgs, exe::ExecutableCommand};
 
 #[derive(Args, Debug)]
 pub struct TopUp {}
 
 impl ExecutableCommand for TopUp {
-    fn require_auth(&self) -> crate::commands::AuthRequirement {
-        crate::commands::AuthRequirement::Neuron
+    fn require_auth(&self) -> AuthRequirement {
+        AuthRequirement::Neuron
     }
 
-    fn validate(&self, _args: &crate::commands::Args, _cmd: &mut clap::Command) {}
+    fn validate(&self, _args: &GlobalArgs, _cmd: &mut clap::Command) {}
 
     async fn execute(&self, ctx: crate::ctx::DreContext) -> anyhow::Result<()> {
         let (neuron, client) = ctx.create_ic_agent_canister_client().await?;

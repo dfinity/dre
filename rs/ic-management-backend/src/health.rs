@@ -38,7 +38,7 @@ impl HealthStatusQuerier for HealthClient {
                 (true, None) => Err(anyhow::anyhow!("Cannot run offline with no local cache destination")),
                 // Should load from local cache
                 (true, Some(path)) => {
-                    let contents = std::fs::read_to_string(&path)?;
+                    let contents = fs_err::read_to_string(&path)?;
                     serde_json::from_str(&contents)
                         .map_err(|e| anyhow::anyhow!("Failed to deserialize from local cache on path `{}` due to: {:?}", path.display(), e))
                 }
@@ -53,7 +53,7 @@ impl HealthStatusQuerier for HealthClient {
 
                     if let Some(path) = local_cache {
                         let contents = serde_json::to_string_pretty(&nodes)?;
-                        std::fs::write(&path, &contents)
+                        fs_err::write(&path, &contents)
                             .map_err(|e| anyhow::anyhow!("Failed to update local cache on path `{}` due to: {:?}", path.display(), e))?;
                     }
                     Ok(nodes)

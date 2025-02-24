@@ -1,3 +1,5 @@
+use clap::Args as ClapArgs;
+use clap_num::maybe_hex;
 use dialoguer::{console::Term, theme::ColorfulTheme, Password, Select};
 use ic_canisters::governance::GovernanceCanisterWrapper;
 use ic_canisters::parallel_hardware_identity::{hsm_key_id_to_int, HsmPinHandler, KeyIdVec, ParallelHardwareIdentity, PinHandlerError};
@@ -9,7 +11,84 @@ use keyring::{Entry, Error};
 use log::{debug, error, info, warn};
 use std::path::PathBuf;
 
-use crate::commands::{AuthOpts, AuthRequirement, HsmOpts, HsmParams};
+/// HSM authentication parameters
+#[derive(ClapArgs, Debug, Clone)]
+pub(crate) struct HsmParams {
+    /// Slot that HSM key uses, can be read with pkcs11-tool
+    #[clap(required = false,
+        conflicts_with = "private_key_pem",
+        long, value_parser=maybe_hex::<u64>, global = true, env = "HSM_SLOT")]
+    pub(crate) hsm_slot: Option<u64>,
+
+    /// HSM Key ID, can be read with pkcs11-tool
+    #[clap(required = false, conflicts_with = "private_key_pem", long, value_parser=maybe_hex::<u8>, global = true, env = "HSM_KEY_ID")]
+    pub(crate) hsm_key_id: Option<KeyIdVec>,
+}
+
+/// HSM authentication arguments
+/// These comprise an optional PIN and optional parameters.
+/// The PIN is used during autodetection if the optional
+/// parameters are missing.
+#[derive(ClapArgs, Debug, Clone)]
+pub(crate) struct HsmOpts {
+    /// Pin for the HSM key used for submitting proposals
+    // Must be present if slot and key are specified.
+    #[clap(
+        required = false,
+        alias = "hsm-pim",
+        conflicts_with = "private_key_pem",
+        long,
+        global = true,
+        hide_env_values = true,
+        env = "HSM_PIN"
+    )]
+    pub(crate) hsm_pin: Option<String>,
+    #[clap(flatten)]
+    pub(crate) hsm_params: HsmParams,
+}
+
+// The following should ideally be defined in terms of an Enum
+// as there is no conceivable scenario in which both a PEM file
+// and a set of HSM options can be used by the program.
+// Sadly, until ticket
+//   https://github.com/clap-rs/clap/issues/2621
+// is fixed, we cannot do this, and we must use a struct instead.
+// Note that group(multiple = false) has no effect, and therefore
+// we have to use conflicts and requires to specify option deps.
+#[derive(ClapArgs, Debug, Clone)]
+#[group(multiple = false)]
+/// Authentication arguments
+pub struct AuthOpts {
+    /// Path to private key file (in PEM format)
+    #[clap(
+        long,
+        required = false,
+        global = true,
+        conflicts_with_all = ["hsm_pin", "hsm_slot", "hsm_key_id"],
+        env = "PRIVATE_KEY_PEM",
+        visible_aliases = &["pem", "key", "private-key"]
+    )]
+    pub(crate) private_key_pem: Option<String>,
+    #[clap(flatten)]
+    pub(crate) hsm_opts: HsmOpts,
+}
+
+impl TryFrom<String> for AuthOpts {
+    type Error = anyhow::Error;
+
+    fn try_from(value: String) -> std::result::Result<Self, Self::Error> {
+        Ok(AuthOpts {
+            private_key_pem: Some(value),
+            hsm_opts: HsmOpts {
+                hsm_pin: None,
+                hsm_params: HsmParams {
+                    hsm_slot: None,
+                    hsm_key_id: None,
+                },
+            },
+        })
+    }
+}
 
 #[derive(Debug, Clone)]
 pub struct Neuron {
@@ -25,6 +104,13 @@ impl PartialEq for Neuron {
 }
 
 impl Eq for Neuron {}
+
+#[derive(Clone)]
+pub enum AuthRequirement {
+    Anonymous, // for get commands
+    Signer,    // just authentication details used for signing
+    Neuron,    // Signer + neuron_id used for proposals
+}
 
 pub const STAGING_NEURON_ID: u64 = 49;
 pub const STAGING_KEY_PATH_FROM_HOME: &str = ".config/dfx/identity/bootstrap-super-leader/identity.pem";
@@ -95,6 +181,7 @@ impl Neuron {
         network: &Network,
         neuron_id: Option<u64>,
         offline: bool,
+        neuron_override: Option<Neuron>,
     ) -> anyhow::Result<Self> {
         let (neuron_id, auth_opts) = if network.name == "staging" {
             let staging_known_path = dirs::home_dir().expect("Home dir should be set").join(STAGING_KEY_PATH_FROM_HOME);
@@ -128,6 +215,20 @@ impl Neuron {
             (neuron_id, auth_opts)
         };
 
+        let auth_specified = !matches!(
+            auth_opts,
+            AuthOpts {
+                private_key_pem: None,
+                hsm_opts: HsmOpts {
+                    hsm_pin: None,
+                    hsm_params: HsmParams {
+                        hsm_slot: None,
+                        hsm_key_id: None,
+                    },
+                },
+            }
+        );
+
         match requirement {
             AuthRequirement::Anonymous => Ok(Self {
                 auth: Auth::Anonymous,
@@ -135,35 +236,45 @@ impl Neuron {
                 include_proposer: false,
             }),
             AuthRequirement::Signer => Ok(Self {
-                auth: Auth::from_auth_opts(auth_opts).await?,
+                // If nothing is specified for the signer and override is provided
+                // use overide neuron for auth
+                auth: match neuron_override {
+                    Some(neuron) if !auth_specified => neuron.auth,
+                    _ => Auth::from_auth_opts(auth_opts).await?,
+                },
                 neuron_id: 0,
                 include_proposer: false,
             }),
             AuthRequirement::Neuron => Ok({
-                match (neuron_id, offline) {
-                    (Some(n), _) => Self {
-                        neuron_id: n,
-                        auth: Auth::from_auth_opts(auth_opts).await?,
-                        include_proposer: true,
-                    },
-                    // This is just a placeholder since
-                    // the tool is instructed to run in
-                    // offline mode.
-                    (None, true) => {
-                        warn!("Required full neuron but offline mode instructed! Will not attempt to auto-detect neuron id");
-                        Self {
-                            neuron_id: 0,
+                if neuron_id.is_none() && !auth_specified && neuron_override.is_some() {
+                    info!("Using override neuron for this command since no auth options were provided");
+                    neuron_override.unwrap()
+                } else {
+                    match (neuron_id, offline) {
+                        (Some(n), _) => Self {
+                            neuron_id: n,
                             auth: Auth::from_auth_opts(auth_opts).await?,
                             include_proposer: true,
+                        },
+                        // This is just a placeholder since
+                        // the tool is instructed to run in
+                        // offline mode.
+                        (None, true) => {
+                            warn!("Required full neuron but offline mode instructed! Will not attempt to auto-detect neuron id");
+                            Self {
+                                neuron_id: 0,
+                                auth: Auth::from_auth_opts(auth_opts).await?,
+                                include_proposer: true,
+                            }
                         }
-                    }
-                    (None, false) => {
-                        let auth = Auth::from_auth_opts(auth_opts).await?;
-                        let neuron_id = auth.clone().auto_detect_neuron_id(network.nns_urls.clone()).await?;
-                        Self {
-                            neuron_id,
-                            auth,
-                            include_proposer: true,
+                        (None, false) => {
+                            let auth = Auth::from_auth_opts(auth_opts).await?;
+                            let neuron_id = auth.clone().auto_detect_neuron_id(network.nns_urls.clone()).await?;
+                            Self {
+                                neuron_id,
+                                auth,
+                                include_proposer: true,
+                            }
                         }
                     }
                 }
@@ -182,13 +293,13 @@ impl Neuron {
 
         let parent = path.parent().ok_or(anyhow::anyhow!("Expected parent to exist"))?;
         if !parent.exists() {
-            std::fs::create_dir_all(parent)?
+            fs_err::create_dir_all(parent)?
         }
 
         let key_pair = rosetta_core::models::Ed25519KeyPair::generate(42);
 
         if !path.exists() {
-            std::fs::write(&path, key_pair.to_pem())?;
+            fs_err::write(&path, key_pair.to_pem())?;
         }
         Ok(path)
     }
@@ -203,19 +314,16 @@ impl Neuron {
         })
     }
 
-    pub fn is_fake_neuron(&self) -> bool {
-        self == &Self::dry_run_fake_neuron().unwrap()
-    }
-
     pub fn as_arg_vec(&self) -> Vec<String> {
         self.auth.as_arg_vec()
     }
 
-    pub fn proposer_as_arg_vec(&self) -> Vec<String> {
+    pub fn maybe_proposer(&self) -> Option<String> {
         if self.include_proposer {
-            return vec!["--proposer".to_string(), self.neuron_id.to_string()];
+            Some(self.neuron_id.to_string())
+        } else {
+            None
         }
-        vec![]
     }
 
     pub fn anonymous_neuron() -> Self {
@@ -226,6 +334,12 @@ impl Neuron {
             include_proposer: false,
         }
     }
+}
+
+const AUTOMATION_NEURON_DEFAULT_PATH: &str = ".config/dfx/identity/release-automation/identity.pem";
+pub fn get_automation_neuron_default_path() -> PathBuf {
+    let home = dirs::home_dir().unwrap();
+    home.join(AUTOMATION_NEURON_DEFAULT_PATH)
 }
 
 #[derive(Debug, Clone)]

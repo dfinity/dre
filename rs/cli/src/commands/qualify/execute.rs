@@ -5,7 +5,10 @@ use clap::Args;
 use ic_management_types::Network;
 use serde_json::Value;
 
-use crate::{commands::ExecutableCommand, ic_admin::IcAdmin, qualification::QualificationExecutorBuilder};
+use crate::auth::AuthRequirement;
+use crate::exe::args::GlobalArgs;
+use crate::exe::ExecutableCommand;
+use crate::{ic_admin::IcAdmin, qualification::QualificationExecutorBuilder};
 
 #[derive(Args, Debug)]
 pub struct Execute {
@@ -41,11 +44,11 @@ pub struct Execute {
 }
 
 impl ExecutableCommand for Execute {
-    fn require_auth(&self) -> crate::commands::AuthRequirement {
-        crate::commands::AuthRequirement::Neuron
+    fn require_auth(&self) -> AuthRequirement {
+        AuthRequirement::Neuron
     }
 
-    fn validate(&self, _args: &crate::commands::Args, cmd: &mut clap::Command) {
+    fn validate(&self, _args: &GlobalArgs, cmd: &mut clap::Command) {
         if self.artifacts.is_some() && self.grafana_url.is_none() {
             cmd.error(
                 clap::error::ErrorKind::InvalidValue,
@@ -68,11 +71,12 @@ impl ExecutableCommand for Execute {
                 let subnets = ctx.registry().await.subnets().await?;
                 let nns_subnet_id = subnets.keys().next().unwrap();
 
-                let output = anonymous_admin_wrapper_for_mainnet
-                    .run_passthrough_get(&["subnet".to_string(), nns_subnet_id.to_string()], true)
-                    .await?;
-
-                let output = serde_json::from_str::<Value>(&output)?;
+                let output = serde_json::from_str::<Value>(
+                    anonymous_admin_wrapper_for_mainnet
+                        .get(&["subnet".to_string(), nns_subnet_id.to_string()])
+                        .await?
+                        .as_str(),
+                )?;
                 output["records"][0]["value"]["replica_version_id"]
                     .as_str()
                     .ok_or(anyhow::anyhow!("Failed to get replica version id for nns"))?

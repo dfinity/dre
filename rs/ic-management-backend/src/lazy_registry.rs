@@ -28,7 +28,7 @@ use ic_registry_local_registry::LocalRegistry;
 use ic_registry_subnet_type::SubnetType;
 use ic_types::{NodeId, PrincipalId, RegistryVersion};
 use itertools::Itertools;
-use log::warn;
+use log::{debug, warn};
 use mockall::mock;
 use tokio::sync::RwLock;
 use tokio::try_join;
@@ -174,6 +174,7 @@ where
     proposal_agent: Arc<dyn ProposalAgent>,
     guest_labels_cache_path: PathBuf,
     health_client: Arc<dyn HealthStatusQuerier>,
+    version_height: Option<u64>,
 }
 
 pub trait LazyRegistryEntry: RegistryValue {
@@ -265,7 +266,9 @@ impl LazyRegistryFamilyEntries for LazyRegistryImpl {
     }
 
     fn get_latest_version(&self) -> RegistryVersion {
-        self.local_registry.get_latest_version()
+        self.version_height
+            .map(RegistryVersion::new)
+            .unwrap_or_else(|| self.local_registry.get_latest_version())
     }
 }
 
@@ -277,6 +280,7 @@ impl LazyRegistryImpl {
         proposal_agent: Arc<dyn ProposalAgent>,
         guest_labels_cache_path: PathBuf,
         health_client: Arc<dyn HealthStatusQuerier>,
+        version_height: Option<u64>,
     ) -> Self {
         Self {
             local_registry,
@@ -293,6 +297,7 @@ impl LazyRegistryImpl {
             proposal_agent,
             guest_labels_cache_path,
             health_client,
+            version_height,
         }
     }
 
@@ -436,13 +441,13 @@ impl LazyRegistry for LazyRegistryImpl {
                                         principal: p,
                                     });
 
-                                    if maybe_provider.is_none() && self.network.is_mainnet() && !self.offline {
-                                        panic!("Node provider not found for operator: {}", principal);
+                                    if maybe_provider.is_none() {
+                                        debug!("Node provider not found for operator: {}", principal);
                                     }
                                     maybe_provider.unwrap_or_default()
                                 })
                                 .unwrap(),
-                            allowance: or.node_allowance,
+                            node_allowance: or.node_allowance,
                             datacenter: data_centers.get(&or.dc_id).map(|dc| {
                                 let (continent, country, area): (_, _, _) = dc
                                     .region
@@ -611,7 +616,7 @@ impl LazyRegistry for LazyRegistryImpl {
                     let principal = PrincipalId::from_str(p).expect("Invalid subnet principal id");
                     let subnet_nodes = all_nodes
                         .iter()
-                        .filter(|(_, n)| n.subnet_id.map_or(false, |s| s == principal))
+                        .filter(|(_, n)| (n.subnet_id == Some(principal)))
                         .map(|(_, n)| n)
                         .cloned()
                         .collect_vec();

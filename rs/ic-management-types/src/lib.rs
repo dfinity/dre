@@ -383,6 +383,8 @@ impl Node {
                         .unwrap_or_else(|| "unknown".to_string()),
                 ),
                 (NodeFeature::NodeProvider, self.operator.provider.principal.to_string()),
+                (NodeFeature::NodeOperator, self.operator.principal.to_string()),
+                (NodeFeature::NodeId, self.principal.to_string()),
             ])
         };
 
@@ -470,6 +472,8 @@ impl Eq for Node {}
 #[strum(serialize_all = "snake_case")]
 #[serde(rename_all = "snake_case")]
 pub enum NodeFeature {
+    NodeId,
+    NodeOperator,
     NodeProvider,
     DataCenter,
     DataCenterOwner,
@@ -483,7 +487,7 @@ impl NodeFeature {
         // Generally skip the continent feature as it is not used in the Nakamoto score calculation
         NodeFeature::VARIANTS
             .iter()
-            .filter(|f| **f != "continent")
+            .filter(|f| **f != "continent" && **f != "node_id")
             .map(|f| NodeFeature::from_str(f).unwrap())
             .collect()
     }
@@ -590,7 +594,7 @@ pub struct CreateSubnetProposalInfo {
 pub struct Operator {
     pub principal: PrincipalId,
     pub provider: Provider,
-    pub allowance: u64,
+    pub node_allowance: u64,
 
     #[serde(skip_serializing_if = "Option::is_none")]
     pub datacenter: Option<Datacenter>,

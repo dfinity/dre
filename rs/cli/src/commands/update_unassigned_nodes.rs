@@ -4,13 +4,19 @@ use clap::Args;
 use ic_canisters::registry::RegistryCanisterWrapper;
 use ic_types::PrincipalId;
 
-use super::{AuthRequirement, ExecutableCommand};
+use crate::auth::AuthRequirement;
+use crate::exe::{args::GlobalArgs, ExecutableCommand};
+use crate::forum::ForumPostKind;
+use crate::submitter::{SubmissionParameters, Submitter};
 
 #[derive(Args, Debug)]
 pub struct UpdateUnassignedNodes {
     /// NNS subnet id
     #[clap(long)]
     pub nns_subnet_id: Option<String>,
+
+    #[clap(flatten)]
+    pub submission_parameters: SubmissionParameters,
 }
 
 impl ExecutableCommand for UpdateUnassignedNodes {
@@ -33,16 +39,19 @@ impl ExecutableCommand for UpdateUnassignedNodes {
             }
         };
 
-        let runner = ctx.runner().await?;
-        if let Some(runner_proposal) = runner
-            .update_unassigned_nodes(&PrincipalId::from_str(&nns_subnet_id)?, ctx.forum_post_link())
+        let runner_proposal = match ctx
+            .runner()
+            .await?
+            .update_unassigned_nodes(&PrincipalId::from_str(&nns_subnet_id)?)
             .await?
         {
-            let ic_admin = ctx.ic_admin().await?;
-            ic_admin.propose_run(runner_proposal.cmd, runner_proposal.opts).await?;
-        }
-        Ok(())
+            Some(runner_proposal) => runner_proposal,
+            None => return Ok(()),
+        };
+        Submitter::from(&self.submission_parameters)
+            .propose(ctx.ic_admin_executor().await?.execution(runner_proposal), ForumPostKind::Generic)
+            .await
     }
 
-    fn validate(&self, _args: &crate::commands::Args, _cmd: &mut clap::Command) {}
+    fn validate(&self, _args: &GlobalArgs, _cmd: &mut clap::Command) {}
 }

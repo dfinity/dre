@@ -4,7 +4,9 @@ use ic_management_types::filter_map_nns_function_proposals;
 use ic_nns_governance::pb::v1::ProposalStatus;
 use registry_canister::mutations::do_change_subnet_membership::ChangeSubnetMembershipPayload;
 
-use crate::commands::{AuthRequirement, ExecutableCommand};
+use crate::auth::AuthRequirement;
+use crate::exe::args::GlobalArgs;
+use crate::exe::ExecutableCommand;
 
 #[derive(Args, Debug)]
 pub struct Analyze {
@@ -43,5 +45,5 @@ impl ExecutableCommand for Analyze {
         }
     }
 
-    fn validate(&self, _args: &crate::commands::Args, _cmd: &mut clap::Command) {}
+    fn validate(&self, _args: &GlobalArgs, _cmd: &mut clap::Command) {}
 }

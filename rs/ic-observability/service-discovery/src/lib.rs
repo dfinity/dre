@@ -28,8 +28,10 @@ use ic_registry_local_registry::{LocalRegistry, LocalRegistryError};
 use job_types::JobType;
 use regex::Regex;
 use serde::{Deserialize, Serialize};
+use slog::info;
 use slog::{warn, Logger};
 use thiserror::Error;
+use tokio::signal::unix::{signal, SignalKind};
 
 pub mod file_sd;
 pub mod job_types;
@@ -153,7 +155,7 @@ impl IcServiceDiscoveryImpl {
     ///   lifetime of a service instance. I.e., removing an IC as a scrape target
     ///   requires rebooting the service.
     pub fn load_new_ics(&self, log: Logger) -> Result<(), IcServiceDiscoveryError> {
-        let paths = std::fs::read_dir(&self.ic_scraping_targets_dir)?;
+        let paths = fs_err::read_dir(&self.ic_scraping_targets_dir)?;
         let mut registries_lock_guard = self.registries.write().unwrap();
         for path in paths {
             let path = path?;
@@ -386,6 +388,20 @@ pub enum IcServiceDiscoveryError {
 
     #[error("couldn't find from {information} from local registry")]
     NotFoundInRegistry { information: String },
+}
+
+pub async fn shutdown_signal(log: Logger) {
+    let mut sig_int = signal(SignalKind::interrupt()).expect("failed to install SIGINT signal handler");
+    let mut sig_term = signal(SignalKind::terminate()).expect("failed to install SIGTERM signal handler");
+
+    tokio::select! {
+        _ = sig_int.recv() => {
+            info!(log, "Caught SIGINT");
+        }
+        _ = sig_term.recv() => {
+            info!(log, "Caught SIGTERM");
+        }
+    }
 }
 
 #[cfg(test)]

@@ -34,7 +34,7 @@ pub struct StepCtx {
 impl StepCtx {
     pub fn new(dre_ctx: DreContext, artifacts: Option<PathBuf>, from_version: String, to_version: String) -> anyhow::Result<Self> {
         let artifacts_of_run = artifacts.as_ref().map(|t| {
-            if let Err(e) = std::fs::create_dir_all(t) {
+            if let Err(e) = fs_err::create_dir_all(t) {
                 panic!("Couldn't create dir {}: {:?}", t.display(), e)
             }
             t.clone()
@@ -62,13 +62,13 @@ impl StepCtx {
     pub async fn download_canister(&self, canister: &str, version: &str) -> anyhow::Result<PathBuf> {
         let cache = dirs::cache_dir().ok_or(anyhow::anyhow!("Can't cache dir"))?.join(IC_EXECUTABLES_DIR);
         if !cache.exists() {
-            std::fs::create_dir_all(&cache)?;
+            fs_err::create_dir_all(&cache)?;
         }
 
         let artifact_path = cache.join(format!("{}/{}.{}", canister, canister, version));
         let artifact_dir = artifact_path.parent().unwrap();
         if !artifact_dir.exists() {
-            std::fs::create_dir(artifact_dir)?;
+            fs_err::create_dir(artifact_dir)?;
         }
 
         let canister_path = PathBuf::from_str(&format!("{}.wasm", artifact_path.display())).map_err(|e| anyhow::anyhow!(e))?;
@@ -84,7 +84,7 @@ impl StepCtx {
         let response = self.client.get(&url).send().await?.error_for_status()?.bytes().await?;
         let mut d = GzDecoder::new(&response[..]);
         let mut collector: Vec<u8> = vec![];
-        let mut file = std::fs::File::create(&canister_path)?;
+        let mut file = fs_err::File::create(&canister_path)?;
         d.read_to_end(&mut collector)?;
 
         file.write_all(&collector)?;
@@ -95,13 +95,13 @@ impl StepCtx {
     pub async fn download_executable(&self, executable: &str, version: &str) -> anyhow::Result<PathBuf> {
         let cache = dirs::cache_dir().ok_or(anyhow::anyhow!("Can't cache dir"))?.join(IC_EXECUTABLES_DIR);
         if !cache.exists() {
-            std::fs::create_dir_all(&cache)?;
+            fs_err::create_dir_all(&cache)?;
         }
 
         let exe_path = cache.join(format!("{}/{}.{}", executable, executable, version));
         let artifact_dir = exe_path.parent().unwrap();
         if !artifact_dir.exists() {
-            std::fs::create_dir(artifact_dir)?;
+            fs_err::create_dir(artifact_dir)?;
         }
 
         if exe_path.exists() && exe_path.is_file() {
@@ -128,7 +128,7 @@ impl StepCtx {
         let response = self.client.get(&url).send().await?.error_for_status()?.bytes().await?;
         let mut d = GzDecoder::new(&response[..]);
         let mut collector: Vec<u8> = vec![];
-        let mut file = std::fs::File::create(&exe_path)?;
+        let mut file = fs_err::File::create(&exe_path)?;
         d.read_to_end(&mut collector)?;
 
         file.write_all(&collector)?;

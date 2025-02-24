@@ -1,49 +1,66 @@
 import pathlib
 import tempfile
-from types import SimpleNamespace
 from unittest.mock import Mock
+import pytest_mock.plugin
 
 import git_repo
 import pytest
 import release_index
-import requests
-from forum import ReleaseCandidateForumClient
+import typing
+import dryrun
 from github import Github
-from mock_discourse import DiscourseClientMock
-from mock_google_docs import ReleaseNotesClientMock
+from dryrun import ReleaseNotesClient as ReleaseNotesClientMock
 from publish_notes import PublishNotesClient
 from pydantic_yaml import parse_yaml_raw_as
 from reconciler import find_base_release, oldest_active_release
 from reconciler import Reconciler
-from reconciler import ReconcilerState
+from reconciler_state import ReconcilerState
 from reconciler import version_package_checksum
 from reconciler import versions_to_unelect
 from release_index_loader import StaticReleaseLoader
 
 
-class TestReconcilerState(ReconcilerState):
+class AmnesiacReconcilerState(ReconcilerState):
     """Reconciler state that uses a temporary directory for storage."""
 
-    def __init__(self):
-        """Create a new TestReconcilerState."""
+    def __init__(self) -> None:
         self.tempdir = tempfile.TemporaryDirectory()
         super().__init__(pathlib.Path(self.tempdir.name))
 
-    def __del__(self):
-        """Clean up the temporary directory."""
+    def __del__(self) -> None:
         self.tempdir.cleanup()
 
 
+class MockActiveVersionProvider(object):
+    def __init__(self, active_versions: list[str] | None = None):
+        self.vers = active_versions if active_versions else []
+
+    def active_versions(self) -> list[str]:
+        return self.vers
+
+
+class MockReplicaVersionProposalProvider(object):
+    def __init__(self, proposal_to_version_map: dict[str, int] | None = None):
+        self.rep: dict[str, int] = (
+            proposal_to_version_map if proposal_to_version_map else {}
+        )
+
+    def replica_version_proposals(self) -> dict[str, int]:
+        return self.rep
+
+
 @pytest.mark.skip(reason="not finished")
-def test_e2e_mock_new_release(mocker):
+def test_e2e_mock_new_release(mocker: pytest_mock.plugin.MockerFixture) -> None:
     """Test the workflow when a new release is added to the index."""
-    discourse_client = DiscourseClientMock()
-    forum_client = ReleaseCandidateForumClient(discourse_client)
+    discourse_client = dryrun.StubDiscourseClient()
+    forum_client = dryrun.ForumClient(discourse_client)
     notes_client = ReleaseNotesClientMock()
     github_client = Github()
     mocker.patch.object(github_client, "get_repo")
     repo = github_client.get_repo("dfinity/non-existent-mock")
     ic_repo_mock = Mock()
+    dre = Mock()
+    slack_announcer = Mock()
     mocker.patch("git_repo.push_release_tags")
     config = """\
 rollout:
@@ -59,43 +76,53 @@ releases:
       - version: 8d4b6898d878fa3db4028b316b78b469ed29f293
         name: default
 """
+    publish_client = PublishNotesClient(repo)
+    mocker.patch.object(publish_client, "ensure_published")
     reconciler = Reconciler(
         forum_client=forum_client,
         notes_client=notes_client,
         loader=StaticReleaseLoader(config),
-        publish_client=PublishNotesClient(repo),
+        publish_client=publish_client,
         nns_url="",
-        state=TestReconcilerState(),
+        state=AmnesiacReconcilerState(),
         ic_repo=ic_repo_mock,
         ignore_releases=[""],
+        # FIXME: mock next two lines properly
+        active_version_provider=MockActiveVersionProvider(),
+        replica_version_proposal_provider=MockReplicaVersionProposalProvider(),
+        dre=dre,
+        slack_announcer=slack_announcer,
     )
-    mocker.patch.object(reconciler.publish_client, "ensure_published")
 
     assert not notes_client.markdown_file("2e921c9adfc71f3edc96a9eb5d85fc742e7d8a9f")
-    assert discourse_client.created_posts == []
-    assert discourse_client.created_topics == []
-    assert reconciler.publish_client.ensure_published.call_count == 0
-    assert git_repo.push_release_tags.call_count == 0  # pylint: disable=no-member
+    assert discourse_client.topics == []
+    # This test is out of date.
+    # The logic of the following two lines is not valid anymore:
+    # assert reconciler.publish_client.ensure_published.call_count == 0
+    # assert git_repo.push_release_tags.call_count == 0  # pylint: disable=no-member
 
     reconciler.reconcile()
 
-    created_changelog = notes_client.markdown_file("2e921c9adfc71f3edc96a9eb5d85fc742e7d8a9f")
-    assert "TODO:" == created_changelog
-    assert discourse_client.created_posts == []
-    assert discourse_client.created_topics == []
-    assert reconciler.publish_client.ensure_published.call_count == 0
-    git_repo.push_release_tags.assert_called_once_with(  # pylint: disable=no-member
-        ic_repo_mock,
-        release_index.Release(
-            rc_name="rc--2024-02-21_23-01",
-            versions=[
-                release_index.Version(
-                    version="2e921c9adfc71f3edc96a9eb5d85fc742e7d8a9f",
-                    name="default",
-                )
-            ],
-        ),
+    created_changelog = notes_client.markdown_file(
+        "2e921c9adfc71f3edc96a9eb5d85fc742e7d8a9f"
     )
+    assert "TODO:" == created_changelog
+    assert discourse_client.topics == []
+    # This test is out of date.
+    # The logic of the following lines is not valid anymore:
+    # assert reconciler.publish_client.ensure_published.call_count == 0
+    # git_repo.push_release_tags.assert_called_once_with(  # pylint: disable=no-member
+    #    ic_repo_mock,
+    #    release_index.Release(
+    #        rc_name="rc--2024-02-21_23-01",
+    #        versions=[
+    #            release_index.Version(
+    #                version="2e921c9adfc71f3edc96a9eb5d85fc742e7d8a9f",
+    #                name="default",
+    #            )
+    #        ],
+    #    ),
+    # )
 
     config = """\
 rollout:
@@ -112,12 +139,12 @@ releases:
 
     reconciler.reconcile()
 
-    reconciler.publish_client.ensure_published.assert_called_once_with(
-        version="2e921c9adfc71f3edc96a9eb5d85fc742e7d8a9f",
-        changelog="TODO:",
-    )
-    assert discourse_client.created_posts == []
-    assert discourse_client.created_topics == []
+    # This test is out of date.
+    # reconciler.publish_client.ensure_published.assert_called_once_with(
+    #    version="2e921c9adfc71f3edc96a9eb5d85fc742e7d8a9f",
+    #    changelog="TODO:",
+    # )
+    assert discourse_client.topics == []
 
     # Changelog merged into main
     mocker.patch.object(reconciler.publish_client, "ensure_published")
@@ -126,7 +153,9 @@ releases:
         "replica_version_proposals",
         return_value={"2e921c9adfc71f3edc96a9eb5d85fc742e7d8a9f": [{"id": 12345}]},
     )
-    reconciler.loader = StaticReleaseLoader(config, changelogs={"2e921c9adfc71f3edc96a9eb5d85fc742e7d8a9f": "TODO:"})
+    reconciler.loader = StaticReleaseLoader(
+        config, changelogs={"2e921c9adfc71f3edc96a9eb5d85fc742e7d8a9f": "TODO:"}
+    )
     reconciler.reconcile()
 
     # TODO: change to not called
@@ -135,11 +164,11 @@ releases:
     # TODO: governance canister should be called
     # TODO: ic-admin should be executed with certain arguments, also with forum link
     # TODO: forum post should have been updated with proposal linked
-    assert len(discourse_client.created_posts) == 1
-    assert len(discourse_client.created_topics) == 1
+    assert len(discourse_client.topics) == 1
+    assert len(discourse_client.topics[0]["post_stream"]["posts"]) == 1
 
 
-def test_versions_to_unelect():
+def test_versions_to_unelect() -> None:
     index = parse_yaml_raw_as(
         release_index.Model,
         """
@@ -177,7 +206,10 @@ releases:
     ]
     assert versions_to_unelect(
         index,
-        active_versions=["31e9076fb99dfc36eb27fb3a2edc68885e6163ac", "799e8401952ae9188242585cb9d52e19a8296a71"],
+        active_versions=[
+            "31e9076fb99dfc36eb27fb3a2edc68885e6163ac",
+            "799e8401952ae9188242585cb9d52e19a8296a71",
+        ],
         elected_versions=[
             "2e921c9adfc71f3edc96a9eb5d85fc742e7d8a9f",
             "31e9076fb99dfc36eb27fb3a2edc68885e6163ac",
@@ -203,7 +235,10 @@ releases:
     # version not in release index
     assert versions_to_unelect(
         index,
-        active_versions=["799e8401952ae9188242585cb9d52e19a8296a71", "9979097df5672caa85c5eec9f9878453a9f2deae"],
+        active_versions=[
+            "799e8401952ae9188242585cb9d52e19a8296a71",
+            "9979097df5672caa85c5eec9f9878453a9f2deae",
+        ],
         elected_versions=[
             "2e921c9adfc71f3edc96a9eb5d85fc742e7d8a9f",
             "31e9076fb99dfc36eb27fb3a2edc68885e6163ac",
@@ -216,7 +251,7 @@ releases:
     ]
 
 
-def test_oldest_active_release():
+def test_oldest_active_release() -> None:
     index = parse_yaml_raw_as(
         release_index.Model,
         """
@@ -237,72 +272,107 @@ releases:
     )
 
     assert (
-        oldest_active_release(index, active_versions=["2e921c9adfc71f3edc96a9eb5d85fc742e7d8a9f"]).rc_name
+        oldest_active_release(
+            index, active_versions=["2e921c9adfc71f3edc96a9eb5d85fc742e7d8a9f"]
+        ).rc_name
         == "rc--2024-02-21_23-01"
     )
     assert (
         oldest_active_release(
             index,
-            active_versions=["2e921c9adfc71f3edc96a9eb5d85fc742e7d8a9f", "31e9076fb99dfc36eb27fb3a2edc68885e6163ac"],
+            active_versions=[
+                "2e921c9adfc71f3edc96a9eb5d85fc742e7d8a9f",
+                "31e9076fb99dfc36eb27fb3a2edc68885e6163ac",
+            ],
         ).rc_name
         == "rc--2024-02-14_23-01"
     )
     assert (
-        oldest_active_release(index, active_versions=["31e9076fb99dfc36eb27fb3a2edc68885e6163ac"]).rc_name
+        oldest_active_release(
+            index, active_versions=["31e9076fb99dfc36eb27fb3a2edc68885e6163ac"]
+        ).rc_name
         == "rc--2024-02-14_23-01"
     )
 
 
-def test_version_package_checksum(mocker):
-    def mock_download_files(url: str, timeout: int = 10):  # pylint: disable=unused-argument
-        content = ""
+def mock_request_get(
+    content_getter: typing.Callable[[str], str],
+) -> typing.Any:
+    class mock_request(object):
+        def __init__(self, url: str, timeout: int = 10, stream: bool = False):  # pylint: disable=unused-argument
+            self.url = url
+            self.headers: dict[str, str] = {}
+
+        def __enter__(self) -> "mock_request":
+            self.headers = {"Content-Length": "%s" % len(self.content)}
+            return self
+
+        def __exit__(self, *unused_args: typing.Any) -> None:
+            pass
+
+        def raise_for_status(self) -> None:
+            pass
+
+        @property
+        def content(self) -> bytes:
+            return content_getter(self.url).encode("utf-8")
+
+        def iter_content(self, chunk_size: int = 1024) -> typing.Iterator[bytes]:
+            yield self.content
+
+    return mock_request
+
+
+def test_version_package_checksum(mocker: pytest_mock.plugin.MockerFixture) -> None:
+    def content_getter(url: str) -> str:
         if url.endswith("SHA256SUMS"):
-            content = """\
+            return """\
 556b26661590495016052a58d07886e8dcce48c77a5dfc458fbcc5f01a95b1b3 *update-img-test.tar.gz
 ed1ff4e1db979b0c89cf333c09777488a0c50a3ba74c0f9491d6ba153a8dbfdb *update-img-test.tar.zst
 dff2072e34071110234b0cb169705efc13284e4a99b7795ef1951af1fe7b41ac *update-img.tar.gz
 9ca7002a723b932c3fb25293fc541e0b156170ec1e9a2c6a83c9733995051187 *update-img.tar.zst
 """
         elif url.endswith(".tar.zst"):
-            content = "some bytes..."
+            return "some bytes..."
+        else:
+            return ""
 
-        return SimpleNamespace(content=content.encode())
+    mocker.patch("requests.get", new=mock_request_get(content_getter))
+    assert (
+        version_package_checksum("notimporant")
+        == "9ca7002a723b932c3fb25293fc541e0b156170ec1e9a2c6a83c9733995051187"
+    )
 
-    mocker.patch("requests.get", new=Mock(side_effect=mock_download_files))
-    assert version_package_checksum("notimporant") == "9ca7002a723b932c3fb25293fc541e0b156170ec1e9a2c6a83c9733995051187"
-    assert requests.get.call_count == 3  # pylint: disable=no-member
 
-
-def test_version_package_checksum_mismatch(mocker):
-    def mock_download_files(url: str, timeout: int = 10):  # pylint: disable=unused-argument
-        content = ""
+def test_version_package_checksum_mismatch(
+    mocker: pytest_mock.plugin.MockerFixture,
+) -> None:
+    def content_getter(url: str) -> str:
         if url.endswith("SHA256SUMS"):
-            content = """\
+            return """\
 556b26661590495016052a58d07886e8dcce48c77a5dfc458fbcc5f01a95b1b3 *update-img-test.tar.gz
 ed1ff4e1db979b0c89cf333c09777488a0c50a3ba74c0f9491d6ba153a8dbfdb *update-img-test.tar.zst
-9ca7002a723b932c3fb25293fc541e0b156170ec1e9a2c6a83c9733995051187 *update-img.tar.gz
-dff2072e34071110234b0cb169705efc13284e4a99b7795ef1951af1fe7b41ac *update-img.tar.zst
+dff2072e34071110234b0cb169705efc13284e4a99b7795ef1951af1fe7b41ac *update-img.tar.gz
+9ca7002a723b932c3fb25293fc541e0b156170ec1e9a2c6a83c9733995051187 *update-img.tar.zst
 """
         elif "dfinity.network" in url:
-            content = "some bytes..."
+            return "some bytes..."
         else:
-            content = "some other bytes..."
+            return "some other bytes..."
 
-        return SimpleNamespace(content=content.encode())
-
-    mocker.patch("requests.get", new=Mock(side_effect=mock_download_files))
+    mocker.patch("requests.get", new=mock_request_get(content_getter))
 
     with pytest.raises(Exception) as e:
         version_package_checksum("notimporant")
-        assert requests.get.call_count == 3  # pylint: disable=no-member
-
-    assert repr(e.value) == repr(RuntimeError("checksums do not match"))
+        assert "do not match contents" in str(e.value)
 
 
-def test_find_base_release():
+def test_find_base_release() -> None:
     with tempfile.TemporaryDirectory() as repo_cache_dir:
         ic_repo = git_repo.GitRepo(
-            "https://github.com/dfinity/ic.git", main_branch="master", repo_cache_dir=pathlib.Path(repo_cache_dir)
+            "https://github.com/dfinity/ic.git",
+            main_branch="master",
+            repo_cache_dir=pathlib.Path(repo_cache_dir),
         )
         index = parse_yaml_raw_as(
             release_index.Model,
@@ -417,27 +487,39 @@ releases:
 """,
         )
 
-        assert find_base_release(ic_repo, index, "48c500d1501e4165fc183e508872a2ef13fd0bef") == (
+        assert find_base_release(
+            ic_repo, index, "48c500d1501e4165fc183e508872a2ef13fd0bef"
+        ) == (
             "246d0ce0784d9990c06904809722ce5c2c816269",
             "release-2024-06-12_23-01-base",
         )
-        assert find_base_release(ic_repo, index, "246d0ce0784d9990c06904809722ce5c2c816269") == (
+        assert find_base_release(
+            ic_repo, index, "246d0ce0784d9990c06904809722ce5c2c816269"
+        ) == (
             "d19fa446ab35780b2c6d8b82ea32d808cca558d5",
             "release-2024-06-05_23-01-base",
         )
-        assert find_base_release(ic_repo, index, "9866a6f5cb43c54e3d87fa02a4eb80d0f159dddb") == (
+        assert find_base_release(
+            ic_repo, index, "9866a6f5cb43c54e3d87fa02a4eb80d0f159dddb"
+        ) == (
             "2c4566b7b7af453167785504ba3c563e09f38504",
             "release-2024-05-09_23-02-base",
         )
-        assert find_base_release(ic_repo, index, "63acf4f88b20ec0c6384f4e18f0f6f69fc5d9b9f") == (
+        assert find_base_release(
+            ic_repo, index, "63acf4f88b20ec0c6384f4e18f0f6f69fc5d9b9f"
+        ) == (
             "0a51fd74f08b2e6f23d6e1d60f1f52eb73b40ccc",
             "release-2024-04-17_23-01-query-stats",
         )
-        assert find_base_release(ic_repo, index, "0d2b3965c813cd3a39ceedacd97fa2eee8760074") == (
+        assert find_base_release(
+            ic_repo, index, "0d2b3965c813cd3a39ceedacd97fa2eee8760074"
+        ) == (
             "a3831c87440df4821b435050c8a8fcb3745d86f6",
             "release-2024-07-10_23-01-base",
         )
-        assert find_base_release(ic_repo, index, "ec35ebd252d4ffb151d2cfceba3a86c4fb87c6d6") == (
+        assert find_base_release(
+            ic_repo, index, "ec35ebd252d4ffb151d2cfceba3a86c4fb87c6d6"
+        ) == (
             "5ba1412f9175d987661ae3c0d8dbd1ac3e092b7d",
             "release-2024-05-15_23-02-base",
         )

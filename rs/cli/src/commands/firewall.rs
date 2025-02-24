@@ -2,7 +2,6 @@ use std::{
     collections::BTreeMap,
     fmt::{self, Display},
     io::Write,
-    sync::Arc,
 };
 
 use clap::Args;
@@ -10,12 +9,18 @@ use ic_protobuf::registry::firewall::v1::FirewallRule;
 use ic_registry_keys::FirewallRulesScope;
 use itertools::Itertools;
 use log::{info, warn};
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use tempfile::NamedTempFile;
 
-use crate::ic_admin::{IcAdmin, ProposeCommand, ProposeOptions};
-
-use super::{AuthRequirement, ExecutableCommand};
+use crate::{
+    auth::AuthRequirement,
+    ctx::DreContext,
+    exe::{args::GlobalArgs, ExecutableCommand},
+    forum::ForumPostKind,
+    ic_admin::{IcAdminProposal, IcAdminProposalCommand, IcAdminProposalOptions},
+    proposal_executors::{ProducesProposalResult, ProposalResponseWithId, RunnableViaIcAdmin},
+    submitter::{SubmissionParameters, Submitter},
+};
 
 #[derive(Args, Debug)]
 pub struct Firewall {
@@ -28,6 +33,9 @@ pub struct Firewall {
     /// Ruleset scope: "global", "replica_nodes", "api_boundary_nodes", "subnet(SUBNET_ID)", "node(NODE_ID)"
     #[clap(long, default_value = None, required = true)]
     pub rules_scope: FirewallRulesScope,
+
+    #[clap(flatten)]
+    pub submission_parameters: SubmissionParameters,
 }
 
 impl ExecutableCommand for Firewall {
@@ -35,7 +43,7 @@ impl ExecutableCommand for Firewall {
         AuthRequirement::Neuron
     }
 
-    async fn execute(&self, ctx: crate::ctx::DreContext) -> anyhow::Result<()> {
+    async fn execute(&self, ctx: DreContext) -> anyhow::Result<()> {
         let registry = ctx.registry().await;
         let firewall_ruleset = registry.firewall_rule_set(self.rules_scope.clone()).await?;
 
@@ -98,14 +106,12 @@ impl ExecutableCommand for Firewall {
 
         match reverse_sorted.into_iter().last() {
             Some((_, mods)) => {
-                Self::submit_proposal(
-                    ctx.ic_admin().await?,
+                Self::create_proposal(
+                    &ctx,
                     mods,
-                    ProposeOptions {
-                        title: self.title.clone(),
-                        summary: self.summary.clone(),
-                        ..Default::default()
-                    },
+                    self.title.clone(),
+                    self.summary.clone(),
+                    &self.submission_parameters,
                     &self.rules_scope,
                 )
                 .await
@@ -114,79 +120,132 @@ impl ExecutableCommand for Firewall {
         }
     }
 
-    fn validate(&self, _args: &crate::commands::Args, _cmd: &mut clap::Command) {}
+    fn validate(&self, _args: &GlobalArgs, _cmd: &mut clap::Command) {}
+}
+
+#[derive(Deserialize)]
+struct FirewallTestResult {
+    hash: String,
+}
+
+impl TryFrom<String> for FirewallTestResult {
+    type Error = serde_json::Error;
+    fn try_from(a: String) -> Result<Self, Self::Error> {
+        serde_json::from_str(a.as_str())
+    }
+}
+
+struct FirewallTestCommand {
+    args: Vec<String>,
+    #[allow(dead_code)]
+    // Holds a reference to the temporary file so it's not deleted
+    // until after proposal execution is done and the ref is dropped.
+    tempfile: NamedTempFile,
+}
+
+impl FirewallTestCommand {
+    fn new(
+        modifications: Vec<FirewallRuleModification>,
+        change_type: &FirewallRuleModificationType,
+        rules_scope: &FirewallRulesScope,
+        positions: &String,
+    ) -> anyhow::Result<Self> {
+        let mut file = NamedTempFile::new().map_err(|e| anyhow::anyhow!("Couldn't create temp file: {:?}", e))?;
+        let args = [
+            vec![format!("{}-firewall-rules", change_type), "--test".to_string(), rules_scope.to_string()],
+            match change_type {
+                FirewallRuleModificationType::Removal => {
+                    vec![positions.to_string(), "none".to_string()]
+                }
+                _ => {
+                    let rules = modifications.iter().map(|modif| modif.clone().rule_being_modified).collect::<Vec<_>>();
+                    let serialized = serde_json::to_string(&rules).unwrap();
+                    file.write_all(serialized.as_bytes())
+                        .map_err(|e| anyhow::anyhow!("Couldn't write to tempfile: {:?}", e))?;
+                    vec![file.path().to_str().unwrap().to_string(), positions.to_string(), "none".to_string()]
+                }
+            },
+        ]
+        .concat();
+        Ok(FirewallTestCommand { args, tempfile: file })
+    }
+}
+
+impl RunnableViaIcAdmin for FirewallTestCommand {
+    type Output = FirewallTestResult;
+    fn to_ic_admin_arguments(&self) -> anyhow::Result<Vec<String>> {
+        IcAdminProposal::new(IcAdminProposalCommand::Raw(self.args.clone()), Default::default()).to_ic_admin_arguments()
+    }
+}
+
+struct FirewallModifyCommand {
+    test_command: FirewallTestCommand,
+    summary: Option<String>,
+    title: Option<String>,
+    hash: String,
+}
+
+impl RunnableViaIcAdmin for FirewallModifyCommand {
+    type Output = ProposalResponseWithId;
+    fn to_ic_admin_arguments(&self) -> anyhow::Result<Vec<String>> {
+        // Uses nearly the same arguments as the test argv.
+        let mut final_args = self.test_command.args.clone();
+        // Remove --test from head of args.
+        let _ = final_args.remove(1);
+        // Add the real hash to args.
+        let last = final_args.last_mut().unwrap();
+        *last = self.hash.to_string();
+        IcAdminProposal::new(
+            IcAdminProposalCommand::Raw(final_args),
+            IcAdminProposalOptions {
+                title: self.title.clone(),
+                summary: self.summary.clone(),
+                motivation: None,
+            },
+        )
+        .to_ic_admin_arguments()
+    }
+}
+
+impl ProducesProposalResult for FirewallModifyCommand {
+    type ProposalResult = ProposalResponseWithId;
 }
 
 impl Firewall {
-    async fn submit_proposal(
-        admin: Arc<dyn IcAdmin>,
+    async fn create_proposal(
+        ctx: &DreContext,
         modifications: Vec<FirewallRuleModification>,
-        propose_options: ProposeOptions,
+        title: Option<String>,
+        summary: Option<String>,
+        submission_parameters: &SubmissionParameters,
         firewall_rules_scope: &FirewallRulesScope,
     ) -> anyhow::Result<()> {
         let positions = modifications.iter().map(|modif| modif.position).join(",");
         let change_type = modifications[0].clone().change_type;
 
-        let mut file = NamedTempFile::new().map_err(|e| anyhow::anyhow!("Couldn't create temp file: {:?}", e))?;
+        let test_command = FirewallTestCommand::new(modifications, &change_type, firewall_rules_scope, &positions)?;
 
-        let test_args = match change_type {
-            FirewallRuleModificationType::Removal => vec![
-                "--test".to_string(),
-                firewall_rules_scope.to_string(),
-                positions.to_string(),
-                "none".to_string(),
-            ],
-            _ => {
-                let rules = modifications.iter().map(|modif| modif.clone().rule_being_modified).collect::<Vec<_>>();
-                let serialized = serde_json::to_string(&rules).unwrap();
-                file.write_all(serialized.as_bytes())
-                    .map_err(|e| anyhow::anyhow!("Couldn't write to tempfile: {:?}", e))?;
-                vec![
-                    "--test".to_string(),
-                    firewall_rules_scope.to_string(),
-                    file.path().to_str().unwrap().to_string(),
-                    positions.to_string(),
-                    "none".to_string(),
-                ]
-            }
-        };
-
-        let cmd = ProposeCommand::Raw {
-            command: format!("{}-firewall-rules", change_type),
-            args: test_args.clone(),
-        };
-
-        let output = admin
-            .propose_run(cmd, propose_options.clone())
+        let parsed = ctx
+            .ic_admin_executor()
+            .await?
+            .run(&test_command, None)
             .await
-            .map_err(|e| anyhow::anyhow!("Couldn't execute test for {}-firewall-rules: {:?}", change_type, e))?;
+            .map_err(|e| anyhow::anyhow!("Test for {}-firewall-rules failed: {:?}", change_type, e))?;
 
-        let parsed: serde_json::Value = serde_json::from_str(&output)
-            .map_err(|e| anyhow::anyhow!("Error deserializing --test output while performing '{}': {:?}", change_type, e))?;
-        let hash = match parsed.get("hash") {
-            Some(serde_json::Value::String(hash)) => hash,
-            _ => {
-                return Err(anyhow::anyhow!(
-                    "Couldn't find string value for key 'hash'. Whole dump:\n{}",
-                    serde_json::to_string_pretty(&parsed).unwrap()
-                ))
-            }
-        };
+        let hash = parsed.hash;
         info!("Computed hash for firewall rule at position '{}': {}", positions, hash);
 
-        let mut final_args = test_args.clone();
-        // Remove --test from head of args.
-        let _ = final_args.remove(0);
-        // Add the real hash to args.
-        let last = final_args.last_mut().unwrap();
-        *last = hash.to_string();
-
-        let cmd = ProposeCommand::Raw {
-            command: format!("{}-firewall-rules", change_type),
-            args: final_args,
-        };
-        let _ = admin.propose_run(cmd, propose_options.clone()).await?;
-        Ok(())
+        Submitter::from(submission_parameters)
+            .propose(
+                ctx.ic_admin_executor().await?.execution(FirewallModifyCommand {
+                    test_command,
+                    hash,
+                    summary,
+                    title,
+                }),
+                ForumPostKind::Generic,
+            )
+            .await
     }
 }
 

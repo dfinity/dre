@@ -3,7 +3,7 @@ use comfy_table::CellAlignment;
 use itertools::Itertools;
 
 use crate::{
-    ic_admin::{ProposeCommand, ProposeOptions},
+    ic_admin::{IcAdminProposal, IcAdminProposalCommand, IcAdminProposalOptions},
     qualification::Step,
 };
 
@@ -34,28 +34,31 @@ impl Step for EnsureBlessedRevisions {
         // Place proposal
         let place_proposal = || async {
             ctx.dre_ctx()
-                .ic_admin()
+                .ic_admin_executor()
                 .await?
-                .propose_run(
-                    ProposeCommand::ReviseElectedVersions {
-                        release_artifact: ic_management_types::Artifact::GuestOs,
-                        args: vec![
-                            "--replica-version-to-elect".to_string(),
-                            self.version.clone(),
-                            "--release-package-sha256-hex".to_string(),
-                            sha.clone(),
-                            "--release-package-urls".to_string(),
-                            format!(
-                                "https://download.dfinity.systems/ic/{}/guest-os/update-img/update-img.tar.zst",
-                                &self.version
-                            ),
-                        ],
-                    },
-                    ProposeOptions {
-                        title: Some(format!("Blessing version: {}", &self.version)),
-                        summary: Some("Some updates".to_string()),
-                        ..Default::default()
-                    },
+                .submit(
+                    &IcAdminProposal::new(
+                        IcAdminProposalCommand::ReviseElectedVersions {
+                            release_artifact: ic_management_types::Artifact::GuestOs,
+                            args: vec![
+                                "--replica-version-to-elect".to_string(),
+                                self.version.clone(),
+                                "--release-package-sha256-hex".to_string(),
+                                sha.clone(),
+                                "--release-package-urls".to_string(),
+                                format!(
+                                    "https://download.dfinity.systems/ic/{}/guest-os/update-img/update-img.tar.zst",
+                                    &self.version
+                                ),
+                            ],
+                        },
+                        IcAdminProposalOptions {
+                            title: Some(format!("Blessing version: {}", &self.version)),
+                            summary: Some("Some updates".to_string()),
+                            motivation: None,
+                        },
+                    ),
+                    None,
                 )
                 .await
         };

@@ -35,7 +35,7 @@ impl IcRepo {
         info!("IC git repo path: {}, lock file path: {}", &repo_path.display(), &lock_file_path);
 
         if !repo_path.exists() {
-            std::fs::create_dir_all(&repo_path).map_err(|e| IoError::Io {
+            fs_err::create_dir_all(&repo_path).map_err(|e| IoError::Io {
                 source: e,
                 path: repo_path.to_path_buf(),
             })?;
@@ -60,7 +60,7 @@ impl IcRepo {
                 Ok(output) => output.status.success(),
                 Err(_) => false,
             } {
-                std::fs::remove_dir_all(&repo_path).map_err(|e| IoError::Io {
+                fs_err::remove_dir_all(&repo_path).map_err(|e| IoError::Io {
                     source: e,
                     path: repo_path.to_path_buf(),
                 })?;
@@ -74,7 +74,8 @@ impl IcRepo {
                 .status()?;
         }
 
-        lock_file.unlock()?;
+        // To avoid something like: #[allow(unstable_name_collisions)]
+        fs2::FileExt::unlock(&lock_file)?;
 
         repo.load_commit_branch_cache()?;
 

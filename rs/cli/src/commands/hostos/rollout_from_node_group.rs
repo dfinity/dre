@@ -3,8 +3,12 @@ use std::str::FromStr;
 use clap::{Args, ValueEnum};
 
 use crate::{
-    commands::{AuthRequirement, ExecutableCommand},
+    auth::AuthRequirement,
+    exe::args::GlobalArgs,
+    exe::ExecutableCommand,
+    forum::ForumPostKind,
     operations::hostos_rollout::{NodeGroupUpdate, NumberOfNodes},
+    submitter::{SubmissionParameters, Submitter},
 };
 
 #[derive(ValueEnum, Copy, Clone, Debug, Ord, Eq, PartialEq, PartialOrd, Default, Hash)]
@@ -73,6 +77,9 @@ pub struct RolloutFromNodeGroup {
 supported values are absolute numbers (10) or percentage (10%)"#
     )]
     pub nodes_in_group: String,
+
+    #[clap(flatten)]
+    pub submission_parameters: SubmissionParameters,
 }
 
 impl ExecutableCommand for RolloutFromNodeGroup {
@@ -83,17 +90,20 @@ impl ExecutableCommand for RolloutFromNodeGroup {
     async fn execute(&self, ctx: crate::ctx::DreContext) -> anyhow::Result<()> {
         let update_group = NodeGroupUpdate::new(self.assignment, self.owner, NumberOfNodes::from_str(&self.nodes_in_group)?);
         let runner = ctx.runner().await?;
-        if let Some((nodes_to_update, summary)) = runner
+
+        let (nodes_to_update, summary) = match runner
             .hostos_rollout_nodes(update_group, &self.version, &self.only, &self.exclude)
             .await?
         {
-            let runner_proposal = runner.hostos_rollout(nodes_to_update, &self.version, Some(summary), ctx.forum_post_link())?;
-            let ic_admin = ctx.ic_admin().await?;
-            ic_admin.propose_run(runner_proposal.cmd, runner_proposal.opts).await?;
-        }
+            Some(s) => s,
+            None => return Ok(()),
+        };
 
-        Ok(())
+        let runner_proposal = runner.hostos_rollout(nodes_to_update, &self.version, Some(summary))?;
+        Submitter::from(&self.submission_parameters)
+            .propose(ctx.ic_admin_executor().await?.execution(runner_proposal), ForumPostKind::Generic)
+            .await
     }
 
-    fn validate(&self, _args: &crate::commands::Args, _cmd: &mut clap::Command) {}
+    fn validate(&self, _args: &GlobalArgs, _cmd: &mut clap::Command) {}
 }

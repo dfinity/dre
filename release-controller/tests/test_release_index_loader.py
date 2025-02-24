@@ -5,7 +5,7 @@ from git_repo import GitRepo
 from release_index_loader import GitReleaseLoader
 
 
-def test_remove_excluded_changes():
+def test_remove_excluded_changes() -> None:
     with tempfile.TemporaryDirectory() as d:
         loader = GitReleaseLoader(
             GitRepo(
@@ -13,8 +13,11 @@ def test_remove_excluded_changes():
                 repo_cache_dir=pathlib.Path(d),
             )
         )
+        res = loader.proposal_summary(
+            "35bfcadd0f2a474057e42393917b8b3ac269627a", security_fix=False
+        )
         assert (
-            loader.proposal_summary("35bfcadd0f2a474057e42393917b8b3ac269627a")
+            res
             == """\
 Release Notes for [**release\\-2024\\-08\\-29\\_01\\-30\\-base**](https://github.com/dfinity/ic/tree/release-2024-08-29_01-30-base) (35bfcadd0f2a474057e42393917b8b3ac269627a)
 ========================================================================================================================================================================
@@ -115,3 +118,10 @@ The two SHA256 sums printed above from a) the downloaded CDN image and b) the lo
 While not required for this NNS proposal, as we are only electing a new GuestOS version here, you have the option to verify the build reproducibility of the HostOS by passing `--hostos` to the script above instead of `--guestos`, or the SetupOS by passing `--setupos`.
 """
         )
+
+    res = loader.proposal_summary(
+        "35bfcadd0f2a474057e42393917b8b3ac269627a", security_fix=True
+    )
+    assert res is not None and (
+        "You will be able to follow" in res
+    ), f"'You will be able to follow' signifying security fix not found in\n\n{res}"

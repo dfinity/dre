@@ -3,8 +3,6 @@ on:
   push:
     branches:
       - "main"
-    tags:
-      - "v*"
     paths-ignore:
       - "release-index.yaml"
       - "replica-releases/**"
@@ -88,15 +86,6 @@ jobs:
           path: bazel-out/k8-opt/bin/rs/ic-observability/multiservice-discovery/multiservice-discovery
 
       ########################################
-      # Prepare release
-      ########################################
-      - name: "🚢 Prepare release"
-        if: ${{ startsWith(github.ref, 'refs/tags/v') }}
-        uses: ./.github/workflows/prepare-release
-        with:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      ########################################
       # Upload container images
       ########################################
       - name: "🔧 Login to GitHub Container Registry"
@@ -106,7 +95,7 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
       - name: "📦 Push images to GitHub Container Registry"
-        if: ${{ startsWith(github.ref, 'refs/tags/v') || startsWith(github.head_ref, 'container') || startsWith(github.ref, 'refs/heads/container') || (github.ref == 'refs/heads/main') }}
+        if: ${{ startsWith(github.head_ref, 'container') || startsWith(github.ref, 'refs/heads/container') || (github.ref == 'refs/heads/main') }}
         run: bazel query --noshow_progress 'kind("oci_push", ...)' | xargs -I_target bazel run _target -- --tag ${GITHUB_SHA}
 
       ########################################

@@ -2,8 +2,12 @@ use clap::Args;
 use ic_types::PrincipalId;
 
 use crate::{
-    commands::{AuthRequirement, ExecutableCommand},
+    auth::AuthRequirement,
+    exe::args::GlobalArgs,
+    exe::ExecutableCommand,
+    forum::ForumPostKind,
     ic_admin::{self},
+    submitter::{SubmissionParameters, Submitter},
 };
 
 #[derive(Args, Debug)]
@@ -19,6 +23,9 @@ pub struct Add {
     /// Motivation for creating the subnet
     #[clap(short, long, aliases = ["summary"], required = true)]
     pub motivation: Option<String>,
+
+    #[clap(flatten)]
+    pub submission_parameters: SubmissionParameters,
 }
 
 impl ExecutableCommand for Add {
@@ -27,25 +34,23 @@ impl ExecutableCommand for Add {
     }
 
     async fn execute(&self, ctx: crate::ctx::DreContext) -> anyhow::Result<()> {
-        let ic_admin = ctx.ic_admin().await?;
-
-        ic_admin
-            .propose_run(
-                ic_admin::ProposeCommand::AddApiBoundaryNodes {
-                    nodes: self.nodes.to_vec(),
-                    version: self.version.clone(),
-                },
-                ic_admin::ProposeOptions {
-                    title: Some(format!("Add {} API boundary node(s)", self.nodes.len())),
-                    summary: Some(format!("Add {} API boundary node(s)", self.nodes.len())),
-                    motivation: self.motivation.clone(),
-                    forum_post_link: ctx.forum_post_link(),
-                },
+        Submitter::from(&self.submission_parameters)
+            .propose(
+                ctx.ic_admin_executor().await?.execution(ic_admin::IcAdminProposal::new(
+                    ic_admin::IcAdminProposalCommand::AddApiBoundaryNodes {
+                        nodes: self.nodes.to_vec(),
+                        version: self.version.clone(),
+                    },
+                    ic_admin::IcAdminProposalOptions {
+                        title: Some(format!("Add {} API boundary node(s)", self.nodes.len())),
+                        summary: Some(format!("Add {} API boundary node(s)", self.nodes.len())),
+                        motivation: self.motivation.clone(),
+                    },
+                )),
+                ForumPostKind::Generic,
             )
-            .await?;
-
-        Ok(())
+            .await
     }
 
-    fn validate(&self, _args: &crate::commands::Args, _cmd: &mut clap::Command) {}
+    fn validate(&self, _args: &GlobalArgs, _cmd: &mut clap::Command) {}
 }

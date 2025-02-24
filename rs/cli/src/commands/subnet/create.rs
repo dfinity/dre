@@ -1,9 +1,16 @@
 use clap::{error::ErrorKind, Args};
 
+use crate::exe::args::GlobalArgs;
 use ic_management_types::requests::SubnetCreateRequest;
+
 use ic_types::PrincipalId;
 
-use crate::commands::{AuthRequirement, ExecutableCommand};
+use crate::{
+    auth::AuthRequirement,
+    exe::ExecutableCommand,
+    forum::ForumPostKind,
+    submitter::{SubmissionParameters, Submitter},
+};
 
 #[derive(Args, Debug)]
 pub struct Create {
@@ -38,6 +45,9 @@ regardless of the decentralization coefficients"#)]
     /// Provide the list of all arguments that ic-admin accepts for subnet creation
     #[clap(long)]
     pub help_other_args: bool,
+
+    #[clap(flatten)]
+    pub submission_parameters: SubmissionParameters,
 }
 
 impl ExecutableCommand for Create {
@@ -46,7 +56,6 @@ impl ExecutableCommand for Create {
     }
 
     async fn execute(&self, ctx: crate::ctx::DreContext) -> anyhow::Result<()> {
-        let runner = ctx.runner().await?;
         let motivation = match &self.motivation {
             Some(m) => m,
             None if self.help_other_args => &"help for options".to_string(),
@@ -55,12 +64,12 @@ impl ExecutableCommand for Create {
 
         if self.help_other_args {
             // Just print help
-            let ic_admin = ctx.ic_admin().await?;
-            ic_admin.grep_subcommand_arguments("propose-to-create-subnet");
-            return Ok(());
+            return ctx.help_propose(Some("propose-to-create-subnet")).await;
         }
 
-        if let Some(runner_proposal) = runner
+        let runner_proposal = match ctx
+            .runner()
+            .await?
             .subnet_create(
                 SubnetCreateRequest {
                     size: self.size,
@@ -69,19 +78,20 @@ impl ExecutableCommand for Create {
                     include: self.include.clone().into(),
                 },
                 motivation.to_string(),
-                ctx.forum_post_link(),
                 self.replica_version.clone(),
                 self.other_args.to_owned(),
             )
             .await?
         {
-            let ic_admin = ctx.ic_admin().await?;
-            ic_admin.propose_run(runner_proposal.cmd, runner_proposal.opts).await?;
-        }
-        Ok(())
+            Some(runner_proposal) => runner_proposal,
+            None => return Ok(()),
+        };
+        Submitter::from(&self.submission_parameters)
+            .propose(ctx.ic_admin_executor().await?.execution(runner_proposal), ForumPostKind::Generic) // FIXME once the Proposable struct gains knowledge of how to create a forum post, then it won't be necessary to pass two different structs.
+            .await
     }
 
-    fn validate(&self, _args: &crate::commands::Args, cmd: &mut clap::Command) {
+    fn validate(&self, _args: &GlobalArgs, cmd: &mut clap::Command) {
         if self.motivation.is_none() && !self.help_other_args {
             cmd.error(
                 ErrorKind::MissingRequiredArgument,

@@ -419,7 +419,7 @@ impl ParallelHardwareIdentity {
             for slot in ctx.get_slots_with_token()? {
                 let info = ctx.get_slot_info(slot)?;
                 let token_info = ctx.get_token_info(slot)?;
-                if info.slot_description().starts_with("Nitrokey Nitrokey HSM") && maybe_slot.is_none() || (maybe_slot.unwrap() == slot.id()) {
+                if info.slot_description().starts_with("Nitrokey Nitrokey HSM") && (maybe_slot.is_none() || (maybe_slot.unwrap() == slot.id())) {
                     let sess = ctx.open_ro_session(slot)?;
                     let key_id = match sess.find_key_id(maybe_key_id.clone())? {
                         Some((key_id, label)) => {

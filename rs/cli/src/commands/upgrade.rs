@@ -4,7 +4,8 @@ use regex::Regex;
 use serde_json::Value;
 use tokio::task::JoinHandle;
 
-use super::{AuthRequirement, ExecutableCommand};
+use crate::auth::AuthRequirement;
+use crate::exe::{args::GlobalArgs, ExecutableCommand};
 
 #[derive(Args, Debug, Default)]
 pub struct Upgrade {
@@ -31,7 +32,7 @@ impl Upgrade {
         let update_check_path = dirs::cache_dir().expect("Failed to find a cache dir").join("dre_update_check");
         if !proceed_with_upgrade {
             // Check for a new release once per day
-            if let Ok(metadata) = std::fs::metadata(&update_check_path) {
+            if let Ok(metadata) = fs_err::metadata(&update_check_path) {
                 let last_check = metadata.modified().unwrap();
                 let now = std::time::SystemTime::now();
                 if now.duration_since(last_check).unwrap().as_secs() < 60 * 60 * 24 {
@@ -57,7 +58,7 @@ impl Upgrade {
             .map_err(|e| anyhow::anyhow!("Configuring backend failed: {:?}", e))?;
 
         // Touch update check file
-        std::fs::write(&update_check_path, "").map_err(|e| anyhow::anyhow!("Couldn't touch update check file: {:?}", e))?;
+        fs_err::write(&update_check_path, "").map_err(|e| anyhow::anyhow!("Couldn't touch update check file: {:?}", e))?;
 
         let releases = maybe_configured_backend
             .fetch()
@@ -105,8 +106,8 @@ impl Upgrade {
 
         let new_dre_path = tmp_dir.path().join(&asset.name);
         let asset_path = tmp_dir.path().join("asset");
-        let asset_file = std::fs::File::create(&asset_path).map_err(|e| anyhow::anyhow!("Couldn't create file: {:?}", e))?;
-        let new_dre_file = std::fs::File::create(&new_dre_path).map_err(|e| anyhow::anyhow!("Couldn't create file: {:?}", e))?;
+        let asset_file = fs_err::File::create(&asset_path).map_err(|e| anyhow::anyhow!("Couldn't create file: {:?}", e))?;
+        let new_dre_file = fs_err::File::create(&new_dre_path).map_err(|e| anyhow::anyhow!("Couldn't create file: {:?}", e))?;
 
         self_update::Download::from_url(&asset.download_url)
             .show_progress(true)
@@ -116,7 +117,7 @@ impl Upgrade {
         info!("Asset downloaded successfully");
 
         let value: Value =
-            serde_json::from_str(&std::fs::read_to_string(&asset_path).unwrap()).map_err(|e| anyhow::anyhow!("Couldn't open asset: {:?}", e))?;
+            serde_json::from_str(&fs_err::read_to_string(&asset_path).unwrap()).map_err(|e| anyhow::anyhow!("Couldn't open asset: {:?}", e))?;
 
         let download_url = match value.get("browser_download_url") {
             Some(Value::String(d)) => d,
@@ -134,7 +135,7 @@ impl Upgrade {
         // Since its possible to upgrade to an older version
         // remove the metafile so that the check will be run
         // with the new version again
-        std::fs::remove_file(&update_check_path)?;
+        fs_err::remove_file(&update_check_path)?;
 
         Ok(UpdateStatus::Updated(release.version.clone()))
     }
@@ -155,5 +156,5 @@ impl ExecutableCommand for Upgrade {
         Ok(())
     }
 
-    fn validate(&self, _args: &crate::commands::Args, _cmd: &mut clap::Command) {}
+    fn validate(&self, _args: &GlobalArgs, _cmd: &mut clap::Command) {}
 }

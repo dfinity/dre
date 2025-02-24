@@ -42,7 +42,7 @@ impl Step for RunXnetTest {
         if !key.exists() {
             anyhow::bail!("Principal key for xnet testing not found at {}", key.display());
         }
-        let file = std::fs::File::open(&key)?;
+        let file = fs_err::File::open(&key)?;
         file.set_permissions(PermissionsExt::from_mode(0o400))?;
 
         let e2e_bin = ctx.download_executable(E2E_TEST_DRIVER, &self.version).await?;

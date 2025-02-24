@@ -1,12 +1,15 @@
 use std::{
-    collections::{BTreeMap, HashMap},
+    collections::{BTreeMap, HashMap, HashSet},
     net::Ipv6Addr,
     path::PathBuf,
     str::FromStr,
     sync::Arc,
 };
 
+use crate::{auth::AuthRequirement, exe::args::GlobalArgs, exe::ExecutableCommand};
 use clap::Args;
+use ic_canisters::governance::GovernanceCanisterWrapper;
+use ic_canisters::IcAgentCanisterClient;
 use ic_management_backend::{health::HealthStatusQuerier, lazy_registry::LazyRegistry};
 use ic_management_types::{HealthStatus, Network};
 use ic_protobuf::registry::{
@@ -19,6 +22,7 @@ use ic_protobuf::registry::{
 };
 use ic_registry_subnet_type::SubnetType;
 use ic_types::PrincipalId;
+use icp_ledger::AccountIdentifier;
 use indexmap::IndexMap;
 use itertools::Itertools;
 use log::{info, warn};
@@ -27,8 +31,6 @@ use serde::Serialize;
 use serde_json::Value;
 
 use crate::ctx::DreContext;
-
-use super::{AuthRequirement, ExecutableCommand};
 
 #[derive(Args, Debug)]
 #[clap(after_help = r#"EXAMPLES:
@@ -45,6 +47,10 @@ pub struct Registry {
     /// Filters in `key=value` format
     #[clap(long, short, alias = "filter")]
     pub filters: Vec<Filter>,
+
+    /// Specify the height for the registry
+    #[clap(long, visible_aliases = ["registry-height", "version"])]
+    pub height: Option<u64>,
 }
 
 #[derive(Debug, Clone)]
@@ -106,12 +112,12 @@ impl ExecutableCommand for Registry {
         Ok(())
     }
 
-    fn validate(&self, _args: &crate::commands::Args, _cmd: &mut clap::Command) {}
+    fn validate(&self, _args: &GlobalArgs, _cmd: &mut clap::Command) {}
 }
 
 impl Registry {
     async fn get_registry(&self, ctx: DreContext) -> anyhow::Result<RegistryDump> {
-        let local_registry = ctx.registry().await;
+        let local_registry = ctx.registry_with_version(self.height).await;
 
         let elected_guest_os_versions = get_elected_guest_os_versions(&local_registry)?;
         let elected_host_os_versions = get_elected_host_os_versions(&local_registry)?;
@@ -133,17 +139,18 @@ impl Registry {
                 let nodes = nodes_by_health.entry(health).or_insert_with(Vec::new);
                 nodes.push(node_id);
             }
-            node_operator.nodes_health = nodes_by_health;
-            node_operator.total_up_nodes = nodes
+            node_operator.computed.nodes_health = nodes_by_health;
+            node_operator.computed.total_up_nodes = nodes
                 .iter()
                 .filter(|n| {
                     n.node_operator_id == node_operator.node_operator_principal_id
                         && (n.status == HealthStatus::Healthy || n.status == HealthStatus::Degraded)
                 })
                 .count() as u32;
+            node_operator.computed.node_allowance_total = node_operator.node_allowance + node_operator.computed.total_up_nodes as u64;
 
-            if node_operator.total_up_nodes == node_operator.rewardable_nodes.iter().map(|n| n.1).sum::<u32>() {
-                node_operator.rewards_correct = true;
+            if node_operator.computed.total_up_nodes == node_operator.rewardable_nodes.iter().map(|n| n.1).sum::<u32>() {
+                node_operator.computed.rewards_correct = true;
             }
         }
         let node_rewards_table = get_node_rewards_table(&local_registry, ctx.network());
@@ -160,7 +167,7 @@ impl Registry {
             node_operators: node_operators.values().cloned().collect_vec(),
             node_rewards_table,
             api_bns,
-            node_providers: get_node_providers(&local_registry).await?,
+            node_providers: get_node_providers(&local_registry, ctx.network()).await?,
         })
     }
 }
@@ -199,18 +206,21 @@ async fn get_node_operators(local_registry: &Arc<dyn LazyRegistry>, network: &Ne
                 record.principal,
                 NodeOperator {
                     node_operator_principal_id: *k,
-                    node_allowance_remaining: record.allowance,
-                    node_allowance_total: record.allowance + operator_registered_nodes_num,
                     node_provider_principal_id: record.provider.principal,
-                    node_provider_name,
                     dc_id: record.datacenter.as_ref().map(|d| d.name.to_owned()).unwrap_or_default(),
                     rewardable_nodes: record.rewardable_nodes.clone(),
+                    node_allowance: record.node_allowance,
                     ipv6: Some(record.ipv6.to_string()),
-                    total_up_nodes: 0,
-                    nodes_health: Default::default(),
-                    rewards_correct: false,
-                    nodes_in_subnets,
-                    nodes_in_registry,
+                    computed: NodeOperatorComputed {
+                        node_provider_name,
+                        node_allowance_remaining: record.node_allowance,
+                        node_allowance_total: record.node_allowance + operator_registered_nodes_num,
+                        total_up_nodes: 0,
+                        nodes_health: Default::default(),
+                        rewards_correct: false,
+                        nodes_in_subnets,
+                        nodes_in_registry,
+                    },
                 },
             )
         })
@@ -417,24 +427,58 @@ fn get_api_boundary_nodes(local_registry: &Arc<dyn LazyRegistry>) -> anyhow::Res
     Ok(api_bns)
 }
 
-async fn get_node_providers(local_registry: &Arc<dyn LazyRegistry>) -> anyhow::Result<Vec<NodeProvider>> {
+async fn get_node_providers(local_registry: &Arc<dyn LazyRegistry>, network: &Network) -> anyhow::Result<Vec<NodeProvider>> {
     let all_nodes = local_registry.nodes().await?;
-    let node_providers = local_registry
+
+    // Get the node providers from the node operator records, and from the governance canister, and merge them
+    let nns_urls = network.get_nns_urls();
+    let url = nns_urls.first().ok_or(anyhow::anyhow!("No NNS URLs provided"))?.to_owned();
+    let canister_client = IcAgentCanisterClient::from_anonymous(url)?;
+    let gov = GovernanceCanisterWrapper::from(canister_client);
+    let gov_node_providers: HashMap<PrincipalId, String> = gov
+        .get_node_providers()
+        .await?
+        .iter()
+        .map(|p| {
+            (
+                p.id.unwrap_or(PrincipalId::new_anonymous()),
+                match &p.reward_account {
+                    Some(account) => AccountIdentifier::from_slice(&account.hash).unwrap().to_string(),
+                    None => "".to_string(),
+                },
+            )
+        })
+        .collect();
+    let mut reg_node_providers = local_registry
         .operators()
         .await?
         .values()
         .map(|operator| operator.provider.clone())
+        .collect_vec();
+    let reg_provider_ids = reg_node_providers.iter().map(|provider| provider.principal).collect::<HashSet<_>>();
+    for principal in gov_node_providers.keys() {
+        if !reg_provider_ids.contains(principal) {
+            reg_node_providers.push(ic_management_types::Provider {
+                principal: *principal,
+                name: None,
+                website: None,
+            });
+        }
+    }
+    let reg_node_providers = reg_node_providers
+        .into_iter()
         .sorted_by_key(|provider| provider.principal)
         .dedup_by(|x, y| x.principal == y.principal)
         .collect_vec();
 
-    Ok(node_providers
+    Ok(reg_node_providers
         .iter()
         .map(|provider| {
             let provider_nodes = all_nodes.values().filter(|node| node.operator.provider.principal == provider.principal);
 
             NodeProvider {
                 principal: provider.principal,
+                reward_account: gov_node_providers.get(&provider.principal).cloned().unwrap_or_default(),
                 total_nodes: provider_nodes.clone().count(),
                 nodes_in_subnet: provider_nodes.clone().filter(|node| node.subnet_id.is_some()).count(),
                 nodes_per_dc: provider_nodes
@@ -515,13 +559,19 @@ struct SubnetRecord {
 #[derive(Clone, Debug, Serialize)]
 struct NodeOperator {
     node_operator_principal_id: PrincipalId,
-    node_allowance_remaining: u64,
-    node_allowance_total: u64,
     node_provider_principal_id: PrincipalId,
-    node_provider_name: String,
     dc_id: String,
     rewardable_nodes: BTreeMap<String, u32>,
+    node_allowance: u64,
     ipv6: Option<String>,
+    computed: NodeOperatorComputed,
+}
+
+#[derive(Clone, Debug, Serialize)]
+struct NodeOperatorComputed {
+    node_provider_name: String,
+    node_allowance_remaining: u64,
+    node_allowance_total: u64,
     total_up_nodes: u32,
     nodes_health: IndexMap<String, Vec<PrincipalId>>,
     rewards_correct: bool,
@@ -562,6 +612,7 @@ pub struct NodeRewardsTableFlattened {
 struct NodeProvider {
     name: String,
     principal: PrincipalId,
+    reward_account: String,
     total_nodes: usize,
     nodes_in_subnet: usize,
     nodes_per_dc: HashMap<String, usize>,

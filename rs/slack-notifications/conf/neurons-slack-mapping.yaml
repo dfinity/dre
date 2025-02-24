@@ -26,7 +26,7 @@
 - neuron_id: 43
   slack_id: U01F2AZLZBL  # Ryan Croote
 - neuron_id: 44
-  slack_id: U01L52P04HW  # Paul Meeusen
+  slack_id: U050JEB66LT  # Sion Hoang
 - neuron_id: 45
   slack_id: UJU6XENEQ    # Mamiko Inoue
 # - neuron_id: 46
@@ -50,25 +50,25 @@
 - neuron_id: 55
   slack_id: U02UZQSG468  # Maximilian Summe
 - neuron_id: 56
-  slack_id: UJHLZDMD4    # Khushboo
+  slack_id: U07QU79GX0T  # Thomas Gladdines
 - neuron_id: 57
   slack_id: U010G9RRJ4A  # Shuo Wang
 - neuron_id: 58
   slack_id: U047B65SPB3  # Nikola Milosavljevic
 - neuron_id: 59
   slack_id: U02TEQHKV35  # Llorenç Muntaner Perello
-- neuron_id: 60
-  slack_id: U03JW41V810  # Andre Popovitch
+# - neuron_id: 60
+#   slack_id: 
 - neuron_id: 61
   slack_id: U04JSKAH6L8  # Manuel Amador
 - neuron_id: 62
   slack_id: U8ET9T067    # Paul Liu
 - neuron_id: 63
-  slack_id: U03T4M2EQ6L  # Nikolas Haimerl
+  slack_id: U07TLD4BZAS  # Yusef Habib Fernández
 - neuron_id: 64
   slack_id: U01806HR6MP  # Ian Blenke
 - neuron_id: 65
-  slack_id: UGNMPG3LL    # Christian Müller
+  slack_id: U07TC5UJE12  # Louis Pahlavi
 - neuron_id: 66
   slack_id: U01EQQYUWRG  # Sam Howard
 - neuron_id: 67
@@ -78,19 +78,19 @@
 - neuron_id: 69
   slack_id: UK6PJFR9A    # Nicolas Mattia
 - neuron_id: 70
-  slack_id: UL6RB18A0    # Roman Kashitsyn
+  slack_id: UFWTXMBB2    # Bas van Dijk
 - neuron_id: 71
   slack_id: U01Q0ED6SDB  # Leon Tan
 - neuron_id: 72
-  slack_id: U02MNAPVA8L  # Daniel Thurau
+  slack_id: U0574S1N1BP  # Jason Zhu
 - neuron_id: 73
-  slack_id: U02LQR955Q9  # Frederik Rothenberger
-- neuron_id: 74
-  slack_id: U03M9TVSQ6Q  # Léo Kazmierczak
-- neuron_id: 75
-  slack_id: U02D55X2D50  # Mario Pastorelli
+  slack_id: U07QU4DNV5Y  # Andri Schatz
+# - neuron_id: 74
+#   slack_id:
+# - neuron_id: 75
+#   slack_id:
 - neuron_id: 76
-  slack_id: U03NX058Y9L  # Stephanus Jacobus Fischer
+  slack_id: U03HC8L2LH3  # Alexander Ufimtsev
 - neuron_id: 77
   slack_id: U04CMGD6XDH  # Pietro Di Marco
 - neuron_id: 78
@@ -99,8 +99,8 @@
   slack_id: U04CV3YLN2G  # Maciej Modelski
 - neuron_id: 9014191754770650971
   slack_id: UD5P5BP5K    # Maria Dubovitskaya https://dfinity.slack.com/archives/C02NJPNSLM6/p1674935817983889?thread_ts=1674934727.112299&cid=C02NJPNSLM6
-- neuron_id: 9593925519518438069
-  slack_id: U03T4M2EQ6L  # Nikolas Haimerl
+# - neuron_id: 9593925519518438069
+#   slack_id:
 - neuron_id: 17212304975669116357
   slack_id: U03LSTP0YB1  # Grégory Demay
 - neuron_id: 17511507705568200227

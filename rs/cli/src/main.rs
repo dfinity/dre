@@ -1,27 +1,13 @@
-use clap::{CommandFactory, Parser};
-use commands::{
-    upgrade::{UpdateStatus, Upgrade},
-    Args, ExecutableCommand,
-};
-use ctx::DreContext;
+use clap::CommandFactory;
+use clap::Parser;
 use dotenv::dotenv;
+use dre::commands::{
+    main_command::{MainCommand, Subcommands},
+    upgrade::{UpdateStatus, Upgrade},
+};
+use dre::ctx::DreContext;
+use dre::exe::ExecutableCommand;
 use log::{info, warn};
-
-mod artifact_downloader;
-mod auth;
-mod commands;
-mod cordoned_feature_fetcher;
-mod ctx;
-mod desktop_notify;
-mod discourse_client;
-mod ic_admin;
-mod operations;
-mod qualification;
-mod runner;
-mod store;
-mod subnet_manager;
-#[cfg(test)]
-mod unit_tests;
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
@@ -31,12 +17,12 @@ async fn main() -> anyhow::Result<()> {
 
     dotenv().ok();
 
-    let args = Args::parse();
+    let args = MainCommand::parse();
 
-    let mut cmd = Args::command();
-    args.validate(&args, &mut cmd);
+    let mut cmd = MainCommand::command();
+    args.validate(&args.global_args, &mut cmd);
 
-    if let commands::Subcommands::Upgrade(upgrade) = args.subcommands {
+    if let Subcommands::Upgrade(upgrade) = args.subcommands {
         let response = upgrade.run().await?;
         match response {
             UpdateStatus::NoUpdate => info!("Running the latest version"),
@@ -46,7 +32,7 @@ async fn main() -> anyhow::Result<()> {
         return Ok(());
     }
 
-    let ctx = DreContext::from_args(&args).await?;
+    let ctx = DreContext::from_args(&args.global_args, args.subcommands.require_auth(), args.neuron_override()).await?;
 
     let r = args.execute(ctx).await;
 

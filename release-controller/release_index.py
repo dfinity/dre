@@ -9,25 +9,20 @@ from pydantic import BaseModel, ConfigDict, RootModel
 
 
 class Version(BaseModel):
-    model_config = ConfigDict(
-        extra='forbid',
-    )
+    model_config = ConfigDict(extra="allow")
     name: str
     version: str
+    security_fix: bool = False
 
 
 class Release(BaseModel):
-    model_config = ConfigDict(
-        extra='forbid',
-    )
+    model_config = ConfigDict(extra="forbid")
     rc_name: str
     versions: List[Version]
 
 
 class ReleaseIndex(BaseModel):
-    model_config = ConfigDict(
-        extra='forbid',
-    )
+    model_config = ConfigDict(extra="forbid")
     releases: List[Release]
 
 

@@ -58,7 +58,6 @@ Reconciler is responsible for generating release notes (1), publishing them as g
 
   It's important to note that forum logic depends on finding alredy created blog posts by querying posts from authenticated user (@DRETeam). For those reasons, it won't be able to find manually created posts by other users.
 
-
 ## Resolving issues
 
 ### Google Docs generation was wrong for particular commit
@@ -157,3 +156,80 @@ Make sure also that few minutes have passed and that public dashboard still does
   ```
   rm /state/<full_commit_hash>
   ```
+
+## Development
+
+Please see the parent folder's `README.md` for virtual environment setup.
+Follow the whole *Contributing* section to the letter.
+
+### Running the reconciler in dry-run mode:
+
+```sh
+bazel run //release-controller:release-controller -- --dry-run --verbose
+```
+
+No credentials of any kind are required by this mode.  By default everything the
+reconciler does in this mode has no outward effect.
+
+All the operations it executes are volatile as well.
+
+If you want the release notes this mock mode stores to be persisted in a folder
+so they are not regenerated on every run:
+
+```sh
+export RECONCILER_DRY_RUN_RELEASE_NOTES_STORAGE=/tmp/dryrun/relnotes
+bazel run //release-controller:release-controller \
+  --action_env=RECONCILER_DRY_RUN_RELEASE_NOTES_STORAGE \
+  -- --dry-run --verbose
+```
+
+If you want the mock forum interactions to be remembered between runs:
+
+```sh
+export RECONCILER_DRY_RUN_FORUM_STORAGE=/tmp/dryrun/forum
+bazel run //release-controller:release-controller \
+  --action_env=RECONCILER_DRY_RUN_FORUM_STORAGE \
+  -- --dry-run --verbose
+```
+
+Custom path for the reconciler state?
+
+
+```sh
+export RECONCILER_STATE_DIR=/tmp/dryrun/reconciler-state
+bazel run //release-controller:release-controller \
+  --action_env=RECONCILER_STATE_DIR \
+  -- --dry-run --verbose
+```
+
+Typing errors preventing you from running it, because you are editing code and
+testing your changes?  Add `--output_groups=-mypy` right after `bazel run`.
+
+The optional argument `--skip-preloading-state` makes it so that the reconciler
+will not preload its list of known proposals by version from the governance
+canister.  It is useful (in conjunction with an empty reconciler state folder)
+to make the reconciler do all the work of submitting proposals again.  It should
+not be used without `--dry-run`, to avoid submitting proposals twice.
+
+### Tests
+
+#### Unit tests
+
+```sh
+bazel test //release-controller:pytest
+```
+
+With the .venv setup, you can also run (with varying levels of success):
+
+```sh
+.venv/bin/python3 -m pytest release-controller/
+```
+
+The above runs all tests.  If you want to run a specific test file,
+specify it as a path instead of the folder specified above.
+
+#### Typing correctness
+
+```sh
+bazel build //release-controller:release-controller
+```

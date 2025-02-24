@@ -2,22 +2,23 @@ use ic_canisters::cycles_minting::CyclesMintingCanisterWrapper;
 use indexmap::IndexMap;
 use std::{path::PathBuf, sync::Arc};
 
+use crate::{auth::AuthRequirement, exe::args::GlobalArgs, exe::ExecutableCommand};
 use clap::{error::ErrorKind, Args};
 use ic_management_types::Subnet;
 use ic_registry_subnet_type::SubnetType;
 use ic_types::PrincipalId;
 use itertools::Itertools;
+
 use log::info;
 
 use crate::{
-    discourse_client::parse_proposal_id_from_ic_admin_response,
-    ic_admin::{ProposeCommand, ProposeOptions},
+    forum::ForumPostKind,
+    ic_admin::{IcAdminProposal, IcAdminProposalCommand, IcAdminProposalOptions},
+    submitter::{SubmissionParameters, Submitter},
 };
 
-use super::{AuthRequirement, ExecutableCommand};
-
 const DEFAULT_CANISTER_LIMIT: u64 = 60_000;
-const DEFAULT_STATE_SIZE_BYTES_LIMIT: u64 = 322_122_547_200; // 300GB
+const DEFAULT_STATE_SIZE_BYTES_LIMIT: u64 = 400 * 1024 * 1024 * 1024; // 400GB
 
 const DEFAULT_AUTHORIZED_SUBNETS_CSV: &str = include_str!(concat!(env!("OUT_DIR"), "/non_public_subnets.csv"));
 
@@ -36,16 +37,19 @@ pub struct UpdateAuthorizedSubnets {
     state_size_limit: u64,
 
     /// Number of verified subnets to open that weren't open before
-    #[clap(long, default_value_t = 0)]
+    #[clap(long, default_value_t = 1)]
     open_verified_subnets: i32,
+
+    #[clap(flatten)]
+    pub submission_parameters: SubmissionParameters,
 }
 
 impl ExecutableCommand for UpdateAuthorizedSubnets {
     fn require_auth(&self) -> AuthRequirement {
-        super::AuthRequirement::Neuron
+        AuthRequirement::Neuron
     }
 
-    fn validate(&self, _args: &crate::commands::Args, cmd: &mut clap::Command) {
+    fn validate(&self, _args: &GlobalArgs, cmd: &mut clap::Command) {
         if let Some(path) = &self.path {
             if !path.exists() {
                 cmd.error(ErrorKind::InvalidValue, format!("Path `{}` not found", path.display())).exit()
@@ -74,27 +78,10 @@ impl ExecutableCommand for UpdateAuthorizedSubnets {
 
         let mut verified_subnets_to_open = self.open_verified_subnets;
 
-        for subnet in subnets.values() {
+        for subnet in subnets.values().sorted_by_cached_key(|s| s.principal) {
             if subnet.subnet_type.eq(&SubnetType::System) {
                 excluded_subnets.insert(subnet.principal, "System subnets should not have public access".to_string());
                 continue;
-            }
-
-            // There was a request to open up 1 verified subnet per week
-            if subnet.subnet_type.eq(&SubnetType::VerifiedApplication) {
-                // Subnet is already open or a sufficient number of verified_subnets has already
-                // been opened up
-                if public_subnets.contains(&subnet.principal) || verified_subnets_to_open == 0 {
-                    // Check if the subnet ID matches any entry in the CSV and use the description.
-                    // If no match is found, default to a generic message.
-                    let description = non_public_subnets_csv
-                        .iter()
-                        .find(|(short_id, _)| subnet.principal.to_string().starts_with(short_id))
-                        .map(|(_, desc)| desc.to_string())
-                        .unwrap_or("Subnet will be opened up soon".to_string());
-                    excluded_subnets.insert(subnet.principal, description);
-                    continue;
-                }
             }
 
             // Check if subnet is explicitly marked as non-public
@@ -119,10 +106,29 @@ impl ExecutableCommand for UpdateAuthorizedSubnets {
                 excluded_subnets.insert(subnet.principal, format!("Subnet has more than {} state size", human_bytes));
             }
 
+            // There was a request to open up 1 verified subnet per week
+            if subnet.subnet_type.eq(&SubnetType::VerifiedApplication) {
+                if public_subnets.contains(&subnet.principal) {
+                    continue;
+                }
+                // A sufficient number of verified_subnets has already been opened up
+                if verified_subnets_to_open == 0 {
+                    // Check if the subnet ID matches any entry in the CSV and use the description.
+                    // If no match is found, default to a generic message.
+                    let description = non_public_subnets_csv
+                        .iter()
+                        .find(|(short_id, _)| subnet.principal.to_string().starts_with(short_id))
+                        .map(|(_, desc)| desc.to_string())
+                        .unwrap_or("Other verified subnets opened up in this run".to_string());
+                    excluded_subnets.insert(subnet.principal, description);
+                    continue;
+                }
+            }
+
             // Looks like we're good to go!
             // Now only adjust the counter of how many VerifiedApplication subnets have been opened
             // up in this run.
-            if subnet.subnet_type.eq(&SubnetType::VerifiedApplication) {
+            if subnet.subnet_type.eq(&SubnetType::VerifiedApplication) && !public_subnets.contains(&subnet.principal) {
                 if verified_subnets_to_open > 0 {
                     verified_subnets_to_open -= 1;
                 } else {
@@ -133,7 +139,7 @@ impl ExecutableCommand for UpdateAuthorizedSubnets {
             }
         }
 
-        let summary = construct_summary(&subnets, &excluded_subnets, public_subnets, ctx.forum_post_link())?;
+        let summary = construct_summary(&subnets, &excluded_subnets, public_subnets)?;
 
         let authorized = subnets
             .keys()
@@ -141,47 +147,28 @@ impl ExecutableCommand for UpdateAuthorizedSubnets {
             .cloned()
             .collect();
 
-        let ic_admin = ctx.ic_admin().await?;
+        let prop = IcAdminProposal::new(
+            IcAdminProposalCommand::SetAuthorizedSubnetworks { subnets: authorized },
+            IcAdminProposalOptions {
+                title: Some("Updating the list of public subnets".to_string()),
+                summary: Some(summary.clone()),
+                motivation: None,
+            },
+        );
 
-        let cmd = ProposeCommand::SetAuthorizedSubnetworks { subnets: authorized };
-        let opts = ProposeOptions {
-            title: Some("Updating the list of public subnets".to_string()),
-            summary: Some(summary.clone()),
-            motivation: None,
-            forum_post_link: Some("[comment]: <> (Link will be added on actual execution)".to_string()),
-        };
-
-        if !ic_admin.propose_print_and_confirm(cmd.clone(), opts.clone()).await? {
-            return Ok(());
-        }
-
-        let discourse_client = ctx.discourse_client()?;
-        let maybe_topic = discourse_client.create_authorized_subnets_update_forum_post(summary).await?;
-
-        let proposal_response = ic_admin
-            .propose_submit(
-                cmd,
-                ProposeOptions {
-                    forum_post_link: maybe_topic.as_ref().map(|resp| resp.url.clone()),
-                    ..opts
-                },
+        Submitter::from(&self.submission_parameters)
+            .propose(
+                ctx.ic_admin_executor().await?.execution(prop),
+                ForumPostKind::AuthorizedSubnetsUpdate { body: summary },
             )
-            .await?;
-
-        if let Some(topic) = maybe_topic {
-            discourse_client
-                .add_proposal_url_to_post(topic.update_id, parse_proposal_id_from_ic_admin_response(proposal_response)?)
-                .await?;
-        }
-
-        Ok(())
+            .await
     }
 }
 
 impl UpdateAuthorizedSubnets {
     fn parse_csv(&self) -> anyhow::Result<Vec<(String, String)>> {
         let contents = match &self.path {
-            Some(p) => std::fs::read_to_string(p)?,
+            Some(p) => fs_err::read_to_string(p)?,
             None => {
                 info!("Using embedded version of authorized subnets csv that is added during build time");
                 DEFAULT_AUTHORIZED_SUBNETS_CSV.to_string()
@@ -202,18 +189,20 @@ impl UpdateAuthorizedSubnets {
     }
 }
 
+/// FIXME probably should be moved to the Discourse post creation code.
+/// also it would be wise to divorce the Discourse machinery from the kind of post
+/// we want to compose, so that composing the post and posting the post are separate activities,
+/// which they are.
 fn construct_summary(
     subnets: &Arc<IndexMap<PrincipalId, Subnet>>,
     excluded_subnets: &IndexMap<PrincipalId, String>,
     current_public_subnets: Vec<PrincipalId>,
-    forum_post_link: Option<String>,
 ) -> anyhow::Result<String> {
     Ok(format!(
         "Updating the list of authorized subnets to:
 
 | Subnet id | Subnet Type | Public | Description |
 | --------- | ----------- | ------ | ----------- |
-{}
 {}
 ",
         subnets
@@ -238,10 +227,6 @@ fn construct_summary(
                     excluded_desc.map(|s| s.to_string()).unwrap_or_default()
                 )
             })
-            .join("\n"),
-        match forum_post_link {
-            Some(link) => format!("\nForum post link: {}", link),
-            None => "".to_string(),
-        }
+            .join("\n")
     ))
 }

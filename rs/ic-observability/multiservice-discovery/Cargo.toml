@@ -11,9 +11,9 @@ base64 = { workspace = true }
 clap = { workspace = true }
 crossbeam = { workspace = true }
 crossbeam-channel = { workspace = true }
+fs-err = { workspace = true }
 futures-util = { workspace = true }
 humantime = { workspace = true }
-ic-async-utils = { workspace = true }
 ic-crypto-utils-threshold-sig-der = { workspace = true }
 ic-registry-client = { workspace = true }
 ic-management-types = { workspace = true }
@@ -36,6 +36,6 @@ retry = { workspace = true }
 [dev-dependencies]
 tempfile = { workspace = true }
 reqwest = { workspace = true }
-assert_cmd = "2.0.16"
-anyhow = "1.0.94"
-flate2 = "1.0.35"
+assert_cmd = { workspace = true }
+anyhow = { workspace = true }
+flate2 = { workspace = true }

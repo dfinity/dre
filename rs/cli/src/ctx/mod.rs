@@ -1,6 +1,6 @@
 use std::{cell::RefCell, rc::Rc, sync::Arc};
 
-use ic_canisters::IcAgentCanisterClient;
+use ic_canisters::{governance::GovernanceCanisterWrapper, IcAgentCanisterClient};
 use ic_management_backend::{
     health::HealthStatusQuerier,
     lazy_git::LazyGit,
@@ -12,21 +12,25 @@ use log::warn;
 
 use crate::{
     artifact_downloader::{ArtifactDownloader, ArtifactDownloaderImpl},
-    auth::Neuron,
-    commands::{Args, AuthOpts, AuthRequirement, DiscourseOpts, ExecutableCommand, IcAdminVersion},
+    auth::{AuthOpts, AuthRequirement, Neuron},
     cordoned_feature_fetcher::CordonedFeatureFetcher,
-    discourse_client::{DiscourseClient, DiscourseClientImp},
-    ic_admin::{IcAdmin, IcAdminImpl},
+    exe::{args::GlobalArgs, args::IcAdminVersion},
+    governance::GovernanceCanisterProposalExecutor,
+    ic_admin::{IcAdmin, IcAdminImpl, IcAdminProposalExecutor},
     runner::Runner,
     store::Store,
     subnet_manager::SubnetManager,
 };
+
+#[cfg(test)]
+mod unit_tests;
 
 #[derive(Clone)]
 struct NeuronOpts {
     auth_opts: AuthOpts,
     requirement: AuthRequirement,
     neuron_id: Option<u64>,
+    neuron_override: Option<Neuron>,
 }
 
 #[derive(Clone)]
@@ -38,18 +42,13 @@ pub struct DreContext {
     ic_repo: RefCell<Option<Arc<dyn LazyGit>>>,
     proposal_agent: Arc<dyn ProposalAgent>,
     verbose_runner: bool,
-    forum_post_link: Option<String>,
-    dry_run: bool,
     artifact_downloader: Arc<dyn ArtifactDownloader>,
     neuron: RefCell<Option<Neuron>>,
-    proceed_without_confirmation: bool,
     version: IcAdminVersion,
     neuron_opts: NeuronOpts,
     cordoned_features_fetcher: Arc<dyn CordonedFeatureFetcher>,
     health_client: Arc<dyn HealthStatusQuerier>,
     store: Store,
-    discourse_opts: DiscourseOpts,
-    discourse_client: RefCell<Option<Arc<dyn DiscourseClient>>>,
 }
 
 #[allow(clippy::too_many_arguments)]
@@ -59,15 +58,12 @@ impl DreContext {
         auth: AuthOpts,
         neuron_id: Option<u64>,
         verbose: bool,
-        yes: bool,
-        dry_run: bool,
         auth_requirement: AuthRequirement,
-        forum_post_link: Option<String>,
         ic_admin_version: IcAdminVersion,
         cordoned_features_fetcher: Arc<dyn CordonedFeatureFetcher>,
         health_client: Arc<dyn HealthStatusQuerier>,
         store: Store,
-        discourse_opts: DiscourseOpts,
+        neuron_override: Option<Neuron>,
     ) -> anyhow::Result<Self> {
         Ok(Self {
             proposal_agent: Arc::new(ProposalAgentImpl::new(&network.nns_urls)),
@@ -76,29 +72,25 @@ impl DreContext {
             ic_admin: RefCell::new(None),
             runner: RefCell::new(None),
             verbose_runner: verbose,
-            forum_post_link: forum_post_link.clone(),
             ic_repo: RefCell::new(None),
-            dry_run,
             artifact_downloader: Arc::new(ArtifactDownloaderImpl {}) as Arc<dyn ArtifactDownloader>,
             neuron: RefCell::new(None),
-            proceed_without_confirmation: yes,
             version: ic_admin_version,
             neuron_opts: NeuronOpts {
                 auth_opts: auth,
                 requirement: auth_requirement,
                 neuron_id,
+                neuron_override,
             },
             cordoned_features_fetcher,
             health_client,
             store,
-            discourse_opts,
-            discourse_client: RefCell::new(None),
         })
     }
 
     // Method that will be called from `main.rs` and
     // will return real implementations of services
-    pub(crate) async fn from_args(args: &Args) -> anyhow::Result<Self> {
+    pub async fn from_args(args: &GlobalArgs, require_auth: AuthRequirement, neuron_override: Option<Neuron>) -> anyhow::Result<Self> {
         let store = Store::new(args.offline)?;
         let network = match store.is_offline() {
             false => ic_management_types::Network::new(args.network.clone(), &args.nns_urls)
@@ -106,39 +98,37 @@ impl DreContext {
                 .map_err(|e| anyhow::anyhow!(e))?,
             true => Network::new_unchecked(args.network.clone(), &args.nns_urls)?,
         };
+
         Self::new(
             network.clone(),
             args.auth_opts.clone(),
             args.neuron_id,
             args.verbose,
-            args.yes,
-            args.dry_run,
-            args.subcommands.require_auth(),
-            args.forum_post_link.clone(),
+            require_auth,
             args.ic_admin_version.clone(),
             store.cordoned_features_fetcher(args.cordoned_features_file.clone())?,
             store.health_client(&network)?,
             store,
-            args.discourse_opts.clone(),
+            neuron_override,
         )
         .await
     }
 
-    pub async fn registry(&self) -> Arc<dyn LazyRegistry> {
+    pub async fn registry_with_version(&self, version_height: Option<u64>) -> Arc<dyn LazyRegistry> {
         if let Some(reg) = self.registry.borrow().as_ref() {
             return reg.clone();
         }
-        let registry = self.store.registry(self.network(), self.proposals_agent()).await.unwrap();
+        let registry = self.store.registry(self.network(), self.proposals_agent(), version_height).await.unwrap();
         *self.registry.borrow_mut() = Some(registry.clone());
         registry
     }
 
-    pub fn network(&self) -> &Network {
-        &self.network
+    pub async fn registry(&self) -> Arc<dyn LazyRegistry> {
+        self.registry_with_version(None).await
     }
 
-    pub fn is_dry_run(&self) -> bool {
-        self.dry_run
+    pub fn network(&self) -> &Network {
+        &self.network
     }
 
     /// Uses `ic_agent::Agent`
@@ -148,23 +138,44 @@ impl DreContext {
         Ok((neuron, canister_client))
     }
 
-    pub async fn ic_admin(&self) -> anyhow::Result<Arc<dyn IcAdmin>> {
+    async fn ic_admin(&self) -> anyhow::Result<Arc<dyn IcAdmin>> {
         if let Some(a) = self.ic_admin.borrow().as_ref() {
             return Ok(a.clone());
         }
 
-        let ic_admin = self
-            .store
-            .ic_admin(
-                &self.version,
-                self.network(),
-                self.proceed_without_confirmation,
-                self.neuron().await?,
-                self.dry_run,
-            )
-            .await?;
+        let ic_admin = self.store.ic_admin(&self.version, self.network(), self.neuron().await?).await?;
         *self.ic_admin.borrow_mut() = Some(ic_admin.clone());
         Ok(ic_admin)
+    }
+
+    pub async fn help_propose(&self, specific_subcommand: Option<&str>) -> anyhow::Result<()> {
+        let ic_admin = self.ic_admin().await?;
+        match &specific_subcommand {
+            None => {
+                println!("List of available ic-admin 'propose' sub-commands:\n");
+                for subcmd in ic_admin.grep_subcommands(r"\s+propose-to-(.+?)\s").await? {
+                    println!("\t{}", subcmd)
+                }
+            }
+            Some(subcmd) => print!("{}", ic_admin.grep_subcommand_arguments(subcmd).await?),
+        }
+        Ok(())
+    }
+
+    pub async fn get(&self, args: &[String]) -> anyhow::Result<()> {
+        print!("{}", self.ic_admin().await?.get(args).await?);
+        Ok(())
+    }
+
+    pub async fn ic_admin_executor(&self) -> anyhow::Result<IcAdminProposalExecutor> {
+        Ok(self.ic_admin().await?.into())
+    }
+
+    pub async fn governance_executor(&self) -> anyhow::Result<GovernanceCanisterProposalExecutor> {
+        let (neuron, client) = self.create_ic_agent_canister_client().await?;
+        let neuron_id = neuron.neuron_id;
+        let governance = GovernanceCanisterWrapper::from(client);
+        Ok((neuron_id, governance).into())
     }
 
     pub async fn neuron(&self) -> anyhow::Result<Neuron> {
@@ -178,6 +189,7 @@ impl DreContext {
             self.network(),
             self.neuron_opts.neuron_id,
             self.store.is_offline(),
+            self.neuron_opts.neuron_override.clone(),
         )
         .await;
 
@@ -198,15 +210,13 @@ impl DreContext {
         Ok(neuron)
     }
 
+    pub fn neuron_id(&self) -> Option<u64> {
+        self.neuron_opts.neuron_id
+    }
+
     pub async fn readonly_ic_admin_for_other_network(&self, network: Network) -> anyhow::Result<impl IcAdmin> {
         let ic_admin = self.ic_admin().await?;
-        Ok(IcAdminImpl::new(
-            network,
-            ic_admin.ic_admin_path(),
-            true,
-            Neuron::anonymous_neuron(),
-            false,
-        ))
+        Ok(IcAdminImpl::new(network, ic_admin.ic_admin_path(), Neuron::anonymous_neuron()))
     }
 
     pub async fn subnet_manager(&self) -> anyhow::Result<SubnetManager> {
@@ -242,54 +252,15 @@ impl DreContext {
         Ok(runner)
     }
 
-    pub fn forum_post_link(&self) -> Option<String> {
-        self.forum_post_link.clone()
-    }
-
     pub fn health_client(&self) -> Arc<dyn HealthStatusQuerier> {
         self.health_client.clone()
-    }
-
-    pub fn discourse_client(&self) -> anyhow::Result<Arc<dyn DiscourseClient>> {
-        if let Some(client) = self.discourse_client.borrow().as_ref() {
-            return Ok(client.clone());
-        }
-
-        let (api_key, api_user, forum_url) = match (
-            self.discourse_opts.discourse_api_key.clone(),
-            self.discourse_opts.discourse_api_user.clone(),
-            self.discourse_opts.discourse_api_url.clone(),
-        ) {
-            (Some(api_key), Some(api_user), Some(forum_url)) => (api_key, api_user, forum_url),
-            // Actual api won't be called so these values don't matter
-            _ if self.discourse_opts.discourse_skip_post_creation => (
-                "placeholder_key".to_string(),
-                "placeholder_user".to_string(),
-                "https://placeholder_url.com".to_string(),
-            ),
-            _ => anyhow::bail!(
-                "Expected to have `api_key`, `forum_url` and `api_user`. Instead found: {:?}",
-                self.discourse_opts
-            ),
-        };
-
-        let client = Arc::new(DiscourseClientImp::new(
-            forum_url,
-            api_key,
-            api_user,
-            // `offline` for discourse client means that it shouldn't try and create posts.
-            // It can happen because the tool runs in offline mode, or if its a dry run.
-            self.store.is_offline() || self.dry_run,
-            self.discourse_opts.discourse_skip_post_creation,
-        )?);
-        *self.discourse_client.borrow_mut() = Some(client.clone());
-        Ok(client)
     }
 }
 
 #[cfg(test)]
 #[allow(dead_code)]
 pub mod tests {
+    use super::DreContext;
     use std::{cell::RefCell, sync::Arc};
 
     use ic_management_backend::{health::HealthStatusQuerier, lazy_git::LazyGit, lazy_registry::LazyRegistry, proposal::ProposalAgent};
@@ -298,14 +269,12 @@ pub mod tests {
     use crate::{
         artifact_downloader::ArtifactDownloader,
         auth::Neuron,
-        commands::{AuthOpts, DiscourseOpts, HsmOpts, HsmParams},
+        auth::{AuthOpts, AuthRequirement, HsmOpts, HsmParams},
         cordoned_feature_fetcher::CordonedFeatureFetcher,
-        discourse_client::DiscourseClient,
+        exe::args::IcAdminVersion,
         ic_admin::IcAdmin,
         store::Store,
     };
-
-    use super::DreContext;
 
     pub fn get_mocked_ctx(
         network: Network,
@@ -317,7 +286,6 @@ pub mod tests {
         artifact_downloader: Arc<dyn ArtifactDownloader>,
         cordoned_features_fetcher: Arc<dyn CordonedFeatureFetcher>,
         health_client: Arc<dyn HealthStatusQuerier>,
-        discourse_client: Arc<dyn DiscourseClient>,
     ) -> DreContext {
         DreContext {
             network,
@@ -327,12 +295,9 @@ pub mod tests {
             ic_repo: RefCell::new(Some(git)),
             proposal_agent,
             verbose_runner: true,
-            forum_post_link: "https://forum.dfinity.org/t/123".to_string().into(),
-            dry_run: true,
             artifact_downloader,
             neuron: RefCell::new(Some(neuron.clone())),
-            proceed_without_confirmation: true,
-            version: crate::commands::IcAdminVersion::Strict("Shouldn't reach this because of mock".to_string()),
+            version: IcAdminVersion::Strict("Shouldn't reach this because of mock".to_string()),
             neuron_opts: super::NeuronOpts {
                 auth_opts: AuthOpts {
                     private_key_pem: None,
@@ -344,7 +309,8 @@ pub mod tests {
                         },
                     },
                 },
-                requirement: crate::commands::AuthRequirement::Neuron,
+                neuron_override: None,
+                requirement: AuthRequirement::Neuron,
                 neuron_id: match neuron.neuron_id {
                     0 => None,
                     n => Some(n),
@@ -353,13 +319,6 @@ pub mod tests {
             cordoned_features_fetcher,
             health_client,
             store: Store::new(false).unwrap(),
-            discourse_opts: DiscourseOpts {
-                discourse_api_key: None,
-                discourse_api_url: None,
-                discourse_api_user: None,
-                discourse_skip_post_creation: true,
-            },
-            discourse_client: RefCell::new(Some(discourse_client)),
         }
     }
 }

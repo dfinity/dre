@@ -488,7 +488,7 @@ impl Display for NakamotoScore {
 mod tests {
     use std::str::FromStr;
 
-    use crate::network::{DecentralizedSubnet, NetworkHealRequest, NetworkHealSubnets, SubnetChangeRequest};
+    use crate::network::{DecentralizedSubnet, NetworkHealRequest, NetworkHealSubnet, SubnetChangeRequest};
     use ic_base_types::PrincipalId;
     use ic_management_types::HealthStatus;
     use indexmap::IndexMap;
@@ -530,6 +530,7 @@ mod tests {
         let score_expected = NakamotoScore {
             coefficients: IndexMap::from([
                 (NodeFeature::NodeProvider, 1.),
+                (NodeFeature::NodeOperator, 1.),
                 (NodeFeature::DataCenter, 1.),
                 (NodeFeature::DataCenterOwner, 1.),
                 (NodeFeature::Area, 1.),
@@ -538,6 +539,7 @@ mod tests {
             value_counts: IndexMap::new(),
             controlled_nodes: IndexMap::from([
                 (NodeFeature::NodeProvider, 1),
+                (NodeFeature::NodeOperator, 1),
                 (NodeFeature::DataCenter, 1),
                 (NodeFeature::DataCenterOwner, 1),
                 (NodeFeature::Area, 1),
@@ -854,7 +856,7 @@ mod tests {
         // Convert the subnet snapshot to the "Subnet" struct
         let subnet_all: DecentralizedSubnet = DecentralizedSubnet::from(subnet_all);
         let re_unhealthy_nodes = Regex::new(r"^(gp7wd|e4ysi|qhz4y|2fbvp)-.+$").unwrap();
-        let subnet_healthy: DecentralizedSubnet = DecentralizedSubnet {
+        let subnet_healthy = DecentralizedSubnet {
             id: subnet_all.id,
             nodes: subnet_all
                 .nodes
@@ -942,26 +944,29 @@ mod tests {
     fn test_network_heal_subnets_ord() {
         let not_important_small = new_test_subnet(0, 13, 0)
             .with_subnet_id(PrincipalId::from_str("k44fs-gm4pv-afozh-rs7zw-cg32n-u7xov-xqyx3-2pw5q-eucnu-cosd4-uqe").unwrap());
-        let not_important_small = NetworkHealSubnets {
+        let not_important_small = NetworkHealSubnet {
             name: String::from("App 20"),
             decentralized_subnet: not_important_small,
             unhealthy_nodes: vec![],
+            cordoned_nodes: vec![],
         };
 
         let not_important_large = new_test_subnet(0, 28, 0)
             .with_subnet_id(PrincipalId::from_str("bkfrj-6k62g-dycql-7h53p-atvkj-zg4to-gaogh-netha-ptybj-ntsgw-rqe").unwrap());
-        let not_important_large = NetworkHealSubnets {
+        let not_important_large = NetworkHealSubnet {
             name: String::from("European"),
             decentralized_subnet: not_important_large,
             unhealthy_nodes: vec![],
+            cordoned_nodes: vec![],
         };
 
         let important =
             serde_json::from_str::<ic_management_types::Subnet>(include_str!("../../test_data/subnet-uzr34.json")).expect("failed to read test data");
-        let important = NetworkHealSubnets {
+        let important = NetworkHealSubnet {
             name: important.metadata.name.clone(),
             decentralized_subnet: DecentralizedSubnet::from(important),
             unhealthy_nodes: vec![],
+            cordoned_nodes: vec![],
         };
 
         let unordered = vec![not_important_small.clone(), important.clone(), not_important_large.clone()];
@@ -1001,7 +1006,7 @@ mod tests {
         important.insert(subnet.principal, subnet);
 
         let network_heal_response = NetworkHealRequest::new(important.clone())
-            .heal_and_optimize(nodes_available.clone(), &health_of_nodes, vec![], &all_nodes, false)
+            .heal_and_optimize(nodes_available.clone(), &health_of_nodes, vec![], &all_nodes, false, false)
             .await
             .unwrap();
         let result = network_heal_response.first().unwrap().clone();

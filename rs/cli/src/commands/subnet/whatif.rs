@@ -1,9 +1,10 @@
+use crate::exe::args::GlobalArgs;
 use clap::Args;
 use ic_types::PrincipalId;
 use registry_canister::mutations::do_change_subnet_membership::ChangeSubnetMembershipPayload;
 
-use crate::commands::{AuthRequirement, ExecutableCommand};
-
+use crate::auth::AuthRequirement;
+use crate::exe::ExecutableCommand;
 #[derive(Args, Debug)]
 #[clap(visible_aliases = &["analyze", "analyze-decentralization", "decentralization", "whatif", "what-if"])]
 pub struct WhatifDecentralization {
@@ -42,5 +43,5 @@ impl ExecutableCommand for WhatifDecentralization {
             .await
     }
 
-    fn validate(&self, _args: &crate::commands::Args, _cmd: &mut clap::Command) {}
+    fn validate(&self, _args: &GlobalArgs, _cmd: &mut clap::Command) {}
 }

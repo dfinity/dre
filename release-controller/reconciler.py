@@ -1,99 +1,88 @@
-import datetime
-import hashlib
+import argparse
 import logging
 import os
 import pathlib
+import requests
 import socket
 import sys
-import tempfile
 import time
-import traceback
 import typing
-import dre_cli
-
+import urllib.parse
 
 sys.path.append(os.path.join(os.path.dirname(__file__)))
 import __fix_import_paths  # isort:skip  # noqa: F401 # pylint: disable=W0611
+import dre_cli
+import dryrun
 import release_index
-import requests
+import slack_announce
+import reconciler_state
+import util
 from dotenv import load_dotenv
-from forum import ReleaseCandidateForumClient
+from forum import ReleaseCandidateForumClient, ForumClientProtocol
 from git_repo import GitRepo
-from git_repo import push_release_tags
 from github import Auth
 from github import Github
-from google_docs import ReleaseNotesClient
+from google_docs import ReleaseNotesClient, ReleaseNotesClientProtocol
 from governance import GovernanceCanister
 from prometheus import ICPrometheus
-from publish_notes import PublishNotesClient
+from publish_notes import PublishNotesClient, PublishNotesClientProtocol
 from pydiscourse import DiscourseClient
 from release_index_loader import DevReleaseLoader
 from release_index_loader import GitReleaseLoader
 from release_index_loader import ReleaseLoader
-from util import version_name
+from release_notes import (
+    prepare_release_notes,
+    SecurityReleaseNotesRequest,
+    OrdinaryReleaseNotesRequest,
+)
+from util import version_name, release_controller_cache_directory
 from watchdog import Watchdog
 
 
-class ReconcilerState:
-    """State for the reconciler. This is used to keep track of the proposals that have been submitted."""
+class CustomFormatter(logging.Formatter):
+    if sys.stderr.isatty():
+        green = "\x1b[32;20m"
+        yellow = "\x1b[33;20m"
+        blue = "\x1b[34;20m"
+        red = "\x1b[31;20m"
+        bold_red = "\x1b[31;1m"
+        reset = "\x1b[0m"
+    else:
+        green = ""
+        yellow = ""
+        blue = ""
+        red = ""
+        bold_red = ""
+        reset = ""
+    fmt = "%(asctime)s %(levelname)8s  %(name)-37s — %(message)s"
+    longfmt = "%(asctime)s %(levelname)13s  %(message)s\n" "%(name)37s"
 
-    def __init__(self, path: pathlib.Path):
-        """Create a new state object."""
-        if not path.exists():
-            os.makedirs(path)
-        self.path = path
+    FORMATS = {
+        logging.DEBUG: blue + fmt + reset,
+        logging.INFO: green + fmt + reset,
+        logging.WARNING: yellow + fmt + reset,
+        logging.ERROR: red + fmt + reset,
+        logging.CRITICAL: bold_red + fmt + reset,
+    }
 
-    def _version_path(self, version: str):
-        return self.path / version
+    LONG_FORMATS = {
+        logging.DEBUG: blue + longfmt + reset,
+        logging.INFO: green + longfmt + reset,
+        logging.WARNING: yellow + longfmt + reset,
+        logging.ERROR: red + longfmt + reset,
+        logging.CRITICAL: bold_red + longfmt + reset,
+    }
 
-    def version_proposal(self, version: str) -> int | None:
-        """Get the proposal ID for the given version. If the version has not been submitted, return None."""
-        version_file = self._version_path(version)
-        if not version_file.exists():
-            return None
-        content = open(version_file, encoding="utf8").read()
-        if len(content) == 0:
-            return None
-        return int(content)
+    def format(self, record: logging.LogRecord) -> str:
+        if len(record.name) > 37 or True:
+            log_fmt = self.LONG_FORMATS.get(record.levelno)
+        else:
+            log_fmt = self.FORMATS.get(record.levelno)
+        formatter = logging.Formatter(log_fmt)
+        return formatter.format(record)
 
-    def proposal_submitted(self, version: str) -> bool:
-        """Check if a proposal has been submitted for the given version."""
-        version_path = self._version_path(version)
-        if self._version_path(version).exists():
-            proposal_id = self.version_proposal(version)
-            if proposal_id:
-                logging.info(
-                    "version %s: proposal %s already submitted", version, proposal_id
-                )
-            else:
-                last_modified = datetime.datetime.fromtimestamp(
-                    os.path.getmtime(version_path)
-                )
-                remaining_time_until_retry = datetime.timedelta(minutes=10) - (
-                    datetime.datetime.now() - last_modified
-                )
-                if remaining_time_until_retry.total_seconds() > 0:
-                    logging.warning(
-                        "version %s: earlier proposal submission attempted but most likely failed, will retry in %s seconds",
-                        version,
-                        remaining_time_until_retry.total_seconds(),
-                    )
-                else:
-                    os.remove(version_path)
-                    return False
-            return True
-        return False
 
-    def mark_submitted(self, version: str):
-        """Mark a proposal as submitted."""
-        self._version_path(version).touch()
-
-    def save_proposal(self, version: str, proposal_id: int):
-        """Save the proposal ID for the given version."""
-        if self.version_proposal(version) or not self._version_path(version).exists():
-            return
-        with open(self._version_path(version), "w", encoding="utf8") as f:
-            f.write(str(proposal_id))
+LOGGER = logging.getLogger()
 
 
 def oldest_active_release(
@@ -161,46 +150,48 @@ def find_base_release(
     )
 
 
-# https://stackoverflow.com/a/44873382
-def sha256sum(filename):
-    h = hashlib.sha256()
-    b = bytearray(128 * 1024)
-    mv = memoryview(b)
-    with open(filename, "rb", buffering=0) as f:
-        for n in iter(lambda: f.readinto(mv), 0):
-            h.update(mv[:n])
-    return h.hexdigest()
-
-
-def version_package_urls(version: str):
+def version_package_urls(version: str) -> list[str]:
     return [
         f"https://download.dfinity.systems/ic/{version}/guest-os/update-img/update-img.tar.zst",
         f"https://download.dfinity.network/ic/{version}/guest-os/update-img/update-img.tar.zst",
     ]
 
 
-def version_package_checksum(version: str):
-    with tempfile.TemporaryDirectory() as d:
-        response = requests.get(
-            f"https://download.dfinity.systems/ic/{version}/guest-os/update-img/SHA256SUMS",
-            timeout=10,
-        )
-        checksum = [
+def version_package_checksum(version: str) -> str:
+    hashurl = (
+        f"https://download.dfinity.systems/ic/{version}/guest-os/update-img/SHA256SUMS"
+    )
+    response = requests.get(hashurl, timeout=10)
+    checksum = typing.cast(
+        str,
+        [
             line
             for line in response.content.decode("utf-8").splitlines()
             if line.strip().endswith("update-img.tar.zst")
-        ][0].split(" ")[0]
+        ][0].split(" ")[0],
+    )
 
-        for i, u in enumerate(version_package_urls(version)):
-            image_file = str(pathlib.Path(d) / f"update-img-{i}.tar.zst")
-            logging.debug("fetching package %s", u)
-            with open(image_file, "wb") as file:
-                response = requests.get(u, timeout=10)
-                file.write(response.content)
-            if sha256sum(image_file) != checksum:
-                raise RuntimeError("checksums do not match")
+    for u in version_package_urls(version):
+        LOGGER.getChild("version_package_checksum").debug("fetching package %s", u)
+        with requests.get(u, timeout=10, stream=True) as resp:
+            resp.raise_for_status()
+            actual_sum = util.sha256sum_http_response(
+                resp, urllib.parse.urlparse(u).netloc
+            )
+        if actual_sum != checksum:
+            raise ValueError(
+                "checksums for %s do not match contents of %s" % (u, hashurl)
+            )
 
-        return checksum
+    return checksum
+
+
+class ActiveVersionProvider(typing.Protocol):
+    def active_versions(self) -> list[str]: ...
+
+
+class ReplicaVersionProposalProvider(typing.Protocol):
+    def replica_version_proposals(self) -> dict[str, int]: ...
 
 
 class Reconciler:
@@ -208,14 +199,18 @@ class Reconciler:
 
     def __init__(
         self,
-        forum_client: ReleaseCandidateForumClient,
+        forum_client: ForumClientProtocol,
         loader: ReleaseLoader,
-        notes_client: ReleaseNotesClient,
-        publish_client: PublishNotesClient,
+        notes_client: ReleaseNotesClientProtocol,
+        publish_client: PublishNotesClientProtocol,
         nns_url: str,
-        state: ReconcilerState,
+        state: reconciler_state.ReconcilerState,
         ic_repo: GitRepo,
-        ignore_releases=None,
+        active_version_provider: ActiveVersionProvider,
+        replica_version_proposal_provider: ReplicaVersionProposalProvider,
+        dre: dre_cli.DRECli,
+        slack_announcer: slack_announce.SlackAnnouncerProtocol,
+        ignore_releases: list[str] | None = None,
     ):
         """Create a new reconciler."""
         self.forum_client = forum_client
@@ -223,236 +218,400 @@ class Reconciler:
         self.notes_client = notes_client
         self.publish_client = publish_client
         self.nns_url = nns_url
-        self.governance_canister = GovernanceCanister()
+        self.governance_canister = replica_version_proposal_provider
         self.state = state
-        self.ic_prometheus = ICPrometheus(
-            url="https://victoria.mainnet.dfinity.network/select/0/prometheus"
-        )
+        self.ic_prometheus = active_version_provider
         self.ic_repo = ic_repo
         self.ignore_releases = ignore_releases or []
+        self.dre = dre
+        self.slack_announcer = slack_announcer
 
-    def reconcile(self):
+    def reconcile(self) -> None:
         """Reconcile the state of the network with the release index."""
         config = self.loader.index()
         active_versions = self.ic_prometheus.active_versions()
-        logging.info(
+        logger = LOGGER.getChild("reconciler")
+
+        logger.info(
             "GuestOS versions active on subnets or unassigned nodes: %s",
-            active_versions,
+            ", ".join(active_versions),
         )
-        dre = dre_cli.DRECli(
-            dre_cli.Auth(
-                key_path=os.environ["PROPOSER_KEY_FILE"],
-                neuron_id=os.environ["PROPOSER_NEURON_ID"],
-            )
-        )
-        for rc_idx, rc in enumerate(
-            config.root.releases[
-                : config.root.releases.index(
-                    oldest_active_release(config, active_versions)
+        releases = config.root.releases[
+            : config.root.releases.index(oldest_active_release(config, active_versions))
+            + 1
+        ]
+        if releases:
+            logger.info("Dealing with the following releases:")
+            for idx, rc in enumerate(releases):
+                logger.info(
+                    "%s. %s (%s)",
+                    idx + 1,
+                    rc.rc_name,
+                    ", ".join([v.name for v in rc.versions]),
                 )
-                + 1
-            ]
-        ):
+        else:
+            logger.info("No releases to deal with")
+
+        for rc in releases:
+            rclogger = logger.getChild(f"{rc.rc_name}")
+
             if rc.rc_name in self.ignore_releases:
+                rclogger.debug("In ignore list.  Skipping.")
                 continue
-            rc_forum_topic = self.forum_client.get_or_create(rc)
-            # update to create posts for any releases
-            rc_forum_topic.update(
-                changelog=self.loader.proposal_summary,
-                proposal=self.state.version_proposal,
-            )
+
             for v_idx, v in enumerate(rc.versions):
-                logging.info("Updating version %s", v)
-                push_release_tags(self.ic_repo, rc)
-                base_release_commit, base_release_name = find_base_release(
-                    self.ic_repo, config, v.version
+                release_tag, release_commit, is_security_fix = (
+                    version_name(rc_name=rc.rc_name, name=v.name),
+                    v.version,
+                    v.security_fix,
                 )
-                self.notes_client.ensure(
-                    base_release_commit=base_release_commit,
-                    base_release_tag=base_release_name,
-                    release_tag=version_name(rc_name=rc.rc_name, name=v.name),
-                    release_commit=v.version,
-                    tag_teams_on_create=v_idx == 0,
+                revlogger = rclogger.getChild(f"{release_tag}")
+
+                prop = self.state.version_proposal(release_commit)
+                if isinstance(prop, reconciler_state.SubmittedProposal):
+                    revlogger.debug("%s.  Nothing to do.", prop)
+                    continue
+                elif (
+                    isinstance(prop, reconciler_state.DREMalfunction)
+                    and not prop.ready_to_retry()
+                ):
+                    revlogger.debug("%s.  Not ready to retry yet.")
+                    continue
+
+                # Here we must check, if the proposal has malfunctioned before,
+                # that the proposal went through (it may have gone through!)
+                # and therefore update posts accordingly (basically everything
+                # except actual proposal submission, since it succeeded before
+                # despite the failure returned to us by governance canister).
+
+                discovered_proposal: dre_cli.ElectionProposal | None = None
+                if isinstance(prop, reconciler_state.DREMalfunction):
+                    existing_proposals = self.dre.get_election_proposals_by_version()
+                    if discovered_proposal := existing_proposals.get(release_commit):
+                        revlogger.warning(
+                            "%s.  However, contrary to recorded failure, proposal"
+                            " to elect %s was indeed successfully submitted as ID %s.",
+                            release_commit,
+                            discovered_proposal["id"],
+                        )
+                    else:
+                        revlogger.info("%s.  Retrying process.", prop)
+                else:
+                    revlogger.info("%s.  Proposal needed.  Beginning process.", prop)
+
+                # update to create posts for any releases
+                rclogger.debug("Ensuring forum post for release candidate exists.")
+                rc_forum_topic = self.forum_client.get_or_create(rc)
+
+                rclogger.debug("Updating forum post preemptively.")
+                rc_forum_topic.update(
+                    summary_retriever=self.loader.proposal_summary,
+                    proposal_id_retriever=self.state.version_proposal,
                 )
 
+                if markdown_file := self.notes_client.markdown_file(release_commit):
+                    revlogger.info(
+                        "Has release notes in editor.  No need to create them."
+                    )
+                else:
+                    revlogger.info("No release notes found in editor.  Creating.")
+                    if is_security_fix:
+                        revlogger.info(
+                            "It's a security fix.  Skipping base release investigation."
+                        )
+                        # FIXME: how to push the release tags and artifacts
+                        # of security fixes 10 days after their rollout?
+                        request: (
+                            OrdinaryReleaseNotesRequest | SecurityReleaseNotesRequest
+                        ) = SecurityReleaseNotesRequest(release_tag, release_commit)
+                    else:
+                        revlogger.info(
+                            "It's an ordinary release.  Generating full changelog."
+                        )
+                        self.ic_repo.push_release_tags(rc)
+                        base_release_commit, base_release_tag = find_base_release(
+                            self.ic_repo, config, release_commit
+                        )
+                        request = OrdinaryReleaseNotesRequest(
+                            release_tag,
+                            release_commit,
+                            base_release_tag,
+                            base_release_commit,
+                        )
+
+                    revlogger.info("Preparing release notes.")
+                    content = prepare_release_notes(request)
+
+                    revlogger.info("Uploading release notes.")
+                    gdoc = self.notes_client.ensure(
+                        release_tag=release_tag,
+                        release_commit=release_commit,
+                        content=content,
+                    )
+
+                    if "SLACK_WEBHOOK_URL" in os.environ:
+                        # This should have never been in the Google Docs code.
+                        revlogger.info("Announcing release notes")
+                        self.slack_announcer.announce_release(
+                            webhook=os.environ["SLACK_WEBHOOK_URL"],
+                            version_name=release_tag,
+                            google_doc_url=gdoc["alternateLink"],
+                            tag_all_teams=v_idx == 0,
+                        )
+
                 self.publish_client.publish_if_ready(
-                    google_doc_markdownified=self.notes_client.markdown_file(v.version),
-                    version=v.version,
+                    google_doc_markdownified=markdown_file,
+                    version=release_commit,
                 )
 
                 # returns a result only if changelog is published
-                changelog = self.loader.proposal_summary(v.version)
-                if changelog:
-                    if self.state.proposal_submitted(v.version):
-                        logging.info(
-                            "RC %s: proposal already submitted for version %s",
-                            rc.rc_name,
-                            v.version,
-                        )
-                    else:
-                        logging.info(
-                            "RC %s: submitting proposal for version %s",
-                            rc.rc_name,
-                            v.version,
-                        )
-                        unelect_versions = []
-                        if v_idx == 0:
-                            unelect_versions.extend(
-                                versions_to_unelect(
-                                    config,
-                                    active_versions=active_versions,
-                                    elected_versions=dre.get_blessed_versions()[
-                                        "value"
-                                    ]["blessed_version_ids"],
-                                ),
-                            )
-                        # This is a defensive approach in case the ic-admin exits with failure
-                        # but still manages to submit the proposal, e.g. because it fails to decode the response.
-                        # We had cases like this in the past.
-                        self.state.mark_submitted(v.version)
-
-                        place_proposal(
-                            dre=dre,
-                            changelog=changelog,
-                            version=v.version,
-                            forum_post_url=rc_forum_topic.post_url(v.version),
-                            unelect_versions=unelect_versions,
-                        )
-
-                    versions_proposals = (
-                        self.governance_canister.replica_version_proposals()
+                changelog = self.loader.proposal_summary(
+                    release_commit, is_security_fix
+                )
+                if not changelog:
+                    revlogger.debug("No changelog ready for proposal submission.")
+                    continue
+                else:
+                    revlogger.info(
+                        "The changelog is now ready for proposal submission."
                     )
-                    if v.version in versions_proposals:
-                        self.state.save_proposal(
-                            v.version, versions_proposals[v.version]
+
+                unelect_versions = []
+                if v_idx == 0:
+                    unelect_versions.extend(
+                        versions_to_unelect(
+                            config,
+                            active_versions=active_versions,
+                            elected_versions=self.dre.get_blessed_versions(),
+                        ),
+                    )
+
+                if discovered_proposal is not None:
+                    prop.record_submission(discovered_proposal["id"])
+                else:
+                    checksum = version_package_checksum(release_commit)
+                    urls = version_package_urls(release_commit)
+
+                    try:
+                        proposal_id = (
+                            self.dre.propose_to_revise_elected_guestos_versions(
+                                changelog=changelog,
+                                version=release_commit,
+                                forum_post_url=rc_forum_topic.post_url(release_commit),
+                                unelect_versions=unelect_versions,
+                                package_checksum=checksum,
+                                package_urls=urls,
+                            )
                         )
+                        success = prop.record_submission(proposal_id)
+                        revlogger.info("%s", success)
+                    except Exception:
+                        fail = prop.record_malfunction()
+                        revlogger.error("%s", fail)
 
-            # update the forum posts in case the proposal was created
-            rc_forum_topic.update(
-                changelog=self.loader.proposal_summary,
-                proposal=self.state.version_proposal,
-            )
+                rclogger.debug("Updating forum posts after processing versions.")
+                # Update the forum posts in case the proposal was created.
+                rc_forum_topic.update(
+                    summary_retriever=self.loader.proposal_summary,
+                    proposal_id_retriever=self.state.version_proposal,
+                )
 
-
-def place_proposal(
-    dre: dre_cli.DRECli,
-    changelog,
-    version: str,
-    forum_post_url: str,
-    unelect_versions: list[str],
-    dry_run=False,
-):
-    unelect_versions_args = []
-    if len(unelect_versions) > 0:
-        unelect_versions_args.append("--replica-versions-to-unelect")
-        unelect_versions_args.extend(unelect_versions)
-    summary = changelog + f"\n\nLink to the forum post: {forum_post_url}"
-    logging.info("submitting proposal for version %s", version)
-    dre.run(
-        "propose",
-        "update-elected-replica-versions",
-        "--proposal-title",
-        f"Elect new IC/Replica revision (commit {version[:7]})",
-        "--summary",
-        summary,
-        *(["--dry-run"] if dry_run else []),  # TODO: replace with system proposer
-        "--release-package-sha256-hex",
-        version_package_checksum(version),
-        "--release-package-urls",
-        *version_package_urls(version),
-        "--replica-version-to-elect",
-        version,
-        *unelect_versions_args,
-    )
+        logger.info("Iteration completed.")
 
 
 dre_repo = "dfinity/dre"
 
 
-def main():
-    if len(sys.argv) == 2:
-        load_dotenv(sys.argv[1])
+def main() -> None:
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "--dry-run",
+        action="store_true",
+        dest="dry_run",
+        help="Make no changes anywhere, including but not limited to proposals, forum posts, or Google documents.",
+    )
+    parser.add_argument("--verbose", "--debug", action="store_true", dest="verbose")
+    parser.add_argument(
+        "--loop-every",
+        action="store",
+        type=int,
+        dest="loop_every",
+        default=60,
+        help="Time to wait between loop executions.  If 0 or less, exit immediately after the first loop.  Defaults to %(default)s seconds.",
+    )
+    parser.add_argument(
+        "--skip-preloading-state",
+        action="store_true",
+        dest="skip_preloading_state",
+        help="Do not fill the reconciler state upon startup with the known proposals from the governance canister.",
+    )
+    parser.add_argument(
+        "dotenv_file",
+        nargs="?",
+    )
+    opts = parser.parse_args()
+
+    dry_run = opts.dry_run
+    verbose = opts.verbose
+    skip_preloading_state = opts.skip_preloading_state
+
+    if skip_preloading_state and not dry_run:
+        assert 0, "To prevent double submission of proposals, preloading state must not be skipped when run without --dry-run"
+
+    if opts.dotenv_file:
+        load_dotenv(opts.dotenv_file)
     else:
         load_dotenv()
 
-    # Watchdog needs to be fed (to report healthy progress) every 10 minutes
-    watchdog = Watchdog(timeout_seconds=600)
+    root = logging.getLogger()
+    root.setLevel(logging.DEBUG if verbose else logging.INFO)
+    if verbose:
+        for info in ["httpcore", "urllib3", "httpx"]:
+            logging.getLogger(info).setLevel(logging.WARNING)
+
+    ch = logging.StreamHandler()
+    ch.setLevel(logging.DEBUG if verbose else logging.INFO)
+    ch.setFormatter(CustomFormatter())
+    root.addHandler(ch)
+
+    # Prep the program for longer timeouts.
+    socket.setdefaulttimeout(60)
+
+    # Watchdog needs to be fed (to report healthy progress) every 10 minutes at the least.
+    watchdog = Watchdog(timeout_seconds=max([600, opts.loop_every * 2]))
     watchdog.start()
 
-    discourse_client = DiscourseClient(
-        host=os.environ["DISCOURSE_URL"],
-        api_username=os.environ["DISCOURSE_USER"],
-        api_key=os.environ["DISCOURSE_KEY"],
-    )
     config_loader = (
         GitReleaseLoader(f"https://github.com/{dre_repo}.git")
         if "dev" not in os.environ
         else DevReleaseLoader()
     )
-    state = ReconcilerState(
-        pathlib.Path(
-            os.environ.get(
-                "RECONCILER_STATE_DIR",
-                pathlib.Path.home() / ".cache/release-controller",
+    forum_client = (
+        ReleaseCandidateForumClient(
+            DiscourseClient(  # type: ignore[no-untyped-call]
+                host=os.environ["DISCOURSE_URL"],
+                api_username=os.environ["DISCOURSE_USER"],
+                api_key=os.environ["DISCOURSE_KEY"],
             )
         )
+        if not dry_run
+        else dryrun.ForumClient(dryrun.StubDiscourseClient())
     )
-    forum_client = ReleaseCandidateForumClient(
-        discourse_client,
-    )
-    github_token = os.environ["GITHUB_TOKEN"]
-    github_client = Github(auth=Auth.Token(github_token))
-    reconciler = Reconciler(
-        forum_client=forum_client,
-        loader=config_loader,
-        notes_client=ReleaseNotesClient(
+    release_notes_client = (
+        ReleaseNotesClient(
             credentials_file=pathlib.Path(
                 os.environ.get(
                     "GDOCS_CREDENTIALS_PATH",
                     pathlib.Path(__file__).parent.resolve() / "credentials.json",
                 )
             )
+        )
+        if not dry_run
+        else dryrun.ReleaseNotesClient()
+    )
+    ic_repo = (
+        GitRepo(
+            f"https://oauth2:{os.environ['GITHUB_TOKEN']}@github.com/dfinity/ic.git",
+            main_branch="master",
+        )
+        if not dry_run
+        else dryrun.GitRepo(
+            "https://github.com/dfinity/ic.git",
+            main_branch="master",
+        )
+    )
+    publish_notes_client: PublishNotesClientProtocol = (
+        PublishNotesClient(
+            Github(auth=Auth.Token(os.environ["GITHUB_TOKEN"])).get_repo(dre_repo)
+        )
+        if not dry_run
+        else dryrun.PublishNotesClient()
+    )
+
+    dre = (
+        dre_cli.DRECli(
+            dre_cli.Auth(
+                key_path=os.environ["PROPOSER_KEY_FILE"],
+                neuron_id=os.environ["PROPOSER_NEURON_ID"],
+            )
+        )
+        if not dry_run
+        else dryrun.DRECli()
+    )
+    state = reconciler_state.ReconcilerState(
+        pathlib.Path(
+            os.environ.get("RECONCILER_STATE_DIR", release_controller_cache_directory())
         ),
-        publish_client=PublishNotesClient(github_client.get_repo(dre_repo)),
+        None if skip_preloading_state else dre.get_election_proposals_by_version,
+    )
+    slack_announcer = (
+        slack_announce.SlackAnnouncer() if not dry_run else dryrun.MockSlackAnnouncer()
+    )
+
+    reconciler = Reconciler(
+        forum_client=forum_client,
+        loader=config_loader,
+        notes_client=release_notes_client,
+        publish_client=publish_notes_client,
         nns_url="https://ic0.app",
         state=state,
         ignore_releases=[
             "rc--2024-03-06_23-01",
             "rc--2024-03-20_23-01",
         ],
-        ic_repo=GitRepo(
-            f"https://oauth2:{github_token}@github.com/dfinity/ic.git",
-            main_branch="master",
+        ic_repo=ic_repo,
+        active_version_provider=ICPrometheus(
+            url="https://victoria.mainnet.dfinity.network/select/0/prometheus"
         ),
+        replica_version_proposal_provider=GovernanceCanister(),
+        slack_announcer=slack_announcer,
+        dre=dre,
     )
 
     while True:
         try:
+            now = time.time()
             reconciler.reconcile()
             watchdog.report_healthy()
-        except Exception as e:
-            logging.error(traceback.format_exc())
-            logging.error("failed to reconcile: %s", e)
-        time.sleep(60)
+            if opts.loop_every <= 0:
+                break
+            else:
+                sleepytime = opts.loop_every - (time.time() - now)
+                if sleepytime > 0.0:
+                    time.sleep(sleepytime)
+        except KeyboardInterrupt:
+            LOGGER.info("Interrupted.")
+            raise
+        except Exception:
+            if opts.loop_every <= 0:
+                raise
+            else:
+                LOGGER.exception(
+                    f"Failed to reconcile.  Retrying in {opts.loop_every} seconds.  Traceback:"
+                )
+                time.sleep(opts.loop_every)
+
+    LOGGER.info("Exiting.")
 
 
 # use this as a template in case you need to manually submit a proposal
-def oneoff():
+def oneoff() -> None:
     release_loader = GitReleaseLoader(f"https://github.com/{dre_repo}.git")
     version = "ac971e7b4c851b89b312bee812f6de542ed907c5"
-    changelog = release_loader.proposal_summary(version)
+    changelog = release_loader.proposal_summary(version, False)
+    assert changelog
 
     dre = dre_cli.DRECli()
-    place_proposal(
-        dre=dre,
+    dre.propose_to_revise_elected_guestos_versions(
         changelog=changelog,
         version=version,
         forum_post_url="https://forum.dfinity.org/t/proposal-to-elect-new-release-rc-2024-03-27-23-01/29042/7",
         unelect_versions=[],
+        package_checksum=version_package_checksum(version),
+        package_urls=version_package_urls(version),
     )
 
 
 if __name__ == "__main__":
-    logging.basicConfig(stream=sys.stdout, level=logging.INFO)
-    socket.setdefaulttimeout(60)
+    # FIXME make formatter not output ANSI when stderr is not console
     main()

@@ -2,7 +2,8 @@ use std::path::PathBuf;
 
 use clap::Args;
 
-use super::{AuthRequirement, ExecutableCommand};
+use crate::auth::AuthRequirement;
+use crate::exe::{args::GlobalArgs, ExecutableCommand};
 
 #[derive(Args, Debug)]
 pub struct DerToPrincipal {
@@ -16,10 +17,10 @@ impl ExecutableCommand for DerToPrincipal {
     }
 
     async fn execute(&self, _ctx: crate::ctx::DreContext) -> anyhow::Result<()> {
-        let principal = ic_base_types::PrincipalId::new_self_authenticating(&std::fs::read(&self.path)?);
+        let principal = ic_base_types::PrincipalId::new_self_authenticating(&fs_err::read(&self.path)?);
         println!("{}", principal);
         Ok(())
     }
 
-    fn validate(&self, _args: &crate::commands::Args, _cmd: &mut clap::Command) {}
+    fn validate(&self, _args: &GlobalArgs, _cmd: &mut clap::Command) {}
 }

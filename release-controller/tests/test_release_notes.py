@@ -3,13 +3,14 @@ import tempfile
 from release_notes import (
     prepare_release_notes,
     get_change_description_for_commit,
+    OrdinaryReleaseNotesRequest,
+    SecurityReleaseNotesRequest,
     Change,
 )
 from git_repo import GitRepo
-import pytest
 
 
-def test_get_change_description_for_commit():
+def test_get_change_description_for_commit() -> None:
     with tempfile.TemporaryDirectory() as repo_cache_dir:
         ic_repo = GitRepo(
             "https://github.com/dfinity/ic.git",
@@ -210,13 +211,15 @@ def test_get_change_description_for_commit():
         )
 
 
-def test_release_notes():
+def test_release_notes() -> None:
     assert (
         prepare_release_notes(
-            "release-2024-07-25_21-03-base",
-            "2c0b76cfc7e596d5c4304cff5222a2619294c8c1",
-            "release-2024-08-02_01-30-base",
-            "3d0b3f10417fc6708e8b5d844a0bac5e86f3e17d",
+            OrdinaryReleaseNotesRequest(
+                "release-2024-08-02_01-30-base",
+                "3d0b3f10417fc6708e8b5d844a0bac5e86f3e17d",
+                "release-2024-07-25_21-03-base",
+                "2c0b76cfc7e596d5c4304cff5222a2619294c8c1",
+            )
         )
         == """\
 # Review checklist
@@ -307,3 +310,12 @@ To see a full list of commits added since last release, compare the revisions on
 * ~~author: oggy      | [`32bc2c260`](https://github.com/dfinity/ic/commit/32bc2c260) Interface,Message Routing: Use mainnet binaries for the queues compatibility test ([#419](https://github.com/dfinity/ic/pull/419)) [AUTO-EXCLUDED:Not modifying GuestOS]~~
 """
     )
+
+    res = prepare_release_notes(
+        SecurityReleaseNotesRequest(
+            "release-2024-08-02_01-30-base",
+            "3d0b3f10417fc6708e8b5d844a0bac5e86f3e17d",
+        )
+    )
+    assert "accordance" in res, f"No security caveat present in {res}"
+    assert "Release Notes for" in res, f"No Release Notes headline present in {res}"

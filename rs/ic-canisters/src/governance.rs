@@ -5,18 +5,25 @@ use ic_nns_common::pb::v1::ProposalId;
 use ic_nns_constants::GOVERNANCE_CANISTER_ID;
 use ic_nns_governance::pb::v1::manage_neuron::claim_or_refresh::By;
 use ic_nns_governance::pb::v1::manage_neuron::ClaimOrRefresh;
+use ic_nns_governance::pb::v1::manage_neuron::Command;
 use ic_nns_governance::pb::v1::manage_neuron::Command::ClaimOrRefresh as CoR;
+use ic_nns_governance::pb::v1::manage_neuron::NeuronIdOrSubaccount;
 use ic_nns_governance::pb::v1::manage_neuron::RegisterVote;
 use ic_nns_governance::pb::v1::GovernanceError;
-use ic_nns_governance::pb::v1::ListNeurons;
-use ic_nns_governance::pb::v1::ListNeuronsResponse;
 use ic_nns_governance::pb::v1::ListProposalInfo;
 use ic_nns_governance::pb::v1::ListProposalInfoResponse;
 use ic_nns_governance::pb::v1::ManageNeuron;
-use ic_nns_governance::pb::v1::ManageNeuronResponse;
 use ic_nns_governance::pb::v1::Neuron;
 use ic_nns_governance::pb::v1::NeuronInfo;
+use ic_nns_governance::pb::v1::NodeProvider as PbNodeProvider;
+use ic_nns_governance::pb::v1::Proposal;
 use ic_nns_governance::pb::v1::ProposalInfo;
+use ic_nns_governance_api::pb::v1::manage_neuron_response::Command as CommandResponse;
+use ic_nns_governance_api::pb::v1::manage_neuron_response::MakeProposalResponse;
+use ic_nns_governance_api::pb::v1::ListNeurons;
+use ic_nns_governance_api::pb::v1::ListNeuronsResponse;
+use ic_nns_governance_api::pb::v1::ListNodeProvidersResponse;
+use ic_nns_governance_api::pb::v1::ManageNeuronResponse;
 use serde::{self, Serialize};
 use std::str::FromStr;
 use std::time::Duration;
@@ -135,12 +142,11 @@ impl GovernanceCanisterWrapper {
         .await?;
 
         match response.command {
-            Some(ic_nns_governance::pb::v1::manage_neuron_response::Command::RegisterVote(response)) => {
-                Ok(format!("Successfully voted on proposal {} {:?}", proposal_id, response))
-            }
-            Some(ic_nns_governance::pb::v1::manage_neuron_response::Command::Error(err))
+            None => Err(anyhow::anyhow!("No command in response")),
+            Some(CommandResponse::RegisterVote(response)) => Ok(format!("Successfully voted on proposal {} {:?}", proposal_id, response)),
+            Some(CommandResponse::Error(err))
                 if err
-                    == ic_nns_governance::pb::v1::GovernanceError {
+                    == ic_nns_governance_api::pb::v1::GovernanceError {
                         error_type: ic_nns_governance::pb::v1::governance_error::ErrorTypeDesc::PreconditionFailed as i32,
                         error_message: "Neuron already voted on proposal.".to_string(),
                     } =>
@@ -176,6 +182,21 @@ impl GovernanceCanisterWrapper {
         Decode!(resp.as_slice(), ManageNeuronResponse).map_err(anyhow::Error::from)
     }
 
+    pub async fn make_proposal(&self, proposer_id: NeuronId, proposal: Proposal) -> anyhow::Result<MakeProposalResponse> {
+        let mng = ManageNeuron {
+            id: None,
+            neuron_id_or_subaccount: Some(NeuronIdOrSubaccount::NeuronId(proposer_id)),
+            command: Some(Command::MakeProposal(proposal.into())),
+        };
+        let resp = self.manage_neuron(&mng).await?;
+        match resp.command {
+            None => Err(anyhow::anyhow!("No command in response")),
+            Some(CommandResponse::MakeProposal(resp)) => Ok(resp),
+            Some(CommandResponse::Error(resp)) => Err(anyhow::anyhow!("{:?}", resp)),
+            Some(_) => Err(anyhow::anyhow!("Unexpected command response to proposal request: {:?}", resp.command)),
+        }
+    }
+
     pub async fn list_proposals(&self, contract: ListProposalInfo) -> anyhow::Result<Vec<ProposalInfo>> {
         self.query::<ListProposalInfoResponse>("list_proposals", candid::encode_one(&contract)?)
             .await
@@ -195,6 +216,24 @@ impl GovernanceCanisterWrapper {
     }
 
     pub async fn list_neurons(&self) -> anyhow::Result<ListNeuronsResponse> {
+        let mut page_number = 0;
+        let mut acc = ListNeuronsResponse::default();
+        loop {
+            let current = self.list_neurons_inner(page_number).await?;
+            acc.full_neurons.extend(current.full_neurons);
+            acc.neuron_infos.extend(current.neuron_infos);
+
+            if page_number >= acc.total_pages_available() {
+                break;
+            }
+
+            page_number += 1;
+        }
+
+        Ok(acc)
+    }
+
+    async fn list_neurons_inner(&self, page: u64) -> anyhow::Result<ListNeuronsResponse> {
         self.query(
             "list_neurons",
             candid::encode_one(ListNeurons {
@@ -202,9 +241,19 @@ impl GovernanceCanisterWrapper {
                 include_neurons_readable_by_caller: true,
                 include_empty_neurons_readable_by_caller: None,
                 include_public_neurons_in_full_neurons: None,
+                page_number: Some(page),
+                page_size: None,
             })?,
         )
         .await
+    }
+
+    pub async fn get_node_providers(&self) -> anyhow::Result<Vec<PbNodeProvider>> {
+        let response = self
+            .query::<ListNodeProvidersResponse>("list_node_providers", candid::encode_one(())?)
+            .await?;
+        let node_providers = response.node_providers.into_iter().map(PbNodeProvider::from).collect();
+        Ok(node_providers)
     }
 
     async fn query<T>(&self, method_name: &str, args: Vec<u8>) -> anyhow::Result<T>

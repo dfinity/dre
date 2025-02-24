@@ -4,16 +4,6 @@ def external_crates_repository():
     crates_repository(
         name = "crate_index_dre",
         annotations = {
-            "ic-adapter-metrics-service": [crate.annotation(
-                build_script_data = [
-                    "@com_google_protobuf//:protoc",
-                    "@com_google_protobuf//:well_known_protos",
-                ],
-                build_script_env = {
-                    "PROTOC": "$(execpath @com_google_protobuf//:protoc)",
-                    "PROTOC_INCLUDE": "../com_google_protobuf/src",
-                },
-            )],
             "ic-icrc1-ledger": [crate.annotation(
                 build_script_data = [
                     "@ic-icrc1-archive//file",
@@ -58,6 +48,7 @@ def external_crates_repository():
             "//rs/dre-canisters/node-provider-rewards-lib:Cargo.toml",
             "//rs/dre-canisters/trustworthy-node-metrics/src/trustworthy-node-metrics:Cargo.toml",
             "//rs/dre-canisters/trustworthy-node-metrics/src/trustworthy-node-metrics-types:Cargo.toml",
+            "//rs:dre-canisters/node_status_canister/src/node_status_canister_backend/Cargo.toml"
         ],
         splicing_config = splicing_config(
             resolver_version = "2",

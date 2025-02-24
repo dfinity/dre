@@ -1,11 +1,12 @@
 [project]
 name = "dre-repo"
-version = "0.5.7"
+version = "0.5.9"
 description = ""
 authors = [{ name = "DRE Team", email = "dept-DRE@dfinity.org" }]
 readme = "README.md"
 dependencies = [
     "requests>=2.32.3",
+    "types-requests>=2.32.0",
     "gitpython>=3.1.43",
     "numpy>=2.1.1",
     "pandas>=2.2.2",
@@ -36,8 +37,9 @@ dependencies = [
     "google-auth-httplib2>=0.2.0",
     "google-auth-oauthlib>=1.2.1",
     "pydrive2>=1.20.0",
+    "types-Markdown",
     "markdownify>=0.13.1",
-    "pytest>=8.3.2",
+    "pytest>=8.3.4",
     "pytest-asyncio>=0.24.0",
     "pytest-xdist>=3.6.1",
     "git-changelog>=2.5.2",
@@ -49,6 +51,8 @@ dependencies = [
     "ruamel-yaml>=0.18.6",
     "httpretty>=1.1.4",
     "aiohttp>=3.10.5",
+    "uv>=0.5.20",
+    "mypy==1.15.0",
 ]
 
 [tool.rye]

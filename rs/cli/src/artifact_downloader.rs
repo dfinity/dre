@@ -12,6 +12,8 @@ use sha2::{Digest, Sha256};
 pub struct ArtifactDownloaderImpl {}
 
 #[automock]
+// automock complains without the explicit allow below
+#[allow(elided_named_lifetimes)]
 pub trait ArtifactDownloader: Sync + Send {
     fn get_s3_cdn_image_url<'a>(&'a self, version: &'a str, s3_subdir: &'a str) -> String {
         format!(
@@ -36,7 +38,7 @@ pub trait ArtifactDownloader: Sync + Send {
             let download_dir = format!("{}/tmp/ic/{}", dirs::home_dir().expect("home_dir is not set").as_path().display(), subdir);
             let download_dir = Path::new(&download_dir);
 
-            std::fs::create_dir_all(download_dir).unwrap_or_else(|_| panic!("create_dir_all failed for {}", download_dir.display()));
+            fs_err::create_dir_all(download_dir).unwrap_or_else(|_| panic!("create_dir_all failed for {}", download_dir.display()));
 
             let download_image = format!("{}/update-img.tar.gz", download_dir.to_str().unwrap());
             let download_image = Path::new(&download_image);

@@ -1,31 +1,121 @@
 # Decentralized Reliability Engineering (DRE)
 
-## Documentation in Github Pages
+[![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
+[![Rust](https://img.shields.io/badge/Rust-stable-orange.svg)](rust-toolchain.toml)
+[![Python](https://img.shields.io/badge/Python-3.x-blue.svg)](.python-version)
+[![Bazel](https://img.shields.io/badge/Build-Bazel-43a047.svg)](.bazelversion)
 
-Searchable docs are available as GitHub pages at https://dfinity.github.io/dre/
+A comprehensive suite of tools and services for managing and monitoring Internet Computer (IC) infrastructure.
 
-## Installation
+## 📚 Table of Contents
 
-Please follow [getting started](docs/getting-started.md).
+- [Documentation](#documentation)
+- [Features](#features)
+- [Installation](#installation)
+- [Usage](#usage)
+- [Contributing](#contributing)
+- [License](#license)
 
-## Usage
+## 📖 Documentation
 
-In this repo we build:
-* DRE cli tool
-* Internal DRE dashboard, both frontend and backend
-* Service discovery, which creates a list of IC targets for logs and metrics
-* Log fetcher for IC nodes: Host, Guest, Boundary nodes
-* Canister log fetcher
-* Node Provider notifications, to notify node providers if node becomes unhealthy (unfinished and unmaintained code)
+Comprehensive, searchable documentation is available at [dfinity.github.io/dre](https://dfinity.github.io/dre/)
 
-The DRE cli tool is built as an release artifact and published on GitHub: https://github.com/dfinity/dre/releases
+The documentation includes:
+- Detailed API references
+- Usage examples
+- Best practices
+- Troubleshooting guides
 
-Some examples of DRE cli tool usage are at [NNS proposals](nns-proposals.md), and elsewhere in the documentation. The documentation published on GitHub pages has quite good search, so please use that.
+## 🚀 Features
 
-## Contributing
+DRE provides a powerful set of tools and services:
 
-Please follow [contributing](docs/contributing.md).
+### Core Components
 
-## License
+- **DRE CLI Tool**: Command-line interface for interacting with IC infrastructure
+  - Available as a pre-built binary on [GitHub Releases](https://github.com/dfinity/dre/releases)
+  - Examples available in [NNS proposals documentation](nns-proposals.md)
 
-The contents of this repo are licensed under the [Apache 2 license](LICENSE).
+- **DRE Dashboard**: Comprehensive monitoring and management interface
+  - Frontend and backend components
+  - Real-time infrastructure insights
+  - Interactive management capabilities
+
+### Monitoring & Logging
+
+- **Service Discovery**: Automated IC target discovery for logs and metrics
+- **Log Fetchers**:
+  - Host node logs
+  - Guest node logs
+  - Boundary node logs
+  - Canister logs
+
+### Infrastructure Management
+
+- **Node Provider Notifications**: Health monitoring system for IC nodes
+  - Automated alerts for node health issues
+  - Note: Currently in maintenance mode
+
+## 🛠 Installation
+
+1. Check the [prerequisites](docs/getting-started.md#prerequisites)
+2. Follow our detailed [getting started guide](docs/getting-started.md)
+3. Verify your installation
+
+## 💻 Usage
+
+The DRE CLI tool (version 0.5.9) provides various commands for managing IC infrastructure:
+
+```bash
+# View all available commands
+dre --help
+
+# Common commands:
+dre network        # Network-wide management operations, such as healing all subnets
+dre subnet         # Subnet management, such as replacing nodes in a subnet
+dre governance     # Commands and actions related to the IC NNS governance, such as submitting NNS motion proposals
+dre proposals      # Listing or analyzing submitted NNS proposals
+dre nodes          # Node operations, such as removing nodes from the IC
+dre registry       # Registry reading
+dre get            # Wrapper around ic-admin get-* commands
+dre propose        # Wrapper around ic-admin propose-* commands
+dre firewall       # Submitting proposals for firewall updates
+dre node-metrics   # Getting the trustworthy node metrics
+dre update-authorized-subnets  # Automatically updating the list of public IC subnets, based on subnet utilization
+dre neuron         # Neuron topping up and checking balance
+```
+
+### Authentication Options
+
+- `--private-key-pem`: Path to private key file (PEM format)
+- `--neuron-id`: Explicitly setting the Neuron ID for governance operations, overriding the autodetection
+- `--network`: Target network (mainnet, staging, or testnet)
+- `--ic-admin`: Custom path to ic-admin
+- `--hsm-*`: Hardware Security Module configurations
+
+### Additional Options
+
+- `--verbose`: Print detailed information
+- `--dry-run`: Simulate operations without execution
+- `--offline`: Run operations offline when possible
+- `-y, --yes`: Skip confirmation prompts
+
+For more examples and detailed usage instructions:
+- Browse the [documentation](https://dfinity.github.io/dre/)
+- Check the [NNS proposals guide](nns-proposals.md)
+- Use the documentation search feature for specific topics
+
+## 🤝 Contributing
+
+We welcome contributions! Please see our [contributing guide](docs/contributing.md) for details on:
+- Code style and standards
+- Development setup
+- Testing requirements
+- Pull request process
+
+## 📄 License
+
+This project is licensed under the [Apache License 2.0](LICENSE).
+
+---
+Built with ❤️ by the DFINITY Foundation

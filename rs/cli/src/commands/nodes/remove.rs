@@ -1,7 +1,13 @@
+use crate::exe::args::GlobalArgs;
 use clap::{error::ErrorKind, Args};
 use decentralization::subnets::NodesRemover;
 
-use crate::commands::{AuthRequirement, ExecutableCommand};
+use crate::{
+    auth::AuthRequirement,
+    exe::ExecutableCommand,
+    forum::ForumPostKind,
+    submitter::{SubmissionParameters, Submitter},
+};
 
 #[derive(Args, Debug)]
 pub struct Remove {
@@ -23,6 +29,9 @@ pub struct Remove {
     /// Motivation for removing additional nodes
     #[clap(long, aliases = ["summary"])]
     pub motivation: Option<String>,
+
+    #[clap(flatten)]
+    pub submission_parameters: SubmissionParameters,
 }
 
 impl ExecutableCommand for Remove {
@@ -31,23 +40,23 @@ impl ExecutableCommand for Remove {
     }
 
     async fn execute(&self, ctx: crate::ctx::DreContext) -> anyhow::Result<()> {
-        let runner = ctx.runner().await?;
-        let runner_proposal = runner
+        let runner_proposal = ctx
+            .runner()
+            .await?
             .remove_nodes(NodesRemover {
                 no_auto: self.no_auto,
                 remove_degraded: self.remove_degraded,
                 extra_nodes_filter: self.extra_nodes_filter.clone(),
                 exclude: Some(self.exclude.clone()),
                 motivation: self.motivation.clone().unwrap_or_default(),
-                forum_post_link: ctx.forum_post_link(),
             })
             .await?;
-        let ic_admin = ctx.ic_admin().await?;
-        ic_admin.propose_run(runner_proposal.cmd, runner_proposal.opts).await?;
-        Ok(())
+        Submitter::from(&self.submission_parameters)
+            .propose(ctx.ic_admin_executor().await?.execution(runner_proposal), ForumPostKind::Generic)
+            .await
     }
 
-    fn validate(&self, _args: &crate::commands::Args, cmd: &mut clap::Command) {
+    fn validate(&self, _args: &GlobalArgs, cmd: &mut clap::Command) {
         if self.motivation.is_none() && !self.extra_nodes_filter.is_empty() {
             cmd.error(ErrorKind::MissingRequiredArgument, "Required argument motivation not found")
                 .exit()

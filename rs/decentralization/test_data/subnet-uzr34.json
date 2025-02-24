@@ -10,7 +10,7 @@
           "principal": "eipr5-izbom-neyqh-s3ec2-52eww-cyfpg-qfomg-3dpwj-4pffh-34xcu-7qe",
           "website": null
         },
-        "allowance": 1,
+        "node_allowance": 1,
         "datacenter": {
           "name": "lv1",
           "owner": {
@@ -39,7 +39,7 @@
           "principal": "bvcsg-3od6r-jnydw-eysln-aql7w-td5zn-ay5m6-sibd2-jzojt-anwag-mqe",
           "website": null
         },
-        "allowance": 0,
+        "node_allowance": 0,
         "datacenter": {
           "name": "mr1",
           "owner": {
@@ -69,7 +69,7 @@
           "name": "Starbase",
           "website": "starbase.co"
         },
-        "allowance": 1,
+        "node_allowance": 1,
         "datacenter": {
           "name": "ty3",
           "owner": {
@@ -99,7 +99,7 @@
           "name": "Virtual Hive GmbH",
           "website": "https://virtualhive.io"
         },
-        "allowance": 1,
+        "node_allowance": 1,
         "datacenter": {
           "name": "fr2",
           "owner": {
@@ -129,7 +129,7 @@
           "name": "OneSixtyTwo Digital Capital",
           "website": "https://162digitalcapital.com"
         },
-        "allowance": 4,
+        "node_allowance": 4,
         "datacenter": {
           "name": "sg1",
           "owner": {
@@ -159,7 +159,7 @@
           "name": "Sygnum Bank",
           "website": "sygnum.com"
         },
-        "allowance": 0,
+        "node_allowance": 0,
         "datacenter": {
           "name": "zh5",
           "owner": {
@@ -189,7 +189,7 @@
           "name": "Tomahawk.vc",
           "website": "https://www.tomahawk.vc/"
         },
-        "allowance": 0,
+        "node_allowance": 0,
         "datacenter": {
           "name": "zh3",
           "owner": {
@@ -219,7 +219,7 @@
           "name": "Fractal Labs AG",
           "website": null
         },
-        "allowance": 0,
+        "node_allowance": 0,
         "datacenter": {
           "name": "mb1",
           "owner": {
@@ -249,7 +249,7 @@
           "name": "Bigger Capital",
           "website": "https://bigger.capital"
         },
-        "allowance": 0,
+        "node_allowance": 0,
         "datacenter": {
           "name": "aw1",
           "owner": {
@@ -279,7 +279,7 @@
           "name": "Sygnum Bank",
           "website": "sygnum.com"
         },
-        "allowance": 0,
+        "node_allowance": 0,
         "datacenter": {
           "name": "zh5",
           "owner": {
@@ -309,7 +309,7 @@
           "name": "Starbase",
           "website": "starbase.co"
         },
-        "allowance": 1,
+        "node_allowance": 1,
         "datacenter": {
           "name": "ty3",
           "owner": {
@@ -339,7 +339,7 @@
           "name": "Peggy Shafaghi",
           "website": null
         },
-        "allowance": 1,
+        "node_allowance": 1,
         "datacenter": {
           "name": "fm1",
           "owner": {
@@ -369,7 +369,7 @@
           "name": "Virtual Hive GmbH",
           "website": "https://virtualhive.io"
         },
-        "allowance": 1,
+        "node_allowance": 1,
         "datacenter": {
           "name": "fr2",
           "owner": {
@@ -398,7 +398,7 @@
           "principal": "eipr5-izbom-neyqh-s3ec2-52eww-cyfpg-qfomg-3dpwj-4pffh-34xcu-7qe",
           "website": null
         },
-        "allowance": 4,
+        "node_allowance": 4,
         "datacenter": {
           "name": "pl1",
           "owner": {
@@ -428,7 +428,7 @@
           "name": "BLP22, LLC",
           "website": null
         },
-        "allowance": 5,
+        "node_allowance": 5,
         "datacenter": {
           "name": "at2",
           "owner": {
@@ -458,7 +458,7 @@
           "name": "OneSixtyTwo Digital Capital",
           "website": "https://162digitalcapital.com"
         },
-        "allowance": 4,
+        "node_allowance": 4,
         "datacenter": {
           "name": "sg1",
           "owner": {
@@ -488,7 +488,7 @@
           "name": "Jimmy Quach",
           "website": null
         },
-        "allowance": 0,
+        "node_allowance": 0,
         "datacenter": {
           "name": "at1",
           "owner": {
@@ -518,7 +518,7 @@
           "name": "Allusion",
           "website": "https://www.allusion.be"
         },
-        "allowance": 4,
+        "node_allowance": 4,
         "datacenter": {
           "name": "an1",
           "owner": {
@@ -548,7 +548,7 @@
           "name": "Fractal Labs AG",
           "website": null
         },
-        "allowance": 0,
+        "node_allowance": 0,
         "datacenter": {
           "name": "lj1",
           "owner": {
@@ -578,7 +578,7 @@
           "name": "Archery Blockchain SCSp",
           "website": "https://bochlsersolutions.com"
         },
-        "allowance": 4,
+        "node_allowance": 4,
         "datacenter": {
           "name": "ge1",
           "owner": {
@@ -607,7 +607,7 @@
           "principal": "i7dto-bgkj2-xo5dx-cyrb7-zkk5y-q46eh-gz6iq-qkgyc-w4qte-scgtb-6ae",
           "website": null
         },
-        "allowance": 0,
+        "node_allowance": 0,
         "datacenter": {
           "name": "bu1",
           "owner": {
@@ -637,7 +637,7 @@
           "name": "Bigger Capital",
           "website": "https://bigger.capital"
         },
-        "allowance": 0,
+        "node_allowance": 0,
         "datacenter": {
           "name": "aw1",
           "owner": {
@@ -667,7 +667,7 @@
           "name": "OneSixtyTwo Digital Capital",
           "website": "https://162digitalcapital.com"
         },
-        "allowance": 4,
+        "node_allowance": 4,
         "datacenter": {
           "name": "sg3",
           "owner": {
@@ -697,7 +697,7 @@
           "name": "Fractal Labs AG",
           "website": null
         },
-        "allowance": 0,
+        "node_allowance": 0,
         "datacenter": {
           "name": "lj1",
           "owner": {
@@ -727,7 +727,7 @@
           "name": "Giant Leaf, LLC",
           "website": "giantleafllc.com"
         },
-        "allowance": 4,
+        "node_allowance": 4,
         "datacenter": {
           "name": "or1",
           "owner": {
@@ -757,7 +757,7 @@
           "name": "Archery Blockchain SCSp",
           "website": "https://bochlsersolutions.com"
         },
-        "allowance": 4,
+        "node_allowance": 4,
         "datacenter": {
           "name": "ge2",
           "owner": {
@@ -787,7 +787,7 @@
           "name": "Bigger Capital",
           "website": "https://bigger.capital"
         },
-        "allowance": 0,
+        "node_allowance": 0,
         "datacenter": {
           "name": "aw1",
           "owner": {
@@ -817,7 +817,7 @@
           "name": "Archery Blockchain SCSp",
           "website": "https://bochlsersolutions.com"
         },
-        "allowance": 4,
+        "node_allowance": 4,
         "datacenter": {
           "name": "ge1",
           "owner": {

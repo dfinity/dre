@@ -409,7 +409,7 @@ impl RegistryState {
                                 principal: p,
                             })
                             .expect("provider missing from operator record"),
-                        allowance: or.node_allowance,
+                        node_allowance: or.node_allowance,
                         datacenter: data_center_records.get(&or.dc_id).map(|dc| {
                             let (continent, country, area): (_, _, _) = dc.region.splitn(3, ',').map(|s| s.to_string()).collect_tuple().unwrap_or((
                                 "Unknown".to_string(),
@@ -532,7 +532,7 @@ impl RegistryState {
                 let subnet_nodes = self
                     .nodes
                     .iter()
-                    .filter(|(_, n)| n.subnet_id.map_or(false, |s| s == principal))
+                    .filter(|(_, n)| (n.subnet_id == Some(principal)))
                     .map(|(_, n)| n.clone())
                     .collect::<Vec<Node>>();
                 let subnet_type = SubnetType::try_from(sr.subnet_type).unwrap();
@@ -901,18 +901,26 @@ fn node_ip_addr(nr: &NodeRecord) -> Ipv6Addr {
 }
 
 pub fn local_cache_path() -> PathBuf {
-    match std::env::var("LOCAL_REGISTRY_PATH") {
+    let path = match std::env::var("LOCAL_REGISTRY_PATH") {
         Ok(path) => PathBuf::from(path),
         Err(_) => match dirs::cache_dir() {
             Some(cache_dir) => cache_dir,
             None => PathBuf::from("/tmp"),
         },
     }
-    .join("ic-registry-cache")
+    .join("ic-registry-cache");
+    if !path.exists() {
+        fs_err::create_dir_all(&path).expect("failed to create local cache directory");
+    }
+    path
 }
 
 pub fn local_registry_path(network: &Network) -> PathBuf {
-    local_cache_path().join(Path::new(network.name.as_str())).join("local_registry")
+    let path = local_cache_path().join(Path::new(network.name.as_str())).join("local_registry");
+    if !path.exists() {
+        fs_err::create_dir_all(&path).expect("failed to create local registry directory");
+    }
+    path
 }
 
 #[allow(dead_code)]
@@ -973,7 +981,7 @@ pub async fn sync_local_store_with_path(target_network: &Network, local_registry
                         target_network.name,
                         local_registry_path.display()
                     );
-                    std::fs::remove_dir_all(local_registry_path)?;
+                    fs_err::remove_dir_all(local_registry_path)?;
                     panic!(
                         "Registry version local {} > remote {}, this should never happen",
                         local_latest_version, remote_version

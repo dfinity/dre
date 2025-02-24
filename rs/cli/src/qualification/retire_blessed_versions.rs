@@ -2,7 +2,7 @@ use backon::{ExponentialBuilder, Retryable};
 use comfy_table::CellAlignment;
 use itertools::Itertools;
 
-use crate::ic_admin::{ProposeCommand, ProposeOptions};
+use crate::ic_admin::{IcAdminProposal, IcAdminProposalCommand, IcAdminProposalOptions};
 
 use super::{comfy_table_util::Table, step::Step, util::StepCtx};
 
@@ -36,22 +36,24 @@ impl Step for RetireBlessedVersions {
 
         let place_proposal = || async {
             ctx.dre_ctx()
-                .ic_admin()
+                .ic_admin_executor()
                 .await?
-                .propose_run(
-                    ProposeCommand::ReviseElectedVersions {
-                        release_artifact: ic_management_types::Artifact::GuestOs,
-                        args: to_unelect
-                            .iter()
-                            .flat_map(|v| vec!["--replica-versions-to-unelect".to_string(), v.to_string()])
-                            .collect(),
-                    },
-                    ProposeOptions {
-                        title: Some("Retire replica versions".to_string()),
-                        summary: Some("Unelecting a version".to_string()),
-                        motivation: Some("Unelecting a version".to_string()),
-                        forum_post_link: None,
-                    },
+                .submit(
+                    &IcAdminProposal::new(
+                        IcAdminProposalCommand::ReviseElectedVersions {
+                            release_artifact: ic_management_types::Artifact::GuestOs,
+                            args: to_unelect
+                                .iter()
+                                .flat_map(|v| vec!["--replica-versions-to-unelect".to_string(), v.to_string()])
+                                .collect(),
+                        },
+                        IcAdminProposalOptions {
+                            title: Some("Retire replica versions".to_string()),
+                            summary: Some("Unelecting a version".to_string()),
+                            motivation: Some("Unelecting a version".to_string()),
+                        },
+                    ),
+                    None,
                 )
                 .await
         };

@@ -1,10 +1,95 @@
 releases:
+  # NOTE: Make sure to mark security hotfixes with the `security_fix: true` flag.
+  - rc_name: rc--2025-02-20_10-16
+    versions:
+      # Qualification pipeline:
+      # https://github.com/dfinity/ic/actions/runs/13432965636
+      - name: base
+        version: 7147f471c7ac27f518e6c0eeb2015952b5e93e1b
+      # Qualification pipeline:
+      # https://github.com/dfinity/ic/actions/runs/13437204854
+      - name: disable-best-effort-messaging
+        version: 2f02a660f6f17b5a78c13d9b372f74c8228f79b8
+  - rc_name: rc--2025-02-13_03-06
+    versions:
+      # Qualification pipeline:
+      # https://github.com/dfinity/ic/actions/runs/13299556269
+      - name: base
+        version: 2008d47a169c4984631c87f2efaa88798e6f14dc
+      # Qualification pipeline:
+      # https://github.com/dfinity/ic/actions/runs/13309323056
+      - name: disable-best-effort-messaging
+        version: d781ef0aa1ada11964394bd9269675ebe84a7b86
+  - rc_name: rc--2025-02-06_12-26
+    versions:
+      # Qualification pipeline:
+      # https://github.com/dfinity/ic/actions/runs/13198646189
+      - name: base
+        version: 5ee8dcf34f26c12defcff51c2f5737214611bccc
+      # Qualification pipeline:
+      # https://github.com/dfinity/ic/actions/runs/13198651006
+      - name: revert-hashes-in-blocks
+        version: 14c8f44cd6f7cf3112f37a082537deba95f32e3f
+  - rc_name: rc--2025-01-30_03-03
+    versions:
+      # Qualification pipeline:
+      # https://github.com/dfinity/ic/actions/runs/13044839910
+      - name: base
+        version: 35f39480fe28485694743dc3ef15ac37ea000c74
+      # https://github.com/dfinity/ic/actions/runs/13049641718
+      - name: hashes-in-blocks
+        version: fb162931586aeea5f21cb19ec6c73382f5fa4fd6
+  - rc_name: rc--2025-01-23_03-04
+    versions:
+      # Qualification pipeline:
+      # https://github.com/dfinity/ic/actions/runs/12813102877
+      - name: base
+        version: 550209a750be0575cc4afff5e23c04b03048c08e
+      - name: hashes-in-blocks
+        version: 4ba583480e05a518aa2bcf36f5a0e48475e8edc2
+  - rc_name: rc--2025-01-16_16-18
+    versions:
+      # Qualification pipeline:
+      # https://github.com/dfinity/ic/actions/runs/12813102877
+      - name: base
+        version: 233c1ee2ef68c1c8800b8151b2b9f38e17b8440a
+  - rc_name: rc--2025-01-09_03-19
+    versions:
+      # Qualification pipeline:
+      # https://github.com/dfinity/ic/actions/runs/12682998949
+      - name: base
+        version: aa705aaa621c2e0d4f146f3a1de801edcb0fa0d5
+  - rc_name: rc--2025-01-03_03-07
+    versions:
+      # Qualification pipeline:
+      # https://github.com/dfinity/ic/actions/runs/12592107683
+      - name: base
+        version: 76a634c31dfb840da25fbe286855eb0be1818ca8
+      # Qualification pipeline:
+      # https://github.com/dfinity/ic-private/actions/runs/12649432945
+      - name: base-secfix
+        version: 43670245ed6919790e7858813c7e838c6fbcedf5
+        security_fix: true
   - rc_name: rc--2024-12-06_03-16
     versions:
       # Qualification pipeline:
       # https://github.com/dfinity/ic/actions/runs/12198247997
       - name: base
         version: d9fe2076f677a08734bed90c67b1c3f4056ed621
+      # Qualification pipeline:
+      # https://github.com/dfinity/ic/actions/runs/12316350606
+      - name: sandboxes7k
+        version: 3e24396441e4c7380928d4e8b4ccff7de77d0e7e
+      # Qualification pipeline:
+      # https://github.com/dfinity/ic-private/actions/runs/12515153590
+      - name: base-secfix
+        version: d69648b2f5a3d90fb515824314ac2f868cbf499a
+        security_fix: true
+      # Qualification pipeline:
+      # https://github.com/dfinity/ic-private/actions/runs/
+      - name: sandboxes7k-secfix
+        version: 9427aba69301dbaaa9b7eb48d809b01749b24d88
+        security_fix: true
   - rc_name: rc--2024-11-28_03-15
     versions:
       # Qualification pipeline:

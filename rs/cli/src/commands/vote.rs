@@ -7,8 +7,12 @@ use ic_nns_governance::pb::v1::ProposalInfo;
 use log::info;
 use spinners::{Spinner, Spinners};
 
-use super::{AuthRequirement, ExecutableCommand};
-use crate::desktop_notify::DesktopNotifier;
+use crate::auth::AuthRequirement;
+use crate::exe::{args::GlobalArgs, ExecutableCommand};
+use crate::{
+    confirm::{ConfirmationModeOptions, HowToProceed},
+    desktop_notify::DesktopNotifier,
+};
 
 #[derive(Args, Debug)]
 pub struct Vote {
@@ -39,6 +43,9 @@ pub struct Vote {
     /// only one voting cycle will take place.
     #[clap(long, default_value = "60s", value_parser = parse_duration)]
     pub sleep_time: Duration,
+
+    #[clap(flatten)]
+    pub confirmation_mode: ConfirmationModeOptions,
 }
 
 impl ExecutableCommand for Vote {
@@ -52,6 +59,7 @@ impl ExecutableCommand for Vote {
         let wrapper: GovernanceCanisterWrapper = client.into();
         let no_duration = Duration::from_secs(0);
         let mut voted_proposals: HashSet<u64> = HashSet::new();
+        let mode: HowToProceed = (&self.confirmation_mode).into();
 
         if self.sleep_time != no_duration {
             DesktopNotifier::send_info("DRE vote: starting", "Starting the voting loop...");
@@ -87,26 +95,28 @@ impl ExecutableCommand for Vote {
                         );
 
                         let prop_id = proposal.id.unwrap().id;
-                        if !ctx.is_dry_run() {
-                            match wrapper.register_vote(neuron.neuron_id, proposal.id.unwrap().id).await {
-                                Ok(response) => {
-                                    info!("Voted successfully: {}", response);
+                        match &mode {
+                            // Confirm mode in this command does not ask for confirmation.  It just votes.
+                            HowToProceed::Confirm | HowToProceed::Unconditional | HowToProceed::UnitTests => {
+                                match wrapper.register_vote(neuron.neuron_id, proposal.id.unwrap().id).await {
+                                    Ok(response) => {
+                                        info!("Voted successfully: {}", response);
+                                    }
+                                    Err(e) => {
+                                        DesktopNotifier::send_critical(
+                                            "DRE vote: error",
+                                            &format!(
+                                                "Error voting on proposal {} (topic {:?}, proposer {}) -> {}",
+                                                prop_id,
+                                                proposal.topic(),
+                                                proposal.proposer.unwrap_or_default().id,
+                                                e
+                                            ),
+                                        );
+                                    }
                                 }
-                                Err(e) => {
-                                    DesktopNotifier::send_critical(
-                                        "DRE vote: error",
-                                        &format!(
-                                            "Error voting on proposal {} (topic {:?}, proposer {}) -> {}",
-                                            prop_id,
-                                            proposal.topic(),
-                                            proposal.proposer.unwrap_or_default().id,
-                                            e
-                                        ),
-                                    );
-                                }
-                            };
-                        } else {
-                            info!("Would have voted for proposal {}", prop_id)
+                            }
+                            HowToProceed::DryRun => info!("Would have voted for proposal {}", prop_id),
                         }
                         voted_proposals.insert(prop_id);
                     }
@@ -155,5 +165,5 @@ impl ExecutableCommand for Vote {
         Ok(())
     }
 
-    fn validate(&self, _args: &crate::commands::Args, _cmd: &mut clap::Command) {}
+    fn validate(&self, _args: &GlobalArgs, _cmd: &mut clap::Command) {}
 }

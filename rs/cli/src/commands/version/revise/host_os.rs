@@ -1,6 +1,12 @@
-use clap::Args;
+use clap::{error::ErrorKind, Args};
 
-use crate::commands::{AuthRequirement, ExecutableCommand};
+use crate::{
+    auth::AuthRequirement,
+    exe::args::GlobalArgs,
+    exe::ExecutableCommand,
+    forum::ForumPostKind,
+    submitter::{SubmissionParameters, Submitter},
+};
 
 #[derive(Debug, Args)]
 pub struct HostOs {
@@ -10,7 +16,7 @@ pub struct HostOs {
 
     /// Git tag for the release
     #[clap(long)]
-    pub release_tag: String,
+    pub release_tag: Option<String>,
 
     /// Force proposal submission, ignoring missing download URLs
     #[clap(long, visible_alias = "force")]
@@ -19,6 +25,9 @@ pub struct HostOs {
     /// Mark version as a security hotfix
     #[clap(long)]
     pub security_fix: bool,
+
+    #[clap(flatten)]
+    pub submission_parameters: SubmissionParameters,
 }
 
 impl ExecutableCommand for HostOs {
@@ -27,27 +36,27 @@ impl ExecutableCommand for HostOs {
     }
 
     async fn execute(&self, ctx: crate::ctx::DreContext) -> anyhow::Result<()> {
-        let runner = ctx.runner().await?;
-        let runner_proposal = runner
+        let runner_proposal = ctx
+            .runner()
+            .await?
             .do_revise_elected_replica_versions(
                 &ic_management_types::Artifact::HostOs,
                 &self.version,
                 &self.release_tag,
                 self.ignore_missing_urls,
-                ctx.forum_post_link().unwrap(), // checked in validate()
                 self.security_fix,
             )
             .await?;
-        let ic_admin = ctx.ic_admin().await?;
-        ic_admin.propose_run(runner_proposal.cmd, runner_proposal.opts).await?;
-        Ok(())
+        Submitter::from(&self.submission_parameters)
+            .propose(ctx.ic_admin_executor().await?.execution(runner_proposal), ForumPostKind::Generic)
+            .await
     }
 
-    fn validate(&self, args: &crate::commands::Args, cmd: &mut clap::Command) {
-        if args.forum_post_link.is_none() {
+    fn validate(&self, _args: &GlobalArgs, cmd: &mut clap::Command) {
+        if self.submission_parameters.forum_parameters.forum_post_link_mandatory().is_err() {
             cmd.error(
-                clap::error::ErrorKind::MissingRequiredArgument,
-                "Forum post link is required for this command",
+                ErrorKind::MissingRequiredArgument,
+                "Forum post link cannot be omitted for this subcommand.",
             )
             .exit()
         }
