@@ -103,7 +103,7 @@ Issue.prototype.createLinearLink = async function (this: Issue, jiraIssueKey: st
 }
 
 Issue.prototype.jiraEpic = async function (this: Issue): Promise<string | undefined> {
-    return (await (await this.project)?.links())?.nodes.find(a => a.label === JIRA_ISSUE_LINK_TITLE || a.label === JIRA_ISSUE_LINK_IMPORTED_TITLE)?.url?.split('/').pop()
+    return (await (await this.project)?.externalLinks())?.nodes.find(a => a.label === JIRA_ISSUE_LINK_TITLE || a.label === JIRA_ISSUE_LINK_IMPORTED_TITLE)?.url?.split('/').pop()
 }
 
 Issue.prototype.assigneeEmail = async function (this: Issue): Promise<string | undefined> {
@@ -160,11 +160,11 @@ Project.prototype.stateName = async function (this: Project): Promise<string | u
 }
 
 Project.prototype.jiraKey = async function (this: Project): Promise<string | undefined> {
-    return this.links().then(a => a.nodes.find(a => a.label === JIRA_ISSUE_LINK_TITLE || a.label === JIRA_ISSUE_LINK_IMPORTED_TITLE)?.url?.split('/').pop())
+    return this.externalLinks().then(a => a.nodes.find(a => a.label === JIRA_ISSUE_LINK_TITLE || a.label === JIRA_ISSUE_LINK_IMPORTED_TITLE)?.url?.split('/').pop())
 }
 
 Project.prototype.createLinearLink = async function (this: Project, jiraIssueKey: string): Promise<void> {
-    await linearClient.createProjectLink({
+    await linearClient.createEntityExternalLink({
         label: JIRA_ISSUE_LINK_TITLE,
         url: jiraIssueUrl(jiraIssueKey),
         projectId: this.id,
