@@ -419,25 +419,49 @@ impl DiscourseClientImp {
             request = request.body(payload);
         }
 
-        match request.send().await {
-            Ok(r) => {
-                let rstatus = r.status();
-                match r.error_for_status() {
-                    Ok(t) => t
-                        .json()
-                        .await
-                        .map_err(|e| DiscourseClientImpError::DeserializeFailed(format!("Deserialization of response failed: {}", e))),
-                    Err(e) => {
-                        if rstatus == reqwest::StatusCode::NOT_FOUND {
-                            Err(DiscourseClientImpError::NotFound)
-                        } else {
-                            Err(DiscourseClientImpError::OtherReqwestError(e))
+        let sleep_secs = 5;
+        let retries_max = 5;
+
+        for retry_num in 1..=retries_max {
+            let retry_secs = sleep_secs * retry_num;
+
+            match request.try_clone().unwrap().send().await {
+                Ok(response) => {
+                    if response.status() == reqwest::StatusCode::TOO_MANY_REQUESTS {
+                        warn!("Rate limited by Discourse, retrying in {} seconds", retry_secs);
+                        tokio::time::sleep(std::time::Duration::from_secs(retry_secs)).await;
+                        continue;
+                    }
+
+                    let response_status = response.status();
+                    match response.error_for_status() {
+                        Ok(success_response) => {
+                            return success_response
+                                .json()
+                                .await
+                                .map_err(|e| DiscourseClientImpError::DeserializeFailed(format!("Deserialization of response failed: {}", e)));
+                        }
+                        Err(error) => {
+                            if response_status == reqwest::StatusCode::NOT_FOUND {
+                                return Err(DiscourseClientImpError::NotFound);
+                            }
+                            return Err(DiscourseClientImpError::OtherReqwestError(error));
                         }
                     }
                 }
+                Err(error) => {
+                    warn!("Error while sending request to Discourse: {}. Retrying in {} seconds", error, retry_secs);
+                    tokio::time::sleep(std::time::Duration::from_secs(retry_secs)).await;
+
+                    if retry_num == retries_max {
+                        return Err(DiscourseClientImpError::OtherReqwestError(error));
+                    }
+                }
             }
-            Err(e) => Err(DiscourseClientImpError::OtherReqwestError(e)),
         }
+
+        // This should never be reached due to the return in the last retry iteration
+        unreachable!("Should have either succeeded or returned an error by now");
     }
 
     async fn get_category_id(&self, category_name: String) -> anyhow::Result<u64> {
