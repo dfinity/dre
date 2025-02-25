@@ -9,14 +9,14 @@
     "typescript": "4.9.4"
   },
   "dependencies": {
-    "@types/react": "*",
     "@atlaskit/adf-schema": "^25.1.1",
     "@atlaskit/editor-json-transformer": "^8.8.3",
     "@atlaskit/editor-markdown-transformer": "^5.0.0",
     "@linear/sdk": "^2.4.0",
     "@types/lodash": "^4.14.191",
+    "@types/react": "*",
     "adf-to-md": "^2.0.0",
-    "jira.js": "^2.16.0",
+    "jira.js": "^4.0.6",
     "lodash": "^4.17.21"
   }
 }
