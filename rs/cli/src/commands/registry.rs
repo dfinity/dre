@@ -374,12 +374,8 @@ fn get_node_rewards_table(local_registry: &Arc<dyn LazyRegistry>, network: &Netw
     let table = match rewards_table.first_entry() {
         Some(f) => f.get().table.clone(),
         None => {
-            if network.is_mainnet() {
-                panic!("Failed to get Node Rewards Table for mainnet")
-            } else {
-                warn!("Failed to get Node Rewards Table for {}", network.name);
-                BTreeMap::new()
-            }
+            warn!("Failed to get Node Rewards Table for {}", network.name);
+            BTreeMap::new()
         }
     };
 
