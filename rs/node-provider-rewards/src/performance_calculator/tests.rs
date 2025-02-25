@@ -149,7 +149,6 @@ fn test_mgr_calculates_node_failure_rates_correctly() {
 
     assert_eq!(node_0_fr.len(), 2);
     assert_eq!(node_2_fr[0].value, NodeFailureRate::Undefined);
-    assert_eq!(node_2_fr[0].value, NodeFailureRate::Undefined);
 }
 
 #[test]
