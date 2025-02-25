@@ -435,16 +435,18 @@ impl LazyRegistry for LazyRegistryImpl {
                             principal,
                             provider: PrincipalId::try_from(or.node_provider_principal_id.as_slice())
                                 .map(|p| {
-                                    let maybe_provider = node_providers.get(&p).map(|node_provider| Provider {
-                                        name: Some(node_provider.display_name.to_owned()),
-                                        website: node_provider.website.to_owned(),
-                                        principal: p,
-                                    });
-
-                                    if maybe_provider.is_none() {
+                                    let mut provider = Provider {
+                                        principal,
+                                        name: None,
+                                        website: None,
+                                    };
+                                    if let Some(dashboard_provider) = node_providers.get(&p) {
+                                        provider.website = dashboard_provider.website.clone();
+                                        provider.name = Some(dashboard_provider.display_name.clone());
+                                    } else {
                                         debug!("Node provider not found for operator: {}", principal);
                                     }
-                                    maybe_provider.unwrap_or_default()
+                                    provider
                                 })
                                 .unwrap(),
                             node_allowance: or.node_allowance,
@@ -500,7 +502,7 @@ impl LazyRegistry for LazyRegistryImpl {
                         .find(|(op, _)| op.to_vec() == nr.node_operator_id)
                         .map(|(_, o)| o.to_owned());
                     if operator.is_none() && self.network.is_mainnet() {
-                        panic!("Operator cannot be none on mainnet")
+                        warn!("Operator should not be none on mainnet for the latest height")
                     }
 
                     let principal = PrincipalId::from_str(p).expect("Invalid node principal id");
