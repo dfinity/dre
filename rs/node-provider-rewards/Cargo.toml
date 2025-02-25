@@ -18,6 +18,8 @@ tabled = { workspace = true }
 chrono = { workspace = true }
 function_name = { workspace = true }
 
+[dev-dependencies]
+once_cell = "1.20.3"
 
 [lib]
 name = "node_provider_rewards"

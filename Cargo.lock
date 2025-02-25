@@ -6048,6 +6048,7 @@ dependencies = [
  "ic-types",
  "itertools 0.13.0",
  "num-traits",
+ "once_cell",
  "rust_decimal",
  "rust_decimal_macros",
  "tabled",

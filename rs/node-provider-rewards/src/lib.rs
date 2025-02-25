@@ -12,6 +12,8 @@ mod metrics;
 mod performance_calculator;
 mod reward_period;
 mod tabled_types;
+#[cfg(test)]
+mod tests;
 
 /// Computes rewards for node providers based on their nodes' performance during the specified `reward_period`.
 ///
@@ -70,9 +72,13 @@ fn validate_input(
                 });
             }
         }
-        // Check if metrics are unique for each day
-        let unique_timestamps = metrics_entries.iter().map(|daily_metrics| *daily_metrics.ts).collect::<HashSet<_>>();
-        if unique_timestamps.len() != metrics_entries.len() {
+        // Metrics are unique if there are no duplicate entries for the same day and subnet.
+        // Metrics with the same timestamp and different subnet are allowed.
+        let unique_timestamp_subnet = metrics_entries
+            .iter()
+            .map(|daily_metrics| (*daily_metrics.ts, daily_metrics.subnet_assigned))
+            .collect::<HashSet<_>>();
+        if unique_timestamp_subnet.len() != metrics_entries.len() {
             return Err(RewardCalculationError::DuplicateMetrics(*node_id));
         }
     }
