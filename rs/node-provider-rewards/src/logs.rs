@@ -47,11 +47,11 @@ pub enum LogEntry {
     },
     NodesMultiplierStep(&'static str),
     Summary(NodeId, Box<Table>),
-    RewardsMultiplier {
+    PerformanceMultiplier {
         node_id: NodeId,
         failure_rate_in_period: Decimal,
         rewards_reduction: Decimal,
-        rewards_multiplier: Decimal,
+        multiplier: Decimal,
     },
 }
 
@@ -78,11 +78,11 @@ impl fmt::Display for LogEntry {
 
                 write!(f, "Compute Rewards Multiplier - Step: {}", formatted_str)
             }
-            LogEntry::RewardsMultiplier {
+            LogEntry::PerformanceMultiplier {
                 node_id,
                 failure_rate_in_period: failure_rate,
                 rewards_reduction,
-                rewards_multiplier,
+                multiplier: rewards_multiplier,
             } => {
                 write!(
                     f,

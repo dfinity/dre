@@ -85,7 +85,7 @@ impl RewardPeriod {
     /// * `RewardPeriodError::StartTimestampAfterEndTimestamp` - If `unaligned_start_ts` is greater than `unaligned_end_ts`.
     /// * `RewardPeriodError::EndTimestampLaterThanToday` - If `unaligned_end_ts` is later than the first timestamp of today.
     pub fn new(unaligned_start_ts: TimestampNanos, unaligned_end_ts: TimestampNanos) -> Result<Self, RewardPeriodError> {
-        if unaligned_start_ts >= unaligned_end_ts {
+        if unaligned_start_ts > unaligned_end_ts {
             return Err(RewardPeriodError::StartTimestampAfterEndTimestamp);
         }
 

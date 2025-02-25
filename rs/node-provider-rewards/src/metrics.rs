@@ -34,7 +34,7 @@ impl NodeDailyMetrics {
             Decimal::from_f64(num_blocks_failed as f64 / total_blocks as f64).unwrap()
         };
         NodeDailyMetrics {
-            ts: ts.into(),
+            ts: TimestampNanosAtDayEnd::from(ts),
             num_blocks_proposed,
             num_blocks_failed,
             subnet_assigned,
@@ -48,8 +48,8 @@ impl NodeDailyMetrics {
 /// The failure rate is a `Decimal` in the range [0, 1]. The variants provide explicit meaning:
 /// - `Defined`: A recorded failure rate for a node assigned to a subnet.
 /// - `DefinedRelative`: A failure rate adjusted by the subnet’s failure rate.
-/// - `Extrapolated`: A computed failure rate when data is missing.
-/// - `Undefined`: Indicates that no metrics were recorded.
+/// - `Extrapolated`: An extrapolated failure rate used when `Undefined` failure rates are extrapolated.
+/// - `Undefined`: Indicates that no metrics were recorded because the node is not assigned to any subnet.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum NodeFailureRate {
     Defined {
