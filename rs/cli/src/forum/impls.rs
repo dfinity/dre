@@ -450,12 +450,12 @@ impl DiscourseClientImp {
                     }
                 }
                 Err(error) => {
-                    warn!("Error while sending request to Discourse: {}. Retrying in {} seconds", error, retry_secs);
-                    tokio::time::sleep(std::time::Duration::from_secs(retry_secs)).await;
-
                     if retry_num == retries_max {
                         return Err(DiscourseClientImpError::OtherReqwestError(error));
                     }
+
+                    warn!("Error while sending request to Discourse: {}. Retrying in {} seconds", error, retry_secs);
+                    tokio::time::sleep(std::time::Duration::from_secs(retry_secs)).await;
                 }
             }
         }
