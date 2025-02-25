@@ -94,8 +94,8 @@ impl FailureRatesManager {
                             value: first.failure_rate,
                         }
                     }
-                    // This is the case if node is reassigned to different subnets on the same day.
-                    // In this case, consider the subnet where the node has proposed more blocks.
+                    // In this case the node is reassigned to different subnets on the same day.
+                    // The algorithm considers for this case the subnet where the node has proposed more blocks.
                     Some(metrics_for_day) => {
                         let mut subnet_block_counts: BTreeMap<SubnetId, u64> = BTreeMap::new();
 
