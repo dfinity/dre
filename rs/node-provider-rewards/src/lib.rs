@@ -1,5 +1,5 @@
-use crate::metrics::NodeDailyMetrics;
-use crate::performance_calculator::{FailureRatesManager, PerformanceMultiplierCalculator};
+use crate::metrics::{nodes_failure_rates_in_period, subnets_failure_rates, NodeDailyMetrics};
+use crate::performance_calculator::PerformanceMultiplierCalculator;
 use crate::reward_period::{RewardPeriod, TimestampNanos};
 use ic_base_types::{NodeId, PrincipalId};
 use std::cmp::PartialEq;
@@ -34,8 +34,11 @@ pub fn calculate_rewards(
 ) -> Result<(), RewardCalculationError> {
     validate_input(&reward_period, &metrics_by_node, &providers_rewardable_nodes)?;
 
-    let mgr = FailureRatesManager::new(reward_period, metrics_by_node);
-    let perf_calculator = PerformanceMultiplierCalculator::new(mgr).with_subnets_failure_rates_discount();
+    let subnets_failure_rates = subnets_failure_rates(&metrics_by_node);
+    let all_nodes: Vec<NodeId> = providers_rewardable_nodes.values().flatten().cloned().collect();
+    let nodes_failure_rates = nodes_failure_rates_in_period(&all_nodes, &reward_period, &metrics_by_node);
+
+    let perf_calculator = PerformanceMultiplierCalculator::new(nodes_failure_rates, subnets_failure_rates);
 
     for (_provider_id, provider_nodes) in providers_rewardable_nodes {
         let _nodes_multiplier = perf_calculator.calculate_performance_multipliers(&provider_nodes);

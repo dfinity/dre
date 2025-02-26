@@ -1,4 +1,6 @@
 use super::*;
+use crate::metrics::{nodes_failure_rates_in_period, subnets_failure_rates, NodeDailyMetrics};
+use crate::reward_period::RewardPeriod;
 use ic_base_types::PrincipalId;
 use itertools::Itertools;
 use num_traits::FromPrimitive;
@@ -16,16 +18,16 @@ fn ts_day_end(day: u64) -> TimestampNanos {
     *TimestampNanosAtDayEnd::from(day * NANOS_PER_DAY)
 }
 
-pub struct FailureRatesManagerBuilder {
+pub struct FailureRatesBuilder {
     daily_data: BTreeMap<TimestampNanos, Vec<(SubnetId, NodeId, Decimal)>>,
-    metrics_by_node: BTreeMap<NodeId, Vec<NodeDailyMetrics>>,
+    nodes_daily_metrics: BTreeMap<NodeId, Vec<NodeDailyMetrics>>,
 }
 
-impl FailureRatesManagerBuilder {
+impl FailureRatesBuilder {
     pub fn new() -> Self {
         Self {
             daily_data: BTreeMap::new(),
-            metrics_by_node: BTreeMap::new(),
+            nodes_daily_metrics: BTreeMap::new(),
         }
     }
     pub fn with_data_next_day(self, data: Vec<(SubnetId, NodeId, f64)>) -> Self {
@@ -56,7 +58,7 @@ impl FailureRatesManagerBuilder {
     }
 
     pub fn with_node_metrics_subnet_proposed_failed_blocks(self, node_id: NodeId, metrics: Vec<(TimestampNanos, SubnetId, u64, u64)>) -> Self {
-        let mut metrics_by_node = self.metrics_by_node;
+        let mut metrics_by_node = self.nodes_daily_metrics;
 
         metrics_by_node.insert(
             node_id,
@@ -66,11 +68,19 @@ impl FailureRatesManagerBuilder {
                 .collect(),
         );
 
-        Self { metrics_by_node, ..self }
+        Self {
+            nodes_daily_metrics: metrics_by_node,
+            ..self
+        }
     }
 
-    pub fn build(self) -> FailureRatesManager {
-        let mut metrics_by_node = self.metrics_by_node;
+    pub fn build(
+        self,
+    ) -> (
+        BTreeMap<NodeId, Vec<NodeDailyFailureRate>>,
+        BTreeMap<SubnetId, Vec<SubnetDailyFailureRate>>,
+    ) {
+        let mut metrics_by_node = self.nodes_daily_metrics;
         for (day, entries) in self.daily_data.into_iter() {
             for (subnet, node, rate) in entries {
                 let metrics = NodeDailyMetrics {
@@ -86,17 +96,19 @@ impl FailureRatesManagerBuilder {
 
         let start_ts = metrics_by_node.values().flat_map(|v| v.iter().map(|m| *m.ts)).min().unwrap();
         let end_ts = metrics_by_node.values().flat_map(|v| v.iter().map(|m| *m.ts)).max().unwrap();
+        let reward_period = RewardPeriod::new(start_ts, end_ts).unwrap();
+        let all_nodes = metrics_by_node.keys().cloned().collect_vec();
 
-        FailureRatesManager {
-            metrics_by_node,
-            reward_period: RewardPeriod::new(start_ts, end_ts).unwrap(),
-        }
+        let subnets_failure_rates = subnets_failure_rates(&metrics_by_node);
+        let nodes_failure_rates = nodes_failure_rates_in_period(&all_nodes, &reward_period, &metrics_by_node);
+
+        (nodes_failure_rates, subnets_failure_rates)
     }
 }
 
-impl Default for FailureRatesManagerBuilder {
+impl Default for FailureRatesBuilder {
     fn default() -> Self {
-        FailureRatesManagerBuilder::new().with_all_days_data(DEFAULT_INPUT.clone())
+        FailureRatesBuilder::new().with_all_days_data(DEFAULT_INPUT.clone())
     }
 }
 
@@ -114,13 +126,14 @@ pub static DEFAULT_INPUT: Lazy<Vec<Vec<(u64, u64, f64)>>> = Lazy::new(|| {
 // FailureRatesManager tests
 
 #[test]
-fn test_mgr_calculates_node_failure_rates_correctly() {
-    let mgr = FailureRatesManagerBuilder::new()
+fn test_calculates_node_failure_rates_correctly() {
+    let (nodes_failure_rates, _) = FailureRatesBuilder::new()
         .with_node_metrics_subnet_proposed_failed_blocks(node_id(0), vec![(0, subnet_id(2), 2, 0)])
         .with_node_metrics_subnet_proposed_failed_blocks(node_id(1), vec![(NANOS_PER_DAY, subnet_id(1), 2, 0)])
+        .with_node_metrics_subnet_proposed_failed_blocks(node_id(2), vec![])
         .build();
 
-    let node_0_fr = mgr.node_failure_rates_in_period(&node_id(0));
+    let node_0_fr = nodes_failure_rates.get(&node_id(0)).unwrap();
 
     assert_eq!(node_0_fr.len(), 2);
     assert_eq!(
@@ -132,7 +145,7 @@ fn test_mgr_calculates_node_failure_rates_correctly() {
     );
     assert_eq!(node_0_fr[1].value, NodeFailureRate::Undefined);
 
-    let node_1_fr = mgr.node_failure_rates_in_period(&node_id(1));
+    let node_1_fr = nodes_failure_rates.get(&node_id(1)).unwrap();
 
     assert_eq!(node_0_fr.len(), 2);
     assert_eq!(node_1_fr[0].value, NodeFailureRate::Undefined);
@@ -145,7 +158,7 @@ fn test_mgr_calculates_node_failure_rates_correctly() {
     );
 
     // Node 2 has no metrics
-    let node_2_fr = mgr.node_failure_rates_in_period(&node_id(2));
+    let node_2_fr = nodes_failure_rates.get(&node_id(2)).unwrap();
 
     assert_eq!(node_0_fr.len(), 2);
     assert_eq!(node_2_fr[0].value, NodeFailureRate::Undefined);
@@ -153,12 +166,12 @@ fn test_mgr_calculates_node_failure_rates_correctly() {
 
 #[test]
 fn test_node_assigned_same_day_multiple_subnets() {
-    let mgr = FailureRatesManagerBuilder::new()
+    let (nodes_failure_rates, _) = FailureRatesBuilder::new()
         // Node 1 has been assigned to two subnets on day 0
         .with_node_metrics_subnet_proposed_failed_blocks(node_id(1), vec![(0, subnet_id(1), 2, 0), (0, subnet_id(2), 1, 0)])
         .build();
 
-    let node_1_fr = mgr.node_failure_rates_in_period(&node_id(1));
+    let node_1_fr = nodes_failure_rates.get(&node_id(1)).unwrap();
 
     assert_eq!(node_1_fr.len(), 1);
     // Expected subnet 1 to be selected as the primary subnet because it has the highest number of proposed blocks
@@ -173,8 +186,7 @@ fn test_node_assigned_same_day_multiple_subnets() {
 
 #[test]
 fn test_mgr_calculates_subnet_failure_rates_correctly() {
-    let mgr = FailureRatesManagerBuilder::default().build();
-    let subnet_rates = mgr.calculate_subnets_failure_rates();
+    let (_, subnet_rates) = FailureRatesBuilder::default().build();
 
     // Subnet 1 expected daily rates: [0.5, 0.2, 0.3, 0.2]
     let subnet_1_rates = subnet_rates.get(&subnet_id(1)).unwrap();
@@ -195,9 +207,8 @@ fn test_mgr_calculates_subnet_failure_rates_correctly() {
 
 #[test]
 fn test_defined_node_failure_rates() {
-    let mgr = FailureRatesManagerBuilder::default().build();
-
-    let node_5_fr = mgr.node_failure_rates_in_period(&node_id(5));
+    let (nodes_failure_rates, _) = FailureRatesBuilder::default().build();
+    let node_5_fr = nodes_failure_rates.get(&node_id(5)).unwrap();
 
     assert_eq!(node_5_fr.len(), 4);
     assert_eq!(
@@ -228,13 +239,13 @@ fn test_defined_node_failure_rates() {
 
 #[test]
 fn test_update_relative_failure_rates() {
-    let mgr = FailureRatesManagerBuilder::default().build();
-    let nodes = mgr.metrics_by_node.keys().cloned().collect_vec();
-    let perf_calculator = PerformanceMultiplierCalculator::new(mgr).with_subnets_failure_rates_discount();
+    let (nodes_failure_rates, subnets_failure_rates) = FailureRatesBuilder::default().build();
+    let nodes = nodes_failure_rates.keys().cloned().collect_vec();
+    let perf_calculator = PerformanceMultiplierCalculator::new(nodes_failure_rates, subnets_failure_rates);
 
-    perf_calculator.update_nodes_failure_rates(&nodes);
+    perf_calculator.update_execution_nodes(&nodes);
     perf_calculator.update_relative_failure_rates();
-    let nodes_failure_rates = perf_calculator.nodes_failure_rates.take();
+    let nodes_failure_rates = perf_calculator.nodes_failure_rates();
 
     let node_5_fr = nodes_failure_rates.get(&node_id(5)).unwrap();
 
@@ -277,11 +288,11 @@ fn test_update_relative_failure_rates() {
 
 #[test]
 fn test_compute_failure_rate_extrapolated() {
-    let mgr = FailureRatesManagerBuilder::default().build();
-    let nodes = mgr.metrics_by_node.keys().cloned().collect_vec();
-    let perf_calculator = PerformanceMultiplierCalculator::new(mgr).with_subnets_failure_rates_discount();
+    let (nodes_failure_rates, subnets_failure_rates) = FailureRatesBuilder::default().build();
+    let nodes = nodes_failure_rates.keys().cloned().collect_vec();
+    let perf_calculator = PerformanceMultiplierCalculator::new(nodes_failure_rates, subnets_failure_rates);
 
-    perf_calculator.update_nodes_failure_rates(&nodes);
+    perf_calculator.update_execution_nodes(&nodes);
     perf_calculator.update_relative_failure_rates();
     let extrapolated_failure_rate = perf_calculator.calculate_extrapolated_failure_rate();
 
@@ -300,10 +311,9 @@ fn test_compute_failure_rate_extrapolated() {
 
 #[test]
 fn test_calculate_performance_multiplier_by_node() {
-    let mgr = FailureRatesManagerBuilder::default().build();
-    let nodes = mgr.metrics_by_node.keys().cloned().collect_vec();
-
-    let perf_calculator = PerformanceMultiplierCalculator::new(mgr).with_subnets_failure_rates_discount();
+    let (nodes_failure_rates, subnets_failure_rates) = FailureRatesBuilder::default().build();
+    let nodes = nodes_failure_rates.keys().cloned().collect_vec();
+    let perf_calculator = PerformanceMultiplierCalculator::new(nodes_failure_rates, subnets_failure_rates);
     let performance_multiplier_by_node = perf_calculator.calculate_performance_multipliers(&nodes)._performance_multiplier_by_node;
 
     // node_5_fr = [0, 0.3, 0.6, 0.05] -> avg = 0.2375
