@@ -167,11 +167,12 @@ fn node_failure_rate(one_day_metrics: Vec<&NodeDailyMetrics>) -> NodeFailureRate
     }
 
     // Node is reassigned to different subnets on the same day.
-    // The algorithm considers for this case the subnet where the node has proposed more blocks.
+    // The algorithm considers for this case the subnet where the node has proposed and failed more blocks.
     let mut subnet_block_counts: BTreeMap<SubnetId, u64> = BTreeMap::new();
 
     for metrics in one_day_metrics.iter() {
-        *subnet_block_counts.entry(metrics.subnet_assigned).or_insert(0) += metrics.num_blocks_proposed;
+        let all_blocks = metrics.num_blocks_proposed + metrics.num_blocks_failed;
+        *subnet_block_counts.entry(metrics.subnet_assigned).or_insert(0) += all_blocks;
     }
 
     let (subnet_assigned, _) = subnet_block_counts.into_iter().max_by_key(|&(_, count)| count).expect("No subnet found");
