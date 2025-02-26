@@ -1,6 +1,5 @@
 use crate::logs::{LogEntry, Logger, Operation};
 use crate::metrics::{NodeDailyFailureRate, NodeFailureRate, SubnetDailyFailureRate};
-use crate::reward_period::{TimestampNanos, TimestampNanosAtDayEnd, NANOS_PER_DAY};
 use crate::tabled_types::generate_table_summary;
 use function_name::named;
 use ic_base_types::{NodeId, SubnetId};

@@ -1,6 +1,6 @@
 use super::*;
 use crate::metrics::{nodes_failure_rates_in_period, subnets_failure_rates, NodeDailyMetrics};
-use crate::reward_period::RewardPeriod;
+use crate::reward_period::{RewardPeriod, TimestampNanos, TimestampNanosAtDayEnd, NANOS_PER_DAY};
 use ic_base_types::PrincipalId;
 use itertools::Itertools;
 use num_traits::FromPrimitive;
