@@ -21,9 +21,9 @@ const MAX_REWARDS_REDUCTION: Decimal = dec!(0.8);
 
 pub struct PerformanceMultipliers {
     /// The computed performance multiplier per node.
-    pub _performance_multiplier_by_node: BTreeMap<NodeId, Decimal>,
+    pub performance_multiplier_by_node: BTreeMap<NodeId, Decimal>,
     /// The logger capturing all the computation steps.
-    pub _logger: Logger,
+    pub logger: Logger,
 }
 
 struct ExecutionContext {
