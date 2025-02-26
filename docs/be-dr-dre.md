@@ -68,6 +68,10 @@ The release process [is documented here](https://www.notion.so/dfinityorg/IC-OS-
 
 ### 4. **Submit requested proposals**
 
+Requested proposals [should get a ticket in the DRE Ops Rotation queue](https://dfinity.atlassian.net/browse/DRE-350) and followed through as soon as possible.
+
+Typical types of requested proposals are:
+
 * Help in on-boarding or off-boarding of datacenters and node providers
 * Firewall rule modifications
 * Node rewards adjustment proposals (see _Handoff operations_ below)
@@ -82,6 +86,8 @@ The release process [is documented here](https://www.notion.so/dfinityorg/IC-OS-
 * Mainnet topology proposals, such as `dre network --heal --optimize --ensure-operator-nodes-unassigned --ensure-operator-nodes-assigned --remove-cordoned-nodes` or a subset of these operations. The operations are still not polished enough to be run automatically.
 * Provider reward adjustment proposals, if any are needed that week. Please ask in `#eng-dre` if you don't know if any are needed.
 
+Please [register proposals as tickets under the DRE Ops Rotation queue](https://dfinity.atlassian.net/browse/DRE-350), so adoption and progress can be tracked, and context can be observed by your teammates.
+
 ### 6. **Monitor status and health of CI**  
 
 - **Weekly dependency upgrade jobs**:
@@ -95,8 +101,23 @@ The release process [is documented here](https://www.notion.so/dfinityorg/IC-OS-
    - Ensure the fixes are implemented and attempt to merge the PR into the repository.  
    - Maintaining compatibility between the IC repo and our repo reduces friction and ensures our tooling operates smoothly. 
 
+### 7. **Drive progress on the DRE Ops Rotation task queue**
+
+Our [DRE Ops Rotation queue](https://dfinity.atlassian.net/browse/DRE-350) exists to keep track of work falling under the Dr. DRE umbrella that may span multiple days or weeks.  It contains a list of child tickets that you need to work on.
+
+Tend to the queue at least once a day.  Read and heed the guidelines in the umbrella epic.  Here is a brief summary (which is not a substitute for reading the guidelines):
+
+* Record (as tickets of type task) multi-day work under the umbrella of the DRE Ops Rotation, with the task queue ticket as the new ticket's epic.
+* Drive progress on tasks that are not blocked.
+* Mark blocked tasks as blocked.
+* Record completion of tasks.
+* Provide enough context there for your teammates to pick up ongoing work the week after.
+* Move work tickets that change scope, out of the queue, and into its own epic or project.
+
 ### 7. **Handoff operations**  
 
 - If there are any pending tasks or unresolved operations, it is your responsibility to inform the next on-call team member.  
 - Provide clear details on what needs to be addressed and any context that might help them pick up where you left off.
 - Pass on information about node rewards adjustments requested to the next on-call team member.
+
+The [DRE Ops Rotation queue](https://dfinity.atlassian.net/browse/DRE-350) is an invaluable aid in getting yourself in context as well as providing context to your teammates.
