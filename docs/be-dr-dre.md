@@ -101,9 +101,18 @@ Please [register proposals as tickets under the DRE Ops Rotation queue](https://
    - Ensure the fixes are implemented and attempt to merge the PR into the repository.  
    - Maintaining compatibility between the IC repo and our repo reduces friction and ensures our tooling operates smoothly. 
 
-### 7. **Drive progress on DRE Ops Rotation Tasks**
+### 7. **Drive progress on the DRE Ops Rotation task queue**
 
-Our [DRE Ops Rotation queue](https://dfinity.atlassian.net/browse/DRE-350) exists to keep track of work falling under the Dr. DRE umbrella that may span multiple days or weeks.  It is your responsibility to drive progress on tasks that are not blocked, to mark blocked tasks as blocked, to record the completion of tasks, and to provide enough context there for your teammates to pick up ongoing work the week after.  Tend to the queue at least once a day.
+Our [DRE Ops Rotation queue](https://dfinity.atlassian.net/browse/DRE-350) exists to keep track of work falling under the Dr. DRE umbrella that may span multiple days or weeks.  It contains a list of child tickets that you need to work on.
+
+Tend to the queue at least once a day.  Read and heed the guidelines in the umbrella epic.  Here is a brief summary (which is not a substitute for reading the guidelines):
+
+* Record (as tickets of type task) multi-day work under the umbrella of the DRE Ops Rotation, with the task queue ticket as the new ticket's epic.
+* Drive progress on tasks that are not blocked.
+* Mark blocked tasks as blocked.
+* Record completion of tasks.
+* Provide enough context there for your teammates to pick up ongoing work the week after.
+* Move work tickets that change scope, out of the queue, and into its own epic or project.
 
 ### 7. **Handoff operations**  
 
