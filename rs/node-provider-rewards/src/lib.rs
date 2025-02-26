@@ -19,7 +19,7 @@ mod tests;
 ///
 /// # Arguments
 /// * reward_period - The time frame for which rewards are calculated.
-/// * metrics_by_node - Daily node metrics for each node in `reward_period`. Only nodes listed in `providers_rewardable_nodes` are considered.
+/// * metrics_by_node - Daily node metrics for nodes in `reward_period`. Only nodes in `providers_rewardable_nodes` keys are considered.
 /// * providers_rewardable_nodes: Nodes eligible for rewards, as recorded in the registry versions spanning the `reward_period` provided.
 ///
 /// TODO: Implement the XDR reward calculation logic from the nodes multiplier.
