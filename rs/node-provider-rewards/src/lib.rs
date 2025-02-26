@@ -17,14 +17,10 @@ mod tests;
 
 /// Computes rewards for node providers based on their nodes' performance during the specified `reward_period`.
 ///
-/// Rewards are determined using:
-/// - metrics_by_node: Daily node metrics for each node. Only nodes listed in `providers_rewardable_nodes` are considered.
-/// - providers_rewardable_nodes: Nodes eligible for rewards, as recorded in the registry versions spanning the `reward_period` provided.
-///
 /// # Arguments
 /// * reward_period - The time frame for which rewards are calculated.
-/// * metrics_by_node - A collection of daily node metrics for each node.
-/// * providers_rewardable_nodes: A set of nodes eligible for rewards during the `reward_period`.
+/// * metrics_by_node - Daily node metrics for each node in `reward_period`. Only nodes listed in `providers_rewardable_nodes` are considered.
+/// * providers_rewardable_nodes: Nodes eligible for rewards, as recorded in the registry versions spanning the `reward_period` provided.
 ///
 /// TODO: Implement the XDR reward calculation logic from the nodes multiplier.
 pub fn calculate_rewards(
