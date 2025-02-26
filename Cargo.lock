@@ -6045,6 +6045,7 @@ dependencies = [
  "chrono",
  "function_name",
  "ic-base-types",
+ "ic-protobuf",
  "ic-types",
  "itertools 0.13.0",
  "num-traits",
