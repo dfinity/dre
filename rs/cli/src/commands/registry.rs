@@ -460,6 +460,9 @@ async fn get_node_providers(
         .map(|operator| operator.provider.clone())
         .collect_vec();
     let reg_provider_ids = reg_node_providers.iter().map(|provider| provider.principal).collect::<HashSet<_>>();
+
+    // Governance canister doesn't have the mechanism to retrieve node providers on a certain height
+    // meaning that merging the lists on arbitrary heights wouldn't make sense.
     if latest_height {
         for principal in gov_node_providers.keys() {
             if !reg_provider_ids.contains(principal) {
