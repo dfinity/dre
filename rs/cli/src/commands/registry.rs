@@ -167,7 +167,7 @@ impl Registry {
             node_operators: node_operators.values().cloned().collect_vec(),
             node_rewards_table,
             api_bns,
-            node_providers: get_node_providers(&local_registry, ctx.network(), ctx.is_offline(), !self.height.is_some()).await?,
+            node_providers: get_node_providers(&local_registry, ctx.network(), ctx.is_offline(), self.height.is_none()).await?,
         })
     }
 }
