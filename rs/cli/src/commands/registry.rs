@@ -167,7 +167,7 @@ impl Registry {
             node_operators: node_operators.values().cloned().collect_vec(),
             node_rewards_table,
             api_bns,
-            node_providers: get_node_providers(&local_registry, ctx.network()).await?,
+            node_providers: get_node_providers(&local_registry, ctx.network(), ctx.is_offline()).await?,
         })
     }
 }
@@ -423,7 +423,7 @@ fn get_api_boundary_nodes(local_registry: &Arc<dyn LazyRegistry>) -> anyhow::Res
     Ok(api_bns)
 }
 
-async fn get_node_providers(local_registry: &Arc<dyn LazyRegistry>, network: &Network) -> anyhow::Result<Vec<NodeProvider>> {
+async fn get_node_providers(local_registry: &Arc<dyn LazyRegistry>, network: &Network, offline: bool) -> anyhow::Result<Vec<NodeProvider>> {
     let all_nodes = local_registry.nodes().await?;
 
     // Get the node providers from the node operator records, and from the governance canister, and merge them
@@ -431,20 +431,23 @@ async fn get_node_providers(local_registry: &Arc<dyn LazyRegistry>, network: &Ne
     let url = nns_urls.first().ok_or(anyhow::anyhow!("No NNS URLs provided"))?.to_owned();
     let canister_client = IcAgentCanisterClient::from_anonymous(url)?;
     let gov = GovernanceCanisterWrapper::from(canister_client);
-    let gov_node_providers: HashMap<PrincipalId, String> = gov
-        .get_node_providers()
-        .await?
-        .iter()
-        .map(|p| {
-            (
-                p.id.unwrap_or(PrincipalId::new_anonymous()),
-                match &p.reward_account {
-                    Some(account) => AccountIdentifier::from_slice(&account.hash).unwrap().to_string(),
-                    None => "".to_string(),
-                },
-            )
-        })
-        .collect();
+    let gov_node_providers: HashMap<PrincipalId, String> = if !offline {
+        gov.get_node_providers()
+            .await?
+            .iter()
+            .map(|p| {
+                (
+                    p.id.unwrap_or(PrincipalId::new_anonymous()),
+                    match &p.reward_account {
+                        Some(account) => AccountIdentifier::from_slice(&account.hash).unwrap().to_string(),
+                        None => "".to_string(),
+                    },
+                )
+            })
+            .collect()
+    } else {
+        HashMap::new()
+    };
     let mut reg_node_providers = local_registry
         .operators()
         .await?
