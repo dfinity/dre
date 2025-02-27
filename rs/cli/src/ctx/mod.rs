@@ -123,6 +123,10 @@ impl DreContext {
         registry
     }
 
+    pub fn is_offline(&self) -> bool {
+        self.store.is_offline()
+    }
+
     pub async fn registry(&self) -> Arc<dyn LazyRegistry> {
         self.registry_with_version(None).await
     }
