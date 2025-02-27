@@ -167,7 +167,7 @@ impl Registry {
             node_operators: node_operators.values().cloned().collect_vec(),
             node_rewards_table,
             api_bns,
-            node_providers: get_node_providers(&local_registry, ctx.network(), ctx.is_offline()).await?,
+            node_providers: get_node_providers(&local_registry, ctx.network(), ctx.is_offline(), self.height.is_none()).await?,
         })
     }
 }
@@ -423,7 +423,12 @@ fn get_api_boundary_nodes(local_registry: &Arc<dyn LazyRegistry>) -> anyhow::Res
     Ok(api_bns)
 }
 
-async fn get_node_providers(local_registry: &Arc<dyn LazyRegistry>, network: &Network, offline: bool) -> anyhow::Result<Vec<NodeProvider>> {
+async fn get_node_providers(
+    local_registry: &Arc<dyn LazyRegistry>,
+    network: &Network,
+    offline: bool,
+    latest_height: bool,
+) -> anyhow::Result<Vec<NodeProvider>> {
     let all_nodes = local_registry.nodes().await?;
 
     // Get the node providers from the node operator records, and from the governance canister, and merge them
@@ -455,13 +460,18 @@ async fn get_node_providers(local_registry: &Arc<dyn LazyRegistry>, network: &Ne
         .map(|operator| operator.provider.clone())
         .collect_vec();
     let reg_provider_ids = reg_node_providers.iter().map(|provider| provider.principal).collect::<HashSet<_>>();
-    for principal in gov_node_providers.keys() {
-        if !reg_provider_ids.contains(principal) {
-            reg_node_providers.push(ic_management_types::Provider {
-                principal: *principal,
-                name: None,
-                website: None,
-            });
+
+    // Governance canister doesn't have the mechanism to retrieve node providers on a certain height
+    // meaning that merging the lists on arbitrary heights wouldn't make sense.
+    if latest_height {
+        for principal in gov_node_providers.keys() {
+            if !reg_provider_ids.contains(principal) {
+                reg_node_providers.push(ic_management_types::Provider {
+                    principal: *principal,
+                    name: None,
+                    website: None,
+                });
+            }
         }
     }
     let reg_node_providers = reg_node_providers
