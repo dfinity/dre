@@ -2,7 +2,6 @@ import collections.abc
 import hashlib
 import math
 import os
-import pathlib
 import sys
 import time
 import typing
@@ -26,10 +25,6 @@ def resolve_binary(name: str) -> str:
     if name == "dre" and os.path.exists(binary_local):
         return binary_local
     return name
-
-
-def release_controller_cache_directory() -> pathlib.Path:
-    return pathlib.Path.home() / ".cache" / "release-controller"
 
 
 T = typing.TypeVar("T")
