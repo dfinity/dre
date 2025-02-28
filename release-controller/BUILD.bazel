@@ -40,6 +40,7 @@ py_binary(
     tags = ["typecheck"],
     env = env,
     deps = deps,
+    data = ["//rs/cli:dre"],
 )
 
 py_binary(

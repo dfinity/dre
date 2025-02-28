@@ -1,5 +1,6 @@
 import json
 import logging
+import pathlib
 import subprocess
 import typing
 from util import resolve_binary
@@ -49,7 +50,11 @@ def _mode_flags(dry_run: bool) -> list[str]:
 
 
 class DRECli:
-    def __init__(self, auth: typing.Optional[Auth] = None):
+    def __init__(
+        self,
+        auth: typing.Optional[Auth] = None,
+        cli_path: typing.Optional[pathlib.Path] = None,
+    ):
         self._logger = LOGGER.getChild(self.__class__.__name__)
         self.env = os.environ.copy()
         if auth:
@@ -61,7 +66,7 @@ class DRECli:
             ]
         else:
             self.auth = []
-        self.cli = resolve_binary("dre")
+        self.cli = str(cli_path) if cli_path else resolve_binary("dre")
 
     def _run(self, *args: str, **subprocess_kwargs: typing.Any) -> str:
         """Run the dre CLI."""
