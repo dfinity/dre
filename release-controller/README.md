@@ -192,16 +192,6 @@ bazel run //release-controller:release-controller \
   -- --dry-run --verbose
 ```
 
-Custom path for the reconciler state?
-
-
-```sh
-export RECONCILER_STATE_DIR=/tmp/dryrun/reconciler-state
-bazel run //release-controller:release-controller \
-  --action_env=RECONCILER_STATE_DIR \
-  -- --dry-run --verbose
-```
-
 Typing errors preventing you from running it, because you are editing code and
 testing your changes?  Add `--output_groups=-mypy` right after `bazel run`.
 

@@ -35,7 +35,7 @@ from release_notes import (
     SecurityReleaseNotesRequest,
     OrdinaryReleaseNotesRequest,
 )
-from util import version_name, release_controller_cache_directory
+from util import version_name
 from watchdog import Watchdog
 
 
@@ -539,9 +539,6 @@ def main() -> None:
         else dryrun.DRECli()
     )
     state = reconciler_state.ReconcilerState(
-        pathlib.Path(
-            os.environ.get("RECONCILER_STATE_DIR", release_controller_cache_directory())
-        ),
         None if skip_preloading_state else dre.get_election_proposals_by_version,
     )
     slack_announcer = (
