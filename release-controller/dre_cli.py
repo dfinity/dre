@@ -56,9 +56,9 @@ class DRECli:
             subprocess.check_output(
                 [
                     self.cli,
-                    *(["--yes"] if "propose" in args else []),
                     *self.auth,
                     *args,
+                    *(["--yes"] if "propose" in args else []),
                 ],
                 env=self.env,
                 text=True,
