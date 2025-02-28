@@ -36,9 +36,10 @@ impl From<&SubmissionParameters> for Submitter {
 impl Submitter {
     /// Submits a proposal (maybe in dry-run mode) with confirmation from the user, unless the user
     /// specifies in the command line that he wants no confirmation (--yes).
+    ///
     /// When a proposal has successfully been executed (as opposed to just simulated),
     /// the result will contain a Some(ProposalResponseWithId).
-    #[must_use = "Are you implementing a CLI command?  Did you forget to print the proposal ID possibly returned by this function?"]
+    #[must_use = "Are you implementing a CLI command?  Did you forget to print the proposal ID possibly returned by this function?  Consider propose_and_print instead."]
     pub async fn propose(&self, execution: Box<dyn ProposalExecution>, kind: ForumPostKind) -> anyhow::Result<Option<ProposalResponseWithId>> {
         if let HowToProceed::Unconditional = self.mode {
         } else {
@@ -84,5 +85,20 @@ impl Submitter {
                 }
             }
         }
+    }
+
+    /// Submits a proposal (maybe in dry-run mode) with confirmation from the user, by calling
+    /// Self.propose().
+    ///
+    /// When a proposal has successfully been executed (as opposed to just simulated),
+    /// the proposal ID will be printed to standard output as "proposal XXXXXX".
+    ///
+    /// You should only call this convenience method if all your code is going to do is print
+    /// the returned proposal ID and exit.
+    pub async fn propose_and_print(&self, execution: Box<dyn ProposalExecution>, kind: ForumPostKind) -> anyhow::Result<()> {
+        if let Some(p) = self.propose(execution, kind).await? {
+            println!("{}", p)
+        };
+        Ok(())
     }
 }

@@ -177,6 +177,8 @@ impl ExecutableCommand for Network {
             return Ok(());
         }
 
+        let mut submitted_proposals = vec![];
+
         for proposal in proposals {
             if let crate::ic_admin::IcAdminProposalCommand::ChangeSubnetMembership { subnet_id, .. } = &proposal.command {
                 let body = match (&proposal.options.motivation, &proposal.options.summary) {
@@ -191,17 +193,20 @@ impl ExecutableCommand for Network {
                         continue;
                     }
                 };
-                if let Err(e) = Submitter::from(&self.submission_parameters)
+                match Submitter::from(&self.submission_parameters)
                     .propose(
                         ctx.ic_admin_executor().await?.execution(proposal.clone()),
                         ForumPostKind::ReplaceNodes { subnet_id: *subnet_id, body },
                     )
                     .await
                 {
-                    errors.push(DetailedError {
-                        proposal: Some(proposal),
-                        error: e,
-                    });
+                    Err(e) => {
+                        errors.push(DetailedError {
+                            proposal: Some(proposal),
+                            error: e,
+                        });
+                    }
+                    Ok(p) => submitted_proposals.push(p),
                 }
             } else {
                 errors.push(DetailedError {
@@ -209,6 +214,10 @@ impl ExecutableCommand for Network {
                     error: anyhow::anyhow!("Expected all proposals to be of type `ChangeSubnetMembership`"),
                 });
             }
+        }
+
+        for p in submitted_proposals.iter().flatten() {
+            println! {"{}", p};
         }
 
         if errors.is_empty() {

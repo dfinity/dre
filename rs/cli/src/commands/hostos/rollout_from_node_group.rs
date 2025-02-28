@@ -100,13 +100,9 @@ impl ExecutableCommand for RolloutFromNodeGroup {
         };
 
         let runner_proposal = runner.hostos_rollout(nodes_to_update, &self.version, Some(summary))?;
-        if let Some(p) = Submitter::from(&self.submission_parameters)
-            .propose(ctx.ic_admin_executor().await?.execution(runner_proposal), ForumPostKind::Generic)
-            .await?
-        {
-            println!("{}", p)
-        };
-        Ok(())
+        Submitter::from(&self.submission_parameters)
+            .propose_and_print(ctx.ic_admin_executor().await?.execution(runner_proposal), ForumPostKind::Generic)
+            .await
     }
 
     fn validate(&self, _args: &GlobalArgs, _cmd: &mut clap::Command) {}

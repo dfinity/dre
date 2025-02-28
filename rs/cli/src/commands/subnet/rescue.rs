@@ -34,13 +34,9 @@ impl ExecutableCommand for Rescue {
             Some(runner_proposal) => runner_proposal,
             None => return Ok(()),
         };
-        if let Some(p) = Submitter::from(&self.submission_parameters)
-            .propose(ctx.ic_admin_executor().await?.execution(runner_proposal), ForumPostKind::Generic)
-            .await?
-        {
-            println!("{}", p)
-        };
-        Ok(())
+        Submitter::from(&self.submission_parameters)
+            .propose_and_print(ctx.ic_admin_executor().await?.execution(runner_proposal), ForumPostKind::Generic)
+            .await
     }
 
     fn validate(&self, _args: &GlobalArgs, _cmd: &mut clap::Command) {}

@@ -235,8 +235,12 @@ impl Firewall {
         let hash = parsed.hash;
         info!("Computed hash for firewall rule at position '{}': {}", positions, hash);
 
-        if let Some(p) = Submitter::from(submission_parameters)
-            .propose(
+        // We should probably not be calling the print variant here, since
+        // this is called in a loop by the caller of create_proposal.  Perhaps
+        // we should summarize the proposals that were submitted, or the errors
+        // that were returned.
+        Submitter::from(submission_parameters)
+            .propose_and_print(
                 ctx.ic_admin_executor().await?.execution(FirewallModifyCommand {
                     test_command,
                     hash,
@@ -245,11 +249,7 @@ impl Firewall {
                 }),
                 ForumPostKind::Generic,
             )
-            .await?
-        {
-            println!("{}", p)
-        };
-        Ok(())
+            .await
     }
 }
 

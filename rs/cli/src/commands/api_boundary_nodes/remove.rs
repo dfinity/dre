@@ -30,8 +30,8 @@ impl ExecutableCommand for Remove {
     }
 
     async fn execute(&self, ctx: crate::ctx::DreContext) -> anyhow::Result<()> {
-        if let Some(p) = Submitter::from(&self.submission_parameters)
-            .propose(
+        Submitter::from(&self.submission_parameters)
+            .propose_and_print(
                 ctx.ic_admin_executor().await?.execution(ic_admin::IcAdminProposal::new(
                     ic_admin::IcAdminProposalCommand::RemoveApiBoundaryNodes { nodes: self.nodes.to_vec() },
                     ic_admin::IcAdminProposalOptions {
@@ -42,11 +42,7 @@ impl ExecutableCommand for Remove {
                 )),
                 ForumPostKind::Generic,
             )
-            .await?
-        {
-            println!("{}", p)
-        };
-        Ok(())
+            .await
     }
 
     fn validate(&self, _args: &GlobalArgs, _cmd: &mut clap::Command) {}
