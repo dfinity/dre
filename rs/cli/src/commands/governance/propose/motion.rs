@@ -80,7 +80,7 @@ impl ExecutableCommand for Motion {
             action: Some(ProposalActionRequest::Motion(MotionPayload { motion_text })),
         };
 
-        Submitter::from(&self.submission_parameters)
+        if let Some(p) = Submitter::from(&self.submission_parameters)
             .propose(
                 ctx.governance_executor().await?.execution(request),
                 ForumPostKind::Motion {
@@ -88,7 +88,11 @@ impl ExecutableCommand for Motion {
                     summary: summary.clone(),
                 },
             )
-            .await
+            .await?
+        {
+            println!("{}", p)
+        };
+        Ok(())
     }
 
     fn validate(&self, _args: &GlobalArgs, _cmd: &mut clap::Command) {

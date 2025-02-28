@@ -86,9 +86,13 @@ impl ExecutableCommand for Create {
             Some(runner_proposal) => runner_proposal,
             None => return Ok(()),
         };
-        Submitter::from(&self.submission_parameters)
+        if let Some(p) = Submitter::from(&self.submission_parameters)
             .propose(ctx.ic_admin_executor().await?.execution(runner_proposal), ForumPostKind::Generic) // FIXME once the Proposable struct gains knowledge of how to create a forum post, then it won't be necessary to pass two different structs.
-            .await
+            .await?
+        {
+            println!("{}", p)
+        };
+        Ok(())
     }
 
     fn validate(&self, _args: &GlobalArgs, cmd: &mut clap::Command) {

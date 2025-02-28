@@ -33,7 +33,7 @@ impl ExecutableCommand for Update {
     }
 
     async fn execute(&self, ctx: crate::ctx::DreContext) -> anyhow::Result<()> {
-        Submitter::from(&self.submission_parameters)
+        if let Some(p) = Submitter::from(&self.submission_parameters)
             .propose(
                 ctx.ic_admin_executor().await?.execution(ic_admin::IcAdminProposal::new(
                     ic_admin::IcAdminProposalCommand::DeployGuestosToSomeApiBoundaryNodes {
@@ -48,7 +48,11 @@ impl ExecutableCommand for Update {
                 )),
                 ForumPostKind::Generic,
             )
-            .await
+            .await?
+        {
+            println!("{}", p)
+        };
+        Ok(())
     }
 
     fn validate(&self, _args: &GlobalArgs, _cmd: &mut clap::Command) {}

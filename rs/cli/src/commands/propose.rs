@@ -43,9 +43,13 @@ impl ExecutableCommand for Propose {
 
         let cmd = IcAdminProposal::new(IcAdminProposalCommand::Raw(args.clone()), Default::default());
 
-        Submitter::from(&self.submission_parameters)
+        if let Some(p) = Submitter::from(&self.submission_parameters)
             .propose(ctx.ic_admin_executor().await?.execution(cmd), ForumPostKind::Generic)
-            .await
+            .await?
+        {
+            println!("{}", p)
+        };
+        Ok(())
     }
 
     fn validate(&self, _args: &GlobalArgs, cmd: &mut clap::Command) {

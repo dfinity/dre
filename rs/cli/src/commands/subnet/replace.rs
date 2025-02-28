@@ -78,7 +78,7 @@ impl ExecutableCommand for Replace {
             None => return Ok(()),
         };
 
-        Submitter::from(&self.submission_parameters)
+        if let Some(p) = Submitter::from(&self.submission_parameters)
             .propose(
                 ctx.ic_admin_executor().await?.execution(runner_proposal.clone()),
                 match subnet_change_response.subnet_id {
@@ -94,7 +94,11 @@ impl ExecutableCommand for Replace {
                     None => ForumPostKind::Generic,
                 },
             )
-            .await
+            .await?
+        {
+            println!("{}", p)
+        };
+        Ok(())
     }
 
     fn validate(&self, _args: &GlobalArgs, cmd: &mut clap::Command) {

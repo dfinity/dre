@@ -156,12 +156,16 @@ impl ExecutableCommand for UpdateAuthorizedSubnets {
             },
         );
 
-        Submitter::from(&self.submission_parameters)
+        if let Some(p) = Submitter::from(&self.submission_parameters)
             .propose(
                 ctx.ic_admin_executor().await?.execution(prop),
                 ForumPostKind::AuthorizedSubnetsUpdate { body: summary },
             )
-            .await
+            .await?
+        {
+            println!("{}", p)
+        };
+        Ok(())
     }
 }
 

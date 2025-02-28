@@ -235,7 +235,7 @@ impl Firewall {
         let hash = parsed.hash;
         info!("Computed hash for firewall rule at position '{}': {}", positions, hash);
 
-        Submitter::from(submission_parameters)
+        if let Some(p) = Submitter::from(submission_parameters)
             .propose(
                 ctx.ic_admin_executor().await?.execution(FirewallModifyCommand {
                     test_command,
@@ -245,7 +245,11 @@ impl Firewall {
                 }),
                 ForumPostKind::Generic,
             )
-            .await
+            .await?
+        {
+            println!("{}", p)
+        };
+        Ok(())
     }
 }
 

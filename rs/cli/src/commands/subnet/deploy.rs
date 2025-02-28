@@ -33,9 +33,13 @@ impl ExecutableCommand for Deploy {
 
     async fn execute(&self, ctx: crate::ctx::DreContext) -> anyhow::Result<()> {
         let runner_proposal = ctx.runner().await?.deploy(&self.id, &self.version).await?;
-        Submitter::from(&self.submission_parameters)
+        if let Some(p) = Submitter::from(&self.submission_parameters)
             .propose(ctx.ic_admin_executor().await?.execution(runner_proposal), ForumPostKind::Generic)
-            .await
+            .await?
+        {
+            println!("{}", p)
+        };
+        Ok(())
     }
 
     fn validate(&self, _args: &GlobalArgs, _cmd: &mut clap::Command) {}
