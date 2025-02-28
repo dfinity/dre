@@ -34,7 +34,7 @@ impl ExecutableCommand for Update {
 
     async fn execute(&self, ctx: crate::ctx::DreContext) -> anyhow::Result<()> {
         Submitter::from(&self.submission_parameters)
-            .propose(
+            .propose_and_print(
                 ctx.ic_admin_executor().await?.execution(ic_admin::IcAdminProposal::new(
                     ic_admin::IcAdminProposalCommand::DeployGuestosToSomeApiBoundaryNodes {
                         nodes: self.nodes.to_vec(),

@@ -157,7 +157,7 @@ impl ExecutableCommand for UpdateAuthorizedSubnets {
         );
 
         Submitter::from(&self.submission_parameters)
-            .propose(
+            .propose_and_print(
                 ctx.ic_admin_executor().await?.execution(prop),
                 ForumPostKind::AuthorizedSubnetsUpdate { body: summary },
             )

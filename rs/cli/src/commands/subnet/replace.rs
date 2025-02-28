@@ -79,7 +79,7 @@ impl ExecutableCommand for Replace {
         };
 
         Submitter::from(&self.submission_parameters)
-            .propose(
+            .propose_and_print(
                 ctx.ic_admin_executor().await?.execution(runner_proposal.clone()),
                 match subnet_change_response.subnet_id {
                     Some(id) => ForumPostKind::ReplaceNodes {

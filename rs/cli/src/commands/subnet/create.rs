@@ -87,7 +87,7 @@ impl ExecutableCommand for Create {
             None => return Ok(()),
         };
         Submitter::from(&self.submission_parameters)
-            .propose(ctx.ic_admin_executor().await?.execution(runner_proposal), ForumPostKind::Generic) // FIXME once the Proposable struct gains knowledge of how to create a forum post, then it won't be necessary to pass two different structs.
+            .propose_and_print(ctx.ic_admin_executor().await?.execution(runner_proposal), ForumPostKind::Generic) // FIXME once the Proposable struct gains knowledge of how to create a forum post, then it won't be necessary to pass two different structs.
             .await
     }
 
