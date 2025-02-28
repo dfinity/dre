@@ -34,6 +34,20 @@ class ElectionProposal(typing.TypedDict):
     payload: HostosElectionProposalPayload | GuestosElectionProposalPayload
 
 
+def _mode_flags(dry_run: bool) -> list[str]:
+    """
+    Return what DRE flag set to use depending on the mode.
+
+    Operations cannot be interactive when used within the callers
+    of this module.  Accordingly, depending on the nature of the
+    operation, either a flag that specifies *yes, do what I said*
+    or *no, just simulate* is necessary.
+
+    This code decides which flags to use.
+    """
+    return ["--dry-run"] if dry_run else ["--yes"]
+
+
 class DRECli:
     def __init__(self, auth: typing.Optional[Auth] = None):
         self._logger = LOGGER.getChild(self.__class__.__name__)
@@ -51,20 +65,13 @@ class DRECli:
 
     def _run(self, *args: str, **subprocess_kwargs: typing.Any) -> str:
         """Run the dre CLI."""
-        args_with_yes = list(args)
-        try:
-            # The --yes must be immediately after the propose verb.
-            pos = args_with_yes.index("propose")
-            args_with_yes.insert(pos + 1, "yes")
-        except IndexError:
-            pass
         return typing.cast(
             str,
             subprocess.check_output(
                 [
                     self.cli,
                     *self.auth,
-                    *args_with_yes,
+                    *args,
                 ],
                 env=self.env,
                 text=True,
@@ -140,26 +147,6 @@ class DRECli:
         package_urls: list[str],
         dry_run: bool = False,
     ) -> int:
-        return self._propose_to_update_elected_replica_versions(
-            changelog,
-            version,
-            forum_post_url,
-            unelect_versions,
-            package_checksum,
-            package_urls,
-            dry_run,
-        )
-
-    def _propose_to_update_elected_replica_versions(
-        self,
-        changelog: str,
-        version: str,
-        forum_post_url: str,
-        unelect_versions: list[str],
-        package_checksum: str,
-        package_urls: list[str],
-        dry_run: bool = False,
-    ) -> int:
         unelect_versions_args = (
             (["--replica-versions-to-unelect"] + list(unelect_versions))
             if len(unelect_versions) > 0
@@ -168,7 +155,7 @@ class DRECli:
         self._logger.info("Submitting proposal for version %s", version)
         text = self._run(
             "propose",
-            *(["--dry-run"] if dry_run else []),  # TODO: replace with system proposer
+            *_mode_flags(dry_run),
             "--proposal-url",
             forum_post_url,
             "revise-elected-guestos-versions",
