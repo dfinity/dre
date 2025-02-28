@@ -291,6 +291,7 @@ class Reconciler:
                         revlogger.warning(
                             "%s.  However, contrary to recorded failure, proposal"
                             " to elect %s was indeed successfully submitted as ID %s.",
+                            prop,
                             release_commit,
                             discovered_proposal["id"],
                         )
