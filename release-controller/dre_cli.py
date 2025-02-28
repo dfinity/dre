@@ -51,14 +51,20 @@ class DRECli:
 
     def _run(self, *args: str, **subprocess_kwargs: typing.Any) -> str:
         """Run the dre CLI."""
+        args_with_yes = list(args)
+        try:
+            # The --yes must be immediately after the propose verb.
+            pos = args_with_yes.index("propose")
+            args_with_yes.insert(pos + 1, "yes")
+        except IndexError:
+            pass
         return typing.cast(
             str,
             subprocess.check_output(
                 [
                     self.cli,
                     *self.auth,
-                    *args,
-                    *(["--yes"] if "propose" in args else []),
+                    *args_with_yes,
                 ],
                 env=self.env,
                 text=True,
