@@ -407,7 +407,7 @@ class Reconciler:
                         revlogger.info("%s", success)
                     except Exception:
                         fail = prop.record_malfunction()
-                        revlogger.error("%s", fail)
+                        revlogger.exception("%s", fail)
 
                 rclogger.debug("Updating forum posts after processing versions.")
                 # Update the forum posts in case the proposal was created.
