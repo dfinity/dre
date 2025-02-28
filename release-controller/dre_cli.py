@@ -47,7 +47,7 @@ class DRECli:
             ]
         else:
             self.auth = []
-        self.cli = resolve_binary("old-dre")
+        self.cli = resolve_binary("dre")
 
     def _run(self, *args: str, **subprocess_kwargs: typing.Any) -> str:
         """Run the dre CLI."""
