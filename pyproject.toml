@@ -4,6 +4,9 @@ version = "0.6.0"
 description = ""
 authors = [{ name = "DRE Team", email = "dept-DRE@dfinity.org" }]
 readme = "README.md"
+# Note: You should add dependencies with `rye add <dependency>`
+# Or to add dev-dependencies: `rye add --dev <dependency>`
+# This will ensure that the dependency is added to the correct section and also updates the corresponding lock file(s).
 dependencies = [
     "requests>=2.32.3",
     "types-requests>=2.32.0",
