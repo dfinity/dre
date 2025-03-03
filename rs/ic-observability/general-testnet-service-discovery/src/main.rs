@@ -1,10 +1,15 @@
-use std::{fmt::Display, path::PathBuf, str::FromStr};
+use std::{fmt::Display, path::PathBuf, str::FromStr, sync::Arc};
 
+use axum_otel_metrics::HttpMetricsLayerBuilder;
 use clap::Parser;
+use metrics::Metrics;
+use server::Server;
 use slog::{info, o, Drain, Logger};
 use storage::{file::FileStorage, in_memory::InMemoryStorage, Storage};
 use tokio_util::sync::CancellationToken;
 
+mod metrics;
+mod server;
 mod storage;
 
 fn main() {
@@ -18,6 +23,11 @@ fn main() {
     let storage = get_storage_impl(args.mode, logger.clone());
     let storage_sync_handle = storage.sync(runtime.handle().clone(), token.clone());
 
+    let metrics = Metrics::new(storage.clone(), runtime.handle().clone());
+
+    let server = Server::new(logger.clone(), metrics, storage, token.clone());
+    let server_handle = runtime.spawn(server.run(HttpMetricsLayerBuilder::new().build()));
+
     let _ = runtime.block_on(tokio::signal::ctrl_c());
     info!(logger, "Received shutdown in main thread");
 
@@ -25,6 +35,9 @@ fn main() {
 
     // Join the sync thread
     let _ = runtime.block_on(storage_sync_handle);
+
+    // Join the server thread
+    let _ = runtime.block_on(server_handle);
 }
 
 fn make_logger() -> Logger {
@@ -56,10 +69,10 @@ impl From<&str> for StorageMode {
     }
 }
 
-fn get_storage_impl(storage_mode: StorageMode, logger: Logger) -> Box<dyn Storage> {
+fn get_storage_impl(storage_mode: StorageMode, logger: Logger) -> Arc<dyn Storage> {
     match storage_mode {
-        StorageMode::InMemory => Box::new(InMemoryStorage::new()),
-        StorageMode::File { path } => Box::new(FileStorage::new(path, logger)),
+        StorageMode::InMemory => Arc::new(InMemoryStorage::new()),
+        StorageMode::File { path } => Arc::new(FileStorage::new(path, logger)),
     }
 }
 
