@@ -23,10 +23,11 @@ fn main() {
     let storage = get_storage_impl(args.mode, logger.clone());
     let storage_sync_handle = storage.sync(runtime.handle().clone(), token.clone());
 
-    let metrics = Metrics::new(storage.clone(), runtime.handle().clone());
+    let metrics_layer = HttpMetricsLayerBuilder::new().build();
+    let metrics = Metrics::new();
 
     let server = Server::new(logger.clone(), metrics, storage, token.clone());
-    let server_handle = runtime.spawn(server.run(HttpMetricsLayerBuilder::new().build()));
+    let server_handle = runtime.spawn(server.run(metrics_layer));
 
     let _ = runtime.block_on(tokio::signal::ctrl_c());
     info!(logger, "Received shutdown in main thread");

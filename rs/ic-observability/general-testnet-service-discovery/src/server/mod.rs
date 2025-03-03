@@ -1,11 +1,18 @@
 use std::sync::Arc;
 
-use axum::{http::StatusCode, Router};
+use axum::{
+    http::StatusCode,
+    routing::{get, post},
+    Router,
+};
 use axum_otel_metrics::HttpMetricsLayer;
 use slog::{info, Logger};
 use tokio_util::sync::CancellationToken;
 
 use crate::{metrics::Metrics, storage::Storage};
+
+mod add_targets;
+mod get_targets;
 
 pub type WebResult<T> = Result<T, (StatusCode, String)>;
 
@@ -30,6 +37,8 @@ impl Server {
     pub async fn run(self, metrics_layer: HttpMetricsLayer) {
         let app = Router::new()
             .merge(metrics_layer.routes())
+            .route("/", get(get_targets::get_targets))
+            .route("/", post(add_targets::add_targets))
             .layer(metrics_layer)
             .with_state(self.storage.clone());
 
