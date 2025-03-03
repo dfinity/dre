@@ -323,9 +323,9 @@ dependencies = [
 
 [[package]]
 name = "anyhow"
-version = "1.0.96"
+version = "1.0.97"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6b964d184e89d9b6b67dd2715bc8e74cf3107fb2b529990c90cf517326150bf4"
+checksum = "dcfed56ad506cb2c684a14971b8861fdc3baaaae314b9e5f9bb532cbe3ba7a4f"
 
 [[package]]
 name = "arc-swap"
@@ -1169,7 +1169,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "117725a109d387c937a1533ce01b450cbde6b88abceea8473c4d7a85853cda3c"
 dependencies = [
  "lazy_static",
- "windows-sys 0.48.0",
+ "windows-sys 0.59.0",
 ]
 
 [[package]]
@@ -2895,7 +2895,7 @@ dependencies = [
  "sha2 0.10.8",
  "simple_asn1",
  "stop-token",
- "thiserror 2.0.11",
+ "thiserror 2.0.12",
  "time",
  "tokio",
  "tower-service",
@@ -3039,7 +3039,7 @@ dependencies = [
  "serde",
  "sha2 0.10.8",
  "simple_asn1",
- "thiserror 2.0.11",
+ "thiserror 2.0.12",
  "trustworthy-node-metrics-types",
  "url",
 ]
@@ -3088,7 +3088,7 @@ dependencies = [
  "itertools 0.12.1",
  "leb128",
  "scoped_threadpool",
- "thiserror 2.0.11",
+ "thiserror 2.0.12",
 ]
 
 [[package]]
@@ -3283,7 +3283,7 @@ dependencies = [
  "hkdf",
  "pem 1.1.1",
  "rand",
- "thiserror 2.0.11",
+ "thiserror 2.0.12",
  "zeroize",
 ]
 
@@ -3470,7 +3470,7 @@ dependencies = [
  "serde_cbor",
  "strum 0.26.3",
  "strum_macros 0.26.4",
- "thiserror 2.0.11",
+ "thiserror 2.0.12",
  "zeroize",
 ]
 
@@ -3558,7 +3558,7 @@ dependencies = [
  "ic-protobuf",
  "serde",
  "serde_bytes",
- "thiserror 2.0.11",
+ "thiserror 2.0.12",
 ]
 
 [[package]]
@@ -3643,7 +3643,7 @@ dependencies = [
  "ic-metrics",
  "prometheus",
  "slog",
- "thiserror 2.0.11",
+ "thiserror 2.0.12",
  "tokio",
  "tokio-io-timeout",
  "tower 0.5.2",
@@ -3668,7 +3668,7 @@ dependencies = [
  "num-traits",
  "serde",
  "serde_bytes",
- "thiserror 2.0.11",
+ "thiserror 2.0.12",
 ]
 
 [[package]]
@@ -3789,7 +3789,7 @@ dependencies = [
  "serde",
  "strum 0.26.3",
  "strum_macros 0.26.4",
- "thiserror 2.0.11",
+ "thiserror 2.0.12",
  "tower 0.5.2",
 ]
 
@@ -3811,7 +3811,7 @@ dependencies = [
  "ic-crypto-tree-hash",
  "ic-types",
  "phantom_newtype",
- "thiserror 2.0.11",
+ "thiserror 2.0.12",
 ]
 
 [[package]]
@@ -4447,7 +4447,7 @@ dependencies = [
  "candid",
  "ic-base-types",
  "serde",
- "thiserror 2.0.11",
+ "thiserror 2.0.12",
 ]
 
 [[package]]
@@ -4499,7 +4499,7 @@ dependencies = [
  "ic-registry-subnet-features",
  "ic-types",
  "serde_cbor",
- "thiserror 2.0.11",
+ "thiserror 2.0.12",
 ]
 
 [[package]]
@@ -4535,7 +4535,7 @@ dependencies = [
  "ic-registry-nns-data-provider",
  "ic-registry-transport",
  "ic-types",
- "thiserror 2.0.11",
+ "thiserror 2.0.12",
  "tokio",
  "url",
 ]
@@ -4994,7 +4994,7 @@ dependencies = [
  "phantom_newtype",
  "prost",
  "rand",
- "thiserror 2.0.11",
+ "thiserror 2.0.12",
  "tokio",
  "wsl",
 ]
@@ -5014,7 +5014,7 @@ dependencies = [
  "serde_cbor",
  "serde_repr",
  "sha2 0.10.8",
- "thiserror 2.0.11",
+ "thiserror 2.0.12",
 ]
 
 [[package]]
@@ -5050,7 +5050,7 @@ dependencies = [
  "serde_with",
  "strum 0.26.3",
  "strum_macros 0.26.4",
- "thiserror 2.0.11",
+ "thiserror 2.0.12",
  "thousands",
 ]
 
@@ -5082,7 +5082,7 @@ dependencies = [
  "sha2 0.10.8",
  "strum 0.26.3",
  "strum_macros 0.26.4",
- "thiserror 2.0.11",
+ "thiserror 2.0.12",
  "time",
  "tokio",
 ]
@@ -6457,7 +6457,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8b7cafe60d6cf8e62e1b9b2ea516a089c008945bb5a275416789e7db0bc199dc"
 dependencies = [
  "memchr",
- "thiserror 2.0.11",
+ "thiserror 2.0.12",
  "ucd-trie",
 ]
 
@@ -6863,7 +6863,7 @@ version = "0.13.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d0f3e5beed80eb580c68e2c600937ac2c4eedabdfd5ef1e5b7ea4f3fba84497b"
 dependencies = [
- "heck 0.4.1",
+ "heck 0.5.0",
  "itertools 0.13.0",
  "log",
  "multimap",
@@ -6962,7 +6962,7 @@ dependencies = [
  "rustc-hash",
  "rustls",
  "socket2",
- "thiserror 2.0.11",
+ "thiserror 2.0.12",
  "tokio",
  "tracing",
 ]
@@ -6981,7 +6981,7 @@ dependencies = [
  "rustls",
  "rustls-pki-types",
  "slab",
- "thiserror 2.0.11",
+ "thiserror 2.0.12",
  "tinyvec",
  "tracing",
  "web-time",
@@ -7665,9 +7665,9 @@ dependencies = [
 
 [[package]]
 name = "serde_json"
-version = "1.0.139"
+version = "1.0.140"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "44f86c3acccc9c65b153fe1b85a3be07fe5515274ec9f0653b4a0875731c72a6"
+checksum = "20068b6e96dc6c9bd23e01df8827e6c7e1f2fddd43c21810382803c136b99373"
 dependencies = [
  "indexmap 2.7.1",
  "itoa",
@@ -7796,7 +7796,7 @@ dependencies = [
  "serde_json",
  "slog",
  "tempfile",
- "thiserror 2.0.11",
+ "thiserror 2.0.12",
  "tokio",
  "url",
 ]
@@ -7881,7 +7881,7 @@ checksum = "297f631f50729c8c99b84667867963997ec0b50f32b2a7dbcab828ef0541e8bb"
 dependencies = [
  "num-bigint",
  "num-traits",
- "thiserror 2.0.11",
+ "thiserror 2.0.12",
  "time",
 ]
 
@@ -8011,7 +8011,7 @@ version = "0.8.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "03c3c6b7927ffe7ecaa769ee0e3994da3b8cafc8f444578982c83ecb161af917"
 dependencies = [
- "heck 0.4.1",
+ "heck 0.5.0",
  "proc-macro2",
  "quote",
  "syn 2.0.98",
@@ -8338,11 +8338,11 @@ dependencies = [
 
 [[package]]
 name = "thiserror"
-version = "2.0.11"
+version = "2.0.12"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d452f284b73e6d76dd36758a0c8684b1d5be31f92b89d07fd5822175732206fc"
+checksum = "567b8a2dae586314f7be2a752ec7474332959c6460e02bde30d702a66d488708"
 dependencies = [
- "thiserror-impl 2.0.11",
+ "thiserror-impl 2.0.12",
 ]
 
 [[package]]
@@ -8358,9 +8358,9 @@ dependencies = [
 
 [[package]]
 name = "thiserror-impl"
-version = "2.0.11"
+version = "2.0.12"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "26afc1baea8a989337eeb52b6e72a039780ce45c3edfcc9c5b9d112feeb173c2"
+checksum = "7f7cf42b4507d8ea322120659672cf1b9dbb93f8f2d4ecfd6e51350ff5b17a1d"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -9118,7 +9118,7 @@ version = "0.1.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "cf221c93e13a30d793f7645a0e7762c55d169dbb0a49671918a2319d289b10bb"
 dependencies = [
- "windows-sys 0.48.0",
+ "windows-sys 0.59.0",
 ]
 
 [[package]]
