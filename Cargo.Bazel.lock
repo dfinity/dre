@@ -1,5 +1,5 @@
 {
-  "checksum": "de0c2fe0b1c1b1892ec2e18c67f53c341253b0af6941db05fbfba5df828233db",
+  "checksum": "6baa637b09aa7e9f89651ef706d5669343474ad0f2c0960c7d5089ccdd4e26d6",
   "crates": {
     "actix-codec 0.5.2": {
       "name": "actix-codec",
@@ -162,7 +162,7 @@
               "target": "encoding_rs"
             },
             {
-              "id": "flate2 1.0.35",
+              "id": "flate2 1.1.0",
               "target": "flate2"
             },
             {
@@ -1794,14 +1794,14 @@
       ],
       "license_file": "LICENSE-APACHE"
     },
-    "anyhow 1.0.96": {
+    "anyhow 1.0.97": {
       "name": "anyhow",
-      "version": "1.0.96",
+      "version": "1.0.97",
       "package_url": "https://github.com/dtolnay/anyhow",
       "repository": {
         "Http": {
-          "url": "https://static.crates.io/crates/anyhow/1.0.96/download",
-          "sha256": "6b964d184e89d9b6b67dd2715bc8e74cf3107fb2b529990c90cf517326150bf4"
+          "url": "https://static.crates.io/crates/anyhow/1.0.97/download",
+          "sha256": "dcfed56ad506cb2c684a14971b8861fdc3baaaae314b9e5f9bb532cbe3ba7a4f"
         }
       },
       "targets": [
@@ -1845,14 +1845,14 @@
         "deps": {
           "common": [
             {
-              "id": "anyhow 1.0.96",
+              "id": "anyhow 1.0.97",
               "target": "build_script_build"
             }
           ],
           "selects": {}
         },
         "edition": "2018",
-        "version": "1.0.96"
+        "version": "1.0.97"
       },
       "build_script_attrs": {
         "compile_data_glob": [
@@ -4992,7 +4992,7 @@
         "deps": {
           "common": [
             {
-              "id": "anyhow 1.0.96",
+              "id": "anyhow 1.0.97",
               "target": "anyhow"
             },
             {
@@ -5298,7 +5298,7 @@
         "deps": {
           "common": [
             {
-              "id": "anyhow 1.0.96",
+              "id": "anyhow 1.0.97",
               "target": "anyhow"
             },
             {
@@ -6075,7 +6075,7 @@
         "deps": {
           "common": [
             {
-              "id": "anyhow 1.0.96",
+              "id": "anyhow 1.0.97",
               "target": "anyhow"
             },
             {
@@ -6227,11 +6227,11 @@
         "deps": {
           "common": [
             {
-              "id": "anyhow 1.0.96",
+              "id": "anyhow 1.0.97",
               "target": "anyhow"
             },
             {
-              "id": "clap 4.5.30",
+              "id": "clap 4.5.31",
               "target": "clap"
             },
             {
@@ -6520,14 +6520,14 @@
       ],
       "license_file": "LICENSE"
     },
-    "chrono 0.4.39": {
+    "chrono 0.4.40": {
       "name": "chrono",
-      "version": "0.4.39",
+      "version": "0.4.40",
       "package_url": "https://github.com/chronotope/chrono",
       "repository": {
         "Http": {
-          "url": "https://static.crates.io/crates/chrono/0.4.39/download",
-          "sha256": "7e36cc9d416881d2e24f9a963be5fb1cd90966419ac844274161d10488b3e825"
+          "url": "https://static.crates.io/crates/chrono/0.4.40/download",
+          "sha256": "1a7964611d71df112cb1730f2ee67324fcf4d0fc6606acbbe9bfe06df124637c"
         }
       },
       "targets": [
@@ -6564,7 +6564,7 @@
             "wasm-bindgen",
             "wasmbind",
             "winapi",
-            "windows-targets"
+            "windows-link"
           ],
           "selects": {}
         },
@@ -6610,8 +6610,8 @@
             ],
             "aarch64-pc-windows-msvc": [
               {
-                "id": "windows-targets 0.52.6",
-                "target": "windows_targets"
+                "id": "windows-link 0.1.0",
+                "target": "windows_link"
               }
             ],
             "aarch64-unknown-fuchsia": [
@@ -6678,8 +6678,8 @@
             ],
             "i686-pc-windows-msvc": [
               {
-                "id": "windows-targets 0.52.6",
-                "target": "windows_targets"
+                "id": "windows-link 0.1.0",
+                "target": "windows_link"
               }
             ],
             "i686-unknown-freebsd": [
@@ -6740,8 +6740,8 @@
             ],
             "x86_64-pc-windows-msvc": [
               {
-                "id": "windows-targets 0.52.6",
-                "target": "windows_targets"
+                "id": "windows-link 0.1.0",
+                "target": "windows_link"
               }
             ],
             "x86_64-unknown-freebsd": [
@@ -6771,7 +6771,7 @@
           }
         },
         "edition": "2021",
-        "version": "0.4.39"
+        "version": "0.4.40"
       },
       "license": "MIT OR Apache-2.0",
       "license_ids": [
@@ -6938,14 +6938,14 @@
       ],
       "license_file": "LICENSE"
     },
-    "clap 4.5.30": {
+    "clap 4.5.31": {
       "name": "clap",
-      "version": "4.5.30",
+      "version": "4.5.31",
       "package_url": "https://github.com/clap-rs/clap",
       "repository": {
         "Http": {
-          "url": "https://static.crates.io/crates/clap/4.5.30/download",
-          "sha256": "92b7b18d71fad5313a1e320fa9897994228ce274b60faa4d694fe0ea89cd9e6d"
+          "url": "https://static.crates.io/crates/clap/4.5.31/download",
+          "sha256": "027bb0d98429ae334a8698531da7077bdf906419543a35a55c2cb1b66437d767"
         }
       },
       "targets": [
@@ -6987,7 +6987,7 @@
         "deps": {
           "common": [
             {
-              "id": "clap_builder 4.5.30",
+              "id": "clap_builder 4.5.31",
               "target": "clap_builder"
             }
           ],
@@ -7003,7 +7003,7 @@
           ],
           "selects": {}
         },
-        "version": "4.5.30"
+        "version": "4.5.31"
       },
       "license": "MIT OR Apache-2.0",
       "license_ids": [
@@ -7059,14 +7059,14 @@
       ],
       "license_file": "LICENSE"
     },
-    "clap_builder 4.5.30": {
+    "clap_builder 4.5.31": {
       "name": "clap_builder",
-      "version": "4.5.30",
+      "version": "4.5.31",
       "package_url": "https://github.com/clap-rs/clap",
       "repository": {
         "Http": {
-          "url": "https://static.crates.io/crates/clap_builder/4.5.30/download",
-          "sha256": "a35db2071778a7344791a4fb4f95308b5673d219dee3ae348b86642574ecc90c"
+          "url": "https://static.crates.io/crates/clap_builder/4.5.31/download",
+          "sha256": "5589e0cba072e0f3d23791efac0fd8627b49c829c196a492e88168e6a669d863"
         }
       },
       "targets": [
@@ -7129,7 +7129,7 @@
           "selects": {}
         },
         "edition": "2021",
-        "version": "4.5.30"
+        "version": "4.5.31"
       },
       "license": "MIT OR Apache-2.0",
       "license_ids": [
@@ -7138,14 +7138,14 @@
       ],
       "license_file": "LICENSE-APACHE"
     },
-    "clap_complete 4.5.45": {
+    "clap_complete 4.5.46": {
       "name": "clap_complete",
-      "version": "4.5.45",
+      "version": "4.5.46",
       "package_url": "https://github.com/clap-rs/clap",
       "repository": {
         "Http": {
-          "url": "https://static.crates.io/crates/clap_complete/4.5.45/download",
-          "sha256": "1e3040c8291884ddf39445dc033c70abc2bc44a42f0a3a00571a0f483a83f0cd"
+          "url": "https://static.crates.io/crates/clap_complete/4.5.46/download",
+          "sha256": "f5c5508ea23c5366f77e53f5a0070e5a84e51687ec3ef9e0464c86dc8d13ce98"
         }
       },
       "targets": [
@@ -7176,14 +7176,14 @@
         "deps": {
           "common": [
             {
-              "id": "clap 4.5.30",
+              "id": "clap 4.5.31",
               "target": "clap"
             }
           ],
           "selects": {}
         },
         "edition": "2021",
-        "version": "4.5.45"
+        "version": "4.5.46"
       },
       "license": "MIT OR Apache-2.0",
       "license_ids": [
@@ -7375,7 +7375,7 @@
           "selects": {
             "cfg(windows)": [
               {
-                "id": "windows-sys 0.48.0",
+                "id": "windows-sys 0.59.0",
                 "target": "windows_sys"
               }
             ]
@@ -10517,7 +10517,7 @@
               "target": "ahash"
             },
             {
-              "id": "anyhow 1.0.96",
+              "id": "anyhow 1.0.97",
               "target": "anyhow"
             },
             {
@@ -11948,7 +11948,7 @@
               "target": "ahash"
             },
             {
-              "id": "anyhow 1.0.96",
+              "id": "anyhow 1.0.97",
               "target": "anyhow"
             },
             {
@@ -11960,11 +11960,11 @@
               "target": "candid"
             },
             {
-              "id": "chrono 0.4.39",
+              "id": "chrono 0.4.40",
               "target": "chrono"
             },
             {
-              "id": "clap 4.5.30",
+              "id": "clap 4.5.31",
               "target": "clap"
             },
             {
@@ -11972,7 +11972,7 @@
               "target": "clap_num"
             },
             {
-              "id": "clap_complete 4.5.45",
+              "id": "clap_complete 4.5.46",
               "target": "clap_complete"
             },
             {
@@ -12008,7 +12008,7 @@
               "target": "edit"
             },
             {
-              "id": "flate2 1.0.35",
+              "id": "flate2 1.1.0",
               "target": "flate2"
             },
             {
@@ -12112,7 +12112,7 @@
               "target": "itertools"
             },
             {
-              "id": "keyring 3.6.1",
+              "id": "keyring 3.6.2",
               "target": "keyring"
             },
             {
@@ -12233,7 +12233,7 @@
         "deps": {
           "common": [
             {
-              "id": "clap 4.5.30",
+              "id": "clap 4.5.31",
               "target": "clap"
             },
             {
@@ -14153,14 +14153,14 @@
       ],
       "license_file": "LICENSE-APACHE"
     },
-    "flate2 1.0.35": {
+    "flate2 1.1.0": {
       "name": "flate2",
-      "version": "1.0.35",
+      "version": "1.1.0",
       "package_url": "https://github.com/rust-lang/flate2-rs",
       "repository": {
         "Http": {
-          "url": "https://static.crates.io/crates/flate2/1.0.35/download",
-          "sha256": "c936bfdafb507ebbf50b8074c54fa31c5be9a1e7e5f467dd659697041407d07c"
+          "url": "https://static.crates.io/crates/flate2/1.1.0/download",
+          "sha256": "11faaf5a5236997af9848be0bef4db95824b1d534ebc64d0f0c6cf3e67bd38dc"
         }
       },
       "targets": [
@@ -14205,7 +14205,7 @@
           "selects": {}
         },
         "edition": "2018",
-        "version": "1.0.35"
+        "version": "1.1.0"
       },
       "license": "MIT OR Apache-2.0",
       "license_ids": [
@@ -18153,7 +18153,7 @@
               "target": "stop_token"
             },
             {
-              "id": "thiserror 2.0.11",
+              "id": "thiserror 2.0.12",
               "target": "thiserror"
             },
             {
@@ -18757,7 +18757,7 @@
         "deps": {
           "common": [
             {
-              "id": "anyhow 1.0.96",
+              "id": "anyhow 1.0.97",
               "target": "anyhow"
             },
             {
@@ -18873,7 +18873,7 @@
               "target": "simple_asn1"
             },
             {
-              "id": "thiserror 2.0.11",
+              "id": "thiserror 2.0.12",
               "target": "thiserror"
             },
             {
@@ -19120,7 +19120,7 @@
               "target": "scoped_threadpool"
             },
             {
-              "id": "thiserror 2.0.11",
+              "id": "thiserror 2.0.12",
               "target": "thiserror"
             }
           ],
@@ -20133,7 +20133,7 @@
               "target": "rand"
             },
             {
-              "id": "thiserror 2.0.11",
+              "id": "thiserror 2.0.12",
               "target": "thiserror"
             },
             {
@@ -21092,7 +21092,7 @@
               "target": "strum"
             },
             {
-              "id": "thiserror 2.0.11",
+              "id": "thiserror 2.0.12",
               "target": "thiserror"
             },
             {
@@ -21565,7 +21565,7 @@
               "target": "serde_bytes"
             },
             {
-              "id": "thiserror 2.0.11",
+              "id": "thiserror 2.0.12",
               "target": "thiserror"
             }
           ],
@@ -21914,7 +21914,7 @@
         "deps": {
           "common": [
             {
-              "id": "anyhow 1.0.96",
+              "id": "anyhow 1.0.97",
               "target": "anyhow"
             },
             {
@@ -22022,7 +22022,7 @@
               "target": "slog"
             },
             {
-              "id": "thiserror 2.0.11",
+              "id": "thiserror 2.0.12",
               "target": "thiserror"
             },
             {
@@ -22144,7 +22144,7 @@
               "target": "serde_bytes"
             },
             {
-              "id": "thiserror 2.0.11",
+              "id": "thiserror 2.0.12",
               "target": "thiserror"
             }
           ],
@@ -22774,7 +22774,7 @@
               "target": "strum"
             },
             {
-              "id": "thiserror 2.0.11",
+              "id": "thiserror 2.0.12",
               "target": "thiserror"
             },
             {
@@ -22903,7 +22903,7 @@
               "target": "phantom_newtype"
             },
             {
-              "id": "thiserror 2.0.11",
+              "id": "thiserror 2.0.12",
               "target": "thiserror"
             }
           ],
@@ -23209,7 +23209,7 @@
         "deps": {
           "common": [
             {
-              "id": "chrono 0.4.39",
+              "id": "chrono 0.4.40",
               "target": "chrono"
             },
             {
@@ -23289,7 +23289,7 @@
               "target": "actix_web"
             },
             {
-              "id": "anyhow 1.0.96",
+              "id": "anyhow 1.0.97",
               "target": "anyhow"
             },
             {
@@ -23301,11 +23301,11 @@
               "target": "candid"
             },
             {
-              "id": "chrono 0.4.39",
+              "id": "chrono 0.4.40",
               "target": "chrono"
             },
             {
-              "id": "clap 4.5.30",
+              "id": "clap 4.5.31",
               "target": "clap"
             },
             {
@@ -23634,7 +23634,7 @@
               "target": "ahash"
             },
             {
-              "id": "anyhow 1.0.96",
+              "id": "anyhow 1.0.97",
               "target": "anyhow"
             },
             {
@@ -23642,7 +23642,7 @@
               "target": "candid"
             },
             {
-              "id": "chrono 0.4.39",
+              "id": "chrono 0.4.40",
               "target": "chrono"
             },
             {
@@ -23707,7 +23707,7 @@
         "deps_dev": {
           "common": [
             {
-              "id": "wiremock 0.6.2",
+              "id": "wiremock 0.6.3",
               "target": "wiremock"
             }
           ],
@@ -26245,7 +26245,7 @@
               "target": "serde"
             },
             {
-              "id": "thiserror 2.0.11",
+              "id": "thiserror 2.0.12",
               "target": "thiserror"
             }
           ],
@@ -26517,7 +26517,7 @@
               "target": "serde_cbor"
             },
             {
-              "id": "thiserror 2.0.11",
+              "id": "thiserror 2.0.12",
               "target": "thiserror"
             }
           ],
@@ -26709,7 +26709,7 @@
               "target": "ic_types"
             },
             {
-              "id": "thiserror 2.0.11",
+              "id": "thiserror 2.0.12",
               "target": "thiserror"
             },
             {
@@ -26868,7 +26868,7 @@
         "deps": {
           "common": [
             {
-              "id": "chrono 0.4.39",
+              "id": "chrono 0.4.40",
               "target": "chrono"
             },
             {
@@ -27562,7 +27562,7 @@
               "target": "candid"
             },
             {
-              "id": "clap 4.5.30",
+              "id": "clap 4.5.31",
               "target": "clap"
             },
             {
@@ -27860,7 +27860,7 @@
               "target": "candid"
             },
             {
-              "id": "clap 4.5.30",
+              "id": "clap 4.5.31",
               "target": "clap"
             },
             {
@@ -29044,7 +29044,7 @@
                 "target": "cvt"
               },
               {
-                "id": "thiserror 2.0.11",
+                "id": "thiserror 2.0.12",
                 "target": "thiserror"
               }
             ]
@@ -29121,7 +29121,7 @@
               "target": "sha2"
             },
             {
-              "id": "thiserror 2.0.11",
+              "id": "thiserror 2.0.12",
               "target": "thiserror"
             }
           ],
@@ -29280,7 +29280,7 @@
               "target": "strum"
             },
             {
-              "id": "thiserror 2.0.11",
+              "id": "thiserror 2.0.12",
               "target": "thiserror"
             },
             {
@@ -29291,7 +29291,7 @@
           "selects": {
             "cfg(not(all(target_arch = \"wasm32\", target_os = \"unknown\")))": [
               {
-                "id": "chrono 0.4.39",
+                "id": "chrono 0.4.40",
                 "target": "chrono"
               }
             ]
@@ -29445,7 +29445,7 @@
               "target": "strum"
             },
             {
-              "id": "thiserror 2.0.11",
+              "id": "thiserror 2.0.12",
               "target": "thiserror"
             },
             {
@@ -29751,7 +29751,7 @@
         "deps": {
           "common": [
             {
-              "id": "anyhow 1.0.96",
+              "id": "anyhow 1.0.97",
               "target": "anyhow"
             },
             {
@@ -29759,7 +29759,7 @@
               "target": "candid"
             },
             {
-              "id": "clap 4.5.30",
+              "id": "clap 4.5.31",
               "target": "clap"
             },
             {
@@ -32501,14 +32501,14 @@
       ],
       "license_file": "LICENSE-APACHE"
     },
-    "keyring 3.6.1": {
+    "keyring 3.6.2": {
       "name": "keyring",
-      "version": "3.6.1",
+      "version": "3.6.2",
       "package_url": "https://github.com/hwchen/keyring-rs.git",
       "repository": {
         "Http": {
-          "url": "https://static.crates.io/crates/keyring/3.6.1/download",
-          "sha256": "2f8fe839464d4e4b37d756d7e910063696af79a7e877282cb1825e4ec5f10833"
+          "url": "https://static.crates.io/crates/keyring/3.6.2/download",
+          "sha256": "1961983669d57bdfe6c0f3ef8e4c229b5ef751afcc7d87e4271d2f71f6ccfa8b"
         }
       },
       "targets": [
@@ -32650,7 +32650,7 @@
           }
         },
         "edition": "2021",
-        "version": "3.6.1"
+        "version": "3.6.2"
       },
       "license": "MIT OR Apache-2.0",
       "license_ids": [
@@ -33795,11 +33795,11 @@
         "deps": {
           "common": [
             {
-              "id": "anyhow 1.0.96",
+              "id": "anyhow 1.0.97",
               "target": "anyhow"
             },
             {
-              "id": "clap 4.5.30",
+              "id": "clap 4.5.31",
               "target": "clap"
             },
             {
@@ -33873,7 +33873,7 @@
               "target": "axum"
             },
             {
-              "id": "clap 4.5.30",
+              "id": "clap 4.5.31",
               "target": "clap"
             },
             {
@@ -33930,11 +33930,11 @@
         "deps": {
           "common": [
             {
-              "id": "anyhow 1.0.96",
+              "id": "anyhow 1.0.97",
               "target": "anyhow"
             },
             {
-              "id": "clap 4.5.30",
+              "id": "clap 4.5.31",
               "target": "clap"
             },
             {
@@ -34931,7 +34931,7 @@
               "target": "base64"
             },
             {
-              "id": "clap 4.5.30",
+              "id": "clap 4.5.31",
               "target": "clap"
             },
             {
@@ -35012,7 +35012,7 @@
         "deps_dev": {
           "common": [
             {
-              "id": "anyhow 1.0.96",
+              "id": "anyhow 1.0.97",
               "target": "anyhow"
             },
             {
@@ -35020,7 +35020,7 @@
               "target": "assert_cmd"
             },
             {
-              "id": "flate2 1.0.35",
+              "id": "flate2 1.1.0",
               "target": "flate2"
             },
             {
@@ -35057,7 +35057,7 @@
         "deps": {
           "common": [
             {
-              "id": "clap 4.5.30",
+              "id": "clap 4.5.31",
               "target": "clap"
             },
             {
@@ -35381,11 +35381,11 @@
         "deps": {
           "common": [
             {
-              "id": "anyhow 1.0.96",
+              "id": "anyhow 1.0.97",
               "target": "anyhow"
             },
             {
-              "id": "clap 4.5.30",
+              "id": "clap 4.5.31",
               "target": "clap"
             },
             {
@@ -36465,7 +36465,7 @@
               "target": "cfg_if"
             },
             {
-              "id": "chrono 0.4.39",
+              "id": "chrono 0.4.40",
               "target": "chrono"
             },
             {
@@ -37937,7 +37937,7 @@
               "target": "memchr"
             },
             {
-              "id": "thiserror 2.0.11",
+              "id": "thiserror 2.0.12",
               "target": "thiserror"
             },
             {
@@ -39657,7 +39657,7 @@
               "target": "byteorder"
             },
             {
-              "id": "flate2 1.0.35",
+              "id": "flate2 1.1.0",
               "target": "flate2"
             },
             {
@@ -40003,7 +40003,7 @@
         "deps": {
           "common": [
             {
-              "id": "anyhow 1.0.96",
+              "id": "anyhow 1.0.97",
               "target": "anyhow"
             },
             {
@@ -40011,7 +40011,7 @@
               "target": "base64"
             },
             {
-              "id": "clap 4.5.30",
+              "id": "clap 4.5.31",
               "target": "clap"
             },
             {
@@ -40200,7 +40200,7 @@
         "deps": {
           "common": [
             {
-              "id": "chrono 0.4.39",
+              "id": "chrono 0.4.40",
               "target": "chrono"
             },
             {
@@ -40479,7 +40479,7 @@
         "deps": {
           "common": [
             {
-              "id": "heck 0.4.1",
+              "id": "heck 0.5.0",
               "target": "heck"
             },
             {
@@ -40570,7 +40570,7 @@
         "deps": {
           "common": [
             {
-              "id": "anyhow 1.0.96",
+              "id": "anyhow 1.0.97",
               "target": "anyhow"
             },
             {
@@ -41051,7 +41051,7 @@
               "target": "socket2"
             },
             {
-              "id": "thiserror 2.0.11",
+              "id": "thiserror 2.0.12",
               "target": "thiserror"
             },
             {
@@ -41123,7 +41123,7 @@
               "target": "slab"
             },
             {
-              "id": "thiserror 2.0.11",
+              "id": "thiserror 2.0.12",
               "target": "thiserror"
             },
             {
@@ -44369,7 +44369,7 @@
         "deps": {
           "common": [
             {
-              "id": "anyhow 1.0.96",
+              "id": "anyhow 1.0.97",
               "target": "anyhow"
             },
             {
@@ -47721,7 +47721,7 @@
         "deps": {
           "common": [
             {
-              "id": "anyhow 1.0.96",
+              "id": "anyhow 1.0.97",
               "target": "anyhow"
             },
             {
@@ -47817,7 +47817,7 @@
               "target": "tempfile"
             },
             {
-              "id": "thiserror 2.0.11",
+              "id": "thiserror 2.0.12",
               "target": "thiserror"
             },
             {
@@ -48328,7 +48328,7 @@
               "target": "num_traits"
             },
             {
-              "id": "thiserror 2.0.11",
+              "id": "thiserror 2.0.12",
               "target": "thiserror"
             },
             {
@@ -48444,7 +48444,7 @@
         "deps": {
           "common": [
             {
-              "id": "anyhow 1.0.96",
+              "id": "anyhow 1.0.97",
               "target": "anyhow"
             },
             {
@@ -48452,7 +48452,7 @@
               "target": "candid"
             },
             {
-              "id": "clap 4.5.30",
+              "id": "clap 4.5.31",
               "target": "clap"
             },
             {
@@ -49182,7 +49182,7 @@
         "deps": {
           "common": [
             {
-              "id": "heck 0.4.1",
+              "id": "heck 0.5.0",
               "target": "heck"
             },
             {
@@ -49224,7 +49224,7 @@
         "deps": {
           "common": [
             {
-              "id": "clap 4.5.30",
+              "id": "clap 4.5.31",
               "target": "clap"
             },
             {
@@ -51441,14 +51441,14 @@
       ],
       "license_file": "LICENSE-APACHE"
     },
-    "thiserror 2.0.11": {
+    "thiserror 2.0.12": {
       "name": "thiserror",
-      "version": "2.0.11",
+      "version": "2.0.12",
       "package_url": "https://github.com/dtolnay/thiserror",
       "repository": {
         "Http": {
-          "url": "https://static.crates.io/crates/thiserror/2.0.11/download",
-          "sha256": "d452f284b73e6d76dd36758a0c8684b1d5be31f92b89d07fd5822175732206fc"
+          "url": "https://static.crates.io/crates/thiserror/2.0.12/download",
+          "sha256": "567b8a2dae586314f7be2a752ec7474332959c6460e02bde30d702a66d488708"
         }
       },
       "targets": [
@@ -51492,7 +51492,7 @@
         "deps": {
           "common": [
             {
-              "id": "thiserror 2.0.11",
+              "id": "thiserror 2.0.12",
               "target": "build_script_build"
             }
           ],
@@ -51502,13 +51502,13 @@
         "proc_macro_deps": {
           "common": [
             {
-              "id": "thiserror-impl 2.0.11",
+              "id": "thiserror-impl 2.0.12",
               "target": "thiserror_impl"
             }
           ],
           "selects": {}
         },
-        "version": "2.0.11"
+        "version": "2.0.12"
       },
       "build_script_attrs": {
         "compile_data_glob": [
@@ -51581,14 +51581,14 @@
       ],
       "license_file": "LICENSE-APACHE"
     },
-    "thiserror-impl 2.0.11": {
+    "thiserror-impl 2.0.12": {
       "name": "thiserror-impl",
-      "version": "2.0.11",
+      "version": "2.0.12",
       "package_url": "https://github.com/dtolnay/thiserror",
       "repository": {
         "Http": {
-          "url": "https://static.crates.io/crates/thiserror-impl/2.0.11/download",
-          "sha256": "26afc1baea8a989337eeb52b6e72a039780ce45c3edfcc9c5b9d112feeb173c2"
+          "url": "https://static.crates.io/crates/thiserror-impl/2.0.12/download",
+          "sha256": "7f7cf42b4507d8ea322120659672cf1b9dbb93f8f2d4ecfd6e51350ff5b17a1d"
         }
       },
       "targets": [
@@ -51628,7 +51628,7 @@
           "selects": {}
         },
         "edition": "2021",
-        "version": "2.0.11"
+        "version": "2.0.12"
       },
       "license": "MIT OR Apache-2.0",
       "license_ids": [
@@ -54109,7 +54109,7 @@
               "target": "ahash"
             },
             {
-              "id": "anyhow 1.0.96",
+              "id": "anyhow 1.0.97",
               "target": "anyhow"
             },
             {
@@ -54117,7 +54117,7 @@
               "target": "candid"
             },
             {
-              "id": "chrono 0.4.39",
+              "id": "chrono 0.4.40",
               "target": "chrono"
             },
             {
@@ -55298,7 +55298,7 @@
         "deps": {
           "common": [
             {
-              "id": "anyhow 1.0.96",
+              "id": "anyhow 1.0.97",
               "target": "anyhow"
             },
             {
@@ -56631,7 +56631,7 @@
           "selects": {
             "cfg(windows)": [
               {
-                "id": "windows-sys 0.48.0",
+                "id": "windows-sys 0.59.0",
                 "target": "windows_sys"
               }
             ]
@@ -56755,6 +56755,45 @@
         },
         "edition": "2021",
         "version": "0.52.0"
+      },
+      "license": "MIT OR Apache-2.0",
+      "license_ids": [
+        "Apache-2.0",
+        "MIT"
+      ],
+      "license_file": "license-apache-2.0"
+    },
+    "windows-link 0.1.0": {
+      "name": "windows-link",
+      "version": "0.1.0",
+      "package_url": "https://github.com/microsoft/windows-rs",
+      "repository": {
+        "Http": {
+          "url": "https://static.crates.io/crates/windows-link/0.1.0/download",
+          "sha256": "6dccfd733ce2b1753b03b6d3c65edf020262ea35e20ccdf3e288043e6dd620e3"
+        }
+      },
+      "targets": [
+        {
+          "Library": {
+            "crate_name": "windows_link",
+            "crate_root": "src/lib.rs",
+            "srcs": {
+              "allow_empty": true,
+              "include": [
+                "**/*.rs"
+              ]
+            }
+          }
+        }
+      ],
+      "library_target_name": "windows_link",
+      "common_attrs": {
+        "compile_data_glob": [
+          "**"
+        ],
+        "edition": "2021",
+        "version": "0.1.0"
       },
       "license": "MIT OR Apache-2.0",
       "license_ids": [
@@ -56967,12 +57006,8 @@
             "Win32",
             "Win32_Foundation",
             "Win32_Globalization",
-            "Win32_Storage",
-            "Win32_Storage_FileSystem",
             "Win32_System",
             "Win32_System_Com",
-            "Win32_System_Console",
-            "Win32_System_SystemInformation",
             "Win32_UI",
             "Win32_UI_Shell",
             "default"
@@ -58401,14 +58436,14 @@
       ],
       "license_file": "LICENSE-MIT"
     },
-    "wiremock 0.6.2": {
+    "wiremock 0.6.3": {
       "name": "wiremock",
-      "version": "0.6.2",
+      "version": "0.6.3",
       "package_url": "https://github.com/LukeMathWalker/wiremock-rs",
       "repository": {
         "Http": {
-          "url": "https://static.crates.io/crates/wiremock/0.6.2/download",
-          "sha256": "7fff469918e7ca034884c7fd8f93fe27bacb7fcb599fd879df6c7b429a29b646"
+          "url": "https://static.crates.io/crates/wiremock/0.6.3/download",
+          "sha256": "101681b74cd87b5899e87bcf5a64e83334dd313fcd3053ea72e6dba18928e301"
         }
       },
       "targets": [
@@ -58505,7 +58540,7 @@
           ],
           "selects": {}
         },
-        "version": "0.6.2"
+        "version": "0.6.3"
       },
       "license": "MIT/Apache-2.0",
       "license_ids": [
@@ -60538,7 +60573,7 @@
   "direct_deps": [
     "actix-web 4.9.0",
     "ahash 0.8.11",
-    "anyhow 1.0.96",
+    "anyhow 1.0.97",
     "async-recursion 1.1.1",
     "axum 0.7.9",
     "axum-otel-metrics 0.8.1",
@@ -60547,10 +60582,10 @@
     "base64 0.22.1",
     "byteorder 1.5.0",
     "candid 0.10.13",
-    "chrono 0.4.39",
-    "clap 4.5.30",
+    "chrono 0.4.40",
+    "clap 4.5.31",
     "clap-num 1.2.0",
-    "clap_complete 4.5.45",
+    "clap_complete 4.5.46",
     "colored 2.2.0",
     "comfy-table 7.1.4",
     "crossbeam 0.8.4",
@@ -60565,7 +60600,7 @@
     "edit 0.1.5",
     "env_logger 0.11.6",
     "erased-serde 0.4.5",
-    "flate2 1.0.35",
+    "flate2 1.1.0",
     "fs-err 3.1.0",
     "fs2 0.4.3",
     "futures 0.3.31",
@@ -60616,7 +60651,7 @@
     "icrc-ledger-types 0.1.8",
     "indexmap 2.7.1",
     "itertools 0.13.0",
-    "keyring 3.6.1",
+    "keyring 3.6.2",
     "lazy_static 1.5.0",
     "log 0.4.26",
     "mockall 0.13.1",
@@ -60652,14 +60687,14 @@
     "tabled 0.16.0",
     "tabular 0.2.0",
     "tempfile 3.17.1",
-    "thiserror 2.0.11",
+    "thiserror 2.0.12",
     "tokio 1.43.0",
     "url 2.5.4"
   ],
   "direct_dev_deps": [
     "actix-rt 2.10.0",
     "assert_cmd 2.0.16",
-    "wiremock 0.6.2"
+    "wiremock 0.6.3"
   ],
   "unused_patches": []
 }
