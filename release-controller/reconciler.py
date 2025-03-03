@@ -25,6 +25,7 @@ from github import Github
 from google_docs import ReleaseNotesClient, ReleaseNotesClientProtocol
 from governance import GovernanceCanister
 from prometheus import ICPrometheus
+from prometheus_client import start_http_server, Gauge
 from publish_notes import PublishNotesClient, PublishNotesClientProtocol
 from pydiscourse import DiscourseClient
 from release_index_loader import DevReleaseLoader
@@ -37,6 +38,20 @@ from release_notes import (
 )
 from util import version_name
 from watchdog import Watchdog
+
+
+LAST_CYCLE_SUCCESS_TIMESTAMP_SECONDS = Gauge(
+    "last_cycle_success_timestamp_seconds",
+    "The UNIX timestamp of the last cycle that completed successfully",
+)
+LAST_CYCLE_START_TIMESTAMP_SECONDS = Gauge(
+    "last_cycle_start_timestamp_seconds",
+    "The UNIX timestamp of the start of the last cycle",
+)
+LAST_CYCLE_SUCCESSFUL = Gauge(
+    "last_cycle_successful",
+    "1 if the last cycle was successful, 0 if it was not",
+)
 
 
 class CustomFormatter(logging.Formatter):
@@ -447,6 +462,13 @@ def main() -> None:
         help="Do not fill the reconciler state upon startup with the known proposals from the governance canister.",
     )
     parser.add_argument(
+        "--telemetry_port",
+        type=int,
+        dest="telemetry_port",
+        default="9467",
+        help="Set the Prometheus telemetry port to listen on.  Telemetry is only served if --loop-every is greater than 0.",
+    )
+    parser.add_argument(
         "dotenv_file",
         nargs="?",
     )
@@ -568,10 +590,16 @@ def main() -> None:
         dre=dre,
     )
 
+    if opts.loop_every > 0:
+        start_http_server(port=int(opts.telemetry_port))
+
     while True:
         try:
             now = time.time()
+            LAST_CYCLE_START_TIMESTAMP_SECONDS.set(int(time.time()))
             reconciler.reconcile()
+            LAST_CYCLE_SUCCESS_TIMESTAMP_SECONDS.set(int(time.time()))
+            LAST_CYCLE_SUCCESSFUL.set(1)
             watchdog.report_healthy()
             if opts.loop_every <= 0:
                 break
@@ -586,6 +614,7 @@ def main() -> None:
             if opts.loop_every <= 0:
                 raise
             else:
+                LAST_CYCLE_SUCCESSFUL.set(0)
                 LOGGER.exception(
                     f"Failed to reconcile.  Retrying in {opts.loop_every} seconds.  Traceback:"
                 )

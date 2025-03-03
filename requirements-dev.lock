@@ -404,7 +404,7 @@ pluggy==1.5.0
 pre-commit==3.8.0
 priority==2.0.0
     # via hypercorn
-prometheus-client==0.20.0
+prometheus-client==0.21.1
     # via jupyter-server
 prompt-toolkit==3.0.47
     # via ipython
