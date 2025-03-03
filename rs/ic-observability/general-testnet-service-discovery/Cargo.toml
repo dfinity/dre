@@ -1,0 +1,27 @@
+[package]
+name = "general-testnet-service-discovery"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+description.workspace = true
+documentation.workspace = true
+license.workspace = true
+
+[dependencies]
+clap.workspace = true
+fs-err.workspace = true
+humantime.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+slog.workspace = true
+slog-async.workspace = true
+slog-term.workspace = true
+tokio.workspace = true
+axum.workspace = true
+axum-otel-metrics.workspace = true
+retry.workspace = true
+multiservice-discovery-shared = { path = "../multiservice-discovery-shared" }
+anyhow.workspace = true
+itertools.workspace = true
+tokio-util.workspace = true
+async-trait.workspace = true
