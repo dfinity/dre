@@ -105,4 +105,13 @@ impl Logger {
     pub fn log(&mut self, entry: LogEntry) {
         self.entries.push(entry);
     }
+    pub fn run_and_log(&mut self, description: &str, operation: Operation) -> Decimal {
+        let result = operation.execute();
+        self.log(LogEntry::Execute {
+            reason: format!("\t{}", description),
+            operation,
+            result,
+        });
+        result
+    }
 }
