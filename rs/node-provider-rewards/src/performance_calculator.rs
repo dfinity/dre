@@ -52,14 +52,14 @@ impl ExecutionState for RelativeFRComputed {}
 impl ExecutionState for UndefinedFRExtrapolated {}
 
 impl ExecutionContext<Initialized> {
-    // Initialized -> RelativeFailureRates
+    // Initialized -> RelativeFRComputed
     pub fn next(self) -> ExecutionContext<RelativeFRComputed> {
         ExecutionContext::transition(self)
     }
 }
 
 impl ExecutionContext<RelativeFRComputed> {
-    // Initialized -> RelativeFailureRates
+    // RelativeFRComputed -> UndefinedFRExtrapolated
     pub fn next(self) -> ExecutionContext<UndefinedFRExtrapolated> {
         ExecutionContext::transition(self)
     }
