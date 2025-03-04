@@ -64,4 +64,10 @@ impl Metrics {
     pub fn observe_down(&self, name: &str) {
         self.observe_status(name, 0);
     }
+
+    pub fn remove_observed_value(&self, name: &str) {
+        let mut values = self.latest_values.write().unwrap();
+
+        values.target_status.remove(name);
+    }
 }

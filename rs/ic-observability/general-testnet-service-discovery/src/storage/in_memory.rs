@@ -20,20 +20,22 @@ impl Storage for InMemoryStorage {
         Ok(targets.values().cloned().collect())
     }
 
-    async fn upsert(&self, new_targets: Vec<JournaldTarget>) -> anyhow::Result<()> {
+    async fn insert(&self, new_target: JournaldTarget) -> anyhow::Result<()> {
         let mut targets = self.targets.write().await;
 
-        for new_target in new_targets {
-            targets.insert(new_target.name.clone(), new_target);
+        if targets.contains_key(&new_target.name) {
+            return Err(anyhow::anyhow!("Target with name {} already registered", new_target.name));
         }
+
+        targets.insert(new_target.name.clone(), new_target);
 
         Ok(())
     }
 
-    async fn delete(&self, names: Vec<String>) -> anyhow::Result<()> {
+    async fn delete(&self, name: String) -> anyhow::Result<()> {
         let mut targets = self.targets.write().await;
 
-        targets.retain(|name, _| !names.contains(name));
+        targets.remove(&name);
 
         Ok(())
     }

@@ -9,9 +9,9 @@ pub mod in_memory;
 pub trait Storage: Send + Sync {
     async fn get(&self) -> anyhow::Result<Vec<JournaldTarget>>;
 
-    async fn upsert(&self, new_targets: Vec<JournaldTarget>) -> anyhow::Result<()>;
+    async fn insert(&self, new_target: JournaldTarget) -> anyhow::Result<()>;
 
-    async fn delete(&self, names: Vec<String>) -> anyhow::Result<()>;
+    async fn delete(&self, name: String) -> anyhow::Result<()>;
 
     fn sync(&self, handle: Handle, token: CancellationToken) -> JoinHandle<()>;
 }

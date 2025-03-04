@@ -1,7 +1,7 @@
 use std::path::PathBuf;
 
-use itertools::Itertools;
-use slog::{debug, error, info, warn, Logger};
+use multiservice_discovery_shared::contracts::journald_target::JournaldTarget;
+use slog::{error, info, warn, Logger};
 use tokio::{runtime::Handle, task::JoinHandle};
 use tokio_util::sync::CancellationToken;
 
@@ -20,16 +20,21 @@ impl Storage for FileStorage {
         self.cache.get().await
     }
 
-    async fn upsert(&self, new_targets: Vec<multiservice_discovery_shared::contracts::journald_target::JournaldTarget>) -> anyhow::Result<()> {
-        let new_targets_stringified = new_targets.iter().map(|target| target.name.clone()).join(", ");
-        info!(self.logger, "Writing new entries: [{}]", new_targets_stringified);
-        self.cache.upsert(new_targets).await
+    async fn insert(&self, new_target: JournaldTarget) -> anyhow::Result<()> {
+        let target_name = new_target.name.clone();
+        info!(self.logger, "Trying to add new entry: {}", target_name);
+        self.cache.insert(new_target).await.map_err(|e| {
+            error!(self.logger, "Failed to add new entry {} due to: {:?}", target_name, e);
+            e
+        })
     }
 
-    async fn delete(&self, names: Vec<String>) -> anyhow::Result<()> {
-        let stringified_names = names.iter().join(", ");
-        info!(self.logger, "Deleting entries named: [{}]", stringified_names);
-        self.cache.delete(names).await
+    async fn delete(&self, name: String) -> anyhow::Result<()> {
+        info!(self.logger, "Trying to delete entry named: {}", name);
+        self.cache.delete(name.clone()).await.map_err(|e| {
+            error!(self.logger, "Failed to remove entry {} due to: {:?}", name, e);
+            e
+        })
     }
 
     fn sync(&self, handle: Handle, token: CancellationToken) -> JoinHandle<()> {
@@ -38,9 +43,7 @@ impl Storage for FileStorage {
             let mut interval = tokio::time::interval(std::time::Duration::from_secs(60));
             loop {
                 tokio::select! {
-                    tick = interval.tick() => {
-                        debug!(self_clone.logger, "Received tick @ {:?}", tick);
-                    },
+                    _ = interval.tick() => {},
                     _ = token.cancelled() => {
                         info!(self_clone.logger, "Received shutdown in file storage sync");
                     }
@@ -72,7 +75,7 @@ impl FileStorage {
             }
         };
 
-        Self { cache, path, logger: logger }
+        Self { cache, path, logger }
     }
 
     async fn write(&self) -> anyhow::Result<()> {

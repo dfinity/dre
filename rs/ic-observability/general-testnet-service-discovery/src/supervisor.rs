@@ -51,7 +51,7 @@ impl TargetSupervisor {
 
         let target_name_for_remove = target.name.clone();
         let storage_clone = self.storage.clone();
-        let remove_target = move || async move { storage_clone.delete(vec![target_name_for_remove]).await.unwrap() };
+        let remove_target = move || async move { storage_clone.delete(target_name_for_remove).await.unwrap() };
         let running_target = RunningTarget::new(self.logger.clone(), self.metrics.clone(), target, self.token.clone(), remove_target);
 
         let join_handle = self.handle.spawn(running_target.poll());
@@ -74,18 +74,13 @@ impl Storage for TargetSupervisor {
         self.storage.get().await
     }
 
-    async fn upsert(&self, new_targets: Vec<JournaldTarget>) -> anyhow::Result<()> {
-        // TODO: Should fix the checking so that the batch insert succeeds
-        self.storage.upsert(new_targets.clone()).await?;
-        for target in new_targets.into_iter() {
-            self.run_target(target).await?
-        }
-
-        Ok(())
+    async fn insert(&self, new_target: JournaldTarget) -> anyhow::Result<()> {
+        self.storage.insert(new_target.clone()).await?;
+        self.run_target(new_target).await
     }
 
-    async fn delete(&self, names: Vec<String>) -> anyhow::Result<()> {
-        self.storage.delete(names).await
+    async fn delete(&self, name: String) -> anyhow::Result<()> {
+        self.storage.delete(name).await
     }
 
     fn sync(&self, _handle: Handle, _token: CancellationToken) -> JoinHandle<()> {
@@ -151,6 +146,7 @@ where
                     if SystemTime::now().duration_since(self.last_successful_sync).unwrap() > self.gc_timeout {
                         self.info("GC elapsed, removing target...");
                         (self.remove_self)().await;
+                        self.metrics.remove_observed_value(&self.target.name);
                         break;
                     }
                 }
