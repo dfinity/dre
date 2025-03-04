@@ -6040,7 +6040,7 @@ dependencies = [
 
 [[package]]
 name = "node-provider-rewards"
-version = "0.5.9"
+version = "0.6.0"
 dependencies = [
  "chrono",
  "function_name",
