@@ -6,11 +6,13 @@ use metrics::Metrics;
 use server::Server;
 use slog::{info, o, Drain, Logger};
 use storage::{file::FileStorage, in_memory::InMemoryStorage, Storage};
+use supervisor::TargetSupervisor;
 use tokio_util::sync::CancellationToken;
 
 mod metrics;
 mod server;
 mod storage;
+mod supervisor;
 
 fn main() {
     let logger = make_logger();
@@ -26,13 +28,19 @@ fn main() {
     let metrics_layer = HttpMetricsLayerBuilder::new().build();
     let metrics = Metrics::new();
 
-    let server = Server::new(logger.clone(), metrics, storage, token.clone());
-    let server_handle = runtime.spawn(server.run(metrics_layer));
+    let target_supervisor = TargetSupervisor::new(logger.clone(), token.clone(), metrics.clone(), storage.clone(), runtime.handle().clone());
+    runtime.block_on(target_supervisor.start_cached_targets());
+
+    let server = Server::new(logger.clone(), token.clone());
+    let server_handle = runtime.spawn(server.run(metrics_layer, target_supervisor.clone()));
 
     let _ = runtime.block_on(tokio::signal::ctrl_c());
     info!(logger, "Received shutdown in main thread");
 
     token.cancel();
+
+    // Join all the jobs that watch the targets
+    runtime.block_on(target_supervisor.stop_cached_targets());
 
     // Join the sync thread
     let _ = runtime.block_on(storage_sync_handle);
