@@ -439,7 +439,9 @@ dre_repo = "dfinity/dre"
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser(
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter
+    )
     parser.add_argument(
         "--dry-run",
         action="store_true",
@@ -453,7 +455,7 @@ def main() -> None:
         type=int,
         dest="loop_every",
         default=60,
-        help="Time to wait between loop executions.  If 0 or less, exit immediately after the first loop.  Defaults to %(default)s seconds.",
+        help="Time to wait (in seconds) between loop executions.  If 0 or less, exit immediately after the first loop.",
     )
     parser.add_argument(
         "--skip-preloading-state",
@@ -465,7 +467,7 @@ def main() -> None:
         "--telemetry_port",
         type=int,
         dest="telemetry_port",
-        default="9467",
+        default=9467,
         help="Set the Prometheus telemetry port to listen on.  Telemetry is only served if --loop-every is greater than 0.",
     )
     parser.add_argument(
