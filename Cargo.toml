@@ -19,6 +19,7 @@ members = [
     "rs/log-fetcher",
     "rs/canister-log-fetcher",
     "rs/slack-notifications",
+    "rs/node-provider-rewards",
     "rs/dre-canisters/node-provider-rewards-lib",
     "rs/dre-canisters/trustworthy-node-metrics/src/trustworthy-node-metrics",
     "rs/dre-canisters/trustworthy-node-metrics/src/trustworthy-node-metrics-types",
@@ -82,6 +83,7 @@ erased-serde = "0.4.5"
 flate2 = "1.1.0"
 fs-err = "3.1.0"
 fs2 = "0.4.3"
+function_name = "0.3"
 futures = "0.3.31"
 futures-util = "0.3.31"
 hex = "0.4.3"
