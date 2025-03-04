@@ -1,4 +1,10 @@
-use std::{collections::BTreeMap, fmt::Display, sync::Arc};
+use std::{
+    collections::BTreeMap,
+    fmt::Display,
+    future::Future,
+    sync::Arc,
+    time::{Duration, SystemTime},
+};
 
 use multiservice_discovery_shared::contracts::journald_target::JournaldTarget;
 use slog::{info, warn, Logger};
@@ -42,7 +48,11 @@ impl TargetSupervisor {
         }
 
         let target_name = target.name.clone();
-        let running_target = RunningTarget::new(self.logger.clone(), self.metrics.clone(), target, self.token.clone());
+
+        let target_name_for_remove = target.name.clone();
+        let storage_clone = self.storage.clone();
+        let remove_target = move || async move { storage_clone.delete(vec![target_name_for_remove]).await.unwrap() };
+        let running_target = RunningTarget::new(self.logger.clone(), self.metrics.clone(), target, self.token.clone(), remove_target);
 
         let join_handle = self.handle.spawn(running_target.poll());
 
@@ -83,26 +93,42 @@ impl Storage for TargetSupervisor {
     }
 }
 
-struct RunningTarget {
+struct RunningTarget<F, Fut>
+where
+    F: FnOnce() -> Fut,
+    Fut: Future<Output = ()>,
+{
     logger: Logger,
     token: CancellationToken,
     metrics: Metrics,
     target: JournaldTarget,
+    last_successful_sync: SystemTime,
+    gc_timeout: Duration,
+    remove_self: F,
 }
 
-impl RunningTarget {
-    fn new(logger: Logger, metrics: Metrics, target: JournaldTarget, token: CancellationToken) -> Self {
+impl<F, Fut> RunningTarget<F, Fut>
+where
+    F: FnOnce() -> Fut,
+    Fut: Future<Output = ()>,
+{
+    fn new(logger: Logger, metrics: Metrics, target: JournaldTarget, token: CancellationToken, remove_self: F) -> Self {
         Self {
             logger,
             metrics,
             token,
             target,
+            last_successful_sync: SystemTime::now(),
+            // TODO: Make adjustable
+            gc_timeout: Duration::from_secs(20),
+            remove_self,
         }
     }
 
-    async fn poll(self) {
+    async fn poll(mut self) {
         // Poll targets each 10 seconds to see if they are reachable
-        let mut interval = tokio::time::interval(std::time::Duration::from_secs(10));
+        // TODO: Maybe make adjustable?
+        let mut interval = tokio::time::interval(Duration::from_secs(10));
 
         self.info("Starting watching target");
         loop {
@@ -117,10 +143,16 @@ impl RunningTarget {
             match TcpStream::connect(self.target.target).await {
                 Ok(_) => {
                     self.metrics.observe_up(&self.target.name);
+                    self.last_successful_sync = SystemTime::now();
                 }
                 Err(e) => {
                     self.warn(format!("Target {} unreachable: {:?}", self.target.target, e));
                     self.metrics.observe_down(&self.target.name);
+                    if SystemTime::now().duration_since(self.last_successful_sync).unwrap() > self.gc_timeout {
+                        self.info("GC elapsed, removing target...");
+                        (self.remove_self)().await;
+                        break;
+                    }
                 }
             }
         }
