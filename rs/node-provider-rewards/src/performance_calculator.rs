@@ -29,7 +29,7 @@ pub struct PerformanceMultipliers {
 struct ExecutionContext<T: ExecutionState> {
     execution_nodes: BTreeMap<NodeId, Vec<NodeDailyFailureRate>>,
     logger: Logger,
-    _marker: PhantomData<T>
+    _marker: PhantomData<T>,
 }
 
 impl<T: ExecutionState> ExecutionContext<T> {
@@ -65,10 +65,9 @@ impl ExecutionContext<RelativeFRComputed> {
     }
 }
 
-
 pub struct PerformanceMultiplierCalculator {
     nodes_failure_rates: BTreeMap<NodeId, Vec<NodeDailyFailureRate>>,
-    subnets_failure_rates: BTreeMap<SubnetId, Vec<SubnetDailyFailureRate>>
+    subnets_failure_rates: BTreeMap<SubnetId, Vec<SubnetDailyFailureRate>>,
 }
 
 impl PerformanceMultiplierCalculator {
@@ -78,7 +77,7 @@ impl PerformanceMultiplierCalculator {
     ) -> Self {
         Self {
             nodes_failure_rates,
-            subnets_failure_rates
+            subnets_failure_rates,
         }
     }
     fn execution_context(&self, nodes: &[NodeId]) -> ExecutionContext<Initialized> {
@@ -88,11 +87,11 @@ impl PerformanceMultiplierCalculator {
             .filter(|(node_id, _)| nodes.contains(node_id))
             .map(|(node_id, failure_rates)| (*node_id, failure_rates.clone()))
             .collect();
-        
+
         ExecutionContext {
             execution_nodes,
             logger: Logger::default(),
-            _marker: PhantomData
+            _marker: PhantomData,
         }
     }
 
@@ -137,7 +136,7 @@ impl PerformanceMultiplierCalculator {
         if ctx.execution_nodes.is_empty() {
             return ctx.logger.run_and_log("No nodes assigned", Operation::Set(dec!(1)));
         }
-        
+
         let mut nodes_avg_failure_rates = Vec::new();
         for (node_id, failure_rates) in ctx.execution_nodes.iter() {
             let failure_rates: Vec<Decimal> = failure_rates
@@ -150,11 +149,16 @@ impl PerformanceMultiplierCalculator {
 
             nodes_avg_failure_rates.push(ctx.logger.run_and_log(&node_id.to_string(), Operation::Avg(failure_rates)));
         }
-        
-        ctx.logger.run_and_log("Extrapolated Failure Rate", Operation::Avg(nodes_avg_failure_rates))
+
+        ctx.logger
+            .run_and_log("Extrapolated Failure Rate", Operation::Avg(nodes_avg_failure_rates))
     }
 
-    fn fill_undefined_failure_rates(&self, extrapolated_rate: Decimal, ctx: ExecutionContext<RelativeFRComputed>) -> ExecutionContext<UndefinedFRExtrapolated> {
+    fn fill_undefined_failure_rates(
+        &self,
+        extrapolated_rate: Decimal,
+        ctx: ExecutionContext<RelativeFRComputed>,
+    ) -> ExecutionContext<UndefinedFRExtrapolated> {
         let mut ctx = ctx;
         for failure_rate in ctx.execution_nodes.values_mut().flatten() {
             if matches!(failure_rate.value, NodeFailureRate::Undefined) {
@@ -190,7 +194,11 @@ impl PerformanceMultiplierCalculator {
 
     /// Calculates the performance multiplier for a node based on its average failure rate.
     #[named]
-    fn calculate_performance_multiplier_by_node(&self, average_failure_rate_by_node: &BTreeMap<NodeId, Decimal>, ctx: &mut ExecutionContext<UndefinedFRExtrapolated>) -> BTreeMap<NodeId, Decimal> {
+    fn calculate_performance_multiplier_by_node(
+        &self,
+        average_failure_rate_by_node: &BTreeMap<NodeId, Decimal>,
+        ctx: &mut ExecutionContext<UndefinedFRExtrapolated>,
+    ) -> BTreeMap<NodeId, Decimal> {
         ctx.logger.log(LogEntry::NodesMultiplierStep(function_name!()));
 
         average_failure_rate_by_node
@@ -227,9 +235,9 @@ impl PerformanceMultiplierCalculator {
     /// * `nodes` - A vector of node IDs for which the performance multipliers are calculated.
     pub fn calculate_performance_multipliers(&self, nodes: &[NodeId]) -> PerformanceMultipliers {
         let ctx = self.execution_context(nodes);
-        
+
         let mut ctx = self.compute_relative_failure_rates(ctx);
-        
+
         let extrapolated_failure_rate = self.calculate_extrapolated_failure_rate(&mut ctx);
 
         let mut ctx = self.fill_undefined_failure_rates(extrapolated_failure_rate, ctx);
@@ -237,7 +245,7 @@ impl PerformanceMultiplierCalculator {
         let average_failure_rate_by_node = self.calculate_average_failure_rate_by_node(&mut ctx);
 
         let performance_multiplier_by_node = self.calculate_performance_multiplier_by_node(&average_failure_rate_by_node, &mut ctx);
-        
+
         for (node_id, failure_entries) in ctx.execution_nodes.into_iter() {
             let failure_entries_table = generate_table_summary(failure_entries);
             ctx.logger.log(LogEntry::Summary(node_id, Box::new(failure_entries_table)));
