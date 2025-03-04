@@ -1,5 +1,5 @@
 {
-  "checksum": "c91cf89eaf114b5a6c0dbcf4830f222983bd64be1b23fba393307c11cff1dbf1",
+  "checksum": "9810164b385fee1356132ee9d24ef723d1175c986c080046075043d23a0cdc81",
   "crates": {
     "actix-codec 0.5.2": {
       "name": "actix-codec",
@@ -14486,6 +14486,97 @@
         "MIT"
       ],
       "license_file": "LICENSE-APACHE"
+    },
+    "function_name 0.3.0": {
+      "name": "function_name",
+      "version": "0.3.0",
+      "package_url": "https://github.com/danielhenrymantilla/rust-function_name",
+      "repository": {
+        "Http": {
+          "url": "https://static.crates.io/crates/function_name/0.3.0/download",
+          "sha256": "b1ab577a896d09940b5fe12ec5ae71f9d8211fff62c919c03a3750a9901e98a7"
+        }
+      },
+      "targets": [
+        {
+          "Library": {
+            "crate_name": "function_name",
+            "crate_root": "src/lib.rs",
+            "srcs": {
+              "allow_empty": true,
+              "include": [
+                "**/*.rs"
+              ]
+            }
+          }
+        }
+      ],
+      "library_target_name": "function_name",
+      "common_attrs": {
+        "compile_data_glob": [
+          "**"
+        ],
+        "crate_features": {
+          "common": [
+            "default"
+          ],
+          "selects": {}
+        },
+        "edition": "2018",
+        "proc_macro_deps": {
+          "common": [
+            {
+              "id": "function_name-proc-macro 0.3.0",
+              "target": "function_name_proc_macro"
+            }
+          ],
+          "selects": {}
+        },
+        "version": "0.3.0"
+      },
+      "license": "MIT",
+      "license_ids": [
+        "MIT"
+      ],
+      "license_file": "LICENSE"
+    },
+    "function_name-proc-macro 0.3.0": {
+      "name": "function_name-proc-macro",
+      "version": "0.3.0",
+      "package_url": "https://github.com/danielhenrymantilla/rust-function_name",
+      "repository": {
+        "Http": {
+          "url": "https://static.crates.io/crates/function_name-proc-macro/0.3.0/download",
+          "sha256": "673464e1e314dd67a0fd9544abc99e8eb28d0c7e3b69b033bcff9b2d00b87333"
+        }
+      },
+      "targets": [
+        {
+          "ProcMacro": {
+            "crate_name": "function_name_proc_macro",
+            "crate_root": "src/lib.rs",
+            "srcs": {
+              "allow_empty": true,
+              "include": [
+                "**/*.rs"
+              ]
+            }
+          }
+        }
+      ],
+      "library_target_name": "function_name_proc_macro",
+      "common_attrs": {
+        "compile_data_glob": [
+          "**"
+        ],
+        "edition": "2018",
+        "version": "0.3.0"
+      },
+      "license": "MIT",
+      "license_ids": [
+        "MIT"
+      ],
+      "license_file": null
     },
     "funty 2.0.0": {
       "name": "funty",
@@ -35279,6 +35370,94 @@
         "MIT"
       ],
       "license_file": "LICENSE"
+    },
+    "node-provider-rewards 0.6.0": {
+      "name": "node-provider-rewards",
+      "version": "0.6.0",
+      "package_url": null,
+      "repository": null,
+      "targets": [
+        {
+          "Library": {
+            "crate_name": "node_provider_rewards",
+            "crate_root": "src/lib.rs",
+            "srcs": {
+              "allow_empty": true,
+              "include": [
+                "**/*.rs"
+              ]
+            }
+          }
+        }
+      ],
+      "library_target_name": "node_provider_rewards",
+      "common_attrs": {
+        "compile_data_glob": [
+          "**"
+        ],
+        "deps": {
+          "common": [
+            {
+              "id": "chrono 0.4.40",
+              "target": "chrono"
+            },
+            {
+              "id": "function_name 0.3.0",
+              "target": "function_name"
+            },
+            {
+              "id": "ic-base-types 0.9.0",
+              "target": "ic_base_types"
+            },
+            {
+              "id": "ic-types 0.9.0",
+              "target": "ic_types"
+            },
+            {
+              "id": "itertools 0.13.0",
+              "target": "itertools"
+            },
+            {
+              "id": "num-traits 0.2.19",
+              "target": "num_traits"
+            },
+            {
+              "id": "rust_decimal 1.36.0",
+              "target": "rust_decimal"
+            },
+            {
+              "id": "tabled 0.16.0",
+              "target": "tabled"
+            }
+          ],
+          "selects": {}
+        },
+        "deps_dev": {
+          "common": [
+            {
+              "id": "once_cell 1.20.3",
+              "target": "once_cell"
+            }
+          ],
+          "selects": {}
+        },
+        "edition": "2021",
+        "proc_macro_deps": {
+          "common": [
+            {
+              "id": "rust_decimal_macros 1.36.0",
+              "target": "rust_decimal_macros"
+            }
+          ],
+          "selects": {}
+        },
+        "version": "0.6.0"
+      },
+      "license": "Apache-2.0",
+      "license_ids": [
+        "Apache-2.0"
+      ],
+      "license_file": null
     },
     "node-provider-rewards-lib 0.6.0": {
       "name": "node-provider-rewards-lib",
@@ -59740,6 +59919,7 @@
     "multiservice-discovery 0.6.0": "rs/ic-observability/multiservice-discovery",
     "multiservice-discovery-downloader 0.6.0": "rs/ic-observability/multiservice-discovery-downloader",
     "multiservice-discovery-shared 0.6.0": "rs/ic-observability/multiservice-discovery-shared",
+    "node-provider-rewards 0.6.0": "rs/node-provider-rewards",
     "node-provider-rewards-lib 0.6.0": "rs/dre-canisters/node-provider-rewards-lib",
     "node-status-updater 0.6.0": "rs/ic-observability/node-status-updater",
     "obs-canister-clients 0.6.0": "rs/ic-observability/obs-canister-clients",
@@ -60603,6 +60783,7 @@
     "flate2 1.1.0",
     "fs-err 3.1.0",
     "fs2 0.4.3",
+    "function_name 0.3.0",
     "futures 0.3.31",
     "futures-util 0.3.31",
     "hex 0.4.3",
@@ -60694,6 +60875,7 @@
   "direct_dev_deps": [
     "actix-rt 2.10.0",
     "assert_cmd 2.0.16",
+    "once_cell 1.20.3",
     "wiremock 0.6.3"
   ],
   "unused_patches": []
