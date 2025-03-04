@@ -1,6 +1,6 @@
 [project]
 name = "dre-repo"
-version = "0.5.9"
+version = "0.6.0"
 description = ""
 authors = [{ name = "DRE Team", email = "dept-DRE@dfinity.org" }]
 readme = "README.md"
@@ -53,6 +53,7 @@ dependencies = [
     "aiohttp>=3.10.5",
     "uv>=0.5.20",
     "mypy==1.15.0",
+    "prometheus-client>=0.21.1",
 ]
 
 [tool.rye]

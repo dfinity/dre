@@ -1,5 +1,6 @@
 import json
 import logging
+import pathlib
 import subprocess
 import typing
 from util import resolve_binary
@@ -34,8 +35,26 @@ class ElectionProposal(typing.TypedDict):
     payload: HostosElectionProposalPayload | GuestosElectionProposalPayload
 
 
+def _mode_flags(dry_run: bool) -> list[str]:
+    """
+    Return what DRE flag set to use depending on the mode.
+
+    Operations cannot be interactive when used within the callers
+    of this module.  Accordingly, depending on the nature of the
+    operation, either a flag that specifies *yes, do what I said*
+    or *no, just simulate* is necessary.
+
+    This code decides which flags to use.
+    """
+    return ["--dry-run"] if dry_run else ["--yes"]
+
+
 class DRECli:
-    def __init__(self, auth: typing.Optional[Auth] = None):
+    def __init__(
+        self,
+        auth: typing.Optional[Auth] = None,
+        cli_path: typing.Optional[pathlib.Path] = None,
+    ):
         self._logger = LOGGER.getChild(self.__class__.__name__)
         self.env = os.environ.copy()
         if auth:
@@ -47,7 +66,7 @@ class DRECli:
             ]
         else:
             self.auth = []
-        self.cli = resolve_binary("old-dre")
+        self.cli = str(cli_path) if cli_path else resolve_binary("dre")
 
     def _run(self, *args: str, **subprocess_kwargs: typing.Any) -> str:
         """Run the dre CLI."""
@@ -56,7 +75,6 @@ class DRECli:
             subprocess.check_output(
                 [
                     self.cli,
-                    *(["--yes"] if "propose" in args else []),
                     *self.auth,
                     *args,
                 ],
@@ -134,78 +152,22 @@ class DRECli:
         package_urls: list[str],
         dry_run: bool = False,
     ) -> int:
-        try:
-            self._run(
-                "propose",
-                "revise-elected-guestos-versions",
-                "--help",
-                stderr=subprocess.STDOUT,
-            )
-            subcommand_name: (
-                typing.Literal["update-elected-replica-versions"]
-                | typing.Literal["revise-elected-guestos-versions"]
-            ) = "revise-elected-guestos-versions"
-            # New style of proposal naming is now active in ic-admin.
-        except subprocess.CalledProcessError:
-            # Old style of proposal naming is still active in ic-admin.
-            try:
-                self._run(
-                    "propose",
-                    "revise-elected-guestos-versions",
-                    "--help",
-                    stderr=subprocess.STDOUT,
-                )
-            except subprocess.CalledProcessError:
-                raise RuntimeError(
-                    "No variant of the dre propose command "
-                    "can be used to revise elected GuestOS versions"
-                )
-            subcommand_name = "update-elected-replica-versions"
-
-        return self._propose_to_update_elected_replica_versions(
-            subcommand_name,
-            changelog,
-            version,
-            forum_post_url,
-            unelect_versions,
-            package_checksum,
-            package_urls,
-            dry_run,
+        unelect_versions_args = (
+            (["--replica-versions-to-unelect"] + list(unelect_versions))
+            if len(unelect_versions) > 0
+            else []
         )
-
-    def _propose_to_update_elected_replica_versions(
-        self,
-        subcommand_name: typing.Literal["update-elected-replica-versions"]
-        | typing.Literal["revise-elected-guestos-versions"],
-        changelog: str,
-        version: str,
-        forum_post_url: str,
-        unelect_versions: list[str],
-        package_checksum: str,
-        package_urls: list[str],
-        dry_run: bool = False,
-    ) -> int:
-        unelect_versions_args = []
-        if subcommand_name == "revise-elected-guestos-versions":
-            proposal_url_args: list[str] = ["--proposal-url", forum_post_url]
-            summary = changelog
-        else:
-            proposal_url_args = []
-            summary = changelog + f"\n\nLink to the forum post: {forum_post_url}"
-
-        if len(unelect_versions) > 0:
-            unelect_versions_args.append("--replica-versions-to-unelect")
-            unelect_versions_args.extend(unelect_versions)
-
         self._logger.info("Submitting proposal for version %s", version)
         text = self._run(
             "propose",
-            subcommand_name,
+            *_mode_flags(dry_run),
+            "--proposal-url",
+            forum_post_url,
+            "revise-elected-guestos-versions",
             "--proposal-title",
             f"Elect new IC/Replica revision (commit {version[:7]})",
             "--summary",
-            summary,
-            *(["--dry-run"] if dry_run else []),  # TODO: replace with system proposer
+            changelog,
             "--release-package-sha256-hex",
             package_checksum,
             "--release-package-urls",
@@ -213,7 +175,6 @@ class DRECli:
             "--replica-version-to-elect",
             version,
             *unelect_versions_args,
-            *proposal_url_args,
         )
         if not dry_run:
             try:

@@ -25,6 +25,7 @@ from github import Github
 from google_docs import ReleaseNotesClient, ReleaseNotesClientProtocol
 from governance import GovernanceCanister
 from prometheus import ICPrometheus
+from prometheus_client import start_http_server, Gauge
 from publish_notes import PublishNotesClient, PublishNotesClientProtocol
 from pydiscourse import DiscourseClient
 from release_index_loader import DevReleaseLoader
@@ -35,8 +36,22 @@ from release_notes import (
     SecurityReleaseNotesRequest,
     OrdinaryReleaseNotesRequest,
 )
-from util import version_name, release_controller_cache_directory
+from util import version_name
 from watchdog import Watchdog
+
+
+LAST_CYCLE_SUCCESS_TIMESTAMP_SECONDS = Gauge(
+    "last_cycle_success_timestamp_seconds",
+    "The UNIX timestamp of the last cycle that completed successfully",
+)
+LAST_CYCLE_START_TIMESTAMP_SECONDS = Gauge(
+    "last_cycle_start_timestamp_seconds",
+    "The UNIX timestamp of the start of the last cycle",
+)
+LAST_CYCLE_SUCCESSFUL = Gauge(
+    "last_cycle_successful",
+    "1 if the last cycle was successful, 0 if it was not",
+)
 
 
 class CustomFormatter(logging.Formatter):
@@ -291,6 +306,7 @@ class Reconciler:
                         revlogger.warning(
                             "%s.  However, contrary to recorded failure, proposal"
                             " to elect %s was indeed successfully submitted as ID %s.",
+                            prop,
                             release_commit,
                             discovered_proposal["id"],
                         )
@@ -407,7 +423,7 @@ class Reconciler:
                         revlogger.info("%s", success)
                     except Exception:
                         fail = prop.record_malfunction()
-                        revlogger.error("%s", fail)
+                        revlogger.exception("%s", fail)
 
                 rclogger.debug("Updating forum posts after processing versions.")
                 # Update the forum posts in case the proposal was created.
@@ -423,7 +439,9 @@ dre_repo = "dfinity/dre"
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser(
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter
+    )
     parser.add_argument(
         "--dry-run",
         action="store_true",
@@ -437,13 +455,20 @@ def main() -> None:
         type=int,
         dest="loop_every",
         default=60,
-        help="Time to wait between loop executions.  If 0 or less, exit immediately after the first loop.  Defaults to %(default)s seconds.",
+        help="Time to wait (in seconds) between loop executions.  If 0 or less, exit immediately after the first loop.",
     )
     parser.add_argument(
         "--skip-preloading-state",
         action="store_true",
         dest="skip_preloading_state",
         help="Do not fill the reconciler state upon startup with the known proposals from the governance canister.",
+    )
+    parser.add_argument(
+        "--telemetry_port",
+        type=int,
+        dest="telemetry_port",
+        default=9467,
+        help="Set the Prometheus telemetry port to listen on.  Telemetry is only served if --loop-every is greater than 0.",
     )
     parser.add_argument(
         "dotenv_file",
@@ -528,20 +553,19 @@ def main() -> None:
         else dryrun.PublishNotesClient()
     )
 
+    cli_path = pathlib.Path("rs/cli/dre") if os.getenv("BAZEL") == "true" else None
     dre = (
         dre_cli.DRECli(
             dre_cli.Auth(
                 key_path=os.environ["PROPOSER_KEY_FILE"],
                 neuron_id=os.environ["PROPOSER_NEURON_ID"],
-            )
+            ),
+            cli_path=cli_path,
         )
         if not dry_run
-        else dryrun.DRECli()
+        else dryrun.DRECli(cli_path=cli_path)
     )
     state = reconciler_state.ReconcilerState(
-        pathlib.Path(
-            os.environ.get("RECONCILER_STATE_DIR", release_controller_cache_directory())
-        ),
         None if skip_preloading_state else dre.get_election_proposals_by_version,
     )
     slack_announcer = (
@@ -568,10 +592,16 @@ def main() -> None:
         dre=dre,
     )
 
+    if opts.loop_every > 0:
+        start_http_server(port=int(opts.telemetry_port))
+
     while True:
         try:
             now = time.time()
+            LAST_CYCLE_START_TIMESTAMP_SECONDS.set(int(time.time()))
             reconciler.reconcile()
+            LAST_CYCLE_SUCCESS_TIMESTAMP_SECONDS.set(int(time.time()))
+            LAST_CYCLE_SUCCESSFUL.set(1)
             watchdog.report_healthy()
             if opts.loop_every <= 0:
                 break
@@ -586,6 +616,7 @@ def main() -> None:
             if opts.loop_every <= 0:
                 raise
             else:
+                LAST_CYCLE_SUCCESSFUL.set(0)
                 LOGGER.exception(
                     f"Failed to reconcile.  Retrying in {opts.loop_every} seconds.  Traceback:"
                 )

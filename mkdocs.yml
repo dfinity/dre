@@ -30,6 +30,7 @@ nav:
   - "Development":
       - "Kubernetes":
           - "Tips and Tricks": k8s/tips-and-tricks.md
+          - "Elastic configuration": k8s/elastic-commands.md
       - "Bazel":
           - "Tips and Tricks": bazel/tips-and-tricks.md
 

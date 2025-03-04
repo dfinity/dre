@@ -28,7 +28,7 @@ members = [
 resolver = "2"
 
 [workspace.package]
-version = "0.5.9"
+version = "0.6.0"
 edition = "2021"
 authors = ["IC Decentralized Reliability Engineering (DRE) Team"]
 description = "Tooling for managing the Internet Computer"
@@ -42,14 +42,14 @@ actix-web = { version = "4.9.0", default-features = false, features = [
 ] }
 actix-rt = "2.10.0"
 ahash = "0.8.11"
-anyhow = "1.0.96"
+anyhow = "1.0.97"
 async-recursion = "1.1.1"
 axum-otel-metrics = "0.8.1"
 axum = "0.7.9"
 backoff = { version = "0.4.0", features = ["tokio"] }
 backon = "1.4.0"
 candid = "0.10.13"
-chrono = { version = "0.4.39", features = ["serde"] }
+chrono = { version = "0.4.40", features = ["serde"] }
 clap-num = "1.2"
 clap = { version = "4.5", features = [
     "derive",
@@ -63,7 +63,7 @@ clap = { version = "4.5", features = [
     "string",
     "cargo",
 ] }
-clap_complete = "4.5.45"
+clap_complete = "4.5.46"
 colored = "2.2.0"
 comfy-table = "7.1.4"
 assert_cmd = "2.0.16"
@@ -80,7 +80,7 @@ base64 = "0.22.1"
 edit = "0.1.5"
 env_logger = "0.11.6"
 erased-serde = "0.4.5"
-flate2 = "1.0.35"
+flate2 = "1.1.0"
 fs-err = "3.1.0"
 fs2 = "0.4.3"
 function_name = "0.3"
@@ -139,7 +139,7 @@ icrc-ledger-types = { git = "https://github.com/dfinity/ic.git", rev = "c22d478a
 ic-transport-types = "0.39.3"
 ic-utils = "0.39.3"
 itertools = "0.13.0"
-keyring = { version = "3.6.1", features = [
+keyring = { version = "3.6.2", features = [
     "apple-native",
     "sync-secret-service",
 ] }
@@ -168,7 +168,7 @@ rstest = { version = "0.23.0", default-features = false }
 rust_decimal = "1.36.0"
 rust_decimal_macros = "1.36.0"
 serde = { version = "1.0", features = ["derive"] }
-serde_json = { version = "1.0.139", default-features = false, features = [
+serde_json = { version = "1.0.140", default-features = false, features = [
     "preserve_order",
 ] }
 serde_yaml = "0.9.34"
@@ -189,11 +189,11 @@ strum_macros = "0.26.4"
 tabled = "0.16.0"
 tabular = "0.2"
 tempfile = "3.17.1"
-thiserror = "2.0.11"
+thiserror = "2.0.12"
 tokio = { version = "1.43.0", features = ["full"] }
 tokio-util = "0.7.13"
 url = "2.5.4"
-wiremock = "0.6.2"
+wiremock = "0.6.3"
 human_bytes = "0.4"
 mockall = "0.13.1"
 
