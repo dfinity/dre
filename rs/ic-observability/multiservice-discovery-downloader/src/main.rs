@@ -174,5 +174,23 @@ pub mod log_subtype {
             #[clap(long = "include-stderr", help = "Include stderr", action = ArgAction::SetTrue, default_value = "false")]
             include_stderr: bool,
         },
+        ExecGeneral {
+            #[clap(long = "script-path", help = "Path for the script file")]
+            script_path: String,
+
+            #[clap(long = "cursors-folder", help = "Path for cursors")]
+            cursors_folder: String,
+
+            #[clap(
+                long = "restart-on-exit",
+                help = "Restart on respawn",
+                action = ArgAction::SetTrue,
+                default_value = "false"
+            )]
+            restart_on_exit: bool,
+
+            #[clap(long = "include-stderr", help = "Include stderr", action = ArgAction::SetTrue, default_value = "false")]
+            include_stderr: bool,
+        },
     }
 }

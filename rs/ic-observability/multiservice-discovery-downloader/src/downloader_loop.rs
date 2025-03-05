@@ -8,6 +8,7 @@ use multiservice_discovery_shared::{
     builders::{log_vector_config_structure::VectorConfigBuilderImpl, prometheus_config_structure::PrometheusConfigBuilder, ConfigBuilder},
     contracts::target::TargetDto,
 };
+use serde_json::Value;
 use service_discovery::job_types::JobType;
 use slog::{debug, info, warn, Logger};
 use std::{
@@ -61,10 +62,18 @@ pub async fn run_downloader_loop(logger: Logger, cli: CliArgs, stop_signal: Rece
             continue;
         }
 
-        let targets: Vec<TargetDto> = match response.json().await {
+        let targets: Value = match response.json().await {
             Ok(targets) => targets,
             Err(e) => {
                 warn!(logger, "Failed to parse response from {} @ interval {:?}: {:?}", cli.sd_url, tick, e);
+                continue;
+            }
+        };
+
+        let targets = match targets {
+            Value::Array(array) => array,
+            v => {
+                warn!(logger, "Got unexpected data contract: {:?}", v);
                 continue;
             }
         };
@@ -76,8 +85,6 @@ pub async fn run_downloader_loop(logger: Logger, cli: CliArgs, stop_signal: Rece
 
         let mut hasher = DefaultHasher::new();
 
-        let targets = targets.into_iter().filter(|f| filters.filter(f)).collect::<Vec<_>>();
-
         for target in &targets {
             target.hash(&mut hasher);
         }
@@ -88,12 +95,31 @@ pub async fn run_downloader_loop(logger: Logger, cli: CliArgs, stop_signal: Rece
             info!(logger, "Received new targets from {} @ interval {:?}", cli.sd_url, tick);
             current_hash = hash;
 
-            generate_config(&cli, targets, logger.clone());
+            generate_config(&cli, targets, logger.clone(), &filters);
         }
     }
 }
 
-fn generate_config(cli: &CliArgs, targets: Vec<TargetDto>, logger: Logger) {
+fn generate_config(cli: &CliArgs, targets: Vec<Value>, logger: Logger, filters: &TargetGroupFilterList) {
+    if matches!(
+        cli.generator.clone(),
+        crate::Generator::Log(subtype) if matches!(subtype.subcommands.clone(), Subtype::ExecGeneral { script_path: _, cursors_folder: _, restart_on_exit: _, include_stderr: _ })
+    ) {
+        println!("Will generate new config")
+    } else {
+        generate_config_inner(cli, convert_and_filter_target_dtos(targets, filters), logger);
+    }
+}
+
+fn convert_and_filter_target_dtos(values: Vec<Value>, filters: &TargetGroupFilterList) -> Vec<TargetDto> {
+    values
+        .into_iter()
+        .map(|value| serde_json::from_value(value).unwrap())
+        .filter(|target| filters.filter(target))
+        .collect()
+}
+
+fn generate_config_inner(cli: &CliArgs, targets: Vec<TargetDto>, logger: Logger) {
     let jobs = match cli.generator {
         crate::Generator::Log(_) => JobType::all_for_logs(),
         crate::Generator::Metric => JobType::all_for_ic_nodes(),
@@ -150,6 +176,12 @@ fn generate_config(cli: &CliArgs, targets: Vec<TargetDto>, logger: Logger) {
                     include_stderr: *include_stderr,
                 }
                 .build(targets_with_job),
+                Subtype::ExecGeneral {
+                    script_path: _,
+                    cursors_folder: _,
+                    restart_on_exit: _,
+                    include_stderr: _,
+                } => unreachable!("Shouldn't happen"),
             },
             crate::Generator::Metric => PrometheusConfigBuilder {}.build(targets_with_job),
         };
