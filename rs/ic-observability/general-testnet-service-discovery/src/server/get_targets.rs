@@ -10,5 +10,5 @@ pub(super) async fn get_targets(State(supervisor): State<TargetSupervisor>) -> W
         .get()
         .await
         .map_err(|e| (StatusCode::BAD_REQUEST, e.to_string()))
-        .map(|resp| Json(resp))
+        .map(Json)
 }

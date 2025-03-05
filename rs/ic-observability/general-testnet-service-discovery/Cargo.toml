@@ -26,3 +26,4 @@ itertools.workspace = true
 tokio-util.workspace = true
 async-trait.workspace = true
 opentelemetry.workspace = true
+chrono.workspace = true

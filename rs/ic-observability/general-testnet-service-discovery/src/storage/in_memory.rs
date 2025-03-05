@@ -1,8 +1,7 @@
 use std::{collections::BTreeMap, path::Path, sync::Arc};
 
 use multiservice_discovery_shared::contracts::journald_target::JournaldTarget;
-use tokio::{runtime::Handle, sync::RwLock, task::JoinHandle};
-use tokio_util::sync::CancellationToken;
+use tokio::sync::RwLock;
 
 use super::Storage;
 
@@ -39,10 +38,6 @@ impl Storage for InMemoryStorage {
 
         Ok(())
     }
-
-    fn sync(&self, handle: Handle, _token: CancellationToken) -> JoinHandle<()> {
-        handle.spawn(async {})
-    }
 }
 
 impl InMemoryStorage {
@@ -57,7 +52,7 @@ impl TryFrom<&Path> for InMemoryStorage {
     type Error = anyhow::Error;
 
     fn try_from(value: &Path) -> Result<Self, Self::Error> {
-        let content = fs_err::read_to_string(&value).map_err(|e| anyhow::anyhow!("Failed to read file {}: {:?}", value.display(), e))?;
+        let content = fs_err::read_to_string(value).map_err(|e| anyhow::anyhow!("Failed to read file {}: {:?}", value.display(), e))?;
 
         let deserialized: Vec<JournaldTarget> =
             serde_json::from_str(&content).map_err(|e| anyhow::anyhow!("Failed to deserialize the stored value: {:?}", e))?;

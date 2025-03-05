@@ -28,10 +28,18 @@ fn main() {
     let metrics_layer = HttpMetricsLayerBuilder::new().build();
     let metrics = Metrics::new();
 
-    let target_supervisor = TargetSupervisor::new(logger.clone(), token.clone(), metrics.clone(), storage.clone(), runtime.handle().clone());
+    let target_supervisor = TargetSupervisor::new(
+        logger.clone(),
+        token.clone(),
+        metrics.clone(),
+        storage.clone(),
+        runtime.handle().clone(),
+        args.gc_timeout.into(),
+        args.check_interval.into(),
+    );
     runtime.block_on(target_supervisor.start_cached_targets());
 
-    let server = Server::new(logger.clone(), token.clone());
+    let server = Server::new(logger.clone(), token.clone(), args.server_port);
     let server_handle = runtime.spawn(server.run(metrics_layer, target_supervisor.clone()));
 
     let _ = runtime.block_on(tokio::signal::ctrl_c());
@@ -96,4 +104,17 @@ struct CliArgs {
     /// Storage mode used for general service discovery.
     #[arg(default_value_t = StorageMode::InMemory, long, short)]
     mode: StorageMode,
+
+    /// Port for server to use
+    #[arg(default_value_t = 8000, long, short)]
+    server_port: u16,
+
+    /// Garbage collection timeout for dead targets
+    #[arg(default_value = "60s", long, short)]
+    gc_timeout: humantime::Duration,
+
+    /// Interval at which the service discovery should
+    /// check if the target is alive
+    #[arg(default_value = "10s", long, short)]
+    check_interval: humantime::Duration,
 }

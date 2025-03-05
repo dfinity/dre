@@ -35,7 +35,8 @@ impl Metrics {
         let values_clone = latest_values.clone();
         let update_instruments = move |observer: &dyn Observer| {
             let values = values_clone.read().unwrap();
-            for (instrument, measurement) in [(&total_targets, values.target_status.len())].into_iter() {
+            {
+                let (instrument, measurement) = (&total_targets, values.target_status.len());
                 observer.observe_u64(instrument, measurement as u64, &[]);
             }
 

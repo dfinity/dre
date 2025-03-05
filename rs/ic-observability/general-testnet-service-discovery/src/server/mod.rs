@@ -1,3 +1,5 @@
+use std::net::{IpAddr, Ipv4Addr, SocketAddr};
+
 use axum::{
     http::StatusCode,
     routing::{get, post},
@@ -18,11 +20,12 @@ pub type WebResult<T> = Result<T, (StatusCode, String)>;
 pub struct Server {
     logger: Logger,
     token: CancellationToken,
+    port: u16,
 }
 
 impl Server {
-    pub fn new(logger: Logger, token: CancellationToken) -> Self {
-        Self { logger, token }
+    pub fn new(logger: Logger, token: CancellationToken, port: u16) -> Self {
+        Self { logger, token, port }
     }
 
     pub async fn run(self, metrics_layer: HttpMetricsLayer, supervisor: TargetSupervisor) {
@@ -33,8 +36,9 @@ impl Server {
             .layer(metrics_layer)
             .with_state(supervisor);
 
-        let listener = tokio::net::TcpListener::bind("0.0.0.0:8000").await.unwrap();
-        info!(self.logger, "Server started on port {}", 8000);
+        let socket = SocketAddr::new(IpAddr::V4(Ipv4Addr::new(0, 0, 0, 0)), self.port);
+        let listener = tokio::net::TcpListener::bind(socket).await.unwrap();
+        info!(self.logger, "Server started on port {}", self.port);
         let logger_clone = self.logger.clone();
         axum::serve(listener, app)
             .with_graceful_shutdown(async move {

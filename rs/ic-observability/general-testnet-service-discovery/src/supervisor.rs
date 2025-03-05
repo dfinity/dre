@@ -6,6 +6,7 @@ use std::{
     time::{Duration, SystemTime},
 };
 
+use chrono::{DateTime, Utc};
 use multiservice_discovery_shared::contracts::journald_target::JournaldTarget;
 use slog::{info, warn, Logger};
 use tokio::{net::TcpStream, runtime::Handle, sync::Mutex, task::JoinHandle};
@@ -21,10 +22,20 @@ pub struct TargetSupervisor {
     storage: Arc<dyn Storage>,
     handle: Handle,
     running_targets: Arc<Mutex<BTreeMap<String, JoinHandle<()>>>>,
+    gc_timeout: Duration,
+    check_interval: Duration,
 }
 
 impl TargetSupervisor {
-    pub fn new(logger: Logger, token: CancellationToken, metrics: Metrics, storage: Arc<dyn Storage>, handle: Handle) -> Self {
+    pub fn new(
+        logger: Logger,
+        token: CancellationToken,
+        metrics: Metrics,
+        storage: Arc<dyn Storage>,
+        handle: Handle,
+        gc_timeout: Duration,
+        check_interval: Duration,
+    ) -> Self {
         Self {
             logger,
             token,
@@ -32,6 +43,8 @@ impl TargetSupervisor {
             storage,
             handle,
             running_targets: Arc::new(Mutex::new(BTreeMap::new())),
+            gc_timeout,
+            check_interval,
         }
     }
 
@@ -43,7 +56,7 @@ impl TargetSupervisor {
 
     async fn run_target(&self, target: JournaldTarget) -> anyhow::Result<()> {
         let mut running_targets = self.running_targets.lock().await;
-        if let Some(_) = running_targets.get(&target.name) {
+        if running_targets.get(&target.name).is_some() {
             return Err(anyhow::anyhow!("Definition with the name {} already running", target.name));
         }
 
@@ -52,7 +65,15 @@ impl TargetSupervisor {
         let target_name_for_remove = target.name.clone();
         let storage_clone = self.storage.clone();
         let remove_target = move || async move { storage_clone.delete(target_name_for_remove).await.unwrap() };
-        let running_target = RunningTarget::new(self.logger.clone(), self.metrics.clone(), target, self.token.clone(), remove_target);
+        let running_target = RunningTarget::new(
+            self.logger.clone(),
+            self.metrics.clone(),
+            target,
+            self.token.clone(),
+            remove_target,
+            self.gc_timeout,
+            self.check_interval,
+        );
 
         let join_handle = self.handle.spawn(running_target.poll());
 
@@ -82,10 +103,6 @@ impl Storage for TargetSupervisor {
     async fn delete(&self, name: String) -> anyhow::Result<()> {
         self.storage.delete(name).await
     }
-
-    fn sync(&self, _handle: Handle, _token: CancellationToken) -> JoinHandle<()> {
-        unreachable!("Shouldn't happen. This trait is implemented as a convenience for the server")
-    }
 }
 
 struct RunningTarget<F, Fut>
@@ -100,6 +117,7 @@ where
     last_successful_sync: SystemTime,
     gc_timeout: Duration,
     remove_self: F,
+    check_interval: Duration,
 }
 
 impl<F, Fut> RunningTarget<F, Fut>
@@ -107,23 +125,29 @@ where
     F: FnOnce() -> Fut,
     Fut: Future<Output = ()>,
 {
-    fn new(logger: Logger, metrics: Metrics, target: JournaldTarget, token: CancellationToken, remove_self: F) -> Self {
+    fn new(
+        logger: Logger,
+        metrics: Metrics,
+        target: JournaldTarget,
+        token: CancellationToken,
+        remove_self: F,
+        gc_timeout: Duration,
+        check_interval: Duration,
+    ) -> Self {
         Self {
             logger,
             metrics,
             token,
             target,
             last_successful_sync: SystemTime::now(),
-            // TODO: Make adjustable
-            gc_timeout: Duration::from_secs(20),
+            gc_timeout,
             remove_self,
+            check_interval,
         }
     }
 
     async fn poll(mut self) {
-        // Poll targets each 10 seconds to see if they are reachable
-        // TODO: Maybe make adjustable?
-        let mut interval = tokio::time::interval(Duration::from_secs(10));
+        let mut interval = tokio::time::interval(self.check_interval);
 
         self.info("Starting watching target");
         loop {
@@ -141,7 +165,13 @@ where
                     self.last_successful_sync = SystemTime::now();
                 }
                 Err(e) => {
-                    self.warn(format!("Target {} unreachable: {:?}", self.target.target, e));
+                    let datetime: DateTime<Utc> = self.last_successful_sync.into();
+                    self.warn(format!(
+                        "Target {} unreachable: {:?}, last successful sync: {}",
+                        self.target.target,
+                        e,
+                        datetime.to_rfc3339()
+                    ));
                     self.metrics.observe_down(&self.target.name);
                     if SystemTime::now().duration_since(self.last_successful_sync).unwrap() > self.gc_timeout {
                         self.info("GC elapsed, removing target...");

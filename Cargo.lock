@@ -2441,6 +2441,7 @@ dependencies = [
  "async-trait",
  "axum",
  "axum-otel-metrics",
+ "chrono",
  "clap",
  "fs-err",
  "humantime",

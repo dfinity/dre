@@ -13,5 +13,10 @@ pub trait Storage: Send + Sync {
 
     async fn delete(&self, name: String) -> anyhow::Result<()>;
 
-    fn sync(&self, handle: Handle, token: CancellationToken) -> JoinHandle<()>;
+    fn sync(&self, handle: Handle, _token: CancellationToken) -> JoinHandle<()> {
+        // Default implementation spawns a future
+        // that will instantly finish which will
+        // not create overhead on the api.
+        handle.spawn(async {})
+    }
 }
