@@ -21,8 +21,8 @@
   slack_id: URT5Z7VDZ    # Sasa Tomic
 - neuron_id: 41
   slack_id: U014KGJDY56  # Samuel Burri
-- neuron_id: 42
-  slack_id: U04H2KWTLBZ  # David de Kloet
+# - neuron_id: 42
+#   slack_id: 
 - neuron_id: 43
   slack_id: U01F2AZLZBL  # Ryan Croote
 - neuron_id: 44
