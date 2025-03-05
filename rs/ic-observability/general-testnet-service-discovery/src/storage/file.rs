@@ -23,18 +23,32 @@ impl Storage for FileStorage {
     async fn insert(&self, new_target: JournaldTarget) -> anyhow::Result<()> {
         let target_name = new_target.name.clone();
         info!(self.logger, "Trying to add new entry: {}", target_name);
-        self.cache.insert(new_target).await.map_err(|e| {
-            error!(self.logger, "Failed to add new entry {} due to: {:?}", target_name, e);
-            e
-        })
+        self.cache
+            .insert(new_target)
+            .await
+            .map_err(|e| {
+                error!(self.logger, "Failed to add new entry {} due to: {:?}", target_name, e);
+                e
+            })
+            .map(|r| {
+                info!(self.logger, "Added entry {}", target_name);
+                r
+            })
     }
 
     async fn delete(&self, name: String) -> anyhow::Result<()> {
         info!(self.logger, "Trying to delete entry named: {}", name);
-        self.cache.delete(name.clone()).await.map_err(|e| {
-            error!(self.logger, "Failed to remove entry {} due to: {:?}", name, e);
-            e
-        })
+        self.cache
+            .delete(name.clone())
+            .await
+            .map_err(|e| {
+                error!(self.logger, "Failed to remove entry {} due to: {:?}", name, e);
+                e
+            })
+            .map(|r| {
+                info!(self.logger, "Deleted entry {}", name);
+                r
+            })
     }
 
     fn sync(&self, handle: Handle, token: CancellationToken) -> JoinHandle<()> {
