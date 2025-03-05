@@ -96,13 +96,13 @@ impl ConfigBuilder for ExecLogConfigBuilderImpl {
 }
 
 #[derive(Debug, Clone, Serialize)]
-struct VectorExecSource {
+pub struct VectorExecSource {
     #[serde(rename = "type")]
-    _type: String,
-    command: Vec<String>,
-    mode: String,
-    streaming: SourceStreamingWrapper,
-    include_stderr: bool,
+    pub _type: String,
+    pub command: Vec<String>,
+    pub mode: String,
+    pub streaming: SourceStreamingWrapper,
+    pub include_stderr: bool,
 }
 
 impl VectorSource for VectorExecSource {
@@ -112,6 +112,6 @@ impl VectorSource for VectorExecSource {
 }
 
 #[derive(Debug, Clone, Serialize)]
-struct SourceStreamingWrapper {
-    respawn_on_exit: bool,
+pub struct SourceStreamingWrapper {
+    pub respawn_on_exit: bool,
 }
