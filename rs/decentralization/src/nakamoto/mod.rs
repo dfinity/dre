@@ -799,7 +799,10 @@ mod tests {
             subnet_initial.check_business_rules().unwrap(),
             (
                 20,
-                vec!["node_provider NP2 controls 2 of nodes, which is higher than target of 1 for the subnet. Applying penalty of 10.".to_string(), "node_provider NP4 controls 2 of nodes, which is higher than target of 1 for the subnet. Applying penalty of 10.".to_string()]
+                vec![
+                    "node_provider NP2 controls 2 of nodes, which is higher than target of 1 for the subnet. Applying penalty of 10.".to_string(),
+                    "node_provider NP4 controls 2 of nodes, which is higher than target of 1 for the subnet. Applying penalty of 10.".to_string()
+                ]
             )
         );
 
