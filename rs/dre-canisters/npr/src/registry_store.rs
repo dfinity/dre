@@ -1,3 +1,5 @@
+mod tests;
+
 use candid::Principal;
 use ic_interfaces_registry::{
     empty_zero_registry_record, RegistryClient, RegistryClientResult, RegistryClientVersionedResult, RegistryTransportRecord, ZERO_REGISTRY_VERSION,
@@ -106,6 +108,66 @@ where
         Ok(())
     }
 
+    pub fn get_versioned_value(&self, key: &str, version: RegistryVersion) -> RegistryClientVersionedResult<Vec<u8>> {
+        if version == ZERO_REGISTRY_VERSION {
+            return Ok(empty_zero_registry_record(key));
+        }
+        if self.get_latest_version() < version {
+            return Err(RegistryClientError::VersionNotAvailable { version });
+        }
+
+        let search_key = StorableRegistryKey::new(key.to_string(), version);
+
+        let result = self
+            .local_registry
+            .range(..=search_key)
+            .rev()
+            .find(|(stored_key, _)| stored_key.key == key)
+            .map(|(_, value)| RegistryTransportRecord {
+                key: key.to_string(),
+                version,
+                value: value.0,
+            })
+            .unwrap_or_else(|| empty_zero_registry_record(key));
+        Ok(result)
+    }
+
+    pub fn get_key_family(&self, key_prefix: &str, version: RegistryVersion) -> Result<Vec<String>, RegistryClientError> {
+        if version == ZERO_REGISTRY_VERSION {
+            return Ok(vec![]);
+        }
+        if self.get_latest_version() < version {
+            return Err(RegistryClientError::VersionNotAvailable { version });
+        }
+
+        let first_matching_key = StorableRegistryKey {
+            key: key_prefix.to_string(),
+            ..Default::default()
+        };
+
+        let records_history = self
+            .local_registry
+            .range(first_matching_key..)
+            .filter(|(storable_key, _)| storable_key.version <= version)
+            .take_while(|(storable_key, _)| storable_key.key.starts_with(key_prefix));
+
+        let mut effective_records = BTreeMap::new();
+
+        for (stored_key, value) in records_history {
+            effective_records.insert(stored_key.key, value.0);
+        }
+
+        let results = effective_records
+            .into_iter()
+            .filter_map(|(key, value)| value.is_some().then_some(key))
+            .collect();
+        Ok(results)
+    }
+
+    pub fn get_latest_version(&self) -> RegistryVersion {
+        self.local_registry.keys().map(|k| k.version).max().unwrap_or(ZERO_REGISTRY_VERSION)
+    }
+
     async fn get_registry_changes_since(version: u64) -> anyhow::Result<Vec<RegistryDelta>> {
         let buff = serialize_get_changes_since_request(version)?;
         let response = ic_cdk::api::call::call_raw(Principal::from(REGISTRY_CANISTER_ID), "get_changes_since", buff, 0)
@@ -153,80 +215,4 @@ where
         }
         Ok(())
     }
-}
-
-impl<Memory> CanisterRegistryClient for CanisterRegistryStore<Memory>
-where
-    Memory: ic_stable_structures::Memory,
-{
-    fn get_versioned_value(&self, key: &str, version: RegistryVersion) -> RegistryClientVersionedResult<Vec<u8>> {
-        if version == ZERO_REGISTRY_VERSION {
-            return Ok(empty_zero_registry_record(key));
-        }
-        if self.get_latest_version() < version {
-            return Err(RegistryClientError::VersionNotAvailable { version });
-        }
-
-        let search_key = StorableRegistryKey::new(key.to_string(), version);
-
-        let result = self
-            .local_registry
-            .range(..=search_key)
-            .rev()
-            .find(|(stored_key, _)| stored_key.key == key)
-            .map(|(_, value)| RegistryTransportRecord {
-                key: key.to_string(),
-                version,
-                value: value.0,
-            })
-            .unwrap_or_else(|| empty_zero_registry_record(key));
-        Ok(result)
-    }
-
-    fn get_key_family(&self, key_prefix: &str, version: RegistryVersion) -> Result<Vec<String>, RegistryClientError> {
-        if version == ZERO_REGISTRY_VERSION {
-            return Ok(vec![]);
-        }
-        if self.get_latest_version() < version {
-            return Err(RegistryClientError::VersionNotAvailable { version });
-        }
-
-        let first_matching_key = StorableRegistryKey {
-            key: key_prefix.to_string(),
-            ..Default::default()
-        };
-
-        let records_history = self
-            .local_registry
-            .range(first_matching_key..)
-            .filter(|(storable_key, _)| storable_key.version <= version)
-            .take_while(|(storable_key, _)| storable_key.key.starts_with(key_prefix));
-
-        let mut effective_records = BTreeMap::new();
-
-        for (stored_key, value) in records_history {
-            effective_records.insert(stored_key.key, value.0);
-        }
-
-        let results = effective_records
-            .into_iter()
-            .filter_map(|(key, value)| value.is_some().then_some(key))
-            .collect();
-        Ok(results)
-    }
-
-    fn get_latest_version(&self) -> RegistryVersion {
-        self.local_registry.keys().map(|k| k.version).max().unwrap_or(ZERO_REGISTRY_VERSION)
-    }
-}
-
-pub trait CanisterRegistryClient {
-    fn get_versioned_value(&self, key: &str, version: RegistryVersion) -> RegistryClientVersionedResult<Vec<u8>>;
-
-    fn get_key_family(&self, key_prefix: &str, version: RegistryVersion) -> Result<Vec<String>, RegistryClientError>;
-
-    fn get_value(&self, key: &str, version: RegistryVersion) -> RegistryClientResult<Vec<u8>> {
-        self.get_versioned_value(key, version).map(|vr| vr.value)
-    }
-    fn get_latest_version(&self) -> RegistryVersion;
 }
