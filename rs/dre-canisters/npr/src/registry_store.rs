@@ -5,17 +5,16 @@ use ic_interfaces_registry::{
 use ic_nns_constants::REGISTRY_CANISTER_ID;
 use ic_registry_transport::pb::v1::RegistryDelta;
 use ic_registry_transport::{deserialize_get_changes_since_response, serialize_get_changes_since_request};
-use ic_stable_structures::memory_manager::VirtualMemory;
 use ic_stable_structures::storable::Bound;
-use ic_stable_structures::{DefaultMemoryImpl, StableBTreeMap, Storable};
+use ic_stable_structures::{StableBTreeMap, Storable};
 use ic_types::registry::RegistryClientError;
 use ic_types::RegistryVersion;
 use itertools::Itertools;
 use std::borrow::Cow;
+use std::cell::RefCell;
 use std::cmp::Ordering;
 use std::collections::BTreeMap;
-
-type Memory = VirtualMemory<DefaultMemoryImpl>;
+use std::rc::Rc;
 
 // This value is set as 2 times the max key size present in the registry
 const MAX_REGISTRY_KEY_SIZE: u32 = 200;
@@ -75,28 +74,19 @@ impl Storable for StorableRegistryValue {
 
 pub struct CanisterRegistryStore<Memory>
 where
-    Memory: ic_stable_structures::Memory + Send + Sync,
+    Memory: ic_stable_structures::Memory,
 {
     local_registry: StableBTreeMap<StorableRegistryKey, StorableRegistryValue, Memory>,
 }
 
 impl<Memory> CanisterRegistryStore<Memory>
 where
-    Memory: ic_stable_structures::Memory + Send + Sync,
+    Memory: ic_stable_structures::Memory,
 {
     pub fn init(memory: Memory) -> Self {
         Self {
             local_registry: StableBTreeMap::init(memory),
         }
-    }
-    async fn get_registry_changes_since(&self, version: u64) -> anyhow::Result<Vec<RegistryDelta>> {
-        let buff = serialize_get_changes_since_request(version)?;
-        let response = ic_cdk::api::call::call_raw(Principal::from(REGISTRY_CANISTER_ID), "get_changes_since", buff, 0)
-            .await
-            .map_err(|(code, msg)| (code as i32, msg))
-            .unwrap();
-        let (registry_delta, _) = deserialize_get_changes_since_response(response)?;
-        Ok(registry_delta)
     }
 
     fn add_deltas(&mut self, deltas: Vec<RegistryDelta>) -> anyhow::Result<()> {
@@ -116,8 +106,18 @@ where
         Ok(())
     }
 
-    pub async fn sync_registry_stored(&mut self) -> anyhow::Result<()> {
-        let mut update_registry_version = self.get_latest_version().get();
+    async fn get_registry_changes_since(version: u64) -> anyhow::Result<Vec<RegistryDelta>> {
+        let buff = serialize_get_changes_since_request(version)?;
+        let response = ic_cdk::api::call::call_raw(Principal::from(REGISTRY_CANISTER_ID), "get_changes_since", buff, 0)
+            .await
+            .map_err(|(code, msg)| (code as i32, msg))
+            .unwrap();
+        let (registry_delta, _) = deserialize_get_changes_since_response(response)?;
+        Ok(registry_delta)
+    }
+
+    pub async fn sync_registry_stored(rc_self: Rc<RefCell<Self>>) -> anyhow::Result<()> {
+        let mut update_registry_version = rc_self.borrow().get_latest_version().get();
 
         loop {
             let remote_latest_version = ic_nns_common::registry::get_latest_version().await;
@@ -142,14 +142,14 @@ where
                 }
             }
 
-            if let Ok(deltas) = self.get_registry_changes_since(update_registry_version).await {
-                update_registry_version = deltas
-                    .iter()
-                    .flat_map(|delta| delta.values.iter().map(|v| v.version))
-                    .max()
-                    .unwrap_or(update_registry_version);
-                self.add_deltas(deltas)?;
-            };
+            let remote_deltas = Self::get_registry_changes_since(update_registry_version).await?;
+
+            update_registry_version = remote_deltas
+                .iter()
+                .flat_map(|delta| delta.values.iter().map(|v| v.version))
+                .max()
+                .unwrap_or(update_registry_version);
+            rc_self.borrow_mut().add_deltas(remote_deltas)?;
         }
         Ok(())
     }
@@ -157,7 +157,7 @@ where
 
 impl<Memory> CanisterRegistryClient for CanisterRegistryStore<Memory>
 where
-    Memory: ic_stable_structures::Memory + Send + Sync,
+    Memory: ic_stable_structures::Memory,
 {
     fn get_versioned_value(&self, key: &str, version: RegistryVersion) -> RegistryClientVersionedResult<Vec<u8>> {
         if version == ZERO_REGISTRY_VERSION {

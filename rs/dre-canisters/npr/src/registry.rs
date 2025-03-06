@@ -7,8 +7,9 @@ use ic_protobuf::registry::node_operator::v1::NodeOperatorRecord;
 use ic_protobuf::registry::subnet::v1::SubnetRecord;
 use ic_registry_keys::{DATA_CENTER_KEY_PREFIX, NODE_OPERATOR_RECORD_KEY_PREFIX, NODE_RECORD_KEY_PREFIX, SUBNET_RECORD_KEY_PREFIX};
 use indexmap::IndexMap;
+use std::cell::{Ref, RefCell};
+use std::rc::Rc;
 use std::str::FromStr;
-use std::sync::{Arc, RwLock, RwLockReadGuard};
 
 pub trait RegistryEntry: RegistryValue {
     const KEY_PREFIX: &'static str;
@@ -31,19 +32,21 @@ impl RegistryEntry for SubnetRecord {
 }
 
 pub struct RegistryClient<Memory: ic_stable_structures::Memory> {
-    registry_store: Arc<RwLock<CanisterRegistryStore<Memory>>>,
+    registry_store: Rc<RefCell<CanisterRegistryStore<Memory>>>,
 }
+
 impl<Memory> RegistryClient<Memory>
 where
     Memory: ic_stable_structures::Memory,
 {
-    pub fn init(registry_store: Arc<RwLock<CanisterRegistryStore<Memory>>>) -> Self {
+    pub fn init(registry_store: Rc<RefCell<CanisterRegistryStore<Memory>>>) -> Self {
         Self { registry_store }
     }
 
-    fn registry_store(&self) -> RwLockReadGuard<CanisterRegistryStore<Memory>> {
-        self.registry_store.read().expect("Failed to lock registry store")
+    fn registry_store(&self) -> Ref<CanisterRegistryStore<Memory>> {
+        self.registry_store.borrow()
     }
+
     fn get_family_entries_of_version<T: RegistryEntry + Default>(&self, version: RegistryVersion) -> IndexMap<String, (u64, T)> {
         let prefix_length = T::KEY_PREFIX.len();
         self.registry_store()
