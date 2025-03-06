@@ -77,7 +77,7 @@ def py_oci_image(name, binary, tars = [], **kwargs):
     )
 
     oci_load(
-        name = "{}_load_locally".format(name),
+        name = "{}_load".format(name),
         image = name,
         repo_tags = [],
         tags = ["manual"],

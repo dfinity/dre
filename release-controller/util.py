@@ -1,11 +1,15 @@
 import collections.abc
 import hashlib
+import logging
 import math
 import os
 import sys
 import time
 import typing
 import requests
+
+
+_LOGGER = logging.getLogger(__name__)
 
 
 def version_name(rc_name: str, name: str) -> str:
@@ -18,12 +22,20 @@ def resolve_binary(name: str) -> str:
     Resolve the binary path for the given binary name.
     Try to locate the binary in expected location if it was packaged in an OCI image.
     """
+    # First, look for the binary in the same folder as this file.
     binary_local = os.path.join(os.path.dirname(__file__), name)
-    if os.path.exists(binary_local):
+    if os.access(binary_local, os.X_OK):
+        _LOGGER.debug("Using %s for executable %s", binary_local, name)
         return binary_local
-    binary_local = os.path.join("/rs/cli", name)
-    if name == "dre" and os.path.exists(binary_local):
-        return binary_local
+    # Then, look for the binary in a runfiles folder within the program's
+    # runfiles directory.  This is where the binary would be included normally
+    # when specified as a data dependency of a container built via Bazel.
+    # Only do this when looking for the DRE binary.
+    if name == "dre":
+        binary_local = os.path.join(os.path.dirname(__file__), "..", "rs/cli", name)
+        if os.access(binary_local, os.X_OK):
+            _LOGGER.debug("Using %s for executable %s", binary_local, name)
+            return binary_local
     return name
 
 
