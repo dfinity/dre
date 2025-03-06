@@ -428,23 +428,24 @@ impl LazyRegistry for LazyRegistryImpl {
             let records: IndexMap<_, _> = operators
                 .iter()
                 .map(|(p, or)| {
-                    let principal = PrincipalId::from_str(p).expect("Invalid operator principal id");
+                    let operator_principal = PrincipalId::from_str(p).expect("Invalid operator principal id");
+                    let provider_principal = PrincipalId::try_from(or.node_provider_principal_id.as_slice());
                     (
-                        principal,
+                        operator_principal,
                         Operator {
-                            principal,
-                            provider: PrincipalId::try_from(or.node_provider_principal_id.as_slice())
-                                .map(|p| {
+                            principal: operator_principal,
+                            provider: provider_principal
+                                .map(|principal| {
                                     let mut provider = Provider {
                                         principal,
                                         name: None,
                                         website: None,
                                     };
-                                    if let Some(dashboard_provider) = node_providers.get(&p) {
+                                    if let Some(dashboard_provider) = node_providers.get(&principal) {
                                         provider.website = dashboard_provider.website.clone();
                                         provider.name = Some(dashboard_provider.display_name.clone());
                                     } else {
-                                        debug!("Node provider not found for operator: {}", principal);
+                                        debug!("Node provider not found for operator: {}", operator_principal);
                                     }
                                     provider
                                 })
