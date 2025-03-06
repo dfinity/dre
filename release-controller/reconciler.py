@@ -552,17 +552,15 @@ def main() -> None:
         else dryrun.PublishNotesClient()
     )
 
-    cli_path = pathlib.Path("rs/cli/dre") if os.getenv("BAZEL") == "true" else None
     dre = (
         dre_cli.DRECli(
             dre_cli.Auth(
                 key_path=os.environ["PROPOSER_KEY_FILE"],
                 neuron_id=os.environ["PROPOSER_NEURON_ID"],
             ),
-            cli_path=cli_path,
         )
         if not dry_run
-        else dryrun.DRECli(cli_path=cli_path)
+        else dryrun.DRECli()
     )
     state = reconciler_state.ReconcilerState(
         None if skip_preloading_state else dre.get_election_proposals_by_version,

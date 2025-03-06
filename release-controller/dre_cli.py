@@ -53,7 +53,6 @@ class DRECli:
     def __init__(
         self,
         auth: typing.Optional[Auth] = None,
-        cli_path: typing.Optional[pathlib.Path] = None,
     ):
         self._logger = LOGGER.getChild(self.__class__.__name__)
         self.env = os.environ.copy()
@@ -66,7 +65,7 @@ class DRECli:
             ]
         else:
             self.auth = []
-        self.cli = str(cli_path) if cli_path else resolve_binary("dre")
+        self.cli = resolve_binary("dre")
 
     def _run(self, *args: str, **subprocess_kwargs: typing.Any) -> str:
         """Run the dre CLI."""

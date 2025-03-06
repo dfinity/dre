@@ -32,10 +32,26 @@ def resolve_binary(name: str) -> str:
     # when specified as a data dependency of a container built via Bazel.
     # Only do this when looking for the DRE binary.
     if name == "dre":
-        binary_local = os.path.join(os.path.dirname(__file__), "..", "rs/cli", name)
-        if os.access(binary_local, os.X_OK):
-            _LOGGER.debug("Using %s for executable %s", binary_local, name)
-            return binary_local
+        if os.getenv("DRE_PATH") is not None:
+            # This branch is taken when running with bazel run, or when the user
+            # manually wants to use a specific DRE tool.
+            binary_local = str(os.getenv("DRE_PATH"))
+            _LOGGER.debug(
+                "Using %s for executable %s as per environment variable DRE_PATH",
+                binary_local,
+                name,
+            )
+        else:
+            binary_local = os.path.join(
+                os.path.dirname(__file__), os.path.pardir, "rs", "cli", "dre"
+            )
+            if os.access(binary_local, os.X_OK):
+                _LOGGER.debug(
+                    "Using %s for executable %s within container",
+                    binary_local,
+                    name,
+                )
+                return binary_local
     return name
 
 
