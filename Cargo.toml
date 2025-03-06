@@ -19,6 +19,7 @@ members = [
     "rs/log-fetcher",
     "rs/canister-log-fetcher",
     "rs/slack-notifications",
+    "rs/dre-canisters/npr",
     "rs/dre-canisters/node-provider-rewards-lib",
     "rs/dre-canisters/trustworthy-node-metrics/src/trustworthy-node-metrics",
     "rs/dre-canisters/trustworthy-node-metrics/src/trustworthy-node-metrics-types",
@@ -121,6 +122,7 @@ ic-registry-keys = { git = "https://github.com/dfinity/ic.git", rev = "c22d478ad
 ic-registry-local-registry = { git = "https://github.com/dfinity/ic.git", rev = "c22d478ad97f82bd5d378862c9dd2f13afe2ece1" }
 ic-registry-local-store = { git = "https://github.com/dfinity/ic.git", rev = "c22d478ad97f82bd5d378862c9dd2f13afe2ece1" }
 ic-registry-local-store-artifacts = { git = "https://github.com/dfinity/ic.git", rev = "c22d478ad97f82bd5d378862c9dd2f13afe2ece1" }
+ic-registry-canister-data-provider = { git = "https://github.com/dfinity/ic.git", rev = "c22d478ad97f82bd5d378862c9dd2f13afe2ece1" }
 ic-registry-nns-data-provider = { git = "https://github.com/dfinity/ic.git", rev = "c22d478ad97f82bd5d378862c9dd2f13afe2ece1" }
 ic-registry-subnet-type = { git = "https://github.com/dfinity/ic.git", rev = "c22d478ad97f82bd5d378862c9dd2f13afe2ece1" }
 ic-registry-transport = { git = "https://github.com/dfinity/ic.git", rev = "c22d478ad97f82bd5d378862c9dd2f13afe2ece1" }
