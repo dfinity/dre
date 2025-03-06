@@ -1,5 +1,5 @@
 {
-  "checksum": "3eb23aafd5a56f1c5542a4dc852472110b4dc31fbd927dbc6d6f26fc47bd224f",
+  "checksum": "be36a28d210851ce0fa30804102f3bb6161f5c0c7e9d3740df09c7849cc24761",
   "crates": {
     "actix-codec 0.5.2": {
       "name": "actix-codec",
@@ -2650,14 +2650,14 @@
       ],
       "license_file": "LICENSE"
     },
-    "async-trait 0.1.85": {
+    "async-trait 0.1.87": {
       "name": "async-trait",
-      "version": "0.1.85",
+      "version": "0.1.87",
       "package_url": "https://github.com/dtolnay/async-trait",
       "repository": {
         "Http": {
-          "url": "https://static.crates.io/crates/async-trait/0.1.85/download",
-          "sha256": "3f934833b4b7233644e5848f235df3f57ed8c80f1528a26c3dfa13d2147fa056"
+          "url": "https://static.crates.io/crates/async-trait/0.1.87/download",
+          "sha256": "d556ec1359574147ec0c4fc5eb525f3f23263a592b1a9c07e0a75b427de55c97"
         }
       },
       "targets": [
@@ -2697,7 +2697,7 @@
           "selects": {}
         },
         "edition": "2021",
-        "version": "0.1.85"
+        "version": "0.1.87"
       },
       "license": "MIT OR Apache-2.0",
       "license_ids": [
@@ -2981,7 +2981,7 @@
         "proc_macro_deps": {
           "common": [
             {
-              "id": "async-trait 0.1.85",
+              "id": "async-trait 0.1.87",
               "target": "async_trait"
             },
             {
@@ -3087,7 +3087,7 @@
         "proc_macro_deps": {
           "common": [
             {
-              "id": "async-trait 0.1.85",
+              "id": "async-trait 0.1.87",
               "target": "async_trait"
             },
             {
@@ -7375,7 +7375,7 @@
           "selects": {
             "cfg(windows)": [
               {
-                "id": "windows-sys 0.48.0",
+                "id": "windows-sys 0.59.0",
                 "target": "windows_sys"
               }
             ]
@@ -9936,7 +9936,7 @@
         "proc_macro_deps": {
           "common": [
             {
-              "id": "async-trait 0.1.85",
+              "id": "async-trait 0.1.87",
               "target": "async_trait"
             },
             {
@@ -10428,7 +10428,7 @@
         "proc_macro_deps": {
           "common": [
             {
-              "id": "async-trait 0.1.85",
+              "id": "async-trait 0.1.87",
               "target": "async_trait"
             }
           ],
@@ -15082,6 +15082,108 @@
       ],
       "license_file": "LICENSE-APACHE"
     },
+    "general-testnet-service-discovery 0.6.0": {
+      "name": "general-testnet-service-discovery",
+      "version": "0.6.0",
+      "package_url": null,
+      "repository": null,
+      "targets": [],
+      "library_target_name": null,
+      "common_attrs": {
+        "compile_data_glob": [
+          "**"
+        ],
+        "deps": {
+          "common": [
+            {
+              "id": "anyhow 1.0.96",
+              "target": "anyhow"
+            },
+            {
+              "id": "axum 0.7.9",
+              "target": "axum"
+            },
+            {
+              "id": "axum-otel-metrics 0.8.1",
+              "target": "axum_otel_metrics"
+            },
+            {
+              "id": "chrono 0.4.40",
+              "target": "chrono"
+            },
+            {
+              "id": "clap 4.5.31",
+              "target": "clap"
+            },
+            {
+              "id": "fs-err 3.1.0",
+              "target": "fs_err"
+            },
+            {
+              "id": "humantime 2.1.0",
+              "target": "humantime"
+            },
+            {
+              "id": "itertools 0.13.0",
+              "target": "itertools"
+            },
+            {
+              "id": "opentelemetry 0.22.0",
+              "target": "opentelemetry"
+            },
+            {
+              "id": "retry 2.0.0",
+              "target": "retry"
+            },
+            {
+              "id": "serde 1.0.218",
+              "target": "serde"
+            },
+            {
+              "id": "serde_json 1.0.139",
+              "target": "serde_json"
+            },
+            {
+              "id": "slog 2.7.0",
+              "target": "slog"
+            },
+            {
+              "id": "slog-async 2.8.0",
+              "target": "slog_async"
+            },
+            {
+              "id": "slog-term 2.9.1",
+              "target": "slog_term"
+            },
+            {
+              "id": "tokio 1.43.0",
+              "target": "tokio"
+            },
+            {
+              "id": "tokio-util 0.7.13",
+              "target": "tokio_util"
+            }
+          ],
+          "selects": {}
+        },
+        "edition": "2021",
+        "proc_macro_deps": {
+          "common": [
+            {
+              "id": "async-trait 0.1.87",
+              "target": "async_trait"
+            }
+          ],
+          "selects": {}
+        },
+        "version": "0.6.0"
+      },
+      "license": "Apache-2.0",
+      "license_ids": [
+        "Apache-2.0"
+      ],
+      "license_file": null
+    },
     "generic-array 0.14.7": {
       "name": "generic-array",
       "version": "0.14.7",
@@ -18182,7 +18284,7 @@
         "proc_macro_deps": {
           "common": [
             {
-              "id": "async-trait 0.1.85",
+              "id": "async-trait 0.1.87",
               "target": "async_trait"
             },
             {
@@ -22457,7 +22559,7 @@
         "proc_macro_deps": {
           "common": [
             {
-              "id": "async-trait 0.1.85",
+              "id": "async-trait 0.1.87",
               "target": "async_trait"
             },
             {
@@ -22993,7 +23095,7 @@
         "proc_macro_deps": {
           "common": [
             {
-              "id": "async-trait 0.1.85",
+              "id": "async-trait 0.1.87",
               "target": "async_trait"
             }
           ],
@@ -23925,7 +24027,7 @@
         "proc_macro_deps": {
           "common": [
             {
-              "id": "async-trait 0.1.85",
+              "id": "async-trait 0.1.87",
               "target": "async_trait"
             }
           ],
@@ -24038,7 +24140,7 @@
         "proc_macro_deps": {
           "common": [
             {
-              "id": "async-trait 0.1.85",
+              "id": "async-trait 0.1.87",
               "target": "async_trait"
             }
           ],
@@ -24250,7 +24352,7 @@
         "proc_macro_deps": {
           "common": [
             {
-              "id": "async-trait 0.1.85",
+              "id": "async-trait 0.1.87",
               "target": "async_trait"
             }
           ],
@@ -24554,7 +24656,7 @@
         "proc_macro_deps": {
           "common": [
             {
-              "id": "async-trait 0.1.85",
+              "id": "async-trait 0.1.87",
               "target": "async_trait"
             }
           ],
@@ -24973,7 +25075,7 @@
         "proc_macro_deps": {
           "common": [
             {
-              "id": "async-trait 0.1.85",
+              "id": "async-trait 0.1.87",
               "target": "async_trait"
             }
           ],
@@ -25664,7 +25766,7 @@
         "proc_macro_deps": {
           "common": [
             {
-              "id": "async-trait 0.1.85",
+              "id": "async-trait 0.1.87",
               "target": "async_trait"
             },
             {
@@ -26042,7 +26144,7 @@
         "proc_macro_deps": {
           "common": [
             {
-              "id": "async-trait 0.1.85",
+              "id": "async-trait 0.1.87",
               "target": "async_trait"
             }
           ],
@@ -27764,7 +27866,7 @@
         "proc_macro_deps": {
           "common": [
             {
-              "id": "async-trait 0.1.85",
+              "id": "async-trait 0.1.87",
               "target": "async_trait"
             },
             {
@@ -28144,7 +28246,7 @@
         "proc_macro_deps": {
           "common": [
             {
-              "id": "async-trait 0.1.85",
+              "id": "async-trait 0.1.87",
               "target": "async_trait"
             }
           ],
@@ -28421,7 +28523,7 @@
         "proc_macro_deps": {
           "common": [
             {
-              "id": "async-trait 0.1.85",
+              "id": "async-trait 0.1.87",
               "target": "async_trait"
             },
             {
@@ -28631,7 +28733,7 @@
         "proc_macro_deps": {
           "common": [
             {
-              "id": "async-trait 0.1.85",
+              "id": "async-trait 0.1.87",
               "target": "async_trait"
             },
             {
@@ -28901,7 +29003,7 @@
         "proc_macro_deps": {
           "common": [
             {
-              "id": "async-trait 0.1.85",
+              "id": "async-trait 0.1.87",
               "target": "async_trait"
             }
           ],
@@ -29463,7 +29565,7 @@
         "proc_macro_deps": {
           "common": [
             {
-              "id": "async-trait 0.1.85",
+              "id": "async-trait 0.1.87",
               "target": "async_trait"
             },
             {
@@ -30459,7 +30561,7 @@
         "proc_macro_deps": {
           "common": [
             {
-              "id": "async-trait 0.1.85",
+              "id": "async-trait 0.1.87",
               "target": "async_trait"
             }
           ],
@@ -35089,6 +35191,10 @@
               "target": "reqwest"
             },
             {
+              "id": "serde_json 1.0.139",
+              "target": "serde_json"
+            },
+            {
               "id": "slog 2.7.0",
               "target": "slog"
             },
@@ -36575,7 +36681,7 @@
         "proc_macro_deps": {
           "common": [
             {
-              "id": "async-trait 0.1.85",
+              "id": "async-trait 0.1.87",
               "target": "async_trait"
             }
           ],
@@ -37139,7 +37245,7 @@
         "proc_macro_deps": {
           "common": [
             {
-              "id": "async-trait 0.1.85",
+              "id": "async-trait 0.1.87",
               "target": "async_trait"
             }
           ],
@@ -40479,7 +40585,7 @@
         "deps": {
           "common": [
             {
-              "id": "heck 0.4.1",
+              "id": "heck 0.5.0",
               "target": "heck"
             },
             {
@@ -49182,7 +49288,7 @@
         "deps": {
           "common": [
             {
-              "id": "heck 0.4.1",
+              "id": "heck 0.5.0",
               "target": "heck"
             },
             {
@@ -53344,7 +53450,7 @@
         "proc_macro_deps": {
           "common": [
             {
-              "id": "async-trait 0.1.85",
+              "id": "async-trait 0.1.87",
               "target": "async_trait"
             }
           ],
@@ -56631,7 +56737,7 @@
           "selects": {
             "cfg(windows)": [
               {
-                "id": "windows-sys 0.48.0",
+                "id": "windows-sys 0.59.0",
                 "target": "windows_sys"
               }
             ]
@@ -57006,12 +57112,8 @@
             "Win32",
             "Win32_Foundation",
             "Win32_Globalization",
-            "Win32_Storage",
-            "Win32_Storage_FileSystem",
             "Win32_System",
             "Win32_System_Com",
-            "Win32_System_Console",
-            "Win32_System_SystemInformation",
             "Win32_UI",
             "Win32_UI_Shell",
             "default"
@@ -58538,7 +58640,7 @@
         "proc_macro_deps": {
           "common": [
             {
-              "id": "async-trait 0.1.85",
+              "id": "async-trait 0.1.87",
               "target": "async_trait"
             }
           ],
@@ -59735,6 +59837,7 @@
     "config-writer-common 0.6.0": "rs/ic-observability/config-writer-common",
     "decentralization 0.6.0": "rs/decentralization",
     "dre 0.6.0": "rs/cli",
+    "general-testnet-service-discovery 0.6.0": "rs/ic-observability/general-testnet-service-discovery",
     "ic-canisters 0.6.0": "rs/ic-canisters",
     "ic-management-backend 0.6.0": "rs/ic-management-backend",
     "ic-management-types 0.6.0": "rs/ic-management-types",
@@ -60579,6 +60682,7 @@
     "ahash 0.8.11",
     "anyhow 1.0.96",
     "async-recursion 1.1.1",
+    "async-trait 0.1.87",
     "axum 0.7.9",
     "axum-otel-metrics 0.8.1",
     "backoff 0.4.0",
@@ -60693,6 +60797,7 @@
     "tempfile 3.17.1",
     "thiserror 2.0.11",
     "tokio 1.43.0",
+    "tokio-util 0.7.13",
     "url 2.5.4"
   ],
   "direct_dev_deps": [
