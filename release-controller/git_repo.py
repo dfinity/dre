@@ -12,6 +12,9 @@ from release_index import Version
 from util import version_name
 
 
+_LOGGER = logging.getLogger(__name__)
+
+
 class FileChange(typing.TypedDict):
     file_path: str
     num_changes: int
@@ -141,8 +144,13 @@ class GitRepo:
     def fetch(self) -> None:
         """Fetch the repository."""
         if (self.dir / ".git").exists():
+            _LOGGER.info(
+                "Updating repository in %s to latest origin/%s",
+                self.dir,
+                self.main_branch,
+            )
             subprocess.check_call(
-                ["git", "fetch"],
+                ["git", "fetch", "--quiet"],
                 cwd=self.dir,
             )
             subprocess.check_call(
@@ -150,6 +158,7 @@ class GitRepo:
                 cwd=self.dir,
             )
         else:
+            _LOGGER.info("Cloning repository %s to %s", self.repo, self.dir)
             os.makedirs(self.dir, exist_ok=True)
             subprocess.check_call(
                 [
@@ -164,6 +173,7 @@ class GitRepo:
                 "git",
                 "fetch",
                 "--all",
+                "--quiet",
             ],
             cwd=self.dir,
         )
@@ -415,11 +425,11 @@ class GitRepo:
                 .split(" ")[0]
             )
             if tag_version == v.version:
-                logging.info(
+                _LOGGER.info(
                     "RC %s: tag %s already exists on origin", release.rc_name, tag
                 )
             else:
-                logging.info(
+                _LOGGER.info(
                     "RC %s: pushing tag %s to the origin", release.rc_name, tag
                 )
                 subprocess.check_call(
