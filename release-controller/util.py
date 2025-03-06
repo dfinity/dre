@@ -57,6 +57,22 @@ def resolve_binary(name: str) -> str:
                     % os.path.join(os.path.dirname(__file__), os.path.pardir),
                 ]
             )
+            subprocess.call(
+                [
+                    "bash",
+                    "-c",
+                    "ls -la %s/rs >&2"
+                    % os.path.join(os.path.dirname(__file__), os.path.pardir),
+                ]
+            )
+            subprocess.call(
+                [
+                    "bash",
+                    "-c",
+                    "ls -la %s/rs/cli >&2"
+                    % os.path.join(os.path.dirname(__file__), os.path.pardir),
+                ]
+            )
             _LOGGER.info(
                 "Trying %s for executable %s within container",
                 binary_local,
