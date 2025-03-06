@@ -1,5 +1,6 @@
 pub mod nakamoto;
 pub mod network;
+pub mod provider_clusters;
 #[cfg(test)]
 mod network_tests;
 pub mod subnets;
