@@ -162,7 +162,7 @@ Make sure also that few minutes have passed and that public dashboard still does
 Please see the parent folder's `README.md` for virtual environment setup.
 Follow the whole *Contributing* section to the letter.
 
-### Running the reconciler in dry-run mode:
+### Running the reconciler in dry-run mode
 
 ```sh
 bazel run //release-controller:release-controller -- --dry-run --verbose
@@ -200,6 +200,22 @@ will not preload its list of known proposals by version from the governance
 canister.  It is useful (in conjunction with an empty reconciler state folder)
 to make the reconciler do all the work of submitting proposals again.  It should
 not be used without `--dry-run`, to avoid submitting proposals twice.
+
+### Running the reconciler in the container it ships
+
+You can load the reconciler into your local podman or docker system:
+
+```sh
+bazel run //release-controller:oci_image_load
+```
+
+This will spit out a SHA256 sum, which is the name of the container image just
+built and imported into your containerization system.  Run it as follows:
+
+```sh
+SHASUM=...
+podman run -it --entrypoint=/release-controller/release-controller $SHASUM
+```
 
 ### Tests
 

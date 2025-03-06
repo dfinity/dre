@@ -1,5 +1,5 @@
 load("@aspect_bazel_lib//lib:tar.bzl", "mtree_spec", "tar")
-load("@rules_oci//oci:defs.bzl", "oci_image", "oci_push")
+load("@rules_oci//oci:defs.bzl", "oci_image", "oci_push", "oci_load")
 
 # match *only* external repositories that have the string "python"
 # e.g. this will match
@@ -74,6 +74,13 @@ def py_oci_image(name, binary, tars = [], **kwargs):
         name = name,
         tars = tars + py_layers(name, binary),
         **kwargs
+    )
+
+    oci_load(
+        name = "{}_load_locally".format(name),
+        image = name,
+        repo_tags = [],
+        tags = ["manual"],
     )
 
     binary_label = native.package_relative_label(binary)
