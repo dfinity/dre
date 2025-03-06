@@ -38,7 +38,9 @@ py_binary(
     main = "reconciler.py",
     srcs = glob(["*.py"], exclude = ["commit_annotator.py", "ci_check.py"]),
     tags = ["typecheck"],
-    env = env,
+    env = {
+        "DRE_PATH": "$(rootpath //rs/cli:dre)",
+    },
     deps = deps + [
         requirement("prometheus-client"),
     ],
@@ -94,11 +96,6 @@ long_tests = ["tests/test_commit_annotator.py"]
 ]
 
 tar(
-    name = "bins_release_controller_tar",
-    srcs = ["//rs/cli:dre"],
-)
-
-tar(
     name = "bins_commit_annotator_tar",
     srcs = [":bazelisk", ":target_determinator"],
 )
@@ -107,7 +104,7 @@ py_oci_image(
     name = "oci_image",
     base = "@bazel_image_7_4_1",
     binary = ":release-controller",
-    tars = [":bins_release_controller_tar"]
+    tars = []
 )
 
 py_oci_image(
