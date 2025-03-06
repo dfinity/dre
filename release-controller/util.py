@@ -25,7 +25,7 @@ def resolve_binary(name: str) -> str:
     # First, look for the binary in the same folder as this file.
     binary_local = os.path.join(os.path.dirname(__file__), name)
     if os.access(binary_local, os.X_OK):
-        _LOGGER.info("Using %s for executable %s", binary_local, name)
+        _LOGGER.debug("Using %s for executable %s", binary_local, name)
         return binary_local
     # Then, look for the binary in a runfiles folder within the program's
     # runfiles directory.  This is where the binary would be included normally
@@ -36,44 +36,15 @@ def resolve_binary(name: str) -> str:
             # This branch is taken when running with bazel run, or when the user
             # manually wants to use a specific DRE tool.
             binary_local = str(os.getenv("DRE_PATH"))
-            _LOGGER.info(
+            _LOGGER.debug(
                 "Using %s for executable %s as per environment variable DRE_PATH",
                 binary_local,
                 name,
             )
+            return binary_local
         else:
-            binary_local = os.path.join(
-                os.path.dirname(__file__), os.path.pardir, "rs", "cli", "dre"
-            )
-            # debugging code, please stand by for removal
-            import subprocess
-
-            subprocess.call(["bash", "-c", "ls -la %s >&2" % os.path.dirname(__file__)])
-            subprocess.call(
-                [
-                    "bash",
-                    "-c",
-                    "ls -la %s >&2"
-                    % os.path.join(os.path.dirname(__file__), os.path.pardir),
-                ]
-            )
-            subprocess.call(
-                [
-                    "bash",
-                    "-c",
-                    "ls -la %s/rs >&2"
-                    % os.path.join(os.path.dirname(__file__), os.path.pardir),
-                ]
-            )
-            subprocess.call(
-                [
-                    "bash",
-                    "-c",
-                    "ls -la %s/rs/cli >&2"
-                    % os.path.join(os.path.dirname(__file__), os.path.pardir),
-                ]
-            )
-            _LOGGER.info(
+            binary_local = os.path.join("/", "rs", "cli", "dre")
+            _LOGGER.debug(
                 "Trying %s for executable %s within container",
                 binary_local,
                 name,
@@ -85,7 +56,7 @@ def resolve_binary(name: str) -> str:
                 _LOGGER.warning("Program %s is not executable", binary_local)
                 return name
             return binary_local
-    _LOGGER.info(
+    _LOGGER.debug(
         "Falling back to path search for executable %s",
         name,
     )
