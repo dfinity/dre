@@ -15,7 +15,7 @@ This motion proposal requests that DFINITY be permitted to expand its operating 
 **Proposal:**
 
 1. **Increase Total Node Count:**
-    Approve the expansion of DFINITY-owned nodes from 42 to 70 by adding an additional 28 nodes. To maintain fairness among node providers (who are limited to 42 nodes), the additional 28 nodes will not be eligible for rewards.
+    Approve the expansion of DFINITY-owned nodes from 42 to 70 by adding an additional 28 nodes. To maintain fairness among node providers (who are limited to 42 nodes), **the additional 28 nodes will not be eligible for rewards**.
 2. **NNS Topology Exception:**
     Approve a modification to the adopted Target Topology that formally permits DFINITY to operate 3 nodes in the NNS subnet outside the regular topology restrictions. This exception will provide the necessary flexibility to maintain recovery resilience and manage operational challenges without extending recovery times.
 
