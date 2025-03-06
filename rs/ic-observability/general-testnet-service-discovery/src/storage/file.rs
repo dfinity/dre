@@ -30,10 +30,7 @@ impl Storage for FileStorage {
                 error!(self.logger, "Failed to add new entry {} due to: {:?}", target_name, e);
                 e
             })
-            .map(|r| {
-                info!(self.logger, "Added entry {}", target_name);
-                r
-            })
+            .inspect(|_| info!(self.logger, "Added entry {}", target_name))
     }
 
     async fn delete(&self, name: String) -> anyhow::Result<()> {
@@ -45,10 +42,7 @@ impl Storage for FileStorage {
                 error!(self.logger, "Failed to remove entry {} due to: {:?}", name, e);
                 e
             })
-            .map(|r| {
-                info!(self.logger, "Deleted entry {}", name);
-                r
-            })
+            .inspect(|_| info!(self.logger, "Deleted entry {}", name))
     }
 
     fn sync(&self, handle: Handle, token: CancellationToken) -> JoinHandle<()> {
