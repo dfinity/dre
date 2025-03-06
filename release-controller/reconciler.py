@@ -68,15 +68,15 @@ class CustomFormatter(logging.Formatter):
         red = ""
         bold_red = ""
         reset = ""
-    fmt = "%(asctime)s %(levelname)8s  %(name)-37s — %(message)s"
+    shortfmt = ":%(name)-20s — %(message)s"
     longfmt = "%(asctime)s %(levelname)13s  %(message)s\n" "%(name)37s"
 
     FORMATS = {
-        logging.DEBUG: blue + fmt + reset,
-        logging.INFO: green + fmt + reset,
-        logging.WARNING: yellow + fmt + reset,
-        logging.ERROR: red + fmt + reset,
-        logging.CRITICAL: bold_red + fmt + reset,
+        logging.DEBUG: blue + "DD" + shortfmt + reset,
+        logging.INFO: green + "II" + shortfmt + reset,
+        logging.WARNING: yellow + "WW" + shortfmt + reset,
+        logging.ERROR: red + "EE" + shortfmt + reset,
+        logging.CRITICAL: bold_red + "!!" + shortfmt + reset,
     }
 
     LONG_FORMATS = {
@@ -87,8 +87,11 @@ class CustomFormatter(logging.Formatter):
         logging.CRITICAL: bold_red + longfmt + reset,
     }
 
+    def __init__(self, one_line_logs: bool):
+        self.one_line_logs = one_line_logs
+
     def format(self, record: logging.LogRecord) -> str:
-        if len(record.name) > 37 or True:
+        if not self.one_line_logs:
             log_fmt = self.LONG_FORMATS.get(record.levelno)
         else:
             log_fmt = self.FORMATS.get(record.levelno)
@@ -449,6 +452,12 @@ def main() -> None:
     )
     parser.add_argument("--verbose", "--debug", action="store_true", dest="verbose")
     parser.add_argument(
+        "--one-line-logs",
+        action="store_true",
+        dest="one_line_logs",
+        help="Make log lines one-line without timestamps (useful in production container for better filtering)",
+    )
+    parser.add_argument(
         "--loop-every",
         action="store",
         type=int,
@@ -495,7 +504,7 @@ def main() -> None:
 
     ch = logging.StreamHandler()
     ch.setLevel(logging.DEBUG if verbose else logging.INFO)
-    ch.setFormatter(CustomFormatter())
+    ch.setFormatter(CustomFormatter(opts.one_line_logs))
     root.addHandler(ch)
 
     # Prep the program for longer timeouts.
