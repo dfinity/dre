@@ -6,6 +6,10 @@ releases:
       # https://github.com/dfinity/ic/actions/runs/13690328982
       - name: base
         version: de6e339b323f59fc07b18c23f37c3cd2aa8ceb55
+      # Qualification pipeline:
+      # https://github.com/dfinity/ic/actions/runs/13700859905
+      - name: disable-best-effort-messaging
+        version: 9769228872b351a7443d7e867d67afd65d96212b
   - rc_name: rc--2025-02-27_03-09
     versions:
       # Qualification pipeline:
