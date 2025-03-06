@@ -39,7 +39,9 @@ py_binary(
     srcs = glob(["*.py"], exclude = ["commit_annotator.py", "ci_check.py"]),
     tags = ["typecheck"],
     env = env,
-    deps = deps,
+    deps = deps + [
+        requirement("prometheus-client"),
+    ],
     data = ["//rs/cli:dre"],
 )
 

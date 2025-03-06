@@ -189,19 +189,18 @@ impl DecentralizedSubnet {
             // For different reasons, there is the same requirement for the NNS and the SNS
             // subnet.
             let feature = NodeFeature::Country;
-            match nakamoto_scores.feature_value_counts_max(&feature) {
-                Some((country_dominant, country_nodes_count)) => {
-                    let controlled_nodes_max = nodes.len() / 3;
-                    if country_nodes_count > controlled_nodes_max {
-                        let penalty = (country_nodes_count - controlled_nodes_max) * 1000;
-                        checks.push(format!(
-                            "Country {} controls {} of nodes, which is > {} (1/3 - 1) of subnet nodes. Applying penalty of {}.",
-                            country_dominant, country_nodes_count, controlled_nodes_max, penalty
-                        ));
-                        penalties += penalty;
-                    }
-                }
-                _ => return Err(anyhow::anyhow!("Incomplete data for {}", feature)),
+            let controlled_nodes_max = nodes.len() / 3;
+            for (country, count) in nakamoto_scores
+                .feature_value_counts(&feature)
+                .iter()
+                .filter(|(_country, count)| *count > controlled_nodes_max)
+            {
+                let penalty = (count - controlled_nodes_max) * 1000;
+                checks.push(format!(
+                    "Country {} controls {} of nodes, which is > {} (1/3 - 1) of subnet nodes. Applying penalty of {}.",
+                    country, count, controlled_nodes_max, penalty
+                ));
+                penalties += penalty;
             }
         }
 
@@ -209,18 +208,19 @@ impl DecentralizedSubnet {
         // https://dashboard.internetcomputer.org/proposal/132136
         let max_nodes_per_np_and_dc = 1;
         for feature in &[NodeFeature::NodeProvider, NodeFeature::DataCenter, NodeFeature::DataCenterOwner] {
-            match nakamoto_scores.feature_value_counts_max(feature) {
-                Some((name, value)) => {
-                    if value > max_nodes_per_np_and_dc {
-                        let penalty = (value - max_nodes_per_np_and_dc) * 10;
-                        checks.push(format!(
-                            "{} {} controls {} of nodes, which is higher than target of {} for the subnet. Applying penalty of {}.",
-                            feature, name, value, max_nodes_per_np_and_dc, penalty
-                        ));
-                        penalties += penalty;
-                    }
+            for (name, count) in nakamoto_scores
+                .feature_value_counts(feature)
+                .iter()
+                .filter(|(_name, count)| *count > max_nodes_per_np_and_dc)
+            {
+                if *count > max_nodes_per_np_and_dc {
+                    let penalty = (count - max_nodes_per_np_and_dc) * 10;
+                    checks.push(format!(
+                        "{} {} controls {} of nodes, which is higher than target of {} for the subnet. Applying penalty of {}.",
+                        feature, name, count, max_nodes_per_np_and_dc, penalty
+                    ));
+                    penalties += penalty;
                 }
-                _ => return Err(anyhow::anyhow!("Incomplete data for {}", feature)),
             }
         }
 
@@ -233,24 +233,16 @@ impl DecentralizedSubnet {
             | "uzr34-akd3s-xrdag-3ql62-ocgoh-ld2ao-tamcv-54e7j-krwgb-2gm4z-oqe" => 3,
             _ => 2,
         };
-        match nakamoto_scores.feature_value_counts_max(&NodeFeature::Country) {
-            Some((name, value)) => {
-                if is_european_subnet && !Node::is_country_from_eu(name.as_str()) {
-                    // European subnet is expected to be controlled by European countries
-                } else if value > max_nodes_per_country {
-                    let penalty = (value - max_nodes_per_country) * 10;
-                    checks.push(format!(
-                        "Country {} controls {} of nodes, which is higher than target of {} for the subnet. Applying penalty of {}.",
-                        name, value, max_nodes_per_country, penalty
-                    ));
-                    penalties += penalty;
-                }
-            }
-            _ => {
-                return Err(anyhow::anyhow!(
-                    "Incomplete data for Node Feature Country in subnet {}",
-                    subnet_id.to_string()
-                ))
+        for (name, count) in nakamoto_scores.feature_value_counts(&NodeFeature::Country) {
+            if is_european_subnet && !Node::is_country_from_eu(name.as_str()) {
+                // European subnet is expected to be controlled by European countries
+            } else if count > max_nodes_per_country {
+                let penalty = (count - max_nodes_per_country) * 10;
+                checks.push(format!(
+                    "Country {} controls {} of nodes, which is higher than target of {} for the subnet. Applying penalty of {}.",
+                    name, count, max_nodes_per_country, penalty
+                ));
+                penalties += penalty;
             }
         }
 
