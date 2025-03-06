@@ -10,7 +10,6 @@ import typing
 import urllib.parse
 
 sys.path.append(os.path.join(os.path.dirname(__file__)))
-import __fix_import_paths  # isort:skip  # noqa: F401 # pylint: disable=W0611
 import dre_cli
 import dryrun
 import release_index
