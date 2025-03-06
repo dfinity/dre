@@ -96,6 +96,11 @@ long_tests = ["tests/test_commit_annotator.py"]
 ]
 
 tar(
+    name = "bins_release_controller_tar",
+    srcs = ["//rs/cli:dre"],
+)
+
+tar(
     name = "bins_commit_annotator_tar",
     srcs = [":bazelisk", ":target_determinator"],
 )
@@ -104,7 +109,7 @@ py_oci_image(
     name = "oci_image",
     base = "@bazel_image_7_4_1",
     binary = ":release-controller",
-    tars = []
+    tars = [":bins_release_controller_tar"]
 )
 
 py_oci_image(
