@@ -35,6 +35,7 @@ def external_crates_repository():
             "//rs/ic-observability/log-noise-filter-backend:Cargo.toml",
             "//rs/ic-observability/log-noise-filter-downloader:Cargo.toml",
             "//rs/ic-observability/multiservice-discovery:Cargo.toml",
+            "//rs/ic-observability/general-testnet-service-discovery:Cargo.toml",
             "//rs/ic-observability/multiservice-discovery-downloader:Cargo.toml",
             "//rs/ic-observability/multiservice-discovery-shared:Cargo.toml",
             "//rs/ic-observability/node-status-updater:Cargo.toml",
