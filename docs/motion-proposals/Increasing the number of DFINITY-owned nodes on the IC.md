@@ -48,5 +48,5 @@ This motion proposal requests that DFINITY be permitted to expand its operating 
 **Conclusion:**
 For the reasons outlined above, we urge the community to support this motion proposal to increase the total number of DFINITY-owned nodes to 70 and to allow the NNS subnet an exceptional status with 3 nodes not subject to standard topology restrictions. These changes are crucial to maintain network resilience and accommodate future expansion.
 
-## Community Discussion
+**Community Discussion**
 Link to forum discussion: [Increasing DFINITY Node Count and NNS Topology Exception](https://forum.dfinity.org/t/increasing-dfinity-node-count-and-nns-topology-exception/41654/1)
