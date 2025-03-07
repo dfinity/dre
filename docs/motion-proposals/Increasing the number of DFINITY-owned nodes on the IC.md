@@ -1,7 +1,4 @@
-## Motion Proposal Draft: Increase of DFINITY-Owned Nodes and NNS Exception in Target Topology
-
-**Title:**
-Motion Proposal – Increase DFINITY-Owned Nodes to 70 and Allow NNS Subnet Exception
+# Motion Proposal – Increase DFINITY-Owned Nodes to 70 and Allow NNS Subnet Exception
 
 **Summary:**
 This motion proposal requests that DFINITY be permitted to expand its operating node count from 42 to 70. In addition, it seeks an exception for the NNS subnet, allowing it to include 3 DFINITY nodes that are exempt from the standard topology restrictions (i.e., the limits of one node per data center owner, per data center, and per node provider). These modifications are essential to ensure sufficient spare capacity for maintenance, support ongoing redeployments, and facilitate the planned expansion of application subnets.
