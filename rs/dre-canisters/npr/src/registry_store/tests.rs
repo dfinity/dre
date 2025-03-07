@@ -1,22 +1,36 @@
 use super::*;
-use ic_registry_keys::NODE_RECORD_KEY_PREFIX;
-use ic_stable_structures::memory_manager::{MemoryId, MemoryManager, VirtualMemory};
+use ic_stable_structures::memory_manager::{MemoryId, MemoryManager};
 use ic_stable_structures::DefaultMemoryImpl;
-use ic_types::PrincipalId;
 use std::cell::RefCell;
-use std::collections::HashSet;
 
-type VM = VirtualMemory<DefaultMemoryImpl>;
+thread_local! {
+    static STATE: RefCell<DummyState> = RefCell::new({
+        let mgr = MemoryManager::init(DefaultMemoryImpl::default());
+        DummyState {
+            local_registry: StableBTreeMap::init(mgr.get(MemoryId::new(0))),
+        }
+    });
+}
+struct DummyState {
+    local_registry: StableBTreeMap<StorableRegistryKey, StorableRegistryValue, VM>,
+}
+impl RegistryData for DummyState {
+    fn with_local_registry<R>(f: impl FnOnce(&StableLocalRegistry) -> R) -> R {
+        STATE.with_borrow(|state| f(&state.local_registry))
+    }
 
-const DELETED_KEY: &str = "\
-    node_record_\
-    2hkvg-f3qgx-b5zoa-nz4k4-7q5v2-fiohf-x7o45-v6hds-5gf6w-o6lf6-gae";
+    fn with_local_registry_mut<R>(f: impl FnOnce(&mut StableLocalRegistry) -> R) -> R {
+        STATE.with_borrow_mut(|state| f(&mut state.local_registry))
+    }
+}
 
-pub fn add_record_helper(store: &mut CanisterRegistryStore<VM>, key: &str, version: u64, value: Option<u64>) {
-    store.local_registry.insert(
-        StorableRegistryKey::new(key.to_string(), v(version)),
-        StorableRegistryValue(value.map(|v| vec![v as u8])),
-    );
+pub fn add_record_helper(key: &str, version: u64, value: Option<u64>) {
+    STATE.with_borrow_mut(|store| {
+        store.local_registry.insert(
+            StorableRegistryKey::new(key.to_string(), v(version)),
+            StorableRegistryValue(value.map(|v| vec![v as u8])),
+        );
+    });
 }
 
 #[derive(PartialEq, Eq, Debug)]
@@ -36,22 +50,25 @@ fn v(v: u64) -> RegistryVersion {
 
 #[test]
 fn test_absent_after_delete() {
-    let mgr = MemoryManager::init(DefaultMemoryImpl::default());
-    let mut store: CanisterRegistryStore<VM> = CanisterRegistryStore::init(mgr.get(MemoryId::new(0)));
+    use ic_base_types::PrincipalId;
+    use ic_registry_keys::NODE_RECORD_KEY_PREFIX;
 
-    add_record_helper(&mut store, DELETED_KEY, 39662, Some(42));
-    add_record_helper(&mut store, DELETED_KEY, 39663, None);
-    add_record_helper(&mut store, DELETED_KEY, 39664, Some(42));
-    add_record_helper(&mut store, DELETED_KEY, 39779, Some(42));
-    add_record_helper(&mut store, DELETED_KEY, 39801, None);
+    const DELETED_KEY: &str = "\
+    node_record_\
+    2hkvg-f3qgx-b5zoa-nz4k4-7q5v2-fiohf-x7o45-v6hds-5gf6w-o6lf6-gae";
+
+    add_record_helper(DELETED_KEY, 39662, Some(42));
+    add_record_helper(DELETED_KEY, 39663, None);
+    add_record_helper(DELETED_KEY, 39664, Some(42));
+    add_record_helper(DELETED_KEY, 39779, Some(42));
+    add_record_helper(DELETED_KEY, 39801, None);
     add_record_helper(
-        &mut store,
         &format!("{}{}", NODE_RECORD_KEY_PREFIX, PrincipalId::new_user_test_id(42),),
         39_972,
         Some(32),
     );
 
-    let result = store.get_key_family(NODE_RECORD_KEY_PREFIX, RegistryVersion::new(39_972));
+    let result = CanisterRegistryStore::<DummyState>::get_key_family(NODE_RECORD_KEY_PREFIX, RegistryVersion::new(39_972));
 
     assert_eq!(
         result,
@@ -61,40 +78,19 @@ fn test_absent_after_delete() {
 
 #[test]
 fn empty_registry_should_report_zero_as_latest_version() {
-    let mgr = MemoryManager::init(DefaultMemoryImpl::default());
-    let store: CanisterRegistryStore<VM> = CanisterRegistryStore::init(mgr.get(MemoryId::new(0)));
-
-    assert_eq!(store.get_latest_version(), ZERO_REGISTRY_VERSION);
+    assert_eq!(CanisterRegistryStore::<DummyState>::get_latest_version(), ZERO_REGISTRY_VERSION);
 }
 
 #[test]
 fn can_retrieve_entries_correctly() {
-    let mgr = MemoryManager::init(DefaultMemoryImpl::default());
-    let store = Rc::new(RefCell::new(CanisterRegistryStore::init(mgr.get(MemoryId::new(0)))));
+    use std::collections::HashSet;
 
-    let set = {
-        let store = Rc::clone(&store);
-        move |key: &str, ver: u64| add_record_helper(&mut store.borrow_mut(), key, ver, Some(ver))
+    let set = |key: &str, ver: u64| add_record_helper(key, ver, Some(ver));
+    let rem = |key: &str, ver: u64| add_record_helper(key, ver, None);
+    let get = |key: &str, ver: u64| {
+        CanisterRegistryStore::<DummyState>::get_versioned_value(key, v(ver)).map(|ok_record| ok_record.map(|test_value| TestValue { test_value }))
     };
-
-    let rem = {
-        let store = Rc::clone(&store);
-        move |key: &str, ver: u64| add_record_helper(&mut store.borrow_mut(), key, ver, None)
-    };
-
-    let get = {
-        let store = Rc::clone(&store);
-        move |key: &str, ver: u64| {
-            store
-                .borrow()
-                .get_versioned_value(key, v(ver))
-                .map(|ok_record| ok_record.map(|test_value| TestValue { test_value }))
-        }
-    };
-    let family = {
-        let store = Rc::clone(&store);
-        move |key_prefix: &str, t: u64| store.borrow().get_key_family(key_prefix, v(t))
-    };
+    let family = |key_prefix: &str, t: u64| CanisterRegistryStore::<DummyState>::get_key_family(key_prefix, v(t));
 
     set("A", 1);
     set("A", 3);
@@ -123,7 +119,7 @@ fn can_retrieve_entries_correctly() {
     }
 
     let latest_version = 8;
-    assert_eq!(store.borrow().get_latest_version(), v(latest_version));
+    assert_eq!(CanisterRegistryStore::<DummyState>::get_latest_version(), v(latest_version));
 
     assert!(get("A", 0).unwrap().is_none());
     assert_eq!(get("A", 1).unwrap().as_ref().unwrap(), &value(1));

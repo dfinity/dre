@@ -1,127 +1,36 @@
-use candid::{CandidType, Decode, Encode};
+use crate::metrics_types::{SubnetIdStored, SubnetMetricsStored, SubnetMetricsStoredKey, TimestampNanos};
+use crate::storage::VM;
 use ic_base_types::SubnetId;
 use ic_cdk::api::call::CallResult;
-use ic_management_canister_types::NodeMetrics;
 use ic_management_canister_types::{NodeMetricsHistoryArgs, NodeMetricsHistoryResponse};
-use ic_stable_structures::storable::Bound;
-use ic_stable_structures::{StableBTreeMap, Storable};
-use itertools::Itertools;
-use serde::Deserialize;
-use std::borrow::Cow;
-use std::cell::{Ref, RefCell};
+use ic_stable_structures::StableBTreeMap;
 use std::collections::{BTreeMap, HashSet};
-use std::rc::Rc;
+use std::marker::PhantomData;
+pub type StableSubnetsMetrics = StableBTreeMap<SubnetMetricsStoredKey, SubnetMetricsStored, VM>;
+pub type StableLastTimestampPerSubnet = StableBTreeMap<SubnetIdStored, TimestampNanos, VM>;
 
-pub(crate) type TimestampNanos = u64;
+pub trait MetricsManagerData {
+    fn with_subnets_to_retry<R>(f: impl FnOnce(&HashSet<SubnetId>) -> R) -> R;
+    fn with_subnets_to_retry_mut<R>(f: impl FnOnce(&mut HashSet<SubnetId>) -> R) -> R;
 
-// Maximum sizes for the storable types chosen as result of test `max_bound_size`
-const MAX_BYTES_SUBNET_ID_STORED: u32 = 38;
-const MAX_BYTES_NODE_METRICS_STORED_KEY: u32 = 60;
-const MAX_BYTES_NODE_METRICS_STORED: u32 = 76;
+    fn with_subnets_metrics<R>(f: impl FnOnce(&StableSubnetsMetrics) -> R) -> R;
+    fn with_subnets_metrics_mut<R>(f: impl FnOnce(&mut StableSubnetsMetrics) -> R) -> R;
 
-#[test]
-fn max_bound_size() {
-    use candid::Principal;
-    use ic_base_types::PrincipalId;
-
-    let max_principal_id = PrincipalId::from(Principal::from_slice(&[0xFF; 29]));
-
-    let max_subnet_id_stored = SubnetIdStored(max_principal_id.into());
-    let max_node_metrics_stored_key = SubnetMetricsStoredKey {
-        timestamp_nanos: u64::MAX,
-        subnet_id: max_principal_id.into(),
-    };
-    let max_node_metrics_stored = SubnetMetricsStored(vec![NodeMetrics {
-        node_id: max_principal_id,
-        num_blocks_proposed_total: u64::MAX,
-        num_block_failures_total: u64::MAX,
-    }]);
-
-    assert_eq!(max_subnet_id_stored.to_bytes().len(), MAX_BYTES_SUBNET_ID_STORED as usize);
-
-    assert_eq!(max_node_metrics_stored_key.to_bytes().len(), MAX_BYTES_NODE_METRICS_STORED_KEY as usize);
-
-    assert_eq!(max_node_metrics_stored.to_bytes().len(), MAX_BYTES_NODE_METRICS_STORED as usize);
+    fn with_last_timestamp_per_subnet<R>(f: impl FnOnce(&StableLastTimestampPerSubnet) -> R) -> R;
+    fn with_last_timestamp_per_subnet_mut<R>(f: impl FnOnce(&mut StableLastTimestampPerSubnet) -> R) -> R;
 }
 
-#[derive(Clone, Debug, CandidType, Deserialize, PartialEq, Eq, PartialOrd, Ord)]
-pub(crate) struct SubnetIdStored(pub(crate) SubnetId);
-impl Storable for SubnetIdStored {
-    fn to_bytes(&self) -> std::borrow::Cow<[u8]> {
-        Cow::Owned(Encode!(self).unwrap())
-    }
-
-    fn from_bytes(bytes: std::borrow::Cow<[u8]>) -> Self {
-        Decode!(bytes.as_ref(), Self).unwrap()
-    }
-
-    const BOUND: Bound = Bound::Bounded {
-        max_size: MAX_BYTES_SUBNET_ID_STORED,
-        is_fixed_size: false,
-    };
+pub struct MetricsManager<D: MetricsManagerData> {
+    _metrics_manager_data: PhantomData<D>,
 }
 
-#[derive(Clone, Debug, CandidType, Deserialize, PartialEq, Eq, PartialOrd, Ord)]
-pub(crate) struct SubnetMetricsStoredKey {
-    pub timestamp_nanos: TimestampNanos,
-    pub subnet_id: SubnetId,
-}
-
-impl Storable for SubnetMetricsStoredKey {
-    fn to_bytes(&self) -> std::borrow::Cow<[u8]> {
-        Cow::Owned(Encode!(self).unwrap())
-    }
-
-    fn from_bytes(bytes: std::borrow::Cow<[u8]>) -> Self {
-        Decode!(bytes.as_ref(), Self).unwrap()
-    }
-
-    const BOUND: Bound = Bound::Bounded {
-        max_size: MAX_BYTES_NODE_METRICS_STORED_KEY,
-        is_fixed_size: false,
-    };
-}
-
-#[derive(Clone, Debug, CandidType, Deserialize)]
-pub(crate) struct SubnetMetricsStored(pub(crate) Vec<NodeMetrics>);
-
-impl Storable for SubnetMetricsStored {
-    fn to_bytes(&self) -> std::borrow::Cow<[u8]> {
-        Cow::Owned(Encode!(self).unwrap())
-    }
-
-    fn from_bytes(bytes: std::borrow::Cow<[u8]>) -> Self {
-        Decode!(bytes.as_ref(), Self).unwrap()
-    }
-
-    const BOUND: Bound = Bound::Bounded {
-        // This size supports subnets with max 400 nodes
-        max_size: MAX_BYTES_NODE_METRICS_STORED * 400,
-        is_fixed_size: false,
-    };
-}
-
-pub struct MetricsManager<Memory: ic_stable_structures::Memory> {
-    pub subnets_to_retry: HashSet<SubnetId>,
-    subnets_metrics: StableBTreeMap<SubnetMetricsStoredKey, SubnetMetricsStored, Memory>,
-    last_timestamp_per_subnet: StableBTreeMap<SubnetIdStored, TimestampNanos, Memory>,
-}
-
-impl<Memory: ic_stable_structures::Memory> MetricsManager<Memory> {
-    pub fn init(subnets_metrics_memory: Memory, last_timestamp_per_subnet_memory: Memory, subnets_to_retry: HashSet<SubnetId>) -> Self {
-        Self {
-            subnets_to_retry,
-            subnets_metrics: StableBTreeMap::init(subnets_metrics_memory),
-            last_timestamp_per_subnet: StableBTreeMap::init(last_timestamp_per_subnet_memory),
-        }
-    }
-
-    pub async fn retry_subnets(rc_self: Rc<RefCell<Self>>) {
-        let subnets_to_retry: Vec<SubnetId> = rc_self.borrow().subnets_to_retry.clone().into_iter().collect();
+impl<D: MetricsManagerData> MetricsManager<D> {
+    pub async fn retry_metrics_fetching() {
+        let subnets_to_retry: Vec<SubnetId> = D::with_subnets_to_retry(|subnets_to_retry| subnets_to_retry.clone().into_iter().collect());
 
         if !subnets_to_retry.is_empty() {
             ic_cdk::println!("Retrying metrics for subnets: {:?}", subnets_to_retry);
-            Self::sync_subnets_metrics(rc_self, subnets_to_retry).await
+            Self::sync_subnets_metrics(subnets_to_retry).await
         }
     }
 
@@ -164,11 +73,12 @@ impl<Memory: ic_stable_structures::Memory> MetricsManager<Memory> {
         futures::future::join_all(subnets_node_metrics).await.into_iter().collect()
     }
 
-    pub async fn sync_subnets_metrics(rc_self: Rc<RefCell<Self>>, subnets: Vec<SubnetId>) {
+    pub async fn sync_subnets_metrics(subnets: Vec<SubnetId>) {
         let last_timestamp_per_subnet = subnets
             .into_iter()
             .map(|subnet| {
-                let last_metrics_ts = rc_self.borrow().last_timestamp_per_subnet.get(&SubnetIdStored(subnet));
+                let last_metrics_ts =
+                    D::with_last_timestamp_per_subnet(|last_timestamp_per_subnet| last_timestamp_per_subnet.get(&SubnetIdStored(subnet)));
                 (subnet, last_metrics_ts.unwrap_or_default())
             })
             .collect();
@@ -184,25 +94,26 @@ impl<Memory: ic_stable_structures::Memory> MetricsManager<Memory> {
                         .max()
                         .unwrap_or(*last_timestamp_per_subnet.get(&subnet_id).expect("last_timestamp_per_subnet exists"));
 
-                    rc_self
-                        .borrow_mut()
-                        .last_timestamp_per_subnet
-                        .insert(SubnetIdStored(subnet_id), last_timestamp);
-
-                    // Insert each fetched metric entry into our node metrics map.
-                    history.into_iter().for_each(|entry| {
-                        let key = SubnetMetricsStoredKey {
-                            subnet_id,
-                            timestamp_nanos: entry.timestamp_nanos,
-                        };
-                        rc_self.borrow_mut().subnets_metrics.insert(key, SubnetMetricsStored(entry.node_metrics));
+                    D::with_last_timestamp_per_subnet_mut(|last_timestamp_per_subnet| {
+                        last_timestamp_per_subnet.insert(SubnetIdStored(subnet_id), last_timestamp)
                     });
 
-                    rc_self.borrow_mut().subnets_to_retry.remove(&subnet_id);
+                    // Insert each fetched metric entry into our node metrics map.
+                    D::with_subnets_metrics_mut(|subnets_metrics| {
+                        history.into_iter().for_each(|entry| {
+                            let key = SubnetMetricsStoredKey {
+                                subnet_id,
+                                timestamp_nanos: entry.timestamp_nanos,
+                            };
+                            subnets_metrics.insert(key, SubnetMetricsStored(entry.node_metrics));
+                        });
+                    });
+                    D::with_subnets_to_retry_mut(|subnets_to_retry| subnets_to_retry.remove(&subnet_id));
                 }
                 Err((code, msg)) => {
                     ic_cdk::println!("Error fetching metrics for subnet {}: CODE: {:?} MSG: {}", subnet_id, code, msg);
-                    rc_self.borrow_mut().subnets_to_retry.insert(subnet_id);
+
+                    D::with_subnets_to_retry_mut(|subnets_to_retry| subnets_to_retry.insert(subnet_id));
                 }
             }
         }

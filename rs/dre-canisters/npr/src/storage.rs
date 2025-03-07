@@ -1,98 +1,108 @@
-use crate::metrics::{MetricsManager, SubnetIdStored};
-use crate::registry::RegistryClient;
-use crate::registry_store::CanisterRegistryStore;
+use crate::metrics::{MetricsManager, MetricsManagerData, StableLastTimestampPerSubnet, StableSubnetsMetrics};
+use crate::metrics_types::{SubnetIdStored, SubnetMetricsStored, SubnetMetricsStoredKey, TimestampNanos};
+use crate::registry_store::{CanisterRegistryStore, RegistryData, StableLocalRegistry};
+use crate::registry_store_types::{StorableRegistryKey, StorableRegistryValue};
+use ic_base_types::SubnetId;
 use ic_stable_structures::memory_manager::{MemoryId, MemoryManager, VirtualMemory};
-use ic_stable_structures::{DefaultMemoryImpl, StableVec};
+use ic_stable_structures::{DefaultMemoryImpl, StableBTreeMap, StableVec};
 use std::cell::RefCell;
-use std::rc::Rc;
+use std::collections::HashSet;
 
-const REGISTRY_STORE_MEMORY_ID: MemoryId = MemoryId::new(0);
-
-const METRICS_MANAGER_SUBNETS_METRICS_MEMORY_ID: MemoryId = MemoryId::new(1);
-const METRICS_MANAGER_LAST_TIMESTAMP_PER_SUBNET_MEMORY_ID: MemoryId = MemoryId::new(2);
-const METRICS_MANAGER_SUBNETS_TO_RETRY_MEMORY_ID: MemoryId = MemoryId::new(3);
-
-type VM = VirtualMemory<DefaultMemoryImpl>;
+pub type RegistryStoreInstance = CanisterRegistryStore<State>;
+pub type MetricsManagerInstance = MetricsManager<State>;
+pub type VM = VirtualMemory<DefaultMemoryImpl>;
 
 thread_local! {
     static MEMORY_MANAGER: RefCell<MemoryManager<DefaultMemoryImpl>> =
         RefCell::new(MemoryManager::init(DefaultMemoryImpl::default()));
 
-    static STATE: RefCell<State> = RefCell::new(State::new());
-}
-
-pub struct State {
-    registry_store: Rc<RefCell<CanisterRegistryStore<VM>>>,
-
-    registry_client: RegistryClient<VM>,
-
-    metrics_manager: Rc<RefCell<MetricsManager<VM>>>,
-}
-
-impl Default for State {
-    fn default() -> Self {
-        todo!()
-    }
-}
-
-impl State {
-    fn new() -> Self {
-        let registry_store =
-            with_memory_manager(|memory_manager| Rc::new(RefCell::new(CanisterRegistryStore::init(memory_manager.get(REGISTRY_STORE_MEMORY_ID)))));
-
-        let registry_client = RegistryClient::init(Rc::clone(&registry_store));
-        let metrics_manager = with_memory_manager(|memory_manager| {
-            let subnets_to_retry_stored: StableVec<SubnetIdStored, _> =
-                StableVec::init(memory_manager.get(METRICS_MANAGER_SUBNETS_TO_RETRY_MEMORY_ID)).expect("Failed to initialize retry subnets");
-            let subnets_to_retry = subnets_to_retry_stored.iter().map(|subnet_id| subnet_id.0).collect();
-
-            MetricsManager::init(
-                memory_manager.get(METRICS_MANAGER_SUBNETS_METRICS_MEMORY_ID),
-                memory_manager.get(METRICS_MANAGER_LAST_TIMESTAMP_PER_SUBNET_MEMORY_ID),
-                subnets_to_retry,
-            )
-        });
-
-        Self {
-            registry_store,
-            registry_client,
-            metrics_manager: Rc::new(RefCell::new(metrics_manager)),
-        }
-    }
+    static STATE: RefCell<State> = RefCell::new(State::init());
 }
 
 fn with_memory_manager<R>(f: impl FnOnce(&MemoryManager<DefaultMemoryImpl>) -> R) -> R {
     MEMORY_MANAGER.with(|memory_manager| f(&memory_manager.borrow()))
 }
 
-pub fn with_registry_client<R>(f: impl FnOnce(&RegistryClient<VM>) -> R) -> R {
-    STATE.with_borrow(|state| f(&state.registry_client))
+const REGISTRY_STORE_LOCAL_REGISTRY_MEMORY_ID: MemoryId = MemoryId::new(0);
+
+const METRICS_MANAGER_SUBNETS_METRICS_MEMORY_ID: MemoryId = MemoryId::new(1);
+const METRICS_MANAGER_LAST_TIMESTAMP_PER_SUBNET_MEMORY_ID: MemoryId = MemoryId::new(2);
+const METRICS_MANAGER_SUBNETS_TO_RETRY_MEMORY_ID: MemoryId = MemoryId::new(3);
+
+pub struct State {
+    subnets_to_retry: HashSet<SubnetId>,
+    local_registry: StableBTreeMap<StorableRegistryKey, StorableRegistryValue, VM>,
+    subnets_metrics: StableBTreeMap<SubnetMetricsStoredKey, SubnetMetricsStored, VM>,
+    last_timestamp_per_subnet: StableBTreeMap<SubnetIdStored, TimestampNanos, VM>,
 }
 
-pub fn with_registry_store<R>(f: impl FnOnce(&Rc<RefCell<CanisterRegistryStore<VM>>>) -> R) -> R {
-    STATE.with_borrow(|state| f(&state.registry_store))
+impl State {
+    fn init() -> Self {
+        let local_registry = with_memory_manager(|mgr| StableBTreeMap::init(mgr.get(REGISTRY_STORE_LOCAL_REGISTRY_MEMORY_ID)));
+
+        let subnets_metrics = with_memory_manager(|mgr| StableBTreeMap::init(mgr.get(METRICS_MANAGER_SUBNETS_METRICS_MEMORY_ID)));
+
+        let last_timestamp_per_subnet = with_memory_manager(|mgr| StableBTreeMap::init(mgr.get(METRICS_MANAGER_LAST_TIMESTAMP_PER_SUBNET_MEMORY_ID)));
+
+        let subnets_to_retry_stored: StableVec<SubnetIdStored, VM> =
+            with_memory_manager(|mgr| StableVec::init(mgr.get(METRICS_MANAGER_SUBNETS_TO_RETRY_MEMORY_ID)))
+                .expect("Failed to initialize subnets_to_retry_stored");
+        let subnets_to_retry: HashSet<SubnetId> = subnets_to_retry_stored.iter().map(|subnet_id_stored| subnet_id_stored.0).collect();
+
+        Self {
+            subnets_to_retry,
+            local_registry,
+            subnets_metrics,
+            last_timestamp_per_subnet,
+        }
+    }
 }
 
-pub fn with_metrics_manager<R>(f: impl FnOnce(&Rc<RefCell<MetricsManager<VM>>>) -> R) -> R {
-    STATE.with_borrow(|state| f(&state.metrics_manager))
+impl RegistryData for State {
+    fn with_local_registry<R>(f: impl FnOnce(&StableLocalRegistry) -> R) -> R {
+        STATE.with_borrow(|state| f(&state.local_registry))
+    }
+
+    fn with_local_registry_mut<R>(f: impl FnOnce(&mut StableLocalRegistry) -> R) -> R {
+        STATE.with_borrow_mut(|state| f(&mut state.local_registry))
+    }
 }
 
-pub fn reset_stable_memory() {
-    MEMORY_MANAGER.with(|mm| *mm.borrow_mut() = MemoryManager::init(DefaultMemoryImpl::default()));
-    STATE.with(|cell| *cell.borrow_mut() = State::new());
+impl MetricsManagerData for State {
+    fn with_subnets_to_retry<R>(f: impl FnOnce(&HashSet<SubnetId>) -> R) -> R {
+        STATE.with_borrow(|state| f(&state.subnets_to_retry))
+    }
+
+    fn with_subnets_to_retry_mut<R>(f: impl FnOnce(&mut HashSet<SubnetId>) -> R) -> R {
+        STATE.with_borrow_mut(|state| f(&mut state.subnets_to_retry))
+    }
+
+    fn with_subnets_metrics<R>(f: impl FnOnce(&StableSubnetsMetrics) -> R) -> R {
+        STATE.with_borrow(|state| f(&state.subnets_metrics))
+    }
+
+    fn with_subnets_metrics_mut<R>(f: impl FnOnce(&mut StableSubnetsMetrics) -> R) -> R {
+        STATE.with_borrow_mut(|state| f(&mut state.subnets_metrics))
+    }
+
+    fn with_last_timestamp_per_subnet<R>(f: impl FnOnce(&StableLastTimestampPerSubnet) -> R) -> R {
+        STATE.with_borrow(|state| f(&state.last_timestamp_per_subnet))
+    }
+
+    fn with_last_timestamp_per_subnet_mut<R>(f: impl FnOnce(&mut StableLastTimestampPerSubnet) -> R) -> R {
+        STATE.with_borrow_mut(|state| f(&mut state.last_timestamp_per_subnet))
+    }
 }
 
 pub fn pre_upgrade() {
-    with_memory_manager(|memory_manager| {
-        let memory = memory_manager.get(METRICS_MANAGER_SUBNETS_TO_RETRY_MEMORY_ID);
-        let subnets_to_retry_stored: StableVec<SubnetIdStored, _> = StableVec::new(memory).expect("Failed to initialize retry subnets");
+    let subnets_to_retry = STATE.with_borrow(|state| state.subnets_to_retry.clone());
+    let subnets_to_retry_stored: StableVec<SubnetIdStored, VM> =
+        with_memory_manager(|mgr| StableVec::new(mgr.get(METRICS_MANAGER_SUBNETS_TO_RETRY_MEMORY_ID)))
+            .expect("Failed to initialize subnets_to_retry_stored");
 
-        with_metrics_manager(|metrics_manager| {
-            for subnet_id in metrics_manager.borrow().subnets_to_retry.iter() {
-                subnets_to_retry_stored
-                    .push(&SubnetIdStored(*subnet_id))
-                    .expect("Failed to push subnet id");
-            }
-        })
-    })
+    for subnet in subnets_to_retry {
+        subnets_to_retry_stored
+            .push(&SubnetIdStored(subnet))
+            .expect("Failed to push subnet to subnets_to_retry_stored");
+    }
 }
