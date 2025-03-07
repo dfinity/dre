@@ -81,7 +81,7 @@ impl ExecutableCommand for Motion {
         };
 
         Submitter::from(&self.submission_parameters)
-            .propose(
+            .propose_and_print(
                 ctx.governance_executor().await?.execution(request),
                 ForumPostKind::Motion {
                     title: title.clone(),

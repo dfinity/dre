@@ -1,4 +1,4 @@
-use std::fmt::Debug;
+use std::fmt::{self, Debug, Display};
 
 use futures::future::BoxFuture;
 use ic_nns_governance_api::pb::v1::{manage_neuron_response::MakeProposalResponse, MakeProposalRequest};
@@ -9,6 +9,7 @@ use url::Url;
 /// of the kind of responses that contain a proposal ID.
 /// Not every proposal response from ic-admin can be deserialized
 /// into a proposal ID, but most of them can.
+#[derive(Clone)]
 pub struct ProposalResponseWithId(u64);
 
 impl From<ProposalResponseWithId> for u64 {
@@ -21,6 +22,12 @@ impl TryFrom<u64> for ProposalResponseWithId {
     type Error = anyhow::Error;
     fn try_from(u: u64) -> Result<Self, Self::Error> {
         Ok(Self(u))
+    }
+}
+
+impl Display for ProposalResponseWithId {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "proposal {}", self.0)
     }
 }
 

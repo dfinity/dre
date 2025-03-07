@@ -24,11 +24,7 @@ class AmnesiacReconcilerState(ReconcilerState):
     """Reconciler state that uses a temporary directory for storage."""
 
     def __init__(self) -> None:
-        self.tempdir = tempfile.TemporaryDirectory()
-        super().__init__(pathlib.Path(self.tempdir.name))
-
-    def __del__(self) -> None:
-        self.tempdir.cleanup()
+        super().__init__()
 
 
 class MockActiveVersionProvider(object):

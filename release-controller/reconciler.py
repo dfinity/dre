@@ -10,7 +10,6 @@ import typing
 import urllib.parse
 
 sys.path.append(os.path.join(os.path.dirname(__file__)))
-import __fix_import_paths  # isort:skip  # noqa: F401 # pylint: disable=W0611
 import dre_cli
 import dryrun
 import release_index
@@ -25,6 +24,7 @@ from github import Github
 from google_docs import ReleaseNotesClient, ReleaseNotesClientProtocol
 from governance import GovernanceCanister
 from prometheus import ICPrometheus
+from prometheus_client import start_http_server, Gauge
 from publish_notes import PublishNotesClient, PublishNotesClientProtocol
 from pydiscourse import DiscourseClient
 from release_index_loader import DevReleaseLoader
@@ -35,8 +35,22 @@ from release_notes import (
     SecurityReleaseNotesRequest,
     OrdinaryReleaseNotesRequest,
 )
-from util import version_name, release_controller_cache_directory
+from util import version_name
 from watchdog import Watchdog
+
+
+LAST_CYCLE_SUCCESS_TIMESTAMP_SECONDS = Gauge(
+    "last_cycle_success_timestamp_seconds",
+    "The UNIX timestamp of the last cycle that completed successfully",
+)
+LAST_CYCLE_START_TIMESTAMP_SECONDS = Gauge(
+    "last_cycle_start_timestamp_seconds",
+    "The UNIX timestamp of the start of the last cycle",
+)
+LAST_CYCLE_SUCCESSFUL = Gauge(
+    "last_cycle_successful",
+    "1 if the last cycle was successful, 0 if it was not",
+)
 
 
 class CustomFormatter(logging.Formatter):
@@ -54,15 +68,15 @@ class CustomFormatter(logging.Formatter):
         red = ""
         bold_red = ""
         reset = ""
-    fmt = "%(asctime)s %(levelname)8s  %(name)-37s — %(message)s"
+    shortfmt = ":%(name)-20s — %(message)s"
     longfmt = "%(asctime)s %(levelname)13s  %(message)s\n" "%(name)37s"
 
     FORMATS = {
-        logging.DEBUG: blue + fmt + reset,
-        logging.INFO: green + fmt + reset,
-        logging.WARNING: yellow + fmt + reset,
-        logging.ERROR: red + fmt + reset,
-        logging.CRITICAL: bold_red + fmt + reset,
+        logging.DEBUG: blue + "DD" + shortfmt + reset,
+        logging.INFO: green + "II" + shortfmt + reset,
+        logging.WARNING: yellow + "WW" + shortfmt + reset,
+        logging.ERROR: red + "EE" + shortfmt + reset,
+        logging.CRITICAL: bold_red + "!!" + shortfmt + reset,
     }
 
     LONG_FORMATS = {
@@ -73,8 +87,11 @@ class CustomFormatter(logging.Formatter):
         logging.CRITICAL: bold_red + longfmt + reset,
     }
 
+    def __init__(self, one_line_logs: bool):
+        self.one_line_logs = one_line_logs
+
     def format(self, record: logging.LogRecord) -> str:
-        if len(record.name) > 37 or True:
+        if not self.one_line_logs:
             log_fmt = self.LONG_FORMATS.get(record.levelno)
         else:
             log_fmt = self.FORMATS.get(record.levelno)
@@ -291,6 +308,7 @@ class Reconciler:
                         revlogger.warning(
                             "%s.  However, contrary to recorded failure, proposal"
                             " to elect %s was indeed successfully submitted as ID %s.",
+                            prop,
                             release_commit,
                             discovered_proposal["id"],
                         )
@@ -407,7 +425,7 @@ class Reconciler:
                         revlogger.info("%s", success)
                     except Exception:
                         fail = prop.record_malfunction()
-                        revlogger.error("%s", fail)
+                        revlogger.exception("%s", fail)
 
                 rclogger.debug("Updating forum posts after processing versions.")
                 # Update the forum posts in case the proposal was created.
@@ -423,7 +441,9 @@ dre_repo = "dfinity/dre"
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser(
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter
+    )
     parser.add_argument(
         "--dry-run",
         action="store_true",
@@ -432,18 +452,31 @@ def main() -> None:
     )
     parser.add_argument("--verbose", "--debug", action="store_true", dest="verbose")
     parser.add_argument(
+        "--one-line-logs",
+        action="store_true",
+        dest="one_line_logs",
+        help="Make log lines one-line without timestamps (useful in production container for better filtering)",
+    )
+    parser.add_argument(
         "--loop-every",
         action="store",
         type=int,
         dest="loop_every",
         default=60,
-        help="Time to wait between loop executions.  If 0 or less, exit immediately after the first loop.  Defaults to %(default)s seconds.",
+        help="Time to wait (in seconds) between loop executions.  If 0 or less, exit immediately after the first loop.",
     )
     parser.add_argument(
         "--skip-preloading-state",
         action="store_true",
         dest="skip_preloading_state",
         help="Do not fill the reconciler state upon startup with the known proposals from the governance canister.",
+    )
+    parser.add_argument(
+        "--telemetry_port",
+        type=int,
+        dest="telemetry_port",
+        default=9467,
+        help="Set the Prometheus telemetry port to listen on.  Telemetry is only served if --loop-every is greater than 0.",
     )
     parser.add_argument(
         "dotenv_file",
@@ -471,7 +504,7 @@ def main() -> None:
 
     ch = logging.StreamHandler()
     ch.setLevel(logging.DEBUG if verbose else logging.INFO)
-    ch.setFormatter(CustomFormatter())
+    ch.setFormatter(CustomFormatter(opts.one_line_logs))
     root.addHandler(ch)
 
     # Prep the program for longer timeouts.
@@ -533,15 +566,12 @@ def main() -> None:
             dre_cli.Auth(
                 key_path=os.environ["PROPOSER_KEY_FILE"],
                 neuron_id=os.environ["PROPOSER_NEURON_ID"],
-            )
+            ),
         )
         if not dry_run
         else dryrun.DRECli()
     )
     state = reconciler_state.ReconcilerState(
-        pathlib.Path(
-            os.environ.get("RECONCILER_STATE_DIR", release_controller_cache_directory())
-        ),
         None if skip_preloading_state else dre.get_election_proposals_by_version,
     )
     slack_announcer = (
@@ -568,10 +598,16 @@ def main() -> None:
         dre=dre,
     )
 
+    if opts.loop_every > 0:
+        start_http_server(port=int(opts.telemetry_port))
+
     while True:
         try:
             now = time.time()
+            LAST_CYCLE_START_TIMESTAMP_SECONDS.set(int(time.time()))
             reconciler.reconcile()
+            LAST_CYCLE_SUCCESS_TIMESTAMP_SECONDS.set(int(time.time()))
+            LAST_CYCLE_SUCCESSFUL.set(1)
             watchdog.report_healthy()
             if opts.loop_every <= 0:
                 break
@@ -586,6 +622,7 @@ def main() -> None:
             if opts.loop_every <= 0:
                 raise
             else:
+                LAST_CYCLE_SUCCESSFUL.set(0)
                 LOGGER.exception(
                     f"Failed to reconcile.  Retrying in {opts.loop_every} seconds.  Traceback:"
                 )

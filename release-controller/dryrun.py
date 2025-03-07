@@ -225,7 +225,9 @@ class PublishNotesClient(object):
 
 
 class DRECli(dre_cli.DRECli):
-    def __init__(self) -> None:
+    def __init__(
+        self,
+    ) -> None:
         super().__init__()
         self._logger = LOGGER.getChild(self.__class__.__name__)
 

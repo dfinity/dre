@@ -1,7 +1,6 @@
 import datetime
 import logging
-import pathlib
-import os
+import time
 import typing
 import dre_cli
 
@@ -73,7 +72,6 @@ class ReconcilerState:
 
     def __init__(
         self,
-        path: pathlib.Path,
         known_proposal_retriever: typing.Callable[
             [], dict[str, dre_cli.ElectionProposal]
         ]
@@ -85,8 +83,12 @@ class ReconcilerState:
         If specified, every proposal mentioned in the known_proposals list will be
         recorded to the state database as existing during initialization.
         """
-        os.makedirs(path, exist_ok=True)
-        self.path = path
+        self.state: dict[
+            str,
+            tuple[typing.Literal["submitted"], float, int]
+            | tuple[typing.Literal["malfunction"], float],
+        ] = {}
+
         self._logger = logging.getLogger(self.__class__.__name__)
         if known_proposal_retriever:
             for replica_version, proposal in known_proposal_retriever().items():
@@ -99,34 +101,28 @@ class ReconcilerState:
                     )
                     p.record_submission(proposal["id"])
 
-    def _version_path(self, version: str) -> pathlib.Path:
-        return self.path / version
-
     def version_proposal(
         self, version: str
     ) -> NoProposal | SubmittedProposal | DREMalfunction:
         """Get the proposal ID for the given version. If the version has not been submitted, return None."""
-        version_file = self._version_path(version)
-        if not version_file.exists():
+        res = self.state.get(version)
+        if res is None:
             return NoProposal(version, self)
-        with open(version_file, encoding="utf8") as vf:
-            try:
-                return SubmittedProposal(version, self, int(vf.read()))
-            except ValueError:
-                return DREMalfunction(version, self)
+        elif isinstance(res, tuple) and res[0] == "malfunction":
+            return DREMalfunction(version, self)
+        else:
+            return SubmittedProposal(version, self, res[2])
 
     def _get_proposal_age(self, version: str) -> datetime.datetime:
-        return datetime.datetime.fromtimestamp(
-            os.path.getmtime(self._version_path(version))
-        )
+        state = self.state[version]
+        return datetime.datetime.fromtimestamp(state[1])
 
     def _record_malfunction(self, version: str) -> DREMalfunction:
         """Mark a proposal as submitted."""
-        self._version_path(version).touch()
+        self.state[version] = ("malfunction", time.time())
         return DREMalfunction(version, self)
 
     def _record_proposal_id(self, version: str, proposal_id: int) -> SubmittedProposal:
         """Save the proposal ID for the given version."""
-        with open(self._version_path(version), "w", encoding="utf8") as f:
-            f.write(str(proposal_id))
+        self.state[version] = ("submitted", time.time(), proposal_id)
         return SubmittedProposal(version, self, proposal_id)

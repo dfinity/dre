@@ -161,16 +161,19 @@ impl SubnetManager {
             all_nodes,
         )?;
 
-        for n in change.removed().iter().filter(|n| !node_ids_unhealthy.contains(&n.principal)) {
-            motivations.push(format!(
-                "replacing {} as per user request{}",
-                n.id_short(),
-                match motivation {
-                    Some(ref m) => format!(": {}", m),
-                    None => "".to_string(),
-                }
-            ));
-        }
+        motivations.push(format!(
+            "replacing {}{}",
+            change
+                .removed()
+                .iter()
+                .filter(|n| !node_ids_unhealthy.contains(&n.principal))
+                .map(|n| n.id_short())
+                .join(", "),
+            match motivation {
+                Some(ref m) => format!(": {}", m),
+                None => "".to_string(),
+            }
+        ));
 
         let motivation = format!(
                 "\n{}\n\nNOTE: The information below is provided for your convenience. Please independently verify the decentralization changes rather than relying solely on this summary.\nCode for calculating replacements is at https://github.com/dfinity/dre/blob/79066127f58c852eaf4adda11610e815a426878c/rs/decentralization/src/network.rs#L912",

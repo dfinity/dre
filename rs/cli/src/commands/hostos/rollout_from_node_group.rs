@@ -101,7 +101,7 @@ impl ExecutableCommand for RolloutFromNodeGroup {
 
         let runner_proposal = runner.hostos_rollout(nodes_to_update, &self.version, Some(summary))?;
         Submitter::from(&self.submission_parameters)
-            .propose(ctx.ic_admin_executor().await?.execution(runner_proposal), ForumPostKind::Generic)
+            .propose_and_print(ctx.ic_admin_executor().await?.execution(runner_proposal), ForumPostKind::Generic)
             .await
     }
 
