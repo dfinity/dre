@@ -54,3 +54,6 @@ For the reasons outlined above, we urge the community to support this motion pro
 ## Community Discussion
 Link to forum discussion: [Increasing DFINITY Node Count and NNS Topology Exception](https://forum.dfinity.org/t/increasing-dfinity-node-count-and-nns-topology-exception/41654/1)
 Discussion period: 26/02/2025 - 07/03/2025
+
+## Community Discussion
+Link to forum discussion: [Increasing DFINITY Node Count and NNS Topology Exception](https://forum.dfinity.org/t/increasing-dfinity-node-count-and-nns-topology-exception/41654/1)
