@@ -1,7 +1,10 @@
 use super::*;
-use ic_stable_structures::memory_manager::{MemoryId, MemoryManager};
+use ic_stable_structures::memory_manager::{MemoryId, MemoryManager, VirtualMemory};
 use ic_stable_structures::DefaultMemoryImpl;
 use std::cell::RefCell;
+
+pub type VM = VirtualMemory<DefaultMemoryImpl>;
+type RegistryStoreTest = CanisterRegistryStore<DummyState, VM>;
 
 thread_local! {
     static STATE: RefCell<DummyState> = RefCell::new({
@@ -14,12 +17,13 @@ thread_local! {
 struct DummyState {
     local_registry: StableBTreeMap<StorableRegistryKey, StorableRegistryValue, VM>,
 }
-impl RegistryData for DummyState {
-    fn with_local_registry<R>(f: impl FnOnce(&StableLocalRegistry) -> R) -> R {
+
+impl RegistryData<VM> for DummyState {
+    fn with_local_registry<R>(f: impl FnOnce(&StableLocalRegistry<VM>) -> R) -> R {
         STATE.with_borrow(|state| f(&state.local_registry))
     }
 
-    fn with_local_registry_mut<R>(f: impl FnOnce(&mut StableLocalRegistry) -> R) -> R {
+    fn with_local_registry_mut<R>(f: impl FnOnce(&mut StableLocalRegistry<VM>) -> R) -> R {
         STATE.with_borrow_mut(|state| f(&mut state.local_registry))
     }
 }
@@ -68,7 +72,7 @@ fn test_absent_after_delete() {
         Some(32),
     );
 
-    let result = CanisterRegistryStore::<DummyState>::get_key_family(NODE_RECORD_KEY_PREFIX, RegistryVersion::new(39_972));
+    let result = RegistryStoreTest::get_key_family(NODE_RECORD_KEY_PREFIX, RegistryVersion::new(39_972));
 
     assert_eq!(
         result,
@@ -78,7 +82,7 @@ fn test_absent_after_delete() {
 
 #[test]
 fn empty_registry_should_report_zero_as_latest_version() {
-    assert_eq!(CanisterRegistryStore::<DummyState>::get_latest_version(), ZERO_REGISTRY_VERSION);
+    assert_eq!(RegistryStoreTest::local_latest_version(), ZERO_REGISTRY_VERSION);
 }
 
 #[test]
@@ -88,9 +92,9 @@ fn can_retrieve_entries_correctly() {
     let set = |key: &str, ver: u64| add_record_helper(key, ver, Some(ver));
     let rem = |key: &str, ver: u64| add_record_helper(key, ver, None);
     let get = |key: &str, ver: u64| {
-        CanisterRegistryStore::<DummyState>::get_versioned_value(key, v(ver)).map(|ok_record| ok_record.map(|test_value| TestValue { test_value }))
+        RegistryStoreTest::get_versioned_value(key, v(ver)).map(|ok_record| ok_record.map(|test_value| TestValue { test_value }))
     };
-    let family = |key_prefix: &str, t: u64| CanisterRegistryStore::<DummyState>::get_key_family(key_prefix, v(t));
+    let family = |key_prefix: &str, t: u64| RegistryStoreTest::get_key_family(key_prefix, v(t));
 
     set("A", 1);
     set("A", 3);
@@ -119,7 +123,7 @@ fn can_retrieve_entries_correctly() {
     }
 
     let latest_version = 8;
-    assert_eq!(CanisterRegistryStore::<DummyState>::get_latest_version(), v(latest_version));
+    assert_eq!(RegistryStoreTest::local_latest_version(), v(latest_version));
 
     assert!(get("A", 0).unwrap().is_none());
     assert_eq!(get("A", 1).unwrap().as_ref().unwrap(), &value(1));

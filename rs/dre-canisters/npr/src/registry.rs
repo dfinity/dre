@@ -50,7 +50,7 @@ fn get_family_entries_of_version<T: RegistryEntry + Default>(version: RegistryVe
 }
 
 fn get_family_entries<T: RegistryEntry + Default>() -> IndexMap<String, (u64, T)> {
-    let latest_version = RegistryStoreInstance::get_latest_version();
+    let latest_version = RegistryStoreInstance::local_latest_version();
     get_family_entries_of_version::<T>(latest_version)
 }
 

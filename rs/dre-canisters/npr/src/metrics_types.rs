@@ -1,3 +1,4 @@
+use crate::metrics::TimestampNanos;
 use candid::{CandidType, Decode, Encode};
 use ic_base_types::SubnetId;
 use ic_management_canister_types::NodeMetrics;
@@ -5,8 +6,7 @@ use ic_stable_structures::storable::Bound;
 use ic_stable_structures::Storable;
 use serde::Deserialize;
 use std::borrow::Cow;
-
-pub type TimestampNanos = u64;
+use std::ops::Deref;
 
 // Maximum sizes for the storable types chosen as result of test `max_bound_size`
 const MAX_BYTES_SUBNET_ID_STORED: u32 = 38;
@@ -21,11 +21,11 @@ fn max_bound_size() {
     let max_principal_id = PrincipalId::from(Principal::from_slice(&[0xFF; 29]));
 
     let max_subnet_id_stored = SubnetIdStored(max_principal_id.into());
-    let max_node_metrics_stored_key = SubnetMetricsStoredKey {
+    let max_node_metrics_stored_key = StorableSubnetMetricsKey {
         timestamp_nanos: u64::MAX,
         subnet_id: max_principal_id.into(),
     };
-    let max_node_metrics_stored = SubnetMetricsStored(vec![NodeMetrics {
+    let max_node_metrics_stored = StorableSubnetMetrics(vec![NodeMetrics {
         node_id: max_principal_id,
         num_blocks_proposed_total: u64::MAX,
         num_block_failures_total: u64::MAX,
@@ -55,13 +55,26 @@ impl Storable for SubnetIdStored {
     };
 }
 
+impl Deref for SubnetIdStored {
+    type Target = SubnetId;
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
+impl From<SubnetId> for SubnetIdStored {
+    fn from(subnet_id: SubnetId) -> Self {
+        Self(subnet_id)
+    }
+}
+
 #[derive(Clone, Debug, CandidType, Deserialize, PartialEq, Eq, PartialOrd, Ord)]
-pub(crate) struct SubnetMetricsStoredKey {
+pub(crate) struct StorableSubnetMetricsKey {
     pub timestamp_nanos: TimestampNanos,
     pub subnet_id: SubnetId,
 }
 
-impl Storable for SubnetMetricsStoredKey {
+impl Storable for StorableSubnetMetricsKey {
     fn to_bytes(&self) -> std::borrow::Cow<[u8]> {
         Cow::Owned(Encode!(self).unwrap())
     }
@@ -77,9 +90,9 @@ impl Storable for SubnetMetricsStoredKey {
 }
 
 #[derive(Clone, Debug, CandidType, Deserialize)]
-pub(crate) struct SubnetMetricsStored(pub(crate) Vec<NodeMetrics>);
+pub(crate) struct StorableSubnetMetrics(pub(crate) Vec<NodeMetrics>);
 
-impl Storable for SubnetMetricsStored {
+impl Storable for StorableSubnetMetrics {
     fn to_bytes(&self) -> std::borrow::Cow<[u8]> {
         Cow::Owned(Encode!(self).unwrap())
     }
