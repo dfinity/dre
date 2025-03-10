@@ -2,7 +2,7 @@ use ahash::{AHashMap, AHasher};
 use indexmap::IndexMap;
 use itertools::Itertools;
 use serde::{Deserialize, Serialize};
-use std::cell::RefCell;
+use std::cell::{Cell, RefCell};
 use std::cmp::Ordering;
 use std::collections::VecDeque;
 use std::fmt::{Debug, Display, Formatter};
@@ -13,7 +13,8 @@ use ic_management_types::{Node, NodeFeature, NodeFeatures};
 
 // A thread-local memoization cache of NakamotoScores
 thread_local! {
-    pub static NAKAMOTOSCORE_CACHE: RefCell<AHashMap<u64, NakamotoScore>> = RefCell::new(AHashMap::new());
+    pub static NAKAMOTOSCORE_CACHE: Cell<AHashMap<u64, NakamotoScore>> = RefCell::new(AHashMap::new());
+    Cell::new(AHashMap::new())
     pub static MEMOIZE_REQ: RefCell<u32> = const { RefCell::new(0) };
     pub static MEMOIZE_HIT: RefCell<u32> = const { RefCell::new(0) };
     pub static MEMOIZE_HIT_RATES: RefCell<VecDeque<u32>> = const { RefCell::new(VecDeque::new()) };

@@ -1,0 +1,54 @@
+use crate::storage::{MetricsManagerInstance, RegistryStoreInstance};
+use ic_cdk_macros::*;
+
+mod metrics;
+mod metrics_types;
+mod registry;
+mod registry_store;
+mod registry_store_types;
+mod storage;
+
+const HOUR_IN_SECONDS: u64 = 60 * 60;
+const DAY_IN_SECONDS: u64 = HOUR_IN_SECONDS * 24;
+
+/// Sync the local registry and subnets metrics with remote
+///
+/// - Sync local registry stored from the registry canister
+/// - Sync subnets metrics from the metrics canister
+async fn sync_all() {
+    RegistryStoreInstance::sync_registry_stored()
+        .await
+        .expect("Failed to sync registry stored");
+
+    let subnets_list = registry::subnets_list();
+    MetricsManagerInstance::sync_subnets_metrics(subnets_list).await;
+
+    ic_cdk::println!("Successfully synced subnets metrics and local registry");
+}
+
+fn setup_timers() {
+    // Next 1 AM UTC timestamp
+    let next_utc_1am_sec = DAY_IN_SECONDS + HOUR_IN_SECONDS - (ic_cdk::api::time() / 1_000_000_000) % DAY_IN_SECONDS;
+
+    ic_cdk_timers::set_timer(std::time::Duration::from_secs(next_utc_1am_sec), || {
+        ic_cdk::spawn(sync_all());
+
+        // Reschedule for the next day
+        ic_cdk_timers::set_timer_interval(std::time::Duration::from_secs(DAY_IN_SECONDS), || ic_cdk::spawn(sync_all()));
+    });
+
+    // Retry subnets fetching every hour
+    ic_cdk_timers::set_timer_interval(std::time::Duration::from_secs(HOUR_IN_SECONDS), || {
+        ic_cdk::spawn(MetricsManagerInstance::retry_failed_subnets())
+    });
+}
+
+#[init]
+fn init() {
+    setup_timers();
+}
+
+#[post_upgrade]
+fn post_upgrade() {
+    setup_timers();
+}

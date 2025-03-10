@@ -1,0 +1,36 @@
+[package]
+name = "npr"
+version.workspace = true
+authors.workspace = true
+edition.workspace = true
+description.workspace = true
+documentation.workspace = true
+license.workspace = true
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+ic-cdk = { workspace = true }
+ic-cdk-timers = { workspace = true }
+ic-cdk-macros = { workspace = true }
+ic-stable-structures = { workspace = true }
+candid = { workspace = true }
+serde = { workspace = true }
+ic-interfaces-registry = { workspace = true }
+ic-registry-keys = { workspace = true }
+futures = { workspace = true }
+ic-types = { workspace = true }
+anyhow = { workspace = true }
+indexmap = { workspace = true }
+ic-base-types = { workspace = true }
+ic-management-canister-types = { workspace = true }
+ic-nns-common = { workspace = true }
+ic-protobuf = { workspace = true }
+ic-registry-canister-client = { workspace = true }
+lazy_static = "1.5.0"
+ic-registry-transport = { workspace = true }
+ic-nns-constants = { workspace = true }
+itertools = "0.13.0"
