@@ -109,6 +109,18 @@ Custom port for boundary nodes
 "#
     )]
     bn_source_port: Option<u64>,
+
+    #[clap(
+        long = "allow-empty-targets",
+        help = r#"
+If the downloader fetches empty target list,
+don't deem it as an error or a mulfunction but
+proceed with file recreation. Used mostly for
+testnet discovery which can have 0 targets.
+        "#,
+        default_value_t = false
+    )]
+    allow_empty_targets: bool,
 }
 
 #[derive(Subcommand, Clone, Debug)]

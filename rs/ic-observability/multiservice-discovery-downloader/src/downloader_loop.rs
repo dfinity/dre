@@ -81,7 +81,7 @@ pub async fn run_downloader_loop(logger: Logger, cli: CliArgs, stop_signal: Rece
             }
         };
 
-        if targets.is_empty() {
+        if targets.is_empty() && !cli.allow_empty_targets {
             warn!(logger, "Got zero targets, skipping @ interval {:?}", tick);
             continue;
         }
