@@ -109,6 +109,18 @@ Custom port for boundary nodes
 "#
     )]
     bn_source_port: Option<u64>,
+
+    #[clap(
+        long = "allow-empty-targets",
+        help = r#"
+If the downloader fetches empty target list,
+don't deem it as an error or a mulfunction but
+proceed with file recreation. Used mostly for
+testnet discovery which can have 0 targets.
+        "#,
+        default_value_t = false
+    )]
+    allow_empty_targets: bool,
 }
 
 #[derive(Subcommand, Clone, Debug)]
@@ -157,6 +169,24 @@ pub mod log_subtype {
         },
         #[clap(about = "Generate a vector config for pure exec script")]
         Exec {
+            #[clap(long = "script-path", help = "Path for the script file")]
+            script_path: String,
+
+            #[clap(long = "cursors-folder", help = "Path for cursors")]
+            cursors_folder: String,
+
+            #[clap(
+                long = "restart-on-exit",
+                help = "Restart on respawn",
+                action = ArgAction::SetTrue,
+                default_value = "false"
+            )]
+            restart_on_exit: bool,
+
+            #[clap(long = "include-stderr", help = "Include stderr", action = ArgAction::SetTrue, default_value = "false")]
+            include_stderr: bool,
+        },
+        ExecGeneral {
             #[clap(long = "script-path", help = "Path for the script file")]
             script_path: String,
 

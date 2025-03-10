@@ -1,4 +1,5 @@
 pub mod deployed_sns;
+pub mod journald_target;
 pub mod target;
 
 pub trait DataContract {
