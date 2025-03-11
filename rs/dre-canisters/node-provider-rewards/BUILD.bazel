@@ -1,0 +1,69 @@
+load("@rules_rust//cargo:defs.bzl", "cargo_build_script")
+load("@rules_rust//rust:defs.bzl", "rust_library", "rust_test")
+load("//bazel:canisters.bzl", "rust_canister")
+
+package(default_visibility = ["//visibility:public"])
+
+MACRO_DEPENDENCIES = [
+    # Keep sorted.
+    "@crate_index//:async-trait",
+]
+
+BUILD_DEPENDENCIES = [
+    # Keep sorted.
+    "@crate_index//:build-info-build",
+]
+
+DEV_DEPENDENCIES = [
+    # Keep sorted.
+    "@crate_index_dre//:tokio",
+]
+
+ALIASES = {}
+
+cargo_build_script(
+    name = "build_script",
+    srcs = ["build.rs"],
+    aliases = ALIASES,
+    data = [],  # build script data (e.g. template files) goes here
+    version = "0.9.0",
+    deps = BUILD_DEPENDENCIES,
+)
+
+rust_library(
+    name = "npr",
+    srcs = glob(["src/**/*.rs"]),
+    aliases = ALIASES,
+    crate_name = "node_provider_rewards_canister",
+    proc_macro_deps = all_crate_deps(
+           proc_macro = True,
+       ),
+    version = "0.9.0",
+    deps = all_crate_deps(
+           normal = True,
+       ) + [":build_script"],
+)
+
+rust_canister(
+    name = "node-provider-rewards-canister",
+    srcs = glob(["src/**/*.rs"]),
+    aliases = ALIASES,
+    proc_macro_deps = all_crate_deps(
+           proc_macro = True,
+       ),
+    service_file = ":node_provider_rewards.did",
+    deps = all_crate_deps(
+           normal = True,
+       ) + [
+        ":build_script",
+        ":npr",
+    ],
+)
+
+rust_test(
+    name = "npr_test",
+    crate = ":npr",
+    deps = all_crate_deps(
+               normal = True,
+           ) + DEV_DEPENDENCIES,
+)
