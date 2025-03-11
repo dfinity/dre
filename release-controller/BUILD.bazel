@@ -48,9 +48,10 @@ py_binary(
 )
 
 py_binary(
-    name = "commit_annotator",
+    name = "commit-annotator",
     main = "commit_annotator.py",
     srcs = glob(["*.py"], exclude = ["reconciler.py", "ci_check.py"]),
+    tags = ["typecheck"],
     data = [":bazelisk", ":target_determinator"],
     env = env,
     deps = deps,
@@ -115,7 +116,7 @@ py_oci_image(
 py_oci_image(
     name = "oci_image_commit_annotator",
     base = "@bazel_image_7_4_1",
-    binary = ":commit_annotator",
+    binary = ":commit-annotator",
     tars = [":bins_commit_annotator_tar"]
 )
 

@@ -15,7 +15,6 @@ import dryrun
 import release_index
 import slack_announce
 import reconciler_state
-import util
 from dotenv import load_dotenv
 from forum import ReleaseCandidateForumClient, ForumClientProtocol
 from git_repo import GitRepo
@@ -35,7 +34,7 @@ from release_notes import (
     SecurityReleaseNotesRequest,
     OrdinaryReleaseNotesRequest,
 )
-from util import version_name
+from util import version_name, conventional_logging, sha256sum_http_response
 from watchdog import Watchdog
 
 
@@ -51,52 +50,6 @@ LAST_CYCLE_SUCCESSFUL = Gauge(
     "last_cycle_successful",
     "1 if the last cycle was successful, 0 if it was not",
 )
-
-
-class CustomFormatter(logging.Formatter):
-    if sys.stderr.isatty():
-        green = "\x1b[32;20m"
-        yellow = "\x1b[33;20m"
-        blue = "\x1b[34;20m"
-        red = "\x1b[31;20m"
-        bold_red = "\x1b[31;1m"
-        reset = "\x1b[0m"
-    else:
-        green = ""
-        yellow = ""
-        blue = ""
-        red = ""
-        bold_red = ""
-        reset = ""
-    shortfmt = ":%(name)-20s — %(message)s"
-    longfmt = "%(asctime)s %(levelname)13s  %(message)s\n" "%(name)37s"
-
-    FORMATS = {
-        logging.DEBUG: blue + "DD" + shortfmt + reset,
-        logging.INFO: green + "II" + shortfmt + reset,
-        logging.WARNING: yellow + "WW" + shortfmt + reset,
-        logging.ERROR: red + "EE" + shortfmt + reset,
-        logging.CRITICAL: bold_red + "!!" + shortfmt + reset,
-    }
-
-    LONG_FORMATS = {
-        logging.DEBUG: blue + longfmt + reset,
-        logging.INFO: green + longfmt + reset,
-        logging.WARNING: yellow + longfmt + reset,
-        logging.ERROR: red + longfmt + reset,
-        logging.CRITICAL: bold_red + longfmt + reset,
-    }
-
-    def __init__(self, one_line_logs: bool):
-        self.one_line_logs = one_line_logs
-
-    def format(self, record: logging.LogRecord) -> str:
-        if not self.one_line_logs:
-            log_fmt = self.LONG_FORMATS.get(record.levelno)
-        else:
-            log_fmt = self.FORMATS.get(record.levelno)
-        formatter = logging.Formatter(log_fmt)
-        return formatter.format(record)
 
 
 LOGGER = logging.getLogger()
@@ -192,9 +145,7 @@ def version_package_checksum(version: str) -> str:
         LOGGER.getChild("version_package_checksum").debug("fetching package %s", u)
         with requests.get(u, timeout=10, stream=True) as resp:
             resp.raise_for_status()
-            actual_sum = util.sha256sum_http_response(
-                resp, urllib.parse.urlparse(u).netloc
-            )
+            actual_sum = sha256sum_http_response(resp, urllib.parse.urlparse(u).netloc)
         if actual_sum != checksum:
             raise ValueError(
                 "checksums for %s do not match contents of %s" % (u, hashurl)
@@ -485,7 +436,6 @@ def main() -> None:
     opts = parser.parse_args()
 
     dry_run = opts.dry_run
-    verbose = opts.verbose
     skip_preloading_state = opts.skip_preloading_state
 
     if skip_preloading_state and not dry_run:
@@ -496,16 +446,7 @@ def main() -> None:
     else:
         load_dotenv()
 
-    root = logging.getLogger()
-    root.setLevel(logging.DEBUG if verbose else logging.INFO)
-    if verbose:
-        for info in ["httpcore", "urllib3", "httpx"]:
-            logging.getLogger(info).setLevel(logging.WARNING)
-
-    ch = logging.StreamHandler()
-    ch.setLevel(logging.DEBUG if verbose else logging.INFO)
-    ch.setFormatter(CustomFormatter(opts.one_line_logs))
-    root.addHandler(ch)
+    conventional_logging(opts.one_line_logs, opts.verbose)
 
     # Prep the program for longer timeouts.
     socket.setdefaulttimeout(60)
@@ -650,5 +591,4 @@ def oneoff() -> None:
 
 
 if __name__ == "__main__":
-    # FIXME make formatter not output ANSI when stderr is not console
     main()
