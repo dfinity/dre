@@ -20,7 +20,6 @@ members = [
     "rs/canister-log-fetcher",
     "rs/slack-notifications",
     "rs/node-provider-rewards",
-    "rs/dre-canisters/node-provider-rewards",
     "rs/dre-canisters/node-provider-rewards-lib",
     "rs/dre-canisters/trustworthy-node-metrics/src/trustworthy-node-metrics",
     "rs/dre-canisters/trustworthy-node-metrics/src/trustworthy-node-metrics-types",
@@ -204,6 +203,7 @@ ic-cdk-timers = { git = "https://github.com/dfinity/cdk-rs.git", rev = "929fd0b3
 ic-cdk-macros = { git = "https://github.com/dfinity/cdk-rs.git", rev = "929fd0b31e9ec69aad7cf6285df0394f25fe1815" }
 ic-stable-structures = "0.6.7"
 dfn_core = { git = "https://github.com/dfinity/ic.git", rev = "c22d478ad97f82bd5d378862c9dd2f13afe2ece1" }
+node-provider-rewards = { path = "rs/dre-canisters/node-provider-rewards" }
 node-provider-rewards-lib = { path = "rs/dre-canisters/node-provider-rewards-lib" }
 
 # dre-airflow deps, should be replaced with dre-airflow once
