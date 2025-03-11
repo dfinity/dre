@@ -1,6 +1,6 @@
 load("@rules_rust//cargo:defs.bzl", "cargo_build_script", "all_crate_deps")
 load("@rules_rust//rust:defs.bzl", "rust_library", "rust_test")
-load("//bazel:canisters.bzl", "rust_canister")
+
 package(default_visibility = ["//visibility:public"])
 
 MACRO_DEPENDENCIES = [
@@ -41,22 +41,6 @@ rust_library(
     deps = all_crate_deps(
            normal = True,
        ) + [":build_script"],
-)
-
-rust_canister(
-    name = "node-provider-rewards-canister",
-    srcs = glob(["src/**/*.rs"]),
-    aliases = ALIASES,
-    proc_macro_deps = all_crate_deps(
-           proc_macro = True,
-       ),
-    service_file = ":node_provider_rewards.did",
-    deps = all_crate_deps(
-           normal = True,
-       ) + [
-        ":build_script",
-        ":npr",
-    ],
 )
 
 rust_test(

@@ -1,5 +1,5 @@
 {
-  "checksum": "fa1366d5595d0acdec47bd2a22ce21f7b307ad4142c26d44c96e77075031bf16",
+  "checksum": "bab9291c07fd2411008bdfd3d109569f3e5ae1e18206fe3b9366dbfaf5d13666",
   "crates": {
     "actix-codec 0.5.2": {
       "name": "actix-codec",
@@ -10535,10 +10535,6 @@
             {
               "id": "itertools 0.13.0",
               "target": "itertools"
-            },
-            {
-              "id": "lazy_static 1.5.0",
-              "target": "lazy_static"
             },
             {
               "id": "log 0.4.26",
@@ -35539,6 +35535,150 @@
       ],
       "license_file": null
     },
+    "node-provider-rewards-canister 0.6.0": {
+      "name": "node-provider-rewards-canister",
+      "version": "0.6.0",
+      "package_url": null,
+      "repository": null,
+      "targets": [
+        {
+          "BuildScript": {
+            "crate_name": "build_script_build",
+            "crate_root": "build.rs",
+            "srcs": {
+              "allow_empty": true,
+              "include": [
+                "**/*.rs"
+              ]
+            }
+          }
+        }
+      ],
+      "library_target_name": null,
+      "common_attrs": {
+        "compile_data_glob": [
+          "**"
+        ],
+        "deps": {
+          "common": [
+            {
+              "id": "anyhow 1.0.97",
+              "target": "anyhow"
+            },
+            {
+              "id": "candid 0.10.13",
+              "target": "candid"
+            },
+            {
+              "id": "futures 0.3.31",
+              "target": "futures"
+            },
+            {
+              "id": "ic-base-types 0.9.0",
+              "target": "ic_base_types"
+            },
+            {
+              "id": "ic-cdk 0.17.1",
+              "target": "ic_cdk"
+            },
+            {
+              "id": "ic-cdk-timers 0.11.0",
+              "target": "ic_cdk_timers"
+            },
+            {
+              "id": "ic-interfaces-registry 0.9.0",
+              "target": "ic_interfaces_registry"
+            },
+            {
+              "id": "ic-management-canister-types 0.9.0",
+              "target": "ic_management_canister_types"
+            },
+            {
+              "id": "ic-nns-common 0.9.0",
+              "target": "ic_nns_common"
+            },
+            {
+              "id": "ic-nns-constants 0.9.0",
+              "target": "ic_nns_constants"
+            },
+            {
+              "id": "ic-protobuf 0.9.0",
+              "target": "ic_protobuf"
+            },
+            {
+              "id": "ic-registry-keys 0.9.0",
+              "target": "ic_registry_keys"
+            },
+            {
+              "id": "ic-registry-transport 0.9.0",
+              "target": "ic_registry_transport"
+            },
+            {
+              "id": "ic-stable-structures 0.6.7",
+              "target": "ic_stable_structures"
+            },
+            {
+              "id": "ic-types 0.9.0",
+              "target": "ic_types"
+            },
+            {
+              "id": "indexmap 2.7.1",
+              "target": "indexmap"
+            },
+            {
+              "id": "mockall 0.13.1",
+              "target": "mockall"
+            },
+            {
+              "id": "node-provider-rewards-canister 0.6.0",
+              "target": "build_script_build"
+            },
+            {
+              "id": "serde 1.0.219",
+              "target": "serde"
+            }
+          ],
+          "selects": {}
+        },
+        "deps_dev": {
+          "common": [
+            {
+              "id": "tokio 1.44.0",
+              "target": "tokio"
+            }
+          ],
+          "selects": {}
+        },
+        "edition": "2021",
+        "proc_macro_deps": {
+          "common": [
+            {
+              "id": "async-trait 0.1.85",
+              "target": "async_trait"
+            },
+            {
+              "id": "ic-cdk-macros 0.17.1",
+              "target": "ic_cdk_macros"
+            }
+          ],
+          "selects": {}
+        },
+        "version": "0.6.0"
+      },
+      "build_script_attrs": {
+        "compile_data_glob": [
+          "**"
+        ],
+        "data_glob": [
+          "**"
+        ]
+      },
+      "license": "Apache-2.0",
+      "license_ids": [
+        "Apache-2.0"
+      ],
+      "license_file": null
+    },
     "node-provider-rewards-lib 0.6.0": {
       "name": "node-provider-rewards-lib",
       "version": "0.6.0",
@@ -60314,6 +60454,7 @@
     "multiservice-discovery-downloader 0.6.0": "rs/ic-observability/multiservice-discovery-downloader",
     "multiservice-discovery-shared 0.6.0": "rs/ic-observability/multiservice-discovery-shared",
     "node-provider-rewards 0.6.0": "rs/node-provider-rewards",
+    "node-provider-rewards-canister 0.6.0": "rs/dre-canisters/node-provider-rewards",
     "node-provider-rewards-lib 0.6.0": "rs/dre-canisters/node-provider-rewards-lib",
     "node-status-updater 0.6.0": "rs/ic-observability/node-status-updater",
     "obs-canister-clients 0.6.0": "rs/ic-observability/obs-canister-clients",
@@ -61192,6 +61333,7 @@
     "ahash 0.8.11",
     "anyhow 1.0.97",
     "async-recursion 1.1.1",
+    "async-trait 0.1.85",
     "axum 0.7.9",
     "axum-otel-metrics 0.8.1",
     "backoff 0.4.0",
