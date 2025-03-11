@@ -59,3 +59,5 @@ fn init() {
 fn post_upgrade() {
     setup_timers();
 }
+
+fn main() {}

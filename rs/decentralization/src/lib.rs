@@ -2,7 +2,6 @@ pub mod nakamoto;
 pub mod network;
 #[cfg(test)]
 mod network_tests;
-pub mod provider_clusters;
 pub mod subnets;
 use indexmap::IndexMap;
 use itertools::Itertools;

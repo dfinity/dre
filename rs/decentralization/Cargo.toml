@@ -16,7 +16,6 @@ ic-base-types = { workspace = true }
 ic-management-types = { workspace = true }
 indexmap = { workspace = true }
 itertools = { workspace = true }
-lazy_static = { workspace = true }
 log = { workspace = true }
 rand = { workspace = true }
 rand_seeder = { workspace = true }

@@ -9,8 +9,9 @@ license.workspace = true
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
-[lib]
-crate-type = ["cdylib"]
+[[bin]]
+name = "node-provider-rewards-canister"
+path = "canister/canister.rs"
 
 [dependencies]
 async-trait = { workspace = true }
