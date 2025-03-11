@@ -25,9 +25,8 @@ cargo_build_script(
 )
 
 rust_library(
-    name = "npr",
+    name = "node_provider_rewards_canister",
     srcs = glob(["src/**/*.rs"]),
-    crate_root= "canister/canister.rs",
     aliases = ALIASES,
     crate_name = "node_provider_rewards_canister",
     proc_macro_deps = all_crate_deps(
