@@ -1,6 +1,10 @@
-use crate::storage::{MetricsManagerInstance, RegistryStoreInstance};
+use crate::external::ICCanisterRuntime;
+use crate::metrics::MetricsManager;
+use crate::registry_store::CanisterRegistryStore;
+use crate::storage::{State, VM};
 use ic_cdk_macros::*;
 
+mod external;
 mod metrics;
 mod metrics_types;
 mod registry;
@@ -11,17 +15,21 @@ mod storage;
 const HOUR_IN_SECONDS: u64 = 60 * 60;
 const DAY_IN_SECONDS: u64 = HOUR_IN_SECONDS * 24;
 
+pub type RegistryStoreInstance = CanisterRegistryStore<State, VM>;
+pub type MetricsManagerInstance = MetricsManager<State, VM>;
+pub const IC_CANISTER_RUNTIME: ICCanisterRuntime = ICCanisterRuntime {};
+
 /// Sync the local registry and subnets metrics with remote
 ///
-/// - Sync local registry stored from the registry canister
-/// - Sync subnets metrics from the metrics canister
+/// - Sync local registry stored from the remote registry canister
+/// - Sync subnets metrics from the management canister of the different subnets
 async fn sync_all() {
-    RegistryStoreInstance::sync_registry_stored()
+    RegistryStoreInstance::sync_registry_stored(&IC_CANISTER_RUNTIME)
         .await
         .expect("Failed to sync registry stored");
 
     let subnets_list = registry::subnets_list();
-    MetricsManagerInstance::sync_subnets_metrics(subnets_list).await;
+    MetricsManagerInstance::update_subnets_metrics(&IC_CANISTER_RUNTIME, subnets_list).await;
 
     ic_cdk::println!("Successfully synced subnets metrics and local registry");
 }
@@ -29,7 +37,6 @@ async fn sync_all() {
 fn setup_timers() {
     // Next 1 AM UTC timestamp
     let next_utc_1am_sec = DAY_IN_SECONDS + HOUR_IN_SECONDS - (ic_cdk::api::time() / 1_000_000_000) % DAY_IN_SECONDS;
-
     ic_cdk_timers::set_timer(std::time::Duration::from_secs(next_utc_1am_sec), || {
         ic_cdk::spawn(sync_all());
 
@@ -39,7 +46,7 @@ fn setup_timers() {
 
     // Retry subnets fetching every hour
     ic_cdk_timers::set_timer_interval(std::time::Duration::from_secs(HOUR_IN_SECONDS), || {
-        ic_cdk::spawn(MetricsManagerInstance::retry_failed_subnets())
+        ic_cdk::spawn(MetricsManagerInstance::retry_failed_subnets(&IC_CANISTER_RUNTIME));
     });
 }
 

@@ -1,41 +1,7 @@
 use super::*;
-use ic_stable_structures::memory_manager::{MemoryId, MemoryManager, VirtualMemory};
-use ic_stable_structures::DefaultMemoryImpl;
-use std::cell::RefCell;
+use crate::storage::{State, VM};
 
-pub type VM = VirtualMemory<DefaultMemoryImpl>;
-type RegistryStoreTest = CanisterRegistryStore<DummyState, VM>;
-
-thread_local! {
-    static STATE: RefCell<DummyState> = RefCell::new({
-        let mgr = MemoryManager::init(DefaultMemoryImpl::default());
-        DummyState {
-            local_registry: StableBTreeMap::init(mgr.get(MemoryId::new(0))),
-        }
-    });
-}
-struct DummyState {
-    local_registry: StableBTreeMap<StorableRegistryKey, StorableRegistryValue, VM>,
-}
-
-impl RegistryData<VM> for DummyState {
-    fn with_local_registry<R>(f: impl FnOnce(&StableLocalRegistry<VM>) -> R) -> R {
-        STATE.with_borrow(|state| f(&state.local_registry))
-    }
-
-    fn with_local_registry_mut<R>(f: impl FnOnce(&mut StableLocalRegistry<VM>) -> R) -> R {
-        STATE.with_borrow_mut(|state| f(&mut state.local_registry))
-    }
-}
-
-pub fn add_record_helper(key: &str, version: u64, value: Option<u64>) {
-    STATE.with_borrow_mut(|store| {
-        store.local_registry.insert(
-            StorableRegistryKey::new(key.to_string(), v(version)),
-            StorableRegistryValue(value.map(|v| vec![v as u8])),
-        );
-    });
-}
+pub type RegistryStoreTest = CanisterRegistryStore<State, VM>;
 
 #[derive(PartialEq, Eq, Debug)]
 struct TestValue {
@@ -50,6 +16,14 @@ fn value(value: u64) -> TestValue {
 
 fn v(v: u64) -> RegistryVersion {
     RegistryVersion::new(v)
+}
+
+fn add_record_helper(key: &str, version: u64, value: Option<u64>) {
+    State::with_local_registry_mut(|local_registry| {
+        let key = StorableRegistryKey::new(key.to_string(), RegistryVersion::from(version));
+        let value = StorableRegistryValue(value.map(|v| vec![v as u8]));
+        local_registry.insert(key, value);
+    });
 }
 
 #[test]

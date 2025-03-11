@@ -1,4 +1,4 @@
-use crate::storage::RegistryStoreInstance;
+use crate::RegistryStoreInstance;
 use ic_base_types::{PrincipalId, RegistryVersion, SubnetId};
 use ic_interfaces_registry::RegistryValue;
 use ic_protobuf::registry::dc::v1::DataCenterRecord;

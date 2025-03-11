@@ -20,7 +20,7 @@ members = [
     "rs/canister-log-fetcher",
     "rs/slack-notifications",
     "rs/node-provider-rewards",
-    "rs/dre-canisters/npr",
+    "rs/dre-canisters/node-provider-rewards",
     "rs/dre-canisters/node-provider-rewards-lib",
     "rs/dre-canisters/trustworthy-node-metrics/src/trustworthy-node-metrics",
     "rs/dre-canisters/trustworthy-node-metrics/src/trustworthy-node-metrics-types",
@@ -45,6 +45,7 @@ actix-rt = "2.10.0"
 ahash = "0.8.11"
 anyhow = "1.0.97"
 async-recursion = "1.1.1"
+async-trait = "0.1.83"
 axum-otel-metrics = "0.8.1"
 axum = "0.7.9"
 backoff = { version = "0.4.0", features = ["tokio"] }

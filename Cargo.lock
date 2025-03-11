@@ -6055,6 +6055,33 @@ dependencies = [
 ]
 
 [[package]]
+name = "node-provider-rewards-canister"
+version = "0.6.0"
+dependencies = [
+ "anyhow",
+ "async-trait",
+ "candid",
+ "futures",
+ "ic-base-types",
+ "ic-cdk 0.17.1",
+ "ic-cdk-macros 0.17.1",
+ "ic-cdk-timers 0.11.0",
+ "ic-interfaces-registry",
+ "ic-management-canister-types",
+ "ic-nns-common",
+ "ic-nns-constants",
+ "ic-protobuf",
+ "ic-registry-keys",
+ "ic-registry-transport",
+ "ic-stable-structures",
+ "ic-types",
+ "indexmap 2.7.1",
+ "mockall",
+ "serde",
+ "tokio",
+]
+
+[[package]]
 name = "node-provider-rewards-lib"
 version = "0.6.0"
 dependencies = [
@@ -6101,33 +6128,6 @@ checksum = "d273983c5a657a70a3e8f2a01329822f3b8c8172b73826411a55751e404a0a4a"
 dependencies = [
  "memchr",
  "minimal-lexical",
-]
-
-[[package]]
-name = "npr"
-version = "0.6.0"
-dependencies = [
- "anyhow",
- "candid",
- "futures",
- "ic-base-types",
- "ic-cdk 0.17.1",
- "ic-cdk-macros 0.17.1",
- "ic-cdk-timers 0.11.0",
- "ic-interfaces-registry",
- "ic-management-canister-types",
- "ic-nns-common",
- "ic-nns-constants",
- "ic-protobuf",
- "ic-registry-canister-client",
- "ic-registry-keys",
- "ic-registry-transport",
- "ic-stable-structures",
- "ic-types",
- "indexmap 2.7.1",
- "itertools 0.13.0",
- "lazy_static",
- "serde",
 ]
 
 [[package]]

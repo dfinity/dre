@@ -1,16 +1,12 @@
-use crate::metrics::{
-    MetricsManager, MetricsManagerData, RetryCount, StableLastTimestampPerSubnet, StableSubnetsMetrics, StableSubnetsToRetry, TimestampNanos,
-};
+use crate::metrics::{MetricsManagerData, RetryCount, StableLastTimestampPerSubnet, StableSubnetsMetrics, StableSubnetsToRetry, TimestampNanos};
 use crate::metrics_types::{StorableSubnetMetrics, StorableSubnetMetricsKey, SubnetIdStored};
-use crate::registry_store::{CanisterRegistryStore, RegistryData, StableLocalRegistry};
+use crate::registry_store::{RegistryStoreData, StableLocalRegistry};
 use crate::registry_store_types::{StorableRegistryKey, StorableRegistryValue};
 use ic_stable_structures::memory_manager::{MemoryId, MemoryManager, VirtualMemory};
 use ic_stable_structures::{DefaultMemoryImpl, StableBTreeMap, Storable};
 use std::cell::RefCell;
 
 pub type VM = VirtualMemory<DefaultMemoryImpl>;
-pub type RegistryStoreInstance = CanisterRegistryStore<State, VM>;
-pub type MetricsManagerInstance = MetricsManager<State, VM>;
 
 thread_local! {
     static MEMORY_MANAGER: RefCell<MemoryManager<DefaultMemoryImpl>> =
@@ -49,7 +45,7 @@ impl State {
     }
 }
 
-impl RegistryData<VM> for State {
+impl RegistryStoreData<VM> for State {
     fn with_local_registry<R>(f: impl FnOnce(&StableLocalRegistry<VM>) -> R) -> R {
         STATE.with_borrow(|state| f(&state.local_registry))
     }

@@ -39,7 +39,7 @@ fn max_bound_size() {
 }
 
 #[derive(Clone, Debug, CandidType, Deserialize, PartialEq, Eq, PartialOrd, Ord)]
-pub(crate) struct SubnetIdStored(pub(crate) SubnetId);
+pub struct SubnetIdStored(pub SubnetId);
 impl Storable for SubnetIdStored {
     fn to_bytes(&self) -> std::borrow::Cow<[u8]> {
         Cow::Owned(Encode!(self).unwrap())
@@ -69,7 +69,7 @@ impl From<SubnetId> for SubnetIdStored {
 }
 
 #[derive(Clone, Debug, CandidType, Deserialize, PartialEq, Eq, PartialOrd, Ord)]
-pub(crate) struct StorableSubnetMetricsKey {
+pub struct StorableSubnetMetricsKey {
     pub timestamp_nanos: TimestampNanos,
     pub subnet_id: SubnetId,
 }
@@ -90,7 +90,7 @@ impl Storable for StorableSubnetMetricsKey {
 }
 
 #[derive(Clone, Debug, CandidType, Deserialize)]
-pub(crate) struct StorableSubnetMetrics(pub(crate) Vec<NodeMetrics>);
+pub struct StorableSubnetMetrics(pub Vec<NodeMetrics>);
 
 impl Storable for StorableSubnetMetrics {
     fn to_bytes(&self) -> std::borrow::Cow<[u8]> {

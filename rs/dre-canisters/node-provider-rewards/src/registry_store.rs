@@ -1,10 +1,8 @@
 use crate::registry_store_types::{StorableRegistryKey, StorableRegistryValue};
 use anyhow::anyhow;
-use candid::Principal;
+use async_trait::async_trait;
 use ic_interfaces_registry::{empty_zero_registry_record, RegistryClientVersionedResult, RegistryTransportRecord, ZERO_REGISTRY_VERSION};
-use ic_nns_constants::REGISTRY_CANISTER_ID;
 use ic_registry_transport::pb::v1::RegistryDelta;
-use ic_registry_transport::{deserialize_get_changes_since_response, serialize_get_changes_since_request};
 use ic_stable_structures::StableBTreeMap;
 use ic_types::registry::RegistryClientError;
 use ic_types::RegistryVersion;
@@ -14,12 +12,17 @@ use std::marker::PhantomData;
 
 pub type StableLocalRegistry<Memory> = StableBTreeMap<StorableRegistryKey, StorableRegistryValue, Memory>;
 
-pub trait RegistryData<Memory: ic_stable_structures::Memory> {
+pub trait RegistryStoreData<Memory: ic_stable_structures::Memory> {
     fn with_local_registry<R>(f: impl FnOnce(&StableLocalRegistry<Memory>) -> R) -> R;
     fn with_local_registry_mut<R>(f: impl FnOnce(&mut StableLocalRegistry<Memory>) -> R) -> R;
 }
 
-pub struct CanisterRegistryStore<D: RegistryData<Memory>, Memory>
+#[async_trait]
+pub trait RegistryCanisterCaller {
+    async fn registry_changes_since(&self, version: u64) -> anyhow::Result<Vec<RegistryDelta>>;
+}
+
+pub struct CanisterRegistryStore<D: RegistryStoreData<Memory>, Memory>
 where
     Memory: ic_stable_structures::Memory,
 {
@@ -27,7 +30,7 @@ where
     _memory: PhantomData<Memory>,
 }
 
-impl<D: RegistryData<Memory>, Memory> CanisterRegistryStore<D, Memory>
+impl<D: RegistryStoreData<Memory>, Memory> CanisterRegistryStore<D, Memory>
 where
     Memory: ic_stable_structures::Memory,
 {
@@ -113,20 +116,10 @@ where
         D::with_local_registry(|local_registry| local_registry.keys().map(|k| k.version).max().unwrap_or(ZERO_REGISTRY_VERSION))
     }
 
-    async fn remote_registry_changes_since(version: u64) -> anyhow::Result<Vec<RegistryDelta>> {
-        let buff = serialize_get_changes_since_request(version)?;
-        let response = ic_cdk::api::call::call_raw(Principal::from(REGISTRY_CANISTER_ID), "get_changes_since", buff, 0)
-            .await
-            .map_err(|(code, msg)| (code as i32, msg))
-            .unwrap();
-        let (registry_delta, _) = deserialize_get_changes_since_response(response)?;
-        Ok(registry_delta)
-    }
-
     /// Syncs the local registry with the remote registry.
     ///
     /// This function will keep fetching registry deltas from the remote registry until the local registry is up to date.
-    pub async fn sync_registry_stored() -> anyhow::Result<()> {
+    pub async fn sync_registry_stored<R: RegistryCanisterCaller>(runtime: &R) -> anyhow::Result<()> {
         let mut current_local_version = Self::local_latest_version().get();
 
         loop {
@@ -149,7 +142,7 @@ where
                 }
             }
 
-            let remote_deltas = Self::remote_registry_changes_since(current_local_version).await?;
+            let remote_deltas = runtime.registry_changes_since(current_local_version).await?;
 
             // Update the local version to the latest remote version for this iteration.
             current_local_version = remote_deltas
