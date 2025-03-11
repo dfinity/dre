@@ -3,7 +3,7 @@ use ic_base_types::PrincipalId;
 use lazy_static::lazy_static;
 use std::str::FromStr;
 
-// List of providers known to be linked to reduce the risk of sybil attacks.
+// List of providers known to be linked. Having them grouped reduces the risk of sybil attacks.
 // To add a new provider cluster, include the cluster name and its associated Principal IDs in the map.
 // Always add a reference link in the comment, preferably pointing directly to the provider's explanation.
 lazy_static! {
