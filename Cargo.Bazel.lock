@@ -1,5 +1,5 @@
 {
-  "checksum": "bab9291c07fd2411008bdfd3d109569f3e5ae1e18206fe3b9366dbfaf5d13666",
+  "checksum": "6d75c2e6b0f1a8cfb93cd94d6e42fe7eacc027a5977d778ce54122aedf16045e",
   "crates": {
     "actix-codec 0.5.2": {
       "name": "actix-codec",
@@ -10535,6 +10535,10 @@
             {
               "id": "itertools 0.13.0",
               "target": "itertools"
+            },
+            {
+              "id": "lazy_static 1.5.0",
+              "target": "lazy_static"
             },
             {
               "id": "log 0.4.26",
