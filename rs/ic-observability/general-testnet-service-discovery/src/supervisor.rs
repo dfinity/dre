@@ -3,7 +3,7 @@ use std::{
     fmt::Display,
     future::Future,
     sync::Arc,
-    time::{Duration, SystemTime},
+    time::{Duration, Instant},
 };
 
 use chrono::{DateTime, Utc};
@@ -114,7 +114,7 @@ where
     token: CancellationToken,
     metrics: Metrics,
     target: JournaldTarget,
-    last_successful_sync: SystemTime,
+    last_successful_sync: Instant,
     gc_timeout: Duration,
     remove_self: F,
     check_interval: Duration,
@@ -139,7 +139,7 @@ where
             metrics,
             token,
             target,
-            last_successful_sync: SystemTime::now(),
+            last_successful_sync: Instant::now(),
             gc_timeout,
             remove_self,
             check_interval,
@@ -162,10 +162,11 @@ where
             match TcpStream::connect(self.target.target).await {
                 Ok(_) => {
                     self.metrics.observe_up(&self.target.name);
-                    self.last_successful_sync = SystemTime::now();
+                    self.last_successful_sync = Instant::now();
                 }
                 Err(e) => {
-                    let datetime: DateTime<Utc> = self.last_successful_sync.into();
+                    let elapsed_from_last_sync = self.last_successful_sync.elapsed();
+                    let datetime: DateTime<Utc> = Utc::now() - elapsed_from_last_sync;
                     self.warn(format!(
                         "Target {} unreachable: {:?}, last successful sync: {}",
                         self.target.target,
@@ -173,7 +174,7 @@ where
                         datetime.to_rfc3339()
                     ));
                     self.metrics.observe_down(&self.target.name);
-                    if SystemTime::now().duration_since(self.last_successful_sync).unwrap() > self.gc_timeout {
+                    if elapsed_from_last_sync > self.gc_timeout {
                         self.info("GC elapsed, removing target...");
                         (self.remove_self)().await;
                         self.metrics.remove_observed_value(&self.target.name);
