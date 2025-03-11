@@ -304,7 +304,7 @@ impl DecentralizedSubnet {
         }
 
         let mut cluster_counter = AHashMap::new();
-        // Count how many nodes in the subnet could be controlled by possibly linked providers
+        // Count how many nodes in the subnet could be controlled by linked providers
         for provider_id in nodes.iter().map(|n| n.operator.provider.principal).collect_vec() {
             for (pl_name, pl_providers) in get_linked_providers() {
                 if pl_providers.contains(&provider_id) {
