@@ -1,5 +1,5 @@
 use crate::nakamoto::NakamotoScore;
-use crate::provider_clusters::get_possibly_linked_providers;
+use crate::provider_clusters::get_linked_providers;
 use crate::subnets::{subnets_with_business_rules_violations, unhealthy_with_nodes};
 use crate::SubnetChangeResponse;
 use actix_web::http::StatusCode;
@@ -306,7 +306,7 @@ impl DecentralizedSubnet {
         let mut possible_link_counter = AHashMap::new();
         // Count how many nodes in the subnet could be controlled by possibly linked providers
         for provider_id in nodes.iter().map(|n| n.operator.provider.principal).collect_vec() {
-            for (pl_name, pl_providers) in get_possibly_linked_providers() {
+            for (pl_name, pl_providers) in get_linked_providers() {
                 if pl_providers.contains(&provider_id) {
                     *possible_link_counter.entry(pl_name.clone()).or_insert(0) += 1;
                 }
