@@ -1700,6 +1700,7 @@ dependencies = [
  "ic-management-types",
  "indexmap 2.7.1",
  "itertools 0.13.0",
+ "lazy_static",
  "log",
  "rand",
  "rand_seeder",
