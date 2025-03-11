@@ -40,7 +40,7 @@ rust_library(
 
 rust_test(
     name = "npr_test",
-    crate = ":npr",
+    crate = ":node_provider_rewards_canister",
     deps = all_crate_deps(
                normal = True,
            ) + DEV_DEPENDENCIES,
