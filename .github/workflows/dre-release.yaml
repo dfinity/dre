@@ -10,7 +10,7 @@ concurrency:
 
 jobs:
   test:
-    runs-on: 
+    runs-on:
       labels: dre-runner-custom
     container: ghcr.io/dfinity/dre/actions-runner:3dd4f38f076cad73fdcc68ad37fd29bed4fa3e4d
     steps:
@@ -18,7 +18,7 @@ jobs:
 
       - name: "☁️ Setup runner"
         uses: ./.github/workflows/manage-runner-pre
-          
+
       - name: "🚀 Testing"
         env:
           STAGING_PRIVATE_KEY_PEM: "${{ secrets.STAGING_PRIVATE_KEY_PEM }}"
@@ -29,7 +29,7 @@ jobs:
 
   release:
     needs: [ test ]
-    runs-on: 
+    runs-on:
       labels: dre-runner-custom
     container: ghcr.io/dfinity/dre/actions-runner:3dd4f38f076cad73fdcc68ad37fd29bed4fa3e4d
     permissions:
@@ -76,9 +76,9 @@ jobs:
       - name: Build artifacts
         shell: bash
         run: |
-          cargo install git-cliff
+          cargo +nightly install git-cliff
           rustup target add x86_64-apple-darwin
-          CARGO_BAZEL_REPIN=true bazel build --config=ci //rs/cli:dre 
+          CARGO_BAZEL_REPIN=true bazel build --config=ci //rs/cli:dre
           cargo drecross
 
           mkdir -p release/artifacts
@@ -86,7 +86,7 @@ jobs:
           cp target/x86_64-apple-darwin/release/dre release/artifacts/dre-x86_64-apple-darwin
 
           git cliff --current --sort newest > release/CHANGELOG.md
-      
+
       - name: "🆕 📢 Prepare release"
         # v0.1.15
         uses: softprops/action-gh-release@c95fe1489396fe8a9eb87c0abf8aa5b2ef267fda
@@ -100,7 +100,7 @@ jobs:
           prerelease: true
           files: |
             release/artifacts/*
-      
+
       - name: "Clean up release artifacts"
         shell: bash
         run: |
@@ -115,7 +115,6 @@ jobs:
           body: |
             This PR updates versions in the code used to generate the contents of a new release [${{ steps.tag.outputs.tag }}](${{ steps.release.outputs.url }})
 
-            If the release notes are correct, set it as latest release and publish it. 
+            If the release notes are correct, set it as latest release and publish it.
           token: ${{ steps.app-token.outputs.token }}
           base: main
-        
