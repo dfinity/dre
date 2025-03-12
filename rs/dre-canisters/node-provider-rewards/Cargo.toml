@@ -31,6 +31,7 @@ ic-protobuf = { workspace = true }
 ic-registry-transport = { workspace = true }
 ic-nns-constants = { workspace = true }
 mockall = { workspace = true }
+thiserror = { workspace = true }
 
 [dev-dependencies]
 tokio = { workspace = true }

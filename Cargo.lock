@@ -6085,6 +6085,7 @@ dependencies = [
  "indexmap 2.7.1",
  "mockall",
  "serde",
+ "thiserror 2.0.12",
  "tokio",
 ]
 

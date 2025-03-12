@@ -17,9 +17,18 @@ pub trait RegistryStoreData<Memory: ic_stable_structures::Memory> {
     fn with_local_registry_mut<R>(f: impl FnOnce(&mut StableLocalRegistry<Memory>) -> R) -> R;
 }
 
+#[derive(Debug, thiserror::Error)]
+pub enum RegistryCanisterClientError {
+    #[error("RegistryTransportError: {0}")]
+    RegistryTransportError(#[from] ic_registry_transport::Error),
+
+    #[error("Call failed with code {0}: {1}")]
+    CallError(u32, String),
+}
+
 #[async_trait]
 pub trait RegistryCanisterClient {
-    async fn registry_changes_since(&self, version: u64) -> anyhow::Result<Vec<RegistryDelta>>;
+    async fn registry_changes_since(&self, version: u64) -> Result<Vec<RegistryDelta>, RegistryCanisterClientError>;
 }
 
 pub struct CanisterRegistryStore<D: RegistryStoreData<Memory>, Memory>
