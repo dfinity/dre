@@ -1,7 +1,4 @@
 use crate::logs::{Logger, Operation};
-use crate::metrics::NodeDailyFailureRate;
-use crate::performance_calculator::PerformanceMultipliers;
-use crate::reward_period::RewardPeriod;
 use crate::rewardable_nodes::{RegionNodeTypeCategory, RewardableNode};
 use ic_base_types::NodeId;
 use ic_protobuf::registry::node_rewards::v2::{NodeRewardRate, NodeRewardsTable};
@@ -12,30 +9,27 @@ use std::cell::{RefCell, RefMut};
 use std::collections::{BTreeMap, HashMap};
 
 const FULL_REWARDS_MACHINES_LIMIT: u32 = 4;
-struct Type3Rewards {
-    coefficients: Vec<Decimal>,
-    base_rewards: Vec<Decimal>,
-}
 pub type XDRPermyriad = u64;
 pub struct RewardsComputationResult {
     pub logger: Logger,
     pub xdr_permyriad: XDRPermyriad,
 }
 
+struct Type3Rewards {
+    coefficients: Vec<Decimal>,
+    base_rewards: Vec<Decimal>,
+}
 struct ExecutionContext {
     logger: RefCell<Logger>,
 }
-
 pub struct RewardsCalculator {
-    reward_period: RewardPeriod,
     rewards_table: NodeRewardsTable,
     ctx: ExecutionContext,
 }
 
 impl RewardsCalculator {
-    pub fn new(reward_period: RewardPeriod, rewards_table: NodeRewardsTable) -> Self {
+    pub fn new(rewards_table: NodeRewardsTable) -> Self {
         Self {
-            reward_period,
             rewards_table,
             ctx: ExecutionContext {
                 logger: RefCell::new(Logger::default()),
@@ -73,7 +67,7 @@ impl RewardsCalculator {
             let rate = self
                 .rewards_table
                 .get_rate(&category.region, &category.node_type)
-                .unwrap_or_else(|| NodeRewardRate {
+                .unwrap_or(NodeRewardRate {
                     xdr_permyriad_per_node_per_month: 1,
                     reward_coefficient_percent: Some(100),
                 });
@@ -186,3 +180,6 @@ impl RewardsCalculator {
         }
     }
 }
+
+#[cfg(test)]
+mod tests;

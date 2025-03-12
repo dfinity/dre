@@ -10,7 +10,7 @@ pub struct RegionNodeTypeCategory {
 #[derive(Debug, Clone, PartialEq)]
 pub struct RewardableNode {
     pub node_id: NodeId,
-    pub node_provider: PrincipalId,
+    pub node_provider_id: PrincipalId,
     pub region: String,
     pub node_type: String,
 }
@@ -28,7 +28,7 @@ pub fn rewardable_nodes_by_provider(rewardable_nodes: &[RewardableNode]) -> BTre
     let mut nodes_by_provider: BTreeMap<PrincipalId, Vec<RewardableNode>> = BTreeMap::new();
 
     for node in rewardable_nodes {
-        nodes_by_provider.entry(node.node_provider).or_default().push(node.clone());
+        nodes_by_provider.entry(node.node_provider_id).or_default().push(node.clone());
     }
     nodes_by_provider
 }

@@ -396,33 +396,6 @@ mod tests {
             .collect_vec()
     }
 
-    fn mocked_rewards_table() -> NodeRewardsTable {
-        let mut rates_outer: BTreeMap<String, NodeRewardRate> = BTreeMap::new();
-        let mut rates_inner: BTreeMap<String, NodeRewardRate> = BTreeMap::new();
-        let mut table: BTreeMap<String, NodeRewardRates> = BTreeMap::new();
-
-        let rate_outer = NodeRewardRate {
-            xdr_permyriad_per_node_per_month: 1000,
-            reward_coefficient_percent: Some(97),
-        };
-
-        let rate_inner = NodeRewardRate {
-            xdr_permyriad_per_node_per_month: 1500,
-            reward_coefficient_percent: Some(95),
-        };
-
-        rates_outer.insert("type0".to_string(), rate_outer);
-        rates_outer.insert("type1".to_string(), rate_outer);
-        rates_outer.insert("type3".to_string(), rate_outer);
-
-        rates_inner.insert("type3.1".to_string(), rate_inner);
-
-        table.insert("A,B,C".to_string(), NodeRewardRates { rates: rates_inner });
-        table.insert("A,B".to_string(), NodeRewardRates { rates: rates_outer });
-
-        NodeRewardsTable { table }
-    }
-
     #[test]
     fn test_rewards_percent() {
         // Overall failed = 130 Overall total = 500 Failure rate = 0.26

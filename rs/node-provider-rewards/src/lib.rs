@@ -6,7 +6,6 @@ use crate::rewardable_nodes::{nodes_ids, rewardable_nodes_by_provider, Rewardabl
 use crate::rewards_calculator::{RewardsCalculator, XDRPermyriad};
 use ic_base_types::{NodeId, PrincipalId};
 use ic_protobuf::registry::node_rewards::v2::NodeRewardsTable;
-use itertools::Itertools;
 use std::cmp::PartialEq;
 use std::collections::{BTreeMap, HashMap, HashSet};
 use std::error::Error;
@@ -31,9 +30,9 @@ pub struct RewardsPerNodeProvider {
 ///
 /// # Arguments
 /// * reward_period - The time frame for which rewards are calculated.
+/// * rewards_table - The rewards table containing the reward rates for each node type.
 /// * metrics_by_node - Daily node metrics for nodes in `reward_period`. Only nodes in `providers_rewardable_nodes` keys are considered.
-/// * providers_rewardable_nodes: Nodes eligible for rewards, as recorded in the registry versions spanning the `reward_period` provided.
-/// * reward
+/// * rewardable_nodes: Nodes eligible for rewards, as recorded in the registry versions spanning the `reward_period` provided.
 pub fn calculate_rewards(
     reward_period: &RewardPeriod,
     rewards_table: &NodeRewardsTable,
@@ -47,9 +46,9 @@ pub fn calculate_rewards(
     validate_input(reward_period, metrics_by_node, &all_nodes)?;
 
     let subnets_failure_rates = subnets_failure_rates(metrics_by_node);
-    let nodes_failure_rates = nodes_failure_rates_in_period(&all_nodes, &reward_period, metrics_by_node);
+    let nodes_failure_rates = nodes_failure_rates_in_period(&all_nodes, reward_period, metrics_by_node);
     let performance_calc = PerformanceMultiplierCalculator::new(nodes_failure_rates, subnets_failure_rates);
-    let rewards_calculator = RewardsCalculator::new(reward_period.clone(), rewards_table.clone());
+    let rewards_calculator = RewardsCalculator::new(rewards_table.clone());
 
     for (provider_id, provider_rewardable_nodes) in rewardable_nodes_by_provider(rewardable_nodes) {
         let ids: Vec<NodeId> = nodes_ids(&provider_rewardable_nodes);
