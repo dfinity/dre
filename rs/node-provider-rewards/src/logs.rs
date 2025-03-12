@@ -1,5 +1,6 @@
 use ic_base_types::NodeId;
 use itertools::Itertools;
+use num_traits::Zero;
 use rust_decimal::Decimal;
 use std::fmt;
 use tabled::Table;
@@ -12,19 +13,34 @@ pub fn round_dp_4(dec: &Decimal) -> Decimal {
 /// This is used to run and log the operations that are executed in the library.
 #[derive(Debug)]
 pub enum Operation {
+    Sum(Vec<Decimal>),
     Avg(Vec<Decimal>),
+    Divide(Decimal, Decimal),
     Set(Decimal),
+    Multiply(Decimal, Decimal),
+    SumOps(Vec<Operation>),
 }
 
 impl Operation {
-    fn format_values(items: &[Decimal], prefix: &str) -> String {
-        format!("{}({})", prefix, &items.iter().map(round_dp_4).join(","))
+    fn sum(operators: &[Decimal]) -> Decimal {
+        operators.iter().fold(Decimal::zero(), |acc, val| acc + val)
+    }
+    fn format_values<T: fmt::Display>(items: &[T], prefix: &str) -> String {
+        if items.is_empty() {
+            "0".to_string()
+        } else {
+            format!("{}({})", prefix, items.iter().map(|item| format!("{}", item)).join(","),)
+        }
     }
 
     pub fn execute(&self) -> Decimal {
         match self {
+            Operation::Divide(o1, o2) => o1 / o2,
+            Operation::Sum(operators) => Self::sum(operators),
             Operation::Avg(operators) => operators.iter().sum::<Decimal>() / Decimal::from(operators.len().max(1)),
             Operation::Set(o1) => *o1,
+            Operation::Multiply(o1, o2) => o1 * o2,
+            Operation::SumOps(operations) => Self::sum(&operations.iter().map(|operation| operation.execute()).collect_vec()),
         }
     }
 }
@@ -32,8 +48,12 @@ impl Operation {
 impl fmt::Display for Operation {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
+            Operation::Sum(values) => write!(f, "{}", Operation::format_values(values, "sum")),
             Operation::Avg(values) => write!(f, "{}", Operation::format_values(values, "avg")),
+            Operation::Divide(o1, o2) => write!(f, "{} {} {}", round_dp_4(o1), "/", round_dp_4(o2)),
             Operation::Set(o1) => write!(f, "set {}", o1),
+            Operation::Multiply(o1, o2) => write!(f, "{} {} {}", round_dp_4(o1), "*", round_dp_4(o2)),
+            Operation::SumOps(operations) => write!(f, "{}", Operation::format_values(operations, "sum")),
         }
     }
 }

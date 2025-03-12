@@ -314,7 +314,7 @@ fn test_calculate_performance_multiplier_by_node() {
     let (nodes_failure_rates, subnets_failure_rates) = FailureRatesBuilder::default().build();
     let nodes = nodes_failure_rates.keys().cloned().collect_vec();
     let perf_calculator = PerformanceMultiplierCalculator::new(nodes_failure_rates, subnets_failure_rates);
-    let performance_multiplier_by_node = perf_calculator.calculate_performance_multipliers(&nodes)._performance_multiplier_by_node;
+    let performance_multiplier_by_node = perf_calculator.calculate_performance_multipliers(&nodes).performance_multiplier_by_node;
 
     // node_5_fr = [0, 0.3, 0.6, 0.05] -> avg = 0.2375
     // rewards_reduction: ((0.2375 - 0.1) / (0.6 - 0.1)) * 0.8 = 0.22

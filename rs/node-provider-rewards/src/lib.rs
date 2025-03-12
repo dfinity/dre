@@ -1,13 +1,14 @@
+use crate::logs::LogEntry;
 use crate::metrics::{nodes_failure_rates_in_period, subnets_failure_rates, NodeDailyMetrics};
-use crate::performance_calculator::{PerformanceMultiplierCalculator, PerformanceMultipliers};
+use crate::performance_calculator::PerformanceMultiplierCalculator;
 use crate::reward_period::{RewardPeriod, TimestampNanos};
-use crate::rewardable_nodes::{nodes_ids, rewardable_nodes_by_provider, NodeIds, NodesByProvider, RewardableNode, RewardableNodes};
-use crate::rewards_calculator::RewardsCalculator;
+use crate::rewardable_nodes::{nodes_ids, rewardable_nodes_by_provider, RewardableNode};
+use crate::rewards_calculator::{RewardsCalculator, XDRPermyriad};
 use ic_base_types::{NodeId, PrincipalId};
 use ic_protobuf::registry::node_rewards::v2::NodeRewardsTable;
 use itertools::Itertools;
 use std::cmp::PartialEq;
-use std::collections::{BTreeMap, HashSet};
+use std::collections::{BTreeMap, HashMap, HashSet};
 use std::error::Error;
 use std::fmt;
 
@@ -21,6 +22,11 @@ mod tabled_types;
 #[cfg(test)]
 mod tests;
 
+pub struct RewardsPerNodeProvider {
+    pub rewards_per_node_provider: HashMap<PrincipalId, XDRPermyriad>,
+    pub logs_per_node_provider: HashMap<PrincipalId, Vec<LogEntry>>,
+}
+
 /// Computes rewards for node providers based on their nodes' performance during the specified `reward_period`.
 ///
 /// # Arguments
@@ -33,7 +39,10 @@ pub fn calculate_rewards(
     rewards_table: &NodeRewardsTable,
     metrics_by_node: &BTreeMap<NodeId, Vec<NodeDailyMetrics>>,
     rewardable_nodes: &[RewardableNode],
-) -> Result<(), RewardCalculationError> {
+) -> Result<RewardsPerNodeProvider, RewardCalculationError> {
+    let mut rewards_per_node_provider = HashMap::new();
+    let mut logs_per_node_provider = HashMap::new();
+
     let all_nodes = nodes_ids(rewardable_nodes);
     validate_input(reward_period, metrics_by_node, &all_nodes)?;
 
@@ -42,23 +51,27 @@ pub fn calculate_rewards(
     let performance_calc = PerformanceMultiplierCalculator::new(nodes_failure_rates, subnets_failure_rates);
     let rewards_calculator = RewardsCalculator::new(reward_period.clone(), rewards_table.clone());
 
-    for (_provider_id, provider_rewardable_nodes) in rewardable_nodes_by_provider(rewardable_nodes) {
+    for (provider_id, provider_rewardable_nodes) in rewardable_nodes_by_provider(rewardable_nodes) {
         let ids: Vec<NodeId> = nodes_ids(&provider_rewardable_nodes);
 
-        PerformanceMultipliers {
-            performance_multiplier_by_node,
-            logger,
-        } = performance_calc.calculate_performance_multipliers(&ids);
-        rewards_calculator.calculate_rewards_xdr(provider_rewardable_nodes, performance_multiplier_by_node);
+        let multipliers = performance_calc.calculate_performance_multipliers(&ids);
+        let result = rewards_calculator.calculate_rewards_xdr(provider_rewardable_nodes, multipliers.performance_multiplier_by_node);
+        let computation_log: Vec<_> = multipliers.logger.entries.into_iter().chain(result.logger.entries.into_iter()).collect();
+
+        rewards_per_node_provider.insert(provider_id, result.xdr_permyriad);
+        logs_per_node_provider.insert(provider_id, computation_log);
     }
 
-    Ok(())
+    Ok(RewardsPerNodeProvider {
+        rewards_per_node_provider,
+        logs_per_node_provider,
+    })
 }
 
 fn validate_input(
     reward_period: &RewardPeriod,
     metrics_by_node: &BTreeMap<NodeId, Vec<NodeDailyMetrics>>,
-    all_nodes: &Vec<NodeId>,
+    all_nodes: &[NodeId],
 ) -> Result<(), RewardCalculationError> {
     if all_nodes.is_empty() {
         return Err(RewardCalculationError::EmptyNodes);

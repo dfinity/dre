@@ -51,15 +51,6 @@ impl PerformanceMultiplierCalculator {
             },
         }
     }
-    fn run_and_log(&self, description: &str, operation: Operation) -> Decimal {
-        let result = operation.execute();
-        self.logger_mut().log(LogEntry::Execute {
-            reason: format!("\t{}", description),
-            operation,
-            result,
-        });
-        result
-    }
 
     fn logger_mut(&self) -> RefMut<Logger> {
         self.ctx.logger.borrow_mut()
@@ -128,7 +119,7 @@ impl PerformanceMultiplierCalculator {
         self.logger_mut().log(LogEntry::NodesMultiplierStep(function_name!()));
 
         if self.nodes_failure_rates().is_empty() {
-            return self.run_and_log("No nodes assigned", Operation::Set(dec!(1)));
+            return self.logger_mut().run_and_log("No nodes assigned", Operation::Set(dec!(1)));
         }
 
         let nodes_avg_failure_rates: Vec<Decimal> = self
@@ -143,11 +134,12 @@ impl PerformanceMultiplierCalculator {
                     })
                     .collect();
 
-                self.run_and_log(&node_id.to_string(), Operation::Avg(raw_failure_rates))
+                self.logger_mut().run_and_log(&node_id.to_string(), Operation::Avg(raw_failure_rates))
             })
             .collect();
 
-        self.run_and_log("Extrapolated Failure Rate", Operation::Avg(nodes_avg_failure_rates))
+        self.logger_mut()
+            .run_and_log("Extrapolated Failure Rate", Operation::Avg(nodes_avg_failure_rates))
     }
 
     fn fill_undefined_failure_rates(&self, extrapolated_rate: Decimal) {
@@ -176,7 +168,7 @@ impl PerformanceMultiplierCalculator {
                     })
                     .collect();
 
-                let average_rate = self.run_and_log(&node_id.to_string(), Operation::Avg(raw_failure_rates));
+                let average_rate = self.logger_mut().run_and_log(&node_id.to_string(), Operation::Avg(raw_failure_rates));
                 (*node_id, average_rate)
             })
             .collect()
@@ -240,8 +232,8 @@ impl PerformanceMultiplierCalculator {
         }
 
         PerformanceMultipliers {
-            _logger: logger,
-            _performance_multiplier_by_node: performance_multiplier_by_node,
+            logger,
+            performance_multiplier_by_node,
         }
     }
 }

@@ -1,12 +1,27 @@
 use ic_base_types::{NodeId, PrincipalId};
 use std::collections::BTreeMap;
 
+#[derive(Eq, Hash, PartialEq, Clone)]
+pub struct RegionNodeTypeCategory {
+    pub region: String,
+    pub node_type: String,
+}
+
 #[derive(Debug, Clone, PartialEq)]
 pub struct RewardableNode {
     pub node_id: NodeId,
     pub node_provider: PrincipalId,
     pub region: String,
     pub node_type: String,
+}
+
+impl RewardableNode {
+    pub fn region_node_type_category(&self) -> RegionNodeTypeCategory {
+        RegionNodeTypeCategory {
+            region: self.region.clone(),
+            node_type: self.node_type.clone(),
+        }
+    }
 }
 
 pub fn rewardable_nodes_by_provider(rewardable_nodes: &[RewardableNode]) -> BTreeMap<PrincipalId, Vec<RewardableNode>> {
