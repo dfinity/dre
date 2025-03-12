@@ -112,7 +112,7 @@ impl ProposableViaGovernanceCanister for MakeProposalRequest {
 /// of a proposal (any object that implements either RunnableViaIcAdmin or
 /// ProposableViaGovernanceCanister, and produces a ProposalResponseWithId).
 pub trait ProposalExecution: Send + Sync {
-    fn simulate(&self) -> BoxFuture<'_, anyhow::Result<()>>;
+    fn simulate(&self, forum_post_link_description: Option<String>) -> BoxFuture<'_, anyhow::Result<()>>;
 
     /// Runs the proposal in forrealz mode.  Result is returned and logged at debug level.
     fn submit<'a, 'b>(&'a self, forum_post_link: Option<Url>) -> BoxFuture<'b, anyhow::Result<ProposalResponseWithId>>
