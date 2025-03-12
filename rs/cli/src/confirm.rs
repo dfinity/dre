@@ -29,7 +29,7 @@ pub struct ConfirmationModeOptions {
     yes: bool,
 
     #[clap(long, aliases = [ "dry-run", "dryrun", "simulate", "no"], env = "DRY_RUN", global = true, conflicts_with = "yes", help = r#"Dry-run, or simulate operation. If specified will not make any changes; instead, it will show what would be done or submitted."#,help_heading = "Options on how to proceed")]
-    dry_run: bool,
+    pub(crate) dry_run: bool,
 }
 
 #[cfg(test)]
