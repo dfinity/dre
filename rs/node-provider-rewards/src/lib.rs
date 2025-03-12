@@ -1,7 +1,11 @@
 use crate::metrics::{nodes_failure_rates_in_period, subnets_failure_rates, NodeDailyMetrics};
-use crate::performance_calculator::PerformanceMultiplierCalculator;
+use crate::performance_calculator::{PerformanceMultiplierCalculator, PerformanceMultipliers};
 use crate::reward_period::{RewardPeriod, TimestampNanos};
+use crate::rewardable_nodes::{nodes_ids, rewardable_nodes_by_provider, NodeIds, NodesByProvider, RewardableNode, RewardableNodes};
+use crate::rewards_calculator::RewardsCalculator;
 use ic_base_types::{NodeId, PrincipalId};
+use ic_protobuf::registry::node_rewards::v2::NodeRewardsTable;
+use itertools::Itertools;
 use std::cmp::PartialEq;
 use std::collections::{BTreeMap, HashSet};
 use std::error::Error;
@@ -11,6 +15,8 @@ mod logs;
 mod metrics;
 mod performance_calculator;
 mod reward_period;
+mod rewardable_nodes;
+mod rewards_calculator;
 mod tabled_types;
 #[cfg(test)]
 mod tests;
@@ -21,23 +27,29 @@ mod tests;
 /// * reward_period - The time frame for which rewards are calculated.
 /// * metrics_by_node - Daily node metrics for nodes in `reward_period`. Only nodes in `providers_rewardable_nodes` keys are considered.
 /// * providers_rewardable_nodes: Nodes eligible for rewards, as recorded in the registry versions spanning the `reward_period` provided.
-///
-/// TODO: Implement the XDR reward calculation logic from the nodes multiplier.
+/// * reward
 pub fn calculate_rewards(
-    reward_period: RewardPeriod,
-    metrics_by_node: BTreeMap<NodeId, Vec<NodeDailyMetrics>>,
-    providers_rewardable_nodes: BTreeMap<PrincipalId, Vec<NodeId>>,
+    reward_period: &RewardPeriod,
+    rewards_table: &NodeRewardsTable,
+    metrics_by_node: &BTreeMap<NodeId, Vec<NodeDailyMetrics>>,
+    rewardable_nodes: &[RewardableNode],
 ) -> Result<(), RewardCalculationError> {
-    validate_input(&reward_period, &metrics_by_node, &providers_rewardable_nodes)?;
+    let all_nodes = nodes_ids(rewardable_nodes);
+    validate_input(reward_period, metrics_by_node, &all_nodes)?;
 
-    let subnets_failure_rates = subnets_failure_rates(&metrics_by_node);
-    let all_nodes: Vec<NodeId> = providers_rewardable_nodes.values().flatten().cloned().collect();
-    let nodes_failure_rates = nodes_failure_rates_in_period(&all_nodes, &reward_period, &metrics_by_node);
+    let subnets_failure_rates = subnets_failure_rates(metrics_by_node);
+    let nodes_failure_rates = nodes_failure_rates_in_period(&all_nodes, &reward_period, metrics_by_node);
+    let performance_calc = PerformanceMultiplierCalculator::new(nodes_failure_rates, subnets_failure_rates);
+    let rewards_calculator = RewardsCalculator::new(reward_period.clone(), rewards_table.clone());
 
-    let perf_calculator = PerformanceMultiplierCalculator::new(nodes_failure_rates, subnets_failure_rates);
+    for (_provider_id, provider_rewardable_nodes) in rewardable_nodes_by_provider(rewardable_nodes) {
+        let ids: Vec<NodeId> = nodes_ids(&provider_rewardable_nodes);
 
-    for (_provider_id, provider_nodes) in providers_rewardable_nodes {
-        let _nodes_multiplier = perf_calculator.calculate_performance_multipliers(&provider_nodes);
+        PerformanceMultipliers {
+            performance_multiplier_by_node,
+            logger,
+        } = performance_calc.calculate_performance_multipliers(&ids);
+        rewards_calculator.calculate_rewards_xdr(provider_rewardable_nodes, performance_multiplier_by_node);
     }
 
     Ok(())
@@ -46,16 +58,15 @@ pub fn calculate_rewards(
 fn validate_input(
     reward_period: &RewardPeriod,
     metrics_by_node: &BTreeMap<NodeId, Vec<NodeDailyMetrics>>,
-    providers_rewardable_nodes: &BTreeMap<PrincipalId, Vec<NodeId>>,
+    all_nodes: &Vec<NodeId>,
 ) -> Result<(), RewardCalculationError> {
-    let rewardable_nodes: HashSet<&NodeId> = providers_rewardable_nodes.values().flatten().collect();
-    if rewardable_nodes.is_empty() {
+    if all_nodes.is_empty() {
         return Err(RewardCalculationError::EmptyNodes);
     }
 
     // Check if all nodes with metrics are present in the rewardable nodes
     for node_id in metrics_by_node.keys() {
-        if !rewardable_nodes.contains(node_id) {
+        if !all_nodes.contains(node_id) {
             return Err(RewardCalculationError::NodeNotInRewardables(*node_id));
         }
     }
