@@ -10,7 +10,7 @@ pub struct DataCenterInfo {
     continent: String,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 pub struct CordonedFeature {
     pub feature: NodeFeature,
     pub value: String,
