@@ -8,16 +8,16 @@ use ic_management_canister_types::NodeMetricsHistoryResponse;
 
 mod mock {
     use super::*;
-    use crate::metrics::ManagementCanisterCaller;
+    use crate::metrics::ManagementCanisterClient;
     use async_trait::async_trait;
     use mockall::mock;
 
     mock! {
         #[derive(Debug)]
-        pub CanisterCaller {}
+        pub CanisterClient {}
 
         #[async_trait]
-        impl ManagementCanisterCaller for CanisterCaller {
+        impl ManagementCanisterClient for CanisterClient {
             async fn node_metrics_history(&self, contract: ic_management_canister_types::NodeMetricsHistoryArgs) -> CallResult<(Vec<NodeMetricsHistoryResponse>,)>;
         }
     }
@@ -41,7 +41,7 @@ fn node_metrics_history_gen(days: u64) -> Vec<NodeMetricsHistoryResponse> {
 
 #[tokio::test]
 async fn subnet_metrics_added_correctly() {
-    let mut mock = mock::MockCanisterCaller::new();
+    let mut mock = mock::MockCanisterClient::new();
     let days = 45;
     mock.expect_node_metrics_history()
         .return_const(CallResult::Ok((node_metrics_history_gen(days),)));
@@ -62,7 +62,7 @@ async fn subnet_metrics_added_correctly() {
 #[tokio::test]
 async fn subnets_to_retry_filled() {
     let subnet_1 = subnet_id(1);
-    let mut mock = mock::MockCanisterCaller::new();
+    let mut mock = mock::MockCanisterClient::new();
     mock.expect_node_metrics_history()
         .times(1)
         .return_const(CallResult::Err((RejectionCode::Unknown, "Error".to_string())));
@@ -80,7 +80,7 @@ async fn subnets_to_retry_filled() {
 
 #[tokio::test]
 async fn multiple_subnets_metrics_added_correctly() {
-    let mut mock = mock::MockCanisterCaller::new();
+    let mut mock = mock::MockCanisterClient::new();
     let subnet_1 = subnet_id(1);
     let subnet_2 = subnet_id(2);
     let days = 30;
@@ -106,7 +106,7 @@ async fn multiple_subnets_metrics_added_correctly() {
 #[tokio::test]
 async fn retry_count_increments_on_failure() {
     let subnet_1 = subnet_id(1);
-    let mut mock = mock::MockCanisterCaller::new();
+    let mut mock = mock::MockCanisterClient::new();
 
     mock.expect_node_metrics_history()
         .return_const(CallResult::Err((RejectionCode::Unknown, "Temporary error".to_string())));
@@ -127,7 +127,7 @@ async fn retry_count_increments_on_failure() {
 #[tokio::test]
 async fn no_metrics_added_when_call_fails() {
     let subnet_1 = subnet_id(1);
-    let mut mock = mock::MockCanisterCaller::new();
+    let mut mock = mock::MockCanisterClient::new();
 
     mock.expect_node_metrics_history()
         .return_const(CallResult::Err((RejectionCode::Unknown, "Error".to_string())));
@@ -143,7 +143,7 @@ async fn no_metrics_added_when_call_fails() {
 async fn partial_failures_are_handled_correctly() {
     let subnet_1 = subnet_id(1);
     let subnet_2 = subnet_id(2);
-    let mut mock = mock::MockCanisterCaller::new();
+    let mut mock = mock::MockCanisterClient::new();
 
     mock.expect_node_metrics_history().returning(move |subnet| {
         if SubnetId::from(subnet.subnet_id) == subnet_1 {

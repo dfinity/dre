@@ -1,10 +1,10 @@
-use crate::external::ICCanisterRuntime;
+use crate::canister_client::ICCanisterClient;
 use crate::metrics::MetricsManager;
 use crate::registry_store::CanisterRegistryStore;
 use crate::storage::{State, VM};
 use ic_cdk_macros::*;
 
-mod external;
+mod canister_client;
 mod metrics;
 mod metrics_types;
 mod registry;
@@ -17,19 +17,19 @@ const DAY_IN_SECONDS: u64 = HOUR_IN_SECONDS * 24;
 
 pub type RegistryStoreInstance = CanisterRegistryStore<State, VM>;
 pub type MetricsManagerInstance = MetricsManager<State, VM>;
-pub const IC_CANISTER_RUNTIME: ICCanisterRuntime = ICCanisterRuntime {};
+pub const IC_CANISTER_CLIENT: ICCanisterClient = ICCanisterClient {};
 
 /// Sync the local registry and subnets metrics with remote
 ///
 /// - Sync local registry stored from the remote registry canister
 /// - Sync subnets metrics from the management canister of the different subnets
 async fn sync_all() {
-    RegistryStoreInstance::sync_registry_stored(&IC_CANISTER_RUNTIME)
+    RegistryStoreInstance::sync_registry_stored(&IC_CANISTER_CLIENT)
         .await
         .expect("Failed to sync registry stored");
 
     let subnets_list = registry::subnets_list();
-    MetricsManagerInstance::update_subnets_metrics(&IC_CANISTER_RUNTIME, subnets_list).await;
+    MetricsManagerInstance::update_subnets_metrics(&IC_CANISTER_CLIENT, subnets_list).await;
 
     ic_cdk::println!("Successfully synced subnets metrics and local registry");
 }
@@ -46,7 +46,7 @@ fn setup_timers() {
 
     // Retry subnets fetching every hour
     ic_cdk_timers::set_timer_interval(std::time::Duration::from_secs(HOUR_IN_SECONDS), || {
-        ic_cdk::spawn(MetricsManagerInstance::retry_failed_subnets(&IC_CANISTER_RUNTIME));
+        ic_cdk::spawn(MetricsManagerInstance::retry_failed_subnets(&IC_CANISTER_CLIENT));
     });
 }
 

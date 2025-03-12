@@ -25,7 +25,7 @@ pub trait MetricsManagerData<Memory: ic_stable_structures::Memory> {
 }
 
 #[async_trait]
-pub trait ManagementCanisterCaller {
+pub trait ManagementCanisterClient {
     async fn node_metrics_history(&self, args: NodeMetricsHistoryArgs) -> CallResult<(Vec<NodeMetricsHistoryResponse>,)>;
 }
 
@@ -41,18 +41,18 @@ impl<D: MetricsManagerData<Memory>, Memory> MetricsManager<D, Memory>
 where
     Memory: ic_stable_structures::Memory,
 {
-    pub async fn retry_failed_subnets<M: ManagementCanisterCaller>(runtime: &M) {
+    pub async fn retry_failed_subnets<M: ManagementCanisterClient>(client: &M) {
         let subnets_to_retry: Vec<SubnetId> = D::with_subnets_to_retry(|subnets_to_retry| subnets_to_retry.keys().map(|key| *key).collect());
 
         if !subnets_to_retry.is_empty() {
             ic_cdk::println!("Retrying metrics for subnets: {:?}", subnets_to_retry);
-            Self::update_subnets_metrics(runtime, subnets_to_retry).await
+            Self::update_subnets_metrics(client, subnets_to_retry).await
         }
     }
 
     /// Fetches subnets metrics for the specified subnets from their last timestamp.
-    async fn fetch_subnets_metrics<M: ManagementCanisterCaller>(
-        runtime: &M,
+    async fn fetch_subnets_metrics<M: ManagementCanisterClient>(
+        client: &M,
         last_timestamp_per_subnet: &BTreeMap<SubnetId, TimestampNanos>,
     ) -> BTreeMap<SubnetId, CallResult<(Vec<NodeMetricsHistoryResponse>,)>> {
         let mut subnets_node_metrics = Vec::new();
@@ -72,7 +72,7 @@ where
             };
 
             subnets_node_metrics.push(async move {
-                let call_result = runtime.node_metrics_history(contract).await;
+                let call_result = client.node_metrics_history(contract).await;
 
                 (*subnet_id, call_result)
             });
@@ -85,7 +85,7 @@ where
     ///
     /// This function fetches the nodes metrics for the given subnets from the management canisters
     /// updating the local metrics with the fetched metrics.
-    pub async fn update_subnets_metrics<M: ManagementCanisterCaller>(runtime: &M, subnets: Vec<SubnetId>) {
+    pub async fn update_subnets_metrics<M: ManagementCanisterClient>(client: &M, subnets: Vec<SubnetId>) {
         let last_timestamp_per_subnet = D::with_last_timestamp_per_subnet(|last_timestamp_per_subnet| {
             subnets
                 .into_iter()
@@ -97,7 +97,7 @@ where
                 .collect()
         });
 
-        let subnets_metrics = Self::fetch_subnets_metrics(runtime, &last_timestamp_per_subnet).await;
+        let subnets_metrics = Self::fetch_subnets_metrics(client, &last_timestamp_per_subnet).await;
         for (subnet_id, call_result) in subnets_metrics {
             match call_result {
                 Ok((nodes_metrics_history,)) => {

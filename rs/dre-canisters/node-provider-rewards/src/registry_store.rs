@@ -18,7 +18,7 @@ pub trait RegistryStoreData<Memory: ic_stable_structures::Memory> {
 }
 
 #[async_trait]
-pub trait RegistryCanisterCaller {
+pub trait RegistryCanisterClient {
     async fn registry_changes_since(&self, version: u64) -> anyhow::Result<Vec<RegistryDelta>>;
 }
 
@@ -119,7 +119,7 @@ where
     /// Syncs the local registry with the remote registry.
     ///
     /// This function will keep fetching registry deltas from the remote registry until the local registry is up to date.
-    pub async fn sync_registry_stored<R: RegistryCanisterCaller>(runtime: &R) -> anyhow::Result<()> {
+    pub async fn sync_registry_stored<R: RegistryCanisterClient>(client: &R) -> anyhow::Result<()> {
         let mut current_local_version = Self::local_latest_version().get();
 
         loop {
@@ -142,7 +142,7 @@ where
                 }
             }
 
-            let remote_deltas = runtime.registry_changes_since(current_local_version).await?;
+            let remote_deltas = client.registry_changes_since(current_local_version).await?;
 
             // Update the local version to the latest remote version for this iteration.
             current_local_version = remote_deltas

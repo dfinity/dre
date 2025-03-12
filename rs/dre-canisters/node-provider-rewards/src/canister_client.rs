@@ -1,5 +1,5 @@
-use crate::metrics::ManagementCanisterCaller;
-use crate::registry_store::RegistryCanisterCaller;
+use crate::metrics::ManagementCanisterClient;
+use crate::registry_store::RegistryCanisterClient;
 use anyhow::anyhow;
 use async_trait::async_trait;
 use candid::Principal;
@@ -9,13 +9,11 @@ use ic_nns_constants::REGISTRY_CANISTER_ID;
 use ic_registry_transport::pb::v1::RegistryDelta;
 use ic_registry_transport::{deserialize_get_changes_since_response, serialize_get_changes_since_request};
 
-/// The runtime for the IC canister.
-///
-/// This struct is used to interact with remote IC canisters.
-pub struct ICCanisterRuntime {}
+/// Used to interact with remote IC canisters.
+pub struct ICCanisterClient {}
 
 #[async_trait]
-impl RegistryCanisterCaller for ICCanisterRuntime {
+impl RegistryCanisterClient for ICCanisterClient {
     async fn registry_changes_since(&self, version: u64) -> anyhow::Result<Vec<RegistryDelta>> {
         let buff = serialize_get_changes_since_request(version)?;
         let registry_canister_principal = Principal::from(REGISTRY_CANISTER_ID);
@@ -29,7 +27,7 @@ impl RegistryCanisterCaller for ICCanisterRuntime {
 }
 
 #[async_trait]
-impl ManagementCanisterCaller for ICCanisterRuntime {
+impl ManagementCanisterClient for ICCanisterClient {
     /// Queries the `node_metrics_history` endpoint of the management canisters of the subnet specified
     /// in the 'contract' to fetch daily node metrics.
     async fn node_metrics_history(&self, contract: NodeMetricsHistoryArgs) -> CallResult<(Vec<NodeMetricsHistoryResponse>,)> {
