@@ -10,6 +10,8 @@ use crate::{
 };
 
 #[derive(Args, Debug)]
+/// Disables automatic help flag parsing so that "--help" can be handled manually to display propose subcommands.
+#[clap(disable_help_flag = true)]
 pub struct Propose {
     #[clap(flatten)]
     pub submission_parameters: SubmissionParameters,
@@ -37,13 +39,20 @@ impl ExecutableCommand for Propose {
             args.to_vec()
         };
 
-        if args.is_empty() {
+        if args.is_empty() || args.len() == 1 && args[0] == "--help" {
             return ctx.help_propose(None).await;
         }
 
         let cmd = IcAdminProposal::new(IcAdminProposalCommand::Raw(args.clone()), Default::default());
 
-        Submitter::from(&self.submission_parameters)
+        // If the '--help' flag is present, switch to dry-run mode.
+        // This automatically bypasses interactive prompts, as they are unnecessary and unexpected when displaying help.
+        let mut submission_params = self.submission_parameters.clone();
+        if args.contains(&String::from("--help")) {
+            submission_params.confirmation_mode.dry_run = true;
+        }
+
+        Submitter::from(&submission_params)
             .propose_and_print(ctx.ic_admin_executor().await?.execution(cmd), ForumPostKind::Generic)
             .await
     }
