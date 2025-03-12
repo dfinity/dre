@@ -114,6 +114,16 @@ Also, due to the requirement that forum posts have long-lasting discussion befor
 -y, --yes              # Skip confirmation prompt
 ```
 
+## Motion Proposal Workflow for DRE Team
+
+1. Prepare your motion proposal content in Markdown, similar to other files in `/docs/motion-proposals`.
+2. Create a new file under the repository path /docs/motion-proposals/<filename>.md (the filename can initially be descriptive, for example "proposal-summary.md").
+3. Open a pull request (PR) with your changes and get feedback from others.
+4. Address any feedback by making changes in the PR until the proposal content is approved.
+5. Submit the proposal using the DRE CLI tool, following the process described below.
+6. After submission, update the filename to include the submitted proposal ID (for example, change `proposal-summary.md` to `<proposalID> proposal-summary.md`).
+7. Merge the PR to finalize the changes.
+
 ## Creating the Proposal
 
 ### 1. Prepare the Summary File
@@ -152,6 +162,16 @@ Implementation timeline:
 - Phase 1: ...
 - Phase 2: ...
 ```
+
+### Step 3: Adjusting the Filename
+
+After a successful submission, the governance canister will return a proposal ID.
+Rename the motion proposal markdown file to include this ID in its filename (for example, updating the file from `proposal-summary.md` to `<proposalID> proposal-summary.md`).
+Commit and push this change to the PR.
+
+### Step 4: Merging the PR
+
+Finally, merge the PR that includes the updated filename to have an official record of the submitted proposal in the repository, for future reference.
 
 ## Submission Examples
 
@@ -237,4 +257,4 @@ dre governance propose motion \
 - [NNS Documentation](https://internetcomputer.org/docs/current/tokenomics/nns/nns-intro)
 - [Internet Computer Forum](https://forum.dfinity.org/)
 - [Markdown Guide](https://www.markdownguide.org/)
-- [DRE CLI Documentation](https://github.com/dfinity/dre/)
+- [DRE CLI Documentation](https://dfinity.github.io/dre/)

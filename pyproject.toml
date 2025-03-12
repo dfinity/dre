@@ -1,9 +1,12 @@
 [project]
 name = "dre-repo"
-version = "0.5.9"
+version = "0.6.0"
 description = ""
 authors = [{ name = "DRE Team", email = "dept-DRE@dfinity.org" }]
 readme = "README.md"
+# Note: You should add dependencies with `rye add <dependency>`
+# Or to add dev-dependencies: `rye add --dev <dependency>`
+# This will ensure that the dependency is added to the correct section and also updates the corresponding lock file(s).
 dependencies = [
     "requests>=2.32.3",
     "types-requests>=2.32.0",
@@ -53,6 +56,7 @@ dependencies = [
     "aiohttp>=3.10.5",
     "uv>=0.5.20",
     "mypy==1.15.0",
+    "prometheus-client>=0.21.1",
 ]
 
 [tool.rye]

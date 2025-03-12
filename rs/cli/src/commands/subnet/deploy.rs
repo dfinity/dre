@@ -34,7 +34,7 @@ impl ExecutableCommand for Deploy {
     async fn execute(&self, ctx: crate::ctx::DreContext) -> anyhow::Result<()> {
         let runner_proposal = ctx.runner().await?.deploy(&self.id, &self.version).await?;
         Submitter::from(&self.submission_parameters)
-            .propose(ctx.ic_admin_executor().await?.execution(runner_proposal), ForumPostKind::Generic)
+            .propose_and_print(ctx.ic_admin_executor().await?.execution(runner_proposal), ForumPostKind::Generic)
             .await
     }
 
