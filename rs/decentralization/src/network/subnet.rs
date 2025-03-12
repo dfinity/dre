@@ -2,6 +2,7 @@ use super::*;
 use crate::nakamoto::NakamotoScore;
 use crate::provider_clusters::get_linked_providers;
 use log::{debug, info};
+use rand::seq::IndexedRandom;
 use std::cmp::Ordering;
 use std::fmt::{Display, Formatter};
 
