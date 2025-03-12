@@ -24,16 +24,15 @@ pub const IC_CANISTER_CLIENT: ICCanisterClient = ICCanisterClient {};
 /// - Sync local registry stored from the remote registry canister
 /// - Sync subnets metrics from the management canister of the different subnets
 async fn sync_all() {
-    let registry_sync_result = RegistryStoreInstance::sync_registry_stored(&IC_CANISTER_CLIENT)
-        .await;
+    let registry_sync_result = RegistryStoreInstance::sync_registry_stored(&IC_CANISTER_CLIENT).await;
 
-    match registry_sync_result { 
+    match registry_sync_result {
         Ok(_) => {
             let subnets_list = registry::subnets_list();
             MetricsManagerInstance::update_subnets_metrics(&IC_CANISTER_CLIENT, subnets_list).await;
 
             ic_cdk::println!("Successfully synced subnets metrics and local registry");
-        },
+        }
         Err(e) => ic_cdk::println!("Failed to sync local registry: {:?}", e),
     }
 }
