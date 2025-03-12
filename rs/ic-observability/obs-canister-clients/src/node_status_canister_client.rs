@@ -3,7 +3,7 @@ use std::time::Duration;
 use candid::{CandidType, Decode, Encode};
 use ic_agent::agent::CallResponse;
 use ic_agent::{export::Principal, identity::AnonymousIdentity, Agent};
-use rand::seq::SliceRandom;
+use rand::seq::IndexedRandom;
 use serde::Deserialize;
 use url::Url;
 
@@ -66,10 +66,7 @@ impl NodeStatusCanister {
     }
 
     async fn choose_random_agent(&self) -> &Agent {
-        let agent = self
-            .agent
-            .choose(&mut rand::thread_rng())
-            .expect("can't fail, ::new asserts list is non-empty");
+        let agent = self.agent.choose(&mut rand::rng()).expect("can't fail, ::new asserts list is non-empty");
 
         if agent.read_root_key().iter().any(|k| *k != 0) {
             agent.fetch_root_key().await.unwrap();
