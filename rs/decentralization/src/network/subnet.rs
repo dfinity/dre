@@ -141,14 +141,11 @@ impl DecentralizedSubnet {
 
         let nakamoto_scores = Self::_calc_nakamoto_score(nodes);
         let subnet_id_str = subnet_id.to_string();
-        let is_european_subnet = subnet_id_str == *"bkfrj-6k62g-dycql-7h53p-atvkj-zg4to-gaogh-netha-ptybj-ntsgw-rqe";
+        let is_european_subnet = &subnet_id_str == "bkfrj-6k62g-dycql-7h53p-atvkj-zg4to-gaogh-netha-ptybj-ntsgw-rqe";
+        let is_nns_subnet = &subnet_id_str == "tdb26-jop6k-aogll-7ltgs-eruif-6kk7m-qpktf-gdiqx-mxtrf-vb5e6-eqe";
 
         let dfinity_owned_nodes_count: usize = nodes.iter().map(|n| n.dfinity_owned.unwrap_or_default() as usize).sum();
-        let target_dfinity_owned_nodes_count = if subnet_id_str == *"tdb26-jop6k-aogll-7ltgs-eruif-6kk7m-qpktf-gdiqx-mxtrf-vb5e6-eqe" {
-            3
-        } else {
-            1
-        };
+        let target_dfinity_owned_nodes_count = if is_nns_subnet { 3 } else { 1 };
 
         if dfinity_owned_nodes_count != target_dfinity_owned_nodes_count {
             checks.push(format!(
@@ -159,7 +156,7 @@ impl DecentralizedSubnet {
         }
 
         if subnet_id_str == *"uzr34-akd3s-xrdag-3ql62-ocgoh-ld2ao-tamcv-54e7j-krwgb-2gm4z-oqe"
-            || subnet_id_str == *"tdb26-jop6k-aogll-7ltgs-eruif-6kk7m-qpktf-gdiqx-mxtrf-vb5e6-eqe"
+            || is_nns_subnet
             || subnet_id_str == *"x33ed-h457x-bsgyx-oqxqf-6pzwv-wkhzr-rm2j3-npodi-purzm-n66cg-gae"
         {
             // We keep the backup of the ECDSA key on uzr34, and we don't want a single
@@ -189,12 +186,36 @@ impl DecentralizedSubnet {
         // As per the adopted target topology
         // https://dashboard.internetcomputer.org/proposal/132136
         let max_nodes_per_np_and_dc = 1;
+        let dfinity_np = "bvcsg-3od6r-jnydw-eysln-aql7w-td5zn-ay5m6-sibd2-jzojt-anwag-mqe";
+        let dfinity_dcs = nodes
+            .iter()
+            .filter(|n| n.operator.provider.principal.to_string() == dfinity_np)
+            .map(|n| n.operator.datacenter.clone().unwrap_or_default().name)
+            .collect::<AHashSet<_>>();
+        let dfinity_dc_owners = nodes
+            .iter()
+            .filter(|n| n.operator.provider.principal.to_string() == dfinity_np)
+            .map(|n| n.operator.datacenter.clone().unwrap_or_default().owner.name)
+            .collect::<AHashSet<_>>();
+
         for feature in &[NodeFeature::NodeProvider, NodeFeature::DataCenter, NodeFeature::DataCenterOwner] {
             for (name, count) in nakamoto_scores
                 .feature_value_counts(feature)
                 .iter()
                 .filter(|(_name, count)| *count > max_nodes_per_np_and_dc)
             {
+                // DFINITY is allowed to have 3 nodes on the NNS subnet, exempt from the standard “1 node per DC/NP” rule: https://dashboard.internetcomputer.org/proposal/135700
+                if is_nns_subnet && *count <= target_dfinity_owned_nodes_count {
+                    if feature == &NodeFeature::NodeProvider && name == dfinity_np {
+                        continue;
+                    }
+                    if feature == &NodeFeature::DataCenter && dfinity_dcs.contains(name) {
+                        continue;
+                    }
+                    if feature == &NodeFeature::DataCenterOwner && dfinity_dc_owners.contains(name) {
+                        continue;
+                    }
+                }
                 if *count > max_nodes_per_np_and_dc {
                     let penalty = (count - max_nodes_per_np_and_dc) * 10;
                     checks.push(format!(
