@@ -14,7 +14,7 @@ use url::Url;
 
 pub async fn download_loop(url: Url, logger: Logger, path: PathBuf, inputs: Vec<String>, transform_id: String) {
     let client = reqwest::Client::builder()
-        .connect_timeout(Duration::from_secs(30))
+        .timeout(Duration::from_secs(30))
         .build()
         .expect("Should be able to build a client");
 
