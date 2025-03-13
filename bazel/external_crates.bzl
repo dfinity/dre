@@ -46,6 +46,7 @@ def external_crates_repository():
             "//rs/log-fetcher:Cargo.toml",
             "//rs/slack-notifications:Cargo.toml",
             "//rs/node-provider-rewards:Cargo.toml",
+            "//rs/dre-canisters/node-provider-rewards:Cargo.toml",
             "//rs/dre-canisters/node-provider-rewards-lib:Cargo.toml",
             "//rs/dre-canisters/trustworthy-node-metrics/src/trustworthy-node-metrics:Cargo.toml",
             "//rs/dre-canisters/trustworthy-node-metrics/src/trustworthy-node-metrics-types:Cargo.toml",
