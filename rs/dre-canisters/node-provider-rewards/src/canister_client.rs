@@ -3,7 +3,7 @@ use crate::registry_store::RegistryCanisterClientError::CallError;
 use crate::registry_store::{RegistryCanisterClient, RegistryCanisterClientError};
 use async_trait::async_trait;
 use candid::Principal;
-use ic_cdk::api::call::{CallResult, RejectionCode};
+use ic_cdk::api::call::CallResult;
 use ic_management_canister_types::{NodeMetricsHistoryArgs, NodeMetricsHistoryResponse};
 use ic_nns_constants::REGISTRY_CANISTER_ID;
 use ic_registry_transport::pb::v1::RegistryDelta;
