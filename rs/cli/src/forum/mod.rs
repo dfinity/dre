@@ -119,6 +119,15 @@ impl ForumParameters {
         }
         Ok(())
     }
+
+    pub fn forum_post_link_for_simulation(&self) -> Option<String> {
+        match &self.forum_post_link {
+            ForumPostLinkVariant::Url(u) => Some(u.to_string()),
+            ForumPostLinkVariant::Ask => Some("Will be prompted".to_string()),
+            ForumPostLinkVariant::ManageOnDiscourse => Some("Will be automatically created on Discourse".to_string()),
+            ForumPostLinkVariant::Omit => None,
+        }
+    }
 }
 
 // FIXME: this should become part of a new composite trait

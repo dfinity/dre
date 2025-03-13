@@ -134,6 +134,9 @@ impl NetworkHealRequest {
             info!("Nothing to do! All subnets are healthy and compliant with business rules.")
         }
 
+        // Re-sort all subnets together to maintain priority ordering and fix the most important subnets first.
+        subnets_to_fix = subnets_to_fix.into_iter().sorted_by(|a, b| b.1.cmp(&a.1)).collect();
+
         for (_subnet_id, subnet) in subnets_to_fix.iter() {
             // If more than 1/3 nodes do not have the latest subnet state, subnet will stall.
             // From those 1/2 are added and 1/2 removed -> nodes_in_subnet/3 * 1/2 = nodes_in_subnet/6
