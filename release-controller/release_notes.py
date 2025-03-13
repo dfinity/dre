@@ -588,7 +588,7 @@ Changes [were removed](https://github.com/dfinity/ic/compare/{release_tag}...{ba
 def is_guestos_change(ic_repo: GitRepo, commit: str) -> bool:
     """Check if GuestOS changed for the commit by querying git notes populated by commit annotator."""
     with ic_repo.annotator([GUESTOS_CHANGED_NOTES_NAMESPACE]) as ann:
-        changed = ann.get(GUESTOS_CHANGED_NOTES_NAMESPACE, commit)
+        changed = ann.get(namespace=GUESTOS_CHANGED_NOTES_NAMESPACE, object=commit)
     if not changed:
         raise ValueError(
             f"Could not find GuestOS label for commit {commit}. Check out commit annotator logs and runbook: https://dfinity.github.io/dre/release.html#missing-guestos-label."
