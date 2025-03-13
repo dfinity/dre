@@ -233,10 +233,15 @@ impl ExecutableCommand for Network {
     fn validate(&self, _args: &GlobalArgs, cmd: &mut clap::Command) {
         // At least one of the two options must be provided
         let network_heal = self.heal || std::env::args().any(|arg| arg == "heal");
-        if !network_heal && !self.ensure_operator_nodes_assigned && !self.ensure_operator_nodes_unassigned && !self.remove_cordoned_nodes {
+        if !(network_heal
+            || self.ensure_operator_nodes_assigned
+            || self.ensure_operator_nodes_unassigned
+            || self.remove_cordoned_nodes
+            || self.optimize_decentralization)
+        {
             cmd.error(
                 clap::error::ErrorKind::MissingRequiredArgument,
-                "At least one of '--heal' or '--ensure-operator-nodes-assigned' or '--ensure-operator-nodes-unassigned' or '--remove-cordoned-nodes' must be specified.",
+                "At least one of '--heal' or '--ensure-operator-nodes-assigned' or '--ensure-operator-nodes-unassigned' or '--remove-cordoned-nodes' or '--optimize-decentralization' must be specified.",
             )
             .exit()
         }

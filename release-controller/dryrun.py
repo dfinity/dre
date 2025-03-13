@@ -227,9 +227,8 @@ class PublishNotesClient(object):
 class DRECli(dre_cli.DRECli):
     def __init__(
         self,
-        cli_path: typing.Optional[pathlib.Path] = None,
     ) -> None:
-        super().__init__(cli_path=cli_path)
+        super().__init__()
         self._logger = LOGGER.getChild(self.__class__.__name__)
 
     def propose_to_revise_elected_guestos_versions(

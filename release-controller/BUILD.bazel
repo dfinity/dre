@@ -38,7 +38,9 @@ py_binary(
     main = "reconciler.py",
     srcs = glob(["*.py"], exclude = ["commit_annotator.py", "ci_check.py"]),
     tags = ["typecheck"],
-    env = env,
+    env = {
+        "DRE_PATH": "$(rootpath //rs/cli:dre)",
+    },
     deps = deps + [
         requirement("prometheus-client"),
     ],
