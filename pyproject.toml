@@ -77,6 +77,8 @@ extend-exclude = '''
 '''
 
 [tool.pytest.ini_options]
+log_cli = true
+log_cli_level = "debug"
 # the following option appears in a pytest version that is later than the one currently used in Bazel.
 # asyncio_default_fixture_loop_scope = "function"
 filterwarnings = [

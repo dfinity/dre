@@ -42,7 +42,7 @@ def annotator() -> typing.Generator[GitRepoAnnotator, None, None]:
             behavior={
                 "push_annotations": False,
                 "save_annotations": True,
-                "fetch_annotations": True,
+                "fetch_annotations": False,
             },
         )
         _LOGGER.info("Clone of IC repo finished.  Going into annotator context.")
