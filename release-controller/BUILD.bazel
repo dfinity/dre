@@ -82,6 +82,8 @@ genrule(
     tags = ["no-sandbox"] + ["manual"],
 )
 
+medium_tests = ["tests/test_release_notes.py"]
+
 # Add file here if you do not want to run the test automatically.
 long_tests = ["tests/test_commit_annotator.py"]
 
@@ -102,9 +104,16 @@ long_tests = ["tests/test_commit_annotator.py"]
     ]
     for group in [
         {
-            "targets": glob(["tests/test_*.py"], exclude=long_tests),
+            "targets": glob(["tests/test_*.py"], exclude=long_tests + medium_tests),
             "tags": [],
             "test_size": "small",
+            "data": [],
+            "env": {},
+        },
+        {
+            "targets": medium_tests,
+            "tags": [],
+            "test_size": "medium",
             "data": [],
             "env": {},
         },
