@@ -99,12 +99,12 @@ long_tests = ["tests/test_commit_annotator.py"]
 ]
 
 tar(
-    name = "bins_release_controller_tar",
+    name = "release_controller_deps",
     srcs = ["//rs/cli:dre"],
 )
 
 tar(
-    name = "bins_commit_annotator_tar",
+    name = "commit_annotator_deps",
     srcs = [":bazelisk", ":target_determinator"],
 )
 
@@ -112,14 +112,14 @@ py_oci_image(
     name = "oci_image",
     base = "@bazel_image_7_4_1",
     binary = ":release-controller",
-    tars = [":bins_release_controller_tar"]
+    tars = [":release_controller_deps"]
 )
 
 py_oci_image(
     name = "oci_image_commit_annotator",
     base = "@bazel_image_7_4_1",
     binary = ":commit-annotator",
-    tars = [":bins_commit_annotator_tar"]
+    tars = [":commit_annotator_deps"]
 )
 
 exports_files(["README.md"])
