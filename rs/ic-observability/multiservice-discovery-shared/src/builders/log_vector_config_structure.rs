@@ -8,6 +8,7 @@ use service_discovery::{job_types::JobType, TargetGroup};
 use crate::builders::vector_config_enriched::VectorSource;
 use crate::builders::vector_config_enriched::VectorTransform;
 use crate::builders::ConfigBuilder;
+use crate::contracts::journald_target::JournaldTarget;
 use crate::contracts::target::TargetDto;
 
 use super::vector_config_enriched::VectorConfigEnriched;
@@ -158,6 +159,20 @@ impl VectorRemapTransform {
                 .into_iter()
                 // Might be dangerous as the tag value is coming from an outside source and
                 // is not escaped.
+                .map(|(k, v)| format!(".{} = \"{}\"", k, v))
+                .collect::<Vec<String>>()
+                .join("\n"),
+        }
+    }
+
+    pub fn from_general(target: JournaldTarget, input: String) -> Self {
+        Self {
+            _type: "remap".to_string(),
+            inputs: vec![input],
+            source: target
+                .labels
+                .into_iter()
+                .chain([("name".to_string(), target.name), (ADDRESS.to_string(), target.target.to_string())])
                 .map(|(k, v)| format!(".{} = \"{}\"", k, v))
                 .collect::<Vec<String>>()
                 .join("\n"),

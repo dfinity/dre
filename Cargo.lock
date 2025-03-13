@@ -468,9 +468,9 @@ dependencies = [
 
 [[package]]
 name = "async-trait"
-version = "0.1.85"
+version = "0.1.87"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3f934833b4b7233644e5848f235df3f57ed8c80f1528a26c3dfa13d2147fa056"
+checksum = "d556ec1359574147ec0c4fc5eb525f3f23263a592b1a9c07e0a75b427de55c97"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -2475,6 +2475,31 @@ dependencies = [
  "pin-project-lite",
  "pin-utils",
  "slab",
+]
+
+[[package]]
+name = "general-testnet-service-discovery"
+version = "0.6.0"
+dependencies = [
+ "anyhow",
+ "async-trait",
+ "axum",
+ "axum-otel-metrics",
+ "chrono",
+ "clap",
+ "fs-err",
+ "humantime",
+ "itertools 0.13.0",
+ "multiservice-discovery-shared",
+ "opentelemetry",
+ "retry",
+ "serde",
+ "serde_json",
+ "slog",
+ "slog-async",
+ "slog-term",
+ "tokio",
+ "tokio-util",
 ]
 
 [[package]]
@@ -6064,6 +6089,7 @@ dependencies = [
  "multiservice-discovery-shared",
  "regex",
  "reqwest",
+ "serde_json",
  "service-discovery",
  "slog",
  "slog-async",

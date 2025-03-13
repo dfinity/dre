@@ -22,3 +22,4 @@ slog-async = { workspace = true }
 slog-term = { workspace = true }
 tokio = { workspace = true }
 url = { workspace = true }
+serde_json.workspace = true
