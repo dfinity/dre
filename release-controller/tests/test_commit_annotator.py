@@ -17,6 +17,12 @@ def test_determinator_touchstones() -> None:
         ("replica changed", "951e895c7", True),
         ("cargo lock paths only", "5a250cb34", False),
     ]
+    # It would be fantastic if this clone could be a @pytest.fixture
+    # but, due to our use of the xdist pytest plugin, that provides
+    # no savings (each process clones its own repo, rather than reusing
+    # the fixtures throughout the session).  It would still not be useful
+    # to parallelize the different tests on the table above, since the
+    # GitRepo class is not thread-safe anyway.
     with tempfile.TemporaryDirectory() as d:
         _LOGGER.info("Cloning IC repo...")
         ic_repo = GitRepo(
