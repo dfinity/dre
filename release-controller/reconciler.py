@@ -545,7 +545,7 @@ def main() -> None:
     while True:
         try:
             now = time.time()
-            LAST_CYCLE_START_TIMESTAMP_SECONDS.set(int(time.time()))
+            LAST_CYCLE_START_TIMESTAMP_SECONDS.set(int(now))
             reconciler.reconcile()
             LAST_CYCLE_SUCCESS_TIMESTAMP_SECONDS.set(int(time.time()))
             LAST_CYCLE_SUCCESSFUL.set(1)

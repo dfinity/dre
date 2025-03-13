@@ -54,7 +54,9 @@ py_binary(
     tags = ["typecheck"],
     data = [":bazelisk", ":target_determinator"],
     env = env,
-    deps = deps,
+    deps = deps + [
+        requirement("prometheus-client"),
+    ],
 )
 
 native_binary(

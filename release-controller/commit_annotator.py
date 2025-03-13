@@ -6,6 +6,7 @@ import sys
 import re
 import time
 import typing
+from prometheus_client import start_http_server, Gauge
 
 sys.path.append(os.path.join(os.path.dirname(__file__)))
 
@@ -20,6 +21,19 @@ from const import GUESTOS_CHANGED_NOTES_NAMESPACE
 GUESTOS_TARGETS_NOTES_NAMESPACE = "guestos-targets"
 GUESTOS_BAZEL_TARGETS = "//ic-os/guestos/envs/prod:update-img.tar.zst union //ic-os/setupos/envs/prod:disk-img.tar.zst"
 CUTOFF_COMMIT = "8646665552677436c8a889ce970857e531fee49b"
+
+LAST_CYCLE_SUCCESS_TIMESTAMP_SECONDS = Gauge(
+    "last_cycle_success_timestamp_seconds",
+    "The UNIX timestamp of the last cycle that completed successfully",
+)
+LAST_CYCLE_START_TIMESTAMP_SECONDS = Gauge(
+    "last_cycle_start_timestamp_seconds",
+    "The UNIX timestamp of the start of the last cycle",
+)
+LAST_CYCLE_SUCCESSFUL = Gauge(
+    "last_cycle_successful",
+    "1 if the last cycle was successful, 0 if it was not",
+)
 
 
 _LOGGER = logging.getLogger()
@@ -171,6 +185,13 @@ def main() -> None:
         dest="max_branch_age_days",
         help="Skip annotating branches older than this value (in days).",
     )
+    parser.add_argument(
+        "--telemetry_port",
+        type=int,
+        dest="telemetry_port",
+        default=9468,
+        help="Set the Prometheus telemetry port to listen on.  Telemetry is only served if --loop-every is greater than 0.",
+    )
     opts = parser.parse_args()
 
     behavior: GitRepoBehavior = {
@@ -196,10 +217,15 @@ def main() -> None:
 
     logger = _LOGGER.getChild("annotator")
     branch_globs = opts.branch_globs.split(",")
+
+    if opts.loop_every > 0:
+        start_http_server(port=int(opts.telemetry_port))
+
     while True:
-        ic_repo.fetch()
         try:
             now = time.time()
+            LAST_CYCLE_START_TIMESTAMP_SECONDS.set(int(now))
+            ic_repo.fetch()
             with ic_repo.annotator(
                 [GUESTOS_CHANGED_NOTES_NAMESPACE, GUESTOS_TARGETS_NOTES_NAMESPACE]
             ) as annotator:
@@ -226,6 +252,8 @@ def main() -> None:
                         )
                         continue
                     annotate_branch(annotator, branch=b)
+            LAST_CYCLE_SUCCESS_TIMESTAMP_SECONDS.set(int(time.time()))
+            LAST_CYCLE_SUCCESSFUL.set(1)
             watchdog.report_healthy()
             if opts.loop_every <= 0:
                 break
