@@ -83,18 +83,19 @@ long_tests = ["tests/test_commit_annotator.py"]
         py_test(
             name = target[6:-3],
             srcs = ["tests/runner.py"] + [target] + glob(["tests/mock_*.py"]),
-            data = glob(["tests/test_data/*"]),
+            data = glob(["tests/test_data/*"]) + ["//:pyproject.toml"],
             main = "tests/runner.py",
             env = env,
-            tags = ["no-sandbox"] + group["tags"],
-            deps = deps + dev_deps + ["release-controller"],
+            tags = ["no-sandbox"] + group["tags"] + ["typecheck"],
+            deps = deps + dev_deps + ["release-controller"] + ["commit-annotator"],
             env_inherit = ["HOME"],
+            size = group["test_size"],
         )
         for target in group["targets"]
     ]
     for group in [
-        {"targets": glob(["tests/test_*.py"], exclude=long_tests), "tags": ["typecheck"]},
-        {"targets": long_tests, "tags": ["manual"]},
+        {"targets": glob(["tests/test_*.py"], exclude=long_tests), "tags": [], "test_size": "small"},
+        {"targets": long_tests, "tags": ["manual"], "test_size": "large"},
     ]
 ]
 

@@ -1,30 +1,39 @@
+import logging
 import pathlib
 import tempfile
+
 from commit_annotator import target_determinator
 from git_repo import GitRepo
 
 
-def _test_guestos_changed(object: str, changed: bool):
+_LOGGER = logging.getLogger()
+
+
+def test_determinator_touchstones() -> None:
+    table = [
+        ("not a guestos change", "00dc67f8d", False),
+        ("bumped dependencies", "2d0835bba", True),
+        ("github dir changed", "94fd38099", False),
+        ("replica changed", "951e895c7", True),
+        ("cargo lock paths only", "5a250cb34", False),
+    ]
     with tempfile.TemporaryDirectory() as d:
-        ic_repo = GitRepo("https://github.com/dfinity/ic.git", main_branch="master", repo_cache_dir=pathlib.Path(d))
-        assert target_determinator(object=object, ic_repo=ic_repo) == changed
-
-
-def test_guestos_changed__not_guestos_change():
-    _test_guestos_changed(object="00dc67f8d", changed=False)
-
-
-def test_guestos_changed__bumped_dependencies():
-    _test_guestos_changed(object="2d0835bba", changed=True)
-
-
-def test_guestos_changed__github_dir_changed():
-    _test_guestos_changed(object="94fd38099", changed=False)
-
-
-def test_guestos_changed__replica_changed():
-    _test_guestos_changed(object="951e895c7", changed=True)
-
-
-def test_guestos_changed__cargo_lock_paths_only():
-    _test_guestos_changed(object="5a250cb34", changed=False)
+        _LOGGER.info("Cloning IC repo...")
+        ic_repo = GitRepo(
+            "https://github.com/dfinity/ic.git",
+            main_branch="master",
+            repo_cache_dir=pathlib.Path(d),
+            behavior={
+                "push_annotations": False,
+                "save_annotations": True,
+                "fetch_annotations": True,
+            },
+        )
+        _LOGGER.info("Clone of IC repo finished.  Going into annotator context.")
+        with ic_repo.annotator([]) as annotator:
+            for explanation, object, expected_result in table:
+                _LOGGER.info(f"Testing touchstone {explanation}...")
+                actual_result = target_determinator(object=object, ic_repo=annotator)
+                assert (
+                    actual_result == expected_result
+                ), f"While running touchstone {explanation} on commit {object}, result {actual_result} != expected {expected_result}"
