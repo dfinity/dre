@@ -279,6 +279,7 @@ fn test_node_provider_rewards_one_assigned() {
         .build();
 
     let rewards = calculate_rewards(&input.reward_period, &input.rewards_table, &input.metrics_by_node, &input.rewardables).unwrap();
+
     // Summary for Node 2o3ay-vafaa-aaaaa-aaaap-2ai:
     // ┌──────────────────────────┬───────────────────────┬─────────────────┬─────────────────────┬────────────────────────────────────┐
     // │ Day (UTC)                │ Original Failure Rate │ Subnet Assigned │ Subnet Failure Rate │ Relative/Extrapolated Failure Rate │

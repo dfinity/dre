@@ -16,7 +16,6 @@ rust_decimal = { workspace = true }
 rust_decimal_macros = { workspace = true }
 tabled = { workspace = true }
 chrono = { workspace = true }
-function_name = { workspace = true }
 ic-protobuf = { workspace = true }
 
 [dev-dependencies]
