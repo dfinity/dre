@@ -108,20 +108,18 @@ impl FailureRatesBuilder {
 
 impl Default for FailureRatesBuilder {
     fn default() -> Self {
-        FailureRatesBuilder::new().with_all_days_data(DEFAULT_INPUT.clone())
+        // Each inner vector represents one day (days 0 through 3)
+        // Tuple: (subnet_id, node_id, failure_rate)
+        let input = vec![
+            vec![(1, 1, 0.3), (1, 2, 0.4), (1, 3, 0.5), (2, 5, 0.344), (2, 6, 0.2), (2, 7, 0.2)],
+            vec![(1, 1, 0.2), (1, 2, 0.1), (1, 3, 0.0), (2, 4, 0.5), (2, 5, 1.0), (2, 6, 0.7), (2, 7, 0.7)],
+            vec![(1, 1, 0.1), (1, 2, 0.2), (1, 3, 0.3), (2, 4, 0.4), (2, 5, 1.0), (2, 6, 0.2), (2, 7, 0.1)],
+            vec![(1, 2, 0.2), (2, 3, 0.3), (2, 4, 0.4), (2, 6, 0.7), (2, 7, 0.5)],
+        ];
+
+        FailureRatesBuilder::new().with_all_days_data(input)
     }
 }
-
-pub static DEFAULT_INPUT: Lazy<Vec<Vec<(u64, u64, f64)>>> = Lazy::new(|| {
-    // Each inner vector represents one day (days 0 through 3)
-    // Tuple: (subnet_id, node_id, failure_rate)
-    vec![
-        vec![(1, 1, 0.3), (1, 2, 0.4), (1, 3, 0.5), (2, 5, 0.344), (2, 6, 0.2), (2, 7, 0.2)],
-        vec![(1, 1, 0.2), (1, 2, 0.1), (1, 3, 0.0), (2, 4, 0.5), (2, 5, 1.0), (2, 6, 0.7), (2, 7, 0.7)],
-        vec![(1, 1, 0.1), (1, 2, 0.2), (1, 3, 0.3), (2, 4, 0.4), (2, 5, 1.0), (2, 6, 0.2), (2, 7, 0.1)],
-        vec![(1, 2, 0.2), (2, 3, 0.3), (2, 4, 0.4), (2, 6, 0.7), (2, 7, 0.5)],
-    ]
-});
 
 // FailureRatesManager tests
 

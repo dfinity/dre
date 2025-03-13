@@ -5,7 +5,6 @@ use ic_protobuf::registry::node_rewards::v2::{NodeRewardRate, NodeRewardRates};
 use itertools::Itertools;
 use rust_decimal::Decimal;
 use rust_decimal_macros::dec;
-use std::ops::Deref;
 
 fn node_id(id: u64) -> NodeId {
     PrincipalId::new_node_test_id(id).into()
@@ -15,8 +14,8 @@ fn subnet_id(id: u64) -> SubnetId {
     PrincipalId::new_subnet_test_id(id).into()
 }
 
-fn create_reward_period() -> RewardPeriod {
-    RewardPeriod::new(NANOS_PER_DAY, 30 * NANOS_PER_DAY).unwrap()
+fn provider_id(id: u64) -> PrincipalId {
+    PrincipalId::new_user_test_id(id).into()
 }
 
 fn create_metrics_by_node() -> BTreeMap<NodeId, Vec<NodeDailyMetrics>> {
@@ -54,7 +53,7 @@ fn mocked_rewards_table() -> NodeRewardsTable {
 
 #[test]
 fn test_empty_rewardable_nodes() {
-    let reward_period = create_reward_period();
+    let reward_period = RewardPeriod::new(NANOS_PER_DAY, 30 * NANOS_PER_DAY).unwrap();
     let result = validate_input(&reward_period, &BTreeMap::new(), &vec![]);
 
     assert_eq!(result, Err(RewardCalculationError::EmptyNodes));
@@ -62,7 +61,7 @@ fn test_empty_rewardable_nodes() {
 
 #[test]
 fn test_node_not_in_rewardables() {
-    let reward_period = create_reward_period();
+    let reward_period = RewardPeriod::new(NANOS_PER_DAY, 30 * NANOS_PER_DAY).unwrap();
     let metrics_by_node = create_metrics_by_node();
 
     let result = validate_input(&reward_period, &metrics_by_node, &vec![node_id(2)]);
@@ -71,7 +70,7 @@ fn test_node_not_in_rewardables() {
 
 #[test]
 fn test_metrics_out_of_range() {
-    let reward_period = create_reward_period();
+    let reward_period = RewardPeriod::new(NANOS_PER_DAY, 30 * NANOS_PER_DAY).unwrap();
     let mut metrics_by_node = create_metrics_by_node();
 
     let metrics_out_of_range = NodeDailyMetrics::new(0, subnet_id(1), 0, 0);
@@ -91,7 +90,7 @@ fn test_metrics_out_of_range() {
 
 #[test]
 fn test_same_day_metrics_same_sub() {
-    let reward_period = create_reward_period();
+    let reward_period = RewardPeriod::new(NANOS_PER_DAY, 30 * NANOS_PER_DAY).unwrap();
     let mut metrics_by_node = create_metrics_by_node();
 
     metrics_by_node
@@ -105,7 +104,7 @@ fn test_same_day_metrics_same_sub() {
 
 #[test]
 fn test_same_day_metrics_different_subs() {
-    let reward_period = create_reward_period();
+    let reward_period = RewardPeriod::new(NANOS_PER_DAY, 30 * NANOS_PER_DAY).unwrap();
     let mut metrics_by_node = create_metrics_by_node();
 
     metrics_by_node
@@ -257,19 +256,18 @@ impl NPRInputBuilder {
 
 #[test]
 fn test_node_provider_rewards_one_assigned() {
-    let subnet_1 = PrincipalId::new_subnet_test_id(1).into();
+    let subnet_1 = subnet_id(1);
 
-    let np_1 = PrincipalId::new_user_test_id(1);
+    let np_1 = provider_id(1);
     let node_1 = node_id(1);
     let nodes_np_1 = vec![node_1, node_id(2), node_id(3), node_id(4), node_id(5)];
 
-    let np_2 = PrincipalId::new_user_test_id(2);
+    let np_2 = provider_id(2);
     let nodes_np_2 = vec![node_id(6), node_id(7), node_id(8)];
 
     let input = NPRInputBuilder::new()
         .with_reward_period(0, 30 * NANOS_PER_DAY)
         .with_rewards_rates("A,B", vec!["type0", "type1", "type3"], 1000, 97)
-        .with_rewards_rates("A,B,C", vec!["type3.1"], 1500, 95)
         // Node Provider 1: node_1 assigned, rest unassigned
         .with_nodes(nodes_np_1, np_1, "A,B", "type1")
         .with_node_metrics(node_1, 0, vec![dec!(0.4), dec!(0.2), dec!(0.3), dec!(0.4)], subnet_1)
@@ -278,7 +276,7 @@ fn test_node_provider_rewards_one_assigned() {
         .with_nodes_metrics(nodes_np_2, 0, vec![dec!(0); 4], subnet_1)
         .build();
 
-    let rewards = calculate_rewards(&input.reward_period, &input.rewards_table, &input.metrics_by_node, &input.rewardables).unwrap();
+    let rewards = calculate_rewards(..input).unwrap();
 
     // Summary for Node 2o3ay-vafaa-aaaaa-aaaap-2ai:
     // ┌──────────────────────────┬───────────────────────┬─────────────────┬─────────────────────┬────────────────────────────────────┐
