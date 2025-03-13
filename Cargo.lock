@@ -6140,34 +6140,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "node-provider-rewards-canister"
-version = "0.6.0"
-dependencies = [
- "anyhow",
- "async-trait",
- "candid",
- "futures",
- "ic-base-types",
- "ic-cdk 0.17.1",
- "ic-cdk-macros 0.17.1",
- "ic-cdk-timers 0.11.0",
- "ic-interfaces-registry",
- "ic-management-canister-types",
- "ic-nns-common",
- "ic-nns-constants",
- "ic-protobuf",
- "ic-registry-keys",
- "ic-registry-transport",
- "ic-stable-structures",
- "ic-types",
- "indexmap 2.7.1",
- "mockall",
- "serde",
- "thiserror 2.0.12",
- "tokio",
-]
-
-[[package]]
 name = "node-provider-rewards-lib"
 version = "0.6.0"
 dependencies = [
