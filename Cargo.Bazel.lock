@@ -1,5 +1,5 @@
 {
-  "checksum": "d6ace34461aa45a78da5a4ffb9f940be987b3f90691ab84e11930b6cc74bfef1",
+  "checksum": "6744c291aefb7127c58c2a9e643b05c1da206e2aaf76c268a36895af731cdb21",
   "crates": {
     "actix-codec 0.5.2": {
       "name": "actix-codec",
@@ -35954,6 +35954,154 @@
       ],
       "license_file": null
     },
+    "node-provider-rewards-canister 0.6.0": {
+      "name": "node-provider-rewards-canister",
+      "version": "0.6.0",
+      "package_url": null,
+      "repository": null,
+      "targets": [
+        {
+          "BuildScript": {
+            "crate_name": "build_script_build",
+            "crate_root": "build.rs",
+            "srcs": {
+              "allow_empty": true,
+              "include": [
+                "**/*.rs"
+              ]
+            }
+          }
+        }
+      ],
+      "library_target_name": null,
+      "common_attrs": {
+        "compile_data_glob": [
+          "**"
+        ],
+        "deps": {
+          "common": [
+            {
+              "id": "anyhow 1.0.97",
+              "target": "anyhow"
+            },
+            {
+              "id": "candid 0.10.13",
+              "target": "candid"
+            },
+            {
+              "id": "futures 0.3.31",
+              "target": "futures"
+            },
+            {
+              "id": "ic-base-types 0.9.0",
+              "target": "ic_base_types"
+            },
+            {
+              "id": "ic-cdk 0.17.1",
+              "target": "ic_cdk"
+            },
+            {
+              "id": "ic-cdk-timers 0.11.0",
+              "target": "ic_cdk_timers"
+            },
+            {
+              "id": "ic-interfaces-registry 0.9.0",
+              "target": "ic_interfaces_registry"
+            },
+            {
+              "id": "ic-management-canister-types 0.9.0",
+              "target": "ic_management_canister_types"
+            },
+            {
+              "id": "ic-nns-common 0.9.0",
+              "target": "ic_nns_common"
+            },
+            {
+              "id": "ic-nns-constants 0.9.0",
+              "target": "ic_nns_constants"
+            },
+            {
+              "id": "ic-protobuf 0.9.0",
+              "target": "ic_protobuf"
+            },
+            {
+              "id": "ic-registry-keys 0.9.0",
+              "target": "ic_registry_keys"
+            },
+            {
+              "id": "ic-registry-transport 0.9.0",
+              "target": "ic_registry_transport"
+            },
+            {
+              "id": "ic-stable-structures 0.6.8",
+              "target": "ic_stable_structures"
+            },
+            {
+              "id": "ic-types 0.9.0",
+              "target": "ic_types"
+            },
+            {
+              "id": "indexmap 2.8.0",
+              "target": "indexmap"
+            },
+            {
+              "id": "mockall 0.13.1",
+              "target": "mockall"
+            },
+            {
+              "id": "node-provider-rewards-canister 0.6.0",
+              "target": "build_script_build"
+            },
+            {
+              "id": "serde 1.0.219",
+              "target": "serde"
+            },
+            {
+              "id": "thiserror 2.0.12",
+              "target": "thiserror"
+            }
+          ],
+          "selects": {}
+        },
+        "deps_dev": {
+          "common": [
+            {
+              "id": "tokio 1.44.0",
+              "target": "tokio"
+            }
+          ],
+          "selects": {}
+        },
+        "edition": "2021",
+        "proc_macro_deps": {
+          "common": [
+            {
+              "id": "async-trait 0.1.87",
+              "target": "async_trait"
+            },
+            {
+              "id": "ic-cdk-macros 0.17.1",
+              "target": "ic_cdk_macros"
+            }
+          ],
+          "selects": {}
+        },
+        "version": "0.6.0"
+      },
+      "build_script_attrs": {
+        "compile_data_glob": [
+          "**"
+        ],
+        "data_glob": [
+          "**"
+        ]
+      },
+      "license": "Apache-2.0",
+      "license_ids": [
+        "Apache-2.0"
+      ],
+      "license_file": null
+    },
     "node-provider-rewards-lib 0.6.0": {
       "name": "node-provider-rewards-lib",
       "version": "0.6.0",
@@ -61814,6 +61962,7 @@
     "multiservice-discovery-downloader 0.6.0": "rs/ic-observability/multiservice-discovery-downloader",
     "multiservice-discovery-shared 0.6.0": "rs/ic-observability/multiservice-discovery-shared",
     "node-provider-rewards 0.6.0": "rs/node-provider-rewards",
+    "node-provider-rewards-canister 0.6.0": "rs/dre-canisters/node-provider-rewards",
     "node-provider-rewards-lib 0.6.0": "rs/dre-canisters/node-provider-rewards-lib",
     "node-status-updater 0.6.0": "rs/ic-observability/node-status-updater",
     "obs-canister-clients 0.6.0": "rs/ic-observability/obs-canister-clients",
