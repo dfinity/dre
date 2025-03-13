@@ -25,7 +25,7 @@ async fn main() -> Result<(), anyhow::Error> {
 
     let client = match ClientBuilder::new()
         .danger_accept_invalid_certs(true)
-        .connect_timeout(Duration::from_secs(10))
+        .timeout(Duration::from_secs(10))
         .build()
     {
         Ok(c) => c,

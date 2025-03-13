@@ -173,7 +173,7 @@ const TIMEOUT: Duration = Duration::from_secs(60);
 const PLACEHOLDER: &str = "upgrading...";
 
 async fn wait_for_subnet_revision(ctx: &StepCtx, subnet: Option<PrincipalId>, revision: &str) -> anyhow::Result<()> {
-    let client = ClientBuilder::new().connect_timeout(TIMEOUT).build()?;
+    let client = ClientBuilder::new().timeout(TIMEOUT).build()?;
     let registry = ctx.dre_ctx().registry().await;
     for i in 0..MAX_TRIES {
         tokio::time::sleep(SLEEP).await;
