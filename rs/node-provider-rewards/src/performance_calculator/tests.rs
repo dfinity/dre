@@ -243,11 +243,10 @@ fn test_update_relative_failure_rates() {
     let nodes = nodes_failure_rates.keys().cloned().collect_vec();
     let perf_calculator = PerformanceMultiplierCalculator::new(nodes_failure_rates, subnets_failure_rates);
 
-    perf_calculator.update_execution_nodes(&nodes);
-    perf_calculator.update_relative_failure_rates();
-    let nodes_failure_rates = perf_calculator.nodes_failure_rates();
+    let ctx = perf_calculator.execution_context(&nodes);
+    let ctx = perf_calculator.compute_relative_failure_rates(ctx);
 
-    let node_5_fr = nodes_failure_rates.get(&node_id(5)).unwrap();
+    let node_5_fr = ctx.execution_nodes.get(&node_id(5)).unwrap();
 
     let mut expected = NodeDailyFailureRate {
         ts: ts_day_end(0),
@@ -292,9 +291,9 @@ fn test_compute_failure_rate_extrapolated() {
     let nodes = nodes_failure_rates.keys().cloned().collect_vec();
     let perf_calculator = PerformanceMultiplierCalculator::new(nodes_failure_rates, subnets_failure_rates);
 
-    perf_calculator.update_execution_nodes(&nodes);
-    perf_calculator.update_relative_failure_rates();
-    let extrapolated_failure_rate = perf_calculator.calculate_extrapolated_failure_rate();
+    let ctx = perf_calculator.execution_context(&nodes);
+    let mut ctx = perf_calculator.compute_relative_failure_rates(ctx);
+    let extrapolated_failure_rate = perf_calculator.calculate_extrapolated_failure_rate(&mut ctx);
 
     // node_1_fr_relative = [0, 0, 0]
     // node_2_fr_relative = [0, 0, 0, 0]

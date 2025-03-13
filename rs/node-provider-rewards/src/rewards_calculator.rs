@@ -72,15 +72,18 @@ impl RewardsCalculator {
                     reward_coefficient_percent: Some(100),
                 });
             let base_rewards = Decimal::from(rate.xdr_permyriad_per_node_per_month);
-            let mut coeff = dec!(1);
 
+            // For nodes which are type3* the base rewards for the single node is computed as the average of base rewards
+            // on DC Country level. Moreover, to de-stimulate the same NP having too many nodes in the same country,
+            // the node rewards is reduced for each node the NP has in the given country. The reduction coefficient is
+            // computed as the average of reduction coefficients on DC Country level.
             if category.node_type.starts_with("type3") && node_count > 0 {
-                // For nodes which are type3* the base rewards for the single node is computed as the average of base rewards
-                // on DC Country level. Moreover, to de-stimulate the same NP having too many nodes in the same country,
-                // the node rewards is reduced for each node the NP has in the given country. The reduction coefficient is
-                // computed as the average of reduction coefficients on DC Country level.
+                // Default reward_coefficient_percent is set to 80%, which is used as a fallback only in the
+                // unlikely case that the type3 entry in the reward table:
+                // a) has xdr_permyriad_per_node_per_month entry set for this region, but
+                // b) does NOT have the reward_coefficient_percent value set
+                let coeff = Decimal::from(rate.reward_coefficient_percent.unwrap_or(80)) / dec!(100);
 
-                coeff = Decimal::from(rate.reward_coefficient_percent.unwrap_or(80)) / dec!(100);
                 let coefficients = vec![coeff; node_count as usize];
                 let base_rewards = vec![base_rewards; node_count as usize];
                 let type3_category = self.type3_category(&category.region);
@@ -108,7 +111,10 @@ impl RewardsCalculator {
             let coefficients_avg = self
                 .logger_mut()
                 .run_and_log("Coefficients avg.", Operation::Avg(type3_rewards.coefficients));
-            let rewards_avg = self.logger_mut().run_and_log("Rewards avg.", Operation::Avg(type3_rewards.base_rewards));
+            let rewards_avg = self
+                .logger_mut()
+                .run_and_log("Base Rewards avg.", Operation::Avg(type3_rewards.base_rewards));
+
             for _ in 0..rewards_len {
                 region_rewards.push(Operation::Multiply(rewards_avg, running_coefficient));
                 running_coefficient *= coefficients_avg;
@@ -136,7 +142,7 @@ impl RewardsCalculator {
         let mut rewards_total = Vec::new();
         let mut performance_multiplier_by_node = performance_multiplier_by_node;
 
-        // 1. calculate the base rewards for all the `RegionNodeTypeCategory`
+        // Calculate the base rewards for all the `RegionNodeTypeCategory`
         let mut nodes_count_by_category = HashMap::default();
         for node in rewardable_nodes.iter() {
             let count = nodes_count_by_category.entry(node.region_node_type_category()).or_default();

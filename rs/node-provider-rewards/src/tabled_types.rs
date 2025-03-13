@@ -2,6 +2,7 @@ use crate::logs::round_dp_4;
 use crate::metrics::{NodeDailyFailureRate, NodeFailureRate};
 use crate::reward_period::TimestampNanos;
 use chrono::DateTime;
+use std::collections::VecDeque;
 use tabled::settings::Style;
 use tabled::Table;
 use tabled::Tabled;
@@ -58,8 +59,38 @@ impl From<NodeDailyFailureRate> for DailyNodeFailureRateTabled {
     }
 }
 
+fn condense_table(entries: Vec<DailyNodeFailureRateTabled>) -> Vec<DailyNodeFailureRateTabled> {
+    let mut condensed: Vec<DailyNodeFailureRateTabled> = Vec::new();
+    let mut queue: VecDeque<DailyNodeFailureRateTabled> = VecDeque::from(entries);
+
+    while let Some(mut start) = queue.pop_front() {
+        let mut end_date = start.utc_day.clone();
+
+        while let Some(next) = queue.front() {
+            if start.original_failure_rate == next.original_failure_rate
+                && start.subnet_assigned == next.subnet_assigned
+                && start.subnet_failure_rate == next.subnet_failure_rate
+                && start.final_failure_rate == next.final_failure_rate
+            {
+                end_date = next.utc_day.clone();
+                queue.pop_front();
+            } else {
+                break;
+            }
+        }
+
+        if start.utc_day != end_date {
+            start.utc_day = format!("{} to {}", start.utc_day, end_date);
+        }
+
+        condensed.push(start);
+    }
+
+    condensed
+}
+
 pub fn generate_table_summary(daily_fr: Vec<NodeDailyFailureRate>) -> Table {
     let data_tabled: Vec<DailyNodeFailureRateTabled> = daily_fr.into_iter().map(|fr| fr.into()).collect::<Vec<_>>();
 
-    Table::new(data_tabled).with(Style::sharp()).to_owned()
+    Table::new(condense_table(data_tabled)).with(Style::sharp()).to_owned()
 }

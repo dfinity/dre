@@ -2,6 +2,7 @@ use ic_base_types::NodeId;
 use itertools::Itertools;
 use num_traits::Zero;
 use rust_decimal::Decimal;
+use std::collections::VecDeque;
 use std::fmt;
 use tabled::Table;
 
@@ -25,11 +26,23 @@ impl Operation {
     fn sum(operators: &[Decimal]) -> Decimal {
         operators.iter().fold(Decimal::zero(), |acc, val| acc + val)
     }
-    fn format_values<T: fmt::Display>(items: &[T], prefix: &str) -> String {
+
+    fn format_values<T: fmt::Display + PartialEq>(items: &[T], prefix: &str) -> String {
         if items.is_empty() {
             "0".to_string()
         } else {
-            format!("{}({})", prefix, items.iter().map(|item| format!("{}", item)).join(","),)
+            let mut values = Vec::new();
+            let mut iter = items.iter().peekable();
+
+            while let Some(current) = iter.next() {
+                values.push(format!("{}", current));
+
+                if iter.peek().map_or(false, |&next| next == current) {
+                    values.push("...".to_string());
+                    break;
+                }
+            }
+            format!("{}({})", prefix, values.join(","))
         }
     }
 
@@ -50,10 +63,10 @@ impl fmt::Display for Operation {
         match self {
             Operation::Sum(values) => write!(f, "{}", Operation::format_values(values, "sum")),
             Operation::Avg(values) => write!(f, "{}", Operation::format_values(values, "avg")),
-            Operation::Divide(o1, o2) => write!(f, "{} {} {}", round_dp_4(o1), "/", round_dp_4(o2)),
+            Operation::Divide(o1, o2) => write!(f, "{} / {}", round_dp_4(o1), round_dp_4(o2)),
             Operation::Set(o1) => write!(f, "set {}", o1),
-            Operation::Multiply(o1, o2) => write!(f, "{} {} {}", round_dp_4(o1), "*", round_dp_4(o2)),
-            Operation::SumOps(operations) => write!(f, "{}", Operation::format_values(operations, "sum")),
+            Operation::Multiply(o1, o2) => write!(f, "{} * {}", round_dp_4(o1), round_dp_4(o2)),
+            Operation::SumOps(operations) => write!(f, "SumOps({})", operations.iter().map(|item| format!("{}", item)).join(",")),
         }
     }
 }
@@ -125,6 +138,10 @@ impl Logger {
     pub fn log(&mut self, entry: LogEntry) {
         self.entries.push(entry);
     }
+    pub fn log_front(&mut self, entry: LogEntry) {
+        self.entries.insert(0, entry);
+    }
+
     pub fn run_and_log(&mut self, description: &str, operation: Operation) -> Decimal {
         let result = operation.execute();
         self.log(LogEntry::Execute {

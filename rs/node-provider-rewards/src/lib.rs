@@ -51,9 +51,9 @@ pub fn calculate_rewards(
     let rewards_calculator = RewardsCalculator::new(rewards_table.clone());
 
     for (provider_id, provider_rewardable_nodes) in rewardable_nodes_by_provider(rewardable_nodes) {
-        let ids: Vec<NodeId> = nodes_ids(&provider_rewardable_nodes);
+        let nodes_ids: Vec<NodeId> = nodes_ids(&provider_rewardable_nodes);
 
-        let multipliers = performance_calc.calculate_performance_multipliers(&ids);
+        let multipliers = performance_calc.calculate_performance_multipliers(&nodes_ids);
         let result = rewards_calculator.calculate_rewards_xdr(provider_rewardable_nodes, multipliers.performance_multiplier_by_node);
         let computation_log: Vec<_> = multipliers.logger.entries.into_iter().chain(result.logger.entries.into_iter()).collect();
 
