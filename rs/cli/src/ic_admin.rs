@@ -156,7 +156,7 @@ impl IcAdmin for IcAdminImpl {
             // Otherwise, add the forum post link description as a string after the ic-admin command.
             let is_forum_post_link_description_url = forum_post_link_description
                 .as_ref()
-                .map(|desc| url::Url::parse(&desc).is_ok())
+                .map(|desc| url::Url::parse(desc).is_ok())
                 .unwrap_or(false);
             let mut args = if is_forum_post_link_description_url {
                 Self::add_proposal_url(self.add_proposer(cmd), forum_post_link_description.clone())
