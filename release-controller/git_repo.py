@@ -1,9 +1,10 @@
+import contextlib
 import logging
 import os
+import collections.abc
 import pathlib
 import subprocess
 import tempfile
-import time
 import typing
 
 from dotenv import load_dotenv
@@ -20,6 +21,19 @@ class FileChange(typing.TypedDict):
     num_changes: int
 
 
+def check_output(cmd: list[str], **kwargs: typing.Any) -> str:
+    # _LOGGER.warning("CMD: %s", cmd)
+    kwargs = kwargs or {}
+    if "text" not in kwargs:
+        kwargs["text"] = True
+    return typing.cast(str, subprocess.check_output(cmd, **kwargs))
+
+
+def check_call(cmd: list[str], **kwargs: typing.Any) -> int:
+    # _LOGGER.warning("CMD: %s", cmd)
+    return subprocess.check_call(cmd, **kwargs)
+
+
 class Commit:
     """Class for representing a git commit."""
 
@@ -34,16 +48,76 @@ class Commit:
         self.branches = branches
 
 
+class GitRepoBehavior(typing.TypedDict):
+    push_annotations: bool
+    save_annotations: bool
+    fetch_annotations: bool
+
+
+class GitRepoAnnotator(object):
+    def __init__(
+        self,
+        repo: "GitRepo",
+        namespaces: collections.abc.Container[str],
+    ):
+        self.repo = repo
+        self.namespaces = namespaces
+        self.cache: dict[str, str | None] = {}
+        md = self.dir / ".git" / "temp-notes"
+        os.makedirs(md, exist_ok=True)
+        self.td = tempfile.TemporaryDirectory(dir=md)
+        self.changed = False
+
+    def add(self, object: str, namespace: str, content: str) -> None:
+        if namespace not in self.namespaces:
+            raise ValueError(
+                "cannot add note for %r with annotator limited to namespaces %s"
+                % (namespace, self.namespaces)
+            )
+        cachekey = f"{namespace}-{object}".replace("/", "_").replace(".", "_")
+        f = os.path.join(self.td.name, cachekey)
+        if self.repo.behavior["save_annotations"]:
+            with open(f, "w") as fh:
+                fh.write(content)
+            self.repo._notes(namespace, "add", f"--file={f}", object, "-f")
+        self.cache[cachekey] = content
+        self.changed = True
+
+    def get(self, object: str, namespace: str) -> typing.Optional[str]:
+        if namespace not in self.namespaces:
+            raise ValueError(
+                "cannot add note for %r with annotator limited to namespaces %s"
+                % (namespace, self.namespaces)
+            )
+        cachekey = f"{namespace}-{object}"
+        if cachekey not in self.cache:
+            try:
+                self.cache[cachekey] = self.repo._notes(namespace, "show", object)
+            except subprocess.CalledProcessError:
+                # It's not there!
+                self.cache[cachekey] = None
+        return self.cache[cachekey]
+
+    def checkout(self, object: str) -> None:
+        return self.repo.checkout(object)
+
+    def parent(self, object: str) -> str:
+        return self.repo.parent(object)
+
+    @property
+    def dir(self) -> pathlib.Path:
+        return self.repo.dir
+
+
 class GitRepo:
     """Class for interacting with a git repository."""
-
-    _last_notes_frequency = 30.0
 
     def __init__(
         self,
         repo: str,
         repo_cache_dir: pathlib.Path = pathlib.Path.home() / ".cache/git",
         main_branch: str = "main",
+        behavior: GitRepoBehavior | None = None,
     ) -> None:
         """Create a new GitRepo object."""
         if not repo.startswith("https://"):
@@ -62,8 +136,16 @@ class GitRepo:
             else repo.removeprefix("https://")
         )
         self.cache: dict[str, Commit] = {}
+        self.behavior = (
+            behavior
+            if behavior
+            else {
+                "push_annotations": True,
+                "save_annotations": True,
+                "fetch_annotations": True,
+            }
+        )
         self.fetch()
-        self._last_notes_fetch = 0.0
 
     def __del__(self) -> None:
         """Clean up the temporary directory."""
@@ -74,14 +156,14 @@ class GitRepo:
         """Ensure that the given branches exist."""
         for branch in branches:
             try:
-                subprocess.check_call(
+                check_call(
                     ["git", "checkout", "--quiet", branch],
                     cwd=self.dir,
                 )
             except subprocess.CalledProcessError:
                 print("Branch {} does not exist".format(branch))
 
-        subprocess.check_call(
+        check_call(
             ["git", "checkout", "--quiet", self.main_branch],
             cwd=self.dir,
         )
@@ -149,26 +231,26 @@ class GitRepo:
                 self.dir,
                 self.main_branch,
             )
-            subprocess.check_call(
+            check_call(
                 ["git", "fetch", "--quiet"],
                 cwd=self.dir,
             )
-            subprocess.check_call(
+            check_call(
                 ["git", "reset", "--hard", "--quiet", f"origin/{self.main_branch}"],
                 cwd=self.dir,
             )
         else:
             _LOGGER.info("Cloning repository %s to %s", self.repo, self.dir)
             os.makedirs(self.dir, exist_ok=True)
-            subprocess.check_call(
+            check_call(
                 [
                     "git",
                     "clone",
                     self.repo,
-                    self.dir,
+                    str(self.dir),
                 ],
             )
-        subprocess.check_call(
+        check_call(
             [
                 "git",
                 "fetch",
@@ -179,23 +261,19 @@ class GitRepo:
         )
 
     def merge_base(self, commit_a: str, commit_b: str) -> str:
-        return (
-            subprocess.check_output(
-                [
-                    "git",
-                    "merge-base",
-                    commit_a,
-                    commit_b,
-                ],
-                cwd=self.dir,
-            )
-            .decode("utf-8")
-            .strip()
-        )
+        return check_output(
+            [
+                "git",
+                "merge-base",
+                commit_a,
+                commit_b,
+            ],
+            cwd=self.dir,
+        ).strip()
 
     def distance(self, commit_a: str, commit_b: str) -> int:
         return int(
-            subprocess.check_output(
+            check_output(
                 [
                     "git",
                     "rev-list",
@@ -203,7 +281,7 @@ class GitRepo:
                     f"{commit_a}..{commit_b}",
                 ],
                 cwd=self.dir,
-            ).decode("utf-8")
+            )
         )
 
     def get_commits_info(
@@ -214,7 +292,7 @@ class GitRepo:
     ) -> list[str]:
         """Get the info of commits in the range [first_commit, last_commit]."""
         return (
-            subprocess.check_output(
+            check_output(
                 [
                     "git",
                     "log",
@@ -223,7 +301,6 @@ class GitRepo:
                     "{}..{}".format(first_commit, last_commit),
                 ],
                 cwd=self.dir,
-                text=True,
             )
             .rstrip()
             .splitlines()
@@ -235,7 +312,7 @@ class GitRepo:
         first_commit: str,
     ) -> str:
         """Get the info of commit."""
-        return subprocess.check_output(
+        return check_output(
             [
                 "git",
                 "show",
@@ -245,7 +322,7 @@ class GitRepo:
             ],
             cwd=self.dir,
             stderr=subprocess.DEVNULL,
-        ).decode("utf-8")
+        )
 
     def file(self, path: str) -> pathlib.Path:
         """Get the file for the given path."""
@@ -258,15 +335,11 @@ class GitRepo:
             "--numstat",
             f"{commit_hash}^..{commit_hash}",
         ]
-        diffstat_output = (
-            subprocess.check_output(
-                cmd,
-                cwd=self.dir,
-                stderr=subprocess.DEVNULL,
-            )
-            .decode()
-            .strip()
-        )
+        diffstat_output = check_output(
+            cmd,
+            cwd=self.dir,
+            stderr=subprocess.DEVNULL,
+        ).strip()
 
         parts = diffstat_output.splitlines()
         changes = []
@@ -287,109 +360,83 @@ class GitRepo:
 
     def checkout(self, ref: str) -> None:
         """Checkout the given ref."""
-        subprocess.check_call(
+        check_call(
             ["git", "reset", "--hard", "--quiet"],
             cwd=self.dir,
         )
-        subprocess.check_call(
+        check_call(
             ["git", "checkout", "--quiet", ref],
             cwd=self.dir,
         )
-        if (
-            subprocess.check_output(
-                ["git", "branch", "--show-current"],
-                cwd=self.dir,
-            )
-            .decode()
-            .strip()
-        ):
-            subprocess.check_call(
+        if check_output(
+            ["git", "branch", "--show-current"],
+            cwd=self.dir,
+        ).strip():
+            check_call(
                 ["git", "reset", "--hard", "--quiet", f"origin/{ref}"],
                 cwd=self.dir,
             )
 
     def parent(self, object: str) -> str:
-        return (
-            subprocess.check_output(
-                ["git", "log", "--pretty=%P", "-n", "1", object],
-                cwd=self.dir,
-            )
-            .decode()
-            .strip()
-        )
+        return check_output(
+            ["git", "log", "--pretty=%P", "-n", "1", object],
+            cwd=self.dir,
+        ).strip()
 
     def branch_list(self, pattern: str) -> typing.List[str]:
         return [
             b.strip().removeprefix("origin/")
-            for b in subprocess.check_output(
+            for b in check_output(
                 ["git", "branch", "-r", "--list", f"origin/{pattern}"],
                 cwd=self.dir,
-            )
-            .decode()
-            .splitlines()
+            ).splitlines()
         ]
 
     def _fetch_notes(self) -> None:
         ref = "refs/notes/*"
-        subprocess.check_call(
+        check_call(
             ["git", "fetch", "origin", f"{ref}:{ref}", "-f", "--prune", "--quiet"],
             cwd=self.dir,
         )
 
     def _push_notes(self, namespace: str) -> None:
-        subprocess.check_call(
+        check_call(
             ["git", "push", "origin", f"refs/notes/{namespace}", "-f", "--quiet"],
             cwd=self.dir,
         )
 
-    def _notes(self, namespace: str, *args: str) -> str:
-        return subprocess.check_output(
-            ["git", "notes", f"--ref={namespace}", *args],
+    def _notes(self, namespace: str, *args: str, silence_stderr: bool = False) -> str:
+        cmd = ["git", "notes", f"--ref={namespace}", *args]
+        return check_output(
+            cmd,
             cwd=self.dir,
-        ).decode()
+            stderr=subprocess.DEVNULL if silence_stderr else None,
+        )
 
-    def add_note(self, namespace: str, object: str, content: str) -> None:
-        self._fetch_notes()
-        with tempfile.TemporaryDirectory() as td:
-            f = os.path.join(td, "content")
-            with open(f, "w") as fh:
-                fh.write(content)
-
-            self._notes(namespace, "add", f"--file={f}", object, "-f")
-
-        self._push_notes(namespace=namespace)
-
-    def get_note(self, namespace: str, object: str) -> typing.Optional[str]:
-        if time.time() - self._last_notes_fetch > self._last_notes_frequency:
+    @contextlib.contextmanager
+    def annotator(
+        self, namespaces: list[str]
+    ) -> typing.Generator[GitRepoAnnotator, None, None]:
+        if self.behavior["fetch_annotations"]:
             self._fetch_notes()
-            self._last_notes_fetch = time.time()
-        if (
-            subprocess.check_output(
-                ["git", "rev-parse", object],
-                cwd=self.dir,
-            )
-            .decode()
-            .strip()
-            not in self._notes(namespace, "list").strip()
-        ):
-            return None
-        return self._notes(namespace, "show", object)
+        ann = GitRepoAnnotator(self, namespaces)
+        yield ann
+        if ann.changed:
+            for namespace in namespaces:
+                if self.behavior["push_annotations"]:
+                    self._push_notes(namespace)
 
     def latest_commit_for_file(self, file: str) -> str:
-        return (
-            subprocess.check_output(
-                ["git", "log", "-n", "1", "--pretty=format:%H", "--", file],
-                cwd=self.dir,
-            )
-            .decode()
-            .strip()
-        )
+        return check_output(
+            ["git", "log", "-n", "1", "--pretty=format:%H", "--", file],
+            cwd=self.dir,
+        ).strip()
 
     # TODO: test
     def push_release_tags(self, release: Release) -> None:
         self.fetch()
         for v in release.versions:
-            subprocess.check_call(
+            check_call(
                 [
                     "git",
                     "fetch",
@@ -400,7 +447,7 @@ class GitRepo:
                 cwd=self.dir,
             )
             tag = version_name(release.rc_name, v.name)
-            subprocess.check_call(
+            check_call(
                 [
                     "git",
                     "tag",
@@ -411,7 +458,7 @@ class GitRepo:
                 cwd=self.dir,
             )
             tag_version = (
-                subprocess.check_output(
+                check_output(
                     [
                         "git",
                         "ls-remote",
@@ -419,7 +466,6 @@ class GitRepo:
                         f"refs/tags/{tag}",
                     ],
                     cwd=self.dir,
-                    text=True,
                 )
                 .strip()
                 .split(" ")[0]
@@ -432,7 +478,7 @@ class GitRepo:
                 _LOGGER.info(
                     "RC %s: pushing tag %s to the origin", release.rc_name, tag
                 )
-                subprocess.check_call(
+                check_call(
                     [
                         "git",
                         "push",

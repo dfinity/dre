@@ -8,6 +8,7 @@ exports_files([
     "cordoned_features.yaml",
     "WORKSPACE.bazel",
     "mypy.ini",
+    "pyproject.toml",
 ])
 
 alias(

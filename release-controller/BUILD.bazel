@@ -48,12 +48,15 @@ py_binary(
 )
 
 py_binary(
-    name = "commit_annotator",
+    name = "commit-annotator",
     main = "commit_annotator.py",
     srcs = glob(["*.py"], exclude = ["reconciler.py", "ci_check.py"]),
+    tags = ["typecheck"],
     data = [":bazelisk", ":target_determinator"],
     env = env,
-    deps = deps,
+    deps = deps + [
+        requirement("prometheus-client"),
+    ],
 )
 
 native_binary(
@@ -72,6 +75,15 @@ native_binary(
     out = "target-determinator",
 )
 
+genrule(
+    name = "ic_repo_clone_for_long_tests",
+    outs = ["ic.git.tar"],
+    cmd = "git clone https://github.com/dfinity/ic.git ic.git && cd `dirname $@`/ic.git && tar cf ../ic.git.tar .",
+    tags = ["no-sandbox"] + ["manual"],
+)
+
+medium_tests = ["tests/test_release_notes.py"]
+
 # Add file here if you do not want to run the test automatically.
 long_tests = ["tests/test_commit_annotator.py"]
 
@@ -80,28 +92,50 @@ long_tests = ["tests/test_commit_annotator.py"]
         py_test(
             name = target[6:-3],
             srcs = ["tests/runner.py"] + [target] + glob(["tests/mock_*.py"]),
-            data = glob(["tests/test_data/*"]),
+            data = glob(["tests/test_data/*"]) + ["//:pyproject.toml"] + group["data"],
             main = "tests/runner.py",
-            env = env,
-            tags = ["no-sandbox"] + group["tags"],
-            deps = deps + dev_deps + ["release-controller"],
+            env = env | group["env"],
+            tags = ["no-sandbox"] + group["tags"] + ["typecheck"],
+            deps = deps + dev_deps + ["release-controller"] + ["commit-annotator"],
             env_inherit = ["HOME"],
+            size = group["test_size"],
         )
         for target in group["targets"]
     ]
     for group in [
-        {"targets": glob(["tests/test_*.py"], exclude=long_tests), "tags": ["typecheck"]},
-        {"targets": long_tests, "tags": ["manual"]},
+        {
+            "targets": glob(["tests/test_*.py"], exclude=long_tests + medium_tests),
+            "tags": [],
+            "test_size": "small",
+            "data": [],
+            "env": {},
+        },
+        {
+            "targets": medium_tests,
+            "tags": [],
+            "test_size": "medium",
+            "data": [],
+            "env": {},
+        },
+        {
+            "targets": long_tests,
+            "tags": ["manual"],
+            "test_size": "large",
+            "data": ["ic_repo_clone_for_long_tests"],
+            "env": {
+                "IC_REPO_SEED_TAR": "$(location ic_repo_clone_for_long_tests)",
+            },
+        },
     ]
 ]
 
 tar(
-    name = "bins_release_controller_tar",
+    name = "release_controller_deps",
     srcs = ["//rs/cli:dre"],
 )
 
 tar(
-    name = "bins_commit_annotator_tar",
+    name = "commit_annotator_deps",
     srcs = [":bazelisk", ":target_determinator"],
 )
 
@@ -109,14 +143,14 @@ py_oci_image(
     name = "oci_image",
     base = "@bazel_image_7_4_1",
     binary = ":release-controller",
-    tars = [":bins_release_controller_tar"]
+    tars = [":release_controller_deps"]
 )
 
 py_oci_image(
     name = "oci_image_commit_annotator",
     base = "@bazel_image_7_4_1",
-    binary = ":commit_annotator",
-    tars = [":bins_commit_annotator_tar"]
+    binary = ":commit-annotator",
+    tars = [":commit_annotator_deps"]
 )
 
 exports_files(["README.md"])

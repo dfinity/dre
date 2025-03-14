@@ -186,3 +186,69 @@ def sha256sum_http_response(r: requests.Response, prefix: str) -> str:
     for chunk in auto_progressbar(HTTPGenerator(r), prefix=prefix):
         h.update(chunk)
     return h.hexdigest()
+
+
+class CustomFormatter(logging.Formatter):
+    if sys.stderr.isatty():
+        green = "\x1b[32;20m"
+        yellow = "\x1b[33;20m"
+        blue = "\x1b[34;20m"
+        red = "\x1b[31;20m"
+        bold_red = "\x1b[31;1m"
+        reset = "\x1b[0m"
+    else:
+        green = ""
+        yellow = ""
+        blue = ""
+        red = ""
+        bold_red = ""
+        reset = ""
+    shortfmt = ":%(name)-20s — %(message)s"
+    longfmt = "%(asctime)s %(levelname)13s  %(message)s\n" "%(name)37s"
+
+    FORMATS = {
+        logging.DEBUG: blue + "DD" + shortfmt + reset,
+        logging.INFO: green + "II" + shortfmt + reset,
+        logging.WARNING: yellow + "WW" + shortfmt + reset,
+        logging.ERROR: red + "EE" + shortfmt + reset,
+        logging.CRITICAL: bold_red + "!!" + shortfmt + reset,
+    }
+
+    LONG_FORMATS = {
+        logging.DEBUG: blue + longfmt + reset,
+        logging.INFO: green + longfmt + reset,
+        logging.WARNING: yellow + longfmt + reset,
+        logging.ERROR: red + longfmt + reset,
+        logging.CRITICAL: bold_red + longfmt + reset,
+    }
+
+    def __init__(self, one_line_logs: bool):
+        self.one_line_logs = one_line_logs
+
+    def format(self, record: logging.LogRecord) -> str:
+        if not self.one_line_logs:
+            log_fmt = self.LONG_FORMATS.get(record.levelno)
+        else:
+            log_fmt = self.FORMATS.get(record.levelno)
+        formatter = logging.Formatter(log_fmt)
+        return formatter.format(record)
+
+
+def conventional_logging(one_line_logs: bool, verbose: bool) -> None:
+    """
+    Set up conventional logging.
+
+    Arguments:
+      one_line_logs: make log entries compact and one-line
+      verbose: enable debug logging
+    """
+    root = logging.getLogger()
+    root.setLevel(logging.DEBUG if verbose else logging.INFO)
+    if verbose:
+        for chatty in ["httpcore", "urllib3", "httpx"]:
+            logging.getLogger(chatty).setLevel(logging.WARNING)
+
+    ch = logging.StreamHandler()
+    ch.setLevel(logging.DEBUG if verbose else logging.INFO)
+    ch.setFormatter(CustomFormatter(one_line_logs))
+    root.addHandler(ch)
