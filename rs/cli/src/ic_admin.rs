@@ -151,13 +151,31 @@ impl IcAdmin for IcAdminImpl {
     fn simulate_proposal(&self, cmd: Vec<String>, forum_post_link_description: Option<String>) -> BoxFuture<'_, anyhow::Result<()>> {
         Box::pin(async move {
             debug!("Simulating proposal {:?}.", cmd);
-            let mut args = Self::add_proposal_url(self.add_proposer(cmd), forum_post_link_description);
+
+            // If the forum post link description is a valid URL, and add it to the arguments if it is.
+            // Otherwise, add the forum post link description as a string after the ic-admin command.
+            let is_forum_post_link_description_url = forum_post_link_description
+                .as_ref()
+                .map(|desc| url::Url::parse(&desc).is_ok())
+                .unwrap_or(false);
+            let mut args = if is_forum_post_link_description_url {
+                Self::add_proposal_url(self.add_proposer(cmd), forum_post_link_description.clone())
+            } else {
+                self.add_proposer(cmd)
+            };
+
             // Make sure there is no more than one `--dry-run` argument, or else ic-admin will complain.
             if !args.contains(&String::from("--dry-run")) {
                 args.push("--dry-run".into())
             };
 
             self.run(args.as_slice(), true).await.map(|r| r.trim().to_string())?;
+
+            // Add the forum post link description as a string after the ic-admin command.
+            if forum_post_link_description.is_some() && !is_forum_post_link_description_url {
+                println!("Forum post link: {}", forum_post_link_description.unwrap());
+            }
+
             Ok(())
         })
     }
