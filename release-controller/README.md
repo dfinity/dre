@@ -227,7 +227,7 @@ bazel run //release-controller:commit-annotator \
   -- \
   --no-push-annotations \
   --loop-every=0 \
-  --no-fetch-annotations \ # don't clobber locally created annootations 
+  --no-fetch-annotations \ # don't clobber locally created annotations 
   --verbose
 ```
 
