@@ -53,10 +53,11 @@ The release process [is documented here](https://www.notion.so/dfinityorg/IC-OS-
     - Evaluate the alert based on its severity and the affected cluster to determine if further action is required.
     - Escalate or address issues as needed to ensure operations continue smoothly.
 
-### 3. **Answer all questions asked in the team's slack channels**
+### 3. **Handle all notifications and answer all questions asked in the team's slack channels**
     
 * [`#eng-dre`](https://dfinity.enterprise.slack.com/archives/C05LD0CEAHY): General channel for activities
 * [`#eng-release`](https://dfinity.enterprise.slack.com/archives/C01DB8MQ5M1): Questions related to release process
+* [`#eng-release-bots`](https://dfinity.enterprise.slack.com/archives/C02NQC42C2F): Automations send important notifications to this channel, which you must handle
 * [`#eng-observability`](https://dfinity.enterprise.slack.com/archives/CGZ4YGN4S): Questions related to our observability
 
 ??? question "But I don't know the answers to all questions"
