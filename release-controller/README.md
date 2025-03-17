@@ -217,6 +217,22 @@ SHASUM=...
 podman run -it --entrypoint=/release-controller/release-controller $SHASUM
 ```
 
+### Running the annotator locally in "dry-run mode"
+
+The annotator can be run in a mostly stateless mode, for one single loop,
+with the following options:
+
+```sh
+bazel run //release-controller:commit-annotator \
+  -- \
+  --no-push-annotations \
+  --loop-every=0 \
+  --no-fetch-annotations \ # don't clobber locally created annotations 
+  --verbose
+```
+
+Please consult `--help` for additional options.
+
 ### Tests
 
 #### Unit tests
