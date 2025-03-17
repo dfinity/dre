@@ -57,7 +57,7 @@ The release process [is documented here](https://www.notion.so/dfinityorg/IC-OS-
     
 * [`#eng-dre`](https://dfinity.enterprise.slack.com/archives/C05LD0CEAHY): General channel for activities
 * [`#eng-release`](https://dfinity.enterprise.slack.com/archives/C01DB8MQ5M1): Questions related to release process
-* [`#eng-release-bots`](https://dfinity.enterprise.slack.com/archives/C02NQC42C2F): Automations send important notifications you must handle there
+* [`#eng-release-bots`](https://dfinity.enterprise.slack.com/archives/C02NQC42C2F): Automations send important notifications to this channel, which you must handle
 * [`#eng-observability`](https://dfinity.enterprise.slack.com/archives/CGZ4YGN4S): Questions related to our observability
 
 ??? question "But I don't know the answers to all questions"
