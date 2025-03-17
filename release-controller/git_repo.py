@@ -92,7 +92,9 @@ class GitRepoAnnotator(object):
         cachekey = f"{namespace}-{object}"
         if cachekey not in self.cache:
             try:
-                self.cache[cachekey] = self.repo._notes(namespace, "show", object)
+                self.cache[cachekey] = self.repo._notes(
+                    namespace, "show", object, silence_stderr=True
+                )
             except subprocess.CalledProcessError:
                 # It's not there!
                 self.cache[cachekey] = None
