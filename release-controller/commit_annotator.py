@@ -154,7 +154,7 @@ def main() -> None:
         "--no-fetch-annotations",
         action="store_false",
         dest="fetch_annotations",
-        help="The default is to fetch annotations from the repository on every loop, annihilating local annotations.  This option turns it off.",
+        help="The default is to fetch annotations from the repository on every loop, overwriting local annotations. This option turns off that behavior.",
     )
     parser.add_argument("--verbose", "--debug", action="store_true", dest="verbose")
     parser.add_argument(
