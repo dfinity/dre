@@ -231,7 +231,7 @@ bazel run //release-controller:commit-annotator \
   --verbose
 ```
 
-Please consult `--help` for the plethora of options to tweak the behavior
+Please consult `--help` for additional options.
 
 ### Tests
 
