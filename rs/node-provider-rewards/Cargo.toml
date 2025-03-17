@@ -19,7 +19,7 @@ chrono = { workspace = true }
 function_name = { workspace = true }
 
 [dev-dependencies]
-once_cell = "1.21.0"
+once_cell = "1.21.1"
 
 [lib]
 name = "node_provider_rewards"
