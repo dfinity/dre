@@ -43,8 +43,8 @@ The release process [is documented here](https://www.notion.so/dfinityorg/IC-OS-
 
 ### 2. **Review alerts for our clusters**
 
-* All alerts that our clusters send are aggregated in our [Jira ops board](https://dfinity.atlassian.net/jira/ops/teams/og-a6d6c0d5-2641-4c54-8a2c-5860ef5e8f53/alerts?view=list&query=responders%3A+og-a6d6c0d5-2641-4c54-8a2c-5860ef5e8f53)
-* Heartbeats are present [here](https://dfinity.atlassian.net/jira/ops/teams/og-a6d6c0d5-2641-4c54-8a2c-5860ef5e8f53/heartbeats)
+* All alerts that our clusters send are aggregated in our [Jira ops board](https://dfinity.atlassian.net/jira/ops/teams/og-a6d6c0d5-2641-4c54-8a2c-5860ef5e8f53/alerts?view=list&query=responders%3A%20og-a6d6c0d5-2641-4c54-8a2c-5860ef5e8f53%20AND%20%28status%3A%20%22snoozed%22%20OR%20status%3A%20%22acknowledged%22%20OR%20status%3A%20%22open%22%29).
+* Heartbeats are present [here](https://dfinity.atlassian.net/jira/ops/teams/og-a6d6c0d5-2641-4c54-8a2c-5860ef5e8f53/heartbeats).
 
 ??? tip "What should I do if there are alerts?"
     
