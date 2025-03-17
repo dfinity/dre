@@ -232,7 +232,6 @@ bazel run //release-controller:commit-annotator \
 ```
 
 Please consult `--help` for the plethora of options to tweak the behavior
-of the annotator at local run time.
 
 ### Tests
 
