@@ -15,40 +15,13 @@ fn subnet_id(id: u64) -> SubnetId {
 }
 
 fn provider_id(id: u64) -> PrincipalId {
-    PrincipalId::new_user_test_id(id).into()
+    PrincipalId::new_user_test_id(id)
 }
 
 fn create_metrics_by_node() -> BTreeMap<NodeId, Vec<NodeDailyMetrics>> {
     let mut metrics_by_node = BTreeMap::new();
     metrics_by_node.insert(node_id(1), vec![NodeDailyMetrics::new(NANOS_PER_DAY, subnet_id(1), 0, 0)]);
     metrics_by_node
-}
-
-fn mocked_rewards_table() -> NodeRewardsTable {
-    let mut rates_outer: BTreeMap<String, NodeRewardRate> = BTreeMap::new();
-    let mut rates_inner: BTreeMap<String, NodeRewardRate> = BTreeMap::new();
-    let mut table: BTreeMap<String, NodeRewardRates> = BTreeMap::new();
-
-    let rate_outer = NodeRewardRate {
-        xdr_permyriad_per_node_per_month: 1000,
-        reward_coefficient_percent: Some(97),
-    };
-
-    let rate_inner = NodeRewardRate {
-        xdr_permyriad_per_node_per_month: 1500,
-        reward_coefficient_percent: Some(95),
-    };
-
-    rates_outer.insert("type0".to_string(), rate_outer);
-    rates_outer.insert("type1".to_string(), rate_outer);
-    rates_outer.insert("type3".to_string(), rate_outer);
-
-    rates_inner.insert("type3.1".to_string(), rate_inner);
-
-    table.insert("A,B,C".to_string(), NodeRewardRates { rates: rates_inner });
-    table.insert("A,B".to_string(), NodeRewardRates { rates: rates_outer });
-
-    NodeRewardsTable { table }
 }
 
 #[test]
@@ -137,14 +110,7 @@ fn test_node_provider_below_min_limit() {
     ];
 
     let rewards = calculate_rewards(&reward_period, &rewards_table, &BTreeMap::new(), &rewardables).unwrap();
-
-    rewards
-        .logs_per_node_provider
-        .get(&node_provider_id)
-        .unwrap()
-        .iter()
-        .for_each(|log| println!("{}", log));
-    assert_eq!(*rewards.rewards_per_node_provider.get(&node_provider_id).unwrap(), 2u64);
+    assert_eq!(*rewards.rewards_per_provider.get(&node_provider_id).unwrap(), 2u64);
 }
 
 struct NPRInput {
@@ -152,6 +118,12 @@ struct NPRInput {
     rewards_table: NodeRewardsTable,
     metrics_by_node: BTreeMap<NodeId, Vec<NodeDailyMetrics>>,
     rewardables: Vec<RewardableNode>,
+}
+
+impl NPRInput {
+    pub fn calculate_rewards(&self) -> RewardsPerNodeProvider {
+        calculate_rewards(&self.reward_period, &self.rewards_table, &self.metrics_by_node, &self.rewardables).unwrap()
+    }
 }
 
 struct NPRInputBuilder {
@@ -271,74 +243,79 @@ fn test_node_provider_rewards_one_assigned() {
         // Node Provider 1: node_1 assigned, rest unassigned
         .with_nodes(nodes_np_1, np_1, "A,B", "type1")
         .with_node_metrics(node_1, 0, vec![dec!(0.4), dec!(0.2), dec!(0.3), dec!(0.4)], subnet_1)
-        // Node Provider 2: all assigned with 0 failure rate
+        // Node Provider 2: all assigned with 0 failure rate this for bringing the subnet failure rate to 0
         .with_nodes(nodes_np_2.clone(), np_2, "A,B", "type1")
         .with_nodes_metrics(nodes_np_2, 0, vec![dec!(0); 4], subnet_1)
         .build();
 
-    let rewards = calculate_rewards(..input).unwrap();
+    let rewards = input.calculate_rewards();
 
-    // Summary for Node 2o3ay-vafaa-aaaaa-aaaap-2ai:
-    // ┌──────────────────────────┬───────────────────────┬─────────────────┬─────────────────────┬────────────────────────────────────┐
-    // │ Day (UTC)                │ Original Failure Rate │ Subnet Assigned │ Subnet Failure Rate │ Relative/Extrapolated Failure Rate │
-    // ├──────────────────────────┼───────────────────────┼─────────────────┼─────────────────────┼────────────────────────────────────┤
-    // │ 01-01-1970 to 31-01-1970 │ N/A                   │ N/A             │ N/A                 │ 0.325                              │
-    // └──────────────────────────┴───────────────────────┴─────────────────┴─────────────────────┴────────────────────────────────────┘
-    // Summary for Node hr2go-2qeaa-aaaaa-aaaap-2ai:
-    // ┌──────────────────────────┬───────────────────────┬─────────────────┬─────────────────────┬────────────────────────────────────┐
-    // │ Day (UTC)                │ Original Failure Rate │ Subnet Assigned │ Subnet Failure Rate │ Relative/Extrapolated Failure Rate │
-    // ├──────────────────────────┼───────────────────────┼─────────────────┼─────────────────────┼────────────────────────────────────┤
-    // │ 01-01-1970 to 31-01-1970 │ N/A                   │ N/A             │ N/A                 │ 0.325                              │
-    // └──────────────────────────┴───────────────────────┴─────────────────┴─────────────────────┴────────────────────────────────────┘
-    // Summary for Node 32uhy-eydaa-aaaaa-aaaap-2ai:
-    // ┌──────────────────────────┬───────────────────────┬─────────────────┬─────────────────────┬────────────────────────────────────┐
-    // │ Day (UTC)                │ Original Failure Rate │ Subnet Assigned │ Subnet Failure Rate │ Relative/Extrapolated Failure Rate │
-    // ├──────────────────────────┼───────────────────────┼─────────────────┼─────────────────────┼────────────────────────────────────┤
-    // │ 01-01-1970 to 31-01-1970 │ N/A                   │ N/A             │ N/A                 │ 0.325                              │
-    // └──────────────────────────┴───────────────────────┴─────────────────┴─────────────────────┴────────────────────────────────────┘
-    // Summary for Node gfvbo-licaa-aaaaa-aaaap-2ai:
-    // ┌──────────────────────────┬───────────────────────┬─────────────────┬─────────────────────┬────────────────────────────────────┐
-    // │ Day (UTC)                │ Original Failure Rate │ Subnet Assigned │ Subnet Failure Rate │ Relative/Extrapolated Failure Rate │
-    // ├──────────────────────────┼───────────────────────┼─────────────────┼─────────────────────┼────────────────────────────────────┤
-    // │ 01-01-1970 to 31-01-1970 │ N/A                   │ N/A             │ N/A                 │ 0.325                              │
-    // └──────────────────────────┴───────────────────────┴─────────────────┴─────────────────────┴────────────────────────────────────┘
-    // Summary for Node 3jo2y-lqbaa-aaaaa-aaaap-2ai:
-    // ┌──────────────────────────┬───────────────────────┬─────────────────────────────┬─────────────────────┬────────────────────────────────────┐
-    // │ Day (UTC)                │ Original Failure Rate │ Subnet Assigned             │ Subnet Failure Rate │ Relative/Extrapolated Failure Rate │
-    // ├──────────────────────────┼───────────────────────┼─────────────────────────────┼─────────────────────┼────────────────────────────────────┤
-    // │ 01-01-1970               │ 0.4                   │ yndj2-3ybaa-aaaaa-aaaap-yai │ 0                   │ 0.4                                │
-    // │ 02-01-1970               │ 0.2                   │ yndj2-3ybaa-aaaaa-aaaap-yai │ 0                   │ 0.2                                │
-    // │ 03-01-1970               │ 0.3                   │ yndj2-3ybaa-aaaaa-aaaap-yai │ 0                   │ 0.3                                │
-    // │ 04-01-1970               │ 0.4                   │ yndj2-3ybaa-aaaaa-aaaap-yai │ 0                   │ 0.4                                │
-    // │ 05-01-1970 to 31-01-1970 │ N/A                   │ N/A                         │ N/A                 │ 0.325                              │
-    // └──────────────────────────┴───────────────────────┴─────────────────────────────┴─────────────────────┴────────────────────────────────────┘
-    // Compute Rewards Multiplier - Step: Calculate Extrapolated Failure Rate
-    // 3jo2y-lqbaa-aaaaa-aaaap-2ai: avg(0.4,0.2,0.3,0.4) = 0.325
-    // Extrapolated Failure Rate: avg(0.325) = 0.325
-    // Compute Rewards Multiplier - Step: Calculate Average Failure Rate By Node
-    // 3jo2y-lqbaa-aaaaa-aaaap-2ai: avg(0.4,0.2,0.3,0.4,0.325,...) = 0.325
-    // gfvbo-licaa-aaaaa-aaaap-2ai: avg(0.325,...) = 0.325
-    // 32uhy-eydaa-aaaaa-aaaap-2ai: avg(0.325,...) = 0.325
-    // hr2go-2qeaa-aaaaa-aaaap-2ai: avg(0.325,...) = 0.325
-    // 2o3ay-vafaa-aaaaa-aaaap-2ai: avg(0.325,...) = 0.325
-    // Compute Rewards Multiplier - Step: Calculate Performance Multiplier By Node
-    // 3jo2y-lqbaa-aaaaa-aaaap-2ai: failure rate in period: 0.325, rewards reduction: 0.360 -> Rewards Multiplier: [0.640]
-    // gfvbo-licaa-aaaaa-aaaap-2ai: failure rate in period: 0.325, rewards reduction: 0.360 -> Rewards Multiplier: [0.640]
-    // 32uhy-eydaa-aaaaa-aaaap-2ai: failure rate in period: 0.325, rewards reduction: 0.360 -> Rewards Multiplier: [0.640]
-    // hr2go-2qeaa-aaaaa-aaaap-2ai: failure rate in period: 0.325, rewards reduction: 0.360 -> Rewards Multiplier: [0.640]
-    // 2o3ay-vafaa-aaaaa-aaaap-2ai: failure rate in period: 0.325, rewards reduction: 0.360 -> Rewards Multiplier: [0.640]
-    // Rewards permyriad XDR for the node: 1000 * 0.640 = 640.000
-    // Rewards permyriad XDR for the node: 1000 * 0.640 = 640.000
-    // Rewards permyriad XDR for the node: 1000 * 0.640 = 640.000
-    // Rewards permyriad XDR for the node: 1000 * 0.640 = 640.000
-    // Rewards permyriad XDR for the node: 1000 * 0.640 = 640.000
-    // Total rewards for all nodes: sum(640.000,...) = 3200.000
-
-    rewards
-        .logs_per_node_provider
-        .get(&np_1)
-        .unwrap()
-        .iter()
-        .for_each(|log| println!("{}", log));
-    assert_eq!(*rewards.rewards_per_node_provider.get(&np_1).unwrap(), 3200);
+    //     ┌─Node: 3jo2y-lqbaa-aaaaa-aaaap-2ai ─────────────────────┬─────────────────────────────┬───────────────────────────┬─────────────────────────────┬─────────────────────────────────┐
+    //     │        Day (UTC)         │ Original Failure Rate [OFR] │       Subnet Assigned       │ Subnet Failure Rate [SFR] │ Relative Failure Rate [RFR] │ Extrapolated Failure Rate [EFR] │
+    //     ├──────────────────────────┼─────────────────────────────┼─────────────────────────────┼───────────────────────────┼─────────────────────────────┼─────────────────────────────────┤
+    //     │        01-01-1970        │             0.4             │ yndj2-3ybaa-aaaaa-aaaap-yai │             0             │             0.4             │                -                │
+    //     ├──────────────────────────┼─────────────────────────────┼─────────────────────────────┼───────────────────────────┼─────────────────────────────┼─────────────────────────────────┤
+    //     │        02-01-1970        │             0.2             │ yndj2-3ybaa-aaaaa-aaaap-yai │             0             │             0.2             │                -                │
+    //     ├──────────────────────────┼─────────────────────────────┼─────────────────────────────┼───────────────────────────┼─────────────────────────────┼─────────────────────────────────┤
+    //     │        03-01-1970        │             0.3             │ yndj2-3ybaa-aaaaa-aaaap-yai │             0             │             0.3             │                -                │
+    //     ├──────────────────────────┼─────────────────────────────┼─────────────────────────────┼───────────────────────────┼─────────────────────────────┼─────────────────────────────────┤
+    //     │        04-01-1970        │             0.4             │ yndj2-3ybaa-aaaaa-aaaap-yai │             0             │             0.4             │                -                │
+    //     ├──────────────────────────┼─────────────────────────────┼─────────────────────────────┼───────────────────────────┼─────────────────────────────┼─────────────────────────────────┤
+    //     │ 05-01-1970 to 31-01-1970 │             N/A             │             N/A             │            N/A            │             N/A             │              0.325              │
+    //     └──────────────────────────┴─────────────────────────────┴─────────────────────────────┴───────────────────────────┴─────────────────────────────┴─────────────────────────────────┘
+    //     ┌─Node: gfvbo-licaa-aaaaa-aaaap-2ai ─────────────────────┬─────────────────┬───────────────────────────┬─────────────────────────────┬─────────────────────────────────┐
+    //     │        Day (UTC)         │ Original Failure Rate [OFR] │ Subnet Assigned │ Subnet Failure Rate [SFR] │ Relative Failure Rate [RFR] │ Extrapolated Failure Rate [EFR] │
+    //     ├──────────────────────────┼─────────────────────────────┼─────────────────┼───────────────────────────┼─────────────────────────────┼─────────────────────────────────┤
+    //     │ 01-01-1970 to 31-01-1970 │             N/A             │       N/A       │            N/A            │             N/A             │              0.325              │
+    //     └──────────────────────────┴─────────────────────────────┴─────────────────┴───────────────────────────┴─────────────────────────────┴─────────────────────────────────┘
+    //     ┌─Node: 32uhy-eydaa-aaaaa-aaaap-2ai ─────────────────────┬─────────────────┬───────────────────────────┬─────────────────────────────┬─────────────────────────────────┐
+    //     │        Day (UTC)         │ Original Failure Rate [OFR] │ Subnet Assigned │ Subnet Failure Rate [SFR] │ Relative Failure Rate [RFR] │ Extrapolated Failure Rate [EFR] │
+    //     ├──────────────────────────┼─────────────────────────────┼─────────────────┼───────────────────────────┼─────────────────────────────┼─────────────────────────────────┤
+    //     │ 01-01-1970 to 31-01-1970 │             N/A             │       N/A       │            N/A            │             N/A             │              0.325              │
+    //     └──────────────────────────┴─────────────────────────────┴─────────────────┴───────────────────────────┴─────────────────────────────┴─────────────────────────────────┘
+    //     ┌─Node: hr2go-2qeaa-aaaaa-aaaap-2ai ─────────────────────┬─────────────────┬───────────────────────────┬─────────────────────────────┬─────────────────────────────────┐
+    //     │        Day (UTC)         │ Original Failure Rate [OFR] │ Subnet Assigned │ Subnet Failure Rate [SFR] │ Relative Failure Rate [RFR] │ Extrapolated Failure Rate [EFR] │
+    //     ├──────────────────────────┼─────────────────────────────┼─────────────────┼───────────────────────────┼─────────────────────────────┼─────────────────────────────────┤
+    //     │ 01-01-1970 to 31-01-1970 │             N/A             │       N/A       │            N/A            │             N/A             │              0.325              │
+    //     └──────────────────────────┴─────────────────────────────┴─────────────────┴───────────────────────────┴─────────────────────────────┴─────────────────────────────────┘
+    //     ┌─Node: 2o3ay-vafaa-aaaaa-aaaap-2ai ─────────────────────┬─────────────────┬───────────────────────────┬─────────────────────────────┬─────────────────────────────────┐
+    //     │        Day (UTC)         │ Original Failure Rate [OFR] │ Subnet Assigned │ Subnet Failure Rate [SFR] │ Relative Failure Rate [RFR] │ Extrapolated Failure Rate [EFR] │
+    //     ├──────────────────────────┼─────────────────────────────┼─────────────────┼───────────────────────────┼─────────────────────────────┼─────────────────────────────────┤
+    //     │ 01-01-1970 to 31-01-1970 │             N/A             │       N/A       │            N/A            │             N/A             │              0.325              │
+    //     └──────────────────────────┴─────────────────────────────┴─────────────────┴───────────────────────────┴─────────────────────────────┴─────────────────────────────────┘
+    //     ┌─Legend─┬───────────────────────────────────────────────────────────────────────────────────────────────────────────┐
+    //     │ Steps  │ Description                                                                                               │
+    //     │────────┼───────────────────────────────────────────────────────────────────────────────────────────────────────────┤
+    //     │ Step 1 │ Average Relative Failure Rate [ARFR]: AVG(RFR(Assigned Days))                                             │
+    //     │        │                                                                                                           │
+    //     │ Step 2 │ Extrapolated Failure Rate [EFR]: AVG(ARFR)                                                                │
+    //     │        │                                                                                                           │
+    //     │ Step 3 │ Average Extrapolated Failure Rate [AEFR]: AVG(RFR(Assigned Days), EFR(Unassigned Days))                   │
+    //     │        │                                                                                                           │
+    //     │ Step 4 │ Rewards Reduction [RR]:                                                                                   │
+    //     │        │     * For nodes with AEFR < 0.1, the rewards reduction is 0                                               │
+    //     │        │     * For nodes with AEFR > 0.6, the rewards reduction is 0.8                                             │
+    //     │        │     * For nodes with 0.1 <= AEFR <= 0.6, the rewards reduction is linearly interpolated between 0 and 0.8 │
+    //     │        │                                                                                                           │
+    //     │ Step 5 │ Performance Multiplier [PM]: 1 - RR                                                                       │
+    //     │        │                                                                                                           │
+    //     │ Step 6 │ Adjusted Rewards: Base Rewards * PM                                                                       │
+    //     │        │                                                                                                           │
+    //     │ Step 7 │ Rewards Total                                                                                             │
+    //     └────────┴───────────────────────────────────────────────────────────────────────────────────────────────────────────┘
+    //     ┌─Nodes Computation───────────┬───────────┬─────────────┬──────────────┬────────┬────────┬────────┬────────┬────────┬────────────┬─────────────┐
+    //     │           Node ID           │ Node Type │ Node Region │ Base Rewards │ Step 1 │ Step 2 │ Step 3 │ Step 4 │ Step 5 │   Step 6   │   Step 7    │
+    //     │                             │           │             │              │        │        │        │        │        │            │             │
+    //     ├─────────────────────────────┼───────────┼─────────────┼──────────────┼────────┼────────┼────────┼────────┼────────┼────────────┼─────────────┤
+    //     │ 3jo2y-lqbaa-aaaaa-aaaap-2ai │   type1   │     A,B     │ 1000 myrXDR  │ 0.325  │ 0.325  │ 0.325  │ 0.360  │ 0.640  │ 640 myrXDR │ 3200 myrXDR │
+    //     ├─────────────────────────────┼───────────┼─────────────┼──────────────┼────────┼        ┼────────┼────────┼────────┼────────────┼             ┤
+    //     │ gfvbo-licaa-aaaaa-aaaap-2ai │   type1   │     A,B     │ 1000 myrXDR  │   -    │        │ 0.325  │ 0.360  │ 0.640  │ 640 myrXDR │             │
+    //     ├─────────────────────────────┼───────────┼─────────────┼──────────────┼────────┼        ┼────────┼────────┼────────┼────────────┼             ┤
+    //     │ 32uhy-eydaa-aaaaa-aaaap-2ai │   type1   │     A,B     │ 1000 myrXDR  │   -    │        │ 0.325  │ 0.360  │ 0.640  │ 640 myrXDR │             │
+    //     ├─────────────────────────────┼───────────┼─────────────┼──────────────┼────────┼        ┼────────┼────────┼────────┼────────────┼             ┤
+    //     │ hr2go-2qeaa-aaaaa-aaaap-2ai │   type1   │     A,B     │ 1000 myrXDR  │   -    │        │ 0.325  │ 0.360  │ 0.640  │ 640 myrXDR │             │
+    //     ├─────────────────────────────┼───────────┼─────────────┼──────────────┼────────┼        ┼────────┼────────┼────────┼────────────┼             ┤
+    //     │ 2o3ay-vafaa-aaaaa-aaaap-2ai │   type1   │     A,B     │ 1000 myrXDR  │   -    │        │ 0.325  │ 0.360  │ 0.640  │ 640 myrXDR │             │
+    //     └─────────────────────────────┴───────────┴─────────────┴──────────────┴────────┴────────┴────────┴────────┴────────┴────────────┴─────────────┘
+    assert_eq!(*rewards.rewards_per_provider.get(&np_1).unwrap(), 3200);
 }

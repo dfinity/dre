@@ -1,29 +1,29 @@
-use crate::logs::LogEntry;
+use crate::execution_context::{ComputedPerformanceMultiplier, ExecutionContext, Initialized, RewardsTotalComputed, XDRPermyriad};
 use crate::metrics::{nodes_failure_rates_in_period, subnets_failure_rates, NodeDailyMetrics};
+use crate::npr_utils::{nodes_ids, rewardable_nodes_by_provider, RewardableNode};
 use crate::performance_calculator::PerformanceMultiplierCalculator;
 use crate::reward_period::{RewardPeriod, TimestampNanos};
-use crate::rewardable_nodes::{nodes_ids, rewardable_nodes_by_provider, RewardableNode};
-use crate::rewards_calculator::{RewardsCalculator, XDRPermyriad};
+use crate::rewards_calculator::RewardsCalculator;
+use ::tabled::Table;
 use ic_base_types::{NodeId, PrincipalId};
 use ic_protobuf::registry::node_rewards::v2::NodeRewardsTable;
 use std::cmp::PartialEq;
-use std::collections::{BTreeMap, HashMap, HashSet};
+use std::collections::{BTreeMap, HashSet};
 use std::error::Error;
 use std::fmt;
 
-mod logs;
+mod execution_context;
+mod intermediate_results;
 mod metrics;
+mod npr_utils;
 mod performance_calculator;
 mod reward_period;
-mod rewardable_nodes;
 mod rewards_calculator;
-mod tabled_types;
-#[cfg(test)]
-mod tests;
+mod tabled;
 
 pub struct RewardsPerNodeProvider {
-    pub rewards_per_node_provider: HashMap<PrincipalId, XDRPermyriad>,
-    pub logs_per_node_provider: HashMap<PrincipalId, Vec<LogEntry>>,
+    pub rewards_per_provider: BTreeMap<PrincipalId, XDRPermyriad>,
+    pub computation_table_per_provider: BTreeMap<PrincipalId, Vec<Table>>,
 }
 
 /// Computes rewards for node providers based on their nodes' performance during the specified `reward_period`.
@@ -39,31 +39,31 @@ pub fn calculate_rewards(
     metrics_by_node: &BTreeMap<NodeId, Vec<NodeDailyMetrics>>,
     rewardable_nodes: &[RewardableNode],
 ) -> Result<RewardsPerNodeProvider, RewardCalculationError> {
-    let mut rewards_per_node_provider = HashMap::new();
-    let mut logs_per_node_provider = HashMap::new();
-
     let all_nodes = nodes_ids(rewardable_nodes);
+
     validate_input(reward_period, metrics_by_node, &all_nodes)?;
 
-    let subnets_failure_rates = subnets_failure_rates(metrics_by_node);
-    let nodes_failure_rates = nodes_failure_rates_in_period(&all_nodes, reward_period, metrics_by_node);
-    let performance_calc = PerformanceMultiplierCalculator::new(nodes_failure_rates, subnets_failure_rates);
-    let rewards_calculator = RewardsCalculator::new(rewards_table.clone());
+    let rewards_calculator = RewardsCalculator::new(rewards_table);
+    let performance_multipliers_calculator = PerformanceMultiplierCalculator::new(
+        nodes_failure_rates_in_period(&all_nodes, reward_period, metrics_by_node),
+        subnets_failure_rates(metrics_by_node),
+    );
 
-    for (provider_id, provider_rewardable_nodes) in rewardable_nodes_by_provider(rewardable_nodes) {
-        let nodes_ids: Vec<NodeId> = nodes_ids(&provider_rewardable_nodes);
+    let mut rewards_per_provider = BTreeMap::new();
+    let mut computation_table_per_provider = BTreeMap::new();
+    for (provider_id, provider_nodes) in rewardable_nodes_by_provider(rewardable_nodes) {
+        let ctx: ExecutionContext<Initialized> = ExecutionContext::new(provider_nodes);
 
-        let multipliers = performance_calc.calculate_performance_multipliers(&nodes_ids);
-        let result = rewards_calculator.calculate_rewards_xdr(provider_rewardable_nodes, multipliers.performance_multiplier_by_node);
-        let computation_log: Vec<_> = multipliers.logger.entries.into_iter().chain(result.logger.entries.into_iter()).collect();
+        let ctx: ExecutionContext<ComputedPerformanceMultiplier> = performance_multipliers_calculator.calculate(ctx);
+        let ctx: ExecutionContext<RewardsTotalComputed> = rewards_calculator.calculate(ctx);
 
-        rewards_per_node_provider.insert(provider_id, result.xdr_permyriad);
-        logs_per_node_provider.insert(provider_id, computation_log);
+        rewards_per_provider.insert(provider_id, ctx.rewards_total);
+        computation_table_per_provider.insert(provider_id, ctx.computation_tabled());
     }
 
     Ok(RewardsPerNodeProvider {
-        rewards_per_node_provider,
-        logs_per_node_provider,
+        rewards_per_provider,
+        computation_table_per_provider,
     })
 }
 
@@ -148,3 +148,6 @@ impl fmt::Display for RewardCalculationError {
         }
     }
 }
+
+#[cfg(test)]
+mod tests;

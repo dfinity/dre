@@ -1,10 +1,10 @@
 use super::*;
 use crate::metrics::{nodes_failure_rates_in_period, subnets_failure_rates, NodeDailyMetrics};
+use crate::npr_utils::RewardableNode;
 use crate::reward_period::{RewardPeriod, TimestampNanos, TimestampNanosAtDayEnd, NANOS_PER_DAY};
 use ic_base_types::PrincipalId;
 use itertools::Itertools;
 use num_traits::FromPrimitive;
-use once_cell::sync::Lazy;
 
 fn node_id(id: u64) -> NodeId {
     PrincipalId::new_node_test_id(id).into()
@@ -235,16 +235,38 @@ fn test_defined_node_failure_rates() {
 
 // PerformanceMultiplierCalculator tests
 
+impl Default for RewardableNode {
+    fn default() -> Self {
+        Self {
+            node_id: NodeId::from(PrincipalId::default()),
+            node_provider_id: PrincipalId::default(),
+            region: Default::default(),
+            node_type: Default::default(),
+        }
+    }
+}
+
+fn test_rewardable_nodes(nodes: Vec<NodeId>) -> Vec<RewardableNode> {
+    nodes
+        .iter()
+        .map(|node_id| RewardableNode {
+            node_id: *node_id,
+            ..Default::default()
+        })
+        .collect()
+}
+
 #[test]
 fn test_update_relative_failure_rates() {
     let (nodes_failure_rates, subnets_failure_rates) = FailureRatesBuilder::default().build();
-    let nodes = nodes_failure_rates.keys().cloned().collect_vec();
+    let rewardable_nodes = test_rewardable_nodes(nodes_failure_rates.keys().cloned().collect_vec());
     let perf_calculator = PerformanceMultiplierCalculator::new(nodes_failure_rates, subnets_failure_rates);
 
-    let ctx = perf_calculator.execution_context(&nodes);
+    let ctx = ExecutionContext::new(rewardable_nodes);
+    let ctx = perf_calculator.compute_nodes_daily_failure_rate(ctx);
     let ctx = perf_calculator.compute_relative_failure_rates(ctx);
 
-    let node_5_fr = ctx.execution_nodes.get(&node_id(5)).unwrap();
+    let node_5_fr = ctx.nodes_failure_rates.get(&node_id(5)).unwrap();
 
     let mut expected = NodeDailyFailureRate {
         ts: ts_day_end(0),
@@ -286,10 +308,11 @@ fn test_update_relative_failure_rates() {
 #[test]
 fn test_compute_failure_rate_extrapolated() {
     let (nodes_failure_rates, subnets_failure_rates) = FailureRatesBuilder::default().build();
-    let nodes = nodes_failure_rates.keys().cloned().collect_vec();
+    let rewardable_nodes = test_rewardable_nodes(nodes_failure_rates.keys().cloned().collect_vec());
     let perf_calculator = PerformanceMultiplierCalculator::new(nodes_failure_rates, subnets_failure_rates);
 
-    let ctx = perf_calculator.execution_context(&nodes);
+    let ctx = ExecutionContext::new(rewardable_nodes);
+    let ctx = perf_calculator.compute_nodes_daily_failure_rate(ctx);
     let mut ctx = perf_calculator.compute_relative_failure_rates(ctx);
     let extrapolated_failure_rate = perf_calculator.calculate_extrapolated_failure_rate(&mut ctx);
 
@@ -309,19 +332,20 @@ fn test_compute_failure_rate_extrapolated() {
 #[test]
 fn test_calculate_performance_multiplier_by_node() {
     let (nodes_failure_rates, subnets_failure_rates) = FailureRatesBuilder::default().build();
-    let nodes = nodes_failure_rates.keys().cloned().collect_vec();
+    let rewardable_nodes = test_rewardable_nodes(nodes_failure_rates.keys().cloned().collect_vec());
+    let ctx = ExecutionContext::new(rewardable_nodes.clone());
     let perf_calculator = PerformanceMultiplierCalculator::new(nodes_failure_rates, subnets_failure_rates);
-    let performance_multiplier_by_node = perf_calculator.calculate_performance_multipliers(&nodes).performance_multiplier_by_node;
+    let performance_multiplier_by_node = perf_calculator.calculate(ctx).performance_multiplier_by_node;
 
     // node_5_fr = [0, 0.3, 0.6, 0.05] -> avg = 0.2375
     // rewards_reduction: ((0.2375 - 0.1) / (0.6 - 0.1)) * 0.8 = 0.22
     // rewards_multiplier: 1 - 0.22 = 0.78
 
-    for node in nodes {
-        if node == node_id(5) {
-            assert_eq!(performance_multiplier_by_node[&node], dec!(0.78));
+    for node in rewardable_nodes {
+        if node.node_id == node_id(5) {
+            assert_eq!(performance_multiplier_by_node[&node.node_id], dec!(0.78));
         } else {
-            assert_eq!(performance_multiplier_by_node[&node], dec!(1));
+            assert_eq!(performance_multiplier_by_node[&node.node_id], dec!(1));
         }
     }
 }
