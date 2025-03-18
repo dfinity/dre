@@ -3,12 +3,12 @@ use crate::execution_context::{
 };
 use crate::intermediate_results::{AllNodesResult, SingleNodeResult};
 use crate::metrics::{NodeDailyFailureRate, NodeFailureRate, SubnetDailyFailureRate};
+use crate::npr_utils::avg;
 use ic_base_types::{NodeId, SubnetId};
 use rust_decimal::Decimal;
 use rust_decimal_macros::dec;
 use std::cmp::max;
 use std::collections::BTreeMap;
-use crate::npr_utils::avg;
 
 /// The minimum and maximum failure rates for a node.
 /// Nodes with a failure rate below `MIN_FAILURE_RATE` will not be penalized.
