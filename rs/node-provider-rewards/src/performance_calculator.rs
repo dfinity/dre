@@ -1,4 +1,4 @@
-use crate::execution_context::{ComputedPerformanceMultiplier, ComputedRelativeFR, ExecutionContext, FilledNodesFR, FilledUndefinedFR, Initialized};
+use crate::execution_context::{PerformanceMultipliersComputed, RelativeFRComputed, ExecutionContext, NodesFRInitialized, UndefinedFRExtrapolated, Initialized};
 use crate::intermediate_results::{AllNodesResult, SingleNodeResult};
 use crate::metrics::{NodeDailyFailureRate, NodeFailureRate, SubnetDailyFailureRate};
 use ic_base_types::{NodeId, SubnetId};
@@ -32,7 +32,7 @@ impl PerformanceMultiplierCalculator {
             subnets_failure_rates,
         }
     }
-    fn compute_nodes_daily_failure_rate(&self, ctx: ExecutionContext<Initialized>) -> ExecutionContext<FilledNodesFR> {
+    fn compute_nodes_daily_failure_rate(&self, ctx: ExecutionContext<Initialized>) -> ExecutionContext<NodesFRInitialized> {
         let mut ctx = ctx;
         let nodes = ctx.provider_nodes.iter().map(|node| node.node_id).collect::<Vec<_>>();
 
@@ -51,7 +51,7 @@ impl PerformanceMultiplierCalculator {
     /// Defined failure rates are adjusted by discounting the failure rate of the subnet to which they are
     /// assigned to.
     /// This is done for removing systematic factors that may affect all nodes in a subnet.
-    fn compute_relative_failure_rates(&self, ctx: ExecutionContext<FilledNodesFR>) -> ExecutionContext<ComputedRelativeFR> {
+    fn compute_relative_failure_rates(&self, ctx: ExecutionContext<NodesFRInitialized>) -> ExecutionContext<RelativeFRComputed> {
         let mut ctx = ctx;
         for failure_rate in ctx.nodes_failure_rates.values_mut().flatten() {
             if let NodeFailureRate::Defined { subnet_assigned, value } = failure_rate.value {
@@ -80,7 +80,7 @@ impl PerformanceMultiplierCalculator {
     /// For each node is computed the average of the relative failure rates recorded in the reward period.
     /// The extrapolated failure rate is the average of these averages.
     /// This is done to put higher weight on nodes with less recorded failure rates (assigned for fewer days).
-    fn calculate_extrapolated_failure_rate(&self, ctx: &mut ExecutionContext<ComputedRelativeFR>) -> Decimal {
+    fn calculate_extrapolated_failure_rate(&self, ctx: &mut ExecutionContext<RelativeFRComputed>) -> Decimal {
         if ctx.nodes_failure_rates.is_empty() {
             return dec!(1);
         }
@@ -98,23 +98,21 @@ impl PerformanceMultiplierCalculator {
             // Do not consider nodes completely unassigned
             if !failure_rates.is_empty() {
                 let node_avg_fr = avg(&failure_rates);
-                ctx.tracker
-                    .record_node_result(SingleNodeResult::AverageRelativeFR, node_id, &node_avg_fr);
+                ctx.tracker.record_node_result(SingleNodeResult::AverageRelativeFR, node_id, &node_avg_fr);
                 nodes_avg_fr.push(node_avg_fr);
             }
         }
 
         let extrapolated_fr = avg(&nodes_avg_fr);
-        ctx.tracker
-            .record_all_nodes_result(AllNodesResult::ExtrapolatedFR, &extrapolated_fr);
+        ctx.tracker.record_all_nodes_result(AllNodesResult::ExtrapolatedFR, &extrapolated_fr);
         extrapolated_fr
     }
 
     fn fill_undefined_failure_rates(
         &self,
         extrapolated_rate: Decimal,
-        ctx: ExecutionContext<ComputedRelativeFR>,
-    ) -> ExecutionContext<FilledUndefinedFR> {
+        ctx: ExecutionContext<RelativeFRComputed>,
+    ) -> ExecutionContext<UndefinedFRExtrapolated> {
         let mut ctx = ctx;
         for failure_rate in ctx.nodes_failure_rates.values_mut().flatten() {
             if matches!(failure_rate.value, NodeFailureRate::Undefined) {
@@ -127,7 +125,7 @@ impl PerformanceMultiplierCalculator {
     /// Calculates the average of the failure rates (DefinedRelative and Extrapolated) for each node in the reward period.
     ///
     /// The average failure rate is used to calculate the performance multiplier for each node.
-    fn calculate_average_failure_rate_by_node(&self, ctx: &mut ExecutionContext<FilledUndefinedFR>) -> BTreeMap<NodeId, Decimal> {
+    fn calculate_average_failure_rate_by_node(&self, ctx: &mut ExecutionContext<UndefinedFRExtrapolated>) -> BTreeMap<NodeId, Decimal> {
         ctx.nodes_failure_rates
             .iter()
             .map(|(node_id, failure_rates)| {
@@ -151,8 +149,8 @@ impl PerformanceMultiplierCalculator {
     fn calculate_performance_multiplier_by_node(
         &self,
         average_failure_rate_by_node: &BTreeMap<NodeId, Decimal>,
-        ctx: ExecutionContext<FilledUndefinedFR>,
-    ) -> ExecutionContext<ComputedPerformanceMultiplier> {
+        ctx: ExecutionContext<UndefinedFRExtrapolated>,
+    ) -> ExecutionContext<PerformanceMultipliersComputed> {
         let mut ctx = ctx;
         ctx.performance_multiplier_by_node = average_failure_rate_by_node
             .iter()
@@ -184,7 +182,7 @@ impl PerformanceMultiplierCalculator {
     ///
     /// # Arguments
     /// * `nodes` - A vector of node IDs for which the performance multipliers are calculated.
-    pub fn calculate(&self, ctx: ExecutionContext<Initialized>) -> ExecutionContext<ComputedPerformanceMultiplier> {
+    pub fn calculate(&self, ctx: ExecutionContext<Initialized>) -> ExecutionContext<PerformanceMultipliersComputed> {
         let ctx = self.compute_nodes_daily_failure_rate(ctx);
 
         let mut ctx = self.compute_relative_failure_rates(ctx);

@@ -45,22 +45,22 @@ pub trait ExecutionState {}
 
 #[derive(Default)]
 pub struct Initialized;
-pub struct FilledNodesFR;
-pub struct ComputedRelativeFR;
-pub struct FilledUndefinedFR;
-pub struct ComputedPerformanceMultiplier;
+pub struct NodesFRInitialized;
+pub struct RelativeFRComputed;
+pub struct UndefinedFRExtrapolated;
+pub struct PerformanceMultipliersComputed;
 pub struct RewardsTotalComputed;
 
 impl ExecutionState for Initialized {}
-impl ExecutionState for FilledNodesFR {}
-impl ExecutionState for ComputedRelativeFR {}
-impl ExecutionState for FilledUndefinedFR {}
-impl ExecutionState for ComputedPerformanceMultiplier {}
+impl ExecutionState for NodesFRInitialized {}
+impl ExecutionState for RelativeFRComputed {}
+impl ExecutionState for UndefinedFRExtrapolated {}
+impl ExecutionState for PerformanceMultipliersComputed {}
 impl ExecutionState for RewardsTotalComputed {}
 
 impl ExecutionContext<Initialized> {
     // Initialized -> NodesDailyFRComputed
-    pub fn next(self) -> ExecutionContext<FilledNodesFR> {
+    pub fn next(self) -> ExecutionContext<NodesFRInitialized> {
         ExecutionContext::transition(self)
     }
 
@@ -73,28 +73,28 @@ impl ExecutionContext<Initialized> {
     }
 }
 
-impl ExecutionContext<FilledNodesFR> {
-    // NodesDailyFRComputed -> RelativeFRComputed
-    pub fn next(self) -> ExecutionContext<ComputedRelativeFR> {
+impl ExecutionContext<NodesFRInitialized> {
+    // NodesFRInitialized -> RelativeFRComputed
+    pub fn next(self) -> ExecutionContext<RelativeFRComputed> {
         ExecutionContext::transition(self)
     }
 }
 
-impl ExecutionContext<ComputedRelativeFR> {
+impl ExecutionContext<RelativeFRComputed> {
     // RelativeFRComputed -> UndefinedFRExtrapolated
-    pub fn next(self) -> ExecutionContext<FilledUndefinedFR> {
+    pub fn next(self) -> ExecutionContext<UndefinedFRExtrapolated> {
         ExecutionContext::transition(self)
     }
 }
 
-impl ExecutionContext<FilledUndefinedFR> {
+impl ExecutionContext<UndefinedFRExtrapolated> {
     // UndefinedFRExtrapolated -> PerformanceMultipliersComputed
-    pub fn next(self) -> ExecutionContext<ComputedPerformanceMultiplier> {
+    pub fn next(self) -> ExecutionContext<PerformanceMultipliersComputed> {
         ExecutionContext::transition(self)
     }
 }
 
-impl ExecutionContext<ComputedPerformanceMultiplier> {
+impl ExecutionContext<PerformanceMultipliersComputed> {
     // PerformanceMultipliersComputed -> RewardsTotalComputed
     pub fn next(self) -> ExecutionContext<RewardsTotalComputed> {
         ExecutionContext::transition(self)

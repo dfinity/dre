@@ -1,4 +1,4 @@
-use crate::execution_context::{ComputedPerformanceMultiplier, ExecutionContext, Initialized, RewardsTotalComputed, XDRPermyriad};
+use crate::execution_context::{PerformanceMultipliersComputed, ExecutionContext, Initialized, RewardsTotalComputed, XDRPermyriad};
 use crate::metrics::{nodes_failure_rates_in_period, subnets_failure_rates, NodeDailyMetrics};
 use crate::npr_utils::{nodes_ids, rewardable_nodes_by_provider, RewardableNode};
 use crate::performance_calculator::PerformanceMultiplierCalculator;
@@ -54,7 +54,7 @@ pub fn calculate_rewards(
     for (provider_id, provider_nodes) in rewardable_nodes_by_provider(rewardable_nodes) {
         let ctx: ExecutionContext<Initialized> = ExecutionContext::new(provider_nodes);
 
-        let ctx: ExecutionContext<ComputedPerformanceMultiplier> = performance_multipliers_calculator.calculate(ctx);
+        let ctx: ExecutionContext<PerformanceMultipliersComputed> = performance_multipliers_calculator.calculate(ctx);
         let ctx: ExecutionContext<RewardsTotalComputed> = rewards_calculator.calculate(ctx);
 
         rewards_per_provider.insert(provider_id, ctx.rewards_total);

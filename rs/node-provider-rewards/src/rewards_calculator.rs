@@ -1,4 +1,4 @@
-use crate::execution_context::{ComputedPerformanceMultiplier, ExecutionContext, RewardsTotalComputed};
+use crate::execution_context::{PerformanceMultipliersComputed, ExecutionContext, RewardsTotalComputed};
 use crate::intermediate_results::{AllNodesResult, SingleNodeResult};
 use crate::npr_utils::{avg, NodeCategory, RewardableNode};
 use ic_base_types::NodeId;
@@ -55,7 +55,7 @@ impl<'a> RewardsCalculator<'a> {
     ///
     /// The base rewards are calculated based on the rewards table entries for the specific region and node type.
     /// For type3* nodes the base rewards are computed as the average of base rewards on DC Country level.
-    fn base_rewards_by_category(&self, ctx: &mut ExecutionContext<ComputedPerformanceMultiplier>) -> HashMap<NodeCategory, Decimal> {
+    fn base_rewards_by_category(&self, ctx: &mut ExecutionContext<PerformanceMultipliersComputed>) -> HashMap<NodeCategory, Decimal> {
         let mut type3_rewards_by_category: HashMap<NodeCategory, Type3Rewards> = HashMap::default();
         let mut rewards_by_category: HashMap<NodeCategory, Decimal> = HashMap::default();
 
@@ -122,7 +122,7 @@ impl<'a> RewardsCalculator<'a> {
     /// Calculate the adjusted rewards for all the nodes based on their performance.
     fn adjusted_rewards_by_node(
         &self,
-        ctx: &mut ExecutionContext<ComputedPerformanceMultiplier>,
+        ctx: &mut ExecutionContext<PerformanceMultipliersComputed>,
         base_rewards_by_category: HashMap<NodeCategory, Decimal>,
     ) -> BTreeMap<NodeId, Decimal> {
         let nodes_count = ctx.provider_nodes.len() as u32;
@@ -138,8 +138,7 @@ impl<'a> RewardsCalculator<'a> {
                     node.category()
                 };
                 let base_rewards = base_rewards_by_category.get(&node_category).expect("Node category exist");
-                ctx.tracker
-                    .record_node_result(SingleNodeResult::BaseRewards, &node.node_id, base_rewards);
+                ctx.tracker.record_node_result(SingleNodeResult::BaseRewards, &node.node_id, base_rewards);
 
                 if nodes_count <= FULL_REWARDS_MACHINES_LIMIT {
                     // Node Providers with less than FULL_REWARDS_MACHINES_LIMIT machines are rewarded fully, independently of their performance
@@ -161,7 +160,7 @@ impl<'a> RewardsCalculator<'a> {
 
     fn calculate_rewards_total(
         &self,
-        ctx: ExecutionContext<ComputedPerformanceMultiplier>,
+        ctx: ExecutionContext<PerformanceMultipliersComputed>,
         adjusted_rewards_by_node: BTreeMap<NodeId, Decimal>,
     ) -> ExecutionContext<RewardsTotalComputed> {
         let mut ctx = ctx;
@@ -175,7 +174,7 @@ impl<'a> RewardsCalculator<'a> {
     }
 
     /// Calculate rewards in XDR for the given `rewardable_nodes` adjusted based on their performances.
-    pub fn calculate(&self, ctx: ExecutionContext<ComputedPerformanceMultiplier>) -> ExecutionContext<RewardsTotalComputed> {
+    pub fn calculate(&self, ctx: ExecutionContext<PerformanceMultipliersComputed>) -> ExecutionContext<RewardsTotalComputed> {
         let mut ctx = ctx;
         let base_rewards_by_category = self.base_rewards_by_category(&mut ctx);
         let adjusted_rewards_by_node = self.adjusted_rewards_by_node(&mut ctx, base_rewards_by_category);
