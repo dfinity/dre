@@ -27,7 +27,7 @@ fn create_metrics_by_node() -> BTreeMap<NodeId, Vec<NodeDailyMetrics>> {
 #[test]
 fn test_empty_rewardable_nodes() {
     let reward_period = RewardPeriod::new(NANOS_PER_DAY, 30 * NANOS_PER_DAY).unwrap();
-    let result = validate_input(&reward_period, &BTreeMap::new(), &vec![]);
+    let result = validate_input(&reward_period, &BTreeMap::new(), &[]);
 
     assert_eq!(result, Err(RewardCalculationError::EmptyNodes));
 }
@@ -37,7 +37,7 @@ fn test_node_not_in_rewardables() {
     let reward_period = RewardPeriod::new(NANOS_PER_DAY, 30 * NANOS_PER_DAY).unwrap();
     let metrics_by_node = create_metrics_by_node();
 
-    let result = validate_input(&reward_period, &metrics_by_node, &vec![node_id(2)]);
+    let result = validate_input(&reward_period, &metrics_by_node, &[node_id(2)]);
     assert_eq!(result, Err(RewardCalculationError::NodeNotInRewardables(node_id(1))));
 }
 
@@ -49,7 +49,7 @@ fn test_metrics_out_of_range() {
     let metrics_out_of_range = NodeDailyMetrics::new(0, subnet_id(1), 0, 0);
     metrics_by_node.get_mut(&node_id(1)).unwrap().push(metrics_out_of_range.clone());
 
-    let result = validate_input(&reward_period, &metrics_by_node, &vec![node_id(1)]);
+    let result = validate_input(&reward_period, &metrics_by_node, &[node_id(1)]);
 
     assert_eq!(
         result,
@@ -70,7 +70,7 @@ fn test_same_day_metrics_same_sub() {
         .get_mut(&node_id(1))
         .unwrap()
         .push(NodeDailyMetrics::new(NANOS_PER_DAY, subnet_id(1), 0, 0));
-    let result = validate_input(&reward_period, &metrics_by_node, &vec![node_id(1)]);
+    let result = validate_input(&reward_period, &metrics_by_node, &[node_id(1)]);
 
     assert_eq!(result, Err(RewardCalculationError::DuplicateMetrics(node_id(1))));
 }
@@ -84,7 +84,7 @@ fn test_same_day_metrics_different_subs() {
         .get_mut(&node_id(1))
         .unwrap()
         .push(NodeDailyMetrics::new(NANOS_PER_DAY, subnet_id(2), 0, 0));
-    let result = validate_input(&reward_period, &metrics_by_node, &vec![node_id(1)]);
+    let result = validate_input(&reward_period, &metrics_by_node, &[node_id(1)]);
 
     assert_eq!(result, Ok(()));
 }

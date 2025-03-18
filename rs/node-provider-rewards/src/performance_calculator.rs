@@ -141,7 +141,7 @@ impl PerformanceMultiplierCalculator {
 
                 let average_rate = avg(&raw_failure_rates);
                 ctx.results_tracker
-                    .record_node_result(SingleNodeResult::AverageExtrapolatedFR, &node_id, &average_rate);
+                    .record_node_result(SingleNodeResult::AverageExtrapolatedFR, node_id, &average_rate);
                 (*node_id, average_rate)
             })
             .collect()
@@ -169,10 +169,10 @@ impl PerformanceMultiplierCalculator {
                 };
 
                 ctx.results_tracker
-                    .record_node_result(SingleNodeResult::RewardsReduction, &node_id, &rewards_reduction);
+                    .record_node_result(SingleNodeResult::RewardsReduction, node_id, &rewards_reduction);
                 let performance_multiplier = dec!(1) - rewards_reduction;
                 ctx.results_tracker
-                    .record_node_result(SingleNodeResult::PerformanceMultiplier, &node_id, &performance_multiplier);
+                    .record_node_result(SingleNodeResult::PerformanceMultiplier, node_id, &performance_multiplier);
 
                 (*node_id, performance_multiplier)
             })
