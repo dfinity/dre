@@ -1,4 +1,4 @@
-use crate::execution_context::{PerformanceMultipliersComputed, ExecutionContext, RewardsTotalComputed};
+use crate::execution_context::{ExecutionContext, PerformanceMultipliersComputed, RewardsTotalComputed};
 use crate::intermediate_results::{AllNodesResult, SingleNodeResult};
 use crate::npr_utils::{avg, NodeCategory, RewardableNode};
 use ic_base_types::NodeId;

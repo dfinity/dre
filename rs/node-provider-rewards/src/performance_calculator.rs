@@ -1,4 +1,6 @@
-use crate::execution_context::{PerformanceMultipliersComputed, RelativeFRComputed, ExecutionContext, NodesFRInitialized, UndefinedFRExtrapolated, Initialized};
+use crate::execution_context::{
+    ExecutionContext, Initialized, NodesFRInitialized, PerformanceMultipliersComputed, RelativeFRComputed, UndefinedFRExtrapolated,
+};
 use crate::intermediate_results::{AllNodesResult, SingleNodeResult};
 use crate::metrics::{NodeDailyFailureRate, NodeFailureRate, SubnetDailyFailureRate};
 use ic_base_types::{NodeId, SubnetId};
