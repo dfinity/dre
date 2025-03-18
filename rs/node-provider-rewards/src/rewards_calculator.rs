@@ -138,20 +138,20 @@ impl<'a> RewardsCalculator<'a> {
                     node.category()
                 };
                 let base_rewards = base_rewards_by_category.get(&node_category).expect("Node category exist");
-                ctx.results_tracker
+                ctx.tracker
                     .record_node_result(SingleNodeResult::BaseRewards, &node.node_id, base_rewards);
 
                 if nodes_count <= FULL_REWARDS_MACHINES_LIMIT {
                     // Node Providers with less than FULL_REWARDS_MACHINES_LIMIT machines are rewarded fully, independently of their performance
 
-                    ctx.results_tracker
+                    ctx.tracker
                         .record_node_result(SingleNodeResult::AdjustedRewards, &node.node_id, base_rewards);
                     (node.node_id, *base_rewards)
                 } else {
                     let performance_multiplier = ctx.performance_multiplier_by_node.get(&node.node_id).expect("Rewards multiplier exist");
 
                     let adjusted_rewards = *base_rewards * performance_multiplier;
-                    ctx.results_tracker
+                    ctx.tracker
                         .record_node_result(SingleNodeResult::AdjustedRewards, &node.node_id, &adjusted_rewards);
                     (node.node_id, adjusted_rewards)
                 }
@@ -169,7 +169,7 @@ impl<'a> RewardsCalculator<'a> {
         let adjusted_rewards: Vec<Decimal> = adjusted_rewards_by_node.into_values().collect();
         let rewards_total = adjusted_rewards.iter().sum::<Decimal>();
 
-        ctx.results_tracker.record_all_nodes_result(AllNodesResult::RewardsTotal, &rewards_total);
+        ctx.tracker.record_all_nodes_result(AllNodesResult::RewardsTotal, &rewards_total);
         ctx.rewards_total = rewards_total.to_u64().expect("Rewards total is u64");
         ctx.next()
     }

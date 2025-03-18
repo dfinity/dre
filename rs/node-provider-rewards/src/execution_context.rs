@@ -12,9 +12,9 @@ pub type XDRPermyriad = u64;
 
 #[derive(Default)]
 pub struct ExecutionContext<T: ExecutionState> {
+    pub tracker: IntermediateResultsTracker,
     pub provider_nodes: Vec<RewardableNode>,
     pub nodes_failure_rates: BTreeMap<NodeId, Vec<NodeDailyFailureRate>>,
-    pub results_tracker: IntermediateResultsTracker,
     pub performance_multiplier_by_node: BTreeMap<NodeId, Decimal>,
     pub rewards_total: XDRPermyriad,
     pub _marker: PhantomData<T>,
@@ -22,7 +22,7 @@ pub struct ExecutionContext<T: ExecutionState> {
 impl<T: ExecutionState> ExecutionContext<T> {
     pub fn transition<S: ExecutionState>(self) -> ExecutionContext<S> {
         ExecutionContext {
-            results_tracker: self.results_tracker,
+            tracker: self.tracker,
             provider_nodes: self.provider_nodes,
             performance_multiplier_by_node: self.performance_multiplier_by_node,
             nodes_failure_rates: self.nodes_failure_rates,
@@ -33,7 +33,7 @@ impl<T: ExecutionState> ExecutionContext<T> {
     pub fn computation_tabled(&self) -> Vec<Table> {
         let mut tables = Vec::new();
 
-        let nodes_computation = self.results_tracker.nodes_computation_tabled(self.provider_nodes.clone());
+        let nodes_computation = self.tracker.nodes_computation_tabled(self.provider_nodes.clone());
 
         tables.extend(failure_rates_tabled(&self.nodes_failure_rates));
         tables.extend(vec![nodes_computation.legend, nodes_computation.computation]);
