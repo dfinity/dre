@@ -43,8 +43,8 @@ The release process [is documented here](https://www.notion.so/dfinityorg/IC-OS-
 
 ### 2. **Review alerts for our clusters**
 
-* All alerts that our clusters send are aggregated in our [Jira ops board](https://dfinity.atlassian.net/jira/ops/teams/og-a6d6c0d5-2641-4c54-8a2c-5860ef5e8f53/alerts?view=list&query=responders%3A+og-a6d6c0d5-2641-4c54-8a2c-5860ef5e8f53)
-* Heartbeats are present [here](https://dfinity.atlassian.net/jira/ops/teams/og-a6d6c0d5-2641-4c54-8a2c-5860ef5e8f53/heartbeats)
+* All alerts that our clusters send are aggregated in our [Jira ops board](https://dfinity.atlassian.net/jira/ops/teams/og-a6d6c0d5-2641-4c54-8a2c-5860ef5e8f53/alerts?view=list&query=responders%3A%20og-a6d6c0d5-2641-4c54-8a2c-5860ef5e8f53%20AND%20%28status%3A%20%22snoozed%22%20OR%20status%3A%20%22acknowledged%22%20OR%20status%3A%20%22open%22%29).
+* Heartbeats are present [here](https://dfinity.atlassian.net/jira/ops/teams/og-a6d6c0d5-2641-4c54-8a2c-5860ef5e8f53/heartbeats).
 
 ??? tip "What should I do if there are alerts?"
     
@@ -53,10 +53,11 @@ The release process [is documented here](https://www.notion.so/dfinityorg/IC-OS-
     - Evaluate the alert based on its severity and the affected cluster to determine if further action is required.
     - Escalate or address issues as needed to ensure operations continue smoothly.
 
-### 3. **Answer all questions asked in the team's slack channels**
+### 3. **Handle all notifications and answer all questions asked in the team's slack channels**
     
 * [`#eng-dre`](https://dfinity.enterprise.slack.com/archives/C05LD0CEAHY): General channel for activities
 * [`#eng-release`](https://dfinity.enterprise.slack.com/archives/C01DB8MQ5M1): Questions related to release process
+* [`#eng-release-bots`](https://dfinity.enterprise.slack.com/archives/C02NQC42C2F): Automations send important notifications to this channel, which you must handle
 * [`#eng-observability`](https://dfinity.enterprise.slack.com/archives/CGZ4YGN4S): Questions related to our observability
 
 ??? question "But I don't know the answers to all questions"

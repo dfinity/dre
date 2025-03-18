@@ -9,13 +9,13 @@ jobs:
     runs-on:
       labels: dre-runner-custom
     # This image is based on ubuntu:20.04
-    container: ghcr.io/dfinity/dre/actions-runner:3dd4f38f076cad73fdcc68ad37fd29bed4fa3e4d
+    container: ghcr.io/dfinity/dre/actions-runner:6413f2909a49329ecbf5371ee7ddf07a9799b625
     name: Test changed-files
     steps:
       - uses: actions/checkout@v4
       - name: Get all changed release files
         id: changed-files
-        uses: tj-actions/changed-files@v45
+        uses: step-security/changed-files@v45
         with:
           files: |
             release-index.yaml

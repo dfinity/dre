@@ -29,12 +29,17 @@ impl GovernanceCanisterProposalExecutor {
         Box::new(ProposalExecutionViaGovernanceCanister { executor: self, proposal: p })
     }
 
-    pub fn simulate<'c, 'd, W: ProposableViaGovernanceCanister + 'c>(&'d self, cmd: &'c W) -> BoxFuture<'c, anyhow::Result<()>>
+    pub fn simulate<'c, 'd, W: ProposableViaGovernanceCanister + 'c>(
+        &'d self,
+        cmd: &'c W,
+        forum_post_link_description: Option<String>,
+    ) -> BoxFuture<'c, anyhow::Result<()>>
     where
         'd: 'c,
     {
         Box::pin(async move {
             println!("Proposal that would be submitted:\n{:#?}", cmd);
+            println!("Forum post link: {}", forum_post_link_description.unwrap_or("None".to_string()));
             Ok(())
         })
     }
@@ -80,8 +85,8 @@ impl<T> ProposalExecution for ProposalExecutionViaGovernanceCanister<T>
 where
     T: ProposableViaGovernanceCanister<ProposalResult = ProposalResponseWithId>,
 {
-    fn simulate(&self) -> BoxFuture<'_, anyhow::Result<()>> {
-        Box::pin(async { self.executor.simulate(&self.proposal).await })
+    fn simulate(&self, forum_post_link_description: Option<String>) -> BoxFuture<'_, anyhow::Result<()>> {
+        Box::pin(async { self.executor.simulate(&self.proposal, forum_post_link_description).await })
     }
 
     fn submit<'a, 'b>(&'a self, forum_post_link: Option<Url>) -> BoxFuture<'b, anyhow::Result<ProposalResponseWithId>>

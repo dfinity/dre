@@ -43,7 +43,7 @@ impl Submitter {
     pub async fn propose(&self, execution: Box<dyn ProposalExecution>, kind: ForumPostKind) -> anyhow::Result<Option<ProposalResponseWithId>> {
         if let HowToProceed::Unconditional = self.mode {
         } else {
-            execution.simulate().await?;
+            execution.simulate(self.forum_parameters.forum_post_link_for_simulation()).await?;
         };
 
         if let HowToProceed::Confirm = self.mode {

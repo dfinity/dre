@@ -1,0 +1,37 @@
+[package]
+name = "node-provider-rewards-canister"
+version.workspace = true
+authors.workspace = true
+edition.workspace = true
+description.workspace = true
+documentation.workspace = true
+license.workspace = true
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+async-trait = { workspace = true }
+ic-cdk = { workspace = true }
+ic-cdk-timers = { workspace = true }
+ic-cdk-macros = { workspace = true }
+ic-stable-structures = { workspace = true }
+candid = { workspace = true }
+serde = { workspace = true }
+ic-interfaces-registry = { workspace = true }
+ic-registry-keys = { workspace = true }
+futures = { workspace = true }
+ic-types = { workspace = true }
+anyhow = { workspace = true }
+indexmap = { workspace = true }
+ic-base-types = { workspace = true }
+ic-management-canister-types = { workspace = true }
+ic-nns-common = { workspace = true }
+ic-protobuf = { workspace = true }
+ic-registry-transport = { workspace = true }
+ic-nns-constants = { workspace = true }
+mockall = { workspace = true }
+thiserror = { workspace = true }
+
+[dev-dependencies]
+tokio = { workspace = true }
