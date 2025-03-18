@@ -119,6 +119,7 @@ impl<'a> RewardsCalculator<'a> {
         rewards_by_category
     }
 
+    /// Calculate the adjusted rewards for all the nodes based on their performance.
     fn adjusted_rewards_by_node(
         &self,
         ctx: &mut ExecutionContext<ComputedPerformanceMultiplier>,
@@ -140,20 +141,21 @@ impl<'a> RewardsCalculator<'a> {
                 ctx.results_tracker
                     .record_node_result(SingleNodeResult::BaseRewards, &node.node_id, base_rewards);
 
-                // Node Providers with less than FULL_REWARDS_MACHINES_LIMIT machines are rewarded fully, independently of their performance
                 if nodes_count <= FULL_REWARDS_MACHINES_LIMIT {
+                    // Node Providers with less than FULL_REWARDS_MACHINES_LIMIT machines are rewarded fully, independently of their performance
+
                     ctx.results_tracker
                         .record_node_result(SingleNodeResult::AdjustedRewards, &node.node_id, base_rewards);
                     (node.node_id, *base_rewards)
                 } else {
                     let performance_multiplier = ctx
                         .performance_multiplier_by_node
-                        .remove(&node.node_id)
+                        .get(&node.node_id)
                         .expect("Rewards multiplier exist");
+                    
                     let adjusted_rewards = *base_rewards * performance_multiplier;
                     ctx.results_tracker
                         .record_node_result(SingleNodeResult::AdjustedRewards, &node.node_id, &adjusted_rewards);
-
                     (node.node_id, adjusted_rewards)
                 }
             })
