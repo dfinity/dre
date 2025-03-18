@@ -8,6 +8,7 @@ use rust_decimal::Decimal;
 use rust_decimal_macros::dec;
 use std::cmp::max;
 use std::collections::BTreeMap;
+use crate::npr_utils::avg;
 
 /// The minimum and maximum failure rates for a node.
 /// Nodes with a failure rate below `MIN_FAILURE_RATE` will not be penalized.
@@ -197,10 +198,6 @@ impl PerformanceMultiplierCalculator {
 
         self.calculate_performance_multiplier_by_node(&average_failure_rate_by_node, ctx)
     }
-}
-
-fn avg(values: &[Decimal]) -> Decimal {
-    values.iter().sum::<Decimal>() / Decimal::from(values.len().max(1))
 }
 
 #[cfg(test)]
