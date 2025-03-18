@@ -148,11 +148,8 @@ impl<'a> RewardsCalculator<'a> {
                         .record_node_result(SingleNodeResult::AdjustedRewards, &node.node_id, base_rewards);
                     (node.node_id, *base_rewards)
                 } else {
-                    let performance_multiplier = ctx
-                        .performance_multiplier_by_node
-                        .get(&node.node_id)
-                        .expect("Rewards multiplier exist");
-                    
+                    let performance_multiplier = ctx.performance_multiplier_by_node.get(&node.node_id).expect("Rewards multiplier exist");
+
                     let adjusted_rewards = *base_rewards * performance_multiplier;
                     ctx.results_tracker
                         .record_node_result(SingleNodeResult::AdjustedRewards, &node.node_id, &adjusted_rewards);
