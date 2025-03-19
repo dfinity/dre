@@ -146,7 +146,7 @@ impl SubnetManager {
         if heal {
             for (node, health_status) in self.unhealthy_nodes(subnet_change_request.subnet()).await? {
                 node_ids_unhealthy.insert(node.principal);
-                motivations.push(format!("replacing {} based on health: {:?}", node.principal.id_short(), health_status));
+                motivations.push(format!("replacing {} based on health: {:?}", node.id_short(), health_status));
                 to_be_replaced.push(node);
             }
         }
