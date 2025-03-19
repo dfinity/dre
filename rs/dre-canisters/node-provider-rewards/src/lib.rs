@@ -102,10 +102,6 @@ fn post_upgrade() {
     setup_timers();
 }
 
-pub fn prometheus_metrics() -> &'static PrometheusMetrics {
-    unsafe { &*PROMETHEUS_METRICS.with(|g| g.as_ptr()) }
-}
-
 pub fn encode_metrics(metrics: &PrometheusMetrics, w: &mut ic_metrics_encoder::MetricsEncoder<Vec<u8>>) -> std::io::Result<()> {
     // General resource consumption.
     w.encode_gauge(
@@ -155,7 +151,7 @@ pub fn encode_metrics(metrics: &PrometheusMetrics, w: &mut ic_metrics_encoder::M
 #[query(hidden = true, decoding_quota = 10000)]
 fn http_request(request: HttpRequest) -> HttpResponse {
     match request.path() {
-        "/metrics" => serve_metrics(|encoder| encode_metrics(prometheus_metrics(), encoder)),
+        "/metrics" => serve_metrics(|encoder| PROMETHEUS_METRICS.with(|m| encode_metrics(&m.borrow(), encoder))),
         _ => HttpResponseBuilder::not_found().build(),
     }
 }
