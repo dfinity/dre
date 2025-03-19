@@ -1,272 +1,134 @@
-use crate::metrics::NodeDailyFailureRate;
-use crate::tabled::{failure_rates_tabled, NodesComputationTableBuilder, NodesComputationTabledResult};
+use crate::execution_context::performance_multipliers_calculator::StartPerformanceCalculator;
+use crate::execution_context::results_tracker::{ResultsTracker, SingleResult};
+use crate::execution_context::rewards_calculator::StartRewardsCalculator;
+use crate::metrics::{NodeDailyFailureRate, SubnetDailyFailureRate};
+use crate::tabled::failure_rates_tabled;
 use crate::types::RewardableNode;
-use ic_base_types::NodeId;
-use indexmap::IndexMap;
+use ic_base_types::{NodeId, SubnetId};
+use ic_protobuf::registry::node_rewards::v2::NodeRewardsTable;
 use rust_decimal::Decimal;
 use std::collections::BTreeMap;
-use std::error::Error;
-use std::fmt;
 use std::marker::PhantomData;
 use tabled::Table;
 
 pub type XDRPermyriad = u64;
 
-#[derive(Eq, Hash, PartialEq, Clone, Copy, Debug)]
-pub enum NodeResult {
-    AverageRelativeFR,
-    AverageExtrapolatedFR,
-    PerformanceMultiplier,
-    RewardsReduction,
-    BaseRewards,
-    AdjustedRewards,
-}
-
-#[derive(Eq, Hash, PartialEq, Clone, Copy, Debug)]
-pub enum SingleResult {
-    ExtrapolatedFR,
-    RewardsTotal,
-}
-
-impl From<NodeResult> for ResultKey {
-    fn from(key: NodeResult) -> Self {
-        ResultKey::NR(key)
-    }
-}
-
-impl From<SingleResult> for ResultKey {
-    fn from(key: SingleResult) -> Self {
-        ResultKey::SR(key)
-    }
-}
-
-#[derive(Eq, Hash, PartialEq, Debug)]
-pub enum ResultKey {
-    NR(NodeResult),
-    SR(SingleResult),
-}
-
-#[derive(Clone)]
-enum ResultValue {
-    NR(BTreeMap<NodeId, Decimal>),
-    SR(Decimal),
-}
-
-impl ResultValue {
-    pub fn insert_nr(&mut self, node_id: NodeId, value: Decimal) {
-        if let ResultValue::NR(map) = self {
-            map.insert(node_id, value);
-        }
-    }
-
-    pub fn insert_sr(&mut self, value: Decimal) {
-        if let ResultValue::SR(val) = self {
-            *val = value;
-        }
-    }
-}
-
-impl ResultKey {
-    pub fn description(&self) -> &'static str {
-        match self {
-            ResultKey::NR(inner) => match inner {
-                NodeResult::AverageRelativeFR => "Average Relative Failure Rate [ARFR]: AVG(RFR(Assigned Days))\n",
-                NodeResult::AverageExtrapolatedFR => "Average Extrapolated Failure Rate [AEFR]: AVG(RFR(Assigned Days), EFR(Unassigned Days))\n",
-                NodeResult::RewardsReduction => {
-                    r#"Rewards Reduction [RR]:
-                    * For nodes with AEFR < 0.1, the rewards reduction is 0
-                    * For nodes with AEFR > 0.6, the rewards reduction is 0.8
-                    * For nodes with 0.1 <= AEFR <= 0.6, the rewards reduction is linearly interpolated between 0 and 0.8
-                    "#
-                }
-                NodeResult::PerformanceMultiplier => "Performance Multiplier [PM]: 1 - RR\n",
-                NodeResult::BaseRewards => "Base Rewards\n",
-                NodeResult::AdjustedRewards => "Adjusted Rewards: Base Rewards * PM\n",
-            },
-            ResultKey::SR(inner) => match inner {
-                SingleResult::ExtrapolatedFR => "Extrapolated Failure Rate [EFR]: AVG(ARFR)\n",
-                SingleResult::RewardsTotal => "Rewards Total\n",
-            },
-        }
-    }
-}
-
-#[derive(Default)]
-pub struct ResultsTracker(IndexMap<ResultKey, ResultValue>);
-
-impl ResultsTracker {
-    fn contains(&self, key: ResultKey) -> bool {
-        self.0.contains_key(&key)
-    }
-
-    fn get_nodes_result(&self, key: NodeResult) -> Result<BTreeMap<NodeId, Decimal>, ResultsTrackerError> {
-        if let Some(ResultValue::NR(value)) = self.0.get(&ResultKey::NR(key)).cloned() {
-            Ok(value)
-        } else {
-            Err(ResultsTrackerError::NoResultValue(key.into()))
-        }
-    }
-
-    fn get_single_result(&self, key: SingleResult) -> Result<Decimal, ResultsTrackerError> {
-        if let Some(ResultValue::SR(value)) = self.0.get(&ResultKey::SR(key)).cloned() {
-            Ok(value)
-        } else {
-            Err(ResultsTrackerError::NoResultValue(key.into()))
-        }
-    }
-
-    pub fn record_node_result(&mut self, key: NodeResult, node_id: &NodeId, value: &Decimal) {
-        self.0
-            .entry(key.into())
-            .or_insert(ResultValue::NR(BTreeMap::new()))
-            .insert_nr(*node_id, *value);
-    }
-
-    pub fn record_single_result(&mut self, key: SingleResult, value: &Decimal) {
-        self.0.entry(key.into()).or_insert(ResultValue::SR(*value)).insert_sr(*value);
-    }
-
-    fn results_tabled(&self, provider_nodes: Vec<RewardableNode>) -> Vec<Table> {
-        let mut builder = NodesComputationTableBuilder::new(provider_nodes);
-
-        for (key, value) in &self.0 {
-            match (key, value) {
-                (ResultKey::NR(node_result), ResultValue::NR(results_by_node)) => {
-                    builder.with_node_result_column(*node_result, results_by_node.clone());
-                }
-                (ResultKey::SR(single_result), ResultValue::SR(value)) => {
-                    builder.with_single_result_column(*single_result, *value);
-                }
-                _ => panic!("unexpected intermediate result"),
-            }
-        }
-        let NodesComputationTabledResult { legend, computation } = builder.build();
-
-        vec![legend, computation]
-    }
-}
-
-#[derive(Debug, PartialEq)]
-pub enum ResultsTrackerError {
-    NoResultValue(ResultKey),
-}
-
-impl Error for ResultsTrackerError {}
-
-impl fmt::Display for ResultsTrackerError {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self {
-            ResultsTrackerError::NoResultValue(key) => {
-                write!(f, "No ResultValue for key: {:?}", key)
-            }
-        }
-    }
-}
-
-#[derive(Default)]
-pub struct ExecutionContext<T: ExecutionState> {
-    pub provider_nodes: Vec<RewardableNode>,
-    pub nodes_failure_rates: BTreeMap<NodeId, Vec<NodeDailyFailureRate>>,
-    pub results_tracker: ResultsTracker,
+pub struct PerformanceCalculatorContext<'a, T: ExecutionState> {
+    subnets_fr: &'a BTreeMap<SubnetId, Vec<SubnetDailyFailureRate>>,
+    execution_nodes_fr: BTreeMap<NodeId, Vec<NodeDailyFailureRate>>,
+    results_tracker: ResultsTracker,
     _marker: PhantomData<T>,
 }
 
-impl<T: ExecutionState> ExecutionContext<T> {
-    pub fn transition<S: ExecutionState>(self) -> ExecutionContext<S> {
-        ExecutionContext {
-            provider_nodes: self.provider_nodes,
-            nodes_failure_rates: self.nodes_failure_rates,
+impl<'a, T: ExecutionState> PerformanceCalculatorContext<'a, T> {
+    pub fn transition<S: ExecutionState>(self) -> PerformanceCalculatorContext<'a, S> {
+        PerformanceCalculatorContext {
+            subnets_fr: self.subnets_fr,
+            execution_nodes_fr: self.execution_nodes_fr,
             results_tracker: self.results_tracker,
             _marker: PhantomData,
         }
     }
 }
 
-pub trait ExecutionState {}
+pub struct RewardsCalculatorContext<'a, T: ExecutionState> {
+    rewards_table: &'a NodeRewardsTable,
+    provider_nodes: Vec<RewardableNode>,
+    results_tracker: ResultsTracker,
+    _marker: PhantomData<T>,
+}
+
+impl<'a, T: ExecutionState> RewardsCalculatorContext<'a, T> {
+    pub fn transition<S: ExecutionState>(self) -> RewardsCalculatorContext<'a, S> {
+        RewardsCalculatorContext {
+            rewards_table: self.rewards_table,
+            provider_nodes: self.provider_nodes,
+            results_tracker: self.results_tracker,
+            _marker: PhantomData,
+        }
+    }
+}
+
+pub struct RewardsCalculationResult {
+    pub rewards: Decimal,
+    pub computation_log_tabled: Vec<Table>,
+}
 
 #[derive(Default)]
-pub struct Initialized;
-pub struct NodesFRInitialized;
-pub struct RelativeFRComputed;
-pub struct UndefinedFRExtrapolated;
-pub struct PerformanceMultipliersComputed;
-pub struct RewardsTotalComputed;
+pub struct ExecutionContext {
+    nodes_fr: BTreeMap<NodeId, Vec<NodeDailyFailureRate>>,
+    subnets_fr: BTreeMap<SubnetId, Vec<SubnetDailyFailureRate>>,
+    rewards_table: NodeRewardsTable,
+}
 
-impl ExecutionState for Initialized {}
-impl ExecutionState for NodesFRInitialized {}
-impl ExecutionState for RelativeFRComputed {}
-impl ExecutionState for UndefinedFRExtrapolated {}
-impl ExecutionState for PerformanceMultipliersComputed {}
-impl ExecutionState for RewardsTotalComputed {}
-
-impl ExecutionContext<Initialized> {
-    // Initialized -> NodesDailyFRComputed
-    pub fn next(self) -> ExecutionContext<NodesFRInitialized> {
-        ExecutionContext::transition(self)
-    }
-
-    pub fn new(provider_nodes: Vec<RewardableNode>) -> Self {
+impl ExecutionContext {
+    pub fn new(
+        nodes_fr: BTreeMap<NodeId, Vec<NodeDailyFailureRate>>,
+        subnets_fr: BTreeMap<SubnetId, Vec<SubnetDailyFailureRate>>,
+        rewards_table: NodeRewardsTable,
+    ) -> Self {
         ExecutionContext {
-            provider_nodes,
+            nodes_fr,
+            subnets_fr,
+            rewards_table,
+        }
+    }
+
+    fn post_process(
+        &self,
+        ctx: RewardsCalculatorContext<RewardsTotalComputed>,
+        execution_nodes_fr: BTreeMap<NodeId, Vec<NodeDailyFailureRate>>,
+    ) -> RewardsCalculationResult {
+        let mut computation_log_tabled = ctx.results_tracker.results_tabled(ctx.provider_nodes);
+        computation_log_tabled.extend(failure_rates_tabled(execution_nodes_fr));
+        let rewards = *ctx.results_tracker.get_single_result(SingleResult::RewardsTotal);
+
+        RewardsCalculationResult {
+            rewards,
+            computation_log_tabled,
+        }
+    }
+
+    pub fn calculate_rewards(&self, provider_nodes: Vec<RewardableNode>) -> RewardsCalculationResult {
+        let nodes_ids = nodes_ids(&provider_nodes);
+        let execution_nodes_fr = self
+            .nodes_fr
+            .iter()
+            .filter(|(node_id, _)| nodes_ids.contains(node_id))
+            .map(|(node_id, failure_rates)| (*node_id, failure_rates.clone()))
+            .collect();
+
+        // Performance Multipliers Calculation
+        let ctx: PerformanceCalculatorContext<StartPerformanceCalculator> = PerformanceCalculatorContext {
+            subnets_fr: &self.subnets_fr,
+            execution_nodes_fr,
+            results_tracker: ResultsTracker::default(),
             _marker: PhantomData,
-            ..Default::default()
-        }
-    }
-}
+        };
 
-impl ExecutionContext<NodesFRInitialized> {
-    // NodesFRInitialized -> RelativeFRComputed
-    pub fn next(self) -> ExecutionContext<RelativeFRComputed> {
-        ExecutionContext::transition(self)
-    }
-}
+        let ctx = ctx.next();
+        let ctx = ctx.next();
+        let ctx = ctx.next();
+        let ctx = ctx.next();
+        let ctx = ctx.next();
+        let ctx: PerformanceCalculatorContext<PerformanceMultipliersComputed> = ctx.next();
 
-impl ExecutionContext<RelativeFRComputed> {
-    // RelativeFRComputed -> UndefinedFRExtrapolated
-    pub fn next(self) -> ExecutionContext<UndefinedFRExtrapolated> {
-        ExecutionContext::transition(self)
-    }
-}
+        let execution_nodes_fr = ctx.execution_nodes_fr;
 
-impl ExecutionContext<UndefinedFRExtrapolated> {
-    // UndefinedFRExtrapolated -> PerformanceMultipliersComputed
-    pub fn next(self) -> Result<ExecutionContext<PerformanceMultipliersComputed>, String> {
-        if self.results_tracker.contains(NodeResult::PerformanceMultiplier.into()) {
-            Ok(ExecutionContext::transition(self))
-        } else {
-            Err("Performance multipliers not computed".to_string())
-        }
-    }
-}
+        // Rewards Calculation
+        let ctx: RewardsCalculatorContext<StartRewardsCalculator> = RewardsCalculatorContext {
+            rewards_table: &self.rewards_table,
+            provider_nodes,
+            results_tracker: ctx.results_tracker,
+            _marker: PhantomData,
+        };
 
-impl ExecutionContext<PerformanceMultipliersComputed> {
-    // PerformanceMultipliersComputed -> RewardsTotalComputed
-    pub fn next(self) -> Result<ExecutionContext<RewardsTotalComputed>, String> {
-        if self.results_tracker.contains(SingleResult::RewardsTotal.into()) {
-            Ok(ExecutionContext::transition(self))
-        } else {
-            Err("Performance multipliers not computed".to_string())
-        }
-    }
+        let ctx = ctx.next();
+        let ctx = ctx.next();
+        let ctx = ctx.next();
+        let ctx: RewardsCalculatorContext<RewardsTotalComputed> = ctx.next();
 
-    pub fn performance_multipliers(&self) -> BTreeMap<NodeId, Decimal> {
-        self.results_tracker
-            .get_nodes_result(NodeResult::PerformanceMultiplier)
-            .expect("Performance multipliers exist")
-    }
-}
-
-impl ExecutionContext<RewardsTotalComputed> {
-    pub fn computation_tabled(&self) -> Vec<Table> {
-        let mut computation_tabled = self.results_tracker.results_tabled(self.provider_nodes.clone());
-        computation_tabled.extend(failure_rates_tabled(&self.nodes_failure_rates));
-        computation_tabled
-    }
-
-    pub fn rewards_total(&self) -> Decimal {
-        self.results_tracker
-            .get_single_result(SingleResult::RewardsTotal)
-            .expect("RewardsTotal exists")
+        self.post_process(ctx, execution_nodes_fr)
     }
 }
 
@@ -277,3 +139,14 @@ pub fn nodes_ids(rewardable_nodes: &[RewardableNode]) -> Vec<NodeId> {
 pub fn avg(values: &[Decimal]) -> Decimal {
     values.iter().sum::<Decimal>() / Decimal::from(values.len().max(1))
 }
+
+pub struct PerformanceMultipliersComputed;
+pub struct RewardsTotalComputed;
+
+pub trait ExecutionState {}
+impl ExecutionState for PerformanceMultipliersComputed {}
+impl ExecutionState for RewardsTotalComputed {}
+
+mod performance_multipliers_calculator;
+pub mod results_tracker;
+mod rewards_calculator;

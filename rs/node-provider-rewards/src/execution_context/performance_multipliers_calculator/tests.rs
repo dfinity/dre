@@ -259,14 +259,16 @@ fn test_rewardable_nodes(nodes: Vec<NodeId>) -> Vec<RewardableNode> {
 #[test]
 fn test_update_relative_failure_rates() {
     let (nodes_failure_rates, subnets_failure_rates) = FailureRatesBuilder::default().build();
-    let rewardable_nodes = test_rewardable_nodes(nodes_failure_rates.keys().cloned().collect_vec());
-    let perf_calculator = PerformanceMultiplierCalculator::new(nodes_failure_rates, subnets_failure_rates);
+    let ctx: PerformanceCalculatorContext<StartPerformanceCalculator> = PerformanceCalculatorContext {
+        subnets_fr: &subnets_failure_rates,
+        execution_nodes_fr: nodes_failure_rates,
+        results_tracker: ResultsTracker::default(),
+        _marker: PhantomData,
+    };
+    let ctx = ctx.next();
+    let ctx = ctx.next();
 
-    let ctx = ExecutionContext::new(rewardable_nodes);
-    let ctx = perf_calculator.compute_nodes_daily_failure_rate(ctx);
-    let ctx = perf_calculator.compute_relative_failure_rates(ctx);
-
-    let node_5_fr = ctx.nodes_failure_rates.get(&node_id(5)).unwrap();
+    let node_5_fr = ctx.execution_nodes_fr.get(&node_id(5)).unwrap();
 
     let mut expected = NodeDailyFailureRate {
         ts: ts_day_end(0),
@@ -308,13 +310,17 @@ fn test_update_relative_failure_rates() {
 #[test]
 fn test_compute_failure_rate_extrapolated() {
     let (nodes_failure_rates, subnets_failure_rates) = FailureRatesBuilder::default().build();
-    let rewardable_nodes = test_rewardable_nodes(nodes_failure_rates.keys().cloned().collect_vec());
-    let perf_calculator = PerformanceMultiplierCalculator::new(nodes_failure_rates, subnets_failure_rates);
+    let ctx: PerformanceCalculatorContext<StartPerformanceCalculator> = PerformanceCalculatorContext {
+        subnets_fr: &subnets_failure_rates,
+        execution_nodes_fr: nodes_failure_rates,
+        results_tracker: ResultsTracker::default(),
+        _marker: PhantomData,
+    };
+    let ctx = ctx.next();
+    let ctx = ctx.next();
+    let ctx = ctx.next();
 
-    let ctx = ExecutionContext::new(rewardable_nodes);
-    let ctx = perf_calculator.compute_nodes_daily_failure_rate(ctx);
-    let mut ctx = perf_calculator.compute_relative_failure_rates(ctx);
-    let extrapolated_failure_rate = perf_calculator.calculate_extrapolated_failure_rate(&mut ctx);
+    let extrapolated_failure_rate = ctx.results_tracker.get_single_result(SingleResult::ExtrapolatedFR);
 
     // node_1_fr_relative = [0, 0, 0]
     // node_2_fr_relative = [0, 0, 0, 0]
@@ -326,16 +332,27 @@ fn test_compute_failure_rate_extrapolated() {
     //
     // expected_extrapolated_fr = 0.05
 
-    assert_eq!(extrapolated_failure_rate, dec!(0.05));
+    assert_eq!(extrapolated_failure_rate, &dec!(0.05));
 }
 
 #[test]
 fn test_calculate_performance_multiplier_by_node() {
     let (nodes_failure_rates, subnets_failure_rates) = FailureRatesBuilder::default().build();
     let rewardable_nodes = test_rewardable_nodes(nodes_failure_rates.keys().cloned().collect_vec());
-    let ctx = ExecutionContext::new(rewardable_nodes.clone());
-    let perf_calculator = PerformanceMultiplierCalculator::new(nodes_failure_rates, subnets_failure_rates);
-    let performance_multiplier_by_node = perf_calculator.calculate(ctx).performance_multipliers();
+
+    let ctx: PerformanceCalculatorContext<StartPerformanceCalculator> = PerformanceCalculatorContext {
+        subnets_fr: &subnets_failure_rates,
+        execution_nodes_fr: nodes_failure_rates,
+        results_tracker: ResultsTracker::default(),
+        _marker: PhantomData,
+    };
+    let ctx = ctx.next();
+    let ctx = ctx.next();
+    let ctx = ctx.next();
+    let ctx = ctx.next();
+    let ctx = ctx.next();
+    let ctx: PerformanceCalculatorContext<PerformanceMultipliersComputed> = ctx.next();
+    let performance_multiplier_by_node = ctx.results_tracker.get_nodes_result(NodeResult::PerformanceMultiplier);
 
     // node_5_fr = [0, 0.3, 0.6, 0.05] -> avg = 0.2375
     // rewards_reduction: ((0.2375 - 0.1) / (0.6 - 0.1)) * 0.8 = 0.22

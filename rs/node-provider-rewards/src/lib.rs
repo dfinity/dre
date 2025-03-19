@@ -1,8 +1,6 @@
-use crate::execution_context::{nodes_ids, ExecutionContext, Initialized, PerformanceMultipliersComputed, RewardsTotalComputed, XDRPermyriad};
+use crate::execution_context::{nodes_ids, ExecutionContext, RewardsCalculationResult, XDRPermyriad};
 use crate::metrics::{nodes_failure_rates_in_period, subnets_failure_rates, NodeDailyMetrics};
-use crate::performance_calculator::PerformanceMultiplierCalculator;
 use crate::reward_period::{RewardPeriod, TimestampNanos};
-use crate::rewards_calculator::RewardsCalculator;
 use crate::types::{rewardable_nodes_by_provider, RewardableNode};
 use ::tabled::Table;
 use ic_base_types::{NodeId, PrincipalId};
@@ -15,9 +13,7 @@ use std::fmt;
 
 mod execution_context;
 mod metrics;
-mod performance_calculator;
 mod reward_period;
-mod rewards_calculator;
 mod tabled;
 mod types;
 
@@ -39,27 +35,26 @@ pub fn calculate_rewards(
     metrics_by_node: &BTreeMap<NodeId, Vec<NodeDailyMetrics>>,
     rewardable_nodes: &[RewardableNode],
 ) -> Result<RewardsPerNodeProvider, RewardCalculationError> {
+    let mut rewards_per_provider = BTreeMap::new();
+    let mut computation_table_per_provider = BTreeMap::new();
     let all_nodes = nodes_ids(rewardable_nodes);
 
     validate_input(reward_period, metrics_by_node, &all_nodes)?;
 
-    let rewards_calculator = RewardsCalculator::new(rewards_table);
-    let performance_multipliers_calculator = PerformanceMultiplierCalculator::new(
+    let ctx = ExecutionContext::new(
         nodes_failure_rates_in_period(&all_nodes, reward_period, metrics_by_node),
         subnets_failure_rates(metrics_by_node),
+        rewards_table.clone(),
     );
 
-    let mut rewards_per_provider = BTreeMap::new();
-    let mut computation_table_per_provider = BTreeMap::new();
     for (provider_id, provider_nodes) in rewardable_nodes_by_provider(rewardable_nodes) {
-        let ctx: ExecutionContext<Initialized> = ExecutionContext::new(provider_nodes);
+        let RewardsCalculationResult {
+            rewards,
+            computation_log_tabled,
+        } = ctx.calculate_rewards(provider_nodes);
 
-        let ctx: ExecutionContext<PerformanceMultipliersComputed> = performance_multipliers_calculator.calculate(ctx);
-        let ctx: ExecutionContext<RewardsTotalComputed> = rewards_calculator.calculate(ctx);
-
-        let rewards_total = ctx.rewards_total().to_u64().expect("Conversion succeeded");
-        rewards_per_provider.insert(provider_id, rewards_total);
-        computation_table_per_provider.insert(provider_id, ctx.computation_tabled());
+        rewards_per_provider.insert(provider_id, rewards.to_u64().expect("Conversion succeeded"));
+        computation_table_per_provider.insert(provider_id, computation_log_tabled);
     }
 
     Ok(RewardsPerNodeProvider {

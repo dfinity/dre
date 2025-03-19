@@ -1,4 +1,4 @@
-use crate::execution_context::{NodeResult, ResultKey, SingleResult};
+use crate::execution_context::results_tracker::{NodeResult, ResultKey, SingleResult};
 use crate::metrics::{NodeDailyFailureRate, NodeFailureRate};
 use crate::reward_period::TimestampNanos;
 use crate::types::RewardableNode;
@@ -67,7 +67,7 @@ impl From<NodeDailyFailureRate> for DailyNodeFailureRateTabled {
     }
 }
 
-pub fn failure_rates_tabled(failure_rates: &BTreeMap<NodeId, Vec<NodeDailyFailureRate>>) -> Vec<Table> {
+pub fn failure_rates_tabled(failure_rates: BTreeMap<NodeId, Vec<NodeDailyFailureRate>>) -> Vec<Table> {
     fn condense_entries(entries: Vec<DailyNodeFailureRateTabled>) -> Vec<DailyNodeFailureRateTabled> {
         let mut condensed: Vec<DailyNodeFailureRateTabled> = Vec::new();
         let mut queue: VecDeque<DailyNodeFailureRateTabled> = VecDeque::from(entries);
@@ -99,10 +99,10 @@ pub fn failure_rates_tabled(failure_rates: &BTreeMap<NodeId, Vec<NodeDailyFailur
     }
 
     failure_rates
-        .iter()
+        .into_iter()
         .map(|(node_id, failure_rates)| {
             let border_text = format!("Node: {} ", node_id);
-            let data_tabled: Vec<DailyNodeFailureRateTabled> = failure_rates.iter().map(|fr| fr.clone().into()).collect::<Vec<_>>();
+            let data_tabled: Vec<DailyNodeFailureRateTabled> = failure_rates.into_iter().map(|fr| fr.into()).collect::<Vec<_>>();
 
             Table::new(condense_entries(data_tabled))
                 .with(Style::modern())
