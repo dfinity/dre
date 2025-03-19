@@ -1,5 +1,5 @@
 {
-  "checksum": "a7ce8a7a81d746bfe5a4f95dcdae17c12d8081fd37edb194eb891727a2d29dc3",
+  "checksum": "8f4fbea21c1f9b827cf3e1a66029671a90a8e31f2f139ace1c0c5b9755f3ef30",
   "crates": {
     "actix-codec 0.5.2": {
       "name": "actix-codec",
@@ -35997,6 +35997,10 @@
               "target": "ic_base_types"
             },
             {
+              "id": "ic-canisters-http-types 0.9.0",
+              "target": "ic_canisters_http_types"
+            },
+            {
               "id": "ic-cdk 0.17.1",
               "target": "ic_cdk"
             },
@@ -36011,6 +36015,14 @@
             {
               "id": "ic-management-canister-types 0.9.0",
               "target": "ic_management_canister_types"
+            },
+            {
+              "id": "ic-metrics-encoder 1.1.1",
+              "target": "ic_metrics_encoder"
+            },
+            {
+              "id": "ic-nervous-system-common 0.9.0",
+              "target": "ic_nervous_system_common"
             },
             {
               "id": "ic-nns-common 0.9.0",
@@ -62879,6 +62891,7 @@
     "ic-base-types 0.9.0",
     "ic-canister-client 0.9.0",
     "ic-canister-client-sender 0.9.0",
+    "ic-canisters-http-types 0.9.0",
     "ic-cdk 0.17.1",
     "ic-cdk-macros 0.17.1",
     "ic-cdk-timers 0.11.0",
@@ -62889,7 +62902,9 @@
     "ic-interfaces-registry 0.9.0",
     "ic-management-canister-types 0.9.0",
     "ic-metrics 0.9.0",
+    "ic-metrics-encoder 1.1.1",
     "ic-nervous-system-clients 0.0.1",
+    "ic-nervous-system-common 0.9.0",
     "ic-nervous-system-root 0.9.0",
     "ic-nns-common 0.9.0",
     "ic-nns-constants 0.9.0",
