@@ -1,7 +1,7 @@
 use super::*;
 use crate::metrics::{nodes_failure_rates_in_period, subnets_failure_rates, NodeDailyMetrics};
-use crate::npr_utils::RewardableNode;
 use crate::reward_period::{RewardPeriod, TimestampNanos, TimestampNanosAtDayEnd, NANOS_PER_DAY};
+use crate::types::RewardableNode;
 use ic_base_types::PrincipalId;
 use itertools::Itertools;
 use num_traits::FromPrimitive;
@@ -335,7 +335,7 @@ fn test_calculate_performance_multiplier_by_node() {
     let rewardable_nodes = test_rewardable_nodes(nodes_failure_rates.keys().cloned().collect_vec());
     let ctx = ExecutionContext::new(rewardable_nodes.clone());
     let perf_calculator = PerformanceMultiplierCalculator::new(nodes_failure_rates, subnets_failure_rates);
-    let performance_multiplier_by_node = perf_calculator.calculate(ctx).performance_multiplier_by_node;
+    let performance_multiplier_by_node = perf_calculator.calculate(ctx).performance_multipliers();
 
     // node_5_fr = [0, 0.3, 0.6, 0.05] -> avg = 0.2375
     // rewards_reduction: ((0.2375 - 0.1) / (0.6 - 0.1)) * 0.8 = 0.22

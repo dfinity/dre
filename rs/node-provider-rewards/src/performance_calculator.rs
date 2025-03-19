@@ -1,9 +1,8 @@
 use crate::execution_context::{
-    ExecutionContext, Initialized, NodesFRInitialized, PerformanceMultipliersComputed, RelativeFRComputed, UndefinedFRExtrapolated,
+    avg, ExecutionContext, Initialized, NodeResult, NodesFRInitialized, PerformanceMultipliersComputed, RelativeFRComputed, SingleResult,
+    UndefinedFRExtrapolated,
 };
-use crate::intermediate_results::{AllNodesResult, SingleNodeResult};
 use crate::metrics::{NodeDailyFailureRate, NodeFailureRate, SubnetDailyFailureRate};
-use crate::npr_utils::avg;
 use ic_base_types::{NodeId, SubnetId};
 use rust_decimal::Decimal;
 use rust_decimal_macros::dec;
@@ -101,13 +100,14 @@ impl PerformanceMultiplierCalculator {
             // Do not consider nodes completely unassigned
             if !failure_rates.is_empty() {
                 let node_avg_fr = avg(&failure_rates);
-                ctx.tracker.record_node_result(SingleNodeResult::AverageRelativeFR, node_id, &node_avg_fr);
+                ctx.results_tracker
+                    .record_node_result(NodeResult::AverageRelativeFR, node_id, &node_avg_fr);
                 nodes_avg_fr.push(node_avg_fr);
             }
         }
 
         let extrapolated_fr = avg(&nodes_avg_fr);
-        ctx.tracker.record_all_nodes_result(AllNodesResult::ExtrapolatedFR, &extrapolated_fr);
+        ctx.results_tracker.record_single_result(SingleResult::ExtrapolatedFR, &extrapolated_fr);
         extrapolated_fr
     }
 
@@ -141,8 +141,8 @@ impl PerformanceMultiplierCalculator {
                     .collect();
 
                 let average_rate = avg(&raw_failure_rates);
-                ctx.tracker
-                    .record_node_result(SingleNodeResult::AverageExtrapolatedFR, node_id, &average_rate);
+                ctx.results_tracker
+                    .record_node_result(NodeResult::AverageExtrapolatedFR, node_id, &average_rate);
                 (*node_id, average_rate)
             })
             .collect()
@@ -155,30 +155,25 @@ impl PerformanceMultiplierCalculator {
         ctx: ExecutionContext<UndefinedFRExtrapolated>,
     ) -> ExecutionContext<PerformanceMultipliersComputed> {
         let mut ctx = ctx;
-        ctx.performance_multiplier_by_node = average_failure_rate_by_node
-            .iter()
-            .map(|(node_id, average_failure_rate)| {
-                let rewards_reduction;
+        average_failure_rate_by_node.iter().for_each(|(node_id, average_failure_rate)| {
+            let rewards_reduction;
 
-                if average_failure_rate < &MIN_FAILURE_RATE {
-                    rewards_reduction = MIN_REWARDS_REDUCTION;
-                } else if average_failure_rate > &MAX_FAILURE_RATE {
-                    rewards_reduction = MAX_REWARDS_REDUCTION;
-                } else {
-                    // Linear interpolation between MIN_REWARDS_REDUCTION and MAX_REWARDS_REDUCTION
-                    rewards_reduction = ((*average_failure_rate - MIN_FAILURE_RATE) / (MAX_FAILURE_RATE - MIN_FAILURE_RATE)) * MAX_REWARDS_REDUCTION;
-                };
+            if average_failure_rate < &MIN_FAILURE_RATE {
+                rewards_reduction = MIN_REWARDS_REDUCTION;
+            } else if average_failure_rate > &MAX_FAILURE_RATE {
+                rewards_reduction = MAX_REWARDS_REDUCTION;
+            } else {
+                // Linear interpolation between MIN_REWARDS_REDUCTION and MAX_REWARDS_REDUCTION
+                rewards_reduction = ((*average_failure_rate - MIN_FAILURE_RATE) / (MAX_FAILURE_RATE - MIN_FAILURE_RATE)) * MAX_REWARDS_REDUCTION;
+            };
 
-                ctx.tracker
-                    .record_node_result(SingleNodeResult::RewardsReduction, node_id, &rewards_reduction);
-                let performance_multiplier = dec!(1) - rewards_reduction;
-                ctx.tracker
-                    .record_node_result(SingleNodeResult::PerformanceMultiplier, node_id, &performance_multiplier);
-
-                (*node_id, performance_multiplier)
-            })
-            .collect();
-        ctx.next()
+            ctx.results_tracker
+                .record_node_result(NodeResult::RewardsReduction, node_id, &rewards_reduction);
+            let performance_multiplier = dec!(1) - rewards_reduction;
+            ctx.results_tracker
+                .record_node_result(NodeResult::PerformanceMultiplier, node_id, &performance_multiplier);
+        });
+        ctx.next().expect("Performance multiplier just computed")
     }
 
     /// Calculates the performance multipliers for a set of nodes.

@@ -1,25 +1,25 @@
-use crate::execution_context::{ExecutionContext, Initialized, PerformanceMultipliersComputed, RewardsTotalComputed, XDRPermyriad};
+use crate::execution_context::{nodes_ids, ExecutionContext, Initialized, PerformanceMultipliersComputed, RewardsTotalComputed, XDRPermyriad};
 use crate::metrics::{nodes_failure_rates_in_period, subnets_failure_rates, NodeDailyMetrics};
-use crate::npr_utils::{nodes_ids, rewardable_nodes_by_provider, RewardableNode};
 use crate::performance_calculator::PerformanceMultiplierCalculator;
 use crate::reward_period::{RewardPeriod, TimestampNanos};
 use crate::rewards_calculator::RewardsCalculator;
+use crate::types::{rewardable_nodes_by_provider, RewardableNode};
 use ::tabled::Table;
 use ic_base_types::{NodeId, PrincipalId};
 use ic_protobuf::registry::node_rewards::v2::NodeRewardsTable;
+use num_traits::ToPrimitive;
 use std::cmp::PartialEq;
 use std::collections::{BTreeMap, HashSet};
 use std::error::Error;
 use std::fmt;
 
 mod execution_context;
-mod intermediate_results;
 mod metrics;
-mod npr_utils;
 mod performance_calculator;
 mod reward_period;
 mod rewards_calculator;
 mod tabled;
+mod types;
 
 pub struct RewardsPerNodeProvider {
     pub rewards_per_provider: BTreeMap<PrincipalId, XDRPermyriad>,
@@ -57,7 +57,8 @@ pub fn calculate_rewards(
         let ctx: ExecutionContext<PerformanceMultipliersComputed> = performance_multipliers_calculator.calculate(ctx);
         let ctx: ExecutionContext<RewardsTotalComputed> = rewards_calculator.calculate(ctx);
 
-        rewards_per_provider.insert(provider_id, ctx.rewards_total);
+        let rewards_total = ctx.rewards_total().to_u64().expect("Conversion succeeded");
+        rewards_per_provider.insert(provider_id, rewards_total);
         computation_table_per_provider.insert(provider_id, ctx.computation_tabled());
     }
 

@@ -1,9 +1,10 @@
-use crate::intermediate_results::{AllNodesResult, IntermediateResult, IntermediateResultTrait, SingleNodeResult};
+use crate::execution_context::{NodeResult, ResultKey, SingleResult};
 use crate::metrics::{NodeDailyFailureRate, NodeFailureRate};
-use crate::npr_utils::RewardableNode;
 use crate::reward_period::TimestampNanos;
+use crate::types::RewardableNode;
 use chrono::DateTime;
 use ic_base_types::NodeId;
+use rust_decimal::Decimal;
 use std::collections::{BTreeMap, VecDeque};
 use tabled::builder::Builder;
 use tabled::settings::object::Rows;
@@ -163,7 +164,7 @@ impl NodesComputationTableBuilder {
         self.table_builder.push_column(col);
     }
 
-    fn new_column(&mut self, key: IntermediateResult) -> Vec<String> {
+    fn new_column(&mut self, key: ResultKey) -> Vec<String> {
         self.step_counter += 1;
         let step = format!("Step {}", self.step_counter);
         self.legend.push(LegendTabled {
@@ -174,32 +175,36 @@ impl NodesComputationTableBuilder {
         vec![step]
     }
 
-    pub fn with_single_node_result_column(&mut self, key: SingleNodeResult, result_record: BTreeMap<NodeId, String>) {
-        let mut result_record = result_record;
-
-        let single_nodes_val: Vec<String> = self
-            .nodes
-            .iter()
-            .map(|node_id| result_record.remove(node_id).unwrap_or("-".to_string()))
-            .collect();
-
-        if matches!(key, SingleNodeResult::BaseRewards) {
-            let mut base_rewards_col = vec![key.description().to_string()];
-            base_rewards_col.extend(single_nodes_val);
-
-            self.table_builder.insert_column(self.header_counter, base_rewards_col);
+    pub fn with_node_result_column(&mut self, key: NodeResult, values: BTreeMap<NodeId, Decimal>) {
+        let mut column = self.new_column(key.into());
+        for node_id in &self.nodes {
+            if let Some(value) = values.get(node_id) {
+                if matches!(key, NodeResult::BaseRewards | NodeResult::AdjustedRewards) {
+                    column.push(myr_xdr(value));
+                } else {
+                    column.push(round(value));
+                }
+            } else {
+                column.push("-".to_string());
+            }
+        }
+        if matches!(key, NodeResult::BaseRewards) {
+            self.table_builder.insert_column(self.header_counter, column);
             self.header_counter += 1;
         } else {
-            let mut column = self.new_column(key.into());
-            column.extend(single_nodes_val);
             self.add_column(column);
         }
     }
 
-    pub fn with_all_nodes_result_column(&mut self, key: AllNodesResult, result_record: String) {
+    pub fn with_single_result_column(&mut self, key: SingleResult, value: Decimal) {
         let mut column = self.new_column(key.into());
         self.col_to_expand.push(self.step_counter);
-        column.push(result_record.to_string());
+
+        if matches!(key, SingleResult::RewardsTotal) {
+            column.push(myr_xdr(&value));
+        } else {
+            column.push(round(&value));
+        }
 
         self.add_column(column);
     }
@@ -237,4 +242,12 @@ impl NodesComputationTableBuilder {
             computation: table,
         }
     }
+}
+
+pub fn myr_xdr(value: &Decimal) -> String {
+    format!("{} myrXDR", value.round())
+}
+
+pub fn round(value: &Decimal) -> String {
+    value.round_dp(4).to_string()
 }

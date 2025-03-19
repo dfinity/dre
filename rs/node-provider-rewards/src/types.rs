@@ -1,5 +1,4 @@
 use ic_base_types::{NodeId, PrincipalId};
-use rust_decimal::Decimal;
 use std::collections::BTreeMap;
 
 #[derive(Eq, Hash, PartialEq, Clone, Ord, PartialOrd)]
@@ -32,20 +31,4 @@ pub fn rewardable_nodes_by_provider(rewardable_nodes: &[RewardableNode]) -> BTre
         nodes_by_provider.entry(node.node_provider_id).or_default().push(node.clone());
     }
     nodes_by_provider
-}
-
-pub fn nodes_ids(rewardable_nodes: &[RewardableNode]) -> Vec<NodeId> {
-    rewardable_nodes.iter().map(|node| node.node_id).collect()
-}
-
-pub fn myr_xdr(value: &Decimal) -> String {
-    format!("{} myrXDR", value.round())
-}
-
-pub fn round(value: &Decimal) -> String {
-    value.round_dp(4).to_string()
-}
-
-pub fn avg(values: &[Decimal]) -> Decimal {
-    values.iter().sum::<Decimal>() / Decimal::from(values.len().max(1))
 }

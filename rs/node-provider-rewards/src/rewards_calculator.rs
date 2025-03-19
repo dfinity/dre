@@ -1,10 +1,8 @@
-use crate::execution_context::{ExecutionContext, PerformanceMultipliersComputed, RewardsTotalComputed};
-use crate::intermediate_results::{AllNodesResult, SingleNodeResult};
-use crate::npr_utils::{avg, NodeCategory, RewardableNode};
+use crate::execution_context::{avg, ExecutionContext, NodeResult, PerformanceMultipliersComputed, RewardsTotalComputed, SingleResult};
+use crate::types::{NodeCategory, RewardableNode};
 use ic_base_types::NodeId;
 use ic_protobuf::registry::node_rewards::v2::NodeRewardsTable;
 use itertools::Itertools;
-use num_traits::ToPrimitive;
 use rust_decimal::Decimal;
 use rust_decimal_macros::dec;
 use std::collections::{BTreeMap, HashMap};
@@ -126,6 +124,7 @@ impl<'a> RewardsCalculator<'a> {
         base_rewards_by_category: HashMap<NodeCategory, Decimal>,
     ) -> BTreeMap<NodeId, Decimal> {
         let nodes_count = ctx.provider_nodes.len() as u32;
+        let performance_multipliers = ctx.performance_multipliers();
 
         ctx.provider_nodes
             .clone()
@@ -138,20 +137,21 @@ impl<'a> RewardsCalculator<'a> {
                     node.category()
                 };
                 let base_rewards = base_rewards_by_category.get(&node_category).expect("Node category exist");
-                ctx.tracker.record_node_result(SingleNodeResult::BaseRewards, &node.node_id, base_rewards);
+                ctx.results_tracker
+                    .record_node_result(NodeResult::BaseRewards, &node.node_id, base_rewards);
 
                 if nodes_count <= FULL_REWARDS_MACHINES_LIMIT {
                     // Node Providers with less than FULL_REWARDS_MACHINES_LIMIT machines are rewarded fully, independently of their performance
 
-                    ctx.tracker
-                        .record_node_result(SingleNodeResult::AdjustedRewards, &node.node_id, base_rewards);
+                    ctx.results_tracker
+                        .record_node_result(NodeResult::AdjustedRewards, &node.node_id, base_rewards);
                     (node.node_id, *base_rewards)
                 } else {
-                    let performance_multiplier = ctx.performance_multiplier_by_node.get(&node.node_id).expect("Rewards multiplier exist");
+                    let node_performance_multiplier = performance_multipliers.get(&node.node_id).expect("Rewards multiplier exist");
 
-                    let adjusted_rewards = *base_rewards * performance_multiplier;
-                    ctx.tracker
-                        .record_node_result(SingleNodeResult::AdjustedRewards, &node.node_id, &adjusted_rewards);
+                    let adjusted_rewards = *base_rewards * node_performance_multiplier;
+                    ctx.results_tracker
+                        .record_node_result(NodeResult::AdjustedRewards, &node.node_id, &adjusted_rewards);
                     (node.node_id, adjusted_rewards)
                 }
             })
@@ -168,9 +168,8 @@ impl<'a> RewardsCalculator<'a> {
         let adjusted_rewards: Vec<Decimal> = adjusted_rewards_by_node.into_values().collect();
         let rewards_total = adjusted_rewards.iter().sum::<Decimal>();
 
-        ctx.tracker.record_all_nodes_result(AllNodesResult::RewardsTotal, &rewards_total);
-        ctx.rewards_total = rewards_total.to_u64().expect("Rewards total is u64");
-        ctx.next()
+        ctx.results_tracker.record_single_result(SingleResult::RewardsTotal, &rewards_total);
+        ctx.next().expect("Rewards Total just computed")
     }
 
     /// Calculate rewards in XDR for the given `rewardable_nodes` adjusted based on their performances.
