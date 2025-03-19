@@ -5,12 +5,14 @@ use ic_base_types::NodeId;
 use indexmap::IndexMap;
 use rust_decimal::Decimal;
 use std::collections::BTreeMap;
+use std::error::Error;
+use std::fmt;
 use std::marker::PhantomData;
 use tabled::Table;
 
 pub type XDRPermyriad = u64;
 
-#[derive(Eq, Hash, PartialEq, Clone, Copy)]
+#[derive(Eq, Hash, PartialEq, Clone, Copy, Debug)]
 pub enum NodeResult {
     AverageRelativeFR,
     AverageExtrapolatedFR,
@@ -20,7 +22,7 @@ pub enum NodeResult {
     AdjustedRewards,
 }
 
-#[derive(Eq, Hash, PartialEq, Clone, Copy)]
+#[derive(Eq, Hash, PartialEq, Clone, Copy, Debug)]
 pub enum SingleResult {
     ExtrapolatedFR,
     RewardsTotal,
@@ -38,7 +40,7 @@ impl From<SingleResult> for ResultKey {
     }
 }
 
-#[derive(Eq, Hash, PartialEq)]
+#[derive(Eq, Hash, PartialEq, Debug)]
 pub enum ResultKey {
     NR(NodeResult),
     SR(SingleResult),
@@ -90,14 +92,6 @@ impl ResultKey {
 }
 
 #[derive(Default)]
-pub struct ExecutionContext<T: ExecutionState> {
-    pub provider_nodes: Vec<RewardableNode>,
-    pub nodes_failure_rates: BTreeMap<NodeId, Vec<NodeDailyFailureRate>>,
-    pub results_tracker: ResultsTracker,
-    _marker: PhantomData<T>,
-}
-
-#[derive(Default)]
 pub struct ResultsTracker(IndexMap<ResultKey, ResultValue>);
 
 impl ResultsTracker {
@@ -105,19 +99,19 @@ impl ResultsTracker {
         self.0.contains_key(&key)
     }
 
-    fn get_nodes_result(&self, key: NodeResult) -> Result<BTreeMap<NodeId, Decimal>, String> {
+    fn get_nodes_result(&self, key: NodeResult) -> Result<BTreeMap<NodeId, Decimal>, ResultsTrackerError> {
         if let Some(ResultValue::NR(value)) = self.0.get(&ResultKey::NR(key)).cloned() {
             Ok(value)
         } else {
-            Err("No ResultValue".to_string())
+            Err(ResultsTrackerError::NoResultValue(key.into()))
         }
     }
 
-    fn get_single_result(&self, key: SingleResult) -> Result<Decimal, String> {
+    fn get_single_result(&self, key: SingleResult) -> Result<Decimal, ResultsTrackerError> {
         if let Some(ResultValue::SR(value)) = self.0.get(&ResultKey::SR(key)).cloned() {
             Ok(value)
         } else {
-            Err("No ResultValue".to_string())
+            Err(ResultsTrackerError::NoResultValue(key.into()))
         }
     }
 
@@ -151,6 +145,32 @@ impl ResultsTracker {
         vec![legend, computation]
     }
 }
+
+#[derive(Debug, PartialEq)]
+pub enum ResultsTrackerError {
+    NoResultValue(ResultKey),
+}
+
+impl Error for ResultsTrackerError {}
+
+impl fmt::Display for ResultsTrackerError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            ResultsTrackerError::NoResultValue(key) => {
+                write!(f, "No ResultValue for key: {:?}", key)
+            }
+        }
+    }
+}
+
+#[derive(Default)]
+pub struct ExecutionContext<T: ExecutionState> {
+    pub provider_nodes: Vec<RewardableNode>,
+    pub nodes_failure_rates: BTreeMap<NodeId, Vec<NodeDailyFailureRate>>,
+    pub results_tracker: ResultsTracker,
+    _marker: PhantomData<T>,
+}
+
 impl<T: ExecutionState> ExecutionContext<T> {
     pub fn transition<S: ExecutionState>(self) -> ExecutionContext<S> {
         ExecutionContext {
