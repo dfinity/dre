@@ -65,11 +65,11 @@ impl<'a> RewardsCalculatorContext<'a, StartRewardsCalculator> {
     }
 }
 
+/// Calculate the base rewards for all the [NodeCategory].
+///
+/// The base rewards are calculated based on the rewards table entries for the specific region and node type.
+/// For type3* nodes the base rewards are computed as the average of base rewards on DC Country level.
 impl<'a> RewardsCalculatorContext<'a, ComputeBaseRewardsByCategory> {
-    /// Calculate the base rewards for all the [NodeCategory].
-    ///
-    /// The base rewards are calculated based on the rewards table entries for the specific region and node type.
-    /// For type3* nodes the base rewards are computed as the average of base rewards on DC Country level.
     pub fn next(mut self) -> RewardsCalculatorContext<'a, AdjustNodesRewards> {
         let mut type3_rewards_by_category: HashMap<NodeCategory, Type3Rewards> = HashMap::default();
 
@@ -135,8 +135,8 @@ impl<'a> RewardsCalculatorContext<'a, ComputeBaseRewardsByCategory> {
     }
 }
 
+/// Calculate the adjusted rewards for all the nodes based on their performance.
 impl<'a> RewardsCalculatorContext<'a, AdjustNodesRewards> {
-    /// Calculate the adjusted rewards for all the nodes based on their performance.
     pub fn next(mut self) -> RewardsCalculatorContext<'a, ComputeRewardsTotal> {
         let nodes_count = self.provider_nodes.len() as u32;
 
@@ -176,8 +176,8 @@ impl<'a> RewardsCalculatorContext<'a, AdjustNodesRewards> {
     }
 }
 
+/// Calculate the adjusted rewards for all the nodes based on their performance.
 impl<'a> RewardsCalculatorContext<'a, ComputeRewardsTotal> {
-    /// Calculate the adjusted rewards for all the nodes based on their performance.
     pub fn next(mut self) -> RewardsCalculatorContext<'a, RewardsTotalComputed> {
         let adjusted_rewards_by_node = self.results_tracker.get_nodes_result(NodeResult::AdjustedRewards);
 

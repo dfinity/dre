@@ -39,12 +39,12 @@ impl<'a> PerformanceCalculatorContext<'a, StartPerformanceCalculator> {
     }
 }
 
+/// Updates node failure rates to be relative to their subnet’s failure rate.
+///
+/// Defined failure rates are adjusted by discounting the failure rate of the subnet to which they are
+/// assigned to.
+/// This is done for removing systematic factors that may affect all nodes in a subnet.
 impl<'a> PerformanceCalculatorContext<'a, ComputeRelativeFR> {
-    /// Updates node failure rates to be relative to their subnet’s failure rate.
-    ///
-    /// Defined failure rates are adjusted by discounting the failure rate of the subnet to which they are
-    /// assigned to.
-    /// This is done for removing systematic factors that may affect all nodes in a subnet.
     pub fn next(mut self) -> PerformanceCalculatorContext<'a, ComputeExtrapolatedFR> {
         for failure_rate in self.execution_nodes_fr.values_mut().flatten() {
             if let NodeFailureRate::Defined { subnet_assigned, value } = failure_rate.value {
@@ -70,12 +70,12 @@ impl<'a> PerformanceCalculatorContext<'a, ComputeRelativeFR> {
     }
 }
 
+/// Calculates the extrapolated failure rate used as replacement for nodes with `Undefined` failure rates.
+///
+/// For each node is computed the average of the relative failure rates recorded in the reward period.
+/// The extrapolated failure rate is the average of these averages.
+/// This is done to put higher weight on nodes with less recorded failure rates (assigned for fewer days).
 impl<'a> PerformanceCalculatorContext<'a, ComputeExtrapolatedFR> {
-    /// Calculates the extrapolated failure rate used as replacement for nodes with `Undefined` failure rates.
-    ///
-    /// For each node is computed the average of the relative failure rates recorded in the reward period.
-    /// The extrapolated failure rate is the average of these averages.
-    /// This is done to put higher weight on nodes with less recorded failure rates (assigned for fewer days).
     pub fn next(mut self) -> PerformanceCalculatorContext<'a, FillUndefinedFR> {
         if self.execution_nodes_fr.is_empty() {
             self.results_tracker.record_single_result(SingleResult::ExtrapolatedFR, &dec!(1));
@@ -108,8 +108,8 @@ impl<'a> PerformanceCalculatorContext<'a, ComputeExtrapolatedFR> {
     }
 }
 
+/// Fills the `Undefined` failure rates with the extrapolated failure rate.
 impl<'a> PerformanceCalculatorContext<'a, FillUndefinedFR> {
-    /// Fills the `Undefined` failure rates with the extrapolated failure rate.
     pub fn next(mut self) -> PerformanceCalculatorContext<'a, ComputeAverageExtrapolatedFR> {
         let extrapolated_fr = self.results_tracker.get_single_result(SingleResult::ExtrapolatedFR);
 
@@ -122,10 +122,10 @@ impl<'a> PerformanceCalculatorContext<'a, FillUndefinedFR> {
     }
 }
 
+/// Calculates the average of the failure rates (DefinedRelative and Extrapolated) for each node in the reward period.
+///
+/// The average failure rate is used to calculate the performance multiplier for each node.
 impl<'a> PerformanceCalculatorContext<'a, ComputeAverageExtrapolatedFR> {
-    /// Calculates the average of the failure rates (DefinedRelative and Extrapolated) for each node in the reward period.
-    ///
-    /// The average failure rate is used to calculate the performance multiplier for each node.
     pub fn next(mut self) -> PerformanceCalculatorContext<'a, ComputePerformanceMultipliers> {
         for (node_id, failure_rates) in self.execution_nodes_fr.iter() {
             let raw_failure_rates: Vec<Decimal> = failure_rates
@@ -145,8 +145,8 @@ impl<'a> PerformanceCalculatorContext<'a, ComputeAverageExtrapolatedFR> {
     }
 }
 
+/// Calculates the performance multiplier for a node based on its average failure rate.
 impl<'a> PerformanceCalculatorContext<'a, ComputePerformanceMultipliers> {
-    /// Calculates the performance multiplier for a node based on its average failure rate.
     pub fn next(mut self) -> PerformanceCalculatorContext<'a, PerformanceMultipliersComputed> {
         let average_extrapolated_fr = self.results_tracker.get_nodes_result(NodeResult::AverageExtrapolatedFR).clone();
 
