@@ -37,7 +37,7 @@ runs:
         git config user.email "idx@dfinity.org"
         git config user.name "IDX Automation"
         SOURCE_BRANCH="${{ github.head_ref || github.ref_name }}"
-        K8S_REPO_BRANCH="update-$( basename $GITHUB_REPOSITORY)-$COMPONENT-images-from-$SOURCE_BRANCH"
+        K8S_REPO_BRANCH="update-$(basename $GITHUB_REPOSITORY)-$COMPONENT-images-from-$SOURCE_BRANCH"
         git checkout -b "${K8S_REPO_BRANCH}"
 
         # Update the internal dashboard image refs
