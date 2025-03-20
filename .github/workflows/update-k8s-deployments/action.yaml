@@ -24,6 +24,7 @@ runs:
       id: "create-rollout-commit"
       env:
         PUSH_TOKEN: ${{ inputs.push-token }}
+        COMPONENT: ${{ inputs.component }}
       shell: bash
       run: |
         set -eExu -o pipefail
