@@ -1,6 +1,6 @@
-use crate::execution_context::performance_multipliers_calculator::StartPerformanceCalculator;
+use crate::execution_context::performance_multipliers_calculator::{PerformanceCalculatorContext, StartPerformanceCalculator};
 use crate::execution_context::results_tracker::{ResultsTracker, SingleResult};
-use crate::execution_context::rewards_calculator::StartRewardsCalculator;
+use crate::execution_context::rewards_calculator::{RewardsCalculatorContext, StartRewardsCalculator};
 use crate::metrics::{NodeDailyFailureRate, SubnetDailyFailureRate};
 use crate::tabled::failure_rates_tabled;
 use crate::types::RewardableNode;
@@ -13,40 +13,12 @@ use tabled::Table;
 
 pub type XDRPermyriad = u64;
 
-pub struct PerformanceCalculatorContext<'a, T: ExecutionState> {
-    subnets_fr: &'a BTreeMap<SubnetId, Vec<SubnetDailyFailureRate>>,
-    execution_nodes_fr: BTreeMap<NodeId, Vec<NodeDailyFailureRate>>,
-    results_tracker: ResultsTracker,
-    _marker: PhantomData<T>,
+pub fn nodes_ids(rewardable_nodes: &[RewardableNode]) -> Vec<NodeId> {
+    rewardable_nodes.iter().map(|node| node.node_id).collect()
 }
 
-impl<'a, T: ExecutionState> PerformanceCalculatorContext<'a, T> {
-    pub fn transition<S: ExecutionState>(self) -> PerformanceCalculatorContext<'a, S> {
-        PerformanceCalculatorContext {
-            subnets_fr: self.subnets_fr,
-            execution_nodes_fr: self.execution_nodes_fr,
-            results_tracker: self.results_tracker,
-            _marker: PhantomData,
-        }
-    }
-}
-
-pub struct RewardsCalculatorContext<'a, T: ExecutionState> {
-    rewards_table: &'a NodeRewardsTable,
-    provider_nodes: Vec<RewardableNode>,
-    results_tracker: ResultsTracker,
-    _marker: PhantomData<T>,
-}
-
-impl<'a, T: ExecutionState> RewardsCalculatorContext<'a, T> {
-    pub fn transition<S: ExecutionState>(self) -> RewardsCalculatorContext<'a, S> {
-        RewardsCalculatorContext {
-            rewards_table: self.rewards_table,
-            provider_nodes: self.provider_nodes,
-            results_tracker: self.results_tracker,
-            _marker: PhantomData,
-        }
-    }
+pub fn avg(values: &[Decimal]) -> Decimal {
+    values.iter().sum::<Decimal>() / Decimal::from(values.len().max(1))
 }
 
 pub struct RewardsCalculationResult {
@@ -130,14 +102,6 @@ impl ExecutionContext {
 
         self.post_process(ctx, execution_nodes_fr)
     }
-}
-
-pub fn nodes_ids(rewardable_nodes: &[RewardableNode]) -> Vec<NodeId> {
-    rewardable_nodes.iter().map(|node| node.node_id).collect()
-}
-
-pub fn avg(values: &[Decimal]) -> Decimal {
-    values.iter().sum::<Decimal>() / Decimal::from(values.len().max(1))
 }
 
 pub struct PerformanceMultipliersComputed;

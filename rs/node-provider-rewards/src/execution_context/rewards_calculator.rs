@@ -1,10 +1,12 @@
-use crate::execution_context::results_tracker::{NodeCategoryResult, NodeResult, SingleResult};
-use crate::execution_context::{avg, ExecutionState, RewardsCalculatorContext, RewardsTotalComputed};
+use crate::execution_context::results_tracker::{NodeCategoryResult, NodeResult, ResultsTracker, SingleResult};
+use crate::execution_context::{avg, ExecutionState, RewardsTotalComputed};
 use crate::types::{NodeCategory, RewardableNode};
+use ic_protobuf::registry::node_rewards::v2::NodeRewardsTable;
 use itertools::Itertools;
 use rust_decimal::Decimal;
 use rust_decimal_macros::dec;
 use std::collections::HashMap;
+use std::marker::PhantomData;
 
 const FULL_REWARDS_MACHINES_LIMIT: u32 = 4;
 struct Type3Rewards {
@@ -37,6 +39,24 @@ fn nodes_count_by_category(rewardable_nodes: &[RewardableNode]) -> HashMap<NodeC
             .or_insert(1);
     }
     nodes_count_by_category
+}
+
+pub(super) struct RewardsCalculatorContext<'a, T: ExecutionState> {
+    pub(super) rewards_table: &'a NodeRewardsTable,
+    pub(super) provider_nodes: Vec<RewardableNode>,
+    pub(super) results_tracker: ResultsTracker,
+    pub(super) _marker: PhantomData<T>,
+}
+
+impl<'a, T: ExecutionState> RewardsCalculatorContext<'a, T> {
+    pub fn transition<S: ExecutionState>(self) -> RewardsCalculatorContext<'a, S> {
+        RewardsCalculatorContext {
+            rewards_table: self.rewards_table,
+            provider_nodes: self.provider_nodes,
+            results_tracker: self.results_tracker,
+            _marker: PhantomData,
+        }
+    }
 }
 
 impl<'a> RewardsCalculatorContext<'a, StartRewardsCalculator> {

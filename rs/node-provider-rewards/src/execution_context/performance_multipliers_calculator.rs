@@ -15,6 +15,24 @@ pub const MAX_FAILURE_RATE: Decimal = dec!(0.6);
 pub const MIN_REWARDS_REDUCTION: Decimal = dec!(0);
 pub const MAX_REWARDS_REDUCTION: Decimal = dec!(0.8);
 
+pub(super) struct PerformanceCalculatorContext<'a, T: ExecutionState> {
+    pub(super) subnets_fr: &'a BTreeMap<SubnetId, Vec<SubnetDailyFailureRate>>,
+    pub(super) execution_nodes_fr: BTreeMap<NodeId, Vec<NodeDailyFailureRate>>,
+    pub(super) results_tracker: ResultsTracker,
+    pub(super) _marker: PhantomData<T>,
+}
+
+impl<'a, T: ExecutionState> PerformanceCalculatorContext<'a, T> {
+    pub fn transition<S: ExecutionState>(self) -> PerformanceCalculatorContext<'a, S> {
+        PerformanceCalculatorContext {
+            subnets_fr: self.subnets_fr,
+            execution_nodes_fr: self.execution_nodes_fr,
+            results_tracker: self.results_tracker,
+            _marker: PhantomData,
+        }
+    }
+}
+
 impl<'a> PerformanceCalculatorContext<'a, StartPerformanceCalculator> {
     pub fn next(self) -> PerformanceCalculatorContext<'a, ComputeRelativeFR> {
         PerformanceCalculatorContext::transition(self)
