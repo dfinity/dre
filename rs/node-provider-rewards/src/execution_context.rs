@@ -7,7 +7,7 @@ use crate::types::RewardableNode;
 use ic_base_types::{NodeId, SubnetId};
 use ic_protobuf::registry::node_rewards::v2::NodeRewardsTable;
 use rust_decimal::Decimal;
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, HashSet};
 use std::marker::PhantomData;
 use tabled::Table;
 
@@ -62,8 +62,8 @@ impl ExecutionContext {
     }
 
     pub fn calculate_rewards(&self, provider_nodes: Vec<RewardableNode>) -> RewardsCalculationResult {
-        // FIXME this should not be a vec, to prevent quadratic execution time in the filter() below.
-        let nodes_ids = nodes_ids(&provider_nodes);
+        // HashSetize because looking up a node ID into a HashSet (done below) is O(1).
+        let nodes_ids: HashSet<NodeId> = HashSet::from_iter(nodes_ids(&provider_nodes));
 
         // Performance Multipliers Calculation
         let ctx: PerformanceCalculatorContext<StartPerformanceCalculator> = PerformanceCalculatorContext {
@@ -84,7 +84,7 @@ impl ExecutionContext {
         // Move the values of the resulting calculation outside the container.
         let (results_tracker, execution_nodes_fr) = (perfmulcomputed.results_tracker, perfmulcomputed.execution_nodes_fr);
 
-        // Rewards Calculation.  LFG!
+        // Rewards Calculation.
         let ctx: RewardsCalculatorContext<StartRewardsCalculator> = RewardsCalculatorContext {
             rewards_table: &self.rewards_table,
             provider_nodes,
