@@ -4,8 +4,6 @@ use ic_base_types::NodeId;
 use indexmap::IndexMap;
 use rust_decimal::Decimal;
 use std::collections::BTreeMap;
-use std::error::Error;
-use std::fmt;
 use tabled::Table;
 
 #[derive(Eq, Hash, PartialEq, Clone, Copy, Debug)]
