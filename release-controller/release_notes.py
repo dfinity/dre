@@ -206,7 +206,9 @@ def parse_codeowners(codeowners_path: str | pathlib.Path) -> dict[str, list[str]
         parsed = {}
         for line in filtered:
             result = line.split()
-            teams = [team.split("@dfinity/")[1] for team in result[1:] if "@dfinity/" in team]
+            if len(result) <= 1:
+                continue
+            teams = [team.split("@dfinity/")[1] for team in result[1:]]
             pattern = result[0]
             pattern = pattern if pattern.startswith("/") else "/" + pattern
             pattern = pattern if not pattern.endswith("/") else pattern + "*"
