@@ -23,7 +23,8 @@ members = [
     "rs/dre-canisters/node-provider-rewards",
     "rs/dre-canisters/node-provider-rewards-lib",
     "rs/dre-canisters/trustworthy-node-metrics/src/trustworthy-node-metrics",
-    "rs/dre-canisters/trustworthy-node-metrics/src/trustworthy-node-metrics-types", "rs/ic-observability/general-testnet-service-discovery",
+    "rs/dre-canisters/trustworthy-node-metrics/src/trustworthy-node-metrics-types",
+    "rs/ic-observability/general-testnet-service-discovery",
 ]
 
 resolver = "2"
@@ -101,6 +102,7 @@ ic-base-types = { git = "https://github.com/dfinity/ic.git", rev = "c22d478ad97f
 ic-canister-client = { git = "https://github.com/dfinity/ic.git", rev = "c22d478ad97f82bd5d378862c9dd2f13afe2ece1" }
 ic-canister-client-sender = { git = "https://github.com/dfinity/ic.git", rev = "c22d478ad97f82bd5d378862c9dd2f13afe2ece1" }
 ic-canisters = { path = "rs/ic-canisters" }
+ic-canisters-http-types = { git = "https://github.com/dfinity/ic.git", rev = "c22d478ad97f82bd5d378862c9dd2f13afe2ece1" }
 ic-nervous-system-common-test-keys = { git = "https://github.com/dfinity/ic.git", rev = "c22d478ad97f82bd5d378862c9dd2f13afe2ece1" }
 ic-cdk = { git = "https://github.com/dfinity/cdk-rs.git", rev = "929fd0b31e9ec69aad7cf6285df0394f25fe1815" }
 ic-config = { git = "https://github.com/dfinity/ic.git", rev = "c22d478ad97f82bd5d378862c9dd2f13afe2ece1" }
@@ -111,6 +113,7 @@ ic-management-backend = { path = "rs/ic-management-backend" }
 ic-management-canister-types = { git = "https://github.com/dfinity/ic.git", rev = "c22d478ad97f82bd5d378862c9dd2f13afe2ece1" }
 ic-management-types = { path = "rs/ic-management-types" }
 ic-metrics = { git = "https://github.com/dfinity/ic.git", rev = "c22d478ad97f82bd5d378862c9dd2f13afe2ece1" }
+ic-nervous-system-common = { git = "https://github.com/dfinity/ic.git", rev = "c22d478ad97f82bd5d378862c9dd2f13afe2ece1" }
 ic-nns-common = { git = "https://github.com/dfinity/ic.git", rev = "c22d478ad97f82bd5d378862c9dd2f13afe2ece1" }
 ic-nns-constants = { git = "https://github.com/dfinity/ic.git", rev = "c22d478ad97f82bd5d378862c9dd2f13afe2ece1" }
 ic-nns-governance = { git = "https://github.com/dfinity/ic.git", rev = "c22d478ad97f82bd5d378862c9dd2f13afe2ece1" }
