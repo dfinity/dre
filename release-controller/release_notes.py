@@ -217,7 +217,7 @@ def parse_codeowners(
             filtered = [line for line in filtered if line and not line.startswith("#")]
             parsed = {}
             for line in filtered:
-                _LOGGER.info("Parsing CODEOWNERS, line: %s" % line)
+                _LOGGER.debug("Parsing CODEOWNERS, line: %s" % line)
                 result = line.split()
                 if len(result) <= 1:
                     continue
