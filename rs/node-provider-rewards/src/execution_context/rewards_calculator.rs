@@ -49,7 +49,7 @@ pub(super) struct RewardsCalculatorContext<'a, T: ExecutionState> {
 }
 
 impl<'a, T: ExecutionState> RewardsCalculatorContext<'a, T> {
-    pub fn transition<S: ExecutionState>(self) -> RewardsCalculatorContext<'a, S> {
+    fn transition<S: ExecutionState>(self) -> RewardsCalculatorContext<'a, S> {
         RewardsCalculatorContext {
             rewards_table: self.rewards_table,
             provider_nodes: self.provider_nodes,

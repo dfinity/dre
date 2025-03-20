@@ -23,7 +23,7 @@ pub(super) struct PerformanceCalculatorContext<'a, T: ExecutionState> {
 }
 
 impl<'a, T: ExecutionState> PerformanceCalculatorContext<'a, T> {
-    pub fn transition<S: ExecutionState>(self) -> PerformanceCalculatorContext<'a, S> {
+    fn transition<S: ExecutionState>(self) -> PerformanceCalculatorContext<'a, S> {
         PerformanceCalculatorContext {
             subnets_fr: self.subnets_fr,
             execution_nodes_fr: self.execution_nodes_fr,
