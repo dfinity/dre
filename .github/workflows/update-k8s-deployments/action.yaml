@@ -44,7 +44,7 @@ runs:
         # this regex matches the first group (ie the image name) and uses \1
         # called a back-reference to insert the first group matched, the second
         # part is to match the 40 characters hash that we replace with the $GITHUB_SHA
-        prev_commit=$(sed -rn 's~(.*)'"(.*):"'([a-f0-9]{40}).*~\3~p' $files | head -1)
+        prev_commit=$(sed -rn 's~(.*)'"(.*):"'([a-f0-9]{40}).*~\3~p' $files | head -n 1)
         sed -i "s~\(\([[:alpha:]]\|-\)\+\):[[:alnum:]]\{40\}~\1:${GITHUB_SHA}~g" $files
 
         # commit changes if there are any

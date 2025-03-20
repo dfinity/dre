@@ -149,7 +149,7 @@ jobs:
         uses: ./.github/workflows/update-k8s-deployments
         with:
           push-token: ${{ secrets.K8S_API_TOKEN }}
-          component: container-images
+          component: containers
 
       ########################################
       # Clean up runner
