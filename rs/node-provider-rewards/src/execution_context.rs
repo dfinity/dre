@@ -62,45 +62,37 @@ impl ExecutionContext {
     }
 
     pub fn calculate_rewards(&self, provider_nodes: Vec<RewardableNode>) -> RewardsCalculationResult {
+        // FIXME this should not be a vec, to prevent quadratic execution time in the filter() below.
         let nodes_ids = nodes_ids(&provider_nodes);
-        let execution_nodes_fr = self
-            .nodes_fr
-            .iter()
-            .filter(|(node_id, _)| nodes_ids.contains(node_id))
-            .map(|(node_id, failure_rates)| (*node_id, failure_rates.clone()))
-            .collect();
 
         // Performance Multipliers Calculation
         let ctx: PerformanceCalculatorContext<StartPerformanceCalculator> = PerformanceCalculatorContext {
             subnets_fr: &self.subnets_fr,
-            execution_nodes_fr,
+            execution_nodes_fr: self
+                .nodes_fr
+                .iter()
+                .filter(|(node_id, _)| nodes_ids.contains(node_id))
+                .map(|(node_id, failure_rates)| (*node_id, failure_rates.clone()))
+                .collect(),
             results_tracker: ResultsTracker::default(),
             _marker: PhantomData,
         };
 
-        let ctx = ctx.next();
-        let ctx = ctx.next();
-        let ctx = ctx.next();
-        let ctx = ctx.next();
-        let ctx = ctx.next();
-        let ctx: PerformanceCalculatorContext<PerformanceMultipliersComputed> = ctx.next();
+        // Step through the multiple steps of the calculation.
+        let perfmulcomputed: PerformanceCalculatorContext<PerformanceMultipliersComputed> = ctx.next().next().next().next().next().next();
 
-        let execution_nodes_fr = ctx.execution_nodes_fr;
+        // Move the values of the resulting calculation outside the container.
+        let (results_tracker, execution_nodes_fr) = (perfmulcomputed.results_tracker, perfmulcomputed.execution_nodes_fr);
 
-        // Rewards Calculation
+        // Rewards Calculation.  LFG!
         let ctx: RewardsCalculatorContext<StartRewardsCalculator> = RewardsCalculatorContext {
             rewards_table: &self.rewards_table,
             provider_nodes,
-            results_tracker: ctx.results_tracker,
+            results_tracker,
             _marker: PhantomData,
         };
 
-        let ctx = ctx.next();
-        let ctx = ctx.next();
-        let ctx = ctx.next();
-        let ctx: RewardsCalculatorContext<RewardsTotalComputed> = ctx.next();
-
-        self.post_process(ctx, execution_nodes_fr)
+        self.post_process(ctx.next().next().next().next(), execution_nodes_fr)
     }
 }
 
