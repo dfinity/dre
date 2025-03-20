@@ -148,7 +148,8 @@ jobs:
         if: ${{ github.ref == 'refs/heads/main' }}
         uses: ./.github/workflows/update-k8s-deployments
         with:
-          github_api_token: ${{ secrets.K8S_API_TOKEN }}
+          push-token: ${{ secrets.K8S_API_TOKEN }}
+          component: container-images
 
       ########################################
       # Clean up runner
