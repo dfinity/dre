@@ -8,6 +8,7 @@ import subprocess
 import tempfile
 import textwrap
 import typing
+import logging
 
 from dataclasses import dataclass
 
@@ -16,6 +17,8 @@ from git_repo import GitRepo
 from util import auto_progressbar_with_item_descriptions
 
 import markdown
+
+_LOGGER = logging.getLogger(__name__)
 
 COMMIT_HASH_LENGTH = 9
 
@@ -205,10 +208,11 @@ def parse_codeowners(codeowners_path: str | pathlib.Path) -> dict[str, list[str]
         filtered = [line for line in filtered if line and not line.startswith("#")]
         parsed = {}
         for line in filtered:
+            _LOGGER.debug("Parsing CODEOWNERS, line: %s" % line)
             result = line.split()
             if len(result) <= 1:
                 continue
-            teams = [team.split("@dfinity/")[1] for team in result[1:]]
+            teams = [team.split("@dfinity/")[1] for team in result[1:] if "@dfinity/" in team]
             pattern = result[0]
             pattern = pattern if pattern.startswith("/") else "/" + pattern
             pattern = pattern if not pattern.endswith("/") else pattern + "*"
