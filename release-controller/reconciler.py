@@ -38,6 +38,10 @@ from util import version_name, conventional_logging, sha256sum_http_response
 from watchdog import Watchdog
 
 
+LAST_CYCLE_END_TIMESTAMP_SECONDS = Gauge(
+    "last_cycle_end_timestamp_seconds",
+    "The UNIX timestamp of the last cycle that completed",
+)
 LAST_CYCLE_SUCCESS_TIMESTAMP_SECONDS = Gauge(
     "last_cycle_success_timestamp_seconds",
     "The UNIX timestamp of the last cycle that completed successfully",
@@ -547,7 +551,9 @@ def main() -> None:
             now = time.time()
             LAST_CYCLE_START_TIMESTAMP_SECONDS.set(int(now))
             reconciler.reconcile()
-            LAST_CYCLE_SUCCESS_TIMESTAMP_SECONDS.set(int(time.time()))
+            and_now = time.time()
+            LAST_CYCLE_SUCCESS_TIMESTAMP_SECONDS.set(int(and_now))
+            LAST_CYCLE_END_TIMESTAMP_SECONDS.set(int(and_now))
             LAST_CYCLE_SUCCESSFUL.set(1)
             watchdog.report_healthy()
             if opts.loop_every <= 0:
@@ -563,6 +569,8 @@ def main() -> None:
             if opts.loop_every <= 0:
                 raise
             else:
+                and_now = time.time()
+                LAST_CYCLE_END_TIMESTAMP_SECONDS.set(int(and_now))
                 LAST_CYCLE_SUCCESSFUL.set(0)
                 LOGGER.exception(
                     f"Failed to reconcile.  Retrying in {opts.loop_every} seconds.  Traceback:"

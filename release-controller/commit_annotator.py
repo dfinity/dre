@@ -22,6 +22,10 @@ GUESTOS_TARGETS_NOTES_NAMESPACE = "guestos-targets"
 GUESTOS_BAZEL_TARGETS = "//ic-os/guestos/envs/prod:update-img.tar.zst union //ic-os/setupos/envs/prod:disk-img.tar.zst"
 CUTOFF_COMMIT = "8646665552677436c8a889ce970857e531fee49b"
 
+LAST_CYCLE_END_TIMESTAMP_SECONDS = Gauge(
+    "last_cycle_end_timestamp_seconds",
+    "The UNIX timestamp of the last cycle that completed",
+)
 LAST_CYCLE_SUCCESS_TIMESTAMP_SECONDS = Gauge(
     "last_cycle_success_timestamp_seconds",
     "The UNIX timestamp of the last cycle that completed successfully",
@@ -252,7 +256,9 @@ def main() -> None:
                         )
                         continue
                     annotate_branch(annotator, branch=b)
-            LAST_CYCLE_SUCCESS_TIMESTAMP_SECONDS.set(int(time.time()))
+            and_now = time.time()
+            LAST_CYCLE_SUCCESS_TIMESTAMP_SECONDS.set(int(and_now))
+            LAST_CYCLE_END_TIMESTAMP_SECONDS.set(int(and_now))
             LAST_CYCLE_SUCCESSFUL.set(1)
             watchdog.report_healthy()
             if opts.loop_every <= 0:
@@ -268,6 +274,9 @@ def main() -> None:
             if opts.loop_every <= 0:
                 raise
             else:
+                and_now = time.time()
+                LAST_CYCLE_END_TIMESTAMP_SECONDS.set(int(and_now))
+                LAST_CYCLE_SUCCESSFUL.set(0)
                 logger.exception(
                     f"Failed to annotate.  Retrying in {opts.loop_every} seconds.  Traceback:"
                 )

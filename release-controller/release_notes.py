@@ -8,6 +8,7 @@ import subprocess
 import tempfile
 import textwrap
 import typing
+import logging
 
 from dataclasses import dataclass
 
@@ -16,6 +17,8 @@ from git_repo import GitRepo
 from util import auto_progressbar_with_item_descriptions
 
 import markdown
+
+_LOGGER = logging.getLogger(__name__)
 
 COMMIT_HASH_LENGTH = 9
 
@@ -198,22 +201,38 @@ def get_rc_branch(repo_dir: str, commit_hash: str) -> str:
     return ""
 
 
-def parse_codeowners(codeowners_path: str | pathlib.Path) -> dict[str, list[str]]:
-    with open(codeowners_path, encoding="utf8") as f:
-        codeowners = f.readlines()
-        filtered = [line.strip() for line in codeowners]
-        filtered = [line for line in filtered if line and not line.startswith("#")]
-        parsed = {}
-        for line in filtered:
-            result = line.split()
-            teams = [team.split("@dfinity/")[1] for team in result[1:]]
-            pattern = result[0]
-            pattern = pattern if pattern.startswith("/") else "/" + pattern
-            pattern = pattern if not pattern.endswith("/") else pattern + "*"
+# Cache codeowners across commits.
+__codeowners_cache: dict[str, dict[str, list[str]]] = {}
 
-            parsed[pattern] = teams
 
-        return parsed
+def parse_codeowners(
+    commit_id: str, codeowners_path: str | pathlib.Path
+) -> dict[str, list[str]]:
+    cachekey = commit_id + str(codeowners_path)
+    global __codeowners_cache
+    if cachekey not in __codeowners_cache:
+        with open(codeowners_path, encoding="utf8") as f:
+            codeowners = f.readlines()
+            filtered = [line.strip() for line in codeowners]
+            filtered = [line for line in filtered if line and not line.startswith("#")]
+            parsed = {}
+            for line in filtered:
+                _LOGGER.debug("Parsing CODEOWNERS, line: %s" % line)
+                result = line.split()
+                if len(result) <= 1:
+                    continue
+                teams = [
+                    team.split("@dfinity/")[1]
+                    for team in result[1:]
+                    if "@dfinity/" in team
+                ]
+                pattern = result[0]
+                pattern = pattern if pattern.startswith("/") else "/" + pattern
+                pattern = pattern if not pattern.endswith("/") else pattern + "*"
+
+                parsed[pattern] = teams
+        __codeowners_cache[cachekey] = parsed
+    return __codeowners_cache[cachekey]
 
 
 class ConventionalCommit(typing.TypedDict):
@@ -394,7 +413,7 @@ def get_change_description_for_commit(
 
     conventional = parse_conventional_commit(stripped_message, conv_commit_pattern)
 
-    codeowners = parse_codeowners(ic_repo.file(".github/CODEOWNERS"))
+    codeowners = parse_codeowners(commit_hash, ic_repo.file(".github/CODEOWNERS"))
     for change in file_changes:
         teams = set(
             sum(
