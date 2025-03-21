@@ -4,6 +4,7 @@ use ic_base_types::SubnetId;
 use ic_cdk::api::call::CallResult;
 use ic_management_canister_types::{NodeMetricsHistoryArgs, NodeMetricsHistoryResponse};
 use ic_stable_structures::StableBTreeMap;
+use std::cell::RefCell;
 use std::collections::BTreeMap;
 use std::rc::Rc;
 
@@ -29,18 +30,18 @@ impl<Memory> MetricsManager<Memory>
 where
     Memory: ic_stable_structures::Memory + 'static,
 {
-    pub async fn retry_failed_subnets(&mut self) {
-        let subnets_to_retry: Vec<SubnetId> = self.subnets_to_retry.keys().map(|key| *key).collect();
+    pub async fn retry_failed_subnets(self_rc: Rc<RefCell<Self>>) {
+        let subnets_to_retry: Vec<SubnetId> = self_rc.borrow().subnets_to_retry.keys().map(|key| *key).collect();
 
         if !subnets_to_retry.is_empty() {
             ic_cdk::println!("Retrying metrics for subnets: {:?}", subnets_to_retry);
-            self.update_subnets_metrics(subnets_to_retry).await;
+            Self::update_subnets_metrics(self_rc, subnets_to_retry).await;
         }
     }
 
     /// Fetches subnets metrics for the specified subnets from their last timestamp.
     async fn fetch_subnets_metrics(
-        &self,
+        self_rc: Rc<RefCell<Self>>,
         last_timestamp_per_subnet: &BTreeMap<SubnetId, TimestampNanos>,
     ) -> BTreeMap<SubnetId, CallResult<(Vec<NodeMetricsHistoryResponse>,)>> {
         let mut subnets_node_metrics = Vec::new();
@@ -59,7 +60,7 @@ where
                 start_at_timestamp_nanos: refresh_ts,
             };
 
-            let client = self.client.clone();
+            let client = self_rc.borrow().client.clone();
             subnets_node_metrics.push(async move { (*subnet_id, client.node_metrics_history(contract).await) });
         }
 
@@ -70,17 +71,17 @@ where
     ///
     /// This function fetches the nodes metrics for the given subnets from the management canisters
     /// updating the local metrics with the fetched metrics.
-    pub async fn update_subnets_metrics(&mut self, subnets: Vec<SubnetId>) {
+    pub async fn update_subnets_metrics(self_rc: Rc<RefCell<Self>>, subnets: Vec<SubnetId>) {
         let last_timestamp_per_subnet: BTreeMap<SubnetId, TimestampNanos> = subnets
             .into_iter()
             .map(|subnet| {
-                let last_timestamp = self.last_timestamp_per_subnet.get(&SubnetIdStored(subnet));
+                let last_timestamp = self_rc.borrow().last_timestamp_per_subnet.get(&SubnetIdStored(subnet));
 
                 (subnet, last_timestamp.unwrap_or_default())
             })
             .collect();
 
-        let subnets_metrics = self.fetch_subnets_metrics(&last_timestamp_per_subnet).await;
+        let subnets_metrics = Self::fetch_subnets_metrics(self_rc.clone(), &last_timestamp_per_subnet).await;
         for (subnet_id, call_result) in subnets_metrics {
             match call_result {
                 Ok((nodes_metrics_history,)) => {
@@ -91,7 +92,7 @@ where
                         .max()
                         .unwrap_or(*last_timestamp_per_subnet.get(&subnet_id).expect("timestamp exists"));
 
-                    self.last_timestamp_per_subnet.insert(subnet_id.into(), last_timestamp);
+                    self_rc.borrow_mut().last_timestamp_per_subnet.insert(subnet_id.into(), last_timestamp);
 
                     // Insert each fetched metric entry into our node metrics map.
                     nodes_metrics_history.into_iter().for_each(|entry| {
@@ -99,20 +100,23 @@ where
                             subnet_id,
                             timestamp_nanos: entry.timestamp_nanos,
                         };
-                        self.subnets_metrics.insert(key, StorableSubnetMetrics(entry.node_metrics));
+                        self_rc
+                            .borrow_mut()
+                            .subnets_metrics
+                            .insert(key, StorableSubnetMetrics(entry.node_metrics));
                     });
 
                     // Remove the subnet from the retry list if present.
-                    self.subnets_to_retry.remove(&subnet_id.into());
+                    self_rc.borrow_mut().subnets_to_retry.remove(&subnet_id.into());
                 }
                 Err((code, msg)) => {
                     ic_cdk::println!("Error fetching metrics for subnet {}: CODE: {:?} MSG: {}", subnet_id, code, msg);
 
                     // The call failed, will retry fetching metrics for this subnet.
-                    let mut retry_count = self.subnets_to_retry.get(&subnet_id.into()).unwrap_or_default();
+                    let mut retry_count = self_rc.borrow().subnets_to_retry.get(&subnet_id.into()).unwrap_or_default();
                     retry_count += 1;
 
-                    self.subnets_to_retry.insert(subnet_id.into(), retry_count);
+                    self_rc.borrow_mut().subnets_to_retry.insert(subnet_id.into(), retry_count);
                 }
             }
         }

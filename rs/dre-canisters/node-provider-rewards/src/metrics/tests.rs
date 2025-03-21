@@ -5,6 +5,7 @@ use ic_cdk::api::call::{CallResult, RejectionCode};
 use ic_management_canister_types::NodeMetricsHistoryResponse;
 use ic_stable_structures::memory_manager::{MemoryId, VirtualMemory};
 use ic_stable_structures::DefaultMemoryImpl;
+use std::cell::RefCell;
 use std::rc::Rc;
 
 mod mock {
@@ -58,17 +59,17 @@ async fn subnet_metrics_added_correctly() {
     let mut mock = mock::MockCanisterClient::new();
     mock.expect_node_metrics_history()
         .return_const(CallResult::Ok((node_metrics_history_gen(days),)));
-    let mut mm = MetricsManager::new(mock);
+    let mm_rc = Rc::new(RefCell::new(MetricsManager::new(mock)));
 
     let subnet_1 = subnet_id(1);
 
-    mm.update_subnets_metrics(vec![subnet_1]).await;
+    MetricsManager::update_subnets_metrics(mm_rc.clone(), vec![subnet_1]).await;
     for i in 0..days {
         let key = StorableSubnetMetricsKey {
             timestamp_nanos: i * ONE_DAY_NANOS,
             subnet_id: subnet_1,
         };
-        assert!(mm.subnets_metrics.get(&key).is_some());
+        assert!(mm_rc.borrow().subnets_metrics.get(&key).is_some());
     }
 }
 
@@ -83,13 +84,13 @@ async fn subnets_to_retry_filled() {
         .times(1)
         .return_const(CallResult::Ok((node_metrics_history_gen(2),)));
 
-    let mut mm = MetricsManager::new(mock);
-    mm.update_subnets_metrics(vec![subnet_1]).await;
-    assert_eq!(mm.subnets_to_retry.get(&subnet_1.into()), Some(1));
+    let mm_rc = Rc::new(RefCell::new(MetricsManager::new(mock)));
+    MetricsManager::update_subnets_metrics(mm_rc.clone(), vec![subnet_1]).await;
+    assert_eq!(mm_rc.borrow().subnets_to_retry.get(&subnet_1.into()), Some(1));
 
     // Retry the subnet and success
-    mm.update_subnets_metrics(vec![subnet_1]).await;
-    assert_eq!(mm.subnets_to_retry.get(&subnet_1.into()), None);
+    MetricsManager::update_subnets_metrics(mm_rc.clone(), vec![subnet_1]).await;
+    assert_eq!(mm_rc.borrow().subnets_to_retry.get(&subnet_1.into()), None);
 }
 
 #[tokio::test]
@@ -99,13 +100,13 @@ async fn multiple_subnets_metrics_added_correctly() {
 
     mock.expect_node_metrics_history()
         .return_const(CallResult::Ok((node_metrics_history_gen(days),)));
-    let mut mm = MetricsManager::new(mock);
+    let mm_rc = Rc::new(RefCell::new(MetricsManager::new(mock)));
     let subnet_1 = subnet_id(1);
     let subnet_2 = subnet_id(2);
 
-    mm.update_subnets_metrics(vec![subnet_1, subnet_2]).await;
+    MetricsManager::update_subnets_metrics(mm_rc.clone(), vec![subnet_1, subnet_2]).await;
 
-    println!("{:?}", mm.subnets_metrics.len());
+    println!("{:?}", mm_rc.borrow().subnets_metrics.len());
 
     for subnet in &[subnet_1, subnet_2] {
         for i in 0..days {
@@ -113,7 +114,11 @@ async fn multiple_subnets_metrics_added_correctly() {
                 timestamp_nanos: i * ONE_DAY_NANOS,
                 subnet_id: *subnet,
             };
-            assert!(mm.subnets_metrics.get(&key).is_some(), "Metrics missing for subnet {:?}", subnet);
+            assert!(
+                mm_rc.borrow().subnets_metrics.get(&key).is_some(),
+                "Metrics missing for subnet {:?}",
+                subnet
+            );
         }
     }
 }
@@ -124,13 +129,13 @@ async fn retry_count_increments_on_failure() {
     mock.expect_node_metrics_history()
         .return_const(CallResult::Err((RejectionCode::Unknown, "Temporary error".to_string())));
 
-    let mut mm = MetricsManager::new(mock);
+    let mm_rc = Rc::new(RefCell::new(MetricsManager::new(mock)));
     let subnet_1 = subnet_id(1);
 
     for retry_attempt in 1..=3 {
-        mm.update_subnets_metrics(vec![subnet_1]).await;
+        MetricsManager::update_subnets_metrics(mm_rc.clone(), vec![subnet_1]).await;
         assert_eq!(
-            mm.subnets_to_retry.get(&subnet_1.into()),
+            mm_rc.borrow().subnets_to_retry.get(&subnet_1.into()),
             Some(retry_attempt),
             "Retry count should be {}",
             retry_attempt
@@ -145,11 +150,11 @@ async fn no_metrics_added_when_call_fails() {
 
     mock.expect_node_metrics_history()
         .return_const(CallResult::Err((RejectionCode::Unknown, "Error".to_string())));
-    let mut mm = MetricsManager::new(mock);
+    let mm_rc = Rc::new(RefCell::new(MetricsManager::new(mock)));
 
-    mm.update_subnets_metrics(vec![subnet_1]).await;
+    MetricsManager::update_subnets_metrics(mm_rc.clone(), vec![subnet_1]).await;
 
-    assert!(mm.subnets_metrics.is_empty(), "Metrics should be empty after a failed call");
+    assert!(mm_rc.borrow().subnets_metrics.is_empty(), "Metrics should be empty after a failed call");
 }
 
 #[tokio::test]
@@ -165,13 +170,17 @@ async fn partial_failures_are_handled_correctly() {
         }
     });
 
-    let mut mm = MetricsManager::new(mock);
+    let mm_rc = Rc::new(RefCell::new(MetricsManager::new(mock)));
 
-    mm.update_subnets_metrics(vec![subnet_1, subnet_2]).await;
+    MetricsManager::update_subnets_metrics(mm_rc.clone(), vec![subnet_1, subnet_2]).await;
 
-    assert_eq!(mm.subnets_to_retry.get(&subnet_1.into()), Some(1), "Subnet 1 should be in retry list");
+    assert_eq!(
+        mm_rc.borrow().subnets_to_retry.get(&subnet_1.into()),
+        Some(1),
+        "Subnet 1 should be in retry list"
+    );
     assert!(
-        mm.subnets_to_retry.get(&subnet_2.into()).is_none(),
+        mm_rc.borrow().subnets_to_retry.get(&subnet_2.into()).is_none(),
         "Subnet 2 should not be in retry list"
     );
 
@@ -179,11 +188,17 @@ async fn partial_failures_are_handled_correctly() {
         timestamp_nanos: 0,
         subnet_id: subnet_1,
     };
-    assert!(mm.subnets_metrics.get(&key).is_none(), "Metrics should not be present for subnet 1");
+    assert!(
+        mm_rc.borrow().subnets_metrics.get(&key).is_none(),
+        "Metrics should not be present for subnet 1"
+    );
 
     let key = StorableSubnetMetricsKey {
         timestamp_nanos: 0,
         subnet_id: subnet_2,
     };
-    assert!(mm.subnets_metrics.get(&key).is_some(), "Metrics should be present for subnet 2");
+    assert!(
+        mm_rc.borrow().subnets_metrics.get(&key).is_some(),
+        "Metrics should be present for subnet 2"
+    );
 }

@@ -2,7 +2,6 @@ use crate::canister_client::ICCanisterClient;
 use crate::metrics::MetricsManager;
 use crate::registry_store::{RegistryStoreData, StableLocalRegistry};
 use crate::registry_store_types::{StorableRegistryKey, StorableRegistryValue};
-use futures::lock::Mutex;
 use ic_stable_structures::memory_manager::{MemoryId, MemoryManager, VirtualMemory};
 use ic_stable_structures::{DefaultMemoryImpl, StableBTreeMap, Storable};
 use std::cell::RefCell;
@@ -30,14 +29,14 @@ const LAST_TIMESTAMP_PER_SUBNET_MEMORY_ID: MemoryId = MemoryId::new(2);
 const SUBNETS_TO_RETRY_MEMORY_ID: MemoryId = MemoryId::new(3);
 
 pub struct State {
-    metrics_manager: Rc<Mutex<MetricsManager<VM>>>,
+    metrics_manager: Rc<RefCell<MetricsManager<VM>>>,
     local_registry: StableBTreeMap<StorableRegistryKey, StorableRegistryValue, VM>,
 }
 
 impl State {
     fn init() -> Self {
         State {
-            metrics_manager: Rc::new(Mutex::new(MetricsManager {
+            metrics_manager: Rc::new(RefCell::new(MetricsManager {
                 client: Rc::new(ICCanisterClient),
                 subnets_to_retry: stable_btreemap_init(SUBNETS_TO_RETRY_MEMORY_ID),
                 subnets_metrics: stable_btreemap_init(SUBNETS_METRICS_MEMORY_ID),
@@ -58,9 +57,9 @@ impl RegistryStoreData<VM> for State {
     }
 }
 
-pub(crate) fn with_metrics_manager_lock_mut<R>(f: impl FnOnce(Rc<Mutex<MetricsManager<VM>>>) -> R) -> R {
+pub(crate) fn metrics_manager_rc() -> Rc<RefCell<MetricsManager<VM>>> {
     STATE.with_borrow_mut(|state| {
         let metrics_manager = state.metrics_manager.clone();
-        f(metrics_manager)
+        metrics_manager
     })
 }
