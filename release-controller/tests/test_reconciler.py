@@ -13,7 +13,7 @@ from dryrun import ReleaseNotesClient as ReleaseNotesClientMock
 from publish_notes import PublishNotesClient
 from pydantic_yaml import parse_yaml_raw_as
 from reconciler import find_base_release, oldest_active_release
-from reconciler import Reconciler
+from reconciler import Reconciler, PhaseCollector
 from reconciler_state import ReconcilerState
 from reconciler import version_package_checksum
 from reconciler import versions_to_unelect
@@ -97,7 +97,7 @@ releases:
     # assert reconciler.publish_client.ensure_published.call_count == 0
     # assert git_repo.push_release_tags.call_count == 0  # pylint: disable=no-member
 
-    reconciler.reconcile()
+    reconciler.reconcile(PhaseCollector())
 
     created_changelog = notes_client.markdown_file(
         "2e921c9adfc71f3edc96a9eb5d85fc742e7d8a9f"
@@ -133,7 +133,7 @@ releases:
     reconciler.loader = StaticReleaseLoader(config)
     # TODO: mock modifying google docs contents
 
-    reconciler.reconcile()
+    reconciler.reconcile(PhaseCollector())
 
     # This test is out of date.
     # reconciler.publish_client.ensure_published.assert_called_once_with(
@@ -152,7 +152,7 @@ releases:
     reconciler.loader = StaticReleaseLoader(
         config, changelogs={"2e921c9adfc71f3edc96a9eb5d85fc742e7d8a9f": "TODO:"}
     )
-    reconciler.reconcile()
+    reconciler.reconcile(PhaseCollector())
 
     # TODO: change to not called
     # assert reconciler.publish_client.ensure_published.call_count == 0
