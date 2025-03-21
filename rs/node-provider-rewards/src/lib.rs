@@ -1,61 +1,80 @@
+use crate::execution_context::{nodes_ids, ExecutionContext, RewardsCalculationResult};
 use crate::metrics::{nodes_failure_rates_in_period, subnets_failure_rates, NodeDailyMetrics};
-use crate::performance_calculator::PerformanceMultiplierCalculator;
 use crate::reward_period::{RewardPeriod, TimestampNanos};
+use crate::types::{rewardable_nodes_by_provider, RewardableNode};
+use ::tabled::Table;
 use ic_base_types::{NodeId, PrincipalId};
+use ic_protobuf::registry::node_rewards::v2::NodeRewardsTable;
+use rust_decimal::Decimal;
 use std::cmp::PartialEq;
 use std::collections::{BTreeMap, HashSet};
 use std::error::Error;
 use std::fmt;
 
-mod logs;
+mod execution_context;
 mod metrics;
-mod performance_calculator;
 mod reward_period;
-mod tabled_types;
-#[cfg(test)]
-mod tests;
+mod tabled;
+mod types;
+
+pub struct RewardsPerNodeProvider {
+    pub rewards_per_provider: BTreeMap<PrincipalId, Decimal>,
+    pub computation_table_per_provider: BTreeMap<PrincipalId, Vec<Table>>,
+}
 
 /// Computes rewards for node providers based on their nodes' performance during the specified `reward_period`.
 ///
 /// # Arguments
 /// * reward_period - The time frame for which rewards are calculated.
+/// * rewards_table - The rewards table containing the reward rates for each node type.
 /// * metrics_by_node - Daily node metrics for nodes in `reward_period`. Only nodes in `providers_rewardable_nodes` keys are considered.
-/// * providers_rewardable_nodes: Nodes eligible for rewards, as recorded in the registry versions spanning the `reward_period` provided.
-///
-/// TODO: Implement the XDR reward calculation logic from the nodes multiplier.
+/// * rewardable_nodes: Nodes eligible for rewards, as recorded in the registry versions spanning the `reward_period` provided.
 pub fn calculate_rewards(
-    reward_period: RewardPeriod,
-    metrics_by_node: BTreeMap<NodeId, Vec<NodeDailyMetrics>>,
-    providers_rewardable_nodes: BTreeMap<PrincipalId, Vec<NodeId>>,
-) -> Result<(), RewardCalculationError> {
-    validate_input(&reward_period, &metrics_by_node, &providers_rewardable_nodes)?;
+    reward_period: &RewardPeriod,
+    rewards_table: &NodeRewardsTable,
+    metrics_by_node: &BTreeMap<NodeId, Vec<NodeDailyMetrics>>,
+    rewardable_nodes: &[RewardableNode],
+) -> Result<RewardsPerNodeProvider, RewardCalculationError> {
+    let mut rewards_per_provider = BTreeMap::new();
+    let mut computation_table_per_provider = BTreeMap::new();
+    let all_nodes = nodes_ids(rewardable_nodes);
 
-    let subnets_failure_rates = subnets_failure_rates(&metrics_by_node);
-    let all_nodes: Vec<NodeId> = providers_rewardable_nodes.values().flatten().cloned().collect();
-    let nodes_failure_rates = nodes_failure_rates_in_period(&all_nodes, &reward_period, &metrics_by_node);
+    validate_input(reward_period, metrics_by_node, &all_nodes)?;
 
-    let perf_calculator = PerformanceMultiplierCalculator::new(nodes_failure_rates, subnets_failure_rates);
+    let ctx = ExecutionContext::new(
+        nodes_failure_rates_in_period(&all_nodes, reward_period, metrics_by_node),
+        subnets_failure_rates(metrics_by_node),
+        rewards_table.clone(),
+    );
 
-    for (_provider_id, provider_nodes) in providers_rewardable_nodes {
-        let _nodes_multiplier = perf_calculator.calculate_performance_multipliers(&provider_nodes);
+    for (provider_id, provider_nodes) in rewardable_nodes_by_provider(rewardable_nodes) {
+        let RewardsCalculationResult {
+            rewards,
+            computation_log_tabled,
+        } = ctx.calculate_rewards(provider_nodes);
+
+        rewards_per_provider.insert(provider_id, rewards);
+        computation_table_per_provider.insert(provider_id, computation_log_tabled);
     }
 
-    Ok(())
+    Ok(RewardsPerNodeProvider {
+        rewards_per_provider,
+        computation_table_per_provider,
+    })
 }
 
 fn validate_input(
     reward_period: &RewardPeriod,
     metrics_by_node: &BTreeMap<NodeId, Vec<NodeDailyMetrics>>,
-    providers_rewardable_nodes: &BTreeMap<PrincipalId, Vec<NodeId>>,
+    all_nodes: &[NodeId],
 ) -> Result<(), RewardCalculationError> {
-    let rewardable_nodes: HashSet<&NodeId> = providers_rewardable_nodes.values().flatten().collect();
-    if rewardable_nodes.is_empty() {
+    if all_nodes.is_empty() {
         return Err(RewardCalculationError::EmptyNodes);
     }
 
     // Check if all nodes with metrics are present in the rewardable nodes
     for node_id in metrics_by_node.keys() {
-        if !rewardable_nodes.contains(node_id) {
+        if !all_nodes.contains(node_id) {
             return Err(RewardCalculationError::NodeNotInRewardables(*node_id));
         }
     }
@@ -125,3 +144,6 @@ impl fmt::Display for RewardCalculationError {
         }
     }
 }
+
+#[cfg(test)]
+mod tests;

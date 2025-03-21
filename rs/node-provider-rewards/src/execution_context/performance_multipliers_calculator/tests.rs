@@ -1,10 +1,10 @@
 use super::*;
 use crate::metrics::{nodes_failure_rates_in_period, subnets_failure_rates, NodeDailyMetrics};
 use crate::reward_period::{RewardPeriod, TimestampNanos, TimestampNanosAtDayEnd, NANOS_PER_DAY};
+use crate::types::RewardableNode;
 use ic_base_types::PrincipalId;
 use itertools::Itertools;
 use num_traits::FromPrimitive;
-use once_cell::sync::Lazy;
 
 fn node_id(id: u64) -> NodeId {
     PrincipalId::new_node_test_id(id).into()
@@ -108,20 +108,18 @@ impl FailureRatesBuilder {
 
 impl Default for FailureRatesBuilder {
     fn default() -> Self {
-        FailureRatesBuilder::new().with_all_days_data(DEFAULT_INPUT.clone())
+        // Each inner vector represents one day (days 0 through 3)
+        // Tuple: (subnet_id, node_id, failure_rate)
+        let input = vec![
+            vec![(1, 1, 0.3), (1, 2, 0.4), (1, 3, 0.5), (2, 5, 0.344), (2, 6, 0.2), (2, 7, 0.2)],
+            vec![(1, 1, 0.2), (1, 2, 0.1), (1, 3, 0.0), (2, 4, 0.5), (2, 5, 1.0), (2, 6, 0.7), (2, 7, 0.7)],
+            vec![(1, 1, 0.1), (1, 2, 0.2), (1, 3, 0.3), (2, 4, 0.4), (2, 5, 1.0), (2, 6, 0.2), (2, 7, 0.1)],
+            vec![(1, 2, 0.2), (2, 3, 0.3), (2, 4, 0.4), (2, 6, 0.7), (2, 7, 0.5)],
+        ];
+
+        FailureRatesBuilder::new().with_all_days_data(input)
     }
 }
-
-pub static DEFAULT_INPUT: Lazy<Vec<Vec<(u64, u64, f64)>>> = Lazy::new(|| {
-    // Each inner vector represents one day (days 0 through 3)
-    // Tuple: (subnet_id, node_id, failure_rate)
-    vec![
-        vec![(1, 1, 0.3), (1, 2, 0.4), (1, 3, 0.5), (2, 5, 0.344), (2, 6, 0.2), (2, 7, 0.2)],
-        vec![(1, 1, 0.2), (1, 2, 0.1), (1, 3, 0.0), (2, 4, 0.5), (2, 5, 1.0), (2, 6, 0.7), (2, 7, 0.7)],
-        vec![(1, 1, 0.1), (1, 2, 0.2), (1, 3, 0.3), (2, 4, 0.4), (2, 5, 1.0), (2, 6, 0.2), (2, 7, 0.1)],
-        vec![(1, 2, 0.2), (2, 3, 0.3), (2, 4, 0.4), (2, 6, 0.7), (2, 7, 0.5)],
-    ]
-});
 
 // FailureRatesManager tests
 
@@ -237,16 +235,40 @@ fn test_defined_node_failure_rates() {
 
 // PerformanceMultiplierCalculator tests
 
+impl Default for RewardableNode {
+    fn default() -> Self {
+        Self {
+            node_id: NodeId::from(PrincipalId::default()),
+            node_provider_id: PrincipalId::default(),
+            region: Default::default(),
+            node_type: Default::default(),
+        }
+    }
+}
+
+fn test_rewardable_nodes(nodes: Vec<NodeId>) -> Vec<RewardableNode> {
+    nodes
+        .iter()
+        .map(|node_id| RewardableNode {
+            node_id: *node_id,
+            ..Default::default()
+        })
+        .collect()
+}
+
 #[test]
 fn test_update_relative_failure_rates() {
     let (nodes_failure_rates, subnets_failure_rates) = FailureRatesBuilder::default().build();
-    let nodes = nodes_failure_rates.keys().cloned().collect_vec();
-    let perf_calculator = PerformanceMultiplierCalculator::new(nodes_failure_rates, subnets_failure_rates);
+    let ctx: PerformanceCalculatorContext<StartPerformanceCalculator> = PerformanceCalculatorContext {
+        subnets_fr: &subnets_failure_rates,
+        execution_nodes_fr: nodes_failure_rates,
+        results_tracker: ResultsTracker::default(),
+        _marker: PhantomData,
+    };
+    let ctx = ctx.next();
+    let ctx = ctx.next();
 
-    let ctx = perf_calculator.execution_context(&nodes);
-    let ctx = perf_calculator.compute_relative_failure_rates(ctx);
-
-    let node_5_fr = ctx.execution_nodes.get(&node_id(5)).unwrap();
+    let node_5_fr = ctx.execution_nodes_fr.get(&node_id(5)).unwrap();
 
     let mut expected = NodeDailyFailureRate {
         ts: ts_day_end(0),
@@ -288,12 +310,17 @@ fn test_update_relative_failure_rates() {
 #[test]
 fn test_compute_failure_rate_extrapolated() {
     let (nodes_failure_rates, subnets_failure_rates) = FailureRatesBuilder::default().build();
-    let nodes = nodes_failure_rates.keys().cloned().collect_vec();
-    let perf_calculator = PerformanceMultiplierCalculator::new(nodes_failure_rates, subnets_failure_rates);
+    let ctx: PerformanceCalculatorContext<StartPerformanceCalculator> = PerformanceCalculatorContext {
+        subnets_fr: &subnets_failure_rates,
+        execution_nodes_fr: nodes_failure_rates,
+        results_tracker: ResultsTracker::default(),
+        _marker: PhantomData,
+    };
+    let ctx = ctx.next();
+    let ctx = ctx.next();
+    let ctx = ctx.next();
 
-    let ctx = perf_calculator.execution_context(&nodes);
-    let mut ctx = perf_calculator.compute_relative_failure_rates(ctx);
-    let extrapolated_failure_rate = perf_calculator.calculate_extrapolated_failure_rate(&mut ctx);
+    let extrapolated_failure_rate = ctx.results_tracker.get_single_result(SingleResult::ExtrapolatedFR);
 
     // node_1_fr_relative = [0, 0, 0]
     // node_2_fr_relative = [0, 0, 0, 0]
@@ -305,25 +332,37 @@ fn test_compute_failure_rate_extrapolated() {
     //
     // expected_extrapolated_fr = 0.05
 
-    assert_eq!(extrapolated_failure_rate, dec!(0.05));
+    assert_eq!(extrapolated_failure_rate, &dec!(0.05));
 }
 
 #[test]
 fn test_calculate_performance_multiplier_by_node() {
     let (nodes_failure_rates, subnets_failure_rates) = FailureRatesBuilder::default().build();
-    let nodes = nodes_failure_rates.keys().cloned().collect_vec();
-    let perf_calculator = PerformanceMultiplierCalculator::new(nodes_failure_rates, subnets_failure_rates);
-    let performance_multiplier_by_node = perf_calculator.calculate_performance_multipliers(&nodes)._performance_multiplier_by_node;
+    let rewardable_nodes = test_rewardable_nodes(nodes_failure_rates.keys().cloned().collect_vec());
+
+    let ctx: PerformanceCalculatorContext<StartPerformanceCalculator> = PerformanceCalculatorContext {
+        subnets_fr: &subnets_failure_rates,
+        execution_nodes_fr: nodes_failure_rates,
+        results_tracker: ResultsTracker::default(),
+        _marker: PhantomData,
+    };
+    let ctx = ctx.next();
+    let ctx = ctx.next();
+    let ctx = ctx.next();
+    let ctx = ctx.next();
+    let ctx = ctx.next();
+    let ctx: PerformanceCalculatorContext<PerformanceMultipliersComputed> = ctx.next();
+    let performance_multiplier_by_node = ctx.results_tracker.get_nodes_result(NodeResult::PerformanceMultiplier);
 
     // node_5_fr = [0, 0.3, 0.6, 0.05] -> avg = 0.2375
     // rewards_reduction: ((0.2375 - 0.1) / (0.6 - 0.1)) * 0.8 = 0.22
     // rewards_multiplier: 1 - 0.22 = 0.78
 
-    for node in nodes {
-        if node == node_id(5) {
-            assert_eq!(performance_multiplier_by_node[&node], dec!(0.78));
+    for node in rewardable_nodes {
+        if node.node_id == node_id(5) {
+            assert_eq!(performance_multiplier_by_node[&node.node_id], dec!(0.78));
         } else {
-            assert_eq!(performance_multiplier_by_node[&node], dec!(1));
+            assert_eq!(performance_multiplier_by_node[&node.node_id], dec!(1));
         }
     }
 }
