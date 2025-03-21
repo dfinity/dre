@@ -364,8 +364,9 @@ def test_publish_if_ready__ready_no_changes(mocker):
     publish_client = PublishNotesClient(repo)
     mocker.patch.object(publish_client, "ensure_published")
 
-    publish_client.publish_if_ready(
-        """\
+    with pytest.raises(ValueError):
+        publish_client.publish_if_ready(
+            """\
 Review checklist
 ================
 
@@ -400,7 +401,7 @@ To see a full list of commits added since last release, compare the revisions on
 * ~~author: Leo Eich |~~ [e76c5a374](https://github.com/dfinity/ic/commit/e76c5a374) Consensus(ecdsa): Stop relaying tECDSA signature shares
 * ~~author: Leo Eich |~~ [2d63da24c](https://github.com/dfinity/ic/commit/2d63da24c) Consensus(ecdsa): Add optional kappa\\_unmasked config to QuadrupleInCreation
 """,
-        "2e921c9adfc71f3edc96a9eb5d85fc742e7d8a9f",
-    )
+            "2e921c9adfc71f3edc96a9eb5d85fc742e7d8a9f",
+        )
 
     assert publish_client.ensure_published.call_count == 0  # pylint: disable=no-member
