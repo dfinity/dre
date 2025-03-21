@@ -11,8 +11,6 @@ use std::collections::{BTreeMap, HashSet};
 use std::marker::PhantomData;
 use tabled::Table;
 
-pub type XDRPermyriad = u64;
-
 pub fn nodes_ids(rewardable_nodes: &[RewardableNode]) -> Vec<NodeId> {
     rewardable_nodes.iter().map(|node| node.node_id).collect()
 }

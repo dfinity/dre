@@ -1,11 +1,11 @@
-use crate::execution_context::{nodes_ids, ExecutionContext, RewardsCalculationResult, XDRPermyriad};
+use crate::execution_context::{nodes_ids, ExecutionContext, RewardsCalculationResult};
 use crate::metrics::{nodes_failure_rates_in_period, subnets_failure_rates, NodeDailyMetrics};
 use crate::reward_period::{RewardPeriod, TimestampNanos};
 use crate::types::{rewardable_nodes_by_provider, RewardableNode};
 use ::tabled::Table;
 use ic_base_types::{NodeId, PrincipalId};
 use ic_protobuf::registry::node_rewards::v2::NodeRewardsTable;
-use num_traits::ToPrimitive;
+use rust_decimal::Decimal;
 use std::cmp::PartialEq;
 use std::collections::{BTreeMap, HashSet};
 use std::error::Error;
@@ -18,7 +18,7 @@ mod tabled;
 mod types;
 
 pub struct RewardsPerNodeProvider {
-    pub rewards_per_provider: BTreeMap<PrincipalId, XDRPermyriad>,
+    pub rewards_per_provider: BTreeMap<PrincipalId, Decimal>,
     pub computation_table_per_provider: BTreeMap<PrincipalId, Vec<Table>>,
 }
 
@@ -53,7 +53,7 @@ pub fn calculate_rewards(
             computation_log_tabled,
         } = ctx.calculate_rewards(provider_nodes);
 
-        rewards_per_provider.insert(provider_id, rewards.to_u64().expect("Conversion succeeded"));
+        rewards_per_provider.insert(provider_id, rewards);
         computation_table_per_provider.insert(provider_id, computation_log_tabled);
     }
 

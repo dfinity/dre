@@ -1,4 +1,5 @@
 use ic_base_types::{NodeId, PrincipalId};
+use itertools::Itertools;
 use std::collections::BTreeMap;
 
 #[derive(Eq, Hash, PartialEq, Clone, Ord, PartialOrd)]
@@ -25,10 +26,10 @@ impl RewardableNode {
 }
 
 pub fn rewardable_nodes_by_provider(rewardable_nodes: &[RewardableNode]) -> BTreeMap<PrincipalId, Vec<RewardableNode>> {
-    let mut nodes_by_provider: BTreeMap<PrincipalId, Vec<RewardableNode>> = BTreeMap::new();
-
-    for node in rewardable_nodes {
-        nodes_by_provider.entry(node.node_provider_id).or_default().push(node.clone());
-    }
-    nodes_by_provider
+    rewardable_nodes
+        .iter()
+        .cloned()
+        .into_group_map_by(|node| node.node_provider_id)
+        .into_iter()
+        .collect()
 }

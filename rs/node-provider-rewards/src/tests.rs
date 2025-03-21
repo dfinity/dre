@@ -110,7 +110,7 @@ fn test_node_provider_below_min_limit() {
     ];
 
     let rewards = calculate_rewards(&reward_period, &rewards_table, &BTreeMap::new(), &rewardables).unwrap();
-    assert_eq!(*rewards.rewards_per_provider.get(&node_provider_id).unwrap(), 2u64);
+    assert_eq!(*rewards.rewards_per_provider.get(&node_provider_id).unwrap(), dec!(2));
 }
 
 struct NPRInput {
@@ -317,5 +317,5 @@ fn test_node_provider_rewards_one_assigned() {
     //     ├─────────────────────────────┼───────────┼─────────────┼──────────────┼────────┼        ┼────────┼────────┼────────┼────────────┼             ┤
     //     │ 2o3ay-vafaa-aaaaa-aaaap-2ai │   type1   │     A,B     │ 1000 myrXDR  │   -    │        │ 0.325  │ 0.360  │ 0.640  │ 640 myrXDR │             │
     //     └─────────────────────────────┴───────────┴─────────────┴──────────────┴────────┴────────┴────────┴────────┴────────┴────────────┴─────────────┘
-    assert_eq!(*rewards.rewards_per_provider.get(&np_1).unwrap(), 3200);
+    assert_eq!(*rewards.rewards_per_provider.get(&np_1).unwrap(), dec!(3200));
 }
