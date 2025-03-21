@@ -3,9 +3,9 @@ releases:
   - rc_name: rc--2025-03-20_03-11
     versions:
       # Qualification pipeline:
-      # https://github.com/dfinity/ic/actions/runs/13961169988
+      # https://github.com/dfinity/ic/actions/runs/13993798224
       - name: base
-        version: 2fe8aefafcb2fbee6fdb2785374d5de715560269
+        version: 4833f30d3b5afd84a385dfb146581580285d8a7e
   - rc_name: rc--2025-03-14_03-10
     versions:
       # Qualification pipeline:

@@ -10,7 +10,7 @@ use ic_registry_transport::pb::v1::RegistryDelta;
 use ic_registry_transport::{deserialize_get_changes_since_response, serialize_get_changes_since_request};
 
 /// Used to interact with remote IC canisters.
-pub struct ICCanisterClient {}
+pub struct ICCanisterClient;
 
 #[async_trait]
 impl RegistryCanisterClient for ICCanisterClient {
