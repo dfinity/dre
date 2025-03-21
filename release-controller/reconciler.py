@@ -53,6 +53,7 @@ LAST_CYCLE_START_TIMESTAMP_SECONDS = Gauge(
 LAST_CYCLE_SUCCESSFUL = Gauge(
     "last_cycle_successful",
     "1 if the last cycle was successful, 0 if it was not",
+    labelnames=["phase"],
 )
 
 
@@ -166,6 +167,49 @@ class ReplicaVersionProposalProvider(typing.Protocol):
     def replica_version_proposals(self) -> dict[str, int]: ...
 
 
+Phases = (
+    typing.Literal["forum post creation"]
+    | typing.Literal["release notes preparation"]
+    | typing.Literal["release notes pull request"]
+    | typing.Literal["proposal submission"]
+    | typing.Literal["forum post update"]
+)
+
+
+class PhaseCollector(object):
+    def __init__(self) -> None:
+        self.phases = {
+            "forum post creation": True,
+            "release notes preparation": True,
+            "releas notes pull request": True,
+            "proposal submission": True,
+            "forum post update": True,
+        }
+        self.current_phase: Phases = "forum post creation"
+
+    def fail(
+        self,
+        phase: Phases,
+    ) -> None:
+        self.phases[phase] = False
+
+    def __call__(self, phase: Phases) -> "PhaseCollector":
+        self.current_phase = phase
+        return self
+
+    def __enter__(self) -> "PhaseCollector":
+        return self
+
+    def __exit__(
+        self,
+        exc_type: type[BaseException] | None,
+        exc_val: BaseException | None,
+        exc_tb: typing.Any,
+    ) -> None:
+        if exc_type:
+            self.fail(self.current_phase)
+
+
 class Reconciler:
     """Reconcile the state of the network with the release index, and create a forum post if needed."""
 
@@ -198,7 +242,7 @@ class Reconciler:
         self.dre = dre
         self.slack_announcer = slack_announcer
 
-    def reconcile(self) -> None:
+    def reconcile(self, phase: PhaseCollector) -> None:
         """Reconcile the state of the network with the release index."""
         config = self.loader.index()
         active_versions = self.ic_prometheus.active_versions()
@@ -247,6 +291,7 @@ class Reconciler:
                     isinstance(prop, reconciler_state.DREMalfunction)
                     and not prop.ready_to_retry()
                 ):
+                    phase.fail("proposal submission")
                     revlogger.debug("%s.  Not ready to retry yet.")
                     continue
 
@@ -274,13 +319,15 @@ class Reconciler:
 
                 # update to create posts for any releases
                 rclogger.debug("Ensuring forum post for release candidate exists.")
-                rc_forum_topic = self.forum_client.get_or_create(rc)
+                with phase("forum post creation"):
+                    rc_forum_topic = self.forum_client.get_or_create(rc)
 
-                rclogger.debug("Updating forum post preemptively.")
-                rc_forum_topic.update(
-                    summary_retriever=self.loader.proposal_summary,
-                    proposal_id_retriever=self.state.version_proposal,
-                )
+                with phase("forum post update"):
+                    rclogger.debug("Updating forum post preemptively.")
+                    rc_forum_topic.update(
+                        summary_retriever=self.loader.proposal_summary,
+                        proposal_id_retriever=self.state.version_proposal,
+                    )
 
                 if markdown_file := self.notes_client.markdown_file(release_commit):
                     revlogger.info(
@@ -312,82 +359,86 @@ class Reconciler:
                             base_release_commit,
                         )
 
-                    revlogger.info("Preparing release notes.")
-                    content = prepare_release_notes(request)
-
-                    revlogger.info("Uploading release notes.")
-                    gdoc = self.notes_client.ensure(
-                        release_tag=release_tag,
-                        release_commit=release_commit,
-                        content=content,
-                    )
-
-                    if "SLACK_WEBHOOK_URL" in os.environ:
-                        # This should have never been in the Google Docs code.
-                        revlogger.info("Announcing release notes")
-                        self.slack_announcer.announce_release(
-                            webhook=os.environ["SLACK_WEBHOOK_URL"],
-                            version_name=release_tag,
-                            google_doc_url=gdoc["alternateLink"],
-                            tag_all_teams=v_idx == 0,
+                    with phase("release notes preparation"):
+                        revlogger.info("Preparing release notes.")
+                        content = prepare_release_notes(request)
+                        revlogger.info("Uploading release notes.")
+                        gdoc = self.notes_client.ensure(
+                            release_tag=release_tag,
+                            release_commit=release_commit,
+                            content=content,
                         )
-
-                self.publish_client.publish_if_ready(
-                    google_doc_markdownified=markdown_file,
-                    version=release_commit,
-                )
-
-                # returns a result only if changelog is published
-                changelog = self.loader.proposal_summary(
-                    release_commit, is_security_fix
-                )
-                if not changelog:
-                    revlogger.debug("No changelog ready for proposal submission.")
-                    continue
-                else:
-                    revlogger.info(
-                        "The changelog is now ready for proposal submission."
-                    )
-
-                unelect_versions = []
-                if v_idx == 0:
-                    unelect_versions.extend(
-                        versions_to_unelect(
-                            config,
-                            active_versions=active_versions,
-                            elected_versions=self.dre.get_blessed_versions(),
-                        ),
-                    )
-
-                if discovered_proposal is not None:
-                    prop.record_submission(discovered_proposal["id"])
-                else:
-                    checksum = version_package_checksum(release_commit)
-                    urls = version_package_urls(release_commit)
-
-                    try:
-                        proposal_id = (
-                            self.dre.propose_to_revise_elected_guestos_versions(
-                                changelog=changelog,
-                                version=release_commit,
-                                forum_post_url=rc_forum_topic.post_url(release_commit),
-                                unelect_versions=unelect_versions,
-                                package_checksum=checksum,
-                                package_urls=urls,
+                        if "SLACK_WEBHOOK_URL" in os.environ:
+                            # This should have never been in the Google Docs code.
+                            revlogger.info("Announcing release notes")
+                            self.slack_announcer.announce_release(
+                                webhook=os.environ["SLACK_WEBHOOK_URL"],
+                                version_name=release_tag,
+                                google_doc_url=gdoc["alternateLink"],
+                                tag_all_teams=v_idx == 0,
                             )
-                        )
-                        success = prop.record_submission(proposal_id)
-                        revlogger.info("%s", success)
-                    except Exception:
-                        fail = prop.record_malfunction()
-                        revlogger.exception("%s", fail)
 
-                rclogger.debug("Updating forum posts after processing versions.")
-                # Update the forum posts in case the proposal was created.
-                rc_forum_topic.update(
-                    summary_retriever=self.loader.proposal_summary,
-                    proposal_id_retriever=self.state.version_proposal,
-                )
+                with phase("release notes pull request"):
+                    self.publish_client.publish_if_ready(
+                        google_doc_markdownified=markdown_file,
+                        version=release_commit,
+                    )
+                    # returns a result only if changelog is published
+                    changelog = self.loader.proposal_summary(
+                        release_commit, is_security_fix
+                    )
+                    if not changelog:
+                        revlogger.debug("No changelog ready for proposal submission.")
+                        continue
+                    else:
+                        revlogger.info(
+                            "The changelog is now ready for proposal submission."
+                        )
+
+                with phase("proposal submission"):
+                    unelect_versions = []
+                    if v_idx == 0:
+                        unelect_versions.extend(
+                            versions_to_unelect(
+                                config,
+                                active_versions=active_versions,
+                                elected_versions=self.dre.get_blessed_versions(),
+                            ),
+                        )
+
+                    if discovered_proposal is not None:
+                        prop.record_submission(discovered_proposal["id"])
+                    else:
+                        checksum = version_package_checksum(release_commit)
+                        urls = version_package_urls(release_commit)
+
+                        try:
+                            proposal_id = (
+                                self.dre.propose_to_revise_elected_guestos_versions(
+                                    changelog=changelog,
+                                    version=release_commit,
+                                    forum_post_url=rc_forum_topic.post_url(
+                                        release_commit
+                                    ),
+                                    unelect_versions=unelect_versions,
+                                    package_checksum=checksum,
+                                    package_urls=urls,
+                                )
+                            )
+                            success = prop.record_submission(proposal_id)
+                            revlogger.info("%s", success)
+                        except Exception:
+                            fail = prop.record_malfunction()
+                            revlogger.error("%s", fail)
+                            raise
+
+                with phase("forum post update"):
+                    rclogger.debug("Updating forum posts after processing versions.")
+                    # Update the forum posts in case the proposal was created.
+                    rc_forum_topic.update(
+                        summary_retriever=self.loader.proposal_summary,
+                        proposal_id_retriever=self.state.version_proposal,
+                    )
 
         logger.info("Iteration completed.")
 
@@ -547,14 +598,16 @@ def main() -> None:
         start_http_server(port=int(opts.telemetry_port))
 
     while True:
+        phase_collector = PhaseCollector()
         try:
             now = time.time()
             LAST_CYCLE_START_TIMESTAMP_SECONDS.set(int(now))
-            reconciler.reconcile()
+            reconciler.reconcile(phase_collector)
             and_now = time.time()
             LAST_CYCLE_SUCCESS_TIMESTAMP_SECONDS.set(int(and_now))
             LAST_CYCLE_END_TIMESTAMP_SECONDS.set(int(and_now))
-            LAST_CYCLE_SUCCESSFUL.set(1)
+            for phase, result in phase_collector.phases.items():
+                LAST_CYCLE_SUCCESSFUL.labels(phase).set(1 if result else 0)
             watchdog.report_healthy()
             if opts.loop_every <= 0:
                 break
@@ -571,7 +624,8 @@ def main() -> None:
             else:
                 and_now = time.time()
                 LAST_CYCLE_END_TIMESTAMP_SECONDS.set(int(and_now))
-                LAST_CYCLE_SUCCESSFUL.set(0)
+                for phase, result in phase_collector.phases.items():
+                    LAST_CYCLE_SUCCESSFUL.labels(phase).set(1 if result else 0)
                 LOGGER.exception(
                     f"Failed to reconcile.  Retrying in {opts.loop_every} seconds.  Traceback:"
                 )
