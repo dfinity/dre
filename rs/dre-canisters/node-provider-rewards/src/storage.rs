@@ -58,8 +58,5 @@ impl RegistryStoreData<VM> for State {
 }
 
 pub(crate) fn metrics_manager_rc() -> Rc<RefCell<MetricsManager<VM>>> {
-    STATE.with_borrow_mut(|state| {
-        let metrics_manager = state.metrics_manager.clone();
-        metrics_manager
-    })
+    STATE.with_borrow_mut(|state| state.metrics_manager.clone())
 }
