@@ -2030,6 +2030,10 @@ dependencies = [
 ]
 
 [[package]]
+name = "dre-canisters-integration-tests"
+version = "0.6.2"
+
+[[package]]
 name = "dyn-clone"
 version = "1.0.17"
 source = "registry+https://github.com/rust-lang/crates.io-index"

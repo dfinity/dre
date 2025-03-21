@@ -1,0 +1,8 @@
+[package]
+name = "dre-canisters-integration-tests"
+version.workspace = true
+authors.workspace = true
+edition.workspace = true
+description.workspace = true
+documentation.workspace = true
+
