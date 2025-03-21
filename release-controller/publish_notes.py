@@ -91,6 +91,7 @@ class PublishNotesClient:
 
     def ensure_published(self, version: str, changelog: str) -> None:
         """Publish the release notes for the given version."""
+        logger = LOGGER.getChild(version)
         published_releases = self.repo.get_contents(f"/{REPLICA_RELEASES_DIR}")
         if not isinstance(published_releases, list):
             return
@@ -100,18 +101,21 @@ class PublishNotesClient:
         branch_name = f"replica-release-notes-{version}"
         pull_head = f"dfinity:{branch_name}"
         if self.repo.get_pulls(head=pull_head, state="open").totalCount > 0:
+            logger.info(
+                "Waiting for PR of branch %s to be approved and merged", branch_name
+            )
             return
 
         version_path = f"{REPLICA_RELEASES_DIR}/{version}.md"
         if not [b for b in self.repo.get_branches() if b.name == branch_name]:
-            logging.info("creating branch %s for version %s", branch_name, version)
+            logger.info("Creating branch %s", branch_name)
             self.repo.create_git_ref(
                 ref=f"refs/heads/{branch_name}",
                 sha=self.repo.get_branch("main").commit.sha,
             )
 
         try:
-            logging.info("creating version %s file on branch %s", version, branch_name)
+            logger.info("Creating file on branch %s", branch_name)
             self.repo.create_file(
                 path=version_path,
                 message=f"chore(release): Elect version {version}",
@@ -119,11 +123,12 @@ class PublishNotesClient:
                 branch=branch_name,
             )
         except:  # pylint: disable=bare-except  # noqa: E722
-            logging.warning(
-                "failed to create version %s file on branch %s", version, branch_name
-            )
+            logger.warning("Failed to create file on branch %s", branch_name)
 
-        logging.info("creating pull request for %s, branch %s", version, branch_name)
+        logger.info(
+            "Creating pull request for branch %s — please approve the PR at your leisure",
+            branch_name,
+        )
         self.repo.create_pull(
             title=f"chore(release): Elect version {version}",
             base="main",
@@ -134,30 +139,31 @@ class PublishNotesClient:
         self, google_doc_markdownified: PreparedReleaseNotes | None, version: str
     ) -> None:
         """Publish the release notes if they are ready."""
+        logger = LOGGER.getChild(version)
         if not isinstance(google_doc_markdownified, str):
-            logging.warning("didn't get markdown notes for %s, skipping", version)
+            logger.warning("Didn't get Markdown notes, skipping")
             return
 
         changelog = post_process_release_notes(google_doc_markdownified)
 
         release_notes_start = changelog.find("Release Notes")
         if release_notes_start == -1:
-            logging.error(
-                "could not find release notes section for version %s", version
+            raise ValueError(
+                "Could not find release notes section for version %s" % version
             )
-            return
 
         if not re.match(
             r"^Review checklist=+Please cross(\\|)-out your team once you finished the review\s*$",
             changelog[:release_notes_start].replace("\n", ""),
         ):
-            logging.info("release notes for version %s not yet ready", version)
+            logger.info("Release notes not yet ready")
             return
 
         changelog = changelog[release_notes_start:]
         if check_number_of_changes(changelog) == 0:
-            logging.error(
-                "release notes for version %s contain no commits that would be published."
+            raise ValueError(
+                "Release notes for version %s contain no commits that would be published"
+                % version
             )
             return
         # TODO: parse markdown to check formatting is correct
