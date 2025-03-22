@@ -63,7 +63,7 @@ async fn sync_all() {
             let metrics_manager = METRICS_MANAGER.with(|m| m.clone());
             let subnets_list = registry::subnets_list();
 
-            metrics_manager.borrow_mut().update_subnets_metrics(subnets_list).await;
+            metrics_manager.update_subnets_metrics(subnets_list).await;
             PROMETHEUS_METRICS.with_borrow_mut(|m| m.mark_last_calculation_success());
             ic_cdk::println!("Successfully synced subnets metrics and local registry");
         }
@@ -88,7 +88,7 @@ fn setup_timers() {
     ic_cdk_timers::set_timer_interval(std::time::Duration::from_secs(HOUR_IN_SECONDS), || {
         ic_cdk::spawn(async {
             let metrics_manager = METRICS_MANAGER.with(|m| m.clone());
-            metrics_manager.borrow_mut().retry_failed_subnets().await;
+            metrics_manager.retry_failed_subnets().await;
         });
     });
 }

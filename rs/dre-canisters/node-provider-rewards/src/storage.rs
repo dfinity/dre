@@ -18,15 +18,15 @@ thread_local! {
     pub static MEMORY_MANAGER: RefCell<MemoryManager<DefaultMemoryImpl>> =
         RefCell::new(MemoryManager::init(DefaultMemoryImpl::default()));
 
-    pub static METRICS_MANAGER: Rc<Rc<RefCell<MetricsManager<VM>>>> = {
+    pub static METRICS_MANAGER: Rc<MetricsManager<VM>> = {
         let metrics_manager = MetricsManager {
             client: Box::new(ICCanisterClient),
-            subnets_to_retry: stable_btreemap_init(SUBNETS_TO_RETRY_MEMORY_ID),
-            subnets_metrics: stable_btreemap_init(SUBNETS_METRICS_MEMORY_ID),
-            last_timestamp_per_subnet: stable_btreemap_init(LAST_TIMESTAMP_PER_SUBNET_MEMORY_ID),
+            subnets_to_retry: RefCell::new(stable_btreemap_init(SUBNETS_TO_RETRY_MEMORY_ID)),
+            subnets_metrics: RefCell::new(stable_btreemap_init(SUBNETS_METRICS_MEMORY_ID)),
+            last_timestamp_per_subnet: RefCell::new(stable_btreemap_init(LAST_TIMESTAMP_PER_SUBNET_MEMORY_ID)),
         };
 
-        Rc::new(Rc::new(RefCell::new(metrics_manager)))
+        Rc::new(metrics_manager)
     };
 
     pub static STATE: RefCell<State> = RefCell::new(State::init());
