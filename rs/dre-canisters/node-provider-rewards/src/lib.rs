@@ -1,7 +1,6 @@
 use crate::canister_client::ICCanisterClient;
-use crate::metrics::MetricsManager;
 use crate::registry_store::CanisterRegistryStore;
-use crate::storage::{metrics_manager_rc, State, VM};
+use crate::storage::{State, METRICS_MANAGER, VM};
 use ic_canisters_http_types::{HttpRequest, HttpResponse, HttpResponseBuilder};
 use ic_cdk_macros::*;
 use ic_nervous_system_common::serve_metrics;
@@ -61,9 +60,10 @@ async fn sync_all() {
 
     match registry_sync_result {
         Ok(_) => {
+            let metrics_manager = METRICS_MANAGER.with(|m| m.clone());
             let subnets_list = registry::subnets_list();
 
-            MetricsManager::update_subnets_metrics(metrics_manager_rc(), subnets_list).await;
+            metrics_manager.update_subnets_metrics(subnets_list).await;
             PROMETHEUS_METRICS.with_borrow_mut(|m| m.mark_last_calculation_success());
             ic_cdk::println!("Successfully synced subnets metrics and local registry");
         }
@@ -86,7 +86,10 @@ fn setup_timers() {
 
     // Retry subnets fetching every hour
     ic_cdk_timers::set_timer_interval(std::time::Duration::from_secs(HOUR_IN_SECONDS), || {
-        ic_cdk::spawn(MetricsManager::retry_failed_subnets(metrics_manager_rc()));
+        ic_cdk::spawn(async {
+            let metrics_manager = METRICS_MANAGER.with(|m| m.clone());
+            metrics_manager.retry_failed_subnets().await;
+        });
     });
 }
 
