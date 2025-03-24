@@ -60,3 +60,10 @@ pub fn subnets_list() -> Vec<SubnetId> {
         .map(|(subnet_id, _)| PrincipalId::from_str(subnet_id).map(SubnetId::from).expect("Invalid subnet id"))
         .collect()
 }
+
+pub fn get_rewards_table() -> Vec<SubnetId> {
+    get_family_entries::<SubnetRecord>()
+        .iter()
+        .map(|(subnet_id, _)| PrincipalId::from_str(subnet_id).map(SubnetId::from).expect("Invalid subnet id"))
+        .collect()
+}

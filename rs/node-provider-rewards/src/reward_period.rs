@@ -1,8 +1,10 @@
+use candid::{CandidType, Deserialize};
 use ic_types::Time;
 use std::error::Error;
 use std::fmt;
 use std::fmt::Display;
 use std::ops::Deref;
+use std::time::Duration;
 
 pub type TimestampNanos = u64;
 pub const NANOS_PER_DAY: TimestampNanos = 24 * 60 * 60 * 1_000_000_000;
@@ -20,9 +22,9 @@ fn current_time() -> Time {
 
 // Wrapper types for TimestampNanos.
 // Used to ensure that the wrapped timestamp is aligned to the start/end of the day.
-#[derive(Debug, Copy, Clone, PartialEq, Eq)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq, CandidType, Deserialize)]
 pub struct TimestampNanosAtDayStart(TimestampNanos);
-#[derive(Debug, Copy, Clone, PartialEq, Eq)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq, CandidType, Deserialize)]
 pub struct TimestampNanosAtDayEnd(TimestampNanos);
 
 impl From<TimestampNanos> for TimestampNanosAtDayStart {
@@ -62,7 +64,7 @@ impl Deref for TimestampNanosAtDayStart {
 /// with the invariant defined in [`ic_replicated_state::metadata_state::BlockmakerMetricsTimeSeries`].
 ///
 /// TODO: This should be moved to NPR canister crate.
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, CandidType, Deserialize)]
 pub struct RewardPeriod {
     pub start_ts: TimestampNanosAtDayStart,
     pub end_ts: TimestampNanosAtDayEnd,

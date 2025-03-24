@@ -1,10 +1,17 @@
 use crate::canister_client::ICCanisterClient;
 use crate::registry_store::CanisterRegistryStore;
 use crate::storage::{State, METRICS_MANAGER, VM};
+use candid::candid_method;
+use ic_base_types::NodeId;
 use ic_canisters_http_types::{HttpRequest, HttpResponse, HttpResponseBuilder};
 use ic_cdk_macros::*;
 use ic_nervous_system_common::serve_metrics;
+use ic_protobuf::registry::node_rewards::v2::NodeRewardsTable;
+use node_provider_rewards::calculate_rewards;
+use node_provider_rewards::reward_period::RewardPeriod;
+use node_provider_rewards::types::RewardableNode;
 use std::cell::RefCell;
+use std::collections::BTreeMap;
 
 mod canister_client;
 mod metrics;
@@ -155,4 +162,16 @@ fn http_request(request: HttpRequest) -> HttpResponse {
         "/metrics" => serve_metrics(|encoder| PROMETHEUS_METRICS.with(|m| encode_metrics(&m.borrow(), encoder))),
         _ => HttpResponseBuilder::not_found().build(),
     }
+}
+
+#[update]
+#[candid_method(update, rename = "get_node_providers_monthly_xdr_rewards")]
+fn get_node_providers_monthly_xdr_rewards_(reward_period: RewardPeriod) -> HttpResponse {
+    let metrics_manager = METRICS_MANAGER.with(|m| m.clone());
+    calculate_rewards(
+        &RewardPeriod,
+        registry::get_rewards_table(),
+        &metrics_manager.get_metrics_by_node(reward_period.start_ts, reward_period.end_ts),
+        &registry::get_rewardable_nodes(),
+    )
 }

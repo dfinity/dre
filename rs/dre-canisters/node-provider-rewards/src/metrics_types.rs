@@ -1,6 +1,6 @@
 use crate::metrics::TimestampNanos;
-use candid::{CandidType, Decode, Encode};
-use ic_base_types::SubnetId;
+use candid::{CandidType, Decode, Encode, Principal};
+use ic_base_types::{PrincipalId, SubnetId};
 use ic_management_canister_types::NodeMetrics;
 use ic_stable_structures::storable::Bound;
 use ic_stable_structures::Storable;
@@ -12,6 +12,14 @@ use std::ops::Deref;
 const MAX_BYTES_SUBNET_ID_STORED: u32 = 38;
 const MAX_BYTES_NODE_METRICS_STORED_KEY: u32 = 60;
 const MAX_BYTES_NODE_METRICS_STORED: u32 = 76;
+
+lazy_static! {
+    pub static ref MIN_STRING: String = String::from("");
+    pub static ref MAX_STRING: String = String::from("\u{10FFFF}");
+    static ref MIN_PRINCIPAL_ID: Principal = Principal::try_from(vec![]).expect("Unable to construct MIN_PRINCIPAL_ID.");
+    static ref MAX_PRINCIPAL_ID: Principal =
+        Principal::try_from(vec![0xFF_u8; Principal::MAX_LENGTH_IN_BYTES]).expect("Unable to construct MAX_PRINCIPAL_ID.");
+}
 
 #[test]
 fn max_bound_size() {

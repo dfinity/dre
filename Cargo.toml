@@ -208,6 +208,7 @@ ic-cdk-macros = { git = "https://github.com/dfinity/cdk-rs.git", rev = "929fd0b3
 ic-stable-structures = "0.6.8"
 dfn_core = { git = "https://github.com/dfinity/ic.git", rev = "c22d478ad97f82bd5d378862c9dd2f13afe2ece1" }
 node-provider-rewards-lib = { path = "rs/dre-canisters/node-provider-rewards-lib" }
+node-provider-rewards = { path = "rs/node-provider-rewards" }
 
 # dre-airflow deps, should be replaced with dre-airflow once
 indexmap = { version = "2.8.0", features = ["serde"] }

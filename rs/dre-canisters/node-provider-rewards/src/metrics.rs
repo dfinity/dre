@@ -1,9 +1,12 @@
 use crate::metrics_types::{StorableSubnetMetrics, StorableSubnetMetricsKey, SubnetIdStored};
 use async_trait::async_trait;
-use ic_base_types::SubnetId;
+use ic_base_types::{NodeId, PrincipalId, SubnetId};
 use ic_cdk::api::call::CallResult;
 use ic_management_canister_types::{NodeMetricsHistoryArgs, NodeMetricsHistoryResponse};
 use ic_stable_structures::StableBTreeMap;
+use itertools::Itertools;
+use node_provider_rewards::metrics::NodeDailyMetrics;
+use node_provider_rewards::reward_period::{TimestampNanosAtDayEnd, TimestampNanosAtDayStart, NANOS_PER_DAY};
 use std::cell::RefCell;
 use std::collections::BTreeMap;
 
@@ -115,6 +118,53 @@ where
                 }
             }
         }
+    }
+
+    /// Fetches subnets metrics for the specified subnets from their last timestamp.
+    pub fn get_metrics_by_node(&self, start_ts: TimestampNanosAtDayStart, end_ts: TimestampNanosAtDayEnd) -> BTreeMap<NodeId, Vec<NodeDailyMetrics>> {
+        let start_key = StorableSubnetMetricsKey {
+            timestamp_nanos: *start_ts - NANOS_PER_DAY,
+            subnet_id: SubnetId::from(PrincipalId::from(Principal::)),
+        };
+
+        let end_key = StorableSubnetMetricsKey {
+            timestamp_nanos: *end_ts,
+            subnet_id: SubnetId::from(PrincipalId::max_value()),
+        };
+
+        self.subnets_metrics
+            .borrow()
+            .range(start_key..=end_key)
+            .into_iter()
+            .flat_map(|(key, nodes_metrics)| {
+                nodes_metrics
+                    .0
+                    .into_iter()
+                    .map(move |metrics| (key.timestamp_nanos, key.subnet_id, metrics))
+            })
+            // TODO: Check if order preserved
+            .into_group_map_by(|(_, subnet_id, metrics)| metrics.node_id)
+            .into_iter()
+            .map(|(node_id, mut entries)| {
+                let (daily_metrics, _) = entries.into_iter().fold(
+                    (Vec::new(), (0, 0)),
+                    |(mut acc, (prev_proposed, prev_failed)), (ts, subnet_id, node_metrics)| {
+                        let current_proposed = node_metrics.num_blocks_proposed_total;
+                        let current_failed = node_metrics.num_block_failures_total;
+
+                        let (num_blocks_proposed, num_blocks_failed) = if prev_proposed > current_proposed || prev_failed > current_failed {
+                            (current_proposed, current_failed)
+                        } else {
+                            (current_proposed - prev_proposed, current_failed - prev_failed)
+                        };
+
+                        acc.push(NodeDailyMetrics::new(ts, subnet_id, num_blocks_proposed, num_blocks_failed));
+                        (acc, (current_proposed, current_failed))
+                    },
+                );
+                (NodeId::from(node_id), daily_metrics)
+            })
+            .collect()
     }
 }
 

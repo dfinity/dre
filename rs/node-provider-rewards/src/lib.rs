@@ -12,10 +12,10 @@ use std::error::Error;
 use std::fmt;
 
 mod execution_context;
-mod metrics;
-mod reward_period;
+pub mod metrics;
+pub mod reward_period;
 mod tabled;
-mod types;
+pub mod types;
 
 pub struct RewardsPerNodeProvider {
     pub rewards_per_provider: BTreeMap<PrincipalId, Decimal>,
