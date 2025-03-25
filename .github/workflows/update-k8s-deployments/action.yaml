@@ -42,7 +42,7 @@ runs:
         git config user.email "idx@dfinity.org"
         git config user.name "IDX Automation"
         SOURCE_BRANCH="${{ github.head_ref || github.ref_name }}"
-        K8S_REPO_BRANCH="update-$(basename $GITHUB_REPOSITORY)-$COMPONENT-images-from-$SOURCE_BRANCH"
+        K8S_REPO_BRANCH="$( echo "update-$(basename $GITHUB_REPOSITORY)-$COMPONENT-images-from-$SOURCE_BRANCH" | tr -cd '[:alnum:]._-' )"
         git checkout -b "${K8S_REPO_BRANCH}"
 
         # Update the internal dashboard image refs
@@ -98,6 +98,9 @@ runs:
               body: 'Updating container images to incorporate [these changes](https://github.com/${{ github.repository }}/compare/${{ steps.create-rollout-commit.outputs.previous_ref }}..${{ steps.create-rollout-commit.outputs.current_ref }}).',
             });
             console.log("Updated pull request " + pulldata[0].number);
+            await core.summary
+              .addLink('Pull request to roll out ${{ inputs.component }} updated.', 'https://github.com/dfinity-ops/k8s/pull/' + pulldata[0].number)
+              .write()
             return result;
           } else {
             var result = await github.rest.pulls.create({
@@ -111,5 +114,8 @@ runs:
             });
             console.log("Created pull request:");
             console.log(result);
+            await core.summary
+              .addLink('Pull request to roll out ${{ inputs.component }} created.', 'https://github.com/dfinity-ops/k8s/pull/' + result.data.number)
+              .write()
             return result;
           }
