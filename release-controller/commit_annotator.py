@@ -12,7 +12,7 @@ sys.path.append(os.path.join(os.path.dirname(__file__)))
 
 from git_repo import GitRepo, GitRepoAnnotator, GitRepoBehavior
 from datetime import datetime
-from tenacity import retry, stop_after_attempt
+from tenacity import retry, stop_after_delay, retry_if_exception_type
 from util import resolve_binary, conventional_logging
 from watchdog import Watchdog
 
@@ -53,7 +53,11 @@ def release_branch_date(branch: str) -> typing.Optional[datetime]:
 
 
 # target-determinator sometimes fails on first few tries
-@retry(stop=stop_after_attempt(10))
+# we will therefore blow up after 180 seconds
+@retry(
+    stop=stop_after_delay(180),
+    retry=retry_if_exception_type(subprocess.CalledProcessError),
+)
 def target_determinator(ic_repo: GitRepoAnnotator, object: str) -> bool:
     logger = _LOGGER.getChild("target_determinator").getChild(object)
     logger.debug("Attempting to determine target")
@@ -70,13 +74,9 @@ def target_determinator(ic_repo: GitRepoAnnotator, object: str) -> bool:
         cwd=ic_repo.dir,
         check=True,
         stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
     )
     output = p.stdout.decode().strip()
-    logger.debug(f"stdout of target determinator for {object}: '{output}'")
-    logger.debug(
-        f"stderr of target determinator for {object}: '{p.stderr.decode().strip()}'"
-    )
+    logger.debug(f"stdout of target determinator for {object}: %s", output)
     return output != ""
 
 
