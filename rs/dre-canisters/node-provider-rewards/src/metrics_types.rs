@@ -4,6 +4,7 @@ use ic_base_types::{PrincipalId, SubnetId};
 use ic_management_canister_types::NodeMetrics;
 use ic_stable_structures::storable::Bound;
 use ic_stable_structures::Storable;
+use lazy_static::lazy_static;
 use serde::Deserialize;
 use std::borrow::Cow;
 use std::ops::Deref;
@@ -12,29 +13,20 @@ use std::ops::Deref;
 const MAX_BYTES_SUBNET_ID_STORED: u32 = 38;
 const MAX_BYTES_NODE_METRICS_STORED_KEY: u32 = 60;
 const MAX_BYTES_NODE_METRICS_STORED: u32 = 76;
+const PRINCIPAL_MAX_LENGTH_IN_BYTES: usize = 29;
 
-lazy_static! {
-    pub static ref MIN_STRING: String = String::from("");
-    pub static ref MAX_STRING: String = String::from("\u{10FFFF}");
-    static ref MIN_PRINCIPAL_ID: Principal = Principal::try_from(vec![]).expect("Unable to construct MIN_PRINCIPAL_ID.");
-    static ref MAX_PRINCIPAL_ID: Principal =
-        Principal::try_from(vec![0xFF_u8; Principal::MAX_LENGTH_IN_BYTES]).expect("Unable to construct MAX_PRINCIPAL_ID.");
-}
+pub const MIN_PRINCIPAL_ID: PrincipalId = PrincipalId(Principal::from_slice(&[]));
+pub const MAX_PRINCIPAL_ID: PrincipalId = PrincipalId(Principal::from_slice(&[0xFF; PRINCIPAL_MAX_LENGTH_IN_BYTES]));
 
 #[test]
 fn max_bound_size() {
-    use candid::Principal;
-    use ic_base_types::PrincipalId;
-
-    let max_principal_id = PrincipalId::from(Principal::from_slice(&[0xFF; 29]));
-
-    let max_subnet_id_stored = SubnetIdStored(max_principal_id.into());
+    let max_subnet_id_stored = SubnetIdStored(MAX_PRINCIPAL_ID.into());
     let max_node_metrics_stored_key = StorableSubnetMetricsKey {
         timestamp_nanos: u64::MAX,
-        subnet_id: max_principal_id.into(),
+        subnet_id: MAX_PRINCIPAL_ID.into(),
     };
     let max_node_metrics_stored = StorableSubnetMetrics(vec![NodeMetrics {
-        node_id: max_principal_id,
+        node_id: MAX_PRINCIPAL_ID.into(),
         num_blocks_proposed_total: u64::MAX,
         num_block_failures_total: u64::MAX,
     }]);

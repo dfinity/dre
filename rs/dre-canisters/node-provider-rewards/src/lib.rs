@@ -168,10 +168,10 @@ fn http_request(request: HttpRequest) -> HttpResponse {
 #[candid_method(update, rename = "get_node_providers_monthly_xdr_rewards")]
 fn get_node_providers_monthly_xdr_rewards_(reward_period: RewardPeriod) -> HttpResponse {
     let metrics_manager = METRICS_MANAGER.with(|m| m.clone());
-    calculate_rewards(
-        &RewardPeriod,
-        registry::get_rewards_table(),
-        &metrics_manager.get_metrics_by_node(reward_period.start_ts, reward_period.end_ts),
-        &registry::get_rewardable_nodes(),
-    )
+
+    let daily_metrics_by_node = metrics_manager.get_daily_metrics_by_node(*reward_period.start_ts, *reward_period.end_ts);
+    let rewards_table = registry::get_rewards_table();
+    let rewardable_nodes = registry::get_rewardable_nodes(*reward_period.start_ts, *reward_period.end_ts);
+
+    calculate_rewards(&reward_period, &rewards_table, &daily_metrics_by_node, &rewardable_nodes)
 }

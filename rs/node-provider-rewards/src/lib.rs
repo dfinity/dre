@@ -32,18 +32,18 @@ pub struct RewardsPerNodeProvider {
 pub fn calculate_rewards(
     reward_period: &RewardPeriod,
     rewards_table: &NodeRewardsTable,
-    metrics_by_node: &BTreeMap<NodeId, Vec<NodeDailyMetrics>>,
+    daily_metrics_by_node: &BTreeMap<NodeId, Vec<NodeDailyMetrics>>,
     rewardable_nodes: &[RewardableNode],
 ) -> Result<RewardsPerNodeProvider, RewardCalculationError> {
     let mut rewards_per_provider = BTreeMap::new();
     let mut computation_table_per_provider = BTreeMap::new();
     let all_nodes = nodes_ids(rewardable_nodes);
 
-    validate_input(reward_period, metrics_by_node, &all_nodes)?;
+    validate_input(reward_period, daily_metrics_by_node, &all_nodes)?;
 
     let ctx = ExecutionContext::new(
-        nodes_failure_rates_in_period(&all_nodes, reward_period, metrics_by_node),
-        subnets_failure_rates(metrics_by_node),
+        nodes_failure_rates_in_period(&all_nodes, reward_period, daily_metrics_by_node),
+        subnets_failure_rates(daily_metrics_by_node),
         rewards_table.clone(),
     );
 
