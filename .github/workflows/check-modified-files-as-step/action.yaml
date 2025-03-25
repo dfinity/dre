@@ -3,7 +3,7 @@ description: Reusable action for checking if a file path is modified as a step. 
 
 inputs:
   path:
-    description: 'Path to check'
+    description: "Path to check"
     required: true
 
 runs:
@@ -13,7 +13,7 @@ runs:
     # Check to see if files changed
     ########################################
     - name: "🔍 Check if $PATH_TO_CHECK is modified in last commit "
-      env: 
+      env:
         PATH_TO_CHECK: ${{ inputs.path }}
       shell: bash
       run: |
@@ -21,7 +21,7 @@ runs:
 
         echo "=============== list modified files ==============="
         git diff --name-only HEAD^ HEAD
-        
+
         echo "========== check paths of modified files =========="
         git diff --name-only HEAD^ HEAD > files.txt
         while IFS= read -r file
@@ -29,9 +29,11 @@ runs:
         echo $file
         if [[ $file != $PATH_TO_CHECK ]]; then
           echo "changed=false" >> $GITHUB_ENV
+          echo "changed=false" >> $GITHUB_OUTPUT
         else
           echo "File $file matches $PATH_TO_CHECK"
           echo "changed=true" >> $GITHUB_ENV
+          echo "changed=true" >> $GITHUB_OUTPUT
           break
         fi
         done < files.txt

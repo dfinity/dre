@@ -108,13 +108,17 @@ jobs:
         with:
           path: dashboard/*
 
+      - name: "❓ Check if release-controller/* changed in last commit"
+        id: check-release-controller-modified
+        uses: ./.github/workflows/check-modified-files-as-step
+        with:
+          path: release-controller/*
+
       - name: "💲 Setting correct paths to update"
         id: paths
         shell: bash
         run: |
           files=(
-            bases/apps/ic-release-controller/controller/controller.yaml
-            bases/apps/ic-release-controller/commit-annotator/commit-annotator.yaml
             bases/apps/mainnet-dashboard/backend/base/deployment.yaml
             bases/apps/mainnet-dashboard/statefulset-slack.yaml
             bases/apps/service-discovery/service-discovery.yaml
@@ -130,6 +134,7 @@ jobs:
           echo "Output of this step:"
           echo ${files[@]}
           echo "files=${files[@]}" >> $GITHUB_ENV
+          echo "files=${files[@]}" >> $GITHUB_OUTPUT
 
       ########################################
       # Deploy to github pages
@@ -148,8 +153,17 @@ jobs:
         if: ${{ github.ref == 'refs/heads/main' }}
         uses: ./.github/workflows/update-k8s-deployments
         with:
+          files-to-update: ${{ steps.paths.outputs.files }}
           push-token: ${{ secrets.K8S_API_TOKEN }}
           component: containers
+
+      - name: "🤖 Update k8s deployments for release controller"
+        if: ${{ github.ref == 'refs/heads/main' && steps.check-release-controller-modified.outputs.changed == 'true' }}
+        uses: ./.github/workflows/update-k8s-deployments
+        with:
+          files-to-update: bases/apps/ic-release-controller/controller/controller.yaml bases/apps/ic-release-controller/commit-annotator/commit-annotator.yaml
+          push-token: ${{ secrets.K8S_API_TOKEN }}
+          component: release controller
 
       ########################################
       # Clean up runner
