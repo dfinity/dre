@@ -12,7 +12,7 @@ sys.path.append(os.path.join(os.path.dirname(__file__)))
 
 from git_repo import GitRepo, GitRepoAnnotator, GitRepoBehavior
 from datetime import datetime
-from tenacity import retry, stop_after_delay, retry_if_exception_type
+from tenacity import retry, stop_after_delay, retry_if_exception_type, after_log
 from util import resolve_binary, conventional_logging
 from watchdog import Watchdog
 
@@ -57,6 +57,7 @@ def release_branch_date(branch: str) -> typing.Optional[datetime]:
 @retry(
     stop=stop_after_delay(180),
     retry=retry_if_exception_type(subprocess.CalledProcessError),
+    after=after_log(_LOGGER, logging.ERROR),
 )
 def target_determinator(ic_repo: GitRepoAnnotator, object: str) -> bool:
     logger = _LOGGER.getChild("target_determinator").getChild(object)
