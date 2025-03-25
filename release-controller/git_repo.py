@@ -242,7 +242,7 @@ class GitRepo:
                 cwd=self.dir,
             )
         else:
-            _LOGGER.info("Cloning repository %s to %s", self.repo, self.dir)
+            _LOGGER.info("Cloning repository to %s", self.dir)
             os.makedirs(self.dir, exist_ok=True)
             check_call(
                 [
