@@ -21,7 +21,7 @@ runs:
         repository: dfinity-ops/k8s
         token: ${{ inputs.push-token }}
         ref: main
-        fetch-depth: 10
+        fetch-depth: 2
         path: k8s
     - name: "Create rollout commit with updated container images"
       id: "create-rollout-commit"
@@ -100,7 +100,7 @@ runs:
             console.log("Updated pull request " + pulldata[0].number);
             await core.summary
               .addLink('Pull request to roll out ${{ inputs.component }} updated.', 'https://github.com/dfinity-ops/k8s/pull/' + pulldata[0].number)
-              .write()
+              .write();
             return result;
           } else {
             var result = await github.rest.pulls.create({
@@ -116,6 +116,6 @@ runs:
             console.log(result);
             await core.summary
               .addLink('Pull request to roll out ${{ inputs.component }} created.', 'https://github.com/dfinity-ops/k8s/pull/' + result.data.number)
-              .write()
+              .write();
             return result;
           }
