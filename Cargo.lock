@@ -6112,6 +6112,7 @@ dependencies = [
 name = "node-provider-rewards"
 version = "0.6.2"
 dependencies = [
+ "candid",
  "chrono",
  "ic-base-types",
  "ic-protobuf",
@@ -6121,6 +6122,7 @@ dependencies = [
  "num-traits",
  "rust_decimal",
  "rust_decimal_macros",
+ "serde",
  "tabled",
 ]
 
@@ -6149,7 +6151,10 @@ dependencies = [
  "ic-stable-structures",
  "ic-types",
  "indexmap 2.8.0",
+ "itertools 0.13.0",
+ "lazy_static",
  "mockall",
+ "node-provider-rewards",
  "serde",
  "thiserror 2.0.12",
  "tokio",

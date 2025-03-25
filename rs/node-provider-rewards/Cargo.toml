@@ -16,6 +16,8 @@ rust_decimal = { workspace = true }
 rust_decimal_macros = { workspace = true }
 tabled = { workspace = true }
 chrono = { workspace = true }
+candid = { workspace = true }
+serde = { workspace = true }
 ic-protobuf = { workspace = true }
 indexmap = { workspace = true }
 

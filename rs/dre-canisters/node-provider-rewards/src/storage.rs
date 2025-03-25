@@ -22,7 +22,7 @@ thread_local! {
         let metrics_manager = MetricsManager {
             client: Box::new(ICCanisterClient),
             subnets_to_retry: RefCell::new(stable_btreemap_init(SUBNETS_TO_RETRY_MEMORY_ID)),
-            subnets_metrics: RefCell::new(stable_btreemap_init(SUBNETS_METRICS_MEMORY_ID)),
+            nodes_metrics: RefCell::new(stable_btreemap_init(SUBNETS_METRICS_MEMORY_ID)),
             last_timestamp_per_subnet: RefCell::new(stable_btreemap_init(LAST_TIMESTAMP_PER_SUBNET_MEMORY_ID)),
         };
 

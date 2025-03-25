@@ -1,9 +1,12 @@
 use crate::canister_client::ICCanisterClient;
 use crate::registry_store::CanisterRegistryStore;
 use crate::storage::{State, METRICS_MANAGER, VM};
+use candid::candid_method;
 use ic_canisters_http_types::{HttpRequest, HttpResponse, HttpResponseBuilder};
 use ic_cdk_macros::*;
 use ic_nervous_system_common::serve_metrics;
+use node_provider_rewards::calculate_rewards;
+use node_provider_rewards::reward_period::RewardPeriod;
 use std::cell::RefCell;
 
 mod canister_client;
@@ -101,6 +104,18 @@ fn init() {
 #[post_upgrade]
 fn post_upgrade() {
     setup_timers();
+}
+
+#[update]
+#[candid_method(update, rename = "get_node_providers_monthly_xdr_rewards")]
+fn get_node_providers_monthly_xdr_rewards_(reward_period: RewardPeriod) -> HttpResponse {
+    let metrics_manager = METRICS_MANAGER.with(|m| m.clone());
+
+    let daily_metrics_by_node = metrics_manager.get_daily_metrics_by_node(*reward_period.start_ts, *reward_period.end_ts);
+    let rewards_table = registry::get_rewards_table();
+    let rewardable_nodes = registry::get_rewardable_nodes(*reward_period.start_ts, *reward_period.end_ts);
+
+    calculate_rewards(&reward_period, &rewards_table, &daily_metrics_by_node, &rewardable_nodes)
 }
 
 pub fn encode_metrics(metrics: &PrometheusMetrics, w: &mut ic_metrics_encoder::MetricsEncoder<Vec<u8>>) -> std::io::Result<()> {

@@ -1,8 +1,8 @@
 use crate::metrics::MetricsManager;
-use crate::metrics_types::StorableSubnetMetricsKey;
-use ic_base_types::{PrincipalId, SubnetId};
+use crate::metrics_types::StorableNodeMetricsKey;
+use ic_base_types::{NodeId, PrincipalId, SubnetId};
 use ic_cdk::api::call::{CallResult, RejectionCode};
-use ic_management_canister_types::NodeMetricsHistoryResponse;
+use ic_management_canister_types::{NodeMetrics, NodeMetricsHistoryResponse};
 use ic_stable_structures::memory_manager::{MemoryId, VirtualMemory};
 use ic_stable_structures::DefaultMemoryImpl;
 use std::cell::RefCell;
@@ -30,23 +30,34 @@ fn subnet_id(id: u64) -> ic_base_types::SubnetId {
     PrincipalId::new_subnet_test_id(id).into()
 }
 
+fn node_id(id: u64) -> ic_base_types::NodeId {
+    PrincipalId::new_node_test_id(id).into()
+}
+
 impl MetricsManager<VM> {
     fn new(client: mock::MockCanisterClient) -> Self {
         Self {
             client: Box::new(client),
-            subnets_metrics: RefCell::new(crate::storage::stable_btreemap_init(MemoryId::new(0))),
+            nodes_metrics: RefCell::new(crate::storage::stable_btreemap_init(MemoryId::new(0))),
             subnets_to_retry: RefCell::new(crate::storage::stable_btreemap_init(MemoryId::new(1))),
             last_timestamp_per_subnet: RefCell::new(crate::storage::stable_btreemap_init(MemoryId::new(2))),
         }
     }
 }
 
-fn node_metrics_history_gen(days: u64) -> Vec<NodeMetricsHistoryResponse> {
+fn node_metrics_history_gen(days: u64, nodes: Vec<NodeId>) -> Vec<NodeMetricsHistoryResponse> {
     let mut result = Vec::new();
     for i in 0..days {
+        let node_metrics = nodes
+            .iter()
+            .map(|node| NodeMetrics {
+                node_id: node.get(),
+                ..Default::default()
+            })
+            .collect();
         result.push(NodeMetricsHistoryResponse {
             timestamp_nanos: i * ONE_DAY_NANOS,
-            ..Default::default()
+            node_metrics,
         });
     }
     result
@@ -55,20 +66,22 @@ fn node_metrics_history_gen(days: u64) -> Vec<NodeMetricsHistoryResponse> {
 #[tokio::test]
 async fn subnet_metrics_added_correctly() {
     let days = 45;
+    let node_1 = node_id(1);
     let mut mock = mock::MockCanisterClient::new();
     mock.expect_node_metrics_history()
-        .return_const(CallResult::Ok((node_metrics_history_gen(days),)));
+        .return_const(CallResult::Ok((node_metrics_history_gen(days, vec![node_1]),)));
     let mm = MetricsManager::new(mock);
 
     let subnet_1 = subnet_id(1);
 
     mm.update_subnets_metrics(vec![subnet_1]).await;
     for i in 0..days {
-        let key = StorableSubnetMetricsKey {
-            timestamp_nanos: i * ONE_DAY_NANOS,
-            subnet_id: subnet_1,
+        let key = StorableNodeMetricsKey {
+            ts: i * ONE_DAY_NANOS,
+            node_id: node_1,
+            subnet_assigned: subnet_1,
         };
-        assert!(mm.subnets_metrics.borrow().get(&key).is_some());
+        assert!(mm.nodes_metrics.borrow().get(&key).is_some());
     }
 }
 
@@ -81,7 +94,7 @@ async fn subnets_to_retry_filled() {
         .return_const(CallResult::Err((RejectionCode::Unknown, "Error".to_string())));
     mock.expect_node_metrics_history()
         .times(1)
-        .return_const(CallResult::Ok((node_metrics_history_gen(2),)));
+        .return_const(CallResult::Ok((node_metrics_history_gen(2, vec![]),)));
 
     let mm = MetricsManager::new(mock);
     mm.update_subnets_metrics(vec![subnet_1]).await;
@@ -95,10 +108,12 @@ async fn subnets_to_retry_filled() {
 #[tokio::test]
 async fn multiple_subnets_metrics_added_correctly() {
     let days = 30;
+    let node_1 = node_id(1);
+
     let mut mock = mock::MockCanisterClient::new();
 
     mock.expect_node_metrics_history()
-        .return_const(CallResult::Ok((node_metrics_history_gen(days),)));
+        .return_const(CallResult::Ok((node_metrics_history_gen(days, vec![node_1]),)));
     let mm = MetricsManager::new(mock);
     let subnet_1 = subnet_id(1);
     let subnet_2 = subnet_id(2);
@@ -107,11 +122,12 @@ async fn multiple_subnets_metrics_added_correctly() {
 
     for subnet in &[subnet_1, subnet_2] {
         for i in 0..days {
-            let key = StorableSubnetMetricsKey {
-                timestamp_nanos: i * ONE_DAY_NANOS,
-                subnet_id: *subnet,
+            let key = StorableNodeMetricsKey {
+                ts: i * ONE_DAY_NANOS,
+                node_id: node_1,
+                subnet_assigned: *subnet,
             };
-            assert!(mm.subnets_metrics.borrow().get(&key).is_some(), "Metrics missing for subnet {:?}", subnet);
+            assert!(mm.nodes_metrics.borrow().get(&key).is_some(), "Metrics missing for subnet {:?}", subnet);
         }
     }
 }
@@ -147,19 +163,21 @@ async fn no_metrics_added_when_call_fails() {
 
     mm.update_subnets_metrics(vec![subnet_1]).await;
 
-    assert!(mm.subnets_metrics.borrow().is_empty(), "Metrics should be empty after a failed call");
+    assert!(mm.nodes_metrics.borrow().is_empty(), "Metrics should be empty after a failed call");
 }
 
 #[tokio::test]
 async fn partial_failures_are_handled_correctly() {
     let subnet_1 = subnet_id(1);
     let subnet_2 = subnet_id(2);
+    let node_1 = node_id(1);
+
     let mut mock = mock::MockCanisterClient::new();
     mock.expect_node_metrics_history().returning(move |subnet| {
         if SubnetId::from(subnet.subnet_id) == subnet_1 {
             CallResult::Err((RejectionCode::Unknown, "Error".to_string()))
         } else {
-            CallResult::Ok((node_metrics_history_gen(1),))
+            CallResult::Ok((node_metrics_history_gen(1, vec![node_1]),))
         }
     });
 
@@ -177,18 +195,20 @@ async fn partial_failures_are_handled_correctly() {
         "Subnet 2 should not be in retry list"
     );
 
-    let key = StorableSubnetMetricsKey {
-        timestamp_nanos: 0,
-        subnet_id: subnet_1,
+    let key = StorableNodeMetricsKey {
+        ts: 0,
+        node_id: node_1,
+        subnet_assigned: subnet_1,
     };
     assert!(
-        mm.subnets_metrics.borrow().get(&key).is_none(),
+        mm.nodes_metrics.borrow().get(&key).is_none(),
         "Metrics should not be present for subnet 1"
     );
 
-    let key = StorableSubnetMetricsKey {
-        timestamp_nanos: 0,
-        subnet_id: subnet_2,
+    let key = StorableNodeMetricsKey {
+        ts: 0,
+        node_id: node_1,
+        subnet_assigned: subnet_2,
     };
-    assert!(mm.subnets_metrics.borrow().get(&key).is_some(), "Metrics should be present for subnet 2");
+    assert!(mm.nodes_metrics.borrow().get(&key).is_some(), "Metrics should be present for subnet 2");
 }
