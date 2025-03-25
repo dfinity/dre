@@ -103,7 +103,7 @@ jobs:
       # it also needs to be updated in k8s
       ########################################
       - name: "❓ Check if dashboard/* changed in last commit"
-        id: check
+        id: check-dashboard-frontend-modified
         uses: ./.github/workflows/check-modified-files-as-step
         with:
           path: dashboard/*
@@ -117,6 +117,8 @@ jobs:
       - name: "💲 Setting correct paths to update"
         id: paths
         shell: bash
+        env:
+          FRONTEND_CHANGED: ${{ steps.check-dashboard-frontend-modified.outputs.changed }}
         run: |
           files=(
             bases/apps/mainnet-dashboard/backend/base/deployment.yaml
@@ -124,7 +126,7 @@ jobs:
             bases/apps/service-discovery/service-discovery.yaml
             .github/workflows/dre-vector-configs.yaml
           )
-          if [[ $changed == "true" ]]; then
+          if [[ "$FRONTEND_CHANGED" == "true" ]]; then
             echo "Adding frontend to list of files"
             files+=( bases/apps/mainnet-dashboard/frontend/deployment.yaml )
           else
