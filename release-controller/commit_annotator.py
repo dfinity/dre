@@ -94,14 +94,18 @@ def annotate_object(ic_repo: GitRepoAnnotator, object: str) -> None:
         ],
         text=True,
         cwd=ic_repo.dir,
-    ).splitlines()
+    )
+    logger.debug(
+        f"stdout of bazel query deps({GUESTOS_BAZEL_TARGETS}) for {object}: %s",
+        bazel_query_output.rstrip(),
+    )
     ic_repo.add(
         object=object,
         namespace=GUESTOS_TARGETS_NOTES_NAMESPACE,
         content="\n".join(
             [
                 line
-                for line in bazel_query_output
+                for line in bazel_query_output.splitlines()
                 if line.strip() and not line.startswith("@")
             ]
         ),
