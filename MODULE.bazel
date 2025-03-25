@@ -116,8 +116,8 @@ http_file(
 
 http_file(
     name = "target_determinator",
-    sha256 = "306071a0037fd9074d7b878a9a489597878b6035606f8ed60ef9baaf81074228",
-    url = "https://github.com/bazel-contrib/target-determinator/releases/download/v0.28.0/target-determinator.linux.amd64",
+    sha256 = "6eaa8921e6c614c309536af3dc7ca23f52e5ced30b9032e6443bbe0d41a8ae33",
+    url = "https://github.com/bazel-contrib/target-determinator/releases/download/v0.30.3/target-determinator.linux.amd64",
     executable = True
 )
 

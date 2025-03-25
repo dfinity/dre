@@ -1,5 +1,5 @@
 {
-  "checksum": "70c4080eb6e6b36580daa5d5f29b92f5407f1c43f966bdeebbe2f2fba3e9bd56",
+  "checksum": "ac2be2a7601feed34988b627ade2f132ac4a1bfc3ddca0e88317f291b7c145f5",
   "crates": {
     "actix-codec 0.5.2": {
       "name": "actix-codec",
@@ -3271,14 +3271,14 @@
       ],
       "license_file": "LICENSE-APACHE"
     },
-    "backon 1.4.0": {
+    "backon 1.4.1": {
       "name": "backon",
-      "version": "1.4.0",
+      "version": "1.4.1",
       "package_url": "https://github.com/Xuanwo/backon",
       "repository": {
         "Http": {
-          "url": "https://static.crates.io/crates/backon/1.4.0/download",
-          "sha256": "49fef586913a57ff189f25c9b3d034356a5bf6b3fa9a7f067588fe1698ba1f5d"
+          "url": "https://static.crates.io/crates/backon/1.4.1/download",
+          "sha256": "970d91570c01a8a5959b36ad7dd1c30642df24b6b3068710066f6809f7033bb7"
         }
       },
       "targets": [
@@ -3628,7 +3628,7 @@
           }
         },
         "edition": "2021",
-        "version": "1.4.0"
+        "version": "1.4.1"
       },
       "license": "Apache-2.0",
       "license_ids": [
@@ -6230,7 +6230,7 @@
               "target": "anyhow"
             },
             {
-              "id": "clap 4.5.31",
+              "id": "clap 4.5.32",
               "target": "clap"
             },
             {
@@ -6246,7 +6246,7 @@
               "target": "pretty_env_logger"
             },
             {
-              "id": "reqwest 0.12.12",
+              "id": "reqwest 0.12.15",
               "target": "reqwest"
             },
             {
@@ -6937,14 +6937,14 @@
       ],
       "license_file": "LICENSE"
     },
-    "clap 4.5.31": {
+    "clap 4.5.32": {
       "name": "clap",
-      "version": "4.5.31",
+      "version": "4.5.32",
       "package_url": "https://github.com/clap-rs/clap",
       "repository": {
         "Http": {
-          "url": "https://static.crates.io/crates/clap/4.5.31/download",
-          "sha256": "027bb0d98429ae334a8698531da7077bdf906419543a35a55c2cb1b66437d767"
+          "url": "https://static.crates.io/crates/clap/4.5.32/download",
+          "sha256": "6088f3ae8c3608d19260cd7445411865a485688711b78b5be70d78cd96136f83"
         }
       },
       "targets": [
@@ -6986,7 +6986,7 @@
         "deps": {
           "common": [
             {
-              "id": "clap_builder 4.5.31",
+              "id": "clap_builder 4.5.32",
               "target": "clap_builder"
             }
           ],
@@ -6996,13 +6996,13 @@
         "proc_macro_deps": {
           "common": [
             {
-              "id": "clap_derive 4.5.28",
+              "id": "clap_derive 4.5.32",
               "target": "clap_derive"
             }
           ],
           "selects": {}
         },
-        "version": "4.5.31"
+        "version": "4.5.32"
       },
       "license": "MIT OR Apache-2.0",
       "license_ids": [
@@ -7058,14 +7058,14 @@
       ],
       "license_file": "LICENSE"
     },
-    "clap_builder 4.5.31": {
+    "clap_builder 4.5.32": {
       "name": "clap_builder",
-      "version": "4.5.31",
+      "version": "4.5.32",
       "package_url": "https://github.com/clap-rs/clap",
       "repository": {
         "Http": {
-          "url": "https://static.crates.io/crates/clap_builder/4.5.31/download",
-          "sha256": "5589e0cba072e0f3d23791efac0fd8627b49c829c196a492e88168e6a669d863"
+          "url": "https://static.crates.io/crates/clap_builder/4.5.32/download",
+          "sha256": "22a7ef7f676155edfb82daa97f99441f3ebf4a58d5e32f295a56259f1b6facc8"
         }
       },
       "targets": [
@@ -7128,7 +7128,7 @@
           "selects": {}
         },
         "edition": "2021",
-        "version": "4.5.31"
+        "version": "4.5.32"
       },
       "license": "MIT OR Apache-2.0",
       "license_ids": [
@@ -7137,14 +7137,14 @@
       ],
       "license_file": "LICENSE-APACHE"
     },
-    "clap_complete 4.5.46": {
+    "clap_complete 4.5.47": {
       "name": "clap_complete",
-      "version": "4.5.46",
+      "version": "4.5.47",
       "package_url": "https://github.com/clap-rs/clap",
       "repository": {
         "Http": {
-          "url": "https://static.crates.io/crates/clap_complete/4.5.46/download",
-          "sha256": "f5c5508ea23c5366f77e53f5a0070e5a84e51687ec3ef9e0464c86dc8d13ce98"
+          "url": "https://static.crates.io/crates/clap_complete/4.5.47/download",
+          "sha256": "c06f5378ea264ad4f82bbc826628b5aad714a75abf6ece087e923010eb937fb6"
         }
       },
       "targets": [
@@ -7175,14 +7175,14 @@
         "deps": {
           "common": [
             {
-              "id": "clap 4.5.31",
+              "id": "clap 4.5.32",
               "target": "clap"
             }
           ],
           "selects": {}
         },
         "edition": "2021",
-        "version": "4.5.46"
+        "version": "4.5.47"
       },
       "license": "MIT OR Apache-2.0",
       "license_ids": [
@@ -7191,14 +7191,14 @@
       ],
       "license_file": "LICENSE-APACHE"
     },
-    "clap_derive 4.5.28": {
+    "clap_derive 4.5.32": {
       "name": "clap_derive",
-      "version": "4.5.28",
+      "version": "4.5.32",
       "package_url": "https://github.com/clap-rs/clap",
       "repository": {
         "Http": {
-          "url": "https://static.crates.io/crates/clap_derive/4.5.28/download",
-          "sha256": "bf4ced95c6f4a675af3da73304b9ac4ed991640c36374e4b46795c49e17cf1ed"
+          "url": "https://static.crates.io/crates/clap_derive/4.5.32/download",
+          "sha256": "09176aae279615badda0765c0c0b3f6ed53f4709118af73cf4655d85d1530cd7"
         }
       },
       "targets": [
@@ -7248,7 +7248,7 @@
           "selects": {}
         },
         "edition": "2021",
-        "version": "4.5.28"
+        "version": "4.5.32"
       },
       "license": "MIT OR Apache-2.0",
       "license_ids": [
@@ -11375,7 +11375,7 @@
               "target": "shell_words"
             },
             {
-              "id": "tempfile 3.19.0",
+              "id": "tempfile 3.19.1",
               "target": "tempfile"
             },
             {
@@ -12086,7 +12086,7 @@
               "target": "anyhow"
             },
             {
-              "id": "backon 1.4.0",
+              "id": "backon 1.4.1",
               "target": "backon"
             },
             {
@@ -12098,7 +12098,7 @@
               "target": "chrono"
             },
             {
-              "id": "clap 4.5.31",
+              "id": "clap 4.5.32",
               "target": "clap"
             },
             {
@@ -12106,7 +12106,7 @@
               "target": "clap_num"
             },
             {
-              "id": "clap_complete 4.5.46",
+              "id": "clap_complete 4.5.47",
               "target": "clap_complete"
             },
             {
@@ -12274,7 +12274,7 @@
               "target": "registry_canister"
             },
             {
-              "id": "reqwest 0.12.12",
+              "id": "reqwest 0.12.15",
               "target": "reqwest"
             },
             {
@@ -12322,7 +12322,7 @@
               "target": "tabular"
             },
             {
-              "id": "tempfile 3.19.0",
+              "id": "tempfile 3.19.1",
               "target": "tempfile"
             },
             {
@@ -12367,7 +12367,7 @@
         "deps": {
           "common": [
             {
-              "id": "clap 4.5.31",
+              "id": "clap 4.5.32",
               "target": "clap"
             },
             {
@@ -12805,7 +12805,7 @@
         "deps": {
           "common": [
             {
-              "id": "tempfile 3.19.0",
+              "id": "tempfile 3.19.1",
               "target": "tempfile"
             },
             {
@@ -15291,7 +15291,7 @@
               "target": "chrono"
             },
             {
-              "id": "clap 4.5.31",
+              "id": "clap 4.5.32",
               "target": "clap"
             },
             {
@@ -18404,7 +18404,7 @@
               "target": "rangemap"
             },
             {
-              "id": "reqwest 0.12.12",
+              "id": "reqwest 0.12.15",
               "target": "reqwest"
             },
             {
@@ -19144,7 +19144,7 @@
               "target": "prost"
             },
             {
-              "id": "reqwest 0.12.12",
+              "id": "reqwest 0.12.15",
               "target": "reqwest"
             },
             {
@@ -20352,7 +20352,7 @@
               "target": "serde"
             },
             {
-              "id": "tempfile 3.19.0",
+              "id": "tempfile 3.19.1",
               "target": "tempfile"
             }
           ],
@@ -23580,7 +23580,7 @@
               "target": "anyhow"
             },
             {
-              "id": "backon 1.4.0",
+              "id": "backon 1.4.1",
               "target": "backon"
             },
             {
@@ -23592,7 +23592,7 @@
               "target": "chrono"
             },
             {
-              "id": "clap 4.5.31",
+              "id": "clap 4.5.32",
               "target": "clap"
             },
             {
@@ -23728,7 +23728,7 @@
               "target": "registry_canister"
             },
             {
-              "id": "reqwest 0.12.12",
+              "id": "reqwest 0.12.15",
               "target": "reqwest"
             },
             {
@@ -23965,7 +23965,7 @@
               "target": "registry_canister"
             },
             {
-              "id": "reqwest 0.12.12",
+              "id": "reqwest 0.12.15",
               "target": "reqwest"
             },
             {
@@ -24519,7 +24519,7 @@
               "target": "prost"
             },
             {
-              "id": "rust_decimal 1.36.0",
+              "id": "rust_decimal 1.37.1",
               "target": "rust_decimal"
             },
             {
@@ -24888,7 +24888,7 @@
         "deps": {
           "common": [
             {
-              "id": "rust_decimal 1.36.0",
+              "id": "rust_decimal 1.37.1",
               "target": "rust_decimal"
             }
           ],
@@ -25054,7 +25054,7 @@
               "target": "prost"
             },
             {
-              "id": "rust_decimal 1.36.0",
+              "id": "rust_decimal 1.37.1",
               "target": "rust_decimal"
             },
             {
@@ -25441,7 +25441,7 @@
               "target": "lazy_static"
             },
             {
-              "id": "rust_decimal 1.36.0",
+              "id": "rust_decimal 1.37.1",
               "target": "rust_decimal"
             },
             {
@@ -25459,7 +25459,7 @@
         "proc_macro_deps": {
           "common": [
             {
-              "id": "rust_decimal_macros 1.36.0",
+              "id": "rust_decimal_macros 1.37.1",
               "target": "rust_decimal_macros"
             }
           ],
@@ -25914,7 +25914,7 @@
               "target": "registry_canister"
             },
             {
-              "id": "rust_decimal 1.36.0",
+              "id": "rust_decimal 1.37.1",
               "target": "rust_decimal"
             },
             {
@@ -25963,7 +25963,7 @@
               "target": "ic_nervous_system_common_build_metadata"
             },
             {
-              "id": "rust_decimal_macros 1.36.0",
+              "id": "rust_decimal_macros 1.37.1",
               "target": "rust_decimal_macros"
             },
             {
@@ -27760,7 +27760,7 @@
               "target": "strum"
             },
             {
-              "id": "tempfile 3.19.0",
+              "id": "tempfile 3.19.1",
               "target": "tempfile"
             },
             {
@@ -27849,7 +27849,7 @@
               "target": "candid"
             },
             {
-              "id": "clap 4.5.31",
+              "id": "clap 4.5.32",
               "target": "clap"
             },
             {
@@ -28025,7 +28025,7 @@
               "target": "rand_chacha"
             },
             {
-              "id": "rust_decimal 1.36.0",
+              "id": "rust_decimal 1.37.1",
               "target": "rust_decimal"
             },
             {
@@ -28063,7 +28063,7 @@
               "target": "ic_nervous_system_common_build_metadata"
             },
             {
-              "id": "rust_decimal_macros 1.36.0",
+              "id": "rust_decimal_macros 1.37.1",
               "target": "rust_decimal_macros"
             },
             {
@@ -28147,7 +28147,7 @@
               "target": "candid"
             },
             {
-              "id": "clap 4.5.31",
+              "id": "clap 4.5.32",
               "target": "clap"
             },
             {
@@ -28312,7 +28312,7 @@
               "target": "num_traits"
             },
             {
-              "id": "rust_decimal 1.36.0",
+              "id": "rust_decimal 1.37.1",
               "target": "rust_decimal"
             }
           ],
@@ -28322,7 +28322,7 @@
         "proc_macro_deps": {
           "common": [
             {
-              "id": "rust_decimal_macros 1.36.0",
+              "id": "rust_decimal_macros 1.37.1",
               "target": "rust_decimal_macros"
             }
           ],
@@ -28421,7 +28421,7 @@
               "target": "num_traits"
             },
             {
-              "id": "rust_decimal 1.36.0",
+              "id": "rust_decimal 1.37.1",
               "target": "rust_decimal"
             }
           ],
@@ -28900,7 +28900,7 @@
               "target": "prost"
             },
             {
-              "id": "rust_decimal 1.36.0",
+              "id": "rust_decimal 1.37.1",
               "target": "rust_decimal"
             },
             {
@@ -28926,7 +28926,7 @@
               "target": "ic_cdk_macros"
             },
             {
-              "id": "rust_decimal_macros 1.36.0",
+              "id": "rust_decimal_macros 1.37.1",
               "target": "rust_decimal_macros"
             }
           ],
@@ -30046,7 +30046,7 @@
               "target": "candid"
             },
             {
-              "id": "clap 4.5.31",
+              "id": "clap 4.5.32",
               "target": "clap"
             },
             {
@@ -34290,7 +34290,7 @@
               "target": "anyhow"
             },
             {
-              "id": "clap 4.5.31",
+              "id": "clap 4.5.32",
               "target": "clap"
             },
             {
@@ -34302,7 +34302,7 @@
               "target": "pretty_env_logger"
             },
             {
-              "id": "reqwest 0.12.12",
+              "id": "reqwest 0.12.15",
               "target": "reqwest"
             },
             {
@@ -34364,7 +34364,7 @@
               "target": "axum"
             },
             {
-              "id": "clap 4.5.31",
+              "id": "clap 4.5.32",
               "target": "clap"
             },
             {
@@ -34425,11 +34425,11 @@
               "target": "anyhow"
             },
             {
-              "id": "clap 4.5.31",
+              "id": "clap 4.5.32",
               "target": "clap"
             },
             {
-              "id": "reqwest 0.12.12",
+              "id": "reqwest 0.12.15",
               "target": "reqwest"
             },
             {
@@ -35422,7 +35422,7 @@
               "target": "base64"
             },
             {
-              "id": "clap 4.5.31",
+              "id": "clap 4.5.32",
               "target": "clap"
             },
             {
@@ -35515,11 +35515,11 @@
               "target": "flate2"
             },
             {
-              "id": "reqwest 0.12.12",
+              "id": "reqwest 0.12.15",
               "target": "reqwest"
             },
             {
-              "id": "tempfile 3.19.0",
+              "id": "tempfile 3.19.1",
               "target": "tempfile"
             }
           ],
@@ -35548,7 +35548,7 @@
         "deps": {
           "common": [
             {
-              "id": "clap 4.5.31",
+              "id": "clap 4.5.32",
               "target": "clap"
             },
             {
@@ -35576,7 +35576,7 @@
               "target": "regex"
             },
             {
-              "id": "reqwest 0.12.12",
+              "id": "reqwest 0.12.15",
               "target": "reqwest"
             },
             {
@@ -35830,7 +35830,7 @@
               "target": "num_traits"
             },
             {
-              "id": "rust_decimal 1.36.0",
+              "id": "rust_decimal 1.37.1",
               "target": "rust_decimal"
             },
             {
@@ -35844,7 +35844,7 @@
         "proc_macro_deps": {
           "common": [
             {
-              "id": "rust_decimal_macros 1.36.0",
+              "id": "rust_decimal_macros 1.37.1",
               "target": "rust_decimal_macros"
             }
           ],
@@ -36077,7 +36077,7 @@
               "target": "num_traits"
             },
             {
-              "id": "rust_decimal 1.36.0",
+              "id": "rust_decimal 1.37.1",
               "target": "rust_decimal"
             },
             {
@@ -36091,7 +36091,7 @@
         "proc_macro_deps": {
           "common": [
             {
-              "id": "rust_decimal_macros 1.36.0",
+              "id": "rust_decimal_macros 1.37.1",
               "target": "rust_decimal_macros"
             }
           ],
@@ -36123,7 +36123,7 @@
               "target": "anyhow"
             },
             {
-              "id": "clap 4.5.31",
+              "id": "clap 4.5.32",
               "target": "clap"
             },
             {
@@ -37115,7 +37115,7 @@
               "target": "rand"
             },
             {
-              "id": "reqwest 0.12.12",
+              "id": "reqwest 0.12.15",
               "target": "reqwest"
             },
             {
@@ -40955,7 +40955,7 @@
               "target": "base64"
             },
             {
-              "id": "clap 4.5.31",
+              "id": "clap 4.5.32",
               "target": "clap"
             },
             {
@@ -41076,7 +41076,7 @@
               "target": "mime"
             },
             {
-              "id": "reqwest 0.12.12",
+              "id": "reqwest 0.12.15",
               "target": "reqwest"
             },
             {
@@ -41257,7 +41257,7 @@
               "target": "rusty_fork"
             },
             {
-              "id": "tempfile 3.19.0",
+              "id": "tempfile 3.19.1",
               "target": "tempfile"
             },
             {
@@ -41467,7 +41467,7 @@
               "target": "syn"
             },
             {
-              "id": "tempfile 3.19.0",
+              "id": "tempfile 3.19.1",
               "target": "tempfile"
             }
           ],
@@ -43775,14 +43775,14 @@
       ],
       "license_file": "LICENSE"
     },
-    "reqwest 0.12.12": {
+    "reqwest 0.12.15": {
       "name": "reqwest",
-      "version": "0.12.12",
+      "version": "0.12.15",
       "package_url": "https://github.com/seanmonstar/reqwest",
       "repository": {
         "Http": {
-          "url": "https://static.crates.io/crates/reqwest/0.12.12/download",
-          "sha256": "43e734407157c3c2034e0258f5e4473ddb361b1e85f95a66690d67264d7cd1da"
+          "url": "https://static.crates.io/crates/reqwest/0.12.15/download",
+          "sha256": "d19c46a6fdd48bc4dab94b6103fccc55d34c67cc0ad04653aad4ea2a07cd7bbb"
         }
       },
       "targets": [
@@ -44344,7 +44344,7 @@
             ],
             "cfg(windows)": [
               {
-                "id": "windows-registry 0.2.0",
+                "id": "windows-registry 0.4.0",
                 "target": "windows_registry"
               }
             ],
@@ -45043,7 +45043,7 @@
           }
         },
         "edition": "2021",
-        "version": "0.12.12"
+        "version": "0.12.15"
       },
       "license": "MIT OR Apache-2.0",
       "license_ids": [
@@ -45559,14 +45559,14 @@
       "license_ids": [],
       "license_file": null
     },
-    "rust_decimal 1.36.0": {
+    "rust_decimal 1.37.1": {
       "name": "rust_decimal",
-      "version": "1.36.0",
+      "version": "1.37.1",
       "package_url": "https://github.com/paupino/rust-decimal",
       "repository": {
         "Http": {
-          "url": "https://static.crates.io/crates/rust_decimal/1.36.0/download",
-          "sha256": "b082d80e3e3cc52b2ed634388d436fe1f4de6af5786cc2de9ba9737527bdf555"
+          "url": "https://static.crates.io/crates/rust_decimal/1.37.1/download",
+          "sha256": "faa7de2ba56ac291bd90c6b9bece784a52ae1411f9506544b3eae36dd2356d50"
         }
       },
       "targets": [
@@ -45619,7 +45619,7 @@
               "target": "num_traits"
             },
             {
-              "id": "rust_decimal 1.36.0",
+              "id": "rust_decimal 1.37.1",
               "target": "build_script_build"
             },
             {
@@ -45630,7 +45630,7 @@
           "selects": {}
         },
         "edition": "2021",
-        "version": "1.36.0"
+        "version": "1.37.1"
       },
       "build_script_attrs": {
         "compile_data_glob": [
@@ -45646,14 +45646,14 @@
       ],
       "license_file": "LICENSE"
     },
-    "rust_decimal_macros 1.36.0": {
+    "rust_decimal_macros 1.37.1": {
       "name": "rust_decimal_macros",
-      "version": "1.36.0",
+      "version": "1.37.1",
       "package_url": "https://github.com/paupino/rust-decimal",
       "repository": {
         "Http": {
-          "url": "https://static.crates.io/crates/rust_decimal_macros/1.36.0/download",
-          "sha256": "da991f231869f34268415a49724c6578e740ad697ba0999199d6f22b3949332c"
+          "url": "https://static.crates.io/crates/rust_decimal_macros/1.37.1/download",
+          "sha256": "f6268b74858287e1a062271b988a0c534bf85bbeb567fe09331bf40ed78113d5"
         }
       },
       "targets": [
@@ -45688,14 +45688,14 @@
               "target": "quote"
             },
             {
-              "id": "rust_decimal 1.36.0",
-              "target": "rust_decimal"
+              "id": "syn 2.0.100",
+              "target": "syn"
             }
           ],
           "selects": {}
         },
         "edition": "2021",
-        "version": "1.36.0"
+        "version": "1.37.1"
       },
       "license": "MIT",
       "license_ids": [
@@ -47251,7 +47251,7 @@
               "target": "quick_error"
             },
             {
-              "id": "tempfile 3.19.0",
+              "id": "tempfile 3.19.1",
               "target": "tempfile"
             },
             {
@@ -47902,7 +47902,7 @@
         "deps": {
           "common": [
             {
-              "id": "tempfile 3.19.0",
+              "id": "tempfile 3.19.1",
               "target": "tempfile"
             }
           ],
@@ -48000,7 +48000,7 @@
               "target": "regex"
             },
             {
-              "id": "reqwest 0.12.12",
+              "id": "reqwest 0.12.15",
               "target": "reqwest"
             },
             {
@@ -48024,7 +48024,7 @@
               "target": "tar"
             },
             {
-              "id": "tempfile 3.19.0",
+              "id": "tempfile 3.19.1",
               "target": "tempfile"
             },
             {
@@ -49248,7 +49248,7 @@
               "target": "slog"
             },
             {
-              "id": "tempfile 3.19.0",
+              "id": "tempfile 3.19.1",
               "target": "tempfile"
             },
             {
@@ -49887,7 +49887,7 @@
               "target": "candid"
             },
             {
-              "id": "clap 4.5.31",
+              "id": "clap 4.5.32",
               "target": "clap"
             },
             {
@@ -49943,7 +49943,7 @@
               "target": "registry_canister"
             },
             {
-              "id": "reqwest 0.12.12",
+              "id": "reqwest 0.12.15",
               "target": "reqwest"
             },
             {
@@ -50659,7 +50659,7 @@
         "deps": {
           "common": [
             {
-              "id": "clap 4.5.31",
+              "id": "clap 4.5.32",
               "target": "clap"
             },
             {
@@ -50683,7 +50683,7 @@
               "target": "humantime"
             },
             {
-              "id": "reqwest 0.12.12",
+              "id": "reqwest 0.12.15",
               "target": "reqwest"
             },
             {
@@ -52338,14 +52338,14 @@
       ],
       "license_file": "LICENSE-APACHE"
     },
-    "tempfile 3.19.0": {
+    "tempfile 3.19.1": {
       "name": "tempfile",
-      "version": "3.19.0",
+      "version": "3.19.1",
       "package_url": "https://github.com/Stebalien/tempfile",
       "repository": {
         "Http": {
-          "url": "https://static.crates.io/crates/tempfile/3.19.0/download",
-          "sha256": "488960f40a3fd53d72c2a29a58722561dee8afdd175bd88e3db4677d7b2ba600"
+          "url": "https://static.crates.io/crates/tempfile/3.19.1/download",
+          "sha256": "7437ac7763b9b123ccf33c338a5cc1bac6f69b45a136c19bdd8a65e3916435bf"
         }
       },
       "targets": [
@@ -52569,7 +52569,7 @@
           }
         },
         "edition": "2021",
-        "version": "3.19.0"
+        "version": "3.19.1"
       },
       "license": "MIT OR Apache-2.0",
       "license_ids": [
@@ -55631,7 +55631,7 @@
               "target": "prost"
             },
             {
-              "id": "rust_decimal 1.36.0",
+              "id": "rust_decimal 1.37.1",
               "target": "rust_decimal"
             }
           ],
@@ -55645,7 +55645,7 @@
               "target": "ic_cdk_macros"
             },
             {
-              "id": "rust_decimal_macros 1.36.0",
+              "id": "rust_decimal_macros 1.37.1",
               "target": "rust_decimal_macros"
             }
           ],
@@ -58277,14 +58277,14 @@
       ],
       "license_file": "license-apache-2.0"
     },
-    "windows-registry 0.2.0": {
+    "windows-registry 0.4.0": {
       "name": "windows-registry",
-      "version": "0.2.0",
+      "version": "0.4.0",
       "package_url": "https://github.com/microsoft/windows-rs",
       "repository": {
         "Http": {
-          "url": "https://static.crates.io/crates/windows-registry/0.2.0/download",
-          "sha256": "e400001bb720a623c1c69032f8e3e4cf09984deec740f007dd2b03ec864804b0"
+          "url": "https://static.crates.io/crates/windows-registry/0.4.0/download",
+          "sha256": "4286ad90ddb45071efd1a66dfa43eb02dd0dfbae1545ad6cc3c51cf34d7e8ba3"
         }
       },
       "targets": [
@@ -58306,25 +58306,32 @@
         "compile_data_glob": [
           "**"
         ],
+        "crate_features": {
+          "common": [
+            "default",
+            "std"
+          ],
+          "selects": {}
+        },
         "deps": {
           "common": [
             {
-              "id": "windows-result 0.2.0",
+              "id": "windows-result 0.3.1",
               "target": "windows_result"
             },
             {
-              "id": "windows-strings 0.1.0",
+              "id": "windows-strings 0.3.1",
               "target": "windows_strings"
             },
             {
-              "id": "windows-targets 0.52.6",
+              "id": "windows-targets 0.53.0",
               "target": "windows_targets"
             }
           ],
           "selects": {}
         },
         "edition": "2021",
-        "version": "0.2.0"
+        "version": "0.4.0"
       },
       "license": "MIT OR Apache-2.0",
       "license_ids": [
@@ -58333,14 +58340,14 @@
       ],
       "license_file": "license-apache-2.0"
     },
-    "windows-result 0.2.0": {
+    "windows-result 0.3.1": {
       "name": "windows-result",
-      "version": "0.2.0",
+      "version": "0.3.1",
       "package_url": "https://github.com/microsoft/windows-rs",
       "repository": {
         "Http": {
-          "url": "https://static.crates.io/crates/windows-result/0.2.0/download",
-          "sha256": "1d1043d8214f791817bab27572aaa8af63732e11bf84aa21a45a78d6c317ae0e"
+          "url": "https://static.crates.io/crates/windows-result/0.3.1/download",
+          "sha256": "06374efe858fab7e4f881500e6e86ec8bc28f9462c47e5a9941a0142ad86b189"
         }
       },
       "targets": [
@@ -58364,7 +58371,6 @@
         ],
         "crate_features": {
           "common": [
-            "default",
             "std"
           ],
           "selects": {}
@@ -58372,14 +58378,14 @@
         "deps": {
           "common": [
             {
-              "id": "windows-targets 0.52.6",
-              "target": "windows_targets"
+              "id": "windows-link 0.1.0",
+              "target": "windows_link"
             }
           ],
           "selects": {}
         },
         "edition": "2021",
-        "version": "0.2.0"
+        "version": "0.3.1"
       },
       "license": "MIT OR Apache-2.0",
       "license_ids": [
@@ -58388,14 +58394,14 @@
       ],
       "license_file": "license-apache-2.0"
     },
-    "windows-strings 0.1.0": {
+    "windows-strings 0.3.1": {
       "name": "windows-strings",
-      "version": "0.1.0",
+      "version": "0.3.1",
       "package_url": "https://github.com/microsoft/windows-rs",
       "repository": {
         "Http": {
-          "url": "https://static.crates.io/crates/windows-strings/0.1.0/download",
-          "sha256": "4cd9b125c486025df0eabcb585e62173c6c9eddcec5d117d3b6e8c30e2ee4d10"
+          "url": "https://static.crates.io/crates/windows-strings/0.3.1/download",
+          "sha256": "87fa48cc5d406560701792be122a10132491cff9d0aeb23583cc2dcafc847319"
         }
       },
       "targets": [
@@ -58419,7 +58425,6 @@
         ],
         "crate_features": {
           "common": [
-            "default",
             "std"
           ],
           "selects": {}
@@ -58427,18 +58432,14 @@
         "deps": {
           "common": [
             {
-              "id": "windows-result 0.2.0",
-              "target": "windows_result"
-            },
-            {
-              "id": "windows-targets 0.52.6",
-              "target": "windows_targets"
+              "id": "windows-link 0.1.0",
+              "target": "windows_link"
             }
           ],
           "selects": {}
         },
         "edition": "2021",
-        "version": "0.1.0"
+        "version": "0.3.1"
       },
       "license": "MIT OR Apache-2.0",
       "license_ids": [
@@ -58845,6 +58846,98 @@
       ],
       "license_file": "license-apache-2.0"
     },
+    "windows-targets 0.53.0": {
+      "name": "windows-targets",
+      "version": "0.53.0",
+      "package_url": "https://github.com/microsoft/windows-rs",
+      "repository": {
+        "Http": {
+          "url": "https://static.crates.io/crates/windows-targets/0.53.0/download",
+          "sha256": "b1e4c7e8ceaaf9cb7d7507c974735728ab453b67ef8f18febdd7c11fe59dca8b"
+        }
+      },
+      "targets": [
+        {
+          "Library": {
+            "crate_name": "windows_targets",
+            "crate_root": "src/lib.rs",
+            "srcs": {
+              "allow_empty": true,
+              "include": [
+                "**/*.rs"
+              ]
+            }
+          }
+        }
+      ],
+      "library_target_name": "windows_targets",
+      "common_attrs": {
+        "compile_data_glob": [
+          "**"
+        ],
+        "deps": {
+          "common": [],
+          "selects": {
+            "aarch64-pc-windows-gnullvm": [
+              {
+                "id": "windows_aarch64_gnullvm 0.53.0",
+                "target": "windows_aarch64_gnullvm"
+              }
+            ],
+            "cfg(all(any(target_arch = \"x86_64\", target_arch = \"arm64ec\"), target_env = \"msvc\", not(windows_raw_dylib)))": [
+              {
+                "id": "windows_x86_64_msvc 0.53.0",
+                "target": "windows_x86_64_msvc"
+              }
+            ],
+            "cfg(all(target_arch = \"aarch64\", target_env = \"msvc\", not(windows_raw_dylib)))": [
+              {
+                "id": "windows_aarch64_msvc 0.53.0",
+                "target": "windows_aarch64_msvc"
+              }
+            ],
+            "cfg(all(target_arch = \"x86\", target_env = \"gnu\", not(target_abi = \"llvm\"), not(windows_raw_dylib)))": [
+              {
+                "id": "windows_i686_gnu 0.53.0",
+                "target": "windows_i686_gnu"
+              }
+            ],
+            "cfg(all(target_arch = \"x86\", target_env = \"msvc\", not(windows_raw_dylib)))": [
+              {
+                "id": "windows_i686_msvc 0.53.0",
+                "target": "windows_i686_msvc"
+              }
+            ],
+            "cfg(all(target_arch = \"x86_64\", target_env = \"gnu\", not(target_abi = \"llvm\"), not(windows_raw_dylib)))": [
+              {
+                "id": "windows_x86_64_gnu 0.53.0",
+                "target": "windows_x86_64_gnu"
+              }
+            ],
+            "i686-pc-windows-gnullvm": [
+              {
+                "id": "windows_i686_gnullvm 0.53.0",
+                "target": "windows_i686_gnullvm"
+              }
+            ],
+            "x86_64-pc-windows-gnullvm": [
+              {
+                "id": "windows_x86_64_gnullvm 0.53.0",
+                "target": "windows_x86_64_gnullvm"
+              }
+            ]
+          }
+        },
+        "edition": "2021",
+        "version": "0.53.0"
+      },
+      "license": "MIT OR Apache-2.0",
+      "license_ids": [
+        "Apache-2.0",
+        "MIT"
+      ],
+      "license_file": "license-apache-2.0"
+    },
     "windows_aarch64_gnullvm 0.48.5": {
       "name": "windows_aarch64_gnullvm",
       "version": "0.48.5",
@@ -58965,6 +59058,74 @@
         },
         "edition": "2021",
         "version": "0.52.6"
+      },
+      "build_script_attrs": {
+        "compile_data_glob": [
+          "**"
+        ],
+        "data_glob": [
+          "**"
+        ]
+      },
+      "license": "MIT OR Apache-2.0",
+      "license_ids": [
+        "Apache-2.0",
+        "MIT"
+      ],
+      "license_file": "license-apache-2.0"
+    },
+    "windows_aarch64_gnullvm 0.53.0": {
+      "name": "windows_aarch64_gnullvm",
+      "version": "0.53.0",
+      "package_url": "https://github.com/microsoft/windows-rs",
+      "repository": {
+        "Http": {
+          "url": "https://static.crates.io/crates/windows_aarch64_gnullvm/0.53.0/download",
+          "sha256": "86b8d5f90ddd19cb4a147a5fa63ca848db3df085e25fee3cc10b39b6eebae764"
+        }
+      },
+      "targets": [
+        {
+          "Library": {
+            "crate_name": "windows_aarch64_gnullvm",
+            "crate_root": "src/lib.rs",
+            "srcs": {
+              "allow_empty": true,
+              "include": [
+                "**/*.rs"
+              ]
+            }
+          }
+        },
+        {
+          "BuildScript": {
+            "crate_name": "build_script_build",
+            "crate_root": "build.rs",
+            "srcs": {
+              "allow_empty": true,
+              "include": [
+                "**/*.rs"
+              ]
+            }
+          }
+        }
+      ],
+      "library_target_name": "windows_aarch64_gnullvm",
+      "common_attrs": {
+        "compile_data_glob": [
+          "**"
+        ],
+        "deps": {
+          "common": [
+            {
+              "id": "windows_aarch64_gnullvm 0.53.0",
+              "target": "build_script_build"
+            }
+          ],
+          "selects": {}
+        },
+        "edition": "2021",
+        "version": "0.53.0"
       },
       "build_script_attrs": {
         "compile_data_glob": [
@@ -59117,6 +59278,74 @@
       ],
       "license_file": "license-apache-2.0"
     },
+    "windows_aarch64_msvc 0.53.0": {
+      "name": "windows_aarch64_msvc",
+      "version": "0.53.0",
+      "package_url": "https://github.com/microsoft/windows-rs",
+      "repository": {
+        "Http": {
+          "url": "https://static.crates.io/crates/windows_aarch64_msvc/0.53.0/download",
+          "sha256": "c7651a1f62a11b8cbd5e0d42526e55f2c99886c77e007179efff86c2b137e66c"
+        }
+      },
+      "targets": [
+        {
+          "Library": {
+            "crate_name": "windows_aarch64_msvc",
+            "crate_root": "src/lib.rs",
+            "srcs": {
+              "allow_empty": true,
+              "include": [
+                "**/*.rs"
+              ]
+            }
+          }
+        },
+        {
+          "BuildScript": {
+            "crate_name": "build_script_build",
+            "crate_root": "build.rs",
+            "srcs": {
+              "allow_empty": true,
+              "include": [
+                "**/*.rs"
+              ]
+            }
+          }
+        }
+      ],
+      "library_target_name": "windows_aarch64_msvc",
+      "common_attrs": {
+        "compile_data_glob": [
+          "**"
+        ],
+        "deps": {
+          "common": [
+            {
+              "id": "windows_aarch64_msvc 0.53.0",
+              "target": "build_script_build"
+            }
+          ],
+          "selects": {}
+        },
+        "edition": "2021",
+        "version": "0.53.0"
+      },
+      "build_script_attrs": {
+        "compile_data_glob": [
+          "**"
+        ],
+        "data_glob": [
+          "**"
+        ]
+      },
+      "license": "MIT OR Apache-2.0",
+      "license_ids": [
+        "Apache-2.0",
+        "MIT"
+      ],
+      "license_file": "license-apache-2.0"
+    },
     "windows_i686_gnu 0.48.5": {
       "name": "windows_i686_gnu",
       "version": "0.48.5",
@@ -59253,6 +59482,74 @@
       ],
       "license_file": "license-apache-2.0"
     },
+    "windows_i686_gnu 0.53.0": {
+      "name": "windows_i686_gnu",
+      "version": "0.53.0",
+      "package_url": "https://github.com/microsoft/windows-rs",
+      "repository": {
+        "Http": {
+          "url": "https://static.crates.io/crates/windows_i686_gnu/0.53.0/download",
+          "sha256": "c1dc67659d35f387f5f6c479dc4e28f1d4bb90ddd1a5d3da2e5d97b42d6272c3"
+        }
+      },
+      "targets": [
+        {
+          "Library": {
+            "crate_name": "windows_i686_gnu",
+            "crate_root": "src/lib.rs",
+            "srcs": {
+              "allow_empty": true,
+              "include": [
+                "**/*.rs"
+              ]
+            }
+          }
+        },
+        {
+          "BuildScript": {
+            "crate_name": "build_script_build",
+            "crate_root": "build.rs",
+            "srcs": {
+              "allow_empty": true,
+              "include": [
+                "**/*.rs"
+              ]
+            }
+          }
+        }
+      ],
+      "library_target_name": "windows_i686_gnu",
+      "common_attrs": {
+        "compile_data_glob": [
+          "**"
+        ],
+        "deps": {
+          "common": [
+            {
+              "id": "windows_i686_gnu 0.53.0",
+              "target": "build_script_build"
+            }
+          ],
+          "selects": {}
+        },
+        "edition": "2021",
+        "version": "0.53.0"
+      },
+      "build_script_attrs": {
+        "compile_data_glob": [
+          "**"
+        ],
+        "data_glob": [
+          "**"
+        ]
+      },
+      "license": "MIT OR Apache-2.0",
+      "license_ids": [
+        "Apache-2.0",
+        "MIT"
+      ],
+      "license_file": "license-apache-2.0"
+    },
     "windows_i686_gnullvm 0.52.6": {
       "name": "windows_i686_gnullvm",
       "version": "0.52.6",
@@ -59305,6 +59602,74 @@
         },
         "edition": "2021",
         "version": "0.52.6"
+      },
+      "build_script_attrs": {
+        "compile_data_glob": [
+          "**"
+        ],
+        "data_glob": [
+          "**"
+        ]
+      },
+      "license": "MIT OR Apache-2.0",
+      "license_ids": [
+        "Apache-2.0",
+        "MIT"
+      ],
+      "license_file": "license-apache-2.0"
+    },
+    "windows_i686_gnullvm 0.53.0": {
+      "name": "windows_i686_gnullvm",
+      "version": "0.53.0",
+      "package_url": "https://github.com/microsoft/windows-rs",
+      "repository": {
+        "Http": {
+          "url": "https://static.crates.io/crates/windows_i686_gnullvm/0.53.0/download",
+          "sha256": "9ce6ccbdedbf6d6354471319e781c0dfef054c81fbc7cf83f338a4296c0cae11"
+        }
+      },
+      "targets": [
+        {
+          "Library": {
+            "crate_name": "windows_i686_gnullvm",
+            "crate_root": "src/lib.rs",
+            "srcs": {
+              "allow_empty": true,
+              "include": [
+                "**/*.rs"
+              ]
+            }
+          }
+        },
+        {
+          "BuildScript": {
+            "crate_name": "build_script_build",
+            "crate_root": "build.rs",
+            "srcs": {
+              "allow_empty": true,
+              "include": [
+                "**/*.rs"
+              ]
+            }
+          }
+        }
+      ],
+      "library_target_name": "windows_i686_gnullvm",
+      "common_attrs": {
+        "compile_data_glob": [
+          "**"
+        ],
+        "deps": {
+          "common": [
+            {
+              "id": "windows_i686_gnullvm 0.53.0",
+              "target": "build_script_build"
+            }
+          ],
+          "selects": {}
+        },
+        "edition": "2021",
+        "version": "0.53.0"
       },
       "build_script_attrs": {
         "compile_data_glob": [
@@ -59457,6 +59822,74 @@
       ],
       "license_file": "license-apache-2.0"
     },
+    "windows_i686_msvc 0.53.0": {
+      "name": "windows_i686_msvc",
+      "version": "0.53.0",
+      "package_url": "https://github.com/microsoft/windows-rs",
+      "repository": {
+        "Http": {
+          "url": "https://static.crates.io/crates/windows_i686_msvc/0.53.0/download",
+          "sha256": "581fee95406bb13382d2f65cd4a908ca7b1e4c2f1917f143ba16efe98a589b5d"
+        }
+      },
+      "targets": [
+        {
+          "Library": {
+            "crate_name": "windows_i686_msvc",
+            "crate_root": "src/lib.rs",
+            "srcs": {
+              "allow_empty": true,
+              "include": [
+                "**/*.rs"
+              ]
+            }
+          }
+        },
+        {
+          "BuildScript": {
+            "crate_name": "build_script_build",
+            "crate_root": "build.rs",
+            "srcs": {
+              "allow_empty": true,
+              "include": [
+                "**/*.rs"
+              ]
+            }
+          }
+        }
+      ],
+      "library_target_name": "windows_i686_msvc",
+      "common_attrs": {
+        "compile_data_glob": [
+          "**"
+        ],
+        "deps": {
+          "common": [
+            {
+              "id": "windows_i686_msvc 0.53.0",
+              "target": "build_script_build"
+            }
+          ],
+          "selects": {}
+        },
+        "edition": "2021",
+        "version": "0.53.0"
+      },
+      "build_script_attrs": {
+        "compile_data_glob": [
+          "**"
+        ],
+        "data_glob": [
+          "**"
+        ]
+      },
+      "license": "MIT OR Apache-2.0",
+      "license_ids": [
+        "Apache-2.0",
+        "MIT"
+      ],
+      "license_file": "license-apache-2.0"
+    },
     "windows_x86_64_gnu 0.48.5": {
       "name": "windows_x86_64_gnu",
       "version": "0.48.5",
@@ -59577,6 +60010,74 @@
         },
         "edition": "2021",
         "version": "0.52.6"
+      },
+      "build_script_attrs": {
+        "compile_data_glob": [
+          "**"
+        ],
+        "data_glob": [
+          "**"
+        ]
+      },
+      "license": "MIT OR Apache-2.0",
+      "license_ids": [
+        "Apache-2.0",
+        "MIT"
+      ],
+      "license_file": "license-apache-2.0"
+    },
+    "windows_x86_64_gnu 0.53.0": {
+      "name": "windows_x86_64_gnu",
+      "version": "0.53.0",
+      "package_url": "https://github.com/microsoft/windows-rs",
+      "repository": {
+        "Http": {
+          "url": "https://static.crates.io/crates/windows_x86_64_gnu/0.53.0/download",
+          "sha256": "2e55b5ac9ea33f2fc1716d1742db15574fd6fc8dadc51caab1c16a3d3b4190ba"
+        }
+      },
+      "targets": [
+        {
+          "Library": {
+            "crate_name": "windows_x86_64_gnu",
+            "crate_root": "src/lib.rs",
+            "srcs": {
+              "allow_empty": true,
+              "include": [
+                "**/*.rs"
+              ]
+            }
+          }
+        },
+        {
+          "BuildScript": {
+            "crate_name": "build_script_build",
+            "crate_root": "build.rs",
+            "srcs": {
+              "allow_empty": true,
+              "include": [
+                "**/*.rs"
+              ]
+            }
+          }
+        }
+      ],
+      "library_target_name": "windows_x86_64_gnu",
+      "common_attrs": {
+        "compile_data_glob": [
+          "**"
+        ],
+        "deps": {
+          "common": [
+            {
+              "id": "windows_x86_64_gnu 0.53.0",
+              "target": "build_script_build"
+            }
+          ],
+          "selects": {}
+        },
+        "edition": "2021",
+        "version": "0.53.0"
       },
       "build_script_attrs": {
         "compile_data_glob": [
@@ -59729,6 +60230,74 @@
       ],
       "license_file": "license-apache-2.0"
     },
+    "windows_x86_64_gnullvm 0.53.0": {
+      "name": "windows_x86_64_gnullvm",
+      "version": "0.53.0",
+      "package_url": "https://github.com/microsoft/windows-rs",
+      "repository": {
+        "Http": {
+          "url": "https://static.crates.io/crates/windows_x86_64_gnullvm/0.53.0/download",
+          "sha256": "0a6e035dd0599267ce1ee132e51c27dd29437f63325753051e71dd9e42406c57"
+        }
+      },
+      "targets": [
+        {
+          "Library": {
+            "crate_name": "windows_x86_64_gnullvm",
+            "crate_root": "src/lib.rs",
+            "srcs": {
+              "allow_empty": true,
+              "include": [
+                "**/*.rs"
+              ]
+            }
+          }
+        },
+        {
+          "BuildScript": {
+            "crate_name": "build_script_build",
+            "crate_root": "build.rs",
+            "srcs": {
+              "allow_empty": true,
+              "include": [
+                "**/*.rs"
+              ]
+            }
+          }
+        }
+      ],
+      "library_target_name": "windows_x86_64_gnullvm",
+      "common_attrs": {
+        "compile_data_glob": [
+          "**"
+        ],
+        "deps": {
+          "common": [
+            {
+              "id": "windows_x86_64_gnullvm 0.53.0",
+              "target": "build_script_build"
+            }
+          ],
+          "selects": {}
+        },
+        "edition": "2021",
+        "version": "0.53.0"
+      },
+      "build_script_attrs": {
+        "compile_data_glob": [
+          "**"
+        ],
+        "data_glob": [
+          "**"
+        ]
+      },
+      "license": "MIT OR Apache-2.0",
+      "license_ids": [
+        "Apache-2.0",
+        "MIT"
+      ],
+      "license_file": "license-apache-2.0"
+    },
     "windows_x86_64_msvc 0.48.5": {
       "name": "windows_x86_64_msvc",
       "version": "0.48.5",
@@ -59849,6 +60418,74 @@
         },
         "edition": "2021",
         "version": "0.52.6"
+      },
+      "build_script_attrs": {
+        "compile_data_glob": [
+          "**"
+        ],
+        "data_glob": [
+          "**"
+        ]
+      },
+      "license": "MIT OR Apache-2.0",
+      "license_ids": [
+        "Apache-2.0",
+        "MIT"
+      ],
+      "license_file": "license-apache-2.0"
+    },
+    "windows_x86_64_msvc 0.53.0": {
+      "name": "windows_x86_64_msvc",
+      "version": "0.53.0",
+      "package_url": "https://github.com/microsoft/windows-rs",
+      "repository": {
+        "Http": {
+          "url": "https://static.crates.io/crates/windows_x86_64_msvc/0.53.0/download",
+          "sha256": "271414315aff87387382ec3d271b52d7ae78726f5d44ac98b4f4030c91880486"
+        }
+      },
+      "targets": [
+        {
+          "Library": {
+            "crate_name": "windows_x86_64_msvc",
+            "crate_root": "src/lib.rs",
+            "srcs": {
+              "allow_empty": true,
+              "include": [
+                "**/*.rs"
+              ]
+            }
+          }
+        },
+        {
+          "BuildScript": {
+            "crate_name": "build_script_build",
+            "crate_root": "build.rs",
+            "srcs": {
+              "allow_empty": true,
+              "include": [
+                "**/*.rs"
+              ]
+            }
+          }
+        }
+      ],
+      "library_target_name": "windows_x86_64_msvc",
+      "common_attrs": {
+        "compile_data_glob": [
+          "**"
+        ],
+        "deps": {
+          "common": [
+            {
+              "id": "windows_x86_64_msvc 0.53.0",
+              "target": "build_script_build"
+            }
+          ],
+          "selects": {}
+        },
+        "edition": "2021",
+        "version": "0.53.0"
       },
       "build_script_attrs": {
         "compile_data_glob": [
@@ -62246,14 +62883,14 @@
     "axum 0.7.9",
     "axum-otel-metrics 0.8.1",
     "backoff 0.4.0",
-    "backon 1.4.0",
+    "backon 1.4.1",
     "base64 0.22.1",
     "byteorder 1.5.0",
     "candid 0.10.13",
     "chrono 0.4.40",
-    "clap 4.5.31",
+    "clap 4.5.32",
     "clap-num 1.2.0",
-    "clap_complete 4.5.46",
+    "clap_complete 4.5.47",
     "colored 2.2.0",
     "comfy-table 7.1.4",
     "crossbeam 0.8.4",
@@ -62337,11 +62974,11 @@
     "rand_seeder 0.3.0",
     "regex 1.11.1",
     "registry-canister 0.9.0",
-    "reqwest 0.12.12",
+    "reqwest 0.12.15",
     "retry 2.0.0",
     "rosetta-core 0.9.0",
-    "rust_decimal 1.36.0",
-    "rust_decimal_macros 1.36.0",
+    "rust_decimal 1.37.1",
+    "rust_decimal_macros 1.37.1",
     "self_update 0.41.0",
     "serde 1.0.219",
     "serde_json 1.0.140",
@@ -62357,7 +62994,7 @@
     "strum_macros 0.26.4",
     "tabled 0.18.0",
     "tabular 0.2.0",
-    "tempfile 3.19.0",
+    "tempfile 3.19.1",
     "thiserror 2.0.12",
     "tokio 1.44.1",
     "tokio-util 0.7.14",

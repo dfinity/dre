@@ -16,19 +16,19 @@ pub struct Upgrade {
 }
 
 impl Upgrade {
-    pub async fn run(&self) -> anyhow::Result<UpdateStatus> {
-        let version = self.version.clone();
-        tokio::task::spawn_blocking(move || Self::check_latest_release(env!("CARGO_PKG_VERSION"), true, version)).await?
+    pub async fn run(&self, curr_version: &str) -> anyhow::Result<UpdateStatus> {
+        let new_version = self.version.clone();
+        let curr_version = curr_version.to_string();
+        tokio::task::spawn_blocking(move || Self::check_latest_release(&curr_version, true, new_version)).await?
     }
 
-    pub fn check(&self) -> JoinHandle<anyhow::Result<UpdateStatus>> {
-        let version = env!("CARGO_PKG_VERSION");
-        tokio::task::spawn_blocking(move || Self::check_latest_release(version, false, None))
+    pub fn check(&self, curr_version: &str) -> JoinHandle<anyhow::Result<UpdateStatus>> {
+        let curr_version = curr_version.to_string();
+        tokio::task::spawn_blocking(move || Self::check_latest_release(&curr_version, false, None))
     }
 
-    fn check_latest_release(curr_version: &str, proceed_with_upgrade: bool, to_version: Option<String>) -> anyhow::Result<UpdateStatus> {
-        // If the user called `Upgrade` don't check the metafile and
-        // try the upgrade
+    fn check_latest_release(curr_version: &str, proceed_with_upgrade: bool, target_version: Option<String>) -> anyhow::Result<UpdateStatus> {
+        // If the user called `Upgrade`, don't check the metafile, directly try to upgrade
         let update_check_path = dirs::cache_dir().expect("Failed to find a cache dir").join("dre_update_check");
         if !proceed_with_upgrade {
             // Check for a new release once per day
@@ -44,8 +44,8 @@ impl Upgrade {
         // ^                --> start of line
         // v?               --> optional 'v' char
         // (\d+\.\d+\.\d+)  --> string in format '1.22.33'
-        // (-([0-9a-f])+)   --> string in format '-12345af' (optional)
-        let re_version = Regex::new(r"^v?(\d+\.\d+\.\d+)(-([0-9a-f])+(\-dirty)?)?$").unwrap();
+        // (-v?([0-9a-f\.])+)   --> string in format '-v12345af' (optional)
+        let re_version = Regex::new(r"^v?(\d+\.\d+\.\d+)(-v?([0-9a-f\.])+(\-dirty)?)?$").unwrap();
         let current_version = match re_version.captures(curr_version) {
             Some(cap) => cap.get(1).unwrap().as_str(),
             None => return Err(anyhow::anyhow!("Version '{}' doesn't follow expected naming", curr_version)),
@@ -64,15 +64,16 @@ impl Upgrade {
             .fetch()
             .map_err(|e| anyhow::anyhow!("Fetching releases failed: {:?}", e))?;
 
-        let release = match to_version {
+        let release = match target_version {
             Some(to_v) => releases
                 .iter()
                 .find(|rel| PartialEq::eq(&rel.version, &to_v))
                 .ok_or(anyhow::anyhow!("Release {} not found", to_v))?,
             None => releases.first().ok_or(anyhow::anyhow!("No releases found"))?,
         };
+        info!("Current version {} and latest release is {}", current_version, release.version);
 
-        if PartialEq::eq(&release.version, current_version) {
+        if current_version >= release.version.as_str() {
             return Ok(UpdateStatus::NoUpdate);
         }
 

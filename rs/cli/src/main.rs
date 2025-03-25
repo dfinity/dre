@@ -12,8 +12,8 @@ use log::{info, warn};
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
     init_logger();
-    let version = env!("CARGO_PKG_VERSION");
-    info!("Running version {}", version);
+    let curr_version = env!("CARGO_PKG_VERSION");
+    info!("Running version {}", curr_version);
 
     dotenv().ok();
 
@@ -23,11 +23,11 @@ async fn main() -> anyhow::Result<()> {
     args.validate(&args.global_args, &mut cmd);
 
     if let Subcommands::Upgrade(upgrade) = args.subcommands {
-        let response = upgrade.run().await?;
+        let response = upgrade.run(curr_version).await?;
         match response {
-            UpdateStatus::NoUpdate => info!("Running the latest version"),
+            UpdateStatus::NoUpdate => info!("Already running the latest version"),
             UpdateStatus::NewVersion(_) => unreachable!("Shouldn't happen"),
-            UpdateStatus::Updated(v) => info!("Upgraded: {} -> {}", version, v),
+            UpdateStatus::Updated(v) => info!("Upgraded: {} -> {}", curr_version, v),
         }
         return Ok(());
     }
@@ -36,7 +36,7 @@ async fn main() -> anyhow::Result<()> {
 
     let r = args.execute(ctx).await;
 
-    let handle = Upgrade::default().check();
+    let handle = Upgrade::default().check(curr_version);
     let maybe_update_status = handle.await?;
     match maybe_update_status {
         Ok(s) => match s {
