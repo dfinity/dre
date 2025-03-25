@@ -65,7 +65,7 @@ async fn subnet_metrics_added_correctly() {
     mm.update_subnets_metrics(vec![subnet_1]).await;
     for i in 0..days {
         let key = StorableSubnetMetricsKey {
-            timestamp_nanos: i * ONE_DAY_NANOS,
+            ts: i * ONE_DAY_NANOS,
             subnet_id: subnet_1,
         };
         assert!(mm.subnets_metrics.borrow().get(&key).is_some());
@@ -108,7 +108,7 @@ async fn multiple_subnets_metrics_added_correctly() {
     for subnet in &[subnet_1, subnet_2] {
         for i in 0..days {
             let key = StorableSubnetMetricsKey {
-                timestamp_nanos: i * ONE_DAY_NANOS,
+                ts: i * ONE_DAY_NANOS,
                 subnet_id: *subnet,
             };
             assert!(mm.subnets_metrics.borrow().get(&key).is_some(), "Metrics missing for subnet {:?}", subnet);
@@ -177,18 +177,12 @@ async fn partial_failures_are_handled_correctly() {
         "Subnet 2 should not be in retry list"
     );
 
-    let key = StorableSubnetMetricsKey {
-        timestamp_nanos: 0,
-        subnet_id: subnet_1,
-    };
+    let key = StorableSubnetMetricsKey { ts: 0, subnet_id: subnet_1 };
     assert!(
         mm.subnets_metrics.borrow().get(&key).is_none(),
         "Metrics should not be present for subnet 1"
     );
 
-    let key = StorableSubnetMetricsKey {
-        timestamp_nanos: 0,
-        subnet_id: subnet_2,
-    };
+    let key = StorableSubnetMetricsKey { ts: 0, subnet_id: subnet_2 };
     assert!(mm.subnets_metrics.borrow().get(&key).is_some(), "Metrics should be present for subnet 2");
 }

@@ -4,7 +4,6 @@ use std::error::Error;
 use std::fmt;
 use std::fmt::Display;
 use std::ops::Deref;
-use std::time::Duration;
 
 pub type TimestampNanos = u64;
 pub const NANOS_PER_DAY: TimestampNanos = 24 * 60 * 60 * 1_000_000_000;

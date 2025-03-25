@@ -61,13 +61,16 @@ where
     }
 
     pub fn get_versioned_value(key: &str, version: RegistryVersion) -> RegistryClientVersionedResult<Vec<u8>> {
+        if version == ZERO_REGISTRY_VERSION {
+            return Ok(empty_zero_registry_record(key));
+        }
         if Self::local_latest_version() < version {
             return Err(RegistryClientError::VersionNotAvailable { version });
         }
 
         let search_key = StorableRegistryKey::new(key.to_string(), version);
 
-        let result = D::with_local_registry(|local_registry| {
+        let result = D::with_local_registry_mut(|local_registry| {
             local_registry
                 .range(..=search_key)
                 .rev()
@@ -82,13 +85,12 @@ where
         Ok(result)
     }
 
-    fn key_family(
-        key_prefix: &str,
-        version_start: Option<RegistryVersion>,
-        version_end: RegistryVersion,
-    ) -> Result<Vec<String>, RegistryClientError> {
-        if Self::local_latest_version() < version_end {
-            return Err(RegistryClientError::VersionNotAvailable { version: version_end });
+    pub fn get_key_family(key_prefix: &str, version: RegistryVersion) -> Result<Vec<String>, RegistryClientError> {
+        if version == ZERO_REGISTRY_VERSION {
+            return Ok(vec![]);
+        }
+        if Self::local_latest_version() < version {
+            return Err(RegistryClientError::VersionNotAvailable { version });
         }
 
         let first_matching_key = StorableRegistryKey {
@@ -101,17 +103,11 @@ where
 
             let records_history = local_registry
                 .range(first_matching_key..)
-                .filter(|(storable_key, _)| storable_key.version <= version_end)
+                .filter(|(storable_key, _)| storable_key.version <= version)
                 .take_while(|(storable_key, _)| storable_key.key.starts_with(key_prefix));
 
             for (stored_key, value) in records_history {
-                if version_start.is_some_and(|version| stored_key.version > version) {
-                    if value.0.is_some() {
-                        effective_records.insert(stored_key.key, value.0);
-                    }
-                } else {
-                    effective_records.insert(stored_key.key, value.0);
-                }
+                effective_records.insert(stored_key.key, value.0);
             }
 
             effective_records
@@ -122,25 +118,6 @@ where
             .filter_map(|(key, value)| value.is_some().then_some(key))
             .collect();
         Ok(results)
-    }
-
-    pub fn get_key_family(key_prefix: &str, version: RegistryVersion) -> Result<Vec<String>, String> {
-        if version == ZERO_REGISTRY_VERSION {
-            return Ok(vec![]);
-        }
-        Self::key_family(key_prefix, None, version).map_err(|e| e.to_string())
-    }
-
-    pub fn get_key_family_between_versions(
-        key_prefix: &str,
-        version_start: RegistryVersion,
-        version_end: RegistryVersion,
-    ) -> Result<Vec<String>, String> {
-        if version_start >= version_end {
-            return Err(format!("Invalid version range: {} >= {}", version_start, version_end));
-        }
-
-        Self::key_family(key_prefix, Some(version_start), version_end).map_err(|e| e.to_string())
     }
 
     /// Returns the latest version of the local registry.

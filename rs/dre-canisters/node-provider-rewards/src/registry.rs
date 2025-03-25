@@ -1,19 +1,19 @@
 use crate::RegistryStoreInstance;
-use ic_base_types::{PrincipalId, RegistryVersion, SubnetId};
+use ic_base_types::{NodeId, PrincipalId, RegistryVersion, SubnetId};
 use ic_interfaces_registry::RegistryValue;
 use ic_protobuf::registry::dc::v1::DataCenterRecord;
 use ic_protobuf::registry::node::v1::NodeRecord;
 use ic_protobuf::registry::node_operator::v1::NodeOperatorRecord;
 use ic_protobuf::registry::node_rewards::v2::NodeRewardsTable;
-use ic_protobuf::registry::subnet::v1::SubnetRecord;
+use ic_protobuf::registry::subnet::v1::{SubnetListRecord, SubnetRecord};
 use ic_registry_keys::{
-    make_data_center_record_key, make_node_operator_record_key, DATA_CENTER_KEY_PREFIX, NODE_OPERATOR_RECORD_KEY_PREFIX, NODE_RECORD_KEY_PREFIX,
-    NODE_REWARDS_TABLE_KEY, SUBNET_RECORD_KEY_PREFIX,
+    make_data_center_record_key, make_node_operator_record_key, make_subnet_list_record_key, DATA_CENTER_KEY_PREFIX, NODE_OPERATOR_RECORD_KEY_PREFIX,
+    NODE_RECORD_KEY_PREFIX, NODE_REWARDS_TABLE_KEY, SUBNET_RECORD_KEY_PREFIX,
 };
+use ic_types::registry::RegistryClientError;
 use indexmap::IndexMap;
 use node_provider_rewards::reward_period::TimestampNanos;
 use node_provider_rewards::types::RewardableNode;
-use std::collections::btree_map::Entry;
 use std::collections::BTreeMap;
 use std::str::FromStr;
 
@@ -41,35 +41,38 @@ impl RegistryEntry for NodeRewardsTable {
     const KEY_PREFIX: &'static str = NODE_REWARDS_TABLE_KEY;
 }
 
-fn get_family_entries_between_versions<T: RegistryEntry + Default>(
-    version_start: Option<RegistryVersion>,
-    version_end: RegistryVersion,
-) -> IndexMap<String, (u64, T)> {
+fn get_family_entries_of_version<T: RegistryEntry + Default>(version: RegistryVersion) -> IndexMap<String, (u64, T)> {
     let prefix_length = T::KEY_PREFIX.len();
 
-    if version_start.is_some() {
-        RegistryStoreInstance::get_key_family_between_versions(T::KEY_PREFIX, version_start.unwrap(), version_end)
-    } else {
-        RegistryStoreInstance::get_key_family(T::KEY_PREFIX, version_end)
-    }
-    .expect("Failed to get key family")
-    .iter()
-    .filter_map(|key| {
-        let r = RegistryStoreInstance::get_versioned_value(key, version)
-            .unwrap_or_else(|_| panic!("Failed to get entry {} for type {}", key, std::any::type_name::<T>()));
+    RegistryStoreInstance::get_key_family(T::KEY_PREFIX, version)
+        .expect("Failed to get key family")
+        .iter()
+        .filter_map(|key| {
+            let r = RegistryStoreInstance::get_versioned_value(key, version)
+                .unwrap_or_else(|_| panic!("Failed to get entry {} for type {}", key, std::any::type_name::<T>()));
 
-        r.as_ref().map(|v| {
-            (
-                key[prefix_length..].to_string(),
-                (r.version.get(), T::decode(v.as_slice()).expect("Invalid registry value")),
-            )
+            r.as_ref().map(|v| {
+                (
+                    key[prefix_length..].to_string(),
+                    (r.version.get(), T::decode(v.as_slice()).expect("Invalid registry value")),
+                )
+            })
         })
-    })
-    .collect()
+        .collect()
 }
 
-fn get_family_entries_of_version<T: RegistryEntry + Default>(version: RegistryVersion) -> IndexMap<String, (u64, T)> {
-    get_family_entries_between_versions::<T>(None, version)
+pub fn get_versioned_value<T: RegistryValue + Default>(key: &str, version: RegistryVersion) -> Result<T, RegistryClientError> {
+    let value = RegistryStoreInstance::get_versioned_value(key, version)?
+        .map(|v| T::decode(v.as_slice()).unwrap())
+        .value
+        .unwrap_or_default();
+    Ok(value)
+}
+
+pub fn get_value<T: RegistryValue + Default>(key: &str) -> Result<T, RegistryClientError> {
+    let latest_version = RegistryStoreInstance::local_latest_version();
+
+    Ok(get_versioned_value::<T>(key, latest_version)?)
 }
 
 fn get_family_entries<T: RegistryEntry + Default>() -> IndexMap<String, (u64, T)> {
@@ -78,83 +81,81 @@ fn get_family_entries<T: RegistryEntry + Default>() -> IndexMap<String, (u64, T)
 }
 
 pub fn subnets_list() -> Vec<SubnetId> {
-    get_family_entries::<SubnetRecord>()
-        .iter()
-        .map(|(subnet_id, _)| PrincipalId::from_str(subnet_id).map(SubnetId::from).expect("Invalid subnet id"))
+    let record = get_value::<SubnetListRecord>(&make_subnet_list_record_key().as_str()).expect("Failed to get subnets list");
+
+    record
+        .subnets
+        .into_iter()
+        .map(|s| SubnetId::from(PrincipalId::try_from(s.clone().as_slice()).unwrap()))
         .collect()
 }
 
 pub fn get_rewards_table() -> NodeRewardsTable {
-    get_family_entries::<NodeRewardsTable>()
-        .into_values()
-        .map(|(_, v)| v)
-        .next()
-        .unwrap_or_else(|| {
-            panic!("Registry does not have a record for NodeRewardsTable.");
-        })
+    let latest_version = RegistryStoreInstance::local_latest_version();
+
+    get_versioned_value::<NodeRewardsTable>(NODE_REWARDS_TABLE_KEY, latest_version).expect("Failed to get subnets list")
 }
 
-pub fn get_rewardable_nodes(start_ts: TimestampNanos, end_ts: TimestampNanos) -> Vec<RewardableNode> {
+fn estimate_node_type(rewardable_count: Option<&mut BTreeMap<String, u32>>) -> String {
+    match rewardable_count {
+        Some(rewardable_count) => {
+            if rewardable_count.is_empty() {
+                "unknown:no_rewardable_nodes_found".to_string()
+            } else {
+                let (k, mut v) = loop {
+                    let (k, v) = match rewardable_count.pop_first() {
+                        Some(kv) => kv,
+                        None => break ("unknown:rewardable_nodes_used_up".to_string(), 0),
+                    };
+                    if v != 0 {
+                        break (k, v);
+                    }
+                };
+                v = v.saturating_sub(1);
+                if v != 0 {
+                    rewardable_count.insert(k.clone(), v);
+                }
+                k
+            }
+        }
+        None => "unknown".to_string(),
+    }
+}
+
+pub fn get_rewardable_nodes(_start_ts: TimestampNanos, _end_ts: TimestampNanos) -> Vec<RewardableNode> {
     let mut nodes = BTreeMap::new();
-    let mut rewardable_nodes = BTreeMap::new();
+    let mut node_operator_rewardable_count = BTreeMap::new();
 
     // TODO: Extend to all the versions in the range once the registry supports it.
     // https://github.com/dfinity/ic/pull/4450
-    let versions = vec![ReRegistryStoreInstance::local_latest_version()];
+    let nodes_record = get_family_entries::<NodeRecord>();
 
-    for version in versions {
-        let nodes_in_version = get_family_entries_of_version::<NodeRecord>(version);
+    for (principal_id, (_, node_record)) in nodes_record {
+        let node_id: NodeId = PrincipalId::from_str(principal_id.as_str()).unwrap().into();
 
-        for (p, (_, node_record)) in nodes_in_version {
-            let principal_id = PrincipalId::from_str(p.as_str()).unwrap();
+        if nodes.get(&node_id).is_none() {
+            let node_operator_id: PrincipalId = node_record.node_operator_id.try_into().unwrap();
+            let node_operator_record = get_value::<NodeOperatorRecord>(&make_node_operator_record_key(node_operator_id).as_str()).unwrap();
 
-            if let Entry::Vacant(node) = nodes.entry(principal_id) {
-                let node_operator_id: PrincipalId = node_record.node_operator_id.try_into().unwrap();
-                let key = make_node_operator_record_key(node_operator_id);
-                let node_operator_record = get_family_entries_of_version::<NodeOperatorRecord>(version);
+            if node_operator_rewardable_count.get(&node_operator_id).is_none() {
+                node_operator_rewardable_count.insert(node_operator_id, node_operator_record.rewardable_nodes);
+            }
 
-                if let Entry::Vacant(rewardables) = rewardable_nodes.entry(node_operator_id) {
-                    rewardables.insert(node_operator_record.rewardable_nodes);
-                }
+            let node_type = estimate_node_type(node_operator_rewardable_count.get_mut(&node_operator_id));
 
-                let node_provider_id: PrincipalId = node_operator_record.node_provider_principal_id.try_into().unwrap();
-                let key = make_data_center_record_key(&node_operator_record.dc_id);
-                let data_center_record = self
-                    .local_registry
-                    .get_versioned_value::<DataCenterRecord>(key.as_str(), registry_version)
-                    .unwrap();
+            let node_provider_id: PrincipalId = node_operator_record.node_provider_principal_id.try_into().unwrap();
+            let data_center_record = get_value::<DataCenterRecord>(&make_data_center_record_key(&node_operator_record.dc_id)).unwrap();
 
-                node.insert(Node {
-                    node_id: principal,
+            nodes.insert(
+                node_id,
+                RewardableNode {
+                    node_id,
                     node_provider_id,
                     region: data_center_record.region,
-                    node_type: match rewardable_nodes.get_mut(&node_operator_id) {
-                        Some(rewardable_nodes) => {
-                            if rewardable_nodes.is_empty() {
-                                "unknown:no_rewardable_nodes_found".to_string()
-                            } else {
-                                let (k, mut v) = loop {
-                                    let (k, v) = match rewardable_nodes.pop_first() {
-                                        Some(kv) => kv,
-                                        None => break ("unknown:rewardable_nodes_used_up".to_string(), 0),
-                                    };
-                                    if v != 0 {
-                                        break (k, v);
-                                    }
-                                };
-                                v = v.saturating_sub(1);
-                                if v != 0 {
-                                    rewardable_nodes.insert(k.clone(), v);
-                                }
-                                k
-                            }
-                        }
-
-                        None => "unknown".to_string(),
-                    },
-                });
-            }
+                    node_type,
+                },
+            );
         }
     }
-    nodes.values().cloned().collect_vec()
+    nodes.into_values().collect()
 }

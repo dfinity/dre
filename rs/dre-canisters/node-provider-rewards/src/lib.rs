@@ -2,16 +2,14 @@ use crate::canister_client::ICCanisterClient;
 use crate::registry_store::CanisterRegistryStore;
 use crate::storage::{State, METRICS_MANAGER, VM};
 use candid::candid_method;
-use ic_base_types::NodeId;
 use ic_canisters_http_types::{HttpRequest, HttpResponse, HttpResponseBuilder};
 use ic_cdk_macros::*;
 use ic_nervous_system_common::serve_metrics;
-use ic_protobuf::registry::node_rewards::v2::NodeRewardsTable;
 use node_provider_rewards::calculate_rewards;
 use node_provider_rewards::reward_period::RewardPeriod;
-use node_provider_rewards::types::RewardableNode;
+use rust_decimal::prelude::ToPrimitive;
 use std::cell::RefCell;
-use std::collections::BTreeMap;
+use std::collections::HashMap;
 
 mod canister_client;
 mod metrics;
@@ -164,14 +162,36 @@ fn http_request(request: HttpRequest) -> HttpResponse {
     }
 }
 
-#[update]
-#[candid_method(update, rename = "get_node_providers_monthly_xdr_rewards")]
-fn get_node_providers_monthly_xdr_rewards_(reward_period: RewardPeriod) -> HttpResponse {
+#[derive(candid::CandidType, candid::Deserialize, Clone, PartialEq, ::prost::Message)]
+pub struct RewardsPerNodeProviderResponse {
+    #[prost(map = "string, uint64", tag = "1")]
+    pub rewards_per_provider: HashMap<::prost::alloc::string::String, u64>,
+}
+
+#[derive(candid::CandidType, candid::Deserialize)]
+pub struct RewardPeriodArgs {
+    pub start_ts: u64,
+    pub end_ts: u64,
+}
+
+#[query]
+#[candid_method(update, rename = "get_node_providers_xdr_rewards")]
+fn get_node_providers_xdr_rewards_(args: RewardPeriodArgs) -> Result<RewardsPerNodeProviderResponse, String> {
+    let reward_period = RewardPeriod::new(args.start_ts, args.end_ts).map_err(|e| format!("Error creating period: {}", e))?;
     let metrics_manager = METRICS_MANAGER.with(|m| m.clone());
 
-    let daily_metrics_by_node = metrics_manager.get_daily_metrics_by_node(*reward_period.start_ts, *reward_period.end_ts);
+    let daily_metrics_by_node = metrics_manager.daily_metrics_by_node(*reward_period.start_ts, *reward_period.end_ts);
     let rewards_table = registry::get_rewards_table();
     let rewardable_nodes = registry::get_rewardable_nodes(*reward_period.start_ts, *reward_period.end_ts);
 
-    calculate_rewards(&reward_period, &rewards_table, &daily_metrics_by_node, &rewardable_nodes)
+    let rewards = calculate_rewards(&reward_period, &rewards_table, &daily_metrics_by_node, &rewardable_nodes)
+        .map_err(|e| format!("Error calculating rewards: {}", e))?;
+
+    Ok(RewardsPerNodeProviderResponse {
+        rewards_per_provider: rewards
+            .rewards_per_provider
+            .into_iter()
+            .map(|(k, v)| (k.to_string(), v.to_u64().unwrap()))
+            .collect(),
+    })
 }

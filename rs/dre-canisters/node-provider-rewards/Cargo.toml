@@ -37,7 +37,8 @@ ic-nns-constants = { workspace = true }
 mockall = { workspace = true }
 node-provider-rewards = { workspace = true }
 thiserror = { workspace = true }
-lazy_static = { workspace = true }
+prost = { workspace = true }
+rust_decimal = { workspace = true }
 
 [dev-dependencies]
 tokio = { workspace = true }

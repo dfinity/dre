@@ -1,2 +1,17 @@
+type RewardsPerNodeProviderResponse = record {
+  rewards : vec record { text; nat64 };
+};
+
+type GetNodeProvidersMonthlyXdrRewardsResponse = variant {
+  Ok : RewardsPerNodeProviderResponse;
+  Err : text;
+};
+
+type RewardPeriodArgs = record {
+  start_ts : nat64;
+  end_ts : nat64;
+};
+
 service : {
+    get_node_providers_monthly_xdr_rewards : (RewardPeriodArgs) -> (GetNodeProvidersMonthlyXdrRewardsResponse) query;
 }

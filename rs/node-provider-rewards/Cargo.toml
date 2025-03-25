@@ -8,6 +8,7 @@ edition.workspace = true
 license.workspace = true
 
 [dependencies]
+ic-cdk = { workspace = true }
 ic-types = { workspace = true }
 ic-base-types = { workspace = true }
 itertools = { workspace = true }
