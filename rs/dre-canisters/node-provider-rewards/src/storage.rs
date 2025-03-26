@@ -15,6 +15,13 @@ const SUBNETS_METRICS_MEMORY_ID: MemoryId = MemoryId::new(1);
 const LAST_TIMESTAMP_PER_SUBNET_MEMORY_ID: MemoryId = MemoryId::new(2);
 const SUBNETS_TO_RETRY_MEMORY_ID: MemoryId = MemoryId::new(3);
 
+pub fn stable_btreemap_init<K: Storable + Clone + Ord, V: Storable>(memory_id: MemoryId) -> StableBTreeMap<K, V, VM> {
+    with_memory_manager(|mgr| StableBTreeMap::init(mgr.get(memory_id)))
+}
+fn with_memory_manager<R>(f: impl FnOnce(&MemoryManager<DefaultMemoryImpl>) -> R) -> R {
+    MEMORY_MANAGER.with(|memory_manager| f(&memory_manager.borrow()))
+}
+
 thread_local! {
     pub static MEMORY_MANAGER: RefCell<MemoryManager<DefaultMemoryImpl>> =
         RefCell::new(MemoryManager::init(DefaultMemoryImpl::default()));
@@ -55,11 +62,4 @@ impl RegistryDataStableMemory for RegistryStoreStableMemoryBorrower {
     ) -> R {
         REGISTRY_DATA_STORE_BTREE_MAP.with_borrow_mut(f)
     }
-}
-
-pub fn stable_btreemap_init<K: Storable + Clone + Ord, V: Storable>(memory_id: MemoryId) -> StableBTreeMap<K, V, VM> {
-    with_memory_manager(|mgr| StableBTreeMap::init(mgr.get(memory_id)))
-}
-fn with_memory_manager<R>(f: impl FnOnce(&MemoryManager<DefaultMemoryImpl>) -> R) -> R {
-    MEMORY_MANAGER.with(|memory_manager| f(&memory_manager.borrow()))
 }
