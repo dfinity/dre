@@ -1,13 +1,11 @@
-use crate::metrics_types::{KeyRange, StorableSubnetMetrics, StorableSubnetMetricsKey, SubnetIdStored};
+use crate::metrics_types::{StorableSubnetMetrics, StorableSubnetMetricsKey, SubnetIdStored};
 use async_trait::async_trait;
-use ic_base_types::{NodeId, PrincipalId, SubnetId};
+use ic_base_types::SubnetId;
 use ic_cdk::api::call::CallResult;
-use ic_management_canister_types::{NodeMetrics, NodeMetricsHistoryArgs, NodeMetricsHistoryResponse};
+use ic_management_canister_types_private::{NodeMetricsHistoryArgs, NodeMetricsHistoryResponse};
 use ic_stable_structures::StableBTreeMap;
-use itertools::Itertools;
-use node_provider_rewards::metrics::NodeDailyMetrics;
 use std::cell::RefCell;
-use std::collections::{BTreeMap, HashMap};
+use std::collections::BTreeMap;
 
 pub type RetryCount = u64;
 pub type TimestampNanos = u64;
@@ -98,7 +96,7 @@ where
                     nodes_metrics_history.into_iter().for_each(|entry| {
                         let key = StorableSubnetMetricsKey {
                             subnet_id,
-                            ts: entry.timestamp_nanos,
+                            timestamp_nanos: entry.timestamp_nanos,
                         };
                         self.subnets_metrics.borrow_mut().insert(key, StorableSubnetMetrics(entry.node_metrics));
                     });
@@ -117,74 +115,6 @@ where
                 }
             }
         }
-    }
-
-    /// Fetches subnets metrics for the specified subnets from their last timestamp.
-    pub fn daily_metrics_by_node(&self, start_ts: TimestampNanos, end_ts: TimestampNanos) -> BTreeMap<NodeId, Vec<NodeDailyMetrics>> {
-        let first_key = StorableSubnetMetricsKey {
-            ts: start_ts,
-            ..StorableSubnetMetricsKey::min_key()
-        };
-        let last_key = StorableSubnetMetricsKey {
-            ts: end_ts,
-            ..StorableSubnetMetricsKey::max_key()
-        };
-
-        // Group node metrics by node_id within the given time range
-        let nodes_in_range: HashMap<PrincipalId, Vec<(StorableSubnetMetricsKey, NodeMetrics)>> = self
-            .subnets_metrics
-            .borrow()
-            .range(first_key.clone()..=last_key.clone())
-            .flat_map(|(key, value)| value.0.into_iter().map(move |metrics| (key.clone(), metrics)))
-            .into_group_map_by(|(_, metrics)| metrics.node_id);
-
-        // Find the last metric before start_ts for each node
-        let mut first_metrics: HashMap<PrincipalId, Option<NodeMetrics>> = HashMap::new();
-
-        for node_id in nodes_in_range.keys() {
-            let latest_metric_before_start = self
-                .subnets_metrics
-                .borrow()
-                .range(..first_key.clone())
-                .flat_map(|(_, value)| value.0.into_iter())
-                .filter(|m| m.node_id == *node_id)
-                .next_back();
-
-            first_metrics.insert(*node_id, latest_metric_before_start);
-        }
-
-        // Compute daily metrics for each node in range
-        nodes_in_range
-            .into_iter()
-            .map(|(node_id, entries)| {
-                let initial_counters = first_metrics
-                    .remove(&node_id)
-                    .expect("first metrics key must exist for each node_id")
-                    .map(|init| (init.num_blocks_proposed_total, init.num_block_failures_total))
-                    .unwrap_or((0, 0));
-
-                let (daily_metrics, _) = entries.into_iter().fold(
-                    (Vec::new(), initial_counters),
-                    |(mut acc, (prev_proposed, prev_failed)), (key, node_metrics)| {
-                        let current_proposed = node_metrics.num_blocks_proposed_total;
-                        let current_failed = node_metrics.num_block_failures_total;
-
-                        // Ensure counters don't decrease (i.e., reset detection)
-                        let (num_blocks_proposed, num_blocks_failed) = if prev_proposed > current_proposed || prev_failed > current_failed {
-                            (current_proposed, current_failed)
-                        } else {
-                            (current_proposed - prev_proposed, current_failed - prev_failed)
-                        };
-
-                        acc.push(NodeDailyMetrics::new(key.ts, key.subnet_id, num_blocks_proposed, num_blocks_failed));
-
-                        (acc, (current_proposed, current_failed))
-                    },
-                );
-
-                (NodeId::from(node_id), daily_metrics)
-            })
-            .collect()
     }
 }
 

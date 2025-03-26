@@ -2,7 +2,7 @@ use std::{borrow::Cow, fmt};
 
 use candid::{CandidType, Decode, Deserialize, Encode, Principal};
 use dfn_core::api::PrincipalId;
-use ic_management_canister_types::NodeMetricsHistoryResponse;
+use ic_management_canister_types_private::NodeMetricsHistoryResponse;
 use ic_nns_governance_api::pb::v1::MonthlyNodeProviderRewards;
 use ic_protobuf::registry::node_rewards::v2::{NodeRewardRate, NodeRewardRates};
 use ic_stable_structures::{storable::Bound, Storable};
@@ -10,7 +10,7 @@ use node_provider_rewards_lib::v1_types::MultiplierStats;
 use serde::Serialize;
 
 pub type SubnetNodeMetricsHistory = (PrincipalId, Vec<NodeMetricsHistoryResponse>);
-pub type NodeMetricsGrouped = (u64, PrincipalId, ic_management_canister_types::NodeMetrics);
+pub type NodeMetricsGrouped = (u64, PrincipalId, ic_management_canister_types_private::NodeMetrics);
 
 // Stored in stable structure
 pub type TimestampNanos = u64;

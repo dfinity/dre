@@ -1,16 +1,11 @@
-use crate::RegistryStoreInstance;
-use ic_base_types::{NodeId, PrincipalId, RegistryVersion, SubnetId};
+use ic_base_types::{PrincipalId, RegistryVersion, SubnetId};
 use ic_interfaces_registry::RegistryValue;
 use ic_protobuf::registry::dc::v1::DataCenterRecord;
 use ic_protobuf::registry::node::v1::NodeRecord;
 use ic_protobuf::registry::node_operator::v1::NodeOperatorRecord;
-use ic_protobuf::registry::node_rewards::v2::NodeRewardsTable;
-use ic_protobuf::registry::subnet::v1::{SubnetListRecord, SubnetRecord};
-use ic_registry_keys::{
-    make_data_center_record_key, make_node_operator_record_key, make_subnet_list_record_key, DATA_CENTER_KEY_PREFIX, NODE_OPERATOR_RECORD_KEY_PREFIX,
-    NODE_RECORD_KEY_PREFIX, NODE_REWARDS_TABLE_KEY, SUBNET_RECORD_KEY_PREFIX,
-};
-use ic_types::registry::RegistryClientError;
+use ic_protobuf::registry::subnet::v1::SubnetRecord;
+use ic_registry_canister_client::{CanisterRegistryClient, RegistryDataStableMemory, StableCanisterRegistryClient};
+use ic_registry_keys::{DATA_CENTER_KEY_PREFIX, NODE_OPERATOR_RECORD_KEY_PREFIX, NODE_RECORD_KEY_PREFIX, SUBNET_RECORD_KEY_PREFIX};
 use indexmap::IndexMap;
 use node_provider_rewards::reward_period::TimestampNanos;
 use node_provider_rewards::types::RewardableNode;
@@ -37,57 +32,48 @@ impl RegistryEntry for SubnetRecord {
     const KEY_PREFIX: &'static str = SUBNET_RECORD_KEY_PREFIX;
 }
 
-impl RegistryEntry for NodeRewardsTable {
-    const KEY_PREFIX: &'static str = NODE_REWARDS_TABLE_KEY;
+pub struct RegistryClient<S: RegistryDataStableMemory> {
+    pub(crate) store: StableCanisterRegistryClient<S>,
 }
 
-fn get_family_entries_of_version<T: RegistryEntry + Default>(version: RegistryVersion) -> IndexMap<String, (u64, T)> {
-    let prefix_length = T::KEY_PREFIX.len();
+impl<S: RegistryDataStableMemory> RegistryClient<S> {
+    pub async fn schedule_registry_sync(&self) -> Result<RegistryVersion, String> {
+        self.store.sync_registry_stored().await
+    }
 
-    RegistryStoreInstance::get_key_family(T::KEY_PREFIX, version)
-        .expect("Failed to get key family")
-        .iter()
-        .filter_map(|key| {
-            let r = RegistryStoreInstance::get_versioned_value(key, version)
-                .unwrap_or_else(|_| panic!("Failed to get entry {} for type {}", key, std::any::type_name::<T>()));
+    fn get_family_entries_of_version<T: RegistryEntry + Default>(&self, version: RegistryVersion) -> IndexMap<String, (u64, T)> {
+        let prefix_length = T::KEY_PREFIX.len();
 
-            r.as_ref().map(|v| {
-                (
-                    key[prefix_length..].to_string(),
-                    (r.version.get(), T::decode(v.as_slice()).expect("Invalid registry value")),
-                )
+        self.store
+            .get_key_family(T::KEY_PREFIX, version)
+            .expect("Failed to get key family")
+            .iter()
+            .filter_map(|key| {
+                let r = self
+                    .store
+                    .get_versioned_value(key, version)
+                    .unwrap_or_else(|_| panic!("Failed to get entry {} for type {}", key, std::any::type_name::<T>()));
+
+                r.as_ref().map(|v| {
+                    (
+                        key[prefix_length..].to_string(),
+                        (r.version.get(), T::decode(v.as_slice()).expect("Invalid registry value")),
+                    )
+                })
             })
-        })
-        .collect()
-}
+            .collect()
+    }
 
-pub fn get_versioned_value<T: RegistryValue + Default>(key: &str, version: RegistryVersion) -> Result<T, RegistryClientError> {
-    let value = RegistryStoreInstance::get_versioned_value(key, version)?
-        .map(|v| T::decode(v.as_slice()).unwrap())
-        .value
-        .unwrap_or_default();
-    Ok(value)
-}
+    fn get_family_entries<T: RegistryEntry + Default>(&self) -> IndexMap<String, (u64, T)> {
+        self.get_family_entries_of_version::<T>(self.store.get_latest_version())
+    }
 
-pub fn get_value<T: RegistryValue + Default>(key: &str) -> Result<T, RegistryClientError> {
-    let latest_version = RegistryStoreInstance::local_latest_version();
-
-    Ok(get_versioned_value::<T>(key, latest_version)?)
-}
-
-fn get_family_entries<T: RegistryEntry + Default>() -> IndexMap<String, (u64, T)> {
-    let latest_version = RegistryStoreInstance::local_latest_version();
-    get_family_entries_of_version::<T>(latest_version)
-}
-
-pub fn subnets_list() -> Vec<SubnetId> {
-    let record = get_value::<SubnetListRecord>(&make_subnet_list_record_key().as_str()).expect("Failed to get subnets list");
-
-    record
-        .subnets
-        .into_iter()
-        .map(|s| SubnetId::from(PrincipalId::try_from(s.clone().as_slice()).unwrap()))
-        .collect()
+    pub fn subnets_list(&self) -> Vec<SubnetId> {
+        self.get_family_entries::<SubnetRecord>()
+            .iter()
+            .map(|(subnet_id, _)| PrincipalId::from_str(subnet_id).map(SubnetId::from).expect("Invalid subnet id"))
+            .collect()
+    }
 }
 
 pub fn get_rewards_table() -> NodeRewardsTable {

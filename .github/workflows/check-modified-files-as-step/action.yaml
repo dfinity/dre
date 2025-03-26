@@ -3,8 +3,12 @@ description: Reusable action for checking if a file path is modified as a step. 
 
 inputs:
   path:
-    description: "Path to check"
+    description: "Path to check -- can be a space-separated list of bash [[]]-compatible globs"
     required: true
+outputs:
+  changed:
+    description: "Whether any of the files matching the globs specified changed between the base and the head commit"
+    value: ${{ steps.check-changed.outputs.changed }}
 
 runs:
   using: composite
@@ -12,26 +16,37 @@ runs:
     ########################################
     # Check to see if files changed
     ########################################
-    - name: "🔍 Check if $PATH_TO_CHECK is modified in last commit "
+    - name: "🔍 Check whether $PATH_TO_CHECK were modified in between the commit range"
+      id: check-changed
       env:
         PATH_TO_CHECK: ${{ inputs.path }}
       shell: bash
       run: |
-        set -eExou pipefail
+        set -eEou pipefail
 
-        echo "=============== list modified files ==============="
-        git diff --name-only HEAD^ HEAD
-
-        echo "========== check paths of modified files =========="
-        git diff --name-only HEAD^ HEAD > files.txt
+        if [[ -v GITHUB_BASE_REF ]]
+        then
+          base=$GITHUB_BASE_REF
+          src=origin/"$base"
+        else
+          base=${{ github.event.before }}
+          src="$base"
+        fi
+        git fetch origin $base
+        git diff --name-only "$src" "$GITHUB_SHA" > files.txt
+        echo "=============== list modified files ===============" >&2
+        cat files.txt >&2
         while IFS= read -r file
         do
-        echo $file
-        if [[ $file != $PATH_TO_CHECK ]]; then
-          echo "changed=false" > $GITHUB_OUTPUT
-        else
-          echo "File $file matches $PATH_TO_CHECK"
-          echo "changed=true" > $GITHUB_OUTPUT
-          break
-        fi
+          set -f # turn off globbing for what I am about to do
+          for subpath_to_check in $PATH_TO_CHECK
+          do
+            if [[ $file = $subpath_to_check ]]; then
+              echo "File $file matching $subpath_to_check changed between $base and $GITHUB_SHA." >> "$GITHUB_STEP_SUMMARY"
+              echo "changed=true" >> $GITHUB_OUTPUT
+              exit
+            fi
+          done
         done < files.txt
+        echo "No files changed between $base and $GITHUB_SHA." >> "$GITHUB_STEP_SUMMARY"
+        echo "changed=false" >> $GITHUB_OUTPUT
