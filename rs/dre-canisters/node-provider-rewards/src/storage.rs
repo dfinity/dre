@@ -31,9 +31,7 @@ thread_local! {
     };
 
     static REGISTRY_DATA_STORE_BTREE_MAP: RefCell<StableBTreeMap<StorableRegistryKey, StorableRegistryValue, VM>>
-        = RefCell::new(MEMORY_MANAGER.with_borrow(|mm|
-            StableBTreeMap::new(mm.get(REGISTRY_STORE_MEMORY_ID))
-        ));
+        = RefCell::new(stable_btreemap_init(REGISTRY_STORE_MEMORY_ID));
 
     pub static REGISTRY_STORE: Rc<RegistryClient<RegistryStoreStableMemoryBorrower>> = {
         let registry_client = RegistryClient {
