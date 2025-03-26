@@ -33,14 +33,6 @@ jobs:
         with:
           fetch-depth: 2
 
-      - name: "Analyze Github event (temporary!)"
-        id: githubevent
-        shell: bash
-        env:
-          EVENT: ${{ toJson(github.event) }}
-        run: |
-          echo "$EVENT"
-
       # The GitHub App token is necessary for pushing changed files back to the repository
       # If regular secrets.GITHUB_TOKEN is used instead, the push will not trigger any actions
       # https://github.com/orgs/community/discussions/25702

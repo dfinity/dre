@@ -1,6 +1,8 @@
 import argparse
+import concurrent.futures
 import logging
 import os
+import pathlib
 import subprocess
 import sys
 import re
@@ -59,10 +61,8 @@ def release_branch_date(branch: str) -> typing.Optional[datetime]:
     retry=retry_if_exception_type(subprocess.CalledProcessError),
     after=after_log(_LOGGER, logging.ERROR),
 )
-def target_determinator(ic_repo: GitRepoAnnotator, object: str) -> bool:
-    logger = _LOGGER.getChild("target_determinator").getChild(object)
-    logger.debug("Attempting to determine target")
-    ic_repo.checkout(object)
+def target_determinator(cwd: pathlib.Path, parent_object: str) -> bool:
+    logger = _LOGGER.getChild("target_determinator").getChild(parent_object)
     p = subprocess.run(
         [
             resolve_binary("target-determinator"),
@@ -70,35 +70,49 @@ def target_determinator(ic_repo: GitRepoAnnotator, object: str) -> bool:
             f"-bazel={resolve_binary("bazel")}",
             "--targets",
             GUESTOS_BAZEL_TARGETS,
-            ic_repo.parent(object),
+            parent_object,
         ],
-        cwd=ic_repo.dir,
+        cwd=cwd,
         check=True,
         stdout=subprocess.PIPE,
+        text=True,
     )
-    output = p.stdout.decode().strip()
-    logger.debug(f"stdout of target determinator for {object}: %s", output)
+    output = p.stdout.strip()
+    logger.debug(
+        f"stdout of target determinator for {parent_object}: %s",
+        output,
+    )
     return output != ""
 
 
 def annotate_object(ic_repo: GitRepoAnnotator, object: str) -> None:
     logger = _LOGGER.getChild("annotate_object").getChild(object)
     logger.debug("Attempting to annotate")
+    start = time.time()
     ic_repo.checkout(object)
-    logger.debug("Running bazel query")
-    bazel_query_output = subprocess.check_output(
-        [
-            resolve_binary("bazel"),
-            "query",
-            f"deps({GUESTOS_BAZEL_TARGETS})",
-        ],
-        text=True,
-        cwd=ic_repo.dir,
-    )
-    logger.debug(
-        f"stdout of bazel query deps({GUESTOS_BAZEL_TARGETS}) for {object}: %s",
-        bazel_query_output.rstrip(),
-    )
+
+    with concurrent.futures.ThreadPoolExecutor(max_workers=2) as executor:
+        logger.debug(f"Running bazel query deps({GUESTOS_BAZEL_TARGETS})")
+        bazel_query_output_future = executor.submit(
+            subprocess.check_output,
+            [
+                resolve_binary("bazel"),
+                "query",
+                f"deps({GUESTOS_BAZEL_TARGETS})",
+            ],
+            text=True,
+            cwd=ic_repo.dir,
+        )
+        target_determinator_future = executor.submit(
+            target_determinator, ic_repo.dir, ic_repo.parent(object)
+        )
+        bazel_query_output = bazel_query_output_future.result()
+        lap = time.time() - start
+        logger.debug("Bazel query finished in %.2f seconds", lap)
+        target_determinator_output = target_determinator_future.result()
+        lap = time.time() - start
+        logger.debug("Target determinator finished in %.2f seconds", lap)
+
     ic_repo.add(
         object=object,
         namespace=GUESTOS_TARGETS_NOTES_NAMESPACE,
@@ -113,8 +127,10 @@ def annotate_object(ic_repo: GitRepoAnnotator, object: str) -> None:
     ic_repo.add(
         object=object,
         namespace=GUESTOS_CHANGED_NOTES_NAMESPACE,
-        content=str(target_determinator(ic_repo=ic_repo, object=object)),
+        content=str(target_determinator_output),
     )
+    lap = time.time() - start
+    logger.debug("Annotation finished in %.2f seconds", lap)
 
 
 def annotate_branch(annotator: GitRepoAnnotator, branch: str) -> None:
@@ -181,6 +197,14 @@ def main() -> None:
         help="Time to wait (in seconds) between loop executions.  If 0 or less, exit immediately after the first loop.",
     )
     parser.add_argument(
+        "--watchdog-timer",
+        action="store",
+        type=int,
+        dest="watchdog_timer",
+        default=1200,
+        help="Kill the annotator if a loop has not completed in this many seconds.",
+    )
+    parser.add_argument(
         "--branch-globs",
         default="master,rc--*",
         type=str,
@@ -220,8 +244,8 @@ def main() -> None:
         behavior=behavior,
     )
 
-    # Watchdog needs to be fed (to report healthy progress) every 10 minutes
-    watchdog = Watchdog(timeout_seconds=max([600, opts.loop_every * 2]))
+    # Watchdog needs to be fed (to report healthy progress) every watchdog_timer seconds
+    watchdog = Watchdog(timeout_seconds=opts.watchdog_timer)
     watchdog.start()
 
     logger = _LOGGER.getChild("annotator")
