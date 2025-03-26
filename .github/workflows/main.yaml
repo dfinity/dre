@@ -78,6 +78,7 @@ jobs:
       ########################################
       # Upload test artifacts
       ########################################
+
       - name: "🧪 Upload test artifacts"
         if: ${{ github.ref == 'refs/heads/main' }}
         uses: actions/upload-artifact@v4
@@ -98,21 +99,17 @@ jobs:
         if: ${{ startsWith(github.head_ref, 'container') || startsWith(github.ref, 'refs/heads/container') || (github.ref == 'refs/heads/main') }}
         run: bazel query --noshow_progress 'kind("oci_push", ...)' | xargs -I_target bazel run _target -- --tag ${GITHUB_SHA}
 
-      ########################################
-      # Check if dashboard/* changed to see if
-      # it also needs to be updated in k8s
-      ########################################
       - name: "❓ Check if dashboard/* changed in last commit"
         id: check-dashboard-frontend-modified
         uses: ./.github/workflows/check-modified-files-as-step
         with:
           path: dashboard/*
 
-      - name: "❓ Check if release-controller/* changed in last commit"
+      - name: "❓ Check if files that influence release controller changed in last commit"
         id: check-release-controller-modified
         uses: ./.github/workflows/check-modified-files-as-step
         with:
-          path: release-controller/*
+          path: release-controller/* requirements*.lock pyproject.toml *.bazel .github/*
 
       - name: "💲 Setting correct paths to update"
         id: paths
@@ -132,10 +129,6 @@ jobs:
           else
             echo "Skipping adding of frontend to list of files"
           fi
-
-          echo "Output of this step:"
-          echo ${files[@]}
-          echo "files=${files[@]}" >> $GITHUB_ENV
           echo "files=${files[@]}" >> $GITHUB_OUTPUT
 
       ########################################
