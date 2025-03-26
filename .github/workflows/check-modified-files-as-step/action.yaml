@@ -22,18 +22,20 @@ runs:
         PATH_TO_CHECK: ${{ inputs.path }}
       shell: bash
       run: |
-        set -eEou pipefail
+        set -eExou pipefail
 
-        if [[ -v GITHUB_BASE_REF ]]
+        if [[ -v GITHUB_BASE_REF ]] && [ "$GITHUB_BASE_REF" != "" ]
         then
           base=$GITHUB_BASE_REF
           src=origin/"$base"
+          next="$GITHUB_SHA"
         else
           base=${{ github.event.before }}
           src="$base"
+          next=${{ github.event.after }}
         fi
-        git fetch origin $base
-        git diff --name-only "$src" "$GITHUB_SHA" > files.txt
+        git fetch origin $base $next
+        git diff --name-only "$src" "$next" > files.txt
         echo "=============== list modified files ===============" >&2
         cat files.txt >&2
         while IFS= read -r file
@@ -42,11 +44,11 @@ runs:
           for subpath_to_check in $PATH_TO_CHECK
           do
             if [[ $file = $subpath_to_check ]]; then
-              echo "File $file matching $subpath_to_check changed between $base and $GITHUB_SHA." >> "$GITHUB_STEP_SUMMARY"
+              echo "File $file matching $subpath_to_check changed between $base and $next." >> "$GITHUB_STEP_SUMMARY"
               echo "changed=true" >> $GITHUB_OUTPUT
               exit
             fi
           done
         done < files.txt
-        echo "No files changed between $base and $GITHUB_SHA." >> "$GITHUB_STEP_SUMMARY"
+        echo "No files changed between $base and $next." >> "$GITHUB_STEP_SUMMARY"
         echo "changed=false" >> $GITHUB_OUTPUT
