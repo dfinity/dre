@@ -40,6 +40,11 @@ LAST_CYCLE_SUCCESSFUL = Gauge(
     "last_cycle_successful",
     "1 if the last cycle was successful, 0 if it was not",
 )
+COMMITS_BEHIND = Gauge(
+    "commits_behind",
+    "Number of commits this ref to be annotated is behind.  On a well-oiled annotator, this never stays above 0 for long.",
+    ["ref"],
+)
 
 
 _LOGGER = logging.getLogger()
@@ -133,9 +138,9 @@ def annotate_object(ic_repo: GitRepoAnnotator, object: str) -> None:
     logger.debug("Annotation finished in %.2f seconds", lap)
 
 
-def annotate_branch(annotator: GitRepoAnnotator, branch: str) -> None:
+def plan_to_annotate_branch(annotator: GitRepoAnnotator, branch: str) -> list[str]:
     logger = _LOGGER.getChild(branch)
-    logger.debug("Attempting to annotate")
+    logger.info("Preparing annotation plan")
     # Reverse to annotate oldest objects first so that loop can be easily restarted if it breaks.
     commits = []
     annotator.checkout(branch)
@@ -152,11 +157,24 @@ def annotate_branch(annotator: GitRepoAnnotator, branch: str) -> None:
         commits.append(current_commit)
         current_commit = annotator.parent(current_commit)
     if commits:
-        logger.info("About to annotate %s commits", len(commits))
-    for c in reversed(commits):
-        annotate_object(ic_repo=annotator, object=c)
+        logger.info("Has %s commits to annotate", len(commits))
+    COMMITS_BEHIND.labels(branch).set(len(commits))
+    return commits
+
+
+def annotate_commits_of_branch(
+    annotator: GitRepoAnnotator, branch: str, commits: list[str]
+) -> None:
+    logger = _LOGGER.getChild(branch)
+    unannotated_commits = len(commits)
     if commits:
+        for c in reversed(commits):
+            annotate_object(ic_repo=annotator, object=c)
+            unannotated_commits = unannotated_commits - 1
+            COMMITS_BEHIND.labels(branch).set(unannotated_commits)
         logger.info("Successfully annotated %s commits", len(commits))
+    else:
+        COMMITS_BEHIND.labels(branch).set(0)
 
 
 def main() -> None:
@@ -262,6 +280,7 @@ def main() -> None:
             with ic_repo.annotator(
                 [GUESTOS_CHANGED_NOTES_NAMESPACE, GUESTOS_TARGETS_NOTES_NAMESPACE]
             ) as annotator:
+                unannotated_commits_by_ref: dict[str, list[str]] = {}
                 for b in [
                     branch
                     for glob in branch_globs
@@ -284,7 +303,19 @@ def main() -> None:
                             b,
                         )
                         continue
-                    annotate_branch(annotator, branch=b)
+                    outstanding_commits = plan_to_annotate_branch(annotator, branch=b)
+                    unannotated_commits_by_ref[b] = outstanding_commits
+                # Make a little cache for this loop's run, saving time not invoking
+                # the annotation for a simgle commit twice.  Git history of different
+                # branches often shares commits in both branches.
+                annotated_commits: set[str] = set()
+                for b, outstanding_commits in unannotated_commits_by_ref.items():
+                    # Remove any commits already annotated so as to not waste time,
+                    # but preserve the ordering since that seems (to me) to matter.
+                    tbd = [c for c in outstanding_commits if c not in annotated_commits]
+                    annotate_commits_of_branch(annotator, b, tbd)
+                    # Remember these were annotated, avoid wasting time next loop.
+                    annotated_commits.update(tbd)
             and_now = time.time()
             LAST_CYCLE_SUCCESS_TIMESTAMP_SECONDS.set(int(and_now))
             LAST_CYCLE_END_TIMESTAMP_SECONDS.set(int(and_now))
