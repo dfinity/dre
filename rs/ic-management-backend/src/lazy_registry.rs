@@ -663,7 +663,6 @@ impl LazyRegistry for LazyRegistryImpl {
                             max_number_of_canisters: sr.max_number_of_canisters,
                             ssh_readonly_access: sr.ssh_readonly_access.clone(),
                             ssh_backup_access: sr.ssh_backup_access.clone(),
-                            ecdsa_config: sr.ecdsa_config.clone(),
                             dkg_dealings_per_block: sr.dkg_dealings_per_block,
                             is_halted: sr.is_halted,
                             halt_at_cup_height: sr.halt_at_cup_height,

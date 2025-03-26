@@ -241,6 +241,7 @@ impl TryFrom<Vec<ProposalInfo>> for MessageGroups {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::collections::HashMap;
     use std::time::SystemTime;
 
     use ic_nns_governance_api::pb::v1::proposal::Action;
@@ -263,7 +264,17 @@ mod tests {
             proposal_timestamp_seconds: SystemTime::now().duration_since(SystemTime::UNIX_EPOCH).unwrap().as_secs(),
             topic,
             status: 1, // AcceptVotes
-            ..Default::default()
+            ballots: HashMap::new(),
+            latest_tally: None,
+            decided_timestamp_seconds: 0,
+            executed_timestamp_seconds: 0,
+            reward_event_round: 0,
+            reward_status: 0,
+            failed_timestamp_seconds: 0,
+            failure_reason: None,
+            deadline_timestamp_seconds: None,
+            derived_proposal_information: None,
+            total_potential_voting_power: None,
         }
     }
 

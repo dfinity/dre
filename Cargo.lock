@@ -3933,6 +3933,7 @@ dependencies = [
  "ic-management-types",
  "ic-nns-constants",
  "ic-nns-governance",
+ "ic-nns-governance-api",
  "ic-protobuf",
  "ic-registry-client",
  "ic-registry-client-fake",

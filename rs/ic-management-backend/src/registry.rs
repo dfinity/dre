@@ -590,7 +590,6 @@ impl RegistryState {
                         max_number_of_canisters: sr.max_number_of_canisters,
                         ssh_readonly_access: sr.ssh_readonly_access.clone(),
                         ssh_backup_access: sr.ssh_backup_access.clone(),
-                        ecdsa_config: sr.ecdsa_config.clone(),
                         dkg_dealings_per_block: sr.dkg_dealings_per_block,
                         is_halted: sr.is_halted,
                         halt_at_cup_height: sr.halt_at_cup_height,
@@ -903,10 +902,7 @@ fn node_ip_addr(nr: &NodeRecord) -> Ipv6Addr {
 pub fn local_cache_path() -> PathBuf {
     let path = match std::env::var("LOCAL_REGISTRY_PATH") {
         Ok(path) => PathBuf::from(path),
-        Err(_) => match dirs::cache_dir() {
-            Some(cache_dir) => cache_dir,
-            None => PathBuf::from("/tmp"),
-        },
+        Err(_) => dirs::cache_dir().unwrap_or_else(|| PathBuf::from("/tmp")),
     }
     .join("ic-registry-cache");
     if !path.exists() {

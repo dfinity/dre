@@ -31,6 +31,7 @@ ic-interfaces-registry = { workspace = true }
 ic-management-types = { path = "../ic-management-types" }
 ic-nns-constants = { workspace = true }
 ic-nns-governance = { workspace = true }
+ic-nns-governance-api = { workspace = true }
 ic-protobuf = { workspace = true }
 ic-registry-client = { workspace = true }
 ic-registry-client-fake = { workspace = true }
