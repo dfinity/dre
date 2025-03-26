@@ -177,6 +177,14 @@ def main() -> None:
         help="Time to wait (in seconds) between loop executions.  If 0 or less, exit immediately after the first loop.",
     )
     parser.add_argument(
+        "--watchdog-timer",
+        action="store",
+        type=int,
+        dest="watchdog_timer",
+        default=1200,
+        help="Kill the annotator if a loop has not completed in this many seconds.",
+    )
+    parser.add_argument(
         "--branch-globs",
         default="master,rc--*",
         type=str,
@@ -216,8 +224,8 @@ def main() -> None:
         behavior=behavior,
     )
 
-    # Watchdog needs to be fed (to report healthy progress) every 10 minutes
-    watchdog = Watchdog(timeout_seconds=max([600, opts.loop_every * 2]))
+    # Watchdog needs to be fed (to report healthy progress) every watchdog_timer seconds
+    watchdog = Watchdog(timeout_seconds=opts.watchdog_timer)
     watchdog.start()
 
     logger = _LOGGER.getChild("annotator")
