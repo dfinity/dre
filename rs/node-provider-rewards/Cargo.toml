@@ -16,7 +16,11 @@ num-traits = { workspace = true }
 rust_decimal = { workspace = true }
 rust_decimal_macros = { workspace = true }
 tabled = { workspace = true }
-chrono = { workspace = true }
+chrono = { version = "0.4.38", default-features = false, features = [
+    "alloc",
+    "clock",
+    "serde",
+] }
 candid = { workspace = true }
 serde = { workspace = true }
 ic-protobuf = { workspace = true }

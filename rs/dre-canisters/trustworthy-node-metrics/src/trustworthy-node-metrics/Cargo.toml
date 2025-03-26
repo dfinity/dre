@@ -35,7 +35,7 @@ rust_decimal_macros = { workspace = true }
 num-traits = { workspace = true }
 ic-nns-constants = { workspace = true }
 ic-nns-governance-api = { workspace = true }
-ic-registry-canister-client = { workspace = true }
+ic-registry-canister-client = { git = "https://github.com/dfinity/ic.git", rev = "c22d478ad97f82bd5d378862c9dd2f13afe2ece1" }
 lazy_static = { workspace = true }
 prost = { workspace = true }
 ic-interfaces-registry = { workspace = true }

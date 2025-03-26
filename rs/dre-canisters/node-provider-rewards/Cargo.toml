@@ -31,9 +31,9 @@ ic-nervous-system-canisters = { workspace = true }
 ic-nervous-system-common = { workspace = true }
 ic-protobuf = { workspace = true }
 ic-registry-canister-client = { workspace = true }
+ic-types = { workspace = true }
 mockall = { workspace = true }
 node-provider-rewards = { workspace = true }
-thiserror = { workspace = true }
 prost = { workspace = true }
 rust_decimal = { workspace = true }
 

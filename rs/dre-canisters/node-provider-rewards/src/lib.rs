@@ -1,4 +1,5 @@
 use crate::storage::{METRICS_MANAGER, REGISTRY_STORE};
+use candid::candid_method;
 use ic_canisters_http_types::{HttpRequest, HttpResponse, HttpResponseBuilder};
 use ic_cdk_macros::*;
 use ic_nervous_system_common::serve_metrics;
@@ -166,15 +167,15 @@ pub struct RewardPeriodArgs {
     pub end_ts: u64,
 }
 
-#[query]
-#[candid_method(update, rename = "get_node_providers_xdr_rewards")]
-fn get_node_providers_xdr_rewards_(args: RewardPeriodArgs) -> Result<RewardsPerNodeProviderResponse, String> {
+#[update]
+#[candid_method(update)]
+fn get_node_providers_xdr_rewards(args: RewardPeriodArgs) -> Result<RewardsPerNodeProviderResponse, String> {
     let reward_period = RewardPeriod::new(args.start_ts, args.end_ts).map_err(|e| format!("Error creating period: {}", e))?;
     let metrics_manager = METRICS_MANAGER.with(|m| m.clone());
-
+    let registry_store = REGISTRY_STORE.with(|m| m.clone());
     let daily_metrics_by_node = metrics_manager.daily_metrics_by_node(*reward_period.start_ts, *reward_period.end_ts);
-    let rewards_table = registry::get_rewards_table();
-    let rewardable_nodes = registry::get_rewardable_nodes(*reward_period.start_ts, *reward_period.end_ts);
+    let rewards_table = registry_store.get_rewards_table();
+    let rewardable_nodes = registry_store.get_rewardable_nodes(*reward_period.start_ts, *reward_period.end_ts);
 
     let rewards = calculate_rewards(&reward_period, &rewards_table, &daily_metrics_by_node, &rewardable_nodes)
         .map_err(|e| format!("Error calculating rewards: {}", e))?;
