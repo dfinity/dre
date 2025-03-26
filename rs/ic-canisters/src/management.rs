@@ -2,7 +2,7 @@ use anyhow::Context;
 use candid::{CandidType, Decode, Deserialize, Encode};
 use ic_agent::Agent;
 use ic_base_types::{CanisterId, PrincipalId};
-use ic_management_canister_types::NodeMetricsHistoryArgs;
+use ic_management_canister_types_private::NodeMetricsHistoryArgs;
 use ic_utils::interfaces::{wallet::CallResult, WalletCanister};
 use log::error;
 use serde::Serialize;
@@ -84,16 +84,6 @@ pub struct NodeMetrics {
     pub node_id: PrincipalId,
     pub num_blocks_proposed_total: u64,
     pub num_block_failures_total: u64,
-}
-
-impl From<trustworthy_node_metrics_types::types::NodeMetrics> for NodeMetrics {
-    fn from(value: trustworthy_node_metrics_types::types::NodeMetrics) -> Self {
-        Self {
-            node_id: PrincipalId::from(value.node_id),
-            num_block_failures_total: value.num_blocks_failures_total,
-            num_blocks_proposed_total: value.num_blocks_proposed_total,
-        }
-    }
 }
 
 #[derive(Default, CandidType, Deserialize, Clone, Debug, Serialize)]

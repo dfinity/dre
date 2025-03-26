@@ -1,5 +1,5 @@
 use ic_management_types::Network;
-use ic_nns_governance::pb::v1::{ListProposalInfo, ListProposalInfoResponse, ProposalInfo, ProposalStatus};
+use ic_nns_governance::pb::v1::{ListProposalInfo, ProposalStatus};
 
 use anyhow::Result;
 use candid::Decode;
@@ -12,6 +12,7 @@ use std::time::SystemTime;
 use tokio::time::{sleep, Duration};
 mod slack;
 use clap::Parser;
+use ic_nns_governance_api::pb::v1::{ListProposalInfoResponse, ProposalInfo};
 use reqwest::Url;
 
 #[macro_use]
