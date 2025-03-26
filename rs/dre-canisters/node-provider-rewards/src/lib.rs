@@ -1,6 +1,4 @@
-use crate::canister_client::ICCanisterClient;
-use crate::registry_store::CanisterRegistryStore;
-use crate::storage::{State, METRICS_MANAGER, VM};
+use crate::storage::{METRICS_MANAGER, REGISTRY_STORE};
 use ic_canisters_http_types::{HttpRequest, HttpResponse, HttpResponseBuilder};
 use ic_cdk_macros::*;
 use ic_nervous_system_common::serve_metrics;
@@ -10,15 +8,10 @@ mod canister_client;
 mod metrics;
 mod metrics_types;
 mod registry;
-mod registry_store;
-mod registry_store_types;
 mod storage;
 
 const HOUR_IN_SECONDS: u64 = 60 * 60;
 const DAY_IN_SECONDS: u64 = HOUR_IN_SECONDS * 24;
-
-pub type RegistryStoreInstance = CanisterRegistryStore<State, VM>;
-pub const IC_CANISTER_CLIENT: ICCanisterClient = ICCanisterClient;
 
 #[derive(Default)]
 pub struct PrometheusMetrics {
@@ -56,12 +49,12 @@ thread_local! {
 /// - Sync subnets metrics from the management canister of the different subnets
 async fn sync_all() {
     PROMETHEUS_METRICS.with_borrow_mut(|m| m.mark_last_calculation_start());
-    let registry_sync_result = RegistryStoreInstance::sync_registry_stored(&IC_CANISTER_CLIENT).await;
+    let registry_store = REGISTRY_STORE.with(|m| m.clone());
 
-    match registry_sync_result {
+    match registry_store.schedule_registry_sync().await {
         Ok(_) => {
             let metrics_manager = METRICS_MANAGER.with(|m| m.clone());
-            let subnets_list = registry::subnets_list();
+            let subnets_list = registry_store.subnets_list();
 
             metrics_manager.update_subnets_metrics(subnets_list).await;
             PROMETHEUS_METRICS.with_borrow_mut(|m| m.mark_last_calculation_success());

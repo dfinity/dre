@@ -9,7 +9,7 @@ license.workspace = true
 
 [dependencies]
 ahash = { version = "0.8.11", default-features = false, features = [
-"compile-time-rng",
+    "compile-time-rng",
 ] }
 ic-base-types = { workspace = true }
 ic-protobuf = { workspace = true }
@@ -18,7 +18,7 @@ lazy_static = { workspace = true }
 num-traits = { workspace = true }
 rust_decimal = { workspace = true }
 rust_decimal_macros = { workspace = true }
-ic-management-canister-types = { workspace = true }
+ic-management-canister-types-private = { workspace = true }
 serde = { workspace = true }
 candid = { workspace = true }
 

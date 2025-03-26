@@ -2,7 +2,7 @@ use crate::metrics::MetricsManager;
 use crate::metrics_types::StorableSubnetMetricsKey;
 use ic_base_types::{PrincipalId, SubnetId};
 use ic_cdk::api::call::{CallResult, RejectionCode};
-use ic_management_canister_types::NodeMetricsHistoryResponse;
+use ic_management_canister_types_private::NodeMetricsHistoryResponse;
 use ic_stable_structures::memory_manager::{MemoryId, VirtualMemory};
 use ic_stable_structures::DefaultMemoryImpl;
 use std::cell::RefCell;
@@ -19,7 +19,7 @@ mod mock {
 
         #[async_trait]
         impl ManagementCanisterClient for CanisterClient {
-            async fn node_metrics_history(&self, contract: ic_management_canister_types::NodeMetricsHistoryArgs) -> CallResult<(Vec<NodeMetricsHistoryResponse>,)>;
+            async fn node_metrics_history(&self, contract: ic_management_canister_types_private::NodeMetricsHistoryArgs) -> CallResult<(Vec<NodeMetricsHistoryResponse>,)>;
         }
     }
 }

@@ -22,19 +22,15 @@ serde = { workspace = true }
 ic-interfaces-registry = { workspace = true }
 ic-registry-keys = { workspace = true }
 futures = { workspace = true }
-ic-types = { workspace = true }
-anyhow = { workspace = true }
 indexmap = { workspace = true }
 ic-base-types = { workspace = true }
-ic-management-canister-types = { workspace = true }
+ic-management-canister-types-private = { workspace = true }
 ic-metrics-encoder = { version = "1.1.1" }
+ic-nervous-system-canisters = { workspace = true }
 ic-nervous-system-common = { workspace = true }
-ic-nns-common = { workspace = true }
 ic-protobuf = { workspace = true }
-ic-registry-transport = { workspace = true }
-ic-nns-constants = { workspace = true }
+ic-registry-canister-client = { workspace = true }
 mockall = { workspace = true }
-thiserror = { workspace = true }
 
 [dev-dependencies]
 tokio = { workspace = true }

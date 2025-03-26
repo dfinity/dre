@@ -1,4 +1,3 @@
-
 [package]
 name = "trustworthy-node-metrics-types"
 version.workspace = true
@@ -20,7 +19,7 @@ candid = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
 dfn_core = { workspace = true }
-ic-management-canister-types = { workspace = true }
+ic-management-canister-types-private = { workspace = true }
 ic-stable-structures = { workspace = true }
 ic-protobuf = { workspace = true }
 ic-nns-governance-api = { workspace = true }

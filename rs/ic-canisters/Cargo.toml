@@ -15,7 +15,7 @@ candid = { workspace = true }
 hex = { workspace = true }
 ic-agent = { workspace = true }
 ic-base-types = { workspace = true }
-ic-management-canister-types = { workspace = true }
+ic-management-canister-types-private = { workspace = true }
 ic-nns-common = { workspace = true }
 ic-nns-constants = { workspace = true }
 ic-nns-governance = { workspace = true }
