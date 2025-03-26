@@ -5,7 +5,7 @@ use std::{
 
 use candid::CandidType;
 use ic_base_types::PrincipalId;
-use ic_management_canister_types_private::{NodeMetrics, NodeMetricsHistoryResponse};
+use ic_management_canister_types::{NodeMetrics, NodeMetricsHistoryResponse};
 use serde::Deserialize;
 
 use crate::v1_logs::RewardsLog;

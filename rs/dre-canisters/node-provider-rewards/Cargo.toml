@@ -12,24 +12,24 @@ crate-type = ["cdylib"]
 
 [dependencies]
 async-trait = { workspace = true }
-ic-canisters-http-types = { workspace = true }
+ic-canisters-http-types = { git = "https://github.com/dfinity/ic.git", rev = "2fe8aefafcb2fbee6fdb2785374d5de715560269" }
 ic-cdk = { workspace = true }
 ic-cdk-timers = { workspace = true }
 ic-cdk-macros = { workspace = true }
 ic-stable-structures = { workspace = true }
 candid = { workspace = true }
 serde = { workspace = true }
-ic-interfaces-registry = { workspace = true }
-ic-registry-keys = { workspace = true }
+ic-interfaces-registry = { git = "https://github.com/dfinity/ic.git", rev = "2fe8aefafcb2fbee6fdb2785374d5de715560269" }
+ic-registry-keys = { git = "https://github.com/dfinity/ic.git", rev = "2fe8aefafcb2fbee6fdb2785374d5de715560269" }
 futures = { workspace = true }
 indexmap = { workspace = true }
-ic-base-types = { workspace = true }
-ic-management-canister-types-private = { workspace = true }
+ic-base-types = { git = "https://github.com/dfinity/ic.git", rev = "2fe8aefafcb2fbee6fdb2785374d5de715560269" }
+ic-management-canister-types-private = { git = "https://github.com/dfinity/ic.git", rev = "2fe8aefafcb2fbee6fdb2785374d5de715560269" }
 ic-metrics-encoder = { version = "1.1.1" }
-ic-nervous-system-canisters = { workspace = true }
-ic-nervous-system-common = { workspace = true }
-ic-protobuf = { workspace = true }
-ic-registry-canister-client = { workspace = true }
+ic-nervous-system-canisters = { git = "https://github.com/dfinity/ic.git", rev = "2fe8aefafcb2fbee6fdb2785374d5de715560269" }
+ic-nervous-system-common = { git = "https://github.com/dfinity/ic.git", rev = "2fe8aefafcb2fbee6fdb2785374d5de715560269" }
+ic-protobuf = { git = "https://github.com/dfinity/ic.git", rev = "2fe8aefafcb2fbee6fdb2785374d5de715560269" }
+ic-registry-canister-client = { git = "https://github.com/dfinity/ic.git", rev = "2fe8aefafcb2fbee6fdb2785374d5de715560269" }
 mockall = { workspace = true }
 
 [dev-dependencies]
