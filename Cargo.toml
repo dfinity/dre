@@ -110,6 +110,7 @@ ic-management-backend = { path = "rs/ic-management-backend" }
 ic-management-canister-types-private = { git = "https://github.com/dfinity/ic.git", rev = "2fe8aefafcb2fbee6fdb2785374d5de715560269" }
 ic-management-types = { path = "rs/ic-management-types" }
 ic-metrics = { git = "https://github.com/dfinity/ic.git", rev = "2fe8aefafcb2fbee6fdb2785374d5de715560269" }
+ic-nervous-system-canisters = { git = "https://github.com/dfinity/ic.git", rev = "2fe8aefafcb2fbee6fdb2785374d5de715560269" }
 ic-nervous-system-common = { git = "https://github.com/dfinity/ic.git", rev = "2fe8aefafcb2fbee6fdb2785374d5de715560269" }
 ic-nns-common = { git = "https://github.com/dfinity/ic.git", rev = "2fe8aefafcb2fbee6fdb2785374d5de715560269" }
 ic-nns-constants = { git = "https://github.com/dfinity/ic.git", rev = "2fe8aefafcb2fbee6fdb2785374d5de715560269" }
@@ -138,6 +139,7 @@ ic-icrc1-test-utils = { git = "https://github.com/dfinity/ic.git", rev = "2fe8ae
 rosetta-core = { git = "https://github.com/dfinity/ic.git", rev = "2fe8aefafcb2fbee6fdb2785374d5de715560269" }
 icp-ledger = { git = "https://github.com/dfinity/ic.git", rev = "2fe8aefafcb2fbee6fdb2785374d5de715560269" }
 icrc-ledger-types = { git = "https://github.com/dfinity/ic.git", rev = "2fe8aefafcb2fbee6fdb2785374d5de715560269" }
+ic-metrics-encoder = "1.1.1"
 ic-transport-types = "0.39.3"
 ic-utils = "0.39.3"
 itertools = "0.13.0"
