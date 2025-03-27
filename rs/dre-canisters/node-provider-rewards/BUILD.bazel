@@ -4,6 +4,10 @@ load("@rules_rust//rust:defs.bzl", "rust_library", "rust_test")
 
 package(default_visibility = ["//visibility:public"])
 
+DEPS = [
+    "//rs/node-provider-rewards",
+]
+
 MACRO_DEPENDENCIES = [
     # Keep sorted.
     "@crate_index_dre//:async-trait",
@@ -33,7 +37,7 @@ rust_library(
            proc_macro = True,
        ),
     version = "0.9.0",
-    deps = all_crate_deps(
+    deps = DEPS + all_crate_deps(
            normal = True,
        ) + [":build_script"],
 )

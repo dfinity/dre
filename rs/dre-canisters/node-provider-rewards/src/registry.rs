@@ -89,12 +89,12 @@ impl<S: RegistryDataStableMemory> RegistryClient<S> {
     }
 
     pub fn get_value<T: RegistryValue + Default>(&self, key: &str) -> Result<T, RegistryClientError> {
-        Ok(self.get_versioned_value::<T>(key, self.store.get_latest_version())?)
+        self.get_versioned_value::<T>(key, self.store.get_latest_version())
     }
 
     pub fn subnets_list(&self) -> Vec<SubnetId> {
         let record = self
-            .get_value::<SubnetListRecord>(&make_subnet_list_record_key().as_str())
+            .get_value::<SubnetListRecord>(make_subnet_list_record_key().as_str())
             .expect("Failed to get subnets list");
 
         record

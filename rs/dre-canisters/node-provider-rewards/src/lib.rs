@@ -9,7 +9,6 @@ use rust_decimal::prelude::ToPrimitive;
 use std::cell::RefCell;
 use std::collections::HashMap;
 
-mod canister_client;
 mod metrics;
 mod metrics_types;
 mod registry;

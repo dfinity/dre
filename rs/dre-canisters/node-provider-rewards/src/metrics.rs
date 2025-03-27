@@ -1,5 +1,6 @@
 use crate::metrics_types::{KeyRange, StorableSubnetMetrics, StorableSubnetMetricsKey, SubnetIdStored};
 use async_trait::async_trait;
+use candid::Principal;
 use ic_base_types::{NodeId, PrincipalId, SubnetId};
 use ic_cdk::api::call::CallResult;
 use ic_management_canister_types_private::{NodeMetrics, NodeMetricsHistoryArgs, NodeMetricsHistoryResponse};
@@ -15,6 +16,24 @@ pub type TimestampNanos = u64;
 #[async_trait]
 pub trait ManagementCanisterClient {
     async fn node_metrics_history(&self, args: NodeMetricsHistoryArgs) -> CallResult<(Vec<NodeMetricsHistoryResponse>,)>;
+}
+
+/// Used to interact with remote Management canisters.
+pub struct ICCanisterClient;
+
+#[async_trait]
+impl ManagementCanisterClient for ICCanisterClient {
+    /// Queries the `node_metrics_history` endpoint of the management canisters of the subnet specified
+    /// in the 'contract' to fetch daily node metrics.
+    async fn node_metrics_history(&self, contract: NodeMetricsHistoryArgs) -> CallResult<(Vec<NodeMetricsHistoryResponse>,)> {
+        ic_cdk::api::call::call_with_payment128::<_, (Vec<NodeMetricsHistoryResponse>,)>(
+            Principal::management_canister(),
+            "node_metrics_history",
+            (contract,),
+            0_u128,
+        )
+        .await
+    }
 }
 
 pub struct MetricsManager<Memory>

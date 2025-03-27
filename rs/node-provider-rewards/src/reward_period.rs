@@ -1,4 +1,3 @@
-use candid::{CandidType, Deserialize};
 use ic_types::Time;
 use std::error::Error;
 use std::fmt;
