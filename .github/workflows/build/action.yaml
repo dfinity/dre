@@ -39,9 +39,9 @@ runs:
         bazel query "${{ inputs.spec }} ${{ inputs.except }}" > "$t"
         r=0
         bazel build --target_pattern_file="$t" --config=ci --test_env=HOME=/home/runner --explain="$t2" --verbose_explanations 2>&1 | tee "$logfile" >&2 || r=1
-        echo === Explanations === >&2
-        cat "$t2" >&2
-        echo == /Explanations === >&2
+        # echo === Explanations === >&2
+        # cat "$t2" >&2
+        # echo == /Explanations === >&2
         if [ "$r" != "0" ]; then
           if grep -q 'Digests do not match' "$logfile" ; then
             echo "repin=true" >> $GITHUB_OUTPUT
