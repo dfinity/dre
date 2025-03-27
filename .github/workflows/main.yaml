@@ -103,7 +103,8 @@ jobs:
         run: |
           set -ex -o pipefail
           oci_targets=$(bazel query --noshow_progress 'kind("oci_push", ...)')
-          # Oh, not changed?  Then skip pushing the release controller container images.
+          # Skip pushing the release controller container images.
+          # There is a separate workflow for that.
           oci_targets=$(echo "$oci_targets" | grep -v //release-controller)
           echo "$oci_targets" | xargs -I_target bazel run _target -- --tag ${GITHUB_SHA}
 
