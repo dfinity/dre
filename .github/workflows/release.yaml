@@ -34,6 +34,7 @@ jobs:
           sha: ${{github.event.pull_request.head.sha || github.sha}}
 
       - name: Run checks for release index
+        if: ${{ steps.changed-files.outputs.any_changed == 'true' }}
         run: |
           rye sync
           export PYTHONPATH=$PWD/release-controller
