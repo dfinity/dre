@@ -36,7 +36,7 @@ env = {
 py_binary(
     name = "release-controller",
     main = "reconciler.py",
-    srcs = glob(["*.py"], exclude = ["commit_annotator.py", "ci_check.py"]),
+    srcs = glob(["*.py"], exclude = ["commit_annotator.py"]),
     tags = ["typecheck"],
     env = {
         "DRE_PATH": "$(rootpath //rs/cli:dre)",
@@ -50,7 +50,7 @@ py_binary(
 py_binary(
     name = "commit-annotator",
     main = "commit_annotator.py",
-    srcs = glob(["*.py"], exclude = ["reconciler.py", "ci_check.py"]),
+    srcs = glob(["*.py"], exclude = ["reconciler.py"]),
     tags = ["typecheck"],
     data = [":bazelisk", ":target_determinator"],
     env = env,
