@@ -1,6 +1,5 @@
 use crate::{CallIn, IcAgentCanisterClient};
 use anyhow::Context;
-use candid::types::TypeInner::Principal;
 use candid::{CandidType, Decode, Deserialize, Encode};
 use ic_agent::Agent;
 use ic_base_types::{CanisterId, PrincipalId};

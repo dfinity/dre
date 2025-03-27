@@ -17,7 +17,7 @@ use ic_protobuf::registry::{
     hostos_version::v1::HostosVersionRecord,
     node::v1::{ConnectionEndpoint, IPv4InterfaceConfig},
     replica_version::v1::ReplicaVersionRecord,
-    subnet::v1::{ChainKeyConfig, EcdsaConfig, SubnetFeatures},
+    subnet::v1::{ChainKeyConfig, SubnetFeatures},
     unassigned_nodes_config::v1::UnassignedNodesConfigRecord,
 };
 use ic_registry_subnet_type::SubnetType;
