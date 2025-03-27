@@ -1,5 +1,5 @@
 {
-  "checksum": "ac2be2a7601feed34988b627ade2f132ac4a1bfc3ddca0e88317f291b7c145f5",
+  "checksum": "ee374ff78dfe59a948665724999686f51dcb0b2c8437aa6a254af08a37477080",
   "crates": {
     "actix-codec 0.5.2": {
       "name": "actix-codec",
@@ -1148,8 +1148,6 @@
         ],
         "crate_features": {
           "common": [
-            "compile-time-rng",
-            "const-random",
             "default",
             "getrandom",
             "runtime-rng",
@@ -1166,10 +1164,6 @@
             {
               "id": "cfg-if 1.0.0",
               "target": "cfg_if"
-            },
-            {
-              "id": "const-random 0.1.18",
-              "target": "const_random"
             },
             {
               "id": "getrandom 0.2.15",
@@ -2998,6 +2992,173 @@
       ],
       "license_file": "LICENSE"
     },
+    "axum 0.8.1": {
+      "name": "axum",
+      "version": "0.8.1",
+      "package_url": "https://github.com/tokio-rs/axum",
+      "repository": {
+        "Http": {
+          "url": "https://static.crates.io/crates/axum/0.8.1/download",
+          "sha256": "6d6fd624c75e18b3b4c6b9caf42b1afe24437daaee904069137d8bab077be8b8"
+        }
+      },
+      "targets": [
+        {
+          "Library": {
+            "crate_name": "axum",
+            "crate_root": "src/lib.rs",
+            "srcs": {
+              "allow_empty": true,
+              "include": [
+                "**/*.rs"
+              ]
+            }
+          }
+        }
+      ],
+      "library_target_name": "axum",
+      "common_attrs": {
+        "compile_data_glob": [
+          "**"
+        ],
+        "crate_features": {
+          "common": [
+            "default",
+            "form",
+            "http1",
+            "json",
+            "matched-path",
+            "original-uri",
+            "query",
+            "tokio",
+            "tower-log",
+            "tracing"
+          ],
+          "selects": {}
+        },
+        "deps": {
+          "common": [
+            {
+              "id": "axum-core 0.5.0",
+              "target": "axum_core"
+            },
+            {
+              "id": "bytes 1.10.1",
+              "target": "bytes"
+            },
+            {
+              "id": "form_urlencoded 1.2.1",
+              "target": "form_urlencoded"
+            },
+            {
+              "id": "futures-util 0.3.31",
+              "target": "futures_util"
+            },
+            {
+              "id": "http 1.2.0",
+              "target": "http"
+            },
+            {
+              "id": "http-body 1.0.1",
+              "target": "http_body"
+            },
+            {
+              "id": "http-body-util 0.1.2",
+              "target": "http_body_util"
+            },
+            {
+              "id": "hyper 1.6.0",
+              "target": "hyper"
+            },
+            {
+              "id": "hyper-util 0.1.10",
+              "target": "hyper_util"
+            },
+            {
+              "id": "itoa 1.0.14",
+              "target": "itoa"
+            },
+            {
+              "id": "matchit 0.8.4",
+              "target": "matchit"
+            },
+            {
+              "id": "memchr 2.7.4",
+              "target": "memchr"
+            },
+            {
+              "id": "mime 0.3.17",
+              "target": "mime"
+            },
+            {
+              "id": "percent-encoding 2.3.1",
+              "target": "percent_encoding"
+            },
+            {
+              "id": "pin-project-lite 0.2.16",
+              "target": "pin_project_lite"
+            },
+            {
+              "id": "serde 1.0.219",
+              "target": "serde"
+            },
+            {
+              "id": "serde_json 1.0.140",
+              "target": "serde_json"
+            },
+            {
+              "id": "serde_path_to_error 0.1.16",
+              "target": "serde_path_to_error"
+            },
+            {
+              "id": "serde_urlencoded 0.7.1",
+              "target": "serde_urlencoded"
+            },
+            {
+              "id": "sync_wrapper 1.0.2",
+              "target": "sync_wrapper"
+            },
+            {
+              "id": "tokio 1.44.1",
+              "target": "tokio"
+            },
+            {
+              "id": "tower 0.5.2",
+              "target": "tower"
+            },
+            {
+              "id": "tower-layer 0.3.3",
+              "target": "tower_layer"
+            },
+            {
+              "id": "tower-service 0.3.3",
+              "target": "tower_service"
+            },
+            {
+              "id": "tracing 0.1.41",
+              "target": "tracing"
+            }
+          ],
+          "selects": {}
+        },
+        "edition": "2021",
+        "proc_macro_deps": {
+          "common": [
+            {
+              "id": "rustversion 1.0.19",
+              "target": "rustversion"
+            }
+          ],
+          "selects": {}
+        },
+        "version": "0.8.1"
+      },
+      "license": "MIT",
+      "license_ids": [
+        "MIT"
+      ],
+      "license_file": "LICENSE"
+    },
     "axum-core 0.4.5": {
       "name": "axum-core",
       "version": "0.4.5",
@@ -3097,6 +3258,108 @@
           "selects": {}
         },
         "version": "0.4.5"
+      },
+      "license": "MIT",
+      "license_ids": [
+        "MIT"
+      ],
+      "license_file": "LICENSE"
+    },
+    "axum-core 0.5.0": {
+      "name": "axum-core",
+      "version": "0.5.0",
+      "package_url": "https://github.com/tokio-rs/axum",
+      "repository": {
+        "Http": {
+          "url": "https://static.crates.io/crates/axum-core/0.5.0/download",
+          "sha256": "df1362f362fd16024ae199c1970ce98f9661bf5ef94b9808fee734bc3698b733"
+        }
+      },
+      "targets": [
+        {
+          "Library": {
+            "crate_name": "axum_core",
+            "crate_root": "src/lib.rs",
+            "srcs": {
+              "allow_empty": true,
+              "include": [
+                "**/*.rs"
+              ]
+            }
+          }
+        }
+      ],
+      "library_target_name": "axum_core",
+      "common_attrs": {
+        "compile_data_glob": [
+          "**"
+        ],
+        "crate_features": {
+          "common": [
+            "tracing"
+          ],
+          "selects": {}
+        },
+        "deps": {
+          "common": [
+            {
+              "id": "bytes 1.10.1",
+              "target": "bytes"
+            },
+            {
+              "id": "futures-util 0.3.31",
+              "target": "futures_util"
+            },
+            {
+              "id": "http 1.2.0",
+              "target": "http"
+            },
+            {
+              "id": "http-body 1.0.1",
+              "target": "http_body"
+            },
+            {
+              "id": "http-body-util 0.1.2",
+              "target": "http_body_util"
+            },
+            {
+              "id": "mime 0.3.17",
+              "target": "mime"
+            },
+            {
+              "id": "pin-project-lite 0.2.16",
+              "target": "pin_project_lite"
+            },
+            {
+              "id": "sync_wrapper 1.0.2",
+              "target": "sync_wrapper"
+            },
+            {
+              "id": "tower-layer 0.3.3",
+              "target": "tower_layer"
+            },
+            {
+              "id": "tower-service 0.3.3",
+              "target": "tower_service"
+            },
+            {
+              "id": "tracing 0.1.41",
+              "target": "tracing"
+            }
+          ],
+          "selects": {}
+        },
+        "edition": "2021",
+        "proc_macro_deps": {
+          "common": [
+            {
+              "id": "rustversion 1.0.19",
+              "target": "rustversion"
+            }
+          ],
+          "selects": {}
+        },
+        "version": "0.5.0"
       },
       "license": "MIT",
       "license_ids": [
@@ -7885,110 +8148,6 @@
       ],
       "license_file": "LICENSE-APACHE"
     },
-    "const-random 0.1.18": {
-      "name": "const-random",
-      "version": "0.1.18",
-      "package_url": "https://github.com/tkaitchuck/constrandom",
-      "repository": {
-        "Http": {
-          "url": "https://static.crates.io/crates/const-random/0.1.18/download",
-          "sha256": "87e00182fe74b066627d63b85fd550ac2998d4b0bd86bfed477a0ae4c7c71359"
-        }
-      },
-      "targets": [
-        {
-          "Library": {
-            "crate_name": "const_random",
-            "crate_root": "src/lib.rs",
-            "srcs": {
-              "allow_empty": true,
-              "include": [
-                "**/*.rs"
-              ]
-            }
-          }
-        }
-      ],
-      "library_target_name": "const_random",
-      "common_attrs": {
-        "compile_data_glob": [
-          "**"
-        ],
-        "edition": "2018",
-        "proc_macro_deps": {
-          "common": [
-            {
-              "id": "const-random-macro 0.1.16",
-              "target": "const_random_macro"
-            }
-          ],
-          "selects": {}
-        },
-        "version": "0.1.18"
-      },
-      "license": "MIT OR Apache-2.0",
-      "license_ids": [
-        "Apache-2.0",
-        "MIT"
-      ],
-      "license_file": "LICENSE-APACHE"
-    },
-    "const-random-macro 0.1.16": {
-      "name": "const-random-macro",
-      "version": "0.1.16",
-      "package_url": "https://github.com/tkaitchuck/constrandom",
-      "repository": {
-        "Http": {
-          "url": "https://static.crates.io/crates/const-random-macro/0.1.16/download",
-          "sha256": "f9d839f2a20b0aee515dc581a6172f2321f96cab76c1a38a4c584a194955390e"
-        }
-      },
-      "targets": [
-        {
-          "ProcMacro": {
-            "crate_name": "const_random_macro",
-            "crate_root": "src/lib.rs",
-            "srcs": {
-              "allow_empty": true,
-              "include": [
-                "**/*.rs"
-              ]
-            }
-          }
-        }
-      ],
-      "library_target_name": "const_random_macro",
-      "common_attrs": {
-        "compile_data_glob": [
-          "**"
-        ],
-        "deps": {
-          "common": [
-            {
-              "id": "getrandom 0.2.15",
-              "target": "getrandom"
-            },
-            {
-              "id": "once_cell 1.21.0",
-              "target": "once_cell"
-            },
-            {
-              "id": "tiny-keccak 2.0.2",
-              "target": "tiny_keccak"
-            }
-          ],
-          "selects": {}
-        },
-        "edition": "2018",
-        "version": "0.1.16"
-      },
-      "license": "MIT OR Apache-2.0",
-      "license_ids": [
-        "Apache-2.0",
-        "MIT"
-      ],
-      "license_file": "LICENSE-APACHE"
-    },
     "convert_case 0.4.0": {
       "name": "convert_case",
       "version": "0.4.0",
@@ -8983,13 +9142,6 @@
         "compile_data_glob": [
           "**"
         ],
-        "crate_features": {
-          "common": [
-            "default",
-            "limit_128"
-          ],
-          "selects": {}
-        },
         "deps": {
           "common": [
             {
@@ -9762,7 +9914,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "c22d478ad97f82bd5d378862c9dd2f13afe2ece1"
+            "Rev": "2fe8aefafcb2fbee6fdb2785374d5de715560269"
           },
           "strip_prefix": "rs/nns/cmc"
         }
@@ -9841,24 +9993,28 @@
               "target": "ic_certified_map"
             },
             {
-              "id": "ic-crypto-getrandom-for-wasm 0.9.0",
-              "target": "ic_crypto_getrandom_for_wasm"
-            },
-            {
               "id": "ic-crypto-tree-hash 0.9.0",
               "target": "ic_crypto_tree_hash"
+            },
+            {
+              "id": "ic-dummy-getrandom-for-wasm 0.1.0",
+              "target": "ic_dummy_getrandom_for_wasm"
             },
             {
               "id": "ic-ledger-core 0.9.0",
               "target": "ic_ledger_core"
             },
             {
-              "id": "ic-management-canister-types 0.9.0",
-              "target": "ic_management_canister_types"
+              "id": "ic-management-canister-types-private 0.9.0",
+              "target": "ic_management_canister_types_private"
             },
             {
               "id": "ic-metrics-encoder 1.1.1",
               "target": "ic_metrics_encoder"
+            },
+            {
+              "id": "ic-nervous-system-clients 0.0.1",
+              "target": "ic_nervous_system_clients"
             },
             {
               "id": "ic-nervous-system-common 0.9.0",
@@ -11033,7 +11189,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "c22d478ad97f82bd5d378862c9dd2f13afe2ece1"
+            "Rev": "2fe8aefafcb2fbee6fdb2785374d5de715560269"
           },
           "strip_prefix": "rs/rust_canisters/dfn_candid"
         }
@@ -11097,7 +11253,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "c22d478ad97f82bd5d378862c9dd2f13afe2ece1"
+            "Rev": "2fe8aefafcb2fbee6fdb2785374d5de715560269"
           },
           "strip_prefix": "rs/rust_canisters/dfn_core"
         }
@@ -11149,7 +11305,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "c22d478ad97f82bd5d378862c9dd2f13afe2ece1"
+            "Rev": "2fe8aefafcb2fbee6fdb2785374d5de715560269"
           },
           "strip_prefix": "rs/rust_canisters/dfn_http"
         }
@@ -11213,7 +11369,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "c22d478ad97f82bd5d378862c9dd2f13afe2ece1"
+            "Rev": "2fe8aefafcb2fbee6fdb2785374d5de715560269"
           },
           "strip_prefix": "rs/rust_canisters/dfn_http_metrics"
         }
@@ -11281,7 +11437,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "c22d478ad97f82bd5d378862c9dd2f13afe2ece1"
+            "Rev": "2fe8aefafcb2fbee6fdb2785374d5de715560269"
           },
           "strip_prefix": "rs/rust_canisters/dfn_protobuf"
         }
@@ -14023,7 +14179,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "c22d478ad97f82bd5d378862c9dd2f13afe2ece1"
+            "Rev": "2fe8aefafcb2fbee6fdb2785374d5de715560269"
           },
           "strip_prefix": "rs/crypto/internal/crypto_lib/threshold_sig/canister_threshold_sig/fe-derive"
         }
@@ -18103,7 +18259,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "c22d478ad97f82bd5d378862c9dd2f13afe2ece1"
+            "Rev": "2fe8aefafcb2fbee6fdb2785374d5de715560269"
           },
           "strip_prefix": "rs/monitoring/adapter_metrics/client"
         }
@@ -18183,7 +18339,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "c22d478ad97f82bd5d378862c9dd2f13afe2ece1"
+            "Rev": "2fe8aefafcb2fbee6fdb2785374d5de715560269"
           },
           "strip_prefix": "rs/monitoring/adapter_metrics/service"
         }
@@ -18495,7 +18651,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "c22d478ad97f82bd5d378862c9dd2f13afe2ece1"
+            "Rev": "2fe8aefafcb2fbee6fdb2785374d5de715560269"
           },
           "strip_prefix": "rs/types/base_types"
         }
@@ -18647,7 +18803,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "c22d478ad97f82bd5d378862c9dd2f13afe2ece1"
+            "Rev": "2fe8aefafcb2fbee6fdb2785374d5de715560269"
           },
           "strip_prefix": "rs/bitcoin/replica_types"
         }
@@ -18682,7 +18838,7 @@
               "target": "ic_btc_interface"
             },
             {
-              "id": "ic-error-types 0.9.0",
+              "id": "ic-error-types 0.1.0",
               "target": "ic_error_types"
             },
             {
@@ -18715,7 +18871,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "c22d478ad97f82bd5d378862c9dd2f13afe2ece1"
+            "Rev": "2fe8aefafcb2fbee6fdb2785374d5de715560269"
           },
           "strip_prefix": "rs/canister_client"
         }
@@ -18778,16 +18934,12 @@
               "target": "ic_certification"
             },
             {
-              "id": "ic-crypto-secp256k1 0.9.0",
-              "target": "ic_crypto_secp256k1"
-            },
-            {
               "id": "ic-crypto-tree-hash 0.9.0",
               "target": "ic_crypto_tree_hash"
             },
             {
-              "id": "ic-management-canister-types 0.9.0",
-              "target": "ic_management_canister_types"
+              "id": "ic-management-canister-types-private 0.9.0",
+              "target": "ic_management_canister_types_private"
             },
             {
               "id": "ic-protobuf 0.9.0",
@@ -18796,6 +18948,10 @@
             {
               "id": "ic-read-state-response-parser 0.9.0",
               "target": "ic_read_state_response_parser"
+            },
+            {
+              "id": "ic-secp256k1 0.1.0",
+              "target": "ic_secp256k1"
             },
             {
               "id": "ic-types 0.9.0",
@@ -18855,7 +19011,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "c22d478ad97f82bd5d378862c9dd2f13afe2ece1"
+            "Rev": "2fe8aefafcb2fbee6fdb2785374d5de715560269"
           },
           "strip_prefix": "rs/canister_client/sender"
         }
@@ -18886,12 +19042,12 @@
               "target": "ic_base_types"
             },
             {
-              "id": "ic-crypto-ed25519 0.9.0",
-              "target": "ic_crypto_ed25519"
+              "id": "ic-ed25519 0.2.0",
+              "target": "ic_ed25519"
             },
             {
-              "id": "ic-crypto-secp256k1 0.9.0",
-              "target": "ic_crypto_secp256k1"
+              "id": "ic-secp256k1 0.1.0",
+              "target": "ic_secp256k1"
             },
             {
               "id": "ic-types 0.9.0",
@@ -18923,7 +19079,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "c22d478ad97f82bd5d378862c9dd2f13afe2ece1"
+            "Rev": "2fe8aefafcb2fbee6fdb2785374d5de715560269"
           },
           "strip_prefix": "rs/rust_canisters/canister_log"
         }
@@ -18973,7 +19129,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "c22d478ad97f82bd5d378862c9dd2f13afe2ece1"
+            "Rev": "2fe8aefafcb2fbee6fdb2785374d5de715560269"
           },
           "strip_prefix": "rs/rust_canisters/canister_profiler"
         }
@@ -19080,8 +19236,8 @@
               "target": "ic_interfaces_registry"
             },
             {
-              "id": "ic-management-canister-types 0.9.0",
-              "target": "ic_management_canister_types"
+              "id": "ic-management-canister-types-private 0.9.0",
+              "target": "ic_management_canister_types_private"
             },
             {
               "id": "ic-nns-common 0.9.0",
@@ -19187,7 +19343,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "c22d478ad97f82bd5d378862c9dd2f13afe2ece1"
+            "Rev": "2fe8aefafcb2fbee6fdb2785374d5de715560269"
           },
           "strip_prefix": "rs/rust_canisters/http_types"
         }
@@ -19247,7 +19403,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "c22d478ad97f82bd5d378862c9dd2f13afe2ece1"
+            "Rev": "2fe8aefafcb2fbee6fdb2785374d5de715560269"
           },
           "strip_prefix": "rs/canonical_state"
         }
@@ -19290,7 +19446,7 @@
               "target": "ic_crypto_tree_hash"
             },
             {
-              "id": "ic-error-types 0.9.0",
+              "id": "ic-error-types 0.1.0",
               "target": "ic_error_types"
             },
             {
@@ -19364,7 +19520,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "c22d478ad97f82bd5d378862c9dd2f13afe2ece1"
+            "Rev": "2fe8aefafcb2fbee6fdb2785374d5de715560269"
           },
           "strip_prefix": "rs/canonical_state/tree_hash"
         }
@@ -19420,153 +19576,14 @@
       "license_ids": [],
       "license_file": null
     },
-    "ic-cdk 0.13.5": {
-      "name": "ic-cdk",
-      "version": "0.13.5",
-      "package_url": "https://github.com/dfinity/cdk-rs",
-      "repository": {
-        "Http": {
-          "url": "https://static.crates.io/crates/ic-cdk/0.13.5/download",
-          "sha256": "3b1da6a25b045f9da3c9459c0cb2b0700ac368ee16382975a17185a23b9c18ab"
-        }
-      },
-      "targets": [
-        {
-          "Library": {
-            "crate_name": "ic_cdk",
-            "crate_root": "src/lib.rs",
-            "srcs": {
-              "allow_empty": true,
-              "include": [
-                "**/*.rs"
-              ]
-            }
-          }
-        }
-      ],
-      "library_target_name": "ic_cdk",
-      "common_attrs": {
-        "compile_data_glob": [
-          "**"
-        ],
-        "deps": {
-          "common": [
-            {
-              "id": "candid 0.10.13",
-              "target": "candid"
-            },
-            {
-              "id": "ic0 0.21.1",
-              "target": "ic0"
-            },
-            {
-              "id": "serde 1.0.219",
-              "target": "serde"
-            },
-            {
-              "id": "serde_bytes 0.11.15",
-              "target": "serde_bytes"
-            }
-          ],
-          "selects": {}
-        },
-        "edition": "2021",
-        "proc_macro_deps": {
-          "common": [
-            {
-              "id": "ic-cdk-macros 0.13.2",
-              "target": "ic_cdk_macros"
-            }
-          ],
-          "selects": {}
-        },
-        "version": "0.13.5"
-      },
-      "license": "Apache-2.0",
-      "license_ids": [
-        "Apache-2.0"
-      ],
-      "license_file": "LICENSE"
-    },
-    "ic-cdk 0.16.0": {
-      "name": "ic-cdk",
-      "version": "0.16.0",
-      "package_url": "https://github.com/dfinity/cdk-rs",
-      "repository": {
-        "Http": {
-          "url": "https://static.crates.io/crates/ic-cdk/0.16.0/download",
-          "sha256": "dd8ecacd682fa05a985253592963306cb9799622d7b1cce4b1edb89c6ec85be1"
-        }
-      },
-      "targets": [
-        {
-          "Library": {
-            "crate_name": "ic_cdk",
-            "crate_root": "src/lib.rs",
-            "srcs": {
-              "allow_empty": true,
-              "include": [
-                "**/*.rs"
-              ]
-            }
-          }
-        }
-      ],
-      "library_target_name": "ic_cdk",
-      "common_attrs": {
-        "compile_data_glob": [
-          "**"
-        ],
-        "deps": {
-          "common": [
-            {
-              "id": "candid 0.10.13",
-              "target": "candid"
-            },
-            {
-              "id": "ic0 0.23.0",
-              "target": "ic0"
-            },
-            {
-              "id": "serde 1.0.219",
-              "target": "serde"
-            },
-            {
-              "id": "serde_bytes 0.11.15",
-              "target": "serde_bytes"
-            }
-          ],
-          "selects": {}
-        },
-        "edition": "2021",
-        "proc_macro_deps": {
-          "common": [
-            {
-              "id": "ic-cdk-macros 0.16.0",
-              "target": "ic_cdk_macros"
-            }
-          ],
-          "selects": {}
-        },
-        "version": "0.16.0"
-      },
-      "license": "Apache-2.0",
-      "license_ids": [
-        "Apache-2.0"
-      ],
-      "license_file": "LICENSE"
-    },
     "ic-cdk 0.17.1": {
       "name": "ic-cdk",
       "version": "0.17.1",
       "package_url": "https://github.com/dfinity/cdk-rs",
       "repository": {
-        "Git": {
-          "remote": "https://github.com/dfinity/cdk-rs.git",
-          "commitish": {
-            "Rev": "929fd0b31e9ec69aad7cf6285df0394f25fe1815"
-          },
-          "strip_prefix": "src/ic-cdk"
+        "Http": {
+          "url": "https://static.crates.io/crates/ic-cdk/0.17.1/download",
+          "sha256": "122efbcb0af5280d408a75a57b7dc6e9d92893bf6ed9cc98fe4dcff51f18b67c"
         }
       },
       "targets": [
@@ -19627,218 +19644,14 @@
       ],
       "license_file": "LICENSE"
     },
-    "ic-cdk-macros 0.9.0": {
-      "name": "ic-cdk-macros",
-      "version": "0.9.0",
-      "package_url": "https://github.com/dfinity/cdk-rs",
-      "repository": {
-        "Http": {
-          "url": "https://static.crates.io/crates/ic-cdk-macros/0.9.0/download",
-          "sha256": "2fde5ca6ef1e69825c68916ff1bf7256b8f7ed69ac5ea3f1756f6e57f1503e27"
-        }
-      },
-      "targets": [
-        {
-          "ProcMacro": {
-            "crate_name": "ic_cdk_macros",
-            "crate_root": "src/lib.rs",
-            "srcs": {
-              "allow_empty": true,
-              "include": [
-                "**/*.rs"
-              ]
-            }
-          }
-        }
-      ],
-      "library_target_name": "ic_cdk_macros",
-      "common_attrs": {
-        "compile_data_glob": [
-          "**"
-        ],
-        "deps": {
-          "common": [
-            {
-              "id": "candid 0.10.13",
-              "target": "candid"
-            },
-            {
-              "id": "proc-macro2 1.0.94",
-              "target": "proc_macro2"
-            },
-            {
-              "id": "quote 1.0.39",
-              "target": "quote"
-            },
-            {
-              "id": "serde 1.0.219",
-              "target": "serde"
-            },
-            {
-              "id": "serde_tokenstream 0.1.7",
-              "target": "serde_tokenstream"
-            },
-            {
-              "id": "syn 1.0.109",
-              "target": "syn"
-            }
-          ],
-          "selects": {}
-        },
-        "edition": "2021",
-        "version": "0.9.0"
-      },
-      "license": "Apache-2.0",
-      "license_ids": [
-        "Apache-2.0"
-      ],
-      "license_file": "LICENSE"
-    },
-    "ic-cdk-macros 0.13.2": {
-      "name": "ic-cdk-macros",
-      "version": "0.13.2",
-      "package_url": "https://github.com/dfinity/cdk-rs",
-      "repository": {
-        "Http": {
-          "url": "https://static.crates.io/crates/ic-cdk-macros/0.13.2/download",
-          "sha256": "a45800053d80a6df839a71aaea5797e723188c0b992618208ca3b941350c7355"
-        }
-      },
-      "targets": [
-        {
-          "ProcMacro": {
-            "crate_name": "ic_cdk_macros",
-            "crate_root": "src/lib.rs",
-            "srcs": {
-              "allow_empty": true,
-              "include": [
-                "**/*.rs"
-              ]
-            }
-          }
-        }
-      ],
-      "library_target_name": "ic_cdk_macros",
-      "common_attrs": {
-        "compile_data_glob": [
-          "**"
-        ],
-        "deps": {
-          "common": [
-            {
-              "id": "candid 0.10.13",
-              "target": "candid"
-            },
-            {
-              "id": "proc-macro2 1.0.94",
-              "target": "proc_macro2"
-            },
-            {
-              "id": "quote 1.0.39",
-              "target": "quote"
-            },
-            {
-              "id": "serde 1.0.219",
-              "target": "serde"
-            },
-            {
-              "id": "serde_tokenstream 0.1.7",
-              "target": "serde_tokenstream"
-            },
-            {
-              "id": "syn 1.0.109",
-              "target": "syn"
-            }
-          ],
-          "selects": {}
-        },
-        "edition": "2021",
-        "version": "0.13.2"
-      },
-      "license": "Apache-2.0",
-      "license_ids": [
-        "Apache-2.0"
-      ],
-      "license_file": "LICENSE"
-    },
-    "ic-cdk-macros 0.16.0": {
-      "name": "ic-cdk-macros",
-      "version": "0.16.0",
-      "package_url": "https://github.com/dfinity/cdk-rs",
-      "repository": {
-        "Http": {
-          "url": "https://static.crates.io/crates/ic-cdk-macros/0.16.0/download",
-          "sha256": "0d4d857135deef20cc7ea8f3869a30cd9cfeb1392b3a81043790b2cd82adc3e0"
-        }
-      },
-      "targets": [
-        {
-          "ProcMacro": {
-            "crate_name": "ic_cdk_macros",
-            "crate_root": "src/lib.rs",
-            "srcs": {
-              "allow_empty": true,
-              "include": [
-                "**/*.rs"
-              ]
-            }
-          }
-        }
-      ],
-      "library_target_name": "ic_cdk_macros",
-      "common_attrs": {
-        "compile_data_glob": [
-          "**"
-        ],
-        "deps": {
-          "common": [
-            {
-              "id": "candid 0.10.13",
-              "target": "candid"
-            },
-            {
-              "id": "proc-macro2 1.0.94",
-              "target": "proc_macro2"
-            },
-            {
-              "id": "quote 1.0.39",
-              "target": "quote"
-            },
-            {
-              "id": "serde 1.0.219",
-              "target": "serde"
-            },
-            {
-              "id": "serde_tokenstream 0.2.2",
-              "target": "serde_tokenstream"
-            },
-            {
-              "id": "syn 2.0.100",
-              "target": "syn"
-            }
-          ],
-          "selects": {}
-        },
-        "edition": "2021",
-        "version": "0.16.0"
-      },
-      "license": "Apache-2.0",
-      "license_ids": [
-        "Apache-2.0"
-      ],
-      "license_file": "LICENSE"
-    },
     "ic-cdk-macros 0.17.1": {
       "name": "ic-cdk-macros",
       "version": "0.17.1",
       "package_url": "https://github.com/dfinity/cdk-rs",
       "repository": {
-        "Git": {
-          "remote": "https://github.com/dfinity/cdk-rs.git",
-          "commitish": {
-            "Rev": "929fd0b31e9ec69aad7cf6285df0394f25fe1815"
-          },
-          "strip_prefix": "src/ic-cdk-macros"
+        "Http": {
+          "url": "https://static.crates.io/crates/ic-cdk-macros/0.17.1/download",
+          "sha256": "c792bf0d1621c893ccf2bcdeac4ee70121103a03030a1827031a6b3c60488944"
         }
       },
       "targets": [
@@ -19898,84 +19711,14 @@
       ],
       "license_file": "LICENSE"
     },
-    "ic-cdk-timers 0.7.0": {
-      "name": "ic-cdk-timers",
-      "version": "0.7.0",
-      "package_url": "https://github.com/dfinity/cdk-rs",
-      "repository": {
-        "Http": {
-          "url": "https://static.crates.io/crates/ic-cdk-timers/0.7.0/download",
-          "sha256": "054727a3a1c486528b96349817d54290ff70df6addf417def456ea708a16f7fb"
-        }
-      },
-      "targets": [
-        {
-          "Library": {
-            "crate_name": "ic_cdk_timers",
-            "crate_root": "src/lib.rs",
-            "srcs": {
-              "allow_empty": true,
-              "include": [
-                "**/*.rs"
-              ]
-            }
-          }
-        }
-      ],
-      "library_target_name": "ic_cdk_timers",
-      "common_attrs": {
-        "compile_data_glob": [
-          "**"
-        ],
-        "deps": {
-          "common": [
-            {
-              "id": "futures 0.3.31",
-              "target": "futures"
-            },
-            {
-              "id": "ic-cdk 0.13.5",
-              "target": "ic_cdk"
-            },
-            {
-              "id": "ic0 0.21.1",
-              "target": "ic0"
-            },
-            {
-              "id": "serde 1.0.219",
-              "target": "serde"
-            },
-            {
-              "id": "serde_bytes 0.11.15",
-              "target": "serde_bytes"
-            },
-            {
-              "id": "slotmap 1.0.7",
-              "target": "slotmap"
-            }
-          ],
-          "selects": {}
-        },
-        "edition": "2021",
-        "version": "0.7.0"
-      },
-      "license": "Apache-2.0",
-      "license_ids": [
-        "Apache-2.0"
-      ],
-      "license_file": "LICENSE"
-    },
     "ic-cdk-timers 0.11.0": {
       "name": "ic-cdk-timers",
       "version": "0.11.0",
       "package_url": "https://github.com/dfinity/cdk-rs",
       "repository": {
-        "Git": {
-          "remote": "https://github.com/dfinity/cdk-rs.git",
-          "commitish": {
-            "Rev": "929fd0b31e9ec69aad7cf6285df0394f25fe1815"
-          },
-          "strip_prefix": "src/ic-cdk-timers"
+        "Http": {
+          "url": "https://static.crates.io/crates/ic-cdk-timers/0.11.0/download",
+          "sha256": "fb8fd812a9e26f6aa00594546f8fbf4d4853f39c3ba794c8ff11ecf86fd3c9e4"
         }
       },
       "targets": [
@@ -20043,7 +19786,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "c22d478ad97f82bd5d378862c9dd2f13afe2ece1"
+            "Rev": "2fe8aefafcb2fbee6fdb2785374d5de715560269"
           },
           "strip_prefix": "rs/certification"
         }
@@ -20185,7 +19928,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "c22d478ad97f82bd5d378862c9dd2f13afe2ece1"
+            "Rev": "2fe8aefafcb2fbee6fdb2785374d5de715560269"
           },
           "strip_prefix": "rs/canonical_state/certification_version"
         }
@@ -20297,7 +20040,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "c22d478ad97f82bd5d378862c9dd2f13afe2ece1"
+            "Rev": "2fe8aefafcb2fbee6fdb2785374d5de715560269"
           },
           "strip_prefix": "rs/config"
         }
@@ -20365,134 +20108,6 @@
       "license_ids": [],
       "license_file": null
     },
-    "ic-crypto-ed25519 0.9.0": {
-      "name": "ic-crypto-ed25519",
-      "version": "0.9.0",
-      "package_url": null,
-      "repository": {
-        "Git": {
-          "remote": "https://github.com/dfinity/ic.git",
-          "commitish": {
-            "Rev": "c22d478ad97f82bd5d378862c9dd2f13afe2ece1"
-          },
-          "strip_prefix": "rs/crypto/ed25519"
-        }
-      },
-      "targets": [
-        {
-          "Library": {
-            "crate_name": "ic_crypto_ed25519",
-            "crate_root": "src/lib.rs",
-            "srcs": {
-              "allow_empty": true,
-              "include": [
-                "**/*.rs"
-              ]
-            }
-          }
-        }
-      ],
-      "library_target_name": "ic_crypto_ed25519",
-      "common_attrs": {
-        "compile_data_glob": [
-          "**"
-        ],
-        "deps": {
-          "common": [
-            {
-              "id": "curve25519-dalek 4.1.3",
-              "target": "curve25519_dalek"
-            },
-            {
-              "id": "ed25519-dalek 2.1.1",
-              "target": "ed25519_dalek"
-            },
-            {
-              "id": "hkdf 0.12.4",
-              "target": "hkdf"
-            },
-            {
-              "id": "pem 1.1.1",
-              "target": "pem"
-            },
-            {
-              "id": "rand 0.8.5",
-              "target": "rand"
-            },
-            {
-              "id": "thiserror 2.0.12",
-              "target": "thiserror"
-            },
-            {
-              "id": "zeroize 1.8.1",
-              "target": "zeroize"
-            }
-          ],
-          "selects": {}
-        },
-        "edition": "2021",
-        "version": "0.9.0"
-      },
-      "license": null,
-      "license_ids": [],
-      "license_file": null
-    },
-    "ic-crypto-getrandom-for-wasm 0.9.0": {
-      "name": "ic-crypto-getrandom-for-wasm",
-      "version": "0.9.0",
-      "package_url": null,
-      "repository": {
-        "Git": {
-          "remote": "https://github.com/dfinity/ic.git",
-          "commitish": {
-            "Rev": "c22d478ad97f82bd5d378862c9dd2f13afe2ece1"
-          },
-          "strip_prefix": "rs/crypto/getrandom_for_wasm"
-        }
-      },
-      "targets": [
-        {
-          "Library": {
-            "crate_name": "ic_crypto_getrandom_for_wasm",
-            "crate_root": "src/lib.rs",
-            "srcs": {
-              "allow_empty": true,
-              "include": [
-                "**/*.rs"
-              ]
-            }
-          }
-        }
-      ],
-      "library_target_name": "ic_crypto_getrandom_for_wasm",
-      "common_attrs": {
-        "compile_data_glob": [
-          "**"
-        ],
-        "deps": {
-          "common": [],
-          "selects": {
-            "cfg(all(target_arch = \"wasm32\", target_vendor = \"unknown\", target_os = \"unknown\"))": [
-              {
-                "id": "getrandom 0.2.15",
-                "target": "getrandom"
-              }
-            ],
-            "cfg(not(all(target_arch = \"wasm32\", target_vendor = \"unknown\", target_os = \"unknown\")))": [
-              {
-                "id": "getrandom 0.2.15",
-                "target": "getrandom"
-              }
-            ]
-          }
-        },
-        "edition": "2021",
-        "version": "0.9.0"
-      },
-      "license": null,
-      "license_ids": [],
-      "license_file": null
-    },
     "ic-crypto-interfaces-sig-verification 0.9.0": {
       "name": "ic-crypto-interfaces-sig-verification",
       "version": "0.9.0",
@@ -20501,7 +20116,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "c22d478ad97f82bd5d378862c9dd2f13afe2ece1"
+            "Rev": "2fe8aefafcb2fbee6fdb2785374d5de715560269"
           },
           "strip_prefix": "rs/crypto/interfaces/sig_verification"
         }
@@ -20549,7 +20164,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "c22d478ad97f82bd5d378862c9dd2f13afe2ece1"
+            "Rev": "2fe8aefafcb2fbee6fdb2785374d5de715560269"
           },
           "strip_prefix": "rs/crypto/internal/crypto_lib/basic_sig/der_utils"
         }
@@ -20605,7 +20220,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "c22d478ad97f82bd5d378862c9dd2f13afe2ece1"
+            "Rev": "2fe8aefafcb2fbee6fdb2785374d5de715560269"
           },
           "strip_prefix": "rs/crypto/internal/crypto_lib/basic_sig/ed25519"
         }
@@ -20644,10 +20259,6 @@
               "target": "hex"
             },
             {
-              "id": "ic-crypto-ed25519 0.9.0",
-              "target": "ic_crypto_ed25519"
-            },
-            {
               "id": "ic-crypto-internal-basic-sig-der-utils 0.9.0",
               "target": "ic_crypto_internal_basic_sig_der_utils"
             },
@@ -20662,6 +20273,10 @@
             {
               "id": "ic-crypto-secrets-containers 0.9.0",
               "target": "ic_crypto_secrets_containers"
+            },
+            {
+              "id": "ic-ed25519 0.2.0",
+              "target": "ic_ed25519"
             },
             {
               "id": "ic-protobuf 0.9.0",
@@ -20709,7 +20324,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "c22d478ad97f82bd5d378862c9dd2f13afe2ece1"
+            "Rev": "2fe8aefafcb2fbee6fdb2785374d5de715560269"
           },
           "strip_prefix": "rs/crypto/internal/crypto_lib/bls12_381/type"
         }
@@ -20802,7 +20417,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "c22d478ad97f82bd5d378862c9dd2f13afe2ece1"
+            "Rev": "2fe8aefafcb2fbee6fdb2785374d5de715560269"
           },
           "strip_prefix": "rs/crypto/internal/crypto_lib/hmac"
         }
@@ -20850,7 +20465,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "c22d478ad97f82bd5d378862c9dd2f13afe2ece1"
+            "Rev": "2fe8aefafcb2fbee6fdb2785374d5de715560269"
           },
           "strip_prefix": "rs/crypto/internal/crypto_lib/multi_sig/bls12_381"
         }
@@ -20942,7 +20557,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "c22d478ad97f82bd5d378862c9dd2f13afe2ece1"
+            "Rev": "2fe8aefafcb2fbee6fdb2785374d5de715560269"
           },
           "strip_prefix": "rs/crypto/internal/crypto_lib/seed"
         }
@@ -21010,7 +20625,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "c22d478ad97f82bd5d378862c9dd2f13afe2ece1"
+            "Rev": "2fe8aefafcb2fbee6fdb2785374d5de715560269"
           },
           "strip_prefix": "rs/crypto/internal/crypto_lib/sha2"
         }
@@ -21058,7 +20673,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "c22d478ad97f82bd5d378862c9dd2f13afe2ece1"
+            "Rev": "2fe8aefafcb2fbee6fdb2785374d5de715560269"
           },
           "strip_prefix": "rs/crypto/internal/crypto_lib/threshold_sig/bls12_381"
         }
@@ -21183,7 +20798,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "c22d478ad97f82bd5d378862c9dd2f13afe2ece1"
+            "Rev": "2fe8aefafcb2fbee6fdb2785374d5de715560269"
           },
           "strip_prefix": "rs/crypto/internal/crypto_lib/threshold_sig/canister_threshold_sig"
         }
@@ -21324,7 +20939,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "c22d478ad97f82bd5d378862c9dd2f13afe2ece1"
+            "Rev": "2fe8aefafcb2fbee6fdb2785374d5de715560269"
           },
           "strip_prefix": "rs/crypto/internal/crypto_lib/types"
         }
@@ -21413,7 +21028,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "c22d478ad97f82bd5d378862c9dd2f13afe2ece1"
+            "Rev": "2fe8aefafcb2fbee6fdb2785374d5de715560269"
           },
           "strip_prefix": "rs/crypto/node_key_validation"
         }
@@ -21493,90 +21108,6 @@
       "license_ids": [],
       "license_file": null
     },
-    "ic-crypto-secp256k1 0.9.0": {
-      "name": "ic-crypto-secp256k1",
-      "version": "0.9.0",
-      "package_url": null,
-      "repository": {
-        "Git": {
-          "remote": "https://github.com/dfinity/ic.git",
-          "commitish": {
-            "Rev": "c22d478ad97f82bd5d378862c9dd2f13afe2ece1"
-          },
-          "strip_prefix": "rs/crypto/secp256k1"
-        }
-      },
-      "targets": [
-        {
-          "Library": {
-            "crate_name": "ic_crypto_secp256k1",
-            "crate_root": "src/lib.rs",
-            "srcs": {
-              "allow_empty": true,
-              "include": [
-                "**/*.rs"
-              ]
-            }
-          }
-        }
-      ],
-      "library_target_name": "ic_crypto_secp256k1",
-      "common_attrs": {
-        "compile_data_glob": [
-          "**"
-        ],
-        "deps": {
-          "common": [
-            {
-              "id": "hmac 0.12.1",
-              "target": "hmac"
-            },
-            {
-              "id": "k256 0.13.4",
-              "target": "k256"
-            },
-            {
-              "id": "lazy_static 1.5.0",
-              "target": "lazy_static"
-            },
-            {
-              "id": "num-bigint 0.4.6",
-              "target": "num_bigint"
-            },
-            {
-              "id": "pem 1.1.1",
-              "target": "pem"
-            },
-            {
-              "id": "rand 0.8.5",
-              "target": "rand"
-            },
-            {
-              "id": "rand_chacha 0.3.1",
-              "target": "rand_chacha"
-            },
-            {
-              "id": "sha2 0.10.8",
-              "target": "sha2"
-            },
-            {
-              "id": "simple_asn1 0.6.3",
-              "target": "simple_asn1"
-            },
-            {
-              "id": "zeroize 1.8.1",
-              "target": "zeroize"
-            }
-          ],
-          "selects": {}
-        },
-        "edition": "2021",
-        "version": "0.9.0"
-      },
-      "license": null,
-      "license_ids": [],
-      "license_file": null
-    },
     "ic-crypto-secrets-containers 0.9.0": {
       "name": "ic-crypto-secrets-containers",
       "version": "0.9.0",
@@ -21585,7 +21116,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "c22d478ad97f82bd5d378862c9dd2f13afe2ece1"
+            "Rev": "2fe8aefafcb2fbee6fdb2785374d5de715560269"
           },
           "strip_prefix": "rs/crypto/secrets_containers"
         }
@@ -21637,7 +21168,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "c22d478ad97f82bd5d378862c9dd2f13afe2ece1"
+            "Rev": "2fe8aefafcb2fbee6fdb2785374d5de715560269"
           },
           "strip_prefix": "rs/crypto/sha2"
         }
@@ -21685,7 +21216,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "c22d478ad97f82bd5d378862c9dd2f13afe2ece1"
+            "Rev": "2fe8aefafcb2fbee6fdb2785374d5de715560269"
           },
           "strip_prefix": "rs/crypto/test_utils/reproducible_rng"
         }
@@ -21737,7 +21268,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "c22d478ad97f82bd5d378862c9dd2f13afe2ece1"
+            "Rev": "2fe8aefafcb2fbee6fdb2785374d5de715560269"
           },
           "strip_prefix": "rs/crypto/node_key_validation/tls_cert_validation"
         }
@@ -21805,7 +21336,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "c22d478ad97f82bd5d378862c9dd2f13afe2ece1"
+            "Rev": "2fe8aefafcb2fbee6fdb2785374d5de715560269"
           },
           "strip_prefix": "rs/crypto/tree_hash"
         }
@@ -21873,7 +21404,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "c22d478ad97f82bd5d378862c9dd2f13afe2ece1"
+            "Rev": "2fe8aefafcb2fbee6fdb2785374d5de715560269"
           },
           "strip_prefix": "rs/crypto/utils/basic_sig"
         }
@@ -21904,8 +21435,8 @@
               "target": "ic_base_types"
             },
             {
-              "id": "ic-crypto-ed25519 0.9.0",
-              "target": "ic_crypto_ed25519"
+              "id": "ic-ed25519 0.2.0",
+              "target": "ic_ed25519"
             },
             {
               "id": "ic-protobuf 0.9.0",
@@ -21929,7 +21460,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "c22d478ad97f82bd5d378862c9dd2f13afe2ece1"
+            "Rev": "2fe8aefafcb2fbee6fdb2785374d5de715560269"
           },
           "strip_prefix": "rs/crypto/utils/ni_dkg"
         }
@@ -21985,7 +21516,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "c22d478ad97f82bd5d378862c9dd2f13afe2ece1"
+            "Rev": "2fe8aefafcb2fbee6fdb2785374d5de715560269"
           },
           "strip_prefix": "rs/crypto/utils/threshold_sig"
         }
@@ -22045,7 +21576,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "c22d478ad97f82bd5d378862c9dd2f13afe2ece1"
+            "Rev": "2fe8aefafcb2fbee6fdb2785374d5de715560269"
           },
           "strip_prefix": "rs/crypto/utils/threshold_sig_der"
         }
@@ -22097,17 +21628,156 @@
       "license_ids": [],
       "license_file": null
     },
-    "ic-error-types 0.9.0": {
-      "name": "ic-error-types",
-      "version": "0.9.0",
+    "ic-dummy-getrandom-for-wasm 0.1.0": {
+      "name": "ic-dummy-getrandom-for-wasm",
+      "version": "0.1.0",
       "package_url": null,
       "repository": {
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "c22d478ad97f82bd5d378862c9dd2f13afe2ece1"
+            "Rev": "2fe8aefafcb2fbee6fdb2785374d5de715560269"
           },
-          "strip_prefix": "rs/types/error_types"
+          "strip_prefix": "packages/ic-dummy-getrandom-for-wasm"
+        }
+      },
+      "targets": [
+        {
+          "Library": {
+            "crate_name": "ic_dummy_getrandom_for_wasm",
+            "crate_root": "src/lib.rs",
+            "srcs": {
+              "allow_empty": true,
+              "include": [
+                "**/*.rs"
+              ]
+            }
+          }
+        }
+      ],
+      "library_target_name": "ic_dummy_getrandom_for_wasm",
+      "common_attrs": {
+        "compile_data_glob": [
+          "**"
+        ],
+        "deps": {
+          "common": [],
+          "selects": {
+            "cfg(all(target_arch = \"wasm32\", target_vendor = \"unknown\", target_os = \"unknown\"))": [
+              {
+                "id": "getrandom 0.2.15",
+                "target": "getrandom"
+              }
+            ],
+            "cfg(not(all(target_arch = \"wasm32\", target_vendor = \"unknown\", target_os = \"unknown\")))": [
+              {
+                "id": "getrandom 0.2.15",
+                "target": "getrandom"
+              }
+            ]
+          }
+        },
+        "edition": "2021",
+        "version": "0.1.0"
+      },
+      "license": "Apache-2.0",
+      "license_ids": [
+        "Apache-2.0"
+      ],
+      "license_file": null
+    },
+    "ic-ed25519 0.2.0": {
+      "name": "ic-ed25519",
+      "version": "0.2.0",
+      "package_url": "https://github.com/dfinity/ic",
+      "repository": {
+        "Git": {
+          "remote": "https://github.com/dfinity/ic.git",
+          "commitish": {
+            "Rev": "2fe8aefafcb2fbee6fdb2785374d5de715560269"
+          },
+          "strip_prefix": "packages/ic-ed25519"
+        }
+      },
+      "targets": [
+        {
+          "Library": {
+            "crate_name": "ic_ed25519",
+            "crate_root": "src/lib.rs",
+            "srcs": {
+              "allow_empty": true,
+              "include": [
+                "**/*.rs"
+              ]
+            }
+          }
+        }
+      ],
+      "library_target_name": "ic_ed25519",
+      "common_attrs": {
+        "compile_data_glob": [
+          "**"
+        ],
+        "crate_features": {
+          "common": [
+            "default",
+            "rand"
+          ],
+          "selects": {}
+        },
+        "deps": {
+          "common": [
+            {
+              "id": "curve25519-dalek 4.1.3",
+              "target": "curve25519_dalek"
+            },
+            {
+              "id": "ed25519-dalek 2.1.1",
+              "target": "ed25519_dalek"
+            },
+            {
+              "id": "hkdf 0.12.4",
+              "target": "hkdf"
+            },
+            {
+              "id": "pem 1.1.1",
+              "target": "pem"
+            },
+            {
+              "id": "rand 0.8.5",
+              "target": "rand"
+            },
+            {
+              "id": "thiserror 2.0.12",
+              "target": "thiserror"
+            },
+            {
+              "id": "zeroize 1.8.1",
+              "target": "zeroize"
+            }
+          ],
+          "selects": {}
+        },
+        "edition": "2021",
+        "version": "0.2.0"
+      },
+      "license": "Apache-2.0",
+      "license_ids": [
+        "Apache-2.0"
+      ],
+      "license_file": "LICENSE"
+    },
+    "ic-error-types 0.1.0": {
+      "name": "ic-error-types",
+      "version": "0.1.0",
+      "package_url": "https://github.com/dfinity/ic",
+      "repository": {
+        "Git": {
+          "remote": "https://github.com/dfinity/ic.git",
+          "commitish": {
+            "Rev": "2fe8aefafcb2fbee6fdb2785374d5de715560269"
+          },
+          "strip_prefix": "packages/ic-error-types"
         }
       },
       "targets": [
@@ -22132,14 +21802,6 @@
         "deps": {
           "common": [
             {
-              "id": "ic-protobuf 0.9.0",
-              "target": "ic_protobuf"
-            },
-            {
-              "id": "ic-utils 0.9.0",
-              "target": "ic_utils"
-            },
-            {
               "id": "serde 1.0.219",
               "target": "serde"
             },
@@ -22160,11 +21822,13 @@
           ],
           "selects": {}
         },
-        "version": "0.9.0"
+        "version": "0.1.0"
       },
-      "license": null,
-      "license_ids": [],
-      "license_file": null
+      "license": "Apache-2.0",
+      "license_ids": [
+        "Apache-2.0"
+      ],
+      "license_file": "LICENSE"
     },
     "ic-http-endpoints-async-utils 0.9.0": {
       "name": "ic-http-endpoints-async-utils",
@@ -22174,7 +21838,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "c22d478ad97f82bd5d378862c9dd2f13afe2ece1"
+            "Rev": "2fe8aefafcb2fbee6fdb2785374d5de715560269"
           },
           "strip_prefix": "rs/http_endpoints/async_utils"
         }
@@ -22258,7 +21922,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "c22d478ad97f82bd5d378862c9dd2f13afe2ece1"
+            "Rev": "2fe8aefafcb2fbee6fdb2785374d5de715560269"
           },
           "strip_prefix": "rs/http_endpoints/metrics"
         }
@@ -22285,7 +21949,7 @@
         "deps": {
           "common": [
             {
-              "id": "axum 0.7.9",
+              "id": "axum 0.8.1",
               "target": "axum"
             },
             {
@@ -22342,7 +22006,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "c22d478ad97f82bd5d378862c9dd2f13afe2ece1"
+            "Rev": "2fe8aefafcb2fbee6fdb2785374d5de715560269"
           },
           "strip_prefix": "rs/ledger_suite/icrc1"
         }
@@ -22452,7 +22116,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "c22d478ad97f82bd5d378862c9dd2f13afe2ece1"
+            "Rev": "2fe8aefafcb2fbee6fdb2785374d5de715560269"
           },
           "strip_prefix": "rs/ledger_suite/icrc1/index-ng"
         }
@@ -22509,11 +22173,11 @@
               "target": "ic_canisters_http_types"
             },
             {
-              "id": "ic-cdk 0.16.0",
+              "id": "ic-cdk 0.17.1",
               "target": "ic_cdk"
             },
             {
-              "id": "ic-cdk-timers 0.7.0",
+              "id": "ic-cdk-timers 0.11.0",
               "target": "ic_cdk_timers"
             },
             {
@@ -22571,7 +22235,7 @@
         "proc_macro_deps": {
           "common": [
             {
-              "id": "ic-cdk-macros 0.9.0",
+              "id": "ic-cdk-macros 0.17.1",
               "target": "ic_cdk_macros"
             }
           ],
@@ -22591,7 +22255,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "c22d478ad97f82bd5d378862c9dd2f13afe2ece1"
+            "Rev": "2fe8aefafcb2fbee6fdb2785374d5de715560269"
           },
           "strip_prefix": "rs/ledger_suite/icrc1/ledger"
         }
@@ -22666,11 +22330,11 @@
               "target": "ic_canisters_http_types"
             },
             {
-              "id": "ic-cdk 0.16.0",
+              "id": "ic-cdk 0.17.1",
               "target": "ic_cdk"
             },
             {
-              "id": "ic-cdk-timers 0.7.0",
+              "id": "ic-cdk-timers 0.11.0",
               "target": "ic_cdk_timers"
             },
             {
@@ -22748,7 +22412,7 @@
               "target": "async_trait"
             },
             {
-              "id": "ic-cdk-macros 0.9.0",
+              "id": "ic-cdk-macros 0.17.1",
               "target": "ic_cdk_macros"
             }
           ],
@@ -22794,7 +22458,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "c22d478ad97f82bd5d378862c9dd2f13afe2ece1"
+            "Rev": "2fe8aefafcb2fbee6fdb2785374d5de715560269"
           },
           "strip_prefix": "rs/ledger_suite/icrc1/test_utils"
         }
@@ -22829,16 +22493,12 @@
               "target": "ic_agent"
             },
             {
-              "id": "ic-crypto-ed25519 0.9.0",
-              "target": "ic_crypto_ed25519"
-            },
-            {
-              "id": "ic-crypto-secp256k1 0.9.0",
-              "target": "ic_crypto_secp256k1"
-            },
-            {
               "id": "ic-crypto-test-utils-reproducible-rng 0.9.0",
               "target": "ic_crypto_test_utils_reproducible_rng"
+            },
+            {
+              "id": "ic-ed25519 0.2.0",
+              "target": "ic_ed25519"
             },
             {
               "id": "ic-icrc1 0.9.0",
@@ -22851,6 +22511,10 @@
             {
               "id": "ic-ledger-hash-of 0.1.0",
               "target": "ic_ledger_hash_of"
+            },
+            {
+              "id": "ic-secp256k1 0.1.0",
+              "target": "ic_secp256k1"
             },
             {
               "id": "ic-types 0.9.0",
@@ -22906,7 +22570,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "c22d478ad97f82bd5d378862c9dd2f13afe2ece1"
+            "Rev": "2fe8aefafcb2fbee6fdb2785374d5de715560269"
           },
           "strip_prefix": "rs/ledger_suite/icrc1/tokens_u64"
         }
@@ -22974,7 +22638,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "c22d478ad97f82bd5d378862c9dd2f13afe2ece1"
+            "Rev": "2fe8aefafcb2fbee6fdb2785374d5de715560269"
           },
           "strip_prefix": "rs/interfaces"
         }
@@ -23009,7 +22673,7 @@
               "target": "ic_crypto_interfaces_sig_verification"
             },
             {
-              "id": "ic-error-types 0.9.0",
+              "id": "ic-error-types 0.1.0",
               "target": "ic_error_types"
             },
             {
@@ -23017,8 +22681,8 @@
               "target": "ic_interfaces_state_manager"
             },
             {
-              "id": "ic-management-canister-types 0.9.0",
-              "target": "ic_management_canister_types"
+              "id": "ic-management-canister-types-private 0.9.0",
+              "target": "ic_management_canister_types_private"
             },
             {
               "id": "ic-protobuf 0.9.0",
@@ -23095,7 +22759,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "c22d478ad97f82bd5d378862c9dd2f13afe2ece1"
+            "Rev": "2fe8aefafcb2fbee6fdb2785374d5de715560269"
           },
           "strip_prefix": "rs/interfaces/registry"
         }
@@ -23151,7 +22815,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "c22d478ad97f82bd5d378862c9dd2f13afe2ece1"
+            "Rev": "2fe8aefafcb2fbee6fdb2785374d5de715560269"
           },
           "strip_prefix": "rs/interfaces/state_manager"
         }
@@ -23211,7 +22875,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "c22d478ad97f82bd5d378862c9dd2f13afe2ece1"
+            "Rev": "2fe8aefafcb2fbee6fdb2785374d5de715560269"
           },
           "strip_prefix": "rs/ledger_suite/common/ledger_canister_core"
         }
@@ -23250,6 +22914,10 @@
               "target": "ic_canister_log"
             },
             {
+              "id": "ic-cdk 0.17.1",
+              "target": "ic_cdk"
+            },
+            {
               "id": "ic-ledger-core 0.9.0",
               "target": "ic_ledger_core"
             },
@@ -23262,8 +22930,8 @@
               "target": "ic_limits"
             },
             {
-              "id": "ic-management-canister-types 0.9.0",
-              "target": "ic_management_canister_types"
+              "id": "ic-management-canister-types-private 0.9.0",
+              "target": "ic_management_canister_types_private"
             },
             {
               "id": "ic-utils 0.9.0",
@@ -23300,7 +22968,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "c22d478ad97f82bd5d378862c9dd2f13afe2ece1"
+            "Rev": "2fe8aefafcb2fbee6fdb2785374d5de715560269"
           },
           "strip_prefix": "rs/ledger_suite/common/ledger_core"
         }
@@ -23372,7 +23040,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "c22d478ad97f82bd5d378862c9dd2f13afe2ece1"
+            "Rev": "2fe8aefafcb2fbee6fdb2785374d5de715560269"
           },
           "strip_prefix": "packages/ic-ledger-hash-of"
         }
@@ -23430,7 +23098,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "c22d478ad97f82bd5d378862c9dd2f13afe2ece1"
+            "Rev": "2fe8aefafcb2fbee6fdb2785374d5de715560269"
           },
           "strip_prefix": "rs/limits"
         }
@@ -23469,7 +23137,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "c22d478ad97f82bd5d378862c9dd2f13afe2ece1"
+            "Rev": "2fe8aefafcb2fbee6fdb2785374d5de715560269"
           },
           "strip_prefix": "rs/monitoring/logger"
         }
@@ -23648,6 +23316,10 @@
               "target": "ic_nns_governance"
             },
             {
+              "id": "ic-nns-governance-api 0.9.0",
+              "target": "ic_nns_governance_api"
+            },
+            {
               "id": "ic-protobuf 0.9.0",
               "target": "ic_protobuf"
             },
@@ -23785,15 +23457,15 @@
       ],
       "license_file": null
     },
-    "ic-management-canister-types 0.9.0": {
-      "name": "ic-management-canister-types",
+    "ic-management-canister-types-private 0.9.0": {
+      "name": "ic-management-canister-types-private",
       "version": "0.9.0",
       "package_url": null,
       "repository": {
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "c22d478ad97f82bd5d378862c9dd2f13afe2ece1"
+            "Rev": "2fe8aefafcb2fbee6fdb2785374d5de715560269"
           },
           "strip_prefix": "rs/types/management_canister_types"
         }
@@ -23801,7 +23473,7 @@
       "targets": [
         {
           "Library": {
-            "crate_name": "ic_management_canister_types",
+            "crate_name": "ic_management_canister_types_private",
             "crate_root": "src/lib.rs",
             "srcs": {
               "allow_empty": true,
@@ -23812,7 +23484,7 @@
           }
         }
       ],
-      "library_target_name": "ic_management_canister_types",
+      "library_target_name": "ic_management_canister_types_private",
       "common_attrs": {
         "compile_data_glob": [
           "**"
@@ -23836,7 +23508,7 @@
               "target": "ic_btc_replica_types"
             },
             {
-              "id": "ic-error-types 0.9.0",
+              "id": "ic-error-types 0.1.0",
               "target": "ic_error_types"
             },
             {
@@ -23945,6 +23617,10 @@
               "target": "ic_nns_governance"
             },
             {
+              "id": "ic-nns-governance-api 0.9.0",
+              "target": "ic_nns_governance_api"
+            },
+            {
               "id": "ic-protobuf 0.9.0",
               "target": "ic_protobuf"
             },
@@ -24026,7 +23702,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "c22d478ad97f82bd5d378862c9dd2f13afe2ece1"
+            "Rev": "2fe8aefafcb2fbee6fdb2785374d5de715560269"
           },
           "strip_prefix": "rs/monitoring/metrics"
         }
@@ -24143,7 +23819,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "c22d478ad97f82bd5d378862c9dd2f13afe2ece1"
+            "Rev": "2fe8aefafcb2fbee6fdb2785374d5de715560269"
           },
           "strip_prefix": "rs/nervous_system/canisters"
         }
@@ -24198,12 +23874,20 @@
               "target": "ic_nns_constants"
             },
             {
+              "id": "ic-registry-transport 0.9.0",
+              "target": "ic_registry_transport"
+            },
+            {
               "id": "icp-ledger 0.9.0",
               "target": "icp_ledger"
             },
             {
               "id": "icrc-ledger-types 0.1.8",
               "target": "icrc_ledger_types"
+            },
+            {
+              "id": "mockall 0.13.1",
+              "target": "mockall"
             }
           ],
           "selects": {}
@@ -24232,7 +23916,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "c22d478ad97f82bd5d378862c9dd2f13afe2ece1"
+            "Rev": "2fe8aefafcb2fbee6fdb2785374d5de715560269"
           },
           "strip_prefix": "rs/nervous_system/clients"
         }
@@ -24275,7 +23959,7 @@
               "target": "ic_base_types"
             },
             {
-              "id": "ic-error-types 0.9.0",
+              "id": "ic-error-types 0.1.0",
               "target": "ic_error_types"
             },
             {
@@ -24283,8 +23967,12 @@
               "target": "ic_ledger_core"
             },
             {
-              "id": "ic-management-canister-types 0.9.0",
-              "target": "ic_management_canister_types"
+              "id": "ic-management-canister-types-private 0.9.0",
+              "target": "ic_management_canister_types_private"
+            },
+            {
+              "id": "ic-nervous-system-canisters 0.9.0",
+              "target": "ic_nervous_system_canisters"
             },
             {
               "id": "ic-nervous-system-common 0.9.0",
@@ -24345,7 +24033,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "c22d478ad97f82bd5d378862c9dd2f13afe2ece1"
+            "Rev": "2fe8aefafcb2fbee6fdb2785374d5de715560269"
           },
           "strip_prefix": "rs/nervous_system/collections/union_multi_map"
         }
@@ -24384,7 +24072,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "c22d478ad97f82bd5d378862c9dd2f13afe2ece1"
+            "Rev": "2fe8aefafcb2fbee6fdb2785374d5de715560269"
           },
           "strip_prefix": "rs/nervous_system/common"
         }
@@ -24574,7 +24262,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "c22d478ad97f82bd5d378862c9dd2f13afe2ece1"
+            "Rev": "2fe8aefafcb2fbee6fdb2785374d5de715560269"
           },
           "strip_prefix": "rs/nervous_system/common/build_metadata"
         }
@@ -24613,7 +24301,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "c22d478ad97f82bd5d378862c9dd2f13afe2ece1"
+            "Rev": "2fe8aefafcb2fbee6fdb2785374d5de715560269"
           },
           "strip_prefix": "rs/nervous_system/common/test_keys"
         }
@@ -24681,7 +24369,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "c22d478ad97f82bd5d378862c9dd2f13afe2ece1"
+            "Rev": "2fe8aefafcb2fbee6fdb2785374d5de715560269"
           },
           "strip_prefix": "rs/nervous_system/common/validation"
         }
@@ -24720,7 +24408,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "c22d478ad97f82bd5d378862c9dd2f13afe2ece1"
+            "Rev": "2fe8aefafcb2fbee6fdb2785374d5de715560269"
           },
           "strip_prefix": "rs/nervous_system/governance"
         }
@@ -24784,7 +24472,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "c22d478ad97f82bd5d378862c9dd2f13afe2ece1"
+            "Rev": "2fe8aefafcb2fbee6fdb2785374d5de715560269"
           },
           "strip_prefix": "rs/nervous_system/initial_supply"
         }
@@ -24861,7 +24549,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "c22d478ad97f82bd5d378862c9dd2f13afe2ece1"
+            "Rev": "2fe8aefafcb2fbee6fdb2785374d5de715560269"
           },
           "strip_prefix": "rs/nervous_system/linear_map"
         }
@@ -24909,7 +24597,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "c22d478ad97f82bd5d378862c9dd2f13afe2ece1"
+            "Rev": "2fe8aefafcb2fbee6fdb2785374d5de715560269"
           },
           "strip_prefix": "rs/nervous_system/lock"
         }
@@ -24948,7 +24636,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "c22d478ad97f82bd5d378862c9dd2f13afe2ece1"
+            "Rev": "2fe8aefafcb2fbee6fdb2785374d5de715560269"
           },
           "strip_prefix": "rs/nervous_system/long_message"
         }
@@ -24979,7 +24667,7 @@
               "target": "candid"
             },
             {
-              "id": "ic-cdk 0.16.0",
+              "id": "ic-cdk 0.17.1",
               "target": "ic_cdk"
             },
             {
@@ -25011,7 +24699,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "c22d478ad97f82bd5d378862c9dd2f13afe2ece1"
+            "Rev": "2fe8aefafcb2fbee6fdb2785374d5de715560269"
           },
           "strip_prefix": "rs/nervous_system/proto"
         }
@@ -25079,7 +24767,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "c22d478ad97f82bd5d378862c9dd2f13afe2ece1"
+            "Rev": "2fe8aefafcb2fbee6fdb2785374d5de715560269"
           },
           "strip_prefix": "rs/nervous_system/proxied_canister_calls_tracker"
         }
@@ -25127,7 +24815,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "c22d478ad97f82bd5d378862c9dd2f13afe2ece1"
+            "Rev": "2fe8aefafcb2fbee6fdb2785374d5de715560269"
           },
           "strip_prefix": "rs/nervous_system/root"
         }
@@ -25162,7 +24850,7 @@
               "target": "dfn_core"
             },
             {
-              "id": "ic-cdk 0.16.0",
+              "id": "ic-cdk 0.17.1",
               "target": "ic_cdk"
             },
             {
@@ -25170,8 +24858,8 @@
               "target": "ic_crypto_sha2"
             },
             {
-              "id": "ic-management-canister-types 0.9.0",
-              "target": "ic_management_canister_types"
+              "id": "ic-management-canister-types-private 0.9.0",
+              "target": "ic_management_canister_types_private"
             },
             {
               "id": "ic-nervous-system-clients 0.0.1",
@@ -25207,7 +24895,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "c22d478ad97f82bd5d378862c9dd2f13afe2ece1"
+            "Rev": "2fe8aefafcb2fbee6fdb2785374d5de715560269"
           },
           "strip_prefix": "rs/nervous_system/runtime"
         }
@@ -25250,7 +24938,7 @@
               "target": "ic_base_types"
             },
             {
-              "id": "ic-cdk 0.16.0",
+              "id": "ic-cdk 0.17.1",
               "target": "ic_cdk"
             }
           ],
@@ -25280,7 +24968,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "c22d478ad97f82bd5d378862c9dd2f13afe2ece1"
+            "Rev": "2fe8aefafcb2fbee6fdb2785374d5de715560269"
           },
           "strip_prefix": "rs/nervous_system/string"
         }
@@ -25319,7 +25007,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "c22d478ad97f82bd5d378862c9dd2f13afe2ece1"
+            "Rev": "2fe8aefafcb2fbee6fdb2785374d5de715560269"
           },
           "strip_prefix": "rs/nervous_system/temporary"
         }
@@ -25350,6 +25038,187 @@
       "license_ids": [],
       "license_file": null
     },
+    "ic-nervous-system-time-helpers 0.9.0": {
+      "name": "ic-nervous-system-time-helpers",
+      "version": "0.9.0",
+      "package_url": null,
+      "repository": {
+        "Git": {
+          "remote": "https://github.com/dfinity/ic.git",
+          "commitish": {
+            "Rev": "2fe8aefafcb2fbee6fdb2785374d5de715560269"
+          },
+          "strip_prefix": "rs/nervous_system/time_helpers"
+        }
+      },
+      "targets": [
+        {
+          "Library": {
+            "crate_name": "ic_nervous_system_time_helpers",
+            "crate_root": "src/lib.rs",
+            "srcs": {
+              "allow_empty": true,
+              "include": [
+                "**/*.rs"
+              ]
+            }
+          }
+        }
+      ],
+      "library_target_name": "ic_nervous_system_time_helpers",
+      "common_attrs": {
+        "compile_data_glob": [
+          "**"
+        ],
+        "deps": {
+          "common": [
+            {
+              "id": "ic-cdk 0.17.1",
+              "target": "ic_cdk"
+            }
+          ],
+          "selects": {}
+        },
+        "edition": "2021",
+        "version": "0.9.0"
+      },
+      "license": null,
+      "license_ids": [],
+      "license_file": null
+    },
+    "ic-nervous-system-timer-task 0.0.1": {
+      "name": "ic-nervous-system-timer-task",
+      "version": "0.0.1",
+      "package_url": null,
+      "repository": {
+        "Git": {
+          "remote": "https://github.com/dfinity/ic.git",
+          "commitish": {
+            "Rev": "2fe8aefafcb2fbee6fdb2785374d5de715560269"
+          },
+          "strip_prefix": "rs/nervous_system/timer_task"
+        }
+      },
+      "targets": [
+        {
+          "Library": {
+            "crate_name": "ic_nervous_system_timer_task",
+            "crate_root": "src/lib.rs",
+            "srcs": {
+              "allow_empty": true,
+              "include": [
+                "**/*.rs"
+              ]
+            }
+          }
+        }
+      ],
+      "library_target_name": "ic_nervous_system_timer_task",
+      "common_attrs": {
+        "compile_data_glob": [
+          "**"
+        ],
+        "deps": {
+          "common": [
+            {
+              "id": "candid 0.10.13",
+              "target": "candid"
+            },
+            {
+              "id": "futures 0.3.31",
+              "target": "futures"
+            },
+            {
+              "id": "ic-cdk 0.17.1",
+              "target": "ic_cdk"
+            },
+            {
+              "id": "ic-metrics-encoder 1.1.1",
+              "target": "ic_metrics_encoder"
+            },
+            {
+              "id": "ic-nervous-system-time-helpers 0.9.0",
+              "target": "ic_nervous_system_time_helpers"
+            },
+            {
+              "id": "ic-nervous-system-timers 0.9.0",
+              "target": "ic_nervous_system_timers"
+            },
+            {
+              "id": "serde 1.0.219",
+              "target": "serde"
+            }
+          ],
+          "selects": {}
+        },
+        "edition": "2021",
+        "proc_macro_deps": {
+          "common": [
+            {
+              "id": "async-trait 0.1.88",
+              "target": "async_trait"
+            }
+          ],
+          "selects": {}
+        },
+        "version": "0.0.1"
+      },
+      "license": null,
+      "license_ids": [],
+      "license_file": null
+    },
+    "ic-nervous-system-timers 0.9.0": {
+      "name": "ic-nervous-system-timers",
+      "version": "0.9.0",
+      "package_url": null,
+      "repository": {
+        "Git": {
+          "remote": "https://github.com/dfinity/ic.git",
+          "commitish": {
+            "Rev": "2fe8aefafcb2fbee6fdb2785374d5de715560269"
+          },
+          "strip_prefix": "rs/nervous_system/timers"
+        }
+      },
+      "targets": [
+        {
+          "Library": {
+            "crate_name": "ic_nervous_system_timers",
+            "crate_root": "src/lib.rs",
+            "srcs": {
+              "allow_empty": true,
+              "include": [
+                "**/*.rs"
+              ]
+            }
+          }
+        }
+      ],
+      "library_target_name": "ic_nervous_system_timers",
+      "common_attrs": {
+        "compile_data_glob": [
+          "**"
+        ],
+        "deps": {
+          "common": [
+            {
+              "id": "ic-cdk-timers 0.11.0",
+              "target": "ic_cdk_timers"
+            },
+            {
+              "id": "slotmap 1.0.7",
+              "target": "slotmap"
+            }
+          ],
+          "selects": {}
+        },
+        "edition": "2021",
+        "version": "0.9.0"
+      },
+      "license": null,
+      "license_ids": [],
+      "license_file": null
+    },
     "ic-nervous-system-timestamp 0.0.1": {
       "name": "ic-nervous-system-timestamp",
       "version": "0.0.1",
@@ -25358,7 +25227,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "c22d478ad97f82bd5d378862c9dd2f13afe2ece1"
+            "Rev": "2fe8aefafcb2fbee6fdb2785374d5de715560269"
           },
           "strip_prefix": "rs/nervous_system/timestamp"
         }
@@ -25406,7 +25275,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "c22d478ad97f82bd5d378862c9dd2f13afe2ece1"
+            "Rev": "2fe8aefafcb2fbee6fdb2785374d5de715560269"
           },
           "strip_prefix": "rs/nervous_system/neurons_fund"
         }
@@ -25479,7 +25348,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "c22d478ad97f82bd5d378862c9dd2f13afe2ece1"
+            "Rev": "2fe8aefafcb2fbee6fdb2785374d5de715560269"
           },
           "strip_prefix": "rs/nns/common"
         }
@@ -25514,12 +25383,12 @@
               "target": "comparable"
             },
             {
-              "id": "dfn_core 0.9.0",
-              "target": "dfn_core"
-            },
-            {
               "id": "ic-base-types 0.9.0",
               "target": "ic_base_types"
+            },
+            {
+              "id": "ic-cdk 0.17.1",
+              "target": "ic_cdk"
             },
             {
               "id": "ic-crypto-sha2 0.9.0",
@@ -25562,10 +25431,6 @@
               "target": "num_traits"
             },
             {
-              "id": "on_wire 0.9.0",
-              "target": "on_wire"
-            },
-            {
               "id": "prost 0.13.5",
               "target": "prost"
             },
@@ -25599,7 +25464,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "c22d478ad97f82bd5d378862c9dd2f13afe2ece1"
+            "Rev": "2fe8aefafcb2fbee6fdb2785374d5de715560269"
           },
           "strip_prefix": "rs/nns/constants"
         }
@@ -25651,7 +25516,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "c22d478ad97f82bd5d378862c9dd2f13afe2ece1"
+            "Rev": "2fe8aefafcb2fbee6fdb2785374d5de715560269"
           },
           "strip_prefix": "rs/nns/governance"
         }
@@ -25710,10 +25575,6 @@
               "target": "cycles_minting_canister"
             },
             {
-              "id": "dfn_http_metrics 0.9.0",
-              "target": "dfn_http_metrics"
-            },
-            {
               "id": "dyn-clone 1.0.17",
               "target": "dyn_clone"
             },
@@ -25730,28 +25591,28 @@
               "target": "ic_canisters_http_types"
             },
             {
-              "id": "ic-cdk 0.16.0",
+              "id": "ic-cdk 0.17.1",
               "target": "ic_cdk"
             },
             {
-              "id": "ic-cdk-timers 0.7.0",
+              "id": "ic-cdk-timers 0.11.0",
               "target": "ic_cdk_timers"
-            },
-            {
-              "id": "ic-crypto-getrandom-for-wasm 0.9.0",
-              "target": "ic_crypto_getrandom_for_wasm"
             },
             {
               "id": "ic-crypto-sha2 0.9.0",
               "target": "ic_crypto_sha2"
             },
             {
+              "id": "ic-dummy-getrandom-for-wasm 0.1.0",
+              "target": "ic_dummy_getrandom_for_wasm"
+            },
+            {
               "id": "ic-ledger-core 0.9.0",
               "target": "ic_ledger_core"
             },
             {
-              "id": "ic-management-canister-types 0.9.0",
-              "target": "ic_management_canister_types"
+              "id": "ic-management-canister-types-private 0.9.0",
+              "target": "ic_management_canister_types_private"
             },
             {
               "id": "ic-metrics-encoder 1.1.1",
@@ -25796,6 +25657,18 @@
             {
               "id": "ic-nervous-system-temporary 0.0.1",
               "target": "ic_nervous_system_temporary"
+            },
+            {
+              "id": "ic-nervous-system-time-helpers 0.9.0",
+              "target": "ic_nervous_system_time_helpers"
+            },
+            {
+              "id": "ic-nervous-system-timer-task 0.0.1",
+              "target": "ic_nervous_system_timer_task"
+            },
+            {
+              "id": "ic-nervous-system-timers 0.9.0",
+              "target": "ic_nervous_system_timers"
             },
             {
               "id": "ic-neurons-fund 0.0.1",
@@ -25955,7 +25828,7 @@
               "target": "async_trait"
             },
             {
-              "id": "ic-cdk-macros 0.9.0",
+              "id": "ic-cdk-macros 0.17.1",
               "target": "ic_cdk_macros"
             },
             {
@@ -26004,7 +25877,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "c22d478ad97f82bd5d378862c9dd2f13afe2ece1"
+            "Rev": "2fe8aefafcb2fbee6fdb2785374d5de715560269"
           },
           "strip_prefix": "rs/nns/governance/api"
         }
@@ -26141,7 +26014,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "c22d478ad97f82bd5d378862c9dd2f13afe2ece1"
+            "Rev": "2fe8aefafcb2fbee6fdb2785374d5de715560269"
           },
           "strip_prefix": "rs/nns/governance/init"
         }
@@ -26233,7 +26106,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "c22d478ad97f82bd5d378862c9dd2f13afe2ece1"
+            "Rev": "2fe8aefafcb2fbee6fdb2785374d5de715560269"
           },
           "strip_prefix": "rs/nns/gtc_accounts"
         }
@@ -26272,7 +26145,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "c22d478ad97f82bd5d378862c9dd2f13afe2ece1"
+            "Rev": "2fe8aefafcb2fbee6fdb2785374d5de715560269"
           },
           "strip_prefix": "rs/nns/handlers/root/interface"
         }
@@ -26307,7 +26180,7 @@
               "target": "ic_base_types"
             },
             {
-              "id": "ic-cdk 0.16.0",
+              "id": "ic-cdk 0.17.1",
               "target": "ic_cdk"
             },
             {
@@ -26349,7 +26222,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "c22d478ad97f82bd5d378862c9dd2f13afe2ece1"
+            "Rev": "2fe8aefafcb2fbee6fdb2785374d5de715560269"
           },
           "strip_prefix": "rs/protobuf"
         }
@@ -26388,6 +26261,10 @@
               "target": "erased_serde"
             },
             {
+              "id": "ic-error-types 0.1.0",
+              "target": "ic_error_types"
+            },
+            {
               "id": "prost 0.13.5",
               "target": "prost"
             },
@@ -26402,6 +26279,10 @@
             {
               "id": "slog 2.7.0",
               "target": "slog"
+            },
+            {
+              "id": "strum 0.26.3",
+              "target": "strum"
             }
           ],
           "selects": {}
@@ -26421,7 +26302,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "c22d478ad97f82bd5d378862c9dd2f13afe2ece1"
+            "Rev": "2fe8aefafcb2fbee6fdb2785374d5de715560269"
           },
           "strip_prefix": "rs/canister_client/read_state_response_parser"
         }
@@ -26493,7 +26374,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "c22d478ad97f82bd5d378862c9dd2f13afe2ece1"
+            "Rev": "2fe8aefafcb2fbee6fdb2785374d5de715560269"
           },
           "strip_prefix": "rs/registry/canister/api"
         }
@@ -26553,7 +26434,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "c22d478ad97f82bd5d378862c9dd2f13afe2ece1"
+            "Rev": "2fe8aefafcb2fbee6fdb2785374d5de715560269"
           },
           "strip_prefix": "rs/registry/canister-client"
         }
@@ -26580,7 +26461,19 @@
         "deps": {
           "common": [
             {
-              "id": "ic-cdk 0.16.0",
+              "id": "anyhow 1.0.97",
+              "target": "anyhow"
+            },
+            {
+              "id": "candid 0.10.13",
+              "target": "candid"
+            },
+            {
+              "id": "futures 0.3.31",
+              "target": "futures"
+            },
+            {
+              "id": "ic-cdk 0.17.1",
               "target": "ic_cdk"
             },
             {
@@ -26588,13 +26481,46 @@
               "target": "ic_interfaces_registry"
             },
             {
+              "id": "ic-nervous-system-canisters 0.9.0",
+              "target": "ic_nervous_system_canisters"
+            },
+            {
+              "id": "ic-nns-common 0.9.0",
+              "target": "ic_nns_common"
+            },
+            {
+              "id": "ic-nns-constants 0.9.0",
+              "target": "ic_nns_constants"
+            },
+            {
+              "id": "ic-registry-transport 0.9.0",
+              "target": "ic_registry_transport"
+            },
+            {
+              "id": "ic-stable-structures 0.6.8",
+              "target": "ic_stable_structures"
+            },
+            {
               "id": "ic-types 0.9.0",
               "target": "ic_types"
+            },
+            {
+              "id": "itertools 0.12.1",
+              "target": "itertools"
             }
           ],
           "selects": {}
         },
         "edition": "2021",
+        "proc_macro_deps": {
+          "common": [
+            {
+              "id": "async-trait 0.1.88",
+              "target": "async_trait"
+            }
+          ],
+          "selects": {}
+        },
         "version": "0.9.0"
       },
       "license": null,
@@ -26609,7 +26535,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "c22d478ad97f82bd5d378862c9dd2f13afe2ece1"
+            "Rev": "2fe8aefafcb2fbee6fdb2785374d5de715560269"
           },
           "strip_prefix": "rs/registry/client"
         }
@@ -26677,7 +26603,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "c22d478ad97f82bd5d378862c9dd2f13afe2ece1"
+            "Rev": "2fe8aefafcb2fbee6fdb2785374d5de715560269"
           },
           "strip_prefix": "rs/registry/fake"
         }
@@ -26729,7 +26655,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "c22d478ad97f82bd5d378862c9dd2f13afe2ece1"
+            "Rev": "2fe8aefafcb2fbee6fdb2785374d5de715560269"
           },
           "strip_prefix": "rs/registry/helpers"
         }
@@ -26768,8 +26694,8 @@
               "target": "ic_limits"
             },
             {
-              "id": "ic-management-canister-types 0.9.0",
-              "target": "ic_management_canister_types"
+              "id": "ic-management-canister-types-private 0.9.0",
+              "target": "ic_management_canister_types_private"
             },
             {
               "id": "ic-protobuf 0.9.0",
@@ -26825,7 +26751,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "c22d478ad97f82bd5d378862c9dd2f13afe2ece1"
+            "Rev": "2fe8aefafcb2fbee6fdb2785374d5de715560269"
           },
           "strip_prefix": "rs/registry/proto"
         }
@@ -26873,7 +26799,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "c22d478ad97f82bd5d378862c9dd2f13afe2ece1"
+            "Rev": "2fe8aefafcb2fbee6fdb2785374d5de715560269"
           },
           "strip_prefix": "rs/registry/keys"
         }
@@ -26908,8 +26834,8 @@
               "target": "ic_base_types"
             },
             {
-              "id": "ic-management-canister-types 0.9.0",
-              "target": "ic_management_canister_types"
+              "id": "ic-management-canister-types-private 0.9.0",
+              "target": "ic_management_canister_types_private"
             },
             {
               "id": "ic-types 0.9.0",
@@ -26937,7 +26863,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "c22d478ad97f82bd5d378862c9dd2f13afe2ece1"
+            "Rev": "2fe8aefafcb2fbee6fdb2785374d5de715560269"
           },
           "strip_prefix": "rs/registry/local_registry"
         }
@@ -27025,7 +26951,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "c22d478ad97f82bd5d378862c9dd2f13afe2ece1"
+            "Rev": "2fe8aefafcb2fbee6fdb2785374d5de715560269"
           },
           "strip_prefix": "rs/registry/local_store"
         }
@@ -27089,7 +27015,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "c22d478ad97f82bd5d378862c9dd2f13afe2ece1"
+            "Rev": "2fe8aefafcb2fbee6fdb2785374d5de715560269"
           },
           "strip_prefix": "rs/registry/local_store/artifacts"
         }
@@ -27128,7 +27054,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "c22d478ad97f82bd5d378862c9dd2f13afe2ece1"
+            "Rev": "2fe8aefafcb2fbee6fdb2785374d5de715560269"
           },
           "strip_prefix": "rs/registry/nns_data_provider"
         }
@@ -27224,7 +27150,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "c22d478ad97f82bd5d378862c9dd2f13afe2ece1"
+            "Rev": "2fe8aefafcb2fbee6fdb2785374d5de715560269"
           },
           "strip_prefix": "rs/registry/node_provider_rewards"
         }
@@ -27276,7 +27202,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "c22d478ad97f82bd5d378862c9dd2f13afe2ece1"
+            "Rev": "2fe8aefafcb2fbee6fdb2785374d5de715560269"
           },
           "strip_prefix": "rs/registry/provisional_whitelist"
         }
@@ -27328,7 +27254,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "c22d478ad97f82bd5d378862c9dd2f13afe2ece1"
+            "Rev": "2fe8aefafcb2fbee6fdb2785374d5de715560269"
           },
           "strip_prefix": "rs/registry/routing_table"
         }
@@ -27388,7 +27314,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "c22d478ad97f82bd5d378862c9dd2f13afe2ece1"
+            "Rev": "2fe8aefafcb2fbee6fdb2785374d5de715560269"
           },
           "strip_prefix": "rs/registry/subnet_features"
         }
@@ -27419,8 +27345,8 @@
               "target": "candid"
             },
             {
-              "id": "ic-management-canister-types 0.9.0",
-              "target": "ic_management_canister_types"
+              "id": "ic-management-canister-types-private 0.9.0",
+              "target": "ic_management_canister_types_private"
             },
             {
               "id": "ic-protobuf 0.9.0",
@@ -27448,7 +27374,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "c22d478ad97f82bd5d378862c9dd2f13afe2ece1"
+            "Rev": "2fe8aefafcb2fbee6fdb2785374d5de715560269"
           },
           "strip_prefix": "rs/registry/subnet_type"
         }
@@ -27517,7 +27443,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "c22d478ad97f82bd5d378862c9dd2f13afe2ece1"
+            "Rev": "2fe8aefafcb2fbee6fdb2785374d5de715560269"
           },
           "strip_prefix": "rs/registry/transport"
         }
@@ -27581,7 +27507,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "c22d478ad97f82bd5d378862c9dd2f13afe2ece1"
+            "Rev": "2fe8aefafcb2fbee6fdb2785374d5de715560269"
           },
           "strip_prefix": "rs/replicated_state"
         }
@@ -27640,7 +27566,7 @@
               "target": "ic_crypto_sha2"
             },
             {
-              "id": "ic-error-types 0.9.0",
+              "id": "ic-error-types 0.1.0",
               "target": "ic_error_types"
             },
             {
@@ -27656,8 +27582,8 @@
               "target": "ic_logger"
             },
             {
-              "id": "ic-management-canister-types 0.9.0",
-              "target": "ic_management_canister_types"
+              "id": "ic-management-canister-types-private 0.9.0",
+              "target": "ic_management_canister_types_private"
             },
             {
               "id": "ic-metrics 0.9.0",
@@ -27718,6 +27644,10 @@
             {
               "id": "nix 0.24.3",
               "target": "nix"
+            },
+            {
+              "id": "num-traits 0.2.19",
+              "target": "num_traits"
             },
             {
               "id": "phantom_newtype 0.9.0",
@@ -27790,6 +27720,92 @@
       "license_ids": [],
       "license_file": "LICENSE"
     },
+    "ic-secp256k1 0.1.0": {
+      "name": "ic-secp256k1",
+      "version": "0.1.0",
+      "package_url": "https://github.com/dfinity/ic",
+      "repository": {
+        "Git": {
+          "remote": "https://github.com/dfinity/ic.git",
+          "commitish": {
+            "Rev": "2fe8aefafcb2fbee6fdb2785374d5de715560269"
+          },
+          "strip_prefix": "packages/ic-secp256k1"
+        }
+      },
+      "targets": [
+        {
+          "Library": {
+            "crate_name": "ic_secp256k1",
+            "crate_root": "src/lib.rs",
+            "srcs": {
+              "allow_empty": true,
+              "include": [
+                "**/*.rs"
+              ]
+            }
+          }
+        }
+      ],
+      "library_target_name": "ic_secp256k1",
+      "common_attrs": {
+        "compile_data_glob": [
+          "**"
+        ],
+        "deps": {
+          "common": [
+            {
+              "id": "hmac 0.12.1",
+              "target": "hmac"
+            },
+            {
+              "id": "k256 0.13.4",
+              "target": "k256"
+            },
+            {
+              "id": "lazy_static 1.5.0",
+              "target": "lazy_static"
+            },
+            {
+              "id": "num-bigint 0.4.6",
+              "target": "num_bigint"
+            },
+            {
+              "id": "pem 1.1.1",
+              "target": "pem"
+            },
+            {
+              "id": "rand 0.8.5",
+              "target": "rand"
+            },
+            {
+              "id": "rand_chacha 0.3.1",
+              "target": "rand_chacha"
+            },
+            {
+              "id": "sha2 0.10.8",
+              "target": "sha2"
+            },
+            {
+              "id": "simple_asn1 0.6.3",
+              "target": "simple_asn1"
+            },
+            {
+              "id": "zeroize 1.8.1",
+              "target": "zeroize"
+            }
+          ],
+          "selects": {}
+        },
+        "edition": "2021",
+        "version": "0.1.0"
+      },
+      "license": "Apache-2.0",
+      "license_ids": [
+        "Apache-2.0"
+      ],
+      "license_file": "LICENSE"
+    },
     "ic-sns-governance 0.9.0": {
       "name": "ic-sns-governance",
       "version": "0.9.0",
@@ -27798,7 +27814,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "c22d478ad97f82bd5d378862c9dd2f13afe2ece1"
+            "Rev": "2fe8aefafcb2fbee6fdb2785374d5de715560269"
           },
           "strip_prefix": "rs/sns/governance"
         }
@@ -27881,11 +27897,11 @@
               "target": "ic_canisters_http_types"
             },
             {
-              "id": "ic-cdk 0.16.0",
+              "id": "ic-cdk 0.17.1",
               "target": "ic_cdk"
             },
             {
-              "id": "ic-cdk-timers 0.7.0",
+              "id": "ic-cdk-timers 0.11.0",
               "target": "ic_cdk_timers"
             },
             {
@@ -27901,8 +27917,8 @@
               "target": "ic_ledger_core"
             },
             {
-              "id": "ic-management-canister-types 0.9.0",
-              "target": "ic_management_canister_types"
+              "id": "ic-management-canister-types-private 0.9.0",
+              "target": "ic_management_canister_types_private"
             },
             {
               "id": "ic-metrics-encoder 1.1.1",
@@ -28001,6 +28017,10 @@
               "target": "icrc_ledger_types"
             },
             {
+              "id": "itertools 0.12.1",
+              "target": "itertools"
+            },
+            {
               "id": "lazy_static 1.5.0",
               "target": "lazy_static"
             },
@@ -28055,7 +28075,7 @@
               "target": "async_trait"
             },
             {
-              "id": "ic-cdk-macros 0.9.0",
+              "id": "ic-cdk-macros 0.17.1",
               "target": "ic_cdk_macros"
             },
             {
@@ -28112,7 +28132,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "c22d478ad97f82bd5d378862c9dd2f13afe2ece1"
+            "Rev": "2fe8aefafcb2fbee6fdb2785374d5de715560269"
           },
           "strip_prefix": "rs/sns/governance/api"
         }
@@ -28199,6 +28219,10 @@
               "target": "serde_bytes"
             },
             {
+              "id": "serde_json 1.0.140",
+              "target": "serde_json"
+            },
+            {
               "id": "strum 0.26.3",
               "target": "strum"
             }
@@ -28229,7 +28253,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "c22d478ad97f82bd5d378862c9dd2f13afe2ece1"
+            "Rev": "2fe8aefafcb2fbee6fdb2785374d5de715560269"
           },
           "strip_prefix": "rs/sns/governance/proposal_criticality"
         }
@@ -28277,7 +28301,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "c22d478ad97f82bd5d378862c9dd2f13afe2ece1"
+            "Rev": "2fe8aefafcb2fbee6fdb2785374d5de715560269"
           },
           "strip_prefix": "rs/sns/governance/proposals_amount_total_limit"
         }
@@ -28342,7 +28366,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "c22d478ad97f82bd5d378862c9dd2f13afe2ece1"
+            "Rev": "2fe8aefafcb2fbee6fdb2785374d5de715560269"
           },
           "strip_prefix": "rs/sns/governance/token_valuation"
         }
@@ -28385,7 +28409,7 @@
               "target": "ic_base_types"
             },
             {
-              "id": "ic-cdk 0.16.0",
+              "id": "ic-cdk 0.17.1",
               "target": "ic_cdk"
             },
             {
@@ -28451,7 +28475,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "c22d478ad97f82bd5d378862c9dd2f13afe2ece1"
+            "Rev": "2fe8aefafcb2fbee6fdb2785374d5de715560269"
           },
           "strip_prefix": "rs/sns/init"
         }
@@ -28579,7 +28603,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "c22d478ad97f82bd5d378862c9dd2f13afe2ece1"
+            "Rev": "2fe8aefafcb2fbee6fdb2785374d5de715560269"
           },
           "strip_prefix": "rs/sns/root"
         }
@@ -28646,16 +28670,16 @@
               "target": "ic_canisters_http_types"
             },
             {
-              "id": "ic-cdk 0.16.0",
+              "id": "ic-cdk 0.17.1",
               "target": "ic_cdk"
             },
             {
-              "id": "ic-cdk-timers 0.7.0",
+              "id": "ic-cdk-timers 0.11.0",
               "target": "ic_cdk_timers"
             },
             {
-              "id": "ic-management-canister-types 0.9.0",
-              "target": "ic_management_canister_types"
+              "id": "ic-management-canister-types-private 0.9.0",
+              "target": "ic_management_canister_types_private"
             },
             {
               "id": "ic-metrics-encoder 1.1.1",
@@ -28712,7 +28736,7 @@
               "target": "async_trait"
             },
             {
-              "id": "ic-cdk-macros 0.9.0",
+              "id": "ic-cdk-macros 0.17.1",
               "target": "ic_cdk_macros"
             },
             {
@@ -28753,7 +28777,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "c22d478ad97f82bd5d378862c9dd2f13afe2ece1"
+            "Rev": "2fe8aefafcb2fbee6fdb2785374d5de715560269"
           },
           "strip_prefix": "rs/sns/swap"
         }
@@ -28820,11 +28844,11 @@
               "target": "ic_canisters_http_types"
             },
             {
-              "id": "ic-cdk 0.16.0",
+              "id": "ic-cdk 0.17.1",
               "target": "ic_cdk"
             },
             {
-              "id": "ic-cdk-timers 0.7.0",
+              "id": "ic-cdk-timers 0.11.0",
               "target": "ic_cdk_timers"
             },
             {
@@ -28922,7 +28946,7 @@
               "target": "async_trait"
             },
             {
-              "id": "ic-cdk-macros 0.9.0",
+              "id": "ic-cdk-macros 0.17.1",
               "target": "ic_cdk_macros"
             },
             {
@@ -28963,7 +28987,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "c22d478ad97f82bd5d378862c9dd2f13afe2ece1"
+            "Rev": "2fe8aefafcb2fbee6fdb2785374d5de715560269"
           },
           "strip_prefix": "rs/sns/swap/proto_library"
         }
@@ -29039,7 +29063,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "c22d478ad97f82bd5d378862c9dd2f13afe2ece1"
+            "Rev": "2fe8aefafcb2fbee6fdb2785374d5de715560269"
           },
           "strip_prefix": "rs/nns/sns-wasm"
         }
@@ -29070,18 +29094,6 @@
               "target": "candid"
             },
             {
-              "id": "dfn_candid 0.9.0",
-              "target": "dfn_candid"
-            },
-            {
-              "id": "dfn_core 0.9.0",
-              "target": "dfn_core"
-            },
-            {
-              "id": "dfn_http_metrics 0.9.0",
-              "target": "dfn_http_metrics"
-            },
-            {
               "id": "futures 0.3.31",
               "target": "futures"
             },
@@ -29094,7 +29106,11 @@
               "target": "ic_base_types"
             },
             {
-              "id": "ic-cdk 0.16.0",
+              "id": "ic-canisters-http-types 0.9.0",
+              "target": "ic_canisters_http_types"
+            },
+            {
+              "id": "ic-cdk 0.17.1",
               "target": "ic_cdk"
             },
             {
@@ -29102,8 +29118,8 @@
               "target": "ic_crypto_sha2"
             },
             {
-              "id": "ic-management-canister-types 0.9.0",
-              "target": "ic_management_canister_types"
+              "id": "ic-management-canister-types-private 0.9.0",
+              "target": "ic_management_canister_types_private"
             },
             {
               "id": "ic-metrics-encoder 1.1.1",
@@ -29255,7 +29271,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "c22d478ad97f82bd5d378862c9dd2f13afe2ece1"
+            "Rev": "2fe8aefafcb2fbee6fdb2785374d5de715560269"
           },
           "strip_prefix": "rs/sys"
         }
@@ -29440,7 +29456,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "c22d478ad97f82bd5d378862c9dd2f13afe2ece1"
+            "Rev": "2fe8aefafcb2fbee6fdb2785374d5de715560269"
           },
           "strip_prefix": "rs/types/types"
         }
@@ -29503,7 +29519,7 @@
               "target": "ic_crypto_tree_hash"
             },
             {
-              "id": "ic-error-types 0.9.0",
+              "id": "ic-error-types 0.1.0",
               "target": "ic_error_types"
             },
             {
@@ -29511,8 +29527,8 @@
               "target": "ic_limits"
             },
             {
-              "id": "ic-management-canister-types 0.9.0",
-              "target": "ic_management_canister_types"
+              "id": "ic-management-canister-types-private 0.9.0",
+              "target": "ic_management_canister_types_private"
             },
             {
               "id": "ic-protobuf 0.9.0",
@@ -29612,7 +29628,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "c22d478ad97f82bd5d378862c9dd2f13afe2ece1"
+            "Rev": "2fe8aefafcb2fbee6fdb2785374d5de715560269"
           },
           "strip_prefix": "rs/utils"
         }
@@ -29776,7 +29792,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "c22d478ad97f82bd5d378862c9dd2f13afe2ece1"
+            "Rev": "2fe8aefafcb2fbee6fdb2785374d5de715560269"
           },
           "strip_prefix": "rs/utils/thread"
         }
@@ -29824,7 +29840,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "c22d478ad97f82bd5d378862c9dd2f13afe2ece1"
+            "Rev": "2fe8aefafcb2fbee6fdb2785374d5de715560269"
           },
           "strip_prefix": "rs/utils/validate_eq"
         }
@@ -29872,7 +29888,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "c22d478ad97f82bd5d378862c9dd2f13afe2ece1"
+            "Rev": "2fe8aefafcb2fbee6fdb2785374d5de715560269"
           },
           "strip_prefix": "rs/utils/validate_eq_derive"
         }
@@ -30093,7 +30109,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "c22d478ad97f82bd5d378862c9dd2f13afe2ece1"
+            "Rev": "2fe8aefafcb2fbee6fdb2785374d5de715560269"
           },
           "strip_prefix": "rs/types/wasm_types"
         }
@@ -30244,44 +30260,6 @@
         ],
         "edition": "2021",
         "version": "0.18.11"
-      },
-      "license": "Apache-2.0",
-      "license_ids": [
-        "Apache-2.0"
-      ],
-      "license_file": "LICENSE"
-    },
-    "ic0 0.21.1": {
-      "name": "ic0",
-      "version": "0.21.1",
-      "package_url": "https://github.com/dfinity/cdk-rs",
-      "repository": {
-        "Http": {
-          "url": "https://static.crates.io/crates/ic0/0.21.1/download",
-          "sha256": "a54b5297861c651551676e8c43df805dad175cc33bc97dbd992edbbb85dcbcdf"
-        }
-      },
-      "targets": [
-        {
-          "Library": {
-            "crate_name": "ic0",
-            "crate_root": "src/lib.rs",
-            "srcs": {
-              "allow_empty": true,
-              "include": [
-                "**/*.rs"
-              ]
-            }
-          }
-        }
-      ],
-      "library_target_name": "ic0",
-      "common_attrs": {
-        "compile_data_glob": [
-          "**"
-        ],
-        "edition": "2021",
-        "version": "0.21.1"
       },
       "license": "Apache-2.0",
       "license_ids": [
@@ -30492,7 +30470,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "c22d478ad97f82bd5d378862c9dd2f13afe2ece1"
+            "Rev": "2fe8aefafcb2fbee6fdb2785374d5de715560269"
           },
           "strip_prefix": "rs/ledger_suite/icp"
         }
@@ -30551,7 +30529,7 @@
               "target": "ic_base_types"
             },
             {
-              "id": "ic-cdk 0.16.0",
+              "id": "ic-cdk 0.17.1",
               "target": "ic_cdk"
             },
             {
@@ -30633,7 +30611,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "c22d478ad97f82bd5d378862c9dd2f13afe2ece1"
+            "Rev": "2fe8aefafcb2fbee6fdb2785374d5de715560269"
           },
           "strip_prefix": "packages/icrc-cbor"
         }
@@ -30701,7 +30679,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "c22d478ad97f82bd5d378862c9dd2f13afe2ece1"
+            "Rev": "2fe8aefafcb2fbee6fdb2785374d5de715560269"
           },
           "strip_prefix": "packages/icrc-ledger-client"
         }
@@ -30768,7 +30746,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "c22d478ad97f82bd5d378862c9dd2f13afe2ece1"
+            "Rev": "2fe8aefafcb2fbee6fdb2785374d5de715560269"
           },
           "strip_prefix": "packages/icrc-ledger-types"
         }
@@ -34642,6 +34620,51 @@
       ],
       "license_file": "LICENSE"
     },
+    "matchit 0.8.4": {
+      "name": "matchit",
+      "version": "0.8.4",
+      "package_url": "https://github.com/ibraheemdev/matchit",
+      "repository": {
+        "Http": {
+          "url": "https://static.crates.io/crates/matchit/0.8.4/download",
+          "sha256": "47e1ffaa40ddd1f3ed91f717a33c8c0ee23fff369e3aa8772b9605cc1d22f4c3"
+        }
+      },
+      "targets": [
+        {
+          "Library": {
+            "crate_name": "matchit",
+            "crate_root": "src/lib.rs",
+            "srcs": {
+              "allow_empty": true,
+              "include": [
+                "**/*.rs"
+              ]
+            }
+          }
+        }
+      ],
+      "library_target_name": "matchit",
+      "common_attrs": {
+        "compile_data_glob": [
+          "**"
+        ],
+        "crate_features": {
+          "common": [
+            "default"
+          ],
+          "selects": {}
+        },
+        "edition": "2021",
+        "version": "0.8.4"
+      },
+      "license": "MIT AND BSD-3-Clause",
+      "license_ids": [
+        "BSD-3-Clause",
+        "MIT"
+      ],
+      "license_file": "LICENSE"
+    },
     "memchr 2.7.4": {
       "name": "memchr",
       "version": "2.7.4",
@@ -35885,10 +35908,6 @@
         "deps": {
           "common": [
             {
-              "id": "anyhow 1.0.97",
-              "target": "anyhow"
-            },
-            {
               "id": "candid 0.10.13",
               "target": "candid"
             },
@@ -35917,44 +35936,36 @@
               "target": "ic_interfaces_registry"
             },
             {
-              "id": "ic-management-canister-types 0.9.0",
-              "target": "ic_management_canister_types"
+              "id": "ic-management-canister-types-private 0.9.0",
+              "target": "ic_management_canister_types_private"
             },
             {
               "id": "ic-metrics-encoder 1.1.1",
               "target": "ic_metrics_encoder"
             },
             {
+              "id": "ic-nervous-system-canisters 0.9.0",
+              "target": "ic_nervous_system_canisters"
+            },
+            {
               "id": "ic-nervous-system-common 0.9.0",
               "target": "ic_nervous_system_common"
-            },
-            {
-              "id": "ic-nns-common 0.9.0",
-              "target": "ic_nns_common"
-            },
-            {
-              "id": "ic-nns-constants 0.9.0",
-              "target": "ic_nns_constants"
             },
             {
               "id": "ic-protobuf 0.9.0",
               "target": "ic_protobuf"
             },
             {
+              "id": "ic-registry-canister-client 0.9.0",
+              "target": "ic_registry_canister_client"
+            },
+            {
               "id": "ic-registry-keys 0.9.0",
               "target": "ic_registry_keys"
             },
             {
-              "id": "ic-registry-transport 0.9.0",
-              "target": "ic_registry_transport"
-            },
-            {
               "id": "ic-stable-structures 0.6.8",
               "target": "ic_stable_structures"
-            },
-            {
-              "id": "ic-types 0.9.0",
-              "target": "ic_types"
             },
             {
               "id": "indexmap 2.8.0",
@@ -35971,10 +35982,6 @@
             {
               "id": "serde 1.0.219",
               "target": "serde"
-            },
-            {
-              "id": "thiserror 2.0.12",
-              "target": "thiserror"
             }
           ],
           "selects": {}
@@ -36011,93 +36018,6 @@
         "data_glob": [
           "**"
         ]
-      },
-      "license": "Apache-2.0",
-      "license_ids": [
-        "Apache-2.0"
-      ],
-      "license_file": null
-    },
-    "node-provider-rewards-lib 0.6.2": {
-      "name": "node-provider-rewards-lib",
-      "version": "0.6.2",
-      "package_url": null,
-      "repository": null,
-      "targets": [
-        {
-          "Library": {
-            "crate_name": "node_provider_rewards_lib",
-            "crate_root": "src/lib.rs",
-            "srcs": {
-              "allow_empty": true,
-              "include": [
-                "**/*.rs"
-              ]
-            }
-          }
-        }
-      ],
-      "library_target_name": "node_provider_rewards_lib",
-      "common_attrs": {
-        "compile_data_glob": [
-          "**"
-        ],
-        "deps": {
-          "common": [
-            {
-              "id": "ahash 0.8.11",
-              "target": "ahash"
-            },
-            {
-              "id": "candid 0.10.13",
-              "target": "candid"
-            },
-            {
-              "id": "ic-base-types 0.9.0",
-              "target": "ic_base_types"
-            },
-            {
-              "id": "ic-management-canister-types 0.9.0",
-              "target": "ic_management_canister_types"
-            },
-            {
-              "id": "ic-protobuf 0.9.0",
-              "target": "ic_protobuf"
-            },
-            {
-              "id": "itertools 0.13.0",
-              "target": "itertools"
-            },
-            {
-              "id": "lazy_static 1.5.0",
-              "target": "lazy_static"
-            },
-            {
-              "id": "num-traits 0.2.19",
-              "target": "num_traits"
-            },
-            {
-              "id": "rust_decimal 1.37.1",
-              "target": "rust_decimal"
-            },
-            {
-              "id": "serde 1.0.219",
-              "target": "serde"
-            }
-          ],
-          "selects": {}
-        },
-        "edition": "2021",
-        "proc_macro_deps": {
-          "common": [
-            {
-              "id": "rust_decimal_macros 1.37.1",
-              "target": "rust_decimal_macros"
-            }
-          ],
-          "selects": {}
-        },
-        "version": "0.6.2"
       },
       "license": "Apache-2.0",
       "license_ids": [
@@ -37424,7 +37344,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "c22d478ad97f82bd5d378862c9dd2f13afe2ece1"
+            "Rev": "2fe8aefafcb2fbee6fdb2785374d5de715560269"
           },
           "strip_prefix": "rs/rust_canisters/on_wire"
         }
@@ -38942,7 +38862,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "c22d478ad97f82bd5d378862c9dd2f13afe2ece1"
+            "Rev": "2fe8aefafcb2fbee6fdb2785374d5de715560269"
           },
           "strip_prefix": "rs/phantom_newtype"
         }
@@ -43475,7 +43395,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "c22d478ad97f82bd5d378862c9dd2f13afe2ece1"
+            "Rev": "2fe8aefafcb2fbee6fdb2785374d5de715560269"
           },
           "strip_prefix": "rs/registry/canister"
         }
@@ -43542,7 +43462,7 @@
               "target": "ic_base_types"
             },
             {
-              "id": "ic-cdk 0.16.0",
+              "id": "ic-cdk 0.17.1",
               "target": "ic_cdk"
             },
             {
@@ -43566,8 +43486,8 @@
               "target": "ic_crypto_utils_ni_dkg"
             },
             {
-              "id": "ic-management-canister-types 0.9.0",
-              "target": "ic_management_canister_types"
+              "id": "ic-management-canister-types-private 0.9.0",
+              "target": "ic_management_canister_types_private"
             },
             {
               "id": "ic-metrics-encoder 1.1.1",
@@ -43576,6 +43496,10 @@
             {
               "id": "ic-nervous-system-canisters 0.9.0",
               "target": "ic_nervous_system_canisters"
+            },
+            {
+              "id": "ic-nervous-system-clients 0.0.1",
+              "target": "ic_nervous_system_clients"
             },
             {
               "id": "ic-nervous-system-common 0.9.0",
@@ -43626,8 +43550,16 @@
               "target": "ic_registry_transport"
             },
             {
+              "id": "ic-stable-structures 0.6.8",
+              "target": "ic_stable_structures"
+            },
+            {
               "id": "ic-types 0.9.0",
               "target": "ic_types"
+            },
+            {
+              "id": "ic-utils 0.9.0",
+              "target": "ic_utils"
             },
             {
               "id": "idna 1.0.3",
@@ -43644,6 +43576,10 @@
             {
               "id": "leb128 0.2.5",
               "target": "leb128"
+            },
+            {
+              "id": "maplit 1.0.2",
+              "target": "maplit"
             },
             {
               "id": "on_wire 0.9.0",
@@ -45467,7 +45403,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "c22d478ad97f82bd5d378862c9dd2f13afe2ece1"
+            "Rev": "2fe8aefafcb2fbee6fdb2785374d5de715560269"
           },
           "strip_prefix": "rs/rosetta-api/common/rosetta_core"
         }
@@ -45510,12 +45446,12 @@
               "target": "ic_agent"
             },
             {
-              "id": "ic-crypto-ed25519 0.9.0",
-              "target": "ic_crypto_ed25519"
+              "id": "ic-ed25519 0.2.0",
+              "target": "ic_ed25519"
             },
             {
-              "id": "ic-crypto-secp256k1 0.9.0",
-              "target": "ic_crypto_secp256k1"
+              "id": "ic-secp256k1 0.1.0",
+              "target": "ic_secp256k1"
             },
             {
               "id": "ic-types 0.9.0",
@@ -45548,6 +45484,14 @@
             {
               "id": "serde_with 1.14.0",
               "target": "serde_with"
+            },
+            {
+              "id": "tokio 1.44.1",
+              "target": "tokio"
+            },
+            {
+              "id": "tracing 0.1.41",
+              "target": "tracing"
             }
           ],
           "selects": {}
@@ -48766,61 +48710,6 @@
       ],
       "license_file": "LICENSE-APACHE"
     },
-    "serde_tokenstream 0.1.7": {
-      "name": "serde_tokenstream",
-      "version": "0.1.7",
-      "package_url": "https://github.com/oxidecomputer/serde_tokenstream",
-      "repository": {
-        "Http": {
-          "url": "https://static.crates.io/crates/serde_tokenstream/0.1.7/download",
-          "sha256": "797ba1d80299b264f3aac68ab5d12e5825a561749db4df7cd7c8083900c5d4e9"
-        }
-      },
-      "targets": [
-        {
-          "Library": {
-            "crate_name": "serde_tokenstream",
-            "crate_root": "src/lib.rs",
-            "srcs": {
-              "allow_empty": true,
-              "include": [
-                "**/*.rs"
-              ]
-            }
-          }
-        }
-      ],
-      "library_target_name": "serde_tokenstream",
-      "common_attrs": {
-        "compile_data_glob": [
-          "**"
-        ],
-        "deps": {
-          "common": [
-            {
-              "id": "proc-macro2 1.0.94",
-              "target": "proc_macro2"
-            },
-            {
-              "id": "serde 1.0.219",
-              "target": "serde"
-            },
-            {
-              "id": "syn 1.0.109",
-              "target": "syn"
-            }
-          ],
-          "selects": {}
-        },
-        "edition": "2021",
-        "version": "0.1.7"
-      },
-      "license": "Apache-2.0",
-      "license_ids": [
-        "Apache-2.0"
-      ],
-      "license_file": "LICENSE"
-    },
     "serde_tokenstream 0.2.2": {
       "name": "serde_tokenstream",
       "version": "0.2.2",
@@ -49921,6 +49810,10 @@
             {
               "id": "ic-nns-governance 0.9.0",
               "target": "ic_nns_governance"
+            },
+            {
+              "id": "ic-nns-governance-api 0.9.0",
+              "target": "ic_nns_governance_api"
             },
             {
               "id": "itertools 0.13.0",
@@ -53346,84 +53239,6 @@
       ],
       "license_file": "LICENSE-Apache"
     },
-    "tiny-keccak 2.0.2": {
-      "name": "tiny-keccak",
-      "version": "2.0.2",
-      "package_url": "https://github.com/debris/tiny-keccak",
-      "repository": {
-        "Http": {
-          "url": "https://static.crates.io/crates/tiny-keccak/2.0.2/download",
-          "sha256": "2c9d3793400a45f954c52e73d068316d76b6f4e36977e3fcebb13a2721e80237"
-        }
-      },
-      "targets": [
-        {
-          "Library": {
-            "crate_name": "tiny_keccak",
-            "crate_root": "src/lib.rs",
-            "srcs": {
-              "allow_empty": true,
-              "include": [
-                "**/*.rs"
-              ]
-            }
-          }
-        },
-        {
-          "BuildScript": {
-            "crate_name": "build_script_build",
-            "crate_root": "build.rs",
-            "srcs": {
-              "allow_empty": true,
-              "include": [
-                "**/*.rs"
-              ]
-            }
-          }
-        }
-      ],
-      "library_target_name": "tiny_keccak",
-      "common_attrs": {
-        "compile_data_glob": [
-          "**"
-        ],
-        "crate_features": {
-          "common": [
-            "default",
-            "shake"
-          ],
-          "selects": {}
-        },
-        "deps": {
-          "common": [
-            {
-              "id": "crunchy 0.2.2",
-              "target": "crunchy"
-            },
-            {
-              "id": "tiny-keccak 2.0.2",
-              "target": "build_script_build"
-            }
-          ],
-          "selects": {}
-        },
-        "edition": "2018",
-        "version": "2.0.2"
-      },
-      "build_script_attrs": {
-        "compile_data_glob": [
-          "**"
-        ],
-        "data_glob": [
-          "**"
-        ]
-      },
-      "license": "CC0-1.0",
-      "license_ids": [
-        "CC0-1.0"
-      ],
-      "license_file": "LICENSE"
-    },
     "tinystr 0.7.6": {
       "name": "tinystr",
       "version": "0.7.6",
@@ -55473,7 +55288,7 @@
         "Git": {
           "remote": "https://github.com/dfinity/ic.git",
           "commitish": {
-            "Rev": "c22d478ad97f82bd5d378862c9dd2f13afe2ece1"
+            "Rev": "2fe8aefafcb2fbee6fdb2785374d5de715560269"
           },
           "strip_prefix": "rs/tree_deserializer"
         }
@@ -55521,144 +55336,6 @@
       "license_ids": [],
       "license_file": null
     },
-    "trustworthy-node-metrics 0.6.2": {
-      "name": "trustworthy-node-metrics",
-      "version": "0.6.2",
-      "package_url": null,
-      "repository": null,
-      "targets": [],
-      "library_target_name": null,
-      "common_attrs": {
-        "compile_data_glob": [
-          "**"
-        ],
-        "deps": {
-          "common": [
-            {
-              "id": "ahash 0.8.11",
-              "target": "ahash"
-            },
-            {
-              "id": "anyhow 1.0.97",
-              "target": "anyhow"
-            },
-            {
-              "id": "candid 0.10.13",
-              "target": "candid"
-            },
-            {
-              "id": "chrono 0.4.40",
-              "target": "chrono"
-            },
-            {
-              "id": "dfn_core 0.9.0",
-              "target": "dfn_core"
-            },
-            {
-              "id": "futures 0.3.31",
-              "target": "futures"
-            },
-            {
-              "id": "ic-base-types 0.9.0",
-              "target": "ic_base_types"
-            },
-            {
-              "id": "ic-cdk 0.17.1",
-              "target": "ic_cdk"
-            },
-            {
-              "id": "ic-cdk-timers 0.11.0",
-              "target": "ic_cdk_timers"
-            },
-            {
-              "id": "ic-interfaces-registry 0.9.0",
-              "target": "ic_interfaces_registry"
-            },
-            {
-              "id": "ic-management-canister-types 0.9.0",
-              "target": "ic_management_canister_types"
-            },
-            {
-              "id": "ic-nns-common 0.9.0",
-              "target": "ic_nns_common"
-            },
-            {
-              "id": "ic-nns-constants 0.9.0",
-              "target": "ic_nns_constants"
-            },
-            {
-              "id": "ic-nns-governance-api 0.9.0",
-              "target": "ic_nns_governance_api"
-            },
-            {
-              "id": "ic-protobuf 0.9.0",
-              "target": "ic_protobuf"
-            },
-            {
-              "id": "ic-registry-canister-client 0.9.0",
-              "target": "ic_registry_canister_client"
-            },
-            {
-              "id": "ic-registry-keys 0.9.0",
-              "target": "ic_registry_keys"
-            },
-            {
-              "id": "ic-registry-transport 0.9.0",
-              "target": "ic_registry_transport"
-            },
-            {
-              "id": "ic-stable-structures 0.6.8",
-              "target": "ic_stable_structures"
-            },
-            {
-              "id": "ic-types 0.9.0",
-              "target": "ic_types"
-            },
-            {
-              "id": "itertools 0.13.0",
-              "target": "itertools"
-            },
-            {
-              "id": "lazy_static 1.5.0",
-              "target": "lazy_static"
-            },
-            {
-              "id": "num-traits 0.2.19",
-              "target": "num_traits"
-            },
-            {
-              "id": "prost 0.13.5",
-              "target": "prost"
-            },
-            {
-              "id": "rust_decimal 1.37.1",
-              "target": "rust_decimal"
-            }
-          ],
-          "selects": {}
-        },
-        "edition": "2021",
-        "proc_macro_deps": {
-          "common": [
-            {
-              "id": "ic-cdk-macros 0.17.1",
-              "target": "ic_cdk_macros"
-            },
-            {
-              "id": "rust_decimal_macros 1.37.1",
-              "target": "rust_decimal_macros"
-            }
-          ],
-          "selects": {}
-        },
-        "version": "0.6.2"
-      },
-      "license": "Apache-2.0",
-      "license_ids": [
-        "Apache-2.0"
-      ],
-      "license_file": null
-    },
     "trustworthy-node-metrics-types 0.6.2": {
       "name": "trustworthy-node-metrics-types",
       "version": "0.6.2",
@@ -55694,8 +55371,8 @@
               "target": "dfn_core"
             },
             {
-              "id": "ic-management-canister-types 0.9.0",
-              "target": "ic_management_canister_types"
+              "id": "ic-management-canister-types-private 0.9.0",
+              "target": "ic_management_canister_types_private"
             },
             {
               "id": "ic-nns-governance-api 0.9.0",
@@ -61998,14 +61675,12 @@
     "multiservice-discovery-shared 0.6.2": "rs/ic-observability/multiservice-discovery-shared",
     "node-provider-rewards 0.6.2": "rs/node-provider-rewards",
     "node-provider-rewards-canister 0.6.2": "rs/dre-canisters/node-provider-rewards",
-    "node-provider-rewards-lib 0.6.2": "rs/dre-canisters/node-provider-rewards-lib",
     "node-status-updater 0.6.2": "rs/ic-observability/node-status-updater",
     "obs-canister-clients 0.6.2": "rs/ic-observability/obs-canister-clients",
     "prometheus-config-updater 0.6.2": "rs/ic-observability/prometheus-config-updater",
     "service-discovery 0.6.2": "rs/ic-observability/service-discovery",
     "slack-notifications 0.6.2": "rs/slack-notifications",
     "sns-downloader 0.6.2": "rs/ic-observability/sns-downloader",
-    "trustworthy-node-metrics 0.6.2": "rs/dre-canisters/trustworthy-node-metrics/src/trustworthy-node-metrics",
     "trustworthy-node-metrics-types 0.6.2": "rs/dre-canisters/trustworthy-node-metrics/src/trustworthy-node-metrics-types"
   },
   "conditions": {
@@ -62926,9 +62601,10 @@
     "ic-http-endpoints-metrics 0.9.0",
     "ic-icrc1-test-utils 0.9.0",
     "ic-interfaces-registry 0.9.0",
-    "ic-management-canister-types 0.9.0",
+    "ic-management-canister-types-private 0.9.0",
     "ic-metrics 0.9.0",
     "ic-metrics-encoder 1.1.1",
+    "ic-nervous-system-canisters 0.9.0",
     "ic-nervous-system-clients 0.0.1",
     "ic-nervous-system-common 0.9.0",
     "ic-nervous-system-root 0.9.0",
