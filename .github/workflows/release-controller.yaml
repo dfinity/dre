@@ -65,12 +65,15 @@ jobs:
       ########################################
       # Upload container images
       ########################################
+
       - name: "🔧 Login to GitHub Container Registry"
+        if: ${{ startsWith(github.head_ref, 'container') || startsWith(github.ref, 'refs/heads/container') || (github.ref == 'refs/heads/main') }}
         uses: docker/login-action@v3
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
+
       - name: "📦 Push images to GitHub Container Registry"
         if: ${{ startsWith(github.head_ref, 'container') || startsWith(github.ref, 'refs/heads/container') || (github.ref == 'refs/heads/main') }}
         shell: bash
@@ -82,6 +85,7 @@ jobs:
 
       ########################################
       # Update k8s deployments
+      # FIXME: probably can use registry_publish event to dispatch a separate pipeline.
       ########################################
 
       - name: "🤖 Update k8s deployments for release controller"
