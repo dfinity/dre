@@ -22,12 +22,13 @@ impl ExecutableCommand for Analyze {
     async fn execute(&self, ctx: crate::ctx::DreContext) -> anyhow::Result<()> {
         let client = GovernanceCanisterWrapper::from(ctx.create_ic_agent_canister_client().await?);
         let proposal = client.get_proposal(self.proposal_id).await?;
+        let status = ProposalStatus::try_from(proposal.status)?;
 
-        if proposal.status() != ProposalStatus::Open {
+        if status != ProposalStatus::Open {
             return Err(anyhow::anyhow!(
                 "Proposal {} has status {}\nProposal must have status: {}",
                 self.proposal_id,
-                proposal.status().as_str_name(),
+                status.as_str_name(),
                 ProposalStatus::Open.as_str_name()
             ));
         }

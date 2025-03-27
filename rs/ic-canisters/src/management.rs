@@ -1,4 +1,6 @@
+use crate::{CallIn, IcAgentCanisterClient};
 use anyhow::Context;
+use candid::types::TypeInner::Principal;
 use candid::{CandidType, Decode, Deserialize, Encode};
 use ic_agent::Agent;
 use ic_base_types::{CanisterId, PrincipalId};
@@ -7,8 +9,6 @@ use ic_utils::interfaces::{wallet::CallResult, WalletCanister};
 use log::error;
 use serde::Serialize;
 use std::str::FromStr;
-
-use crate::{CallIn, IcAgentCanisterClient};
 
 #[derive(Clone)]
 pub struct WalletCanisterWrapper {
@@ -84,6 +84,16 @@ pub struct NodeMetrics {
     pub node_id: PrincipalId,
     pub num_blocks_proposed_total: u64,
     pub num_block_failures_total: u64,
+}
+
+impl From<trustworthy_node_metrics_types::types::NodeMetrics> for NodeMetrics {
+    fn from(metrics: trustworthy_node_metrics_types::types::NodeMetrics) -> Self {
+        Self {
+            node_id: PrincipalId::from(metrics.node_id),
+            num_blocks_proposed_total: metrics.num_blocks_proposed_total,
+            num_block_failures_total: metrics.num_blocks_failures_total,
+        }
+    }
 }
 
 #[derive(Default, CandidType, Deserialize, Clone, Debug, Serialize)]

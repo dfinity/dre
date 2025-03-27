@@ -3,7 +3,8 @@ use std::{collections::HashSet, io::Write, time::Duration};
 use clap::Args;
 use humantime::{format_duration, parse_duration};
 use ic_canisters::governance::GovernanceCanisterWrapper;
-use ic_nns_governance::pb::v1::ProposalInfo;
+use ic_nns_governance::pb::v1::Topic;
+use ic_nns_governance_api::pb::v1::ProposalInfo;
 use log::info;
 use spinners::{Spinner, Spinners};
 
@@ -53,6 +54,8 @@ impl ExecutableCommand for Vote {
         AuthRequirement::Neuron
     }
 
+    fn validate(&self, _args: &GlobalArgs, _cmd: &mut clap::Command) {}
+
     async fn execute(&self, ctx: crate::ctx::DreContext) -> anyhow::Result<()> {
         let mut had_error = false;
         let (neuron, client) = ctx.create_ic_agent_canister_client().await?;
@@ -88,7 +91,7 @@ impl ExecutableCommand for Vote {
                             &format!(
                                 "Voting on proposal {} (topic {:?}, proposer {}) -> {}",
                                 proposal.id.unwrap().id,
-                                proposal.topic(),
+                                Topic::try_from(proposal.topic)?,
                                 proposal.proposer.unwrap_or_default().id,
                                 proposal.proposal.clone().unwrap().title.unwrap()
                             ),
@@ -108,7 +111,7 @@ impl ExecutableCommand for Vote {
                                             &format!(
                                                 "Error voting on proposal {} (topic {:?}, proposer {}) -> {}",
                                                 prop_id,
-                                                proposal.topic(),
+                                                Topic::try_from(proposal.topic)?,
                                                 proposal.proposer.unwrap_or_default().id,
                                                 e
                                             ),
@@ -164,6 +167,4 @@ impl ExecutableCommand for Vote {
 
         Ok(())
     }
-
-    fn validate(&self, _args: &GlobalArgs, _cmd: &mut clap::Command) {}
 }
