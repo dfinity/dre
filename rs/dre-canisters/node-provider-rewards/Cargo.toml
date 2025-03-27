@@ -21,6 +21,7 @@ candid = { workspace = true }
 serde = { workspace = true }
 ic-interfaces-registry = { workspace = true }
 ic-registry-keys = { workspace = true }
+itertools = { workspace = true }
 futures = { workspace = true }
 indexmap = { workspace = true }
 ic-base-types = { workspace = true }
@@ -30,7 +31,11 @@ ic-nervous-system-canisters = { workspace = true }
 ic-nervous-system-common = { workspace = true }
 ic-protobuf = { workspace = true }
 ic-registry-canister-client = { workspace = true }
+ic-types = { workspace = true }
 mockall = { workspace = true }
+node-provider-rewards = { workspace = true }
+prost = { workspace = true }
+rust_decimal = { workspace = true }
 
 [dev-dependencies]
 tokio = { workspace = true }

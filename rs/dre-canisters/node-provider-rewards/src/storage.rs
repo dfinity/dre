@@ -1,5 +1,4 @@
-use crate::canister_client::ICCanisterClient;
-use crate::metrics::MetricsManager;
+use crate::metrics::{ICCanisterClient, MetricsManager};
 use crate::registry::RegistryClient;
 use ic_nervous_system_canisters::registry::RegistryCanister;
 use ic_registry_canister_client::{RegistryDataStableMemory, StableCanisterRegistryClient, StorableRegistryKey, StorableRegistryValue};

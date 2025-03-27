@@ -1,5 +1,5 @@
 {
-  "checksum": "ee374ff78dfe59a948665724999686f51dcb0b2c8437aa6a254af08a37477080",
+  "checksum": "5f7f5e716cf0d061f36446a63a704d77fb0c6151f26ca6221bd43a4997a61c51",
   "crates": {
     "actix-codec 0.5.2": {
       "name": "actix-codec",
@@ -35825,12 +35825,20 @@
         "deps": {
           "common": [
             {
+              "id": "candid 0.10.13",
+              "target": "candid"
+            },
+            {
               "id": "chrono 0.4.40",
               "target": "chrono"
             },
             {
               "id": "ic-base-types 0.9.0",
               "target": "ic_base_types"
+            },
+            {
+              "id": "ic-cdk 0.17.1",
+              "target": "ic_cdk"
             },
             {
               "id": "ic-protobuf 0.9.0",
@@ -35855,6 +35863,10 @@
             {
               "id": "rust_decimal 1.37.1",
               "target": "rust_decimal"
+            },
+            {
+              "id": "serde 1.0.219",
+              "target": "serde"
             },
             {
               "id": "tabled 0.18.0",
@@ -35968,8 +35980,16 @@
               "target": "ic_stable_structures"
             },
             {
+              "id": "ic-types 0.9.0",
+              "target": "ic_types"
+            },
+            {
               "id": "indexmap 2.8.0",
               "target": "indexmap"
+            },
+            {
+              "id": "itertools 0.13.0",
+              "target": "itertools"
             },
             {
               "id": "mockall 0.13.1",
@@ -35978,6 +35998,14 @@
             {
               "id": "node-provider-rewards-canister 0.6.2",
               "target": "build_script_build"
+            },
+            {
+              "id": "prost 0.13.5",
+              "target": "prost"
+            },
+            {
+              "id": "rust_decimal 1.37.1",
+              "target": "rust_decimal"
             },
             {
               "id": "serde 1.0.219",
