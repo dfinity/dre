@@ -88,9 +88,15 @@ jobs:
 
       - name: "❓ Check if files that influence release controller changed in last commit"
         id: check-release-controller-modified
-        uses: ./.github/workflows/check-modified-files-as-step
+        uses: step-security/changed-files@v45
         with:
-          path: release-controller/* requirements*.lock pyproject.toml *.bazel .github/*
+          files: |
+            release-controller/**
+            requirements*.lock
+            pyproject.toml
+            *.bazel
+            bazel/**
+            .github/**
 
       ########################################
       # Upload container images
@@ -103,8 +109,9 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
       - name: "📦 Push images to GitHub Container Registry"
         if: ${{ startsWith(github.head_ref, 'container') || startsWith(github.ref, 'refs/heads/container') || (github.ref == 'refs/heads/main') }}
+        shell: bash
         env:
-          RELEASE_CONTROLLER_CHANGED: ${{ steps.check-release-controller-modified.outputs.changed }}
+          RELEASE_CONTROLLER_CHANGED: ${{ steps.check-release-controller-modified.outputs.any_changed }}
         run: |
           set -ex -o pipefail
           oci_targets=$(bazel query --noshow_progress 'kind("oci_push", ...)')
@@ -117,15 +124,19 @@ jobs:
 
       - name: "❓ Check if dashboard/* changed in last commit"
         id: check-dashboard-frontend-modified
-        uses: ./.github/workflows/check-modified-files-as-step
+        uses: step-security/changed-files@v45
         with:
-          path: dashboard/*
+          files: |
+            dashboard/**
+            *.bazel
+            bazel/**
+            .github/**
 
       - name: "💲 Setting correct paths to update"
         id: paths
         shell: bash
         env:
-          FRONTEND_CHANGED: ${{ steps.check-dashboard-frontend-modified.outputs.changed }}
+          FRONTEND_CHANGED: ${{ steps.check-dashboard-frontend-modified.outputs.any_changed }}
         run: |
           files=(
             bases/apps/mainnet-dashboard/backend/base/deployment.yaml
@@ -163,7 +174,7 @@ jobs:
           component: containers
 
       - name: "🤖 Update k8s deployments for release controller"
-        if: ${{ github.ref == 'refs/heads/main' && steps.check-release-controller-modified.outputs.changed == 'true' }}
+        if: ${{ github.ref == 'refs/heads/main' && steps.check-release-controller-modified.outputs.any_changed == 'true' }}
         uses: ./.github/workflows/update-k8s-deployments
         with:
           files-to-update: bases/apps/ic-release-controller/controller/controller.yaml bases/apps/ic-release-controller/commit-annotator/commit-annotator.yaml
