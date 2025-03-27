@@ -61,7 +61,7 @@ runs:
         set -euxo pipefail
         t=$(mktemp) ; trap 'rm -f "$t"' EXIT
         bazel query "${{ inputs.spec }} ${{ inputs.except }}" > "$t"
-        CARGO_BAZEL_REPIN=true xargs bazel build --target_pattern_file="$t" --config=ci || return $?
+        CARGO_BAZEL_REPIN=true xargs bazel build --target_pattern_file="$t" --config=ci || exit $?
         git config --local user.email "github-actions[bot]@users.noreply.github.com"
         git config --local user.name "github-actions[bot]"
         git commit -a -m "Github Action: Bazel Repin"
