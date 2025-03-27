@@ -37,4 +37,4 @@ jobs:
         run: |
           rye sync
           export PYTHONPATH=$PWD/release-controller
-          rye run python3 release_index_ci_check.py --repo-path /home/runner/.cache
+          rye run python3 scripts/release_index_ci_check.py --repo-path /home/runner/.cache
