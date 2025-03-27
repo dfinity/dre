@@ -6155,8 +6155,10 @@ dependencies = [
 name = "node-provider-rewards"
 version = "0.6.2"
 dependencies = [
+ "candid",
  "chrono",
  "ic-base-types",
+ "ic-cdk 0.17.1 (git+https://github.com/dfinity/cdk-rs.git?rev=929fd0b31e9ec69aad7cf6285df0394f25fe1815)",
  "ic-protobuf",
  "ic-types",
  "indexmap 2.8.0",
@@ -6164,6 +6166,7 @@ dependencies = [
  "num-traits",
  "rust_decimal",
  "rust_decimal_macros",
+ "serde",
  "tabled",
 ]
 
@@ -6188,8 +6191,13 @@ dependencies = [
  "ic-registry-canister-client",
  "ic-registry-keys",
  "ic-stable-structures",
+ "ic-types",
  "indexmap 2.8.0",
+ "itertools 0.13.0",
  "mockall",
+ "node-provider-rewards",
+ "prost",
+ "rust_decimal",
  "serde",
  "tokio",
 ]
