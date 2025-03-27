@@ -9,6 +9,10 @@ inputs:
     description: "Bazel query specification returning what targets to build"
     required: false
     default: "..."
+  except:
+    description: "Specification of what to except from the build"
+    required: false
+    default: "except kind(.*test, //...) except attr(tags, 'manual', //...)"
 
 runs:
   using: composite
@@ -45,7 +49,7 @@ runs:
         }
         set -o pipefail
         t=$(mktemp) ; trap 'rm -f "$t"' EXIT
-        bazel query "${{ inputs.spec }} except kind(.*test, //...) except attr(tags, 'manual', //...)" > "$t"
+        bazel query "${{ inputs.spec }} ${{ inputs.except }}" > "$t"
         bazel_build_auto_repin build --target_pattern_file="$t" --config=ci
       shell: bash
 
@@ -61,7 +65,7 @@ runs:
       run: |
         set -euxo pipefail
         t=$(mktemp) ; trap 'rm -f "$t"' EXIT
-        bazel query "${{ inputs.spec }} except kind(.*test, //...) except attr(tags, 'manual', //...)" > "$t"
+        bazel query "${{ inputs.spec }} ${{ inputs.except }}" > "$t"
         CARGO_BAZEL_REPIN=true xargs bazel build --target_pattern_file="$t" --config=ci || return $?
         git config --local user.email "github-actions[bot]@users.noreply.github.com"
         git config --local user.name "github-actions[bot]"
@@ -83,7 +87,7 @@ runs:
       shell: bash
       run: |
         set -euxo pipefail
-        bazel query "${{ inputs.spec }} except kind(.*test, //...) except attr(tags, 'manual', //...)" | grep -E "tarball$" | while IFS= read -r target; do
+        bazel query "${{ inputs.spec }} ${{ inputs.except }}" | grep -E "tarball$" | while IFS= read -r target; do
             echo "Testing $target"
             bazel run $target
 
