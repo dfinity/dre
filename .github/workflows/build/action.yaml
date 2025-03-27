@@ -44,7 +44,7 @@ runs:
             return $r
         }
         set -o pipefail
-        bazel_build_auto_repin build --config=ci $(bazel query '${{ inputs.spec }}')
+        bazel_build_auto_repin build --config=ci $(bazel query "${{ inputs.spec }} except kind(.*test, //...) except attr(tags, 'manual', //...)")
       shell: bash
 
     - uses: actions/checkout@v4
@@ -58,7 +58,7 @@ runs:
       if: ${{ steps.build.outputs.repin == 'true' }}
       run: |
         set -euxo pipefail
-        bazel query '${{ inputs.spec }}' | CARGO_BAZEL_REPIN=true xargs bazel build || return $?
+        bazel query "${{ inputs.spec }} except kind(.*test, //...) except attr(tags, 'manual', //...)" | CARGO_BAZEL_REPIN=true xargs bazel build || return $?
         git config --local user.email "github-actions[bot]@users.noreply.github.com"
         git config --local user.name "github-actions[bot]"
         git commit -a -m "Github Action: Bazel Repin"
@@ -79,7 +79,7 @@ runs:
       shell: bash
       run: |
         set -euxo pipefail
-        bazel query '${{ inputs.spec }}' | grep -E "tarball$" | while IFS= read -r target; do
+        bazel query "${{ inputs.spec }}" | grep -E "tarball$" | while IFS= read -r target; do
             echo "Testing $target"
             bazel run $target
 
