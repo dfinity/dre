@@ -106,7 +106,7 @@ impl<S: RegistryDataStableMemory> RegistryClient<S> {
 
     pub fn get_rewards_table(&self) -> NodeRewardsTable {
         self.get_value::<NodeRewardsTable>(NODE_REWARDS_TABLE_KEY)
-            .expect("Failed to get subnets list")
+            .expect("Failed to get NodeRewardsTable")
     }
 
     fn estimate_node_type(&self, rewardable_count: Option<&mut BTreeMap<String, u32>>) -> String {
