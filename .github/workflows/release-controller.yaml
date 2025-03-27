@@ -58,9 +58,18 @@ jobs:
       # Will run test as a local subprocess because for some tests
       ########################################
 
+      - name: "🚀 Building"
+        uses: ./.github/workflows/build
+        with:
+          # See above where the token is generated: we can't use regular secrets.GITHUB_TOKEN
+          # since the push needs to trigger actions again
+          GITHUB_TOKEN: "${{ steps.app-token.outputs.token }}"
+          spec: //release-controller/...
       - name: "🚀 Testing"
+        shell: bash
         run: |
-          bazel test //release-controller/...
+          set -o pipefail
+          bazel query '//release-controller/...' | xargs bazel test --spawn_strategy=local --test_env=HOME=/home/runner
 
       ########################################
       # Upload container images
