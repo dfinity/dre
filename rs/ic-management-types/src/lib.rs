@@ -6,13 +6,12 @@ use ahash::AHashMap;
 use candid::{CandidType, Decode};
 use core::hash::Hash;
 use ic_base_types::NodeId;
-use ic_nns_governance::pb::v1::proposal::Action;
 use ic_nns_governance::pb::v1::NnsFunction;
-use ic_nns_governance::pb::v1::ProposalInfo;
 use ic_nns_governance::pb::v1::ProposalStatus;
+use ic_nns_governance_api::pb::v1::proposal::Action;
+use ic_nns_governance_api::pb::v1::ProposalInfo;
 use ic_protobuf::registry::node::v1::IPv4InterfaceConfig;
 use ic_protobuf::registry::subnet::v1::ChainKeyConfig;
-use ic_protobuf::registry::subnet::v1::EcdsaConfig;
 use ic_protobuf::registry::subnet::v1::SubnetFeatures;
 use ic_registry_subnet_type::SubnetType;
 use ic_types::PrincipalId;
@@ -268,8 +267,6 @@ pub struct Subnet {
     pub ssh_readonly_access: Vec<String>,
     #[serde(default)]
     pub ssh_backup_access: Vec<String>,
-    #[serde(skip_serializing_if = "Option::is_none", default)]
-    pub ecdsa_config: Option<EcdsaConfig>,
     #[serde(default)]
     pub dkg_dealings_per_block: u64,
     #[serde(default)]

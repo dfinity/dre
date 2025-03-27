@@ -1,7 +1,7 @@
 use crate::metrics::TimestampNanos;
 use candid::{CandidType, Decode, Encode};
 use ic_base_types::SubnetId;
-use ic_management_canister_types::NodeMetrics;
+use ic_management_canister_types_private::NodeMetrics;
 use ic_stable_structures::storable::Bound;
 use ic_stable_structures::Storable;
 use serde::Deserialize;

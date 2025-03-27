@@ -2,7 +2,7 @@ use crate::metrics_types::{StorableSubnetMetrics, StorableSubnetMetricsKey, Subn
 use async_trait::async_trait;
 use ic_base_types::SubnetId;
 use ic_cdk::api::call::CallResult;
-use ic_management_canister_types::{NodeMetricsHistoryArgs, NodeMetricsHistoryResponse};
+use ic_management_canister_types_private::{NodeMetricsHistoryArgs, NodeMetricsHistoryResponse};
 use ic_stable_structures::StableBTreeMap;
 use std::cell::RefCell;
 use std::collections::BTreeMap;

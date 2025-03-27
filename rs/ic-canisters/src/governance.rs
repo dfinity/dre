@@ -11,19 +11,16 @@ use ic_nns_governance::pb::v1::manage_neuron::NeuronIdOrSubaccount;
 use ic_nns_governance::pb::v1::manage_neuron::RegisterVote;
 use ic_nns_governance::pb::v1::GovernanceError;
 use ic_nns_governance::pb::v1::ListProposalInfo;
-use ic_nns_governance::pb::v1::ListProposalInfoResponse;
 use ic_nns_governance::pb::v1::ManageNeuron;
 use ic_nns_governance::pb::v1::Neuron;
-use ic_nns_governance::pb::v1::NeuronInfo;
 use ic_nns_governance::pb::v1::NodeProvider as PbNodeProvider;
 use ic_nns_governance::pb::v1::Proposal;
-use ic_nns_governance::pb::v1::ProposalInfo;
 use ic_nns_governance_api::pb::v1::manage_neuron_response::Command as CommandResponse;
 use ic_nns_governance_api::pb::v1::manage_neuron_response::MakeProposalResponse;
-use ic_nns_governance_api::pb::v1::ListNeurons;
 use ic_nns_governance_api::pb::v1::ListNeuronsResponse;
 use ic_nns_governance_api::pb::v1::ListNodeProvidersResponse;
 use ic_nns_governance_api::pb::v1::ManageNeuronResponse;
+use ic_nns_governance_api::pb::v1::{ListNeurons, ListProposalInfoResponse, NeuronInfo, ProposalInfo};
 use serde::{self, Serialize};
 use std::str::FromStr;
 use std::time::Duration;
@@ -243,6 +240,7 @@ impl GovernanceCanisterWrapper {
                 include_public_neurons_in_full_neurons: None,
                 page_number: Some(page),
                 page_size: None,
+                neuron_subaccounts: None,
             })?,
         )
         .await
