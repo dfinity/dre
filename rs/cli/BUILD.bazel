@@ -41,6 +41,23 @@ rust_binary(
     compile_data = [ "src/assets/subnet_topic_map.json" ],
 )
 
+rust_binary(
+    name = "dre-embedded", # Variant does not have an embedded git revision, which permits caching of dependents.
+    srcs = glob(["src/**/*.rs"]),
+    aliases = aliases(),
+    rustc_env_files = [":generate_rustc_env_file_no_rev"],
+    proc_macro_deps = all_crate_deps(
+        proc_macro = True,
+    ),
+    deps = all_crate_deps(
+        normal = True,
+    ) + DEPS + ["//rs/cli:dre-lib", ":build_script"],
+    data = [
+        "//:cordoned_features.yaml",
+    ],
+    compile_data = [ "src/assets/subnet_topic_map.json" ],
+)
+
 rust_library(
     name = "dre-lib",
     srcs = glob(["src/**/*.rs"]),
@@ -74,5 +91,12 @@ genrule(
     name = "generate_rustc_env_file",
     outs = ["rustc_env_file"],
     cmd = "echo \"CARGO_PKG_VERSION=$$(awk '$$1 == \"RELEASE_VERSION\" {print $$2}' bazel-out/volatile-status.txt)-$$(awk '$$1 == \"GIT_REV\" {print $$2}' bazel-out/volatile-status.txt)\" > $@",
+    stamp = True,
+)
+
+genrule(
+    name = "generate_rustc_env_file_no_rev",
+    outs = ["rustc_env_file_no_rev"],
+    cmd = "echo \"CARGO_PKG_VERSION=$$(awk '$$1 == \"RELEASE_VERSION\" {print $$2}' bazel-out/volatile-status.txt)-n0rev1s1n\" > $@",
     stamp = True,
 )
