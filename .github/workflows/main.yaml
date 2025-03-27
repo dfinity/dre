@@ -103,10 +103,12 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
       - name: "📦 Push images to GitHub Container Registry"
         if: ${{ startsWith(github.head_ref, 'container') || startsWith(github.ref, 'refs/heads/container') || (github.ref == 'refs/heads/main') }}
+        env:
+          RELEASE_CONTROLLER_CHANGED: ${{ steps.check-release-controller-modified.outputs.changed }}
         run: |
           set -ex -o pipefail
           oci_targets=$(bazel query --noshow_progress 'kind("oci_push", ...)')
-          if [ "{{ steps.check-release-controller-modified.outputs.changed }}" != "true" ]
+          if [ "$RELEASE_CONTROLLER_CHANGED" != "true" ]
           then
             # Oh, not changed?  Then skip pushing the release controller container images.
             oci_targets=$(echo "$oci_targets" | grep -v //release-controller)
