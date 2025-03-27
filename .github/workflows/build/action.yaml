@@ -44,7 +44,7 @@ runs:
             return $r
         }
         set -o pipefail
-        bazel query '${{ inputs.spec }}' | xargs bazel_build_auto_repin build --config=ci
+        xargs bazel_build_auto_repin build --config=ci $(bazel query '${{ inputs.spec }}')
       shell: bash
 
     - uses: actions/checkout@v4
@@ -79,7 +79,7 @@ runs:
       shell: bash
       run: |
         set -euxo pipefail
-        bazel query ... | grep -E "tarball$" | while IFS= read -r target; do
+        bazel query '${{ inputs.spec }}' | grep -E "tarball$" | while IFS= read -r target; do
             echo "Testing $target"
             bazel run $target
 
