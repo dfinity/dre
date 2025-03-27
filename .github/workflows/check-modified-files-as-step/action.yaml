@@ -22,7 +22,7 @@ runs:
         PATH_TO_CHECK: ${{ inputs.path }}
       shell: bash
       run: |
-        set -eExou pipefail
+        set -eEou pipefail
 
         if [[ -v GITHUB_BASE_REF ]] && [ "$GITHUB_BASE_REF" != "" ]
         then
@@ -36,8 +36,8 @@ runs:
         fi
         git fetch origin $base $next
         git diff --name-only "$src" "$next" > files.txt
-        echo "=============== list modified files ===============" >&2
-        cat files.txt >&2
+        # echo "=============== list modified files ===============" >&2
+        # cat files.txt >&2
         while IFS= read -r file
         do
           set -f # turn off globbing for what I am about to do
