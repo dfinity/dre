@@ -44,7 +44,7 @@ runs:
             return $r
         }
         set -o pipefail
-        bazel query '${{ inputs.spec }}' | bazel_build_auto_repin build --config=ci
+        bazel query '${{ inputs.spec }}' | xargs bazel_build_auto_repin build --config=ci
       shell: bash
 
     - uses: actions/checkout@v4
