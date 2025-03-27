@@ -68,7 +68,9 @@ jobs:
           set -e -o pipefail
           mkdir -p ~/.config/dfx/identity/bootstrap-super-leader/
           echo $STAGING_PRIVATE_KEY_PEM > ~/.config/dfx/identity/bootstrap-super-leader/identity.pem
-          bazel query "... except //release-controller/... except attr(tags, 'manual', //...) except attr(name, '.*oci_image.*', //...)" | xargs bazel test --config=ci --spawn_strategy=local --test_env=HOME=/home/runner
+          t=$(mktemp) ; trap 'rm -f "$t"' EXIT
+          bazel query "... except //release-controller/... except attr(tags, 'manual', //...) except attr(name, '.*oci_image.*', //...)" > "$t"
+          bazel test --target_pattern_file="$t" --config=ci --spawn_strategy=local --test_env=HOME=/home/runner
 
       # We don't need the linear-jira build and test step for now
       # - name: "🚀 Build and Test Linear-Jira with Bazel"
