@@ -109,6 +109,7 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
       - name: "📦 Push images to GitHub Container Registry"
         if: ${{ startsWith(github.head_ref, 'container') || startsWith(github.ref, 'refs/heads/container') || (github.ref == 'refs/heads/main') }}
+        shell: bash
         env:
           RELEASE_CONTROLLER_CHANGED: ${{ steps.check-release-controller-modified.outputs.any_changed }}
         run: |
