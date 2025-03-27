@@ -6,7 +6,7 @@ inputs:
     description: "Github App Token, that allows to push to the repository and trigger actions"
     required: true
   spec:
-    description: "Specification of what to build"
+    description: "Bazel query specification returning what targets to build"
     required: false
     default: "..."
 
@@ -79,7 +79,7 @@ runs:
       shell: bash
       run: |
         set -euxo pipefail
-        bazel query "${{ inputs.spec }}" | grep -E "tarball$" | while IFS= read -r target; do
+        bazel query "${{ inputs.spec }} except kind(.*test, //...) except attr(tags, 'manual', //...)" | grep -E "tarball$" | while IFS= read -r target; do
             echo "Testing $target"
             bazel run $target
 

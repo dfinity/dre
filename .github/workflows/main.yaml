@@ -59,7 +59,7 @@ jobs:
           # See above where the token is generated: we can't use regular secrets.GITHUB_TOKEN
           # since the push needs to trigger actions again
           GITHUB_TOKEN: "${{ steps.app-token.outputs.token }}"
-          spec: ... except //release-controller/...
+          spec: ... except //release-controller/... except attr(name, '.*oci_image.*', //...)
       - name: "🚀 Testing"
         env:
           STAGING_PRIVATE_KEY_PEM: "${{ secrets.STAGING_PRIVATE_KEY_PEM }}"
@@ -68,7 +68,7 @@ jobs:
           set -e -o pipefail
           mkdir -p ~/.config/dfx/identity/bootstrap-super-leader/
           echo $STAGING_PRIVATE_KEY_PEM > ~/.config/dfx/identity/bootstrap-super-leader/identity.pem
-          bazel query "... except //release-controller/... except attr(tags, 'manual', //...)" | xargs bazel test --spawn_strategy=local --test_env=HOME=/home/runner
+          bazel query "... except //release-controller/... except attr(tags, 'manual', //...) except attr(name, '.*oci_image.*', //...)" | xargs bazel test --spawn_strategy=local --test_env=HOME=/home/runner
 
       # We don't need the linear-jira build and test step for now
       # - name: "🚀 Build and Test Linear-Jira with Bazel"

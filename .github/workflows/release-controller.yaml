@@ -69,7 +69,7 @@ jobs:
         shell: bash
         run: |
           set -o pipefail
-          bazel query "//release-controller/... except attr(tags, 'manual', //...)" | xargs bazel test --spawn_strategy=local --test_env=HOME=/home/runner
+          bazel query "//release-controller/... except attr(tags, 'manual', //...) except attr(name, '.*oci_image.*', //release-controller/...)" | xargs bazel test --spawn_strategy=local --test_env=HOME=/home/runner
 
       ########################################
       # Upload container images
