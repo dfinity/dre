@@ -47,7 +47,6 @@ runs:
             echo "repin=false" >> $GITHUB_OUTPUT
             return $r
         }
-        set -o pipefail
         t=$(mktemp) ; trap 'rm -f "$t"' EXIT
         bazel query "${{ inputs.spec }} ${{ inputs.except }}" > "$t"
         bazel_build_auto_repin build --target_pattern_file="$t" --config=ci

@@ -66,11 +66,11 @@ jobs:
           GITHUB_TOKEN: "${{ steps.app-token.outputs.token }}"
           spec: //release-controller/... except attr(name, '.*oci_image.*', //release-controller/...)
       - name: "🚀 Testing"
-        shell: bash
         run: |
-          set -o pipefail
+          set -e
           t=$(mktemp) ; trap 'rm -f "$t"' EXIT
           bazel query "//release-controller/... except attr(tags, 'manual', //...) except attr(name, '.*oci_image.*', //release-controller/...)" > "$t"
+          set -x
           bazel test --target_pattern_file="$t" --config=ci --spawn_strategy=local --test_env=HOME=/home/runner
 
       ########################################
@@ -90,9 +90,8 @@ jobs:
         shell: bash
         run: |
           set -ex -o pipefail
-          oci_targets=$(bazel query --noshow_progress 'kind("oci_push", ...)')
-          oci_targets=$(echo "$oci_targets" | grep //release-controller)
-          echo "$oci_targets" | xargs -I_target bazel run _target -- --tag ${GITHUB_SHA}
+          bazel query --noshow_progress 'kind("oci_push", ...) intersect //release-controller/...' \
+            | xargs -I_target bazel run _target -- --tag ${GITHUB_SHA}
 
       ########################################
       # Update k8s deployments

@@ -63,13 +63,13 @@ jobs:
       - name: "🚀 Testing"
         env:
           STAGING_PRIVATE_KEY_PEM: "${{ secrets.STAGING_PRIVATE_KEY_PEM }}"
-        shell: bash
         run: |
-          set -e -o pipefail
+          set -e
           mkdir -p ~/.config/dfx/identity/bootstrap-super-leader/
           echo $STAGING_PRIVATE_KEY_PEM > ~/.config/dfx/identity/bootstrap-super-leader/identity.pem
           t=$(mktemp) ; trap 'rm -f "$t"' EXIT
           bazel query "... except //release-controller/... except attr(tags, 'manual', //...) except attr(name, '.*oci_image.*', //...)" > "$t"
+          set -x
           bazel test --target_pattern_file="$t" --config=ci --spawn_strategy=local --test_env=HOME=/home/runner
 
       # We don't need the linear-jira build and test step for now
@@ -102,16 +102,14 @@ jobs:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
+
       - name: "📦 Push images to GitHub Container Registry"
         if: ${{ startsWith(github.head_ref, 'container') || startsWith(github.ref, 'refs/heads/container') || (github.ref == 'refs/heads/main') }}
         shell: bash
         run: |
           set -ex -o pipefail
-          oci_targets=$(bazel query --noshow_progress 'kind("oci_push", ...)')
-          # Skip pushing the release controller container images.
-          # There is a separate workflow for that.
-          oci_targets=$(echo "$oci_targets" | grep -v //release-controller)
-          echo "$oci_targets" | xargs -I_target bazel run _target -- --tag ${GITHUB_SHA}
+          bazel query --noshow_progress 'kind("oci_push", ...) except //release-controller/...' \
+            | xargs -I_target bazel run _target -- --tag ${GITHUB_SHA}
 
       - name: "❓ Check if dashboard/* changed in last commit"
         id: check-dashboard-frontend-modified
