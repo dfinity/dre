@@ -86,6 +86,12 @@ jobs:
           name: test-artifacts
           path: bazel-out/k8-opt/bin/rs/ic-observability/multiservice-discovery/multiservice-discovery
 
+      - name: "❓ Check if files that influence release controller changed in last commit"
+        id: check-release-controller-modified
+        uses: ./.github/workflows/check-modified-files-as-step
+        with:
+          path: release-controller/* requirements*.lock pyproject.toml *.bazel .github/*
+
       ########################################
       # Upload container images
       ########################################
@@ -97,19 +103,23 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
       - name: "📦 Push images to GitHub Container Registry"
         if: ${{ startsWith(github.head_ref, 'container') || startsWith(github.ref, 'refs/heads/container') || (github.ref == 'refs/heads/main') }}
-        run: bazel query --noshow_progress 'kind("oci_push", ...)' | xargs -I_target bazel run _target -- --tag ${GITHUB_SHA}
+        env:
+          RELEASE_CONTROLLER_CHANGED: ${{ steps.check-release-controller-modified.outputs.changed }}
+        run: |
+          set -ex -o pipefail
+          oci_targets=$(bazel query --noshow_progress 'kind("oci_push", ...)')
+          if [ "$RELEASE_CONTROLLER_CHANGED" != "true" ]
+          then
+            # Oh, not changed?  Then skip pushing the release controller container images.
+            oci_targets=$(echo "$oci_targets" | grep -v //release-controller)
+          fi
+          echo "$oci_targets" | xargs -I_target bazel run _target -- --tag ${GITHUB_SHA}
 
       - name: "❓ Check if dashboard/* changed in last commit"
         id: check-dashboard-frontend-modified
         uses: ./.github/workflows/check-modified-files-as-step
         with:
           path: dashboard/*
-
-      - name: "❓ Check if files that influence release controller changed in last commit"
-        id: check-release-controller-modified
-        uses: ./.github/workflows/check-modified-files-as-step
-        with:
-          path: release-controller/* requirements*.lock pyproject.toml *.bazel .github/*
 
       - name: "💲 Setting correct paths to update"
         id: paths
