@@ -41,9 +41,8 @@ def resolve_binary(name: str) -> str:
                 binary_local,
                 name,
             )
-            return binary_local
         else:
-            binary_local = os.path.join("/", "rs", "cli", "dre")
+            binary_local = os.path.join("/", "rs", "cli", "dre-embedded")
             _LOGGER.debug(
                 "Trying %s for executable %s within container",
                 binary_local,

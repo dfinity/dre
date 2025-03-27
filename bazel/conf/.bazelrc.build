@@ -65,6 +65,13 @@ build:ci --build_tag_filters="-system_test,-fuzz_test"
 build:ci --verbose_failures
 
 test --test_output=errors
+
+# If the environment changes between run / build / test, then
+# Bazel has to discard a ton of state, which then makes it
+# slower.  This variable isn't exactly a problem to have on
+# during build or run.
+build --test_env=RUST_BACKTRACE=full
+run --test_env=RUST_BACKTRACE=full
 test --test_env=RUST_BACKTRACE=full
 
 test:precommit --build_tests_only --test_tag_filters="smoke"

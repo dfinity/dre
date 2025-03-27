@@ -5,6 +5,14 @@ inputs:
   GITHUB_TOKEN:
     description: "Github App Token, that allows to push to the repository and trigger actions"
     required: true
+  spec:
+    description: "Bazel query specification returning what targets to build"
+    required: false
+    default: "..."
+  except:
+    description: "Specification of what to except from the build"
+    required: false
+    default: "except kind(.*test, //...) except attr(tags, 'manual', //...)"
 
 runs:
   using: composite
@@ -15,7 +23,7 @@ runs:
       id: cargo-deny
       run: |
         set -euxo pipefail
-        rye sync
+        rye sync -q
         rye run python3 scripts/cargo-deny-checks.py
       shell: bash
 
@@ -23,23 +31,23 @@ runs:
       id: build
       run: |
         set -euxo pipefail
-        rm -rf /home/runner/work/_temp/*/cache.tzst
-        function bazel_build_auto_repin() {
-            MYTMPDIR="$(mktemp -d)"
-            trap 'rm -rf -- "$MYTMPDIR"' EXIT
-            local logfile="$MYTMPDIR/bazel-out.log"
-            local r=0
-            bazel "$@" 2>&1 | tee "$logfile" >&2 || r=1
-            if [ "$r" != "0" ]; then
-                if grep -q 'Digests do not match' "$logfile" ; then
-                    echo "repin=true" >> $GITHUB_OUTPUT
-                    return 0
-                fi
-            fi
-            echo "repin=false" >> $GITHUB_OUTPUT
-            return $r
-        }
-        bazel_build_auto_repin build --config=ci ...
+        MYTMPDIR="$(mktemp -d)"
+        trap 'rm -rf -- "$MYTMPDIR"' EXIT
+        logfile="$MYTMPDIR/bazel-out.log"
+        bazel query "${{ inputs.spec }} ${{ inputs.except }}" > "$MYTMPDIR/targets"
+        r=0
+        bazel build --target_pattern_file="$MYTMPDIR/targets" --config=ci --test_env=HOME=/home/runner --explain="$MYTMPDIR/explanations" --verbose_explanations --show_result=100000 2>&1 | tee "$logfile" >&2 || r=1
+        # echo === Explanations === >&2
+        # cat "$MYTMPDIR/explanations" >&2
+        # echo == /Explanations === >&2
+        if [ "$r" != "0" ]; then
+          if grep -q 'Digests do not match' "$logfile" ; then
+            echo "repin=true" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+        fi
+        echo "repin=false" >> $GITHUB_OUTPUT
+        exit $r
       shell: bash
 
     - uses: actions/checkout@v4
@@ -53,7 +61,9 @@ runs:
       if: ${{ steps.build.outputs.repin == 'true' }}
       run: |
         set -euxo pipefail
-        CARGO_BAZEL_REPIN=true bazel build ... || return $?
+        t=$(mktemp) ; trap 'rm -f "$t"' EXIT
+        bazel query "${{ inputs.spec }} ${{ inputs.except }}" > "$t"
+        CARGO_BAZEL_REPIN=true xargs bazel build --target_pattern_file="$t" --config=ci --test_env=HOME=/home/runner --show_result=100000 || exit $?
         git config --local user.email "github-actions[bot]@users.noreply.github.com"
         git config --local user.name "github-actions[bot]"
         git commit -a -m "Github Action: Bazel Repin"
@@ -74,7 +84,7 @@ runs:
       shell: bash
       run: |
         set -euxo pipefail
-        bazel query ... | grep -E "tarball$" | while IFS= read -r target; do
+        bazel query "${{ inputs.spec }} ${{ inputs.except }}" | grep -E "tarball$" | while IFS= read -r target; do
             echo "Testing $target"
             bazel run $target
 
