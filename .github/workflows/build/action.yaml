@@ -5,6 +5,10 @@ inputs:
   GITHUB_TOKEN:
     description: "Github App Token, that allows to push to the repository and trigger actions"
     required: true
+  spec:
+    description: "Specification of what to build"
+    required: false
+    default: "..."
 
 runs:
   using: composite
@@ -39,7 +43,8 @@ runs:
             echo "repin=false" >> $GITHUB_OUTPUT
             return $r
         }
-        bazel_build_auto_repin build --config=ci ...
+        set -o pipefail
+        bazel query '${{ inputs.spec }}' | bazel_build_auto_repin build --config=ci
       shell: bash
 
     - uses: actions/checkout@v4

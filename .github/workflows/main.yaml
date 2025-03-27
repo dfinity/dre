@@ -59,6 +59,7 @@ jobs:
           # See above where the token is generated: we can't use regular secrets.GITHUB_TOKEN
           # since the push needs to trigger actions again
           GITHUB_TOKEN: "${{ steps.app-token.outputs.token }}"
+          spec: ... except //release-controller/...
       - name: "🚀 Testing"
         env:
           STAGING_PRIVATE_KEY_PEM: "${{ secrets.STAGING_PRIVATE_KEY_PEM }}"
