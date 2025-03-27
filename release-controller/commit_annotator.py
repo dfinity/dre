@@ -1,6 +1,8 @@
 import argparse
+import concurrent.futures
 import logging
 import os
+import pathlib
 import subprocess
 import sys
 import re
@@ -38,6 +40,11 @@ LAST_CYCLE_SUCCESSFUL = Gauge(
     "last_cycle_successful",
     "1 if the last cycle was successful, 0 if it was not",
 )
+COMMITS_BEHIND = Gauge(
+    "commits_behind",
+    "Number of commits this ref to be annotated is behind.  On a well-oiled annotator, this never stays above 0 for long.",
+    ["ref"],
+)
 
 
 _LOGGER = logging.getLogger()
@@ -59,10 +66,8 @@ def release_branch_date(branch: str) -> typing.Optional[datetime]:
     retry=retry_if_exception_type(subprocess.CalledProcessError),
     after=after_log(_LOGGER, logging.ERROR),
 )
-def target_determinator(ic_repo: GitRepoAnnotator, object: str) -> bool:
-    logger = _LOGGER.getChild("target_determinator").getChild(object)
-    logger.debug("Attempting to determine target")
-    ic_repo.checkout(object)
+def target_determinator(cwd: pathlib.Path, parent_object: str) -> bool:
+    logger = _LOGGER.getChild("target_determinator").getChild(parent_object)
     p = subprocess.run(
         [
             resolve_binary("target-determinator"),
@@ -70,35 +75,49 @@ def target_determinator(ic_repo: GitRepoAnnotator, object: str) -> bool:
             f"-bazel={resolve_binary("bazel")}",
             "--targets",
             GUESTOS_BAZEL_TARGETS,
-            ic_repo.parent(object),
+            parent_object,
         ],
-        cwd=ic_repo.dir,
+        cwd=cwd,
         check=True,
         stdout=subprocess.PIPE,
+        text=True,
     )
-    output = p.stdout.decode().strip()
-    logger.debug(f"stdout of target determinator for {object}: %s", output)
+    output = p.stdout.strip()
+    logger.debug(
+        f"stdout of target determinator for {parent_object}: %s",
+        output,
+    )
     return output != ""
 
 
 def annotate_object(ic_repo: GitRepoAnnotator, object: str) -> None:
     logger = _LOGGER.getChild("annotate_object").getChild(object)
     logger.debug("Attempting to annotate")
+    start = time.time()
     ic_repo.checkout(object)
-    logger.debug("Running bazel query")
-    bazel_query_output = subprocess.check_output(
-        [
-            resolve_binary("bazel"),
-            "query",
-            f"deps({GUESTOS_BAZEL_TARGETS})",
-        ],
-        text=True,
-        cwd=ic_repo.dir,
-    )
-    logger.debug(
-        f"stdout of bazel query deps({GUESTOS_BAZEL_TARGETS}) for {object}: %s",
-        bazel_query_output.rstrip(),
-    )
+
+    with concurrent.futures.ThreadPoolExecutor(max_workers=2) as executor:
+        logger.debug(f"Running bazel query deps({GUESTOS_BAZEL_TARGETS})")
+        bazel_query_output_future = executor.submit(
+            subprocess.check_output,
+            [
+                resolve_binary("bazel"),
+                "query",
+                f"deps({GUESTOS_BAZEL_TARGETS})",
+            ],
+            text=True,
+            cwd=ic_repo.dir,
+        )
+        target_determinator_future = executor.submit(
+            target_determinator, ic_repo.dir, ic_repo.parent(object)
+        )
+        bazel_query_output = bazel_query_output_future.result()
+        lap = time.time() - start
+        logger.debug("Bazel query finished in %.2f seconds", lap)
+        target_determinator_output = target_determinator_future.result()
+        lap = time.time() - start
+        logger.debug("Target determinator finished in %.2f seconds", lap)
+
     ic_repo.add(
         object=object,
         namespace=GUESTOS_TARGETS_NOTES_NAMESPACE,
@@ -113,13 +132,15 @@ def annotate_object(ic_repo: GitRepoAnnotator, object: str) -> None:
     ic_repo.add(
         object=object,
         namespace=GUESTOS_CHANGED_NOTES_NAMESPACE,
-        content=str(target_determinator(ic_repo=ic_repo, object=object)),
+        content=str(target_determinator_output),
     )
+    lap = time.time() - start
+    logger.debug("Annotation finished in %.2f seconds", lap)
 
 
-def annotate_branch(annotator: GitRepoAnnotator, branch: str) -> None:
+def plan_to_annotate_branch(annotator: GitRepoAnnotator, branch: str) -> list[str]:
     logger = _LOGGER.getChild(branch)
-    logger.debug("Attempting to annotate")
+    logger.info("Preparing annotation plan")
     # Reverse to annotate oldest objects first so that loop can be easily restarted if it breaks.
     commits = []
     annotator.checkout(branch)
@@ -136,11 +157,24 @@ def annotate_branch(annotator: GitRepoAnnotator, branch: str) -> None:
         commits.append(current_commit)
         current_commit = annotator.parent(current_commit)
     if commits:
-        logger.info("About to annotate %s commits", len(commits))
-    for c in reversed(commits):
-        annotate_object(ic_repo=annotator, object=c)
+        logger.info("Has %s commits to annotate", len(commits))
+    COMMITS_BEHIND.labels(branch).set(len(commits))
+    return commits
+
+
+def annotate_commits_of_branch(
+    annotator: GitRepoAnnotator, branch: str, commits: list[str]
+) -> None:
+    logger = _LOGGER.getChild(branch)
+    unannotated_commits = len(commits)
     if commits:
+        for c in reversed(commits):
+            annotate_object(ic_repo=annotator, object=c)
+            unannotated_commits = unannotated_commits - 1
+            COMMITS_BEHIND.labels(branch).set(unannotated_commits)
         logger.info("Successfully annotated %s commits", len(commits))
+    else:
+        COMMITS_BEHIND.labels(branch).set(0)
 
 
 def main() -> None:
@@ -179,6 +213,14 @@ def main() -> None:
         dest="loop_every",
         default=30,
         help="Time to wait (in seconds) between loop executions.  If 0 or less, exit immediately after the first loop.",
+    )
+    parser.add_argument(
+        "--watchdog-timer",
+        action="store",
+        type=int,
+        dest="watchdog_timer",
+        default=1200,
+        help="Kill the annotator if a loop has not completed in this many seconds.",
     )
     parser.add_argument(
         "--branch-globs",
@@ -220,8 +262,8 @@ def main() -> None:
         behavior=behavior,
     )
 
-    # Watchdog needs to be fed (to report healthy progress) every 10 minutes
-    watchdog = Watchdog(timeout_seconds=max([600, opts.loop_every * 2]))
+    # Watchdog needs to be fed (to report healthy progress) every watchdog_timer seconds
+    watchdog = Watchdog(timeout_seconds=opts.watchdog_timer)
     watchdog.start()
 
     logger = _LOGGER.getChild("annotator")
@@ -238,6 +280,7 @@ def main() -> None:
             with ic_repo.annotator(
                 [GUESTOS_CHANGED_NOTES_NAMESPACE, GUESTOS_TARGETS_NOTES_NAMESPACE]
             ) as annotator:
+                unannotated_commits_by_ref: dict[str, list[str]] = {}
                 for b in [
                     branch
                     for glob in branch_globs
@@ -260,7 +303,19 @@ def main() -> None:
                             b,
                         )
                         continue
-                    annotate_branch(annotator, branch=b)
+                    outstanding_commits = plan_to_annotate_branch(annotator, branch=b)
+                    unannotated_commits_by_ref[b] = outstanding_commits
+                # Make a little cache for this loop's run, saving time not invoking
+                # the annotation for a simgle commit twice.  Git history of different
+                # branches often shares commits in both branches.
+                annotated_commits: set[str] = set()
+                for b, outstanding_commits in unannotated_commits_by_ref.items():
+                    # Remove any commits already annotated so as to not waste time,
+                    # but preserve the ordering since that seems (to me) to matter.
+                    tbd = [c for c in outstanding_commits if c not in annotated_commits]
+                    annotate_commits_of_branch(annotator, b, tbd)
+                    # Remember these were annotated, avoid wasting time next loop.
+                    annotated_commits.update(tbd)
             and_now = time.time()
             LAST_CYCLE_SUCCESS_TIMESTAMP_SECONDS.set(int(and_now))
             LAST_CYCLE_END_TIMESTAMP_SECONDS.set(int(and_now))

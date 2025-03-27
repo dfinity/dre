@@ -21,9 +21,9 @@ fn current_time() -> Time {
 
 // Wrapper types for TimestampNanos.
 // Used to ensure that the wrapped timestamp is aligned to the start/end of the day.
-#[derive(Debug, Copy, Clone, PartialEq, Eq, CandidType, Deserialize)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub struct TimestampNanosAtDayStart(TimestampNanos);
-#[derive(Debug, Copy, Clone, PartialEq, Eq, CandidType, Deserialize)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub struct TimestampNanosAtDayEnd(TimestampNanos);
 
 impl From<TimestampNanos> for TimestampNanosAtDayStart {
@@ -63,7 +63,7 @@ impl Deref for TimestampNanosAtDayStart {
 /// with the invariant defined in [`ic_replicated_state::metadata_state::BlockmakerMetricsTimeSeries`].
 ///
 /// TODO: This should be moved to NPR canister crate.
-#[derive(Debug, Clone, PartialEq, CandidType, Deserialize)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct RewardPeriod {
     pub start_ts: TimestampNanosAtDayStart,
     pub end_ts: TimestampNanosAtDayEnd,
