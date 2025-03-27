@@ -17,7 +17,7 @@ use ic_protobuf::registry::{
     hostos_version::v1::HostosVersionRecord,
     node::v1::{ConnectionEndpoint, IPv4InterfaceConfig},
     replica_version::v1::ReplicaVersionRecord,
-    subnet::v1::{ChainKeyConfig, EcdsaConfig, SubnetFeatures},
+    subnet::v1::{ChainKeyConfig, SubnetFeatures},
     unassigned_nodes_config::v1::UnassignedNodesConfigRecord,
 };
 use ic_registry_subnet_type::SubnetType;
@@ -253,7 +253,6 @@ async fn get_subnets_and_nodes(
             max_number_of_canisters: record.max_number_of_canisters,
             ssh_readonly_access: record.ssh_readonly_access.clone(),
             ssh_backup_access: record.ssh_backup_access.clone(),
-            ecdsa_config: record.ecdsa_config.clone(),
             dkg_dealings_per_block: record.dkg_dealings_per_block,
             is_halted: record.is_halted,
             halt_at_cup_height: record.halt_at_cup_height,
@@ -559,7 +558,6 @@ struct SubnetRecord {
     max_number_of_canisters: u64,
     ssh_readonly_access: Vec<String>,
     ssh_backup_access: Vec<String>,
-    ecdsa_config: Option<EcdsaConfig>,
     is_halted: bool,
     halt_at_cup_height: bool,
     chain_key_config: Option<ChainKeyConfig>,

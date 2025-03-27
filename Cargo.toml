@@ -21,8 +21,6 @@ members = [
     "rs/slack-notifications",
     "rs/node-provider-rewards",
     "rs/dre-canisters/node-provider-rewards",
-    "rs/dre-canisters/node-provider-rewards-lib",
-    "rs/dre-canisters/trustworthy-node-metrics/src/trustworthy-node-metrics",
     "rs/dre-canisters/trustworthy-node-metrics/src/trustworthy-node-metrics-types",
     "rs/ic-observability/general-testnet-service-discovery",
 ]
@@ -103,7 +101,6 @@ ic-canister-client = { git = "https://github.com/dfinity/ic.git", rev = "2fe8aef
 ic-canister-client-sender = { git = "https://github.com/dfinity/ic.git", rev = "2fe8aefafcb2fbee6fdb2785374d5de715560269" }
 ic-canisters = { path = "rs/ic-canisters" }
 ic-canisters-http-types = { git = "https://github.com/dfinity/ic.git", rev = "2fe8aefafcb2fbee6fdb2785374d5de715560269" }
-ic-nervous-system-common-test-keys = { git = "https://github.com/dfinity/ic.git", rev = "2fe8aefafcb2fbee6fdb2785374d5de715560269" }
 ic-cdk = { git = "https://github.com/dfinity/cdk-rs.git", rev = "929fd0b31e9ec69aad7cf6285df0394f25fe1815" }
 ic-config = { git = "https://github.com/dfinity/ic.git", rev = "2fe8aefafcb2fbee6fdb2785374d5de715560269" }
 ic-crypto-utils-threshold-sig-der = { git = "https://github.com/dfinity/ic.git", rev = "2fe8aefafcb2fbee6fdb2785374d5de715560269" }
@@ -142,6 +139,7 @@ ic-icrc1-test-utils = { git = "https://github.com/dfinity/ic.git", rev = "2fe8ae
 rosetta-core = { git = "https://github.com/dfinity/ic.git", rev = "2fe8aefafcb2fbee6fdb2785374d5de715560269" }
 icp-ledger = { git = "https://github.com/dfinity/ic.git", rev = "2fe8aefafcb2fbee6fdb2785374d5de715560269" }
 icrc-ledger-types = { git = "https://github.com/dfinity/ic.git", rev = "2fe8aefafcb2fbee6fdb2785374d5de715560269" }
+ic-metrics-encoder = "1.1.1"
 ic-transport-types = "0.39.3"
 ic-utils = "0.39.3"
 itertools = "0.13.0"
@@ -208,8 +206,6 @@ ic-cdk-timers = { git = "https://github.com/dfinity/cdk-rs.git", rev = "929fd0b3
 ic-cdk-macros = { git = "https://github.com/dfinity/cdk-rs.git", rev = "929fd0b31e9ec69aad7cf6285df0394f25fe1815" }
 ic-stable-structures = "0.6.8"
 dfn_core = { git = "https://github.com/dfinity/ic.git", rev = "2fe8aefafcb2fbee6fdb2785374d5de715560269" }
-node-provider-rewards-lib = { path = "rs/dre-canisters/node-provider-rewards-lib" }
-node-provider-rewards = { path = "rs/node-provider-rewards" }
 
 # dre-airflow deps, should be replaced with dre-airflow once
 indexmap = { version = "2.8.0", features = ["serde"] }

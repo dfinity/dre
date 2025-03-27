@@ -2,7 +2,8 @@ use candid::Deserialize;
 use ic_nns_common::pb::v1::NeuronId;
 use ic_nns_common::pb::v1::ProposalId;
 use ic_nns_governance::pb::v1::ProposalStatus;
-use ic_nns_governance::pb::v1::{ProposalInfo, Topic};
+use ic_nns_governance::pb::v1::Topic;
+use ic_nns_governance_api::pb::v1::ProposalInfo;
 use itertools::Itertools;
 use log::info;
 use regex::Regex;
@@ -205,12 +206,13 @@ impl TryFrom<Vec<ProposalInfo>> for MessageGroups {
         let message_groups = proposals
             .into_iter()
             .chunk_by(|p| {
+                let topic = Topic::try_from(p.topic).expect("failed to parse topic");
                 (
                     slack_channel_for_proposal(p),
-                    alert_mention(p.proposer.as_ref().expect("No NeuronId in the proposal"), p.topic()),
+                    alert_mention(p.proposer.as_ref().expect("No NeuronId in the proposal"), topic),
                     proposer_mention(p.proposer.expect("proposer not set")),
                     proposal_motivation(p),
-                    p.topic(),
+                    topic,
                 )
             })
             .into_iter()
@@ -239,11 +241,12 @@ impl TryFrom<Vec<ProposalInfo>> for MessageGroups {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::collections::HashMap;
     use std::time::SystemTime;
 
-    use ic_nns_governance::pb::v1::proposal;
-    use ic_nns_governance::pb::v1::Motion;
-    use ic_nns_governance::pb::v1::Proposal;
+    use ic_nns_governance_api::pb::v1::proposal::Action;
+    use ic_nns_governance_api::pb::v1::Motion;
+    use ic_nns_governance_api::pb::v1::Proposal;
 
     fn gen_test_proposal(proposal_id: u64, proposer: u64, summary: &str, topic: i32) -> ProposalInfo {
         ProposalInfo {
@@ -253,7 +256,7 @@ mod tests {
             proposal: Some(Proposal {
                 title: Some("A Reasonable Title".to_string()),
                 summary: String::from(summary),
-                action: Some(proposal::Action::Motion(Motion {
+                action: Some(Action::Motion(Motion {
                     motion_text: "me like proposals".to_string(),
                 })),
                 ..Default::default()
@@ -261,7 +264,17 @@ mod tests {
             proposal_timestamp_seconds: SystemTime::now().duration_since(SystemTime::UNIX_EPOCH).unwrap().as_secs(),
             topic,
             status: 1, // AcceptVotes
-            ..Default::default()
+            ballots: HashMap::new(),
+            latest_tally: None,
+            decided_timestamp_seconds: 0,
+            executed_timestamp_seconds: 0,
+            reward_event_round: 0,
+            reward_status: 0,
+            failed_timestamp_seconds: 0,
+            failure_reason: None,
+            deadline_timestamp_seconds: None,
+            derived_proposal_information: None,
+            total_potential_voting_power: None,
         }
     }
 

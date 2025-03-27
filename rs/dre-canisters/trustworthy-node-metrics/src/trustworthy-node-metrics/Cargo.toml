@@ -39,7 +39,6 @@ ic-registry-canister-client = { git = "https://github.com/dfinity/ic.git", rev =
 lazy_static = { workspace = true }
 prost = { workspace = true }
 ic-interfaces-registry = { workspace = true }
-node-provider-rewards-lib = { workspace = true }
 chrono = { version = "0.4", default-features = false, features = ["std"] }
 ahash = { version = "0.8.11", default-features = false, features = [
     "compile-time-rng",

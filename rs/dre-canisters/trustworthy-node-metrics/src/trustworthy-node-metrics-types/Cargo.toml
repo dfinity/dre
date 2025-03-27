@@ -23,4 +23,3 @@ ic-management-canister-types-private = { workspace = true }
 ic-stable-structures = { workspace = true }
 ic-protobuf = { workspace = true }
 ic-nns-governance-api = { workspace = true }
-node-provider-rewards-lib = { workspace = true }

@@ -21,6 +21,7 @@ ic-management-types = { workspace = true }
 ic-nns-common = { workspace = true }
 ic-nns-constants = { workspace = true }
 ic-nns-governance = { workspace = true }
+ic-nns-governance-api = { workspace = true }
 itertools = { workspace = true }
 lazy_static = { workspace = true }
 log = { workspace = true }
