@@ -15,7 +15,7 @@ from release_index_loader import ReleaseLoader
 BASE_VERSION_NAME = "base"
 
 
-def parse_args():
+def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Tool for checking release index")
     parser.add_argument(
         "--path",
@@ -42,7 +42,10 @@ def parse_args():
     return parser.parse_args()
 
 
-def success_print(message: str):
+def success_print(message: str) -> None:
+    if "GITHUB_STEP_SUMMARY" in os.environ:
+        with open(os.environ["GITHUB_STEP_SUMMARY"], "a") as log:
+            print(f"✅ SUCCESS: {message}", file=log)
     print(f"{Fore.GREEN}✅ SUCCESS: {message}{Fore.RESET}")
 
 
@@ -52,6 +55,9 @@ def print_and_ret(message: str) -> str:
 
 
 def error_print(message: str) -> str:
+    if "GITHUB_STEP_SUMMARY" in os.environ:
+        with open(os.environ["GITHUB_STEP_SUMMARY"], "a") as log:
+            print(f"❌ ERROR: {message}", file=log)
     return print_and_ret(f"{Fore.RED}❌ ERROR: {message}{Fore.RESET}")
 
 
@@ -176,6 +182,10 @@ if __name__ == "__main__":
         "Checking release index at '%s' against schmea at '%s' and repo at '%s'"
         % (args.path, args.schema_path, args.repo_path)
     )
+    if "GITHUB_STEP_SUMMARY" in os.environ:
+        with open(os.environ["GITHUB_STEP_SUMMARY"], "a") as log:
+            print("## Release checks", file=log)
+
     index = yaml.load(open(args.path, "r", encoding="utf8"), Loader=yaml.FullLoader)
 
     errors = []
