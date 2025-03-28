@@ -1,7 +1,6 @@
 use crate::metrics::TimestampNanos;
 use candid::{CandidType, Decode, Encode, Principal};
-use ic_base_types::{PrincipalId, SubnetId};
-use ic_management_canister_types_private::NodeMetrics;
+use ic_base_types::{NodeId, PrincipalId, SubnetId};
 use ic_stable_structures::storable::Bound;
 use ic_stable_structures::Storable;
 use serde::Deserialize;
@@ -101,8 +100,15 @@ impl Storable for StorableSubnetMetricsKey {
     };
 }
 
+#[derive(Clone, Debug, CandidType, Deserialize, PartialEq, Eq, PartialOrd, Ord)]
+pub struct SubnetNodeMetricsDaily {
+    pub node_id: NodeId,
+    pub num_blocks_proposed: u64,
+    pub num_blocks_failed: u64,
+}
+
 #[derive(Clone, Debug, CandidType, Deserialize)]
-pub struct StorableSubnetMetrics(pub Vec<NodeMetrics>);
+pub struct StorableSubnetMetrics(pub Vec<SubnetNodeMetricsDaily>);
 
 impl Storable for StorableSubnetMetrics {
     fn to_bytes(&self) -> std::borrow::Cow<[u8]> {
@@ -117,7 +123,7 @@ impl Storable for StorableSubnetMetrics {
 }
 
 impl Deref for StorableSubnetMetrics {
-    type Target = Vec<NodeMetrics>;
+    type Target = Vec<SubnetNodeMetricsDaily>;
     fn deref(&self) -> &Self::Target {
         &self.0
     }

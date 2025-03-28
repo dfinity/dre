@@ -174,6 +174,7 @@ fn get_node_providers_xdr_rewards(args: RewardPeriodArgs) -> Result<RewardsPerNo
     let registry_store = REGISTRY_STORE.with(|m| m.clone());
 
     let daily_metrics_by_node = metrics_manager.daily_metrics_by_node(*reward_period.start_ts, *reward_period.end_ts);
+
     let rewards_table = registry_store.get_rewards_table();
     let rewardable_nodes = registry_store.get_rewardable_nodes(*reward_period.start_ts, *reward_period.end_ts);
 

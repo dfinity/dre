@@ -1,5 +1,5 @@
 use super::*;
-use crate::metrics::{nodes_failure_rates_in_period, subnets_failure_rates, NodeDailyMetrics};
+use crate::metrics::{nodes_failure_rates_in_period, subnets_failure_rates, NodeMetricsDaily};
 use crate::reward_period::{RewardPeriod, TimestampNanos, TimestampNanosAtDayEnd, NANOS_PER_DAY};
 use crate::types::RewardableNode;
 use ic_base_types::PrincipalId;
@@ -20,7 +20,7 @@ fn ts_day_end(day: u64) -> TimestampNanos {
 
 pub struct FailureRatesBuilder {
     daily_data: BTreeMap<TimestampNanos, Vec<(SubnetId, NodeId, Decimal)>>,
-    nodes_daily_metrics: BTreeMap<NodeId, Vec<NodeDailyMetrics>>,
+    nodes_daily_metrics: BTreeMap<NodeId, Vec<NodeMetricsDaily>>,
 }
 
 impl FailureRatesBuilder {
@@ -64,7 +64,7 @@ impl FailureRatesBuilder {
             node_id,
             metrics
                 .into_iter()
-                .map(|(ts, subnet_id, proposed, failed)| NodeDailyMetrics::new(ts, subnet_id, proposed, failed))
+                .map(|(ts, subnet_id, proposed, failed)| NodeMetricsDaily::new(ts, subnet_id, proposed, failed))
                 .collect(),
         );
 
@@ -83,7 +83,7 @@ impl FailureRatesBuilder {
         let mut metrics_by_node = self.nodes_daily_metrics;
         for (day, entries) in self.daily_data.into_iter() {
             for (subnet, node, rate) in entries {
-                let metrics = NodeDailyMetrics {
+                let metrics = NodeMetricsDaily {
                     ts: TimestampNanosAtDayEnd::from(day),
                     subnet_assigned: subnet,
                     num_blocks_proposed: 0,
