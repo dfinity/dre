@@ -1,14 +1,13 @@
-use crate::metrics::MetricsManager;
-use crate::metrics_types::{StorableSubnetMetricsKey, SubnetNodeMetricsDaily};
-use futures::StreamExt;
+use crate::metrics::{MetricsManager, TimestampNanos};
+use crate::metrics_types::{NodeMetricsDailyStored, SubnetMetricsStoredKey};
 use ic_base_types::{NodeId, PrincipalId, SubnetId};
 use ic_cdk::api::call::{CallResult, RejectionCode};
 use ic_management_canister_types_private::{NodeMetrics, NodeMetricsHistoryArgs, NodeMetricsHistoryResponse};
 use ic_stable_structures::memory_manager::{MemoryId, VirtualMemory};
 use ic_stable_structures::DefaultMemoryImpl;
-use itertools::Itertools;
+use node_provider_rewards::reward_period::TimestampNanosAtDayEnd;
 use std::cell::RefCell;
-use std::collections::HashMap;
+use std::collections::{BTreeMap, HashMap};
 
 mod mock {
     use super::*;
@@ -22,7 +21,7 @@ mod mock {
 
         #[async_trait]
         impl ManagementCanisterClient for CanisterClient {
-            async fn node_metrics_history(&self, contract: ic_management_canister_types_private::NodeMetricsHistoryArgs) -> CallResult<(Vec<NodeMetricsHistoryResponse>,)>;
+            async fn node_metrics_history(&self, contract: NodeMetricsHistoryArgs) -> CallResult<(Vec<NodeMetricsHistoryResponse>,)>;
         }
     }
 }
@@ -70,7 +69,7 @@ async fn subnet_metrics_added_correctly() {
 
     mm.update_subnets_metrics(vec![subnet_1]).await;
     for i in 0..days {
-        let key = StorableSubnetMetricsKey {
+        let key = SubnetMetricsStoredKey {
             timestamp_nanos: i * ONE_DAY_NANOS,
             subnet_id: subnet_1,
         };
@@ -113,7 +112,7 @@ async fn multiple_subnets_metrics_added_correctly() {
 
     for subnet in &[subnet_1, subnet_2] {
         for i in 0..days {
-            let key = StorableSubnetMetricsKey {
+            let key = SubnetMetricsStoredKey {
                 timestamp_nanos: i * ONE_DAY_NANOS,
                 subnet_id: *subnet,
             };
@@ -183,7 +182,7 @@ async fn partial_failures_are_handled_correctly() {
         "Subnet 2 should not be in retry list"
     );
 
-    let key = StorableSubnetMetricsKey {
+    let key = SubnetMetricsStoredKey {
         timestamp_nanos: 0,
         subnet_id: subnet_1,
     };
@@ -192,135 +191,92 @@ async fn partial_failures_are_handled_correctly() {
         "Metrics should not be present for subnet 1"
     );
 
-    let key = StorableSubnetMetricsKey {
+    let key = SubnetMetricsStoredKey {
         timestamp_nanos: 0,
         subnet_id: subnet_2,
     };
     assert!(mm.subnets_metrics.borrow().get(&key).is_some(), "Metrics should be present for subnet 2");
 }
 
-fn node_metrics_history(node_id: NodeId, proposed_failed_blocks: Vec<(u64, u64)>) -> Vec<NodeMetricsHistoryResponse> {
-    let mut result = Vec::new();
-    for (idx, (num_proposed, num_failed)) in proposed_failed_blocks.into_iter().enumerate() {
-        result.push(NodeMetricsHistoryResponse {
-            timestamp_nanos: idx as u64 * ONE_DAY_NANOS,
-            node_metrics: vec![NodeMetrics {
-                num_blocks_proposed_total: num_proposed,
-                num_block_failures_total: num_failed,
-                node_id: node_id.get(),
-            }],
-        });
-    }
-    result
-}
-
 const MAX_TIMES: usize = 20;
+type FromTS = u64;
+type Proposed = u64;
+type Failed = u64;
 
 #[derive(Clone)]
 struct NodeMetricsHistoryResponseTracker {
     current_subnet: SubnetId,
-    current_node: NodeId,
-    current_ts: u64,
-    subnets_responses: HashMap<SubnetId, Vec<NodeMetricsHistoryResponse>>,
+    subnets_responses: BTreeMap<TimestampNanos, HashMap<SubnetId, Vec<NodeMetrics>>>,
 }
 
 impl NodeMetricsHistoryResponseTracker {
     pub fn new() -> Self {
         Self {
             current_subnet: subnet_id(0),
-            current_node: node_id(0),
-            current_ts: 0,
-            subnets_responses: HashMap::new(),
+            subnets_responses: BTreeMap::new(),
         }
     }
 
     fn with_subnet(mut self, subnet_id: SubnetId) -> Self {
-        self.subnets_responses.entry(subnet_id).or_default();
         self.current_subnet = subnet_id;
-        self
-    }
-
-    fn with_node(mut self, node_id: NodeId) -> Self {
-        self.current_node = node_id;
-        self
-    }
-
-    fn change_ts(mut self, ts: u64) -> Self {
-        self.current_ts = ts;
-        self.subnets_responses
-            .get_mut(&self.current_subnet)
-            .unwrap()
-            .push(NodeMetricsHistoryResponse {
-                timestamp_nanos: ts,
-                node_metrics: Vec::new(),
-            });
-        self
-    }
-
-    fn with_node_metrics_single(mut self, blocks_proposed_total: u64, blocks_failed_total: u64) -> Self {
-        let responses = self.subnets_responses.get_mut(&self.current_subnet).unwrap();
-
-        // Ensure we have at least one response with the current timestamp
-        if responses.is_empty() || responses.last().unwrap().timestamp_nanos != self.current_ts {
-            responses.push(NodeMetricsHistoryResponse {
-                timestamp_nanos: self.current_ts,
-                node_metrics: Vec::new(),
-            });
+        for (_, metrics) in self.subnets_responses.iter_mut() {
+            metrics.insert(subnet_id, Vec::new());
         }
-
-        // Now we can safely add the metrics to the last response
-        responses.last_mut().unwrap().node_metrics.push(NodeMetrics {
-            num_blocks_proposed_total: blocks_proposed_total,
-            num_block_failures_total: blocks_failed_total,
-            node_id: self.current_node.get(),
-        });
-
         self
     }
-    fn add_node_metrics(mut self, proposed_failed: Vec<(u64, u64)>) -> Self {
-        let len = proposed_failed.len();
-        for (i, (proposed, failed)) in proposed_failed.into_iter().enumerate() {
-            self = self.with_node_metrics_single(proposed, failed);
-            if i < len - 1 {
-                let new_ts = self.current_ts + ONE_DAY_NANOS;
-                self = self.change_ts(new_ts);
+
+    fn add_node_metrics(mut self, node_id: NodeId, metrics: Vec<(FromTS, Vec<(Proposed, Failed)>)>) -> Self {
+        for (from_ts, proposed_failed) in metrics {
+            for (i, (proposed, failed)) in proposed_failed.into_iter().enumerate() {
+                let ts = from_ts + (i as u64) * ONE_DAY_NANOS;
+                let entry = self.subnets_responses.entry(ts).or_default();
+                let entry_sub = entry.entry(self.current_subnet).or_default();
+
+                entry_sub.push(NodeMetrics {
+                    num_blocks_proposed_total: proposed,
+                    num_block_failures_total: failed,
+                    node_id: node_id.get(),
+                });
             }
         }
         self
     }
 
     fn next(&self, response_step: usize, contract: NodeMetricsHistoryArgs) -> Vec<NodeMetricsHistoryResponse> {
+        let mut response = Vec::new();
         self.subnets_responses
-            .get(&SubnetId::from(contract.subnet_id))
-            .unwrap()
-            .clone()
-            .into_iter()
-            .filter(|metric| metric.timestamp_nanos >= contract.start_at_timestamp_nanos)
-            .take(response_step)
-            .collect()
+            .range(contract.start_at_timestamp_nanos..(contract.start_at_timestamp_nanos + (response_step as u64) * ONE_DAY_NANOS))
+            .filter(|(_, metrics)| metrics.contains_key(&contract.subnet_id.into()))
+            .for_each(|(ts, metrics)| {
+                let node_metrics = metrics.get(&contract.subnet_id.into()).unwrap().clone();
+                response.push(NodeMetricsHistoryResponse {
+                    node_metrics,
+                    timestamp_nanos: *ts,
+                });
+            });
+
+        response
+    }
+
+    fn next_2_steps(&self, contract: NodeMetricsHistoryArgs) -> Vec<NodeMetricsHistoryResponse> {
+        self.next(2, contract)
     }
 }
 
-async fn daily_metrics_are_correctly_computed(response_step: usize) {
-    // (blocks_proposed, blocks_failed)
+async fn _daily_metrics_correct_different_update_size(size: usize) {
     let tracker = NodeMetricsHistoryResponseTracker::new()
         .with_subnet(subnet_id(1))
-        .with_node(node_id(1))
-        .add_node_metrics(vec![(7, 5), (10, 6), (15, 6), (25, 50), (10, 6)]);
+        .add_node_metrics(node_id(1), vec![(0, vec![(7, 5), (10, 6), (15, 6), (25, 50), (10, 6)])]);
 
     let mut mock = mock::MockCanisterClient::new();
-    mock.expect_node_metrics_history().times(MAX_TIMES).returning(move |contract| {
-        let call_elem = tracker.next(response_step, contract);
-
-        println!("{:?}", call_elem);
-        CallResult::Ok((call_elem,))
-    });
+    mock.expect_node_metrics_history()
+        .returning(move |contract| CallResult::Ok((tracker.next(size, contract),)));
     let mm = MetricsManager::new(mock);
 
     for _ in 0..MAX_TIMES {
         mm.update_subnets_metrics(vec![subnet_id(1)]).await;
     }
-    let node_1_daily_metrics: Vec<SubnetNodeMetricsDaily> = mm
+    let node_1_daily_metrics: Vec<NodeMetricsDailyStored> = mm
         .subnets_metrics
         .borrow()
         .values()
@@ -331,7 +287,7 @@ async fn daily_metrics_are_correctly_computed(response_step: usize) {
     assert_eq!(node_1_daily_metrics[0].num_blocks_proposed, 7);
     assert_eq!(node_1_daily_metrics[0].num_blocks_failed, 5);
 
-    // (10 - 7, 6 - 5) = (5, 1)
+    // (10 - 7, 6 - 5) = (3, 1)
     assert_eq!(node_1_daily_metrics[1].num_blocks_proposed, 3);
     assert_eq!(node_1_daily_metrics[1].num_blocks_failed, 1);
 
@@ -350,9 +306,107 @@ async fn daily_metrics_are_correctly_computed(response_step: usize) {
 }
 
 #[tokio::test]
-async fn daily_metrics_are_correctly_computed_over_multiple_updates() {
-    daily_metrics_are_correctly_computed(2).await;
-    daily_metrics_are_correctly_computed(3).await;
-    daily_metrics_are_correctly_computed(4).await;
-    daily_metrics_are_correctly_computed(5).await;
+async fn daily_metrics_correct_different_update_size() {
+    _daily_metrics_correct_different_update_size(2).await;
+    _daily_metrics_correct_different_update_size(3).await;
+    _daily_metrics_correct_different_update_size(4).await;
+    _daily_metrics_correct_different_update_size(5).await;
+}
+
+#[tokio::test]
+async fn daily_metrics_correct_2_subs() {
+    let subnet_1 = subnet_id(1);
+    let subnet_2 = subnet_id(2);
+
+    let node_1 = node_id(1);
+
+    let tracker = NodeMetricsHistoryResponseTracker::new()
+        .with_subnet(subnet_1)
+        .add_node_metrics(node_1, vec![(0, vec![(1, 1), (2, 2), (3, 3)])])
+        .with_subnet(subnet_2)
+        .add_node_metrics(node_1, vec![(3 * ONE_DAY_NANOS, vec![(4, 4), (6, 6), (8, 8)])]);
+
+    let mut mock = mock::MockCanisterClient::new();
+    mock.expect_node_metrics_history()
+        .returning(move |contract| CallResult::Ok((tracker.next_2_steps(contract),)));
+    let mm = MetricsManager::new(mock);
+
+    for _ in 0..MAX_TIMES {
+        mm.update_subnets_metrics(vec![subnet_1, subnet_2]).await;
+    }
+
+    let node_1_daily_metrics = mm.daily_metrics_by_node(0, 8 * ONE_DAY_NANOS).get(&node_1).unwrap().clone();
+
+    for (day, metrics) in node_1_daily_metrics.iter().enumerate() {
+        match day {
+            0 => {
+                assert_eq!(metrics.subnet_assigned, subnet_1);
+                assert_eq!((metrics.num_blocks_proposed, metrics.num_blocks_failed), (1, 1));
+            }
+            1 => {
+                assert_eq!(metrics.subnet_assigned, subnet_1);
+                assert_eq!((metrics.num_blocks_proposed, metrics.num_blocks_failed), (1, 1));
+            }
+            2 => {
+                assert_eq!(metrics.subnet_assigned, subnet_1);
+                assert_eq!((metrics.num_blocks_proposed, metrics.num_blocks_failed), (1, 1));
+            }
+            3 => {
+                assert_eq!(metrics.subnet_assigned, subnet_2);
+                assert_eq!((metrics.num_blocks_proposed, metrics.num_blocks_failed), (4, 4));
+            }
+            4 => {
+                assert_eq!(metrics.subnet_assigned, subnet_2);
+                assert_eq!((metrics.num_blocks_proposed, metrics.num_blocks_failed), (2, 2));
+            }
+            _ => {
+                assert_eq!(metrics.subnet_assigned, subnet_2);
+                assert_eq!((metrics.num_blocks_proposed, metrics.num_blocks_failed), (2, 2));
+            }
+        }
+    }
+}
+
+#[tokio::test]
+async fn daily_metrics_correct_overlapping_days() {
+    let subnet_1 = subnet_id(1);
+    let subnet_2 = subnet_id(2);
+
+    let node_1 = node_id(1);
+    let node_2 = node_id(1);
+
+    let tracker = NodeMetricsHistoryResponseTracker::new()
+        .with_subnet(subnet_1)
+        .add_node_metrics(node_1, vec![(0, vec![(1, 1), (2, 2), (3, 3)])])
+        .with_subnet(subnet_2)
+        // Node 1 redeployed to subnet 2 on day 2
+        .add_node_metrics(node_1, vec![(2 * ONE_DAY_NANOS, vec![(4, 4), (6, 6), (8, 8)])])
+        .add_node_metrics(node_2, vec![(2 * ONE_DAY_NANOS, vec![(1, 1), (3, 3), (6, 6)])]);
+
+    let mut mock = mock::MockCanisterClient::new();
+    mock.expect_node_metrics_history()
+        .returning(move |contract| CallResult::Ok((tracker.next_2_steps(contract),)));
+    let mm = MetricsManager::new(mock);
+
+    for _ in 0..MAX_TIMES {
+        mm.update_subnets_metrics(vec![subnet_id(1), subnet_id(2)]).await;
+    }
+
+    let daily_metrics = mm.daily_metrics_by_node(0, 4 * ONE_DAY_NANOS).get(&node_1).unwrap().clone();
+
+    let overlapping_sub_1 = daily_metrics
+        .iter()
+        .find(|daily_metrics| daily_metrics.subnet_assigned == subnet_1 && daily_metrics.ts == TimestampNanosAtDayEnd::from(2 * ONE_DAY_NANOS))
+        .unwrap();
+
+    assert_eq!(overlapping_sub_1.num_blocks_proposed, 1);
+    assert_eq!(overlapping_sub_1.num_blocks_failed, 1);
+
+    let overlapping_sub_2 = daily_metrics
+        .iter()
+        .find(|daily_metrics| daily_metrics.subnet_assigned == subnet_2 && daily_metrics.ts == TimestampNanosAtDayEnd::from(2 * ONE_DAY_NANOS))
+        .unwrap();
+
+    assert_eq!(overlapping_sub_2.num_blocks_proposed, 4);
+    assert_eq!(overlapping_sub_2.num_blocks_failed, 4);
 }

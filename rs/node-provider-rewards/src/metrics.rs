@@ -94,7 +94,7 @@ pub fn subnets_failure_rates(metrics_by_node: &BTreeMap<NodeId, Vec<NodeMetricsD
     // Aggregate failure rates by (subnet, timestamp)
     for metrics in metrics_by_node.values().flatten() {
         rates_map
-            .entry((metrics.subnet_assigned, *metrics.ts))
+            .entry((metrics.subnet_assigned, metrics.ts.get()))
             .or_default()
             .push(metrics.failure_rate);
     }
@@ -132,7 +132,7 @@ pub fn nodes_failure_rates_in_period(
         .map(|node_id| {
             let failure_rates_in_period = (0..days_in_period)
                 .map(|day| {
-                    let ts = TimestampNanosAtDayEnd::from(*reward_period.start_ts + day * NANOS_PER_DAY);
+                    let ts = TimestampNanosAtDayEnd::from(reward_period.start_ts.get() + day * NANOS_PER_DAY);
 
                     let value = match metrics_by_node.get(node_id) {
                         Some(metrics) => {
@@ -141,7 +141,7 @@ pub fn nodes_failure_rates_in_period(
                         }
                         None => NodeFailureRate::Undefined,
                     };
-                    NodeDailyFailureRate { ts: *ts, value }
+                    NodeDailyFailureRate { ts: ts.get(), value }
                 })
                 .collect_vec();
 

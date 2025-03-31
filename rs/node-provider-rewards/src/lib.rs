@@ -82,10 +82,10 @@ fn validate_input(
     for (node_id, metrics_entries) in metrics_by_node {
         for entry in metrics_entries {
             // Check if all metrics are within the reward period
-            if !reward_period.contains(*entry.ts) {
+            if !reward_period.contains(entry.ts.get()) {
                 return Err(RewardCalculationError::NodeMetricsOutOfRange {
                     node_id: *node_id,
-                    timestamp: *entry.ts,
+                    timestamp: entry.ts.get(),
                     reward_period: reward_period.clone(),
                 });
             }
@@ -94,7 +94,7 @@ fn validate_input(
         // Metrics with the same timestamp and different subnet are allowed.
         let unique_timestamp_subnet = metrics_entries
             .iter()
-            .map(|daily_metrics| (*daily_metrics.ts, daily_metrics.subnet_assigned))
+            .map(|daily_metrics| (daily_metrics.ts.get(), daily_metrics.subnet_assigned))
             .collect::<HashSet<_>>();
         if unique_timestamp_subnet.len() != metrics_entries.len() {
             return Err(RewardCalculationError::DuplicateMetrics(*node_id));

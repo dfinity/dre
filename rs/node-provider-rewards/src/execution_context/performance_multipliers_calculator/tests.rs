@@ -15,7 +15,7 @@ fn subnet_id(id: u64) -> SubnetId {
 }
 
 fn ts_day_end(day: u64) -> TimestampNanos {
-    *TimestampNanosAtDayEnd::from(day * NANOS_PER_DAY)
+    TimestampNanosAtDayEnd::from(day * NANOS_PER_DAY).get()
 }
 
 pub struct FailureRatesBuilder {
@@ -94,8 +94,8 @@ impl FailureRatesBuilder {
             }
         }
 
-        let start_ts = metrics_by_node.values().flat_map(|v| v.iter().map(|m| *m.ts)).min().unwrap();
-        let end_ts = metrics_by_node.values().flat_map(|v| v.iter().map(|m| *m.ts)).max().unwrap();
+        let start_ts = metrics_by_node.values().flat_map(|v| v.iter().map(|m| m.ts.get())).min().unwrap();
+        let end_ts = metrics_by_node.values().flat_map(|v| v.iter().map(|m| m.ts.get())).max().unwrap();
         let reward_period = RewardPeriod::new(start_ts, end_ts).unwrap();
         let all_nodes = metrics_by_node.keys().cloned().collect_vec();
 

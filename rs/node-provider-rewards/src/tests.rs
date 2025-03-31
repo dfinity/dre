@@ -55,7 +55,7 @@ fn test_metrics_out_of_range() {
         result,
         Err(RewardCalculationError::NodeMetricsOutOfRange {
             node_id: node_id(1),
-            timestamp: *metrics_out_of_range.ts,
+            timestamp: metrics_out_of_range.ts.get(),
             reward_period,
         })
     );
