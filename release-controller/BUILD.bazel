@@ -39,12 +39,12 @@ py_binary(
     srcs = glob(["*.py"], exclude = ["commit_annotator.py"]),
     tags = ["typecheck"],
     env = {
-        "DRE_PATH": "$(rootpath //rs/cli:dre)",
+        "DRE_PATH": "$(rootpath //rs/cli:dre-embedded)",
     },
     deps = deps + [
         requirement("prometheus-client"),
     ],
-    data = ["//rs/cli:dre"],
+    data = ["//rs/cli:dre-embedded"],
 )
 
 py_binary(
@@ -131,7 +131,7 @@ long_tests = ["tests/test_commit_annotator.py"]
 
 tar(
     name = "release_controller_deps",
-    srcs = ["//rs/cli:dre"],
+    srcs = ["//rs/cli:dre-embedded"],
 )
 
 tar(

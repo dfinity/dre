@@ -6,11 +6,13 @@ on:
     paths-ignore:
       - "release-index.yaml"
       - "replica-releases/**"
+      - "release-controller/**"
       - "node-labels/**"
   pull_request:
     paths-ignore:
       - "release-index.yaml"
       - "replica-releases/**"
+      - "release-controller/**"
       - "node-labels/**"
   workflow_dispatch:
 
@@ -57,13 +59,18 @@ jobs:
           # See above where the token is generated: we can't use regular secrets.GITHUB_TOKEN
           # since the push needs to trigger actions again
           GITHUB_TOKEN: "${{ steps.app-token.outputs.token }}"
+          spec: ... except //release-controller/... except attr(name, '.*oci_image.*', //...)
       - name: "🚀 Testing"
         env:
           STAGING_PRIVATE_KEY_PEM: "${{ secrets.STAGING_PRIVATE_KEY_PEM }}"
         run: |
+          set -e
           mkdir -p ~/.config/dfx/identity/bootstrap-super-leader/
           echo $STAGING_PRIVATE_KEY_PEM > ~/.config/dfx/identity/bootstrap-super-leader/identity.pem
-          bazel test ... --spawn_strategy=local --test_env=HOME=/home/runner
+          t=$(mktemp) ; trap 'rm -f "$t"' EXIT
+          bazel query "... except //release-controller/... except attr(tags, 'manual', //...) except attr(name, '.*oci_image.*', //...)" > "$t"
+          set -x
+          bazel test --target_pattern_file="$t" --config=ci --test_env=HOME=/home/runner
 
       # We don't need the linear-jira build and test step for now
       # - name: "🚀 Build and Test Linear-Jira with Bazel"
@@ -86,18 +93,6 @@ jobs:
           name: test-artifacts
           path: bazel-out/k8-opt/bin/rs/ic-observability/multiservice-discovery/multiservice-discovery
 
-      - name: "❓ Check if files that influence release controller changed in last commit"
-        id: check-release-controller-modified
-        uses: step-security/changed-files@v45
-        with:
-          files: |
-            release-controller/**
-            requirements*.lock
-            pyproject.toml
-            *.bazel
-            bazel/**
-            .github/**
-
       ########################################
       # Upload container images
       ########################################
@@ -107,20 +102,14 @@ jobs:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
+
       - name: "📦 Push images to GitHub Container Registry"
         if: ${{ startsWith(github.head_ref, 'container') || startsWith(github.ref, 'refs/heads/container') || (github.ref == 'refs/heads/main') }}
         shell: bash
-        env:
-          RELEASE_CONTROLLER_CHANGED: ${{ steps.check-release-controller-modified.outputs.any_changed }}
         run: |
           set -ex -o pipefail
-          oci_targets=$(bazel query --noshow_progress 'kind("oci_push", ...)')
-          if [ "$RELEASE_CONTROLLER_CHANGED" != "true" ]
-          then
-            # Oh, not changed?  Then skip pushing the release controller container images.
-            oci_targets=$(echo "$oci_targets" | grep -v //release-controller)
-          fi
-          echo "$oci_targets" | xargs -I_target bazel run _target -- --tag ${GITHUB_SHA}
+          bazel query --noshow_progress 'kind("oci_push", ...) except //release-controller/...' \
+            | xargs -I_target bazel run _target -- --tag ${GITHUB_SHA}
 
       - name: "❓ Check if dashboard/* changed in last commit"
         id: check-dashboard-frontend-modified
@@ -172,14 +161,6 @@ jobs:
           files-to-update: ${{ steps.paths.outputs.files }}
           push-token: ${{ secrets.K8S_API_TOKEN }}
           component: containers
-
-      - name: "🤖 Update k8s deployments for release controller"
-        if: ${{ github.ref == 'refs/heads/main' && steps.check-release-controller-modified.outputs.any_changed == 'true' }}
-        uses: ./.github/workflows/update-k8s-deployments
-        with:
-          files-to-update: bases/apps/ic-release-controller/controller/controller.yaml bases/apps/ic-release-controller/commit-annotator/commit-annotator.yaml
-          push-token: ${{ secrets.K8S_API_TOKEN }}
-          component: release controller
 
       ########################################
       # Clean up runner
