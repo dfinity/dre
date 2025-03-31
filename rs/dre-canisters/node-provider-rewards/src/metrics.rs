@@ -1,12 +1,12 @@
-use crate::metrics_types::{KeyRange, StorableSubnetMetrics, StorableSubnetMetricsKey, SubnetIdStored};
+use crate::metrics_types::{KeyRange, NodeMetricsDailyStored, SubnetIdStored, SubnetMetricsStoredKey, SubnetMetricsStoredValue};
 use async_trait::async_trait;
 use candid::Principal;
-use ic_base_types::{NodeId, PrincipalId, SubnetId};
+use ic_base_types::{NodeId, SubnetId};
 use ic_cdk::api::call::CallResult;
-use ic_management_canister_types_private::{NodeMetrics, NodeMetricsHistoryArgs, NodeMetricsHistoryResponse};
+use ic_management_canister_types_private::{NodeMetricsHistoryArgs, NodeMetricsHistoryResponse};
 use ic_stable_structures::StableBTreeMap;
 use itertools::Itertools;
-use node_provider_rewards::metrics::NodeDailyMetrics;
+use node_provider_rewards::metrics::NodeMetricsDaily;
 use std::cell::RefCell;
 use std::collections::{BTreeMap, HashMap};
 
@@ -41,7 +41,7 @@ where
     Memory: ic_stable_structures::Memory,
 {
     pub(crate) client: Box<dyn ManagementCanisterClient>,
-    pub(crate) subnets_metrics: RefCell<StableBTreeMap<StorableSubnetMetricsKey, StorableSubnetMetrics, Memory>>,
+    pub(crate) subnets_metrics: RefCell<StableBTreeMap<SubnetMetricsStoredKey, SubnetMetricsStoredValue, Memory>>,
     pub(crate) subnets_to_retry: RefCell<StableBTreeMap<SubnetIdStored, RetryCount, Memory>>,
     pub(crate) last_timestamp_per_subnet: RefCell<StableBTreeMap<SubnetIdStored, TimestampNanos, Memory>>,
 }
@@ -51,7 +51,7 @@ where
     Memory: ic_stable_structures::Memory + 'static,
 {
     pub async fn retry_failed_subnets(&self) {
-        let subnets_to_retry: Vec<SubnetId> = self.subnets_to_retry.borrow().keys().map(|key| *key).collect();
+        let subnets_to_retry: Vec<SubnetId> = self.subnets_to_retry.borrow().keys().map(|key| key.0).collect();
 
         if !subnets_to_retry.is_empty() {
             ic_cdk::println!("Retrying metrics for subnets: {:?}", subnets_to_retry);
@@ -59,19 +59,89 @@ where
         }
     }
 
+    /// Update the daily metrics for each node in the subnet.
+    fn update_nodes_metrics_daily(
+        &self,
+        subnet_id: SubnetId,
+        last_stored_ts: Option<TimestampNanos>,
+        mut subnet_update: Vec<NodeMetricsHistoryResponse>,
+    ) {
+        // Extract initial total metrics for each node in the subnet.
+        let mut initial_total_metrics_per_node: HashMap<_, _> = HashMap::new();
+
+        subnet_update.sort_by_key(|metrics| metrics.timestamp_nanos);
+        if let Some(first_metrics) = subnet_update.first() {
+            if Some(first_metrics.timestamp_nanos) == last_stored_ts {
+                initial_total_metrics_per_node = subnet_update
+                    .remove(0)
+                    .node_metrics
+                    .iter()
+                    .map(|node_metrics| {
+                        (
+                            node_metrics.node_id,
+                            (node_metrics.num_blocks_proposed_total, node_metrics.num_block_failures_total),
+                        )
+                    })
+                    .collect();
+            }
+        };
+
+        let mut running_total_metrics_per_node = initial_total_metrics_per_node;
+        for one_day_update in subnet_update {
+            let key = SubnetMetricsStoredKey {
+                subnet_id,
+                timestamp_nanos: one_day_update.timestamp_nanos,
+            };
+
+            let daily_nodes_metrics = one_day_update
+                .node_metrics
+                .into_iter()
+                .map(|node_metrics| {
+                    let current_proposed_total = node_metrics.num_blocks_proposed_total;
+                    let current_failed_total = node_metrics.num_block_failures_total;
+
+                    let (mut running_proposed_total, mut running_failed_total) = running_total_metrics_per_node
+                        .remove(&node_metrics.node_id)
+                        // Default is needed if the node joined the subnet after last_stored_ts.
+                        .unwrap_or_default();
+
+                    // This can happen if the node was redeployed.
+                    if running_proposed_total > current_proposed_total || running_failed_total > current_failed_total {
+                        running_proposed_total = 0;
+                        running_failed_total = 0;
+                    };
+
+                    // Update the total metrics for the next iteration.
+                    running_total_metrics_per_node.insert(node_metrics.node_id, (current_proposed_total, current_failed_total));
+
+                    NodeMetricsDailyStored {
+                        node_id: node_metrics.node_id.into(),
+                        num_blocks_proposed: current_proposed_total - running_proposed_total,
+                        num_blocks_failed: current_failed_total - running_failed_total,
+                    }
+                })
+                .collect();
+
+            self.subnets_metrics
+                .borrow_mut()
+                .insert(key, SubnetMetricsStoredValue(daily_nodes_metrics));
+        }
+    }
+
     /// Fetches subnets metrics for the specified subnets from their last timestamp.
     async fn fetch_subnets_metrics(
         &self,
-        last_timestamp_per_subnet: &BTreeMap<SubnetId, TimestampNanos>,
-    ) -> BTreeMap<SubnetId, CallResult<(Vec<NodeMetricsHistoryResponse>,)>> {
-        let mut subnets_node_metrics = Vec::new();
+        last_timestamp_per_subnet: &BTreeMap<SubnetId, Option<TimestampNanos>>,
+    ) -> BTreeMap<(SubnetId, Option<TimestampNanos>), CallResult<(Vec<NodeMetricsHistoryResponse>,)>> {
+        let mut subnets_history = Vec::new();
 
-        for (subnet_id, last_metrics_ts) in last_timestamp_per_subnet {
-            let refresh_ts = last_metrics_ts + 1;
+        for (subnet_id, last_stored_ts) in last_timestamp_per_subnet {
+            let refresh_ts = last_stored_ts.unwrap_or_default();
+            // For nodes assigned to the subnet before the current update, the TOTAL metrics at last_stored_ts
+            // are required since only DAILY metrics for each node are stored.
             ic_cdk::println!(
-                "Updating node metrics for subnet {}: Latest timestamp persisted: {}  Refreshing metrics from timestamp {}",
+                "Updating node metrics for subnet {}: Refreshing metrics from timestamp {}",
                 subnet_id,
-                last_metrics_ts,
                 refresh_ts
             );
 
@@ -80,10 +150,10 @@ where
                 start_at_timestamp_nanos: refresh_ts,
             };
 
-            subnets_node_metrics.push(async move { (*subnet_id, self.client.node_metrics_history(contract).await) });
+            subnets_history.push(async move { ((*subnet_id, *last_stored_ts), self.client.node_metrics_history(contract).await) });
         }
 
-        futures::future::join_all(subnets_node_metrics).await.into_iter().collect()
+        futures::future::join_all(subnets_history).await.into_iter().collect()
     }
 
     /// Updates the stored subnets metrics from remote management canisters.
@@ -91,38 +161,29 @@ where
     /// This function fetches the nodes metrics for the given subnets from the management canisters
     /// updating the local metrics with the fetched metrics.
     pub async fn update_subnets_metrics(&self, subnets: Vec<SubnetId>) {
-        let last_timestamp_per_subnet: BTreeMap<SubnetId, TimestampNanos> = subnets
+        let last_timestamp_per_subnet: BTreeMap<SubnetId, _> = subnets
             .into_iter()
             .map(|subnet| {
                 let last_timestamp = self.last_timestamp_per_subnet.borrow().get(&SubnetIdStored(subnet));
 
-                (subnet, last_timestamp.unwrap_or_default())
+                (subnet, last_timestamp)
             })
             .collect();
 
         let subnets_metrics = self.fetch_subnets_metrics(&last_timestamp_per_subnet).await;
-        for (subnet_id, call_result) in subnets_metrics {
+        for ((subnet_id, last_stored_ts), call_result) in subnets_metrics {
             match call_result {
-                Ok((nodes_metrics_history,)) => {
-                    // Update the last timestamp for this subnet.
-                    let last_timestamp = nodes_metrics_history
-                        .iter()
-                        .map(|entry| entry.timestamp_nanos)
-                        .max()
-                        .unwrap_or(*last_timestamp_per_subnet.get(&subnet_id).expect("timestamp exists"));
+                Ok((subnet_update,)) => {
+                    if subnet_update.is_empty() {
+                        ic_cdk::println!("No updates for subnet {}", subnet_id);
+                    } else {
+                        // Update the last timestamp for this subnet.
+                        let last_timestamp = subnet_update.last().map(|metrics| metrics.timestamp_nanos).expect("Not empty");
+                        self.last_timestamp_per_subnet.borrow_mut().insert(subnet_id.into(), last_timestamp);
 
-                    self.last_timestamp_per_subnet.borrow_mut().insert(subnet_id.into(), last_timestamp);
+                        self.update_nodes_metrics_daily(subnet_id, last_stored_ts, subnet_update);
+                    }
 
-                    // Insert each fetched metric entry into our node metrics map.
-                    nodes_metrics_history.into_iter().for_each(|entry| {
-                        let key = StorableSubnetMetricsKey {
-                            subnet_id,
-                            timestamp_nanos: entry.timestamp_nanos,
-                        };
-                        self.subnets_metrics.borrow_mut().insert(key, StorableSubnetMetrics(entry.node_metrics));
-                    });
-
-                    // Remove the subnet from the retry list if present.
                     self.subnets_to_retry.borrow_mut().remove(&subnet_id.into());
                 }
                 Err((code, msg)) => {
@@ -139,74 +200,33 @@ where
     }
 
     /// Fetches subnets metrics for the specified subnets from their last timestamp.
-    pub fn daily_metrics_by_node(&self, start_ts: TimestampNanos, end_ts: TimestampNanos) -> BTreeMap<NodeId, Vec<NodeDailyMetrics>> {
-        let first_key = StorableSubnetMetricsKey {
+    pub fn daily_metrics_by_node(&self, start_ts: TimestampNanos, end_ts: TimestampNanos) -> BTreeMap<NodeId, Vec<NodeMetricsDaily>> {
+        let first_key = SubnetMetricsStoredKey {
             timestamp_nanos: start_ts,
-            ..StorableSubnetMetricsKey::min_key()
+            ..SubnetMetricsStoredKey::min_key()
         };
-        let last_key = StorableSubnetMetricsKey {
+        let last_key = SubnetMetricsStoredKey {
             timestamp_nanos: end_ts,
-            ..StorableSubnetMetricsKey::max_key()
+            ..SubnetMetricsStoredKey::max_key()
         };
 
-        // Group node metrics by node_id within the given time range
-        let nodes_in_range: HashMap<PrincipalId, Vec<(StorableSubnetMetricsKey, NodeMetrics)>> = self
-            .subnets_metrics
+        // Group node metrics by node_id within the given time range and return its daily metrics.
+        self.subnets_metrics
             .borrow()
-            .range(first_key.clone()..=last_key.clone())
+            .range(first_key..=last_key)
             .flat_map(|(key, value)| value.0.into_iter().map(move |metrics| (key.clone(), metrics)))
-            .into_group_map_by(|(_, metrics)| metrics.node_id);
-
-        // Find the last metric before start_ts for each node
-        let mut first_metrics: HashMap<PrincipalId, Option<NodeMetrics>> = HashMap::new();
-
-        for node_id in nodes_in_range.keys() {
-            let latest_metric_before_start = self
-                .subnets_metrics
-                .borrow()
-                .range(..first_key.clone())
-                .flat_map(|(_, value)| value.0.into_iter())
-                .filter(|m| m.node_id == *node_id)
-                .next_back();
-
-            first_metrics.insert(*node_id, latest_metric_before_start);
-        }
-
-        // Compute daily metrics for each node in range
-        nodes_in_range
+            .into_group_map_by(|(_, metrics)| metrics.node_id)
             .into_iter()
-            .map(|(node_id, entries)| {
-                let initial_counters = first_metrics
-                    .remove(&node_id)
-                    .expect("first metrics key must exist for each node_id")
-                    .map(|init| (init.num_blocks_proposed_total, init.num_block_failures_total))
-                    .unwrap_or((0, 0));
+            .map(|(node_id, daily_metrics_stored)| {
+                let daily_metrics_in_range = daily_metrics_stored
+                    .into_iter()
+                    .sorted_by_key(|(key, _)| key.timestamp_nanos)
+                    .map(|(key, metrics)| {
+                        NodeMetricsDaily::new(key.timestamp_nanos, key.subnet_id, metrics.num_blocks_proposed, metrics.num_blocks_failed)
+                    })
+                    .collect();
 
-                let (daily_metrics, _) = entries.into_iter().fold(
-                    (Vec::new(), initial_counters),
-                    |(mut acc, (prev_proposed, prev_failed)), (key, node_metrics)| {
-                        let current_proposed = node_metrics.num_blocks_proposed_total;
-                        let current_failed = node_metrics.num_block_failures_total;
-
-                        // Ensure counters don't decrease (i.e., reset detection)
-                        let (num_blocks_proposed, num_blocks_failed) = if prev_proposed > current_proposed || prev_failed > current_failed {
-                            (current_proposed, current_failed)
-                        } else {
-                            (current_proposed - prev_proposed, current_failed - prev_failed)
-                        };
-
-                        acc.push(NodeDailyMetrics::new(
-                            key.timestamp_nanos,
-                            key.subnet_id,
-                            num_blocks_proposed,
-                            num_blocks_failed,
-                        ));
-
-                        (acc, (current_proposed, current_failed))
-                    },
-                );
-
-                (NodeId::from(node_id), daily_metrics)
+                (node_id, daily_metrics_in_range)
             })
             .collect()
     }
