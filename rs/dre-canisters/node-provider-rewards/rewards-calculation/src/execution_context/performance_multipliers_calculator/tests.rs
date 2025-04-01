@@ -1,6 +1,6 @@
 use super::*;
 use crate::metrics::{nodes_failure_rates_in_period, subnets_failure_rates, NodeMetricsDaily};
-use crate::reward_period::{RewardPeriod, TimestampNanos, TimestampNanosAtDayEnd, NANOS_PER_DAY};
+use crate::reward_period::{DayEndNanos, RewardPeriod, TimestampNanos, NANOS_PER_DAY};
 use crate::types::RewardableNode;
 use ic_base_types::PrincipalId;
 use itertools::Itertools;
@@ -14,8 +14,8 @@ fn subnet_id(id: u64) -> SubnetId {
     PrincipalId::new_subnet_test_id(id).into()
 }
 
-fn ts_day_end(day: u64) -> TimestampNanos {
-    TimestampNanosAtDayEnd::from(day * NANOS_PER_DAY).get()
+fn ts_day_end(day: u64) -> DayEndNanos {
+    DayEndNanos::from(day * NANOS_PER_DAY)
 }
 
 pub struct FailureRatesBuilder {
@@ -84,7 +84,7 @@ impl FailureRatesBuilder {
         for (day, entries) in self.daily_data.into_iter() {
             for (subnet, node, rate) in entries {
                 let metrics = NodeMetricsDaily {
-                    ts: TimestampNanosAtDayEnd::from(day),
+                    ts: DayEndNanos::from(day),
                     subnet_assigned: subnet,
                     num_blocks_proposed: 0,
                     num_blocks_failed: 0,

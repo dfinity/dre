@@ -5,7 +5,8 @@ load("@rules_rust//rust:defs.bzl", "rust_library", "rust_test")
 package(default_visibility = ["//visibility:public"])
 
 DEPS = [
-    "//rs/node-provider-rewards",
+    "//rs/dre-canisters/node-provider-rewards/rewards-calculation",
+    "//rs/dre-canisters/node-provider-rewards/api",
 ]
 
 MACRO_DEPENDENCIES = [

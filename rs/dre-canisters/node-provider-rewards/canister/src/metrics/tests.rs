@@ -5,7 +5,7 @@ use ic_cdk::api::call::{CallResult, RejectionCode};
 use ic_management_canister_types_private::{NodeMetrics, NodeMetricsHistoryArgs, NodeMetricsHistoryResponse};
 use ic_stable_structures::memory_manager::{MemoryId, VirtualMemory};
 use ic_stable_structures::DefaultMemoryImpl;
-use node_provider_rewards::reward_period::TimestampNanosAtDayEnd;
+use node_provider_rewards::reward_period::DayEndNanos;
 use std::cell::RefCell;
 use std::collections::{BTreeMap, HashMap};
 
@@ -396,7 +396,7 @@ async fn daily_metrics_correct_overlapping_days() {
 
     let overlapping_sub_1 = daily_metrics
         .iter()
-        .find(|daily_metrics| daily_metrics.subnet_assigned == subnet_1 && daily_metrics.ts == TimestampNanosAtDayEnd::from(2 * ONE_DAY_NANOS))
+        .find(|daily_metrics| daily_metrics.subnet_assigned == subnet_1 && daily_metrics.ts == DayEndNanos::from(2 * ONE_DAY_NANOS))
         .unwrap();
 
     assert_eq!(overlapping_sub_1.num_blocks_proposed, 1);
@@ -404,7 +404,7 @@ async fn daily_metrics_correct_overlapping_days() {
 
     let overlapping_sub_2 = daily_metrics
         .iter()
-        .find(|daily_metrics| daily_metrics.subnet_assigned == subnet_2 && daily_metrics.ts == TimestampNanosAtDayEnd::from(2 * ONE_DAY_NANOS))
+        .find(|daily_metrics| daily_metrics.subnet_assigned == subnet_2 && daily_metrics.ts == DayEndNanos::from(2 * ONE_DAY_NANOS))
         .unwrap();
 
     assert_eq!(overlapping_sub_2.num_blocks_proposed, 4);

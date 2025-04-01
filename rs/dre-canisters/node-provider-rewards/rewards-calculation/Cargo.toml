@@ -21,8 +21,6 @@ chrono = { version = "0.4.38", default-features = false, features = [
     "clock",
     "serde",
 ] }
-candid = { workspace = true }
-serde = { workspace = true }
 ic-protobuf = { workspace = true }
 indexmap = { workspace = true }
 

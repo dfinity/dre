@@ -1,5 +1,5 @@
 use super::*;
-use crate::reward_period::{TimestampNanosAtDayEnd, NANOS_PER_DAY};
+use crate::reward_period::{DayEndNanos, NANOS_PER_DAY};
 use ic_base_types::SubnetId;
 use ic_protobuf::registry::node_rewards::v2::{NodeRewardRate, NodeRewardRates};
 use itertools::Itertools;
@@ -188,7 +188,7 @@ impl NPRInputBuilder {
             .iter()
             .enumerate()
             .map(|(i, rate)| NodeMetricsDaily {
-                ts: TimestampNanosAtDayEnd::from(ts_start + i as u64 * NANOS_PER_DAY),
+                ts: DayEndNanos::from(ts_start + i as u64 * NANOS_PER_DAY),
                 subnet_assigned: subnet_id,
                 num_blocks_proposed: 0,
                 num_blocks_failed: 0,
