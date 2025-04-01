@@ -14,6 +14,21 @@ class PrometheusQueryResponse(typing.TypedDict):
     data: PrometheusData
 
 
+# This query retrieves a count per replica version of all assigned nodes
+# plus a count per replica version of all unassigned nodes
+# (both aggregated) so long as the overall ount per replica version is
+# greater than 10 nodes, which means we deem said replica version active.
+ACTIVE_VERSIONS_QUERY = """
+max_over_time(
+  sum by (ic_active_version) (
+    label_replace(count by (ic_active_version) (ic_replica_info), "kind", "assigned", "ic_active_version", ".+")
+    or
+    label_replace(count by (ic_active_version) (ic_orchestrator_info{ic_subnet=""}), "kind", "unassigned", "ic_active_version", ".+")
+  )[1h]
+) > 10
+"""
+
+
 class ICPrometheus:
     """A simple client for querying the Internet Computer's Prometheus instance."""
 
@@ -25,9 +40,7 @@ class ICPrometheus:
         """Return a list of active versions."""
         versions = [
             r["metric"]["ic_active_version"]
-            for r in self.query(
-                'max_over_time((count by (ic_active_version) (ic_replica_info or topk(1, ic_orchestrator_info{ic_subnet=""})))[1h])'
-            )["data"]["result"]
+            for r in self.query(ACTIVE_VERSIONS_QUERY)["data"]["result"]
         ]
         if not versions:
             raise Exception("expected at least one active version")
