@@ -3,9 +3,9 @@ use candid::candid_method;
 use ic_canisters_http_types::{HttpRequest, HttpResponse, HttpResponseBuilder};
 use ic_cdk_macros::*;
 use ic_nervous_system_common::serve_metrics;
-use node_provider_rewards::calculate_rewards;
-use node_provider_rewards::reward_period::RewardPeriod;
 use node_provider_rewards_api::endpoints::{RewardPeriodArgs, RewardsPerNodeProviderResponse};
+use rewards_calculation::calculate_rewards;
+use rewards_calculation::reward_period::RewardPeriod;
 use rust_decimal::prelude::ToPrimitive;
 use std::cell::RefCell;
 

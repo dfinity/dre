@@ -5,7 +5,7 @@ use ic_cdk::api::call::{CallResult, RejectionCode};
 use ic_management_canister_types_private::{NodeMetrics, NodeMetricsHistoryArgs, NodeMetricsHistoryResponse};
 use ic_stable_structures::memory_manager::{MemoryId, VirtualMemory};
 use ic_stable_structures::DefaultMemoryImpl;
-use node_provider_rewards::reward_period::DayEndNanos;
+use rewards_calculation::reward_period::DayEndNanos;
 use std::cell::RefCell;
 use std::collections::{BTreeMap, HashMap};
 
