@@ -248,14 +248,14 @@ class Reconciler:
         active_versions = self.ic_prometheus.active_versions()
         logger = LOGGER.getChild("reconciler")
 
+        oar = oldest_active_release(config, active_versions)
+
         logger.info(
             "GuestOS versions active on subnets or unassigned nodes: %s",
             ", ".join(active_versions),
         )
-        releases = config.root.releases[
-            : config.root.releases.index(oldest_active_release(config, active_versions))
-            + 1
-        ]
+        logger.info("Oldest active release: %s", oar.rc_name)
+        releases = config.root.releases[: config.root.releases.index(oar) + 1]
         if releases:
             logger.info("Dealing with the following releases:")
             for idx, rc in enumerate(releases):
