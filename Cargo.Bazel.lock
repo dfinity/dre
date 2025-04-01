@@ -1,5 +1,5 @@
 {
-  "checksum": "5f7f5e716cf0d061f36446a63a704d77fb0c6151f26ca6221bd43a4997a61c51",
+  "checksum": "34097ca50e15a81e3fdba144fe7c424fb111d24be17ae2d11b3bc0d8cf8cf5c6",
   "crates": {
     "actix-codec 0.5.2": {
       "name": "actix-codec",
@@ -35798,15 +35798,15 @@
       ],
       "license_file": "LICENSE"
     },
-    "node-provider-rewards 0.6.2": {
-      "name": "node-provider-rewards",
+    "node-provider-rewards-api 0.6.2": {
+      "name": "node-provider-rewards-api",
       "version": "0.6.2",
       "package_url": null,
       "repository": null,
       "targets": [
         {
           "Library": {
-            "crate_name": "node_provider_rewards",
+            "crate_name": "node_provider_rewards_api",
             "crate_root": "src/lib.rs",
             "srcs": {
               "allow_empty": true,
@@ -35817,7 +35817,7 @@
           }
         }
       ],
-      "library_target_name": "node_provider_rewards",
+      "library_target_name": "node_provider_rewards_api",
       "common_attrs": {
         "compile_data_glob": [
           "**"
@@ -35829,62 +35829,13 @@
               "target": "candid"
             },
             {
-              "id": "chrono 0.4.40",
-              "target": "chrono"
-            },
-            {
-              "id": "ic-base-types 0.9.0",
-              "target": "ic_base_types"
-            },
-            {
-              "id": "ic-cdk 0.17.1",
-              "target": "ic_cdk"
-            },
-            {
-              "id": "ic-protobuf 0.9.0",
-              "target": "ic_protobuf"
-            },
-            {
-              "id": "ic-types 0.9.0",
-              "target": "ic_types"
-            },
-            {
-              "id": "indexmap 2.8.0",
-              "target": "indexmap"
-            },
-            {
-              "id": "itertools 0.13.0",
-              "target": "itertools"
-            },
-            {
-              "id": "num-traits 0.2.19",
-              "target": "num_traits"
-            },
-            {
-              "id": "rust_decimal 1.37.1",
-              "target": "rust_decimal"
-            },
-            {
               "id": "serde 1.0.219",
               "target": "serde"
-            },
-            {
-              "id": "tabled 0.18.0",
-              "target": "tabled"
             }
           ],
           "selects": {}
         },
         "edition": "2021",
-        "proc_macro_deps": {
-          "common": [
-            {
-              "id": "rust_decimal_macros 1.37.1",
-              "target": "rust_decimal_macros"
-            }
-          ],
-          "selects": {}
-        },
         "version": "0.6.2"
       },
       "license": "Apache-2.0",
@@ -35998,10 +35949,6 @@
             {
               "id": "node-provider-rewards-canister 0.6.2",
               "target": "build_script_build"
-            },
-            {
-              "id": "prost 0.13.5",
-              "target": "prost"
             },
             {
               "id": "rust_decimal 1.37.1",
@@ -45070,6 +45017,93 @@
         "MIT"
       ],
       "license_file": "LICENSE"
+    },
+    "rewards-calculation 0.6.2": {
+      "name": "rewards-calculation",
+      "version": "0.6.2",
+      "package_url": null,
+      "repository": null,
+      "targets": [
+        {
+          "Library": {
+            "crate_name": "rewards_calculation",
+            "crate_root": "src/lib.rs",
+            "srcs": {
+              "allow_empty": true,
+              "include": [
+                "**/*.rs"
+              ]
+            }
+          }
+        }
+      ],
+      "library_target_name": "rewards_calculation",
+      "common_attrs": {
+        "compile_data_glob": [
+          "**"
+        ],
+        "deps": {
+          "common": [
+            {
+              "id": "chrono 0.4.40",
+              "target": "chrono"
+            },
+            {
+              "id": "ic-base-types 0.9.0",
+              "target": "ic_base_types"
+            },
+            {
+              "id": "ic-cdk 0.17.1",
+              "target": "ic_cdk"
+            },
+            {
+              "id": "ic-protobuf 0.9.0",
+              "target": "ic_protobuf"
+            },
+            {
+              "id": "ic-types 0.9.0",
+              "target": "ic_types"
+            },
+            {
+              "id": "indexmap 2.8.0",
+              "target": "indexmap"
+            },
+            {
+              "id": "itertools 0.13.0",
+              "target": "itertools"
+            },
+            {
+              "id": "num-traits 0.2.19",
+              "target": "num_traits"
+            },
+            {
+              "id": "rust_decimal 1.37.1",
+              "target": "rust_decimal"
+            },
+            {
+              "id": "tabled 0.18.0",
+              "target": "tabled"
+            }
+          ],
+          "selects": {}
+        },
+        "edition": "2021",
+        "proc_macro_deps": {
+          "common": [
+            {
+              "id": "rust_decimal_macros 1.37.1",
+              "target": "rust_decimal_macros"
+            }
+          ],
+          "selects": {}
+        },
+        "version": "0.6.2"
+      },
+      "license": "Apache-2.0",
+      "license_ids": [
+        "Apache-2.0"
+      ],
+      "license_file": null
     },
     "rfc6979 0.4.0": {
       "name": "rfc6979",
@@ -61701,11 +61735,12 @@
     "multiservice-discovery 0.6.2": "rs/ic-observability/multiservice-discovery",
     "multiservice-discovery-downloader 0.6.2": "rs/ic-observability/multiservice-discovery-downloader",
     "multiservice-discovery-shared 0.6.2": "rs/ic-observability/multiservice-discovery-shared",
-    "node-provider-rewards 0.6.2": "rs/node-provider-rewards",
-    "node-provider-rewards-canister 0.6.2": "rs/dre-canisters/node-provider-rewards",
+    "node-provider-rewards-api 0.6.2": "rs/dre-canisters/node-provider-rewards/canister/api",
+    "node-provider-rewards-canister 0.6.2": "rs/dre-canisters/node-provider-rewards/canister",
     "node-status-updater 0.6.2": "rs/ic-observability/node-status-updater",
     "obs-canister-clients 0.6.2": "rs/ic-observability/obs-canister-clients",
     "prometheus-config-updater 0.6.2": "rs/ic-observability/prometheus-config-updater",
+    "rewards-calculation 0.6.2": "rs/dre-canisters/node-provider-rewards/rewards-calculation",
     "service-discovery 0.6.2": "rs/ic-observability/service-discovery",
     "slack-notifications 0.6.2": "rs/slack-notifications",
     "sns-downloader 0.6.2": "rs/ic-observability/sns-downloader",

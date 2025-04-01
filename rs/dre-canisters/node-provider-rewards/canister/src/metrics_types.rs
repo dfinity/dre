@@ -1,8 +1,8 @@
-use crate::metrics::TimestampNanos;
 use candid::{CandidType, Decode, Encode, Principal};
 use ic_base_types::{NodeId, PrincipalId, SubnetId};
 use ic_stable_structures::storable::Bound;
 use ic_stable_structures::Storable;
+use rewards_calculation::reward_period::TimestampNanos;
 use serde::Deserialize;
 use std::borrow::Cow;
 

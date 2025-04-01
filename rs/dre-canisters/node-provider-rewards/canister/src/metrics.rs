@@ -6,12 +6,12 @@ use ic_cdk::api::call::CallResult;
 use ic_management_canister_types_private::{NodeMetricsHistoryArgs, NodeMetricsHistoryResponse};
 use ic_stable_structures::StableBTreeMap;
 use itertools::Itertools;
-use node_provider_rewards::metrics::NodeMetricsDaily;
+use rewards_calculation::metrics::NodeMetricsDaily;
+use rewards_calculation::reward_period::TimestampNanos;
 use std::cell::RefCell;
 use std::collections::{BTreeMap, HashMap};
 
 pub type RetryCount = u64;
-pub type TimestampNanos = u64;
 
 #[async_trait]
 pub trait ManagementCanisterClient {

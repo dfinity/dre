@@ -12,8 +12,8 @@ use ic_registry_keys::{
 };
 use ic_types::registry::RegistryClientError;
 use indexmap::IndexMap;
-use node_provider_rewards::reward_period::TimestampNanos;
-use node_provider_rewards::types::RewardableNode;
+use rewards_calculation::reward_period::TimestampNanos;
+use rewards_calculation::types::RewardableNode;
 use std::collections::btree_map::Entry;
 use std::collections::BTreeMap;
 use std::str::FromStr;

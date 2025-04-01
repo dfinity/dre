@@ -6152,22 +6152,11 @@ dependencies = [
 ]
 
 [[package]]
-name = "node-provider-rewards"
+name = "node-provider-rewards-api"
 version = "0.6.2"
 dependencies = [
  "candid",
- "chrono",
- "ic-base-types",
- "ic-cdk 0.17.1 (git+https://github.com/dfinity/cdk-rs.git?rev=929fd0b31e9ec69aad7cf6285df0394f25fe1815)",
- "ic-protobuf",
- "ic-types",
- "indexmap 2.8.0",
- "itertools 0.13.0",
- "num-traits",
- "rust_decimal",
- "rust_decimal_macros",
  "serde",
- "tabled",
 ]
 
 [[package]]
@@ -6195,8 +6184,8 @@ dependencies = [
  "indexmap 2.8.0",
  "itertools 0.13.0",
  "mockall",
- "node-provider-rewards",
- "prost",
+ "node-provider-rewards-api",
+ "rewards-calculation",
  "rust_decimal",
  "serde",
  "tokio",
@@ -7481,6 +7470,23 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9166d72162de3575f950507683fac47e30f6f2c3836b71b7fbc61aa517c9c5f4"
 dependencies = [
  "rand 0.8.5",
+]
+
+[[package]]
+name = "rewards-calculation"
+version = "0.6.2"
+dependencies = [
+ "chrono",
+ "ic-base-types",
+ "ic-cdk 0.17.1 (git+https://github.com/dfinity/cdk-rs.git?rev=929fd0b31e9ec69aad7cf6285df0394f25fe1815)",
+ "ic-protobuf",
+ "ic-types",
+ "indexmap 2.8.0",
+ "itertools 0.13.0",
+ "num-traits",
+ "rust_decimal",
+ "rust_decimal_macros",
+ "tabled",
 ]
 
 [[package]]
