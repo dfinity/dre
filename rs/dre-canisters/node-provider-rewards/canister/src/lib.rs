@@ -1,5 +1,5 @@
 use crate::storage::{METRICS_MANAGER, REGISTRY_STORE};
-use candid::candid_method;
+use candid::{candid_method, Encode};
 use ic_base_types::{NodeId, PrincipalId};
 use ic_canisters_http_types::{HttpRequest, HttpResponse, HttpResponseBuilder};
 use ic_cdk_macros::*;
@@ -12,9 +12,8 @@ use rewards_calculation::calculate_rewards;
 use rewards_calculation::metrics::NodeMetricsDaily;
 use rewards_calculation::reward_period::RewardPeriod;
 use rewards_calculation::types::RewardableNode;
-use rust_decimal::prelude::ToPrimitive;
 use std::cell::RefCell;
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, HashSet};
 
 mod metrics;
 mod metrics_types;
@@ -205,8 +204,8 @@ impl RewardsCalculationInput {
     }
 }
 
-#[update]
-#[candid_method(update)]
+#[query]
+#[candid_method(query)]
 fn get_node_providers_xdr_rewards_total(args: RewardPeriodArgs) -> Result<NodeProvidersRewardsXDRTotal, String> {
     let RewardsCalculationInput {
         reward_period,
@@ -214,10 +213,19 @@ fn get_node_providers_xdr_rewards_total(args: RewardPeriodArgs) -> Result<NodePr
         daily_metrics_by_node,
         rewardable_nodes,
     } = RewardsCalculationInput::get_node_providers_xdr_rewards_total_input(args)?;
-    let result = calculate_rewards(&reward_period, &rewards_table, &daily_metrics_by_node, &rewardable_nodes)
-        .map_err(|e| format!("Error calculating rewards: {}", e))?;
 
-    Ok(result.into())
+    // Workaround till registry versions ready
+    let nodes_in_registry: HashSet<NodeId> = rewardable_nodes.iter().map(|n| n.node_id).collect();
+    let daily_metrics_by_node = daily_metrics_by_node.into_iter().filter(|(n, _)| nodes_in_registry.contains(n)).collect();
+
+    let result = calculate_rewards(&reward_period, &rewards_table, &daily_metrics_by_node, &rewardable_nodes)
+        .map_err(|e| format!("Error calculating rewards: {}", e))?
+        .into();
+
+    ic_cdk::println!("instruction count: {:?}", ic_cdk::api::instruction_counter());
+    ic_cdk::println!("size count: {:?}", Encode!(&result).unwrap().len());
+
+    Ok(result)
 }
 
 #[update]
@@ -230,7 +238,11 @@ fn get_node_provider_rewards_calculation(args: NodeProviderRewardsCalculationArg
         rewardable_nodes,
     } = RewardsCalculationInput::get_node_provider_rewards_calculation_input(args.reward_period, args.provider_id)?;
     let result = calculate_rewards(&reward_period, &rewards_table, &daily_metrics_by_node, &rewardable_nodes)
-        .map_err(|e| format!("Error calculating rewards: {}", e))?;
+        .map_err(|e| format!("Error calculating rewards: {}", e))?
+        .into();
 
-    Ok(result.into())
+    ic_cdk::println!("instruction count: {:?}", ic_cdk::api::instruction_counter());
+    ic_cdk::println!("size count: {:?}", Encode!(&result).unwrap().len());
+
+    Ok(result)
 }

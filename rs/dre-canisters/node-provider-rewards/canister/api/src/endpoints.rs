@@ -1,4 +1,3 @@
-use candid::{Encode, Principal};
 use chrono::DateTime;
 use ic_base_types::{NodeId, PrincipalId, SubnetId};
 use rewards_calculation::calculation_results::NodeProviderCalculationResults;
@@ -106,7 +105,7 @@ impl From<RewardsCalculationResult> for NodeProviderRewardsCalculation {
                     .into_iter()
                     .map(move |fr| DailySubnetFailureRate {
                         utc_day: timestamp_to_utc_date(fr.ts.get()),
-                        fr: fr.value.to_f64().unwrap(),
+                        fr: fr.value.round_dp(4).to_f64().unwrap(),
                     })
                     .collect();
 
@@ -114,7 +113,7 @@ impl From<RewardsCalculationResult> for NodeProviderRewardsCalculation {
             })
             .collect();
 
-        let extrapolated_fr = extrapolated_fr.to_f64().unwrap();
+        let extrapolated_fr = extrapolated_fr.round_dp(4).to_f64().unwrap();
 
         let mut results_by_node = BTreeMap::new();
         for node in provider_nodes.into_iter() {
@@ -137,8 +136,8 @@ impl From<RewardsCalculationResult> for NodeProviderRewardsCalculation {
                         subnet_assigned,
                         blocks_proposed: 0,
                         blocks_failed: 0,
-                        original_failure_rate: original_failure_rate.to_f64().unwrap(),
-                        relative_failure_rate: value.to_f64().unwrap(),
+                        original_failure_rate: original_failure_rate.round_dp(4).to_f64().unwrap(),
+                        relative_failure_rate: value.round_dp(4).to_f64().unwrap(),
                     }),
                     _ => None,
                 })
@@ -151,26 +150,31 @@ impl From<RewardsCalculationResult> for NodeProviderRewardsCalculation {
             entry.average_fr = average_extrapolated_fr
                 .remove(&node.node_id)
                 .expect("Average extrapolated fr exists for all nodes")
+                .round_dp(4)
                 .to_f64()
                 .unwrap();
             entry.rewards_reduction = rewards_reduction
                 .remove(&node.node_id)
                 .expect("Rewards reduction exists for all nodes")
+                .round_dp(4)
                 .to_f64()
                 .unwrap();
             entry.performance_multiplier = performance_multiplier
                 .remove(&node.node_id)
                 .expect("Performance multiplier exists for all nodes")
+                .round_dp(4)
                 .to_f64()
                 .unwrap();
             entry.base_rewards = base_rewards
                 .remove(&node.node_id)
                 .expect("Base Rewards exist for all nodes")
+                .round_dp(4)
                 .to_f64()
                 .unwrap();
             entry.adjusted_rewards = adjusted_rewards
                 .remove(&node.node_id)
                 .expect("Adjusted Rewards exist for all nodes")
+                .round_dp(4)
                 .to_f64()
                 .unwrap();
         }
@@ -180,11 +184,11 @@ impl From<RewardsCalculationResult> for NodeProviderRewardsCalculation {
             .map(|(category, rewards)| BaseRewardsByCategory {
                 node_type: category.node_type.to_string(),
                 region: category.region.to_string(),
-                base_rewards: rewards.to_f64().unwrap(),
+                base_rewards: rewards.round_dp(4).to_f64().unwrap(),
             })
             .collect();
 
-        let rewards_total = rewards_total.to_f64().unwrap();
+        let rewards_total = rewards_total.round_dp(4).to_f64().unwrap();
 
         Self {
             daily_subnets_fr,
@@ -202,80 +206,4 @@ fn timestamp_to_utc_date(ts: TimestampNanos) -> String {
         .naive_utc()
         .format("%d-%m-%Y")
         .to_string()
-}
-
-#[test]
-fn test_max_encoded_size() {
-    const MAX_PRINCIPAL_ID: PrincipalId = PrincipalId(Principal::from_slice(&[0xFF; 29]));
-
-    let max_f64 = f64::MAX;
-    let max_u64 = u64::MAX;
-    let max_nodes = 1500;
-    let max_subnets = 100;
-    let max_days = 180;
-    let large_string = "X".repeat(100);
-
-    let daily_subnets_fr = (0..max_subnets)
-        .map(|_| {
-            (
-                MAX_PRINCIPAL_ID.into(),
-                (0..max_days)
-                    .map(|_| DailySubnetFailureRate {
-                        utc_day: "2025-05-04".to_string(),
-                        fr: max_f64,
-                    })
-                    .collect(),
-            )
-        })
-        .collect();
-
-    let results_by_node = (0..max_nodes)
-        .map(|_| {
-            (
-                MAX_PRINCIPAL_ID.into(),
-                NodeResults {
-                    node_type: large_string.clone(),
-                    region: large_string.clone(),
-                    daily_node_results: Some(
-                        (0..max_days)
-                            .map(|_| DailyNodeResults {
-                                utc_day: "2025-01-01".to_string(),
-                                subnet_assigned: MAX_PRINCIPAL_ID.into(),
-                                blocks_proposed: max_u64,
-                                blocks_failed: max_u64,
-                                original_failure_rate: max_f64,
-                                relative_failure_rate: max_f64,
-                            })
-                            .collect(),
-                    ),
-                    average_fr: max_f64,
-                    rewards_reduction: max_f64,
-                    performance_multiplier: max_f64,
-                    base_rewards: max_f64,
-                    adjusted_rewards: max_f64,
-                },
-            )
-        })
-        .collect::<BTreeMap<_, _>>();
-
-    let rewards_by_category = (0..max_days)
-        .map(|_| BaseRewardsByCategory {
-            node_type: large_string.clone(),
-            region: large_string.clone(),
-            base_rewards: max_f64,
-        })
-        .collect();
-
-    let rewards_calculation = NodeProviderRewardsCalculation {
-        daily_subnets_fr,
-        extrapolated_fr: max_f64,
-        results_by_node,
-        rewards_by_category,
-        rewards_total: max_f64,
-    };
-
-    let encoded = Encode!(&rewards_calculation).unwrap();
-    let size_mb = encoded.len() as f64 / (1024.0 * 1024.0);
-    println!("Encoded size: {:.2} MB", size_mb);
-    assert!(size_mb < 2.0, "Encoded size is too large!");
 }

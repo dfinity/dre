@@ -1,14 +1,9 @@
-type PrincipalId = text;
+type PrincipalId = principal;
 type SubnetId = PrincipalId;
 type NodeId = PrincipalId;
 
 type NodeProvidersRewardsXDRTotal = record {
   rewards_per_provider : vec record { PrincipalId; nat64 };
-};
-
-type GetNodeProvidersMonthlyXdrRewardsResponse = variant {
-  Ok : NodeProvidersRewardsXDRTotal;
-  Err : text;
 };
 
 type RewardPeriodArgs = record {
@@ -60,8 +55,18 @@ type NodeProviderRewardsCalculation = record {
     rewards_total: float64;
 };
 
+type GetNodeProviderRewardsCalculationResponse = variant {
+  Ok : NodeProviderRewardsCalculation;
+  Err : text;
+};
+
+type GetNodeProvidersMonthlyXdrRewardsResponse = variant {
+  Ok : NodeProvidersRewardsXDRTotal;
+  Err : text;
+};
+
 
 service : {
     get_node_providers_xdr_rewards_total : (RewardPeriodArgs) -> (GetNodeProvidersMonthlyXdrRewardsResponse);
-    get_node_provider_rewards_calculation : (NodeProviderRewardsCalculationArgs) -> (GetNodeProvidersMonthlyXdrRewardsResponse);
+    get_node_provider_rewards_calculation : (NodeProviderRewardsCalculationArgs) -> (GetNodeProviderRewardsCalculationResponse);
 }
