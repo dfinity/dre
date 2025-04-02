@@ -223,9 +223,6 @@ fn get_node_providers_rewards_xdr_total(args: RewardPeriodArgs) -> Result<NodePr
         .map_err(|e| format!("Error calculating rewards: {}", e))?
         .into();
 
-    ic_cdk::println!("instruction count: {:?}", ic_cdk::api::instruction_counter());
-    ic_cdk::println!("size count: {:?}", Encode!(&result).unwrap().len());
-
     Ok(result)
 }
 
@@ -241,9 +238,6 @@ fn get_node_provider_rewards_calculation(args: NodeProviderRewardsCalculationArg
     let result = calculate_rewards(&reward_period, &rewards_table, &daily_metrics_by_node, &rewardable_nodes)
         .map_err(|e| format!("Error calculating rewards: {}", e))?
         .into();
-
-    ic_cdk::println!("instruction count: {:?}", ic_cdk::api::instruction_counter());
-    ic_cdk::println!("size count: {:?}", Encode!(&result).unwrap().len());
 
     Ok(result)
 }

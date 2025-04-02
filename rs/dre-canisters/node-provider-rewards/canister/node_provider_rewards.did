@@ -3,14 +3,14 @@ type SubnetId = PrincipalId;
 type NodeId = PrincipalId;
 
 type NodeProvidersRewardsXDRTotal = record {
-// Total rewards in XDR for all providers
+  // Total rewards in XDR for all providers
   rewards_per_provider : vec record { PrincipalId; nat64 };
 };
 
 type RewardPeriodArgs = record {
-// First timestamp of the day in nanoseconds
+  // First timestamp of the day in nanoseconds
   start_ts : nat64;
-// Last timestamp of the day in nanoseconds
+  // Last timestamp of the day in nanoseconds
   end_ts : nat64;
 };
 
