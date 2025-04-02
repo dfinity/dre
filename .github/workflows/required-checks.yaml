@@ -16,6 +16,17 @@ jobs:
     # This image is based on ubuntu:20.04
     container: ghcr.io/dfinity/dre/actions-runner:6413f2909a49329ecbf5371ee7ddf07a9799b625
     steps:
-      - name: "Verify everything worked"
-        run: |
-          echo Required actions completed >&2
+      - name: Wait for bazel to succeed
+        uses: lewagon/wait-on-check-action@v1.3.4
+        with:
+          ref: ${{ github.ref }}
+          check-name: bazel
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+          wait-interval: 10
+      - name: Wait for Release controller pipeline to succeed
+        uses: lewagon/wait-on-check-action@v1.3.4
+        with:
+          ref: ${{ github.ref }}
+          check-name: bazel-release-controller
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+          wait-interval: 10
