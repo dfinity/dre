@@ -15,30 +15,10 @@ jobs:
     name: Wait for required jobs to complete or be skipped
     runs-on: ubuntu-latest
     steps:
-      - name: Create GitHub App Token
-        uses: actions/create-github-app-token@v1
-        id: app-token
-        with:
-          app-id: ${{ vars.PR_AUTOMATION_BOT_PUBLIC_APP_ID }}
-          private-key: ${{ secrets.PR_AUTOMATION_BOT_PUBLIC_PRIVATE_KEY }}
-      - name: abc
-        env:
-          GITHUB_TOKEN: "${{ steps.app-token.outputs.token }}"
-          REF: "${{ github.ref }}"
-        run: |
-          set -x
-          curl -u "username:$GITHUB_TOKEN" https://api.github.com/repos/dfinity/dre/commits/$REF/check-runs
-      - name: Wait for release controller pipeline
+      - name: Wait for running jobs
         uses: lewagon/wait-on-check-action@v1.3.4
         with:
           ref: ${{ github.ref }}
-          check-name: Release controller pipeline
-          repo-token: "${{ steps.app-token.outputs.token }}"
-          wait-interval: 10
-      - name: Wait for build and test
-        uses: lewagon/wait-on-check-action@v1.3.4
-        with:
-          ref: ${{ github.ref }}
-          check-name: Build and test pipeline
-          repo-token: "${{ steps.app-token.outputs.token }}"
+          running-workflow-name: Wait for required jobs to complete or be skipped
+          repo-token: "${{ secrets.GITHUB_TOKEN }}"
           wait-interval: 10
