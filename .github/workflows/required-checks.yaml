@@ -1,0 +1,21 @@
+name: Required checks
+on:
+  workflow_run:
+    workflows: ["Build and test", "Release controller"]
+    types:
+      - completed
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    runs-on:
+      labels: dre-runner-custom
+    # This image is based on ubuntu:20.04
+    container: ghcr.io/dfinity/dre/actions-runner:6413f2909a49329ecbf5371ee7ddf07a9799b625
+    steps:
+      - name: "Verify everything worked"
+        run: |
+          echo Required actions completed >&2
