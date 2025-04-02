@@ -72,9 +72,10 @@ jobs:
           set -e
           t=$(mktemp) ; t2=$(mktemp) ; trap 'rm -f "$t" "$t2"' EXIT
           bazel query "//release-controller/... except attr(tags, 'manual', //...) except attr(name, '.*oci_image.*', //release-controller/...)" > "$t"
+          if [ "$(stat -c %s "$t")" == "0" ] ; then echo No testing targets found >&2 ; exit 0 ; fi
           set -x
           r=0
-          bazel test --target_pattern_file="$t" --config=ci --test_env=HOME=/home/runner --explain="$t2" --verbose_explanations || r=?
+          bazel test --target_pattern_file="$t" --config=ci --test_env=HOME=/home/runner --explain="$t2" --verbose_explanations || r=$?
           #echo === Explanations === >&2
           #cat "$t2" >&2
           #echo == /Explanations === >&2
