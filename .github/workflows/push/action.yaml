@@ -1,0 +1,49 @@
+name: Push OCI containers
+description: Reusable action for pushing containers with bazel
+
+inputs:
+  spec:
+    description: "Bazel query specification returning what targets to push"
+    required: false
+    default: >-
+      kind("oci_push", ...)'
+  push-token:
+    description: "The token required to push OCI images"
+    required: true
+
+outputs:
+  pushed:
+    description: Whether any OCI containers were pushed
+    value: ${{ steps.push.outputs.pushed }}
+
+runs:
+  using: composite
+  steps:
+    - id: login
+      name: "🔧 Login to GitHub Container Registry"
+      if: ${{ github.ref == 'refs/heads/main' }}
+      uses: docker/login-action@v3
+      with:
+        registry: ghcr.io
+        username: ${{ github.actor }}
+        password: ${{ inputs.push-token }}
+    - id: push
+      name: "📦 Push images to GitHub Container Registry"
+      shell: bash
+      env:
+        SPEC: ${{ inputs.spec }}
+      run: |
+        set -ex -o pipefail
+        t=$(mktemp) ; trap 'rm -f "$t"' EXIT
+        bazel query --noshow_progress "$SPEC" \
+          | xargs -I_target bazel run --test_env=HOME=/home/runner _target -- --tag ${GITHUB_SHA} | tee "$t" >&2
+        if grep -q 'pushed blob' "$t"
+        then
+          echo "pushed=true" >> $GITHUB_OUTPUT
+          echo "## Container images" >> $GITHUB_STEP_SUMMARY
+          echo >> $GITHUB_STEP_SUMMARY
+          echo Containers matching expression '`'"$SPEC"'`' were pushed to the container registry. >> $GITHUB_STEP_SUMMARY
+          echo >> $GITHUB_STEP_SUMMARY
+        else
+          echo "pushed=false" >> $GITHUB_OUTPUT
+        fi
