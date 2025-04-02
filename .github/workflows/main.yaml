@@ -24,6 +24,7 @@ concurrency:
 
 jobs:
   bazel:
+    name: Build and test pipeline
     runs-on:
       labels: dre-runner-custom
     # This image is based on ubuntu:20.04
