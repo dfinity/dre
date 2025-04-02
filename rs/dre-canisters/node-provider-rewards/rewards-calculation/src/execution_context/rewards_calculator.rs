@@ -1,5 +1,6 @@
 use crate::calculation_results::NodeProviderCalculationResults;
 use crate::execution_context::{avg, ExecutionState, RewardsTotalComputed};
+use crate::reward_period::RewardPeriod;
 use crate::types::{NodeCategory, RewardableNode};
 use ic_protobuf::registry::node_rewards::v2::NodeRewardsTable;
 use itertools::Itertools;
@@ -42,6 +43,7 @@ fn nodes_count_by_category(rewardable_nodes: &[RewardableNode]) -> HashMap<NodeC
 }
 
 pub(super) struct RewardsCalculatorContext<'a, T: ExecutionState> {
+    pub(super) reward_period: &'a RewardPeriod,
     pub(super) rewards_table: &'a NodeRewardsTable,
     pub(super) provider_nodes: Vec<RewardableNode>,
     pub(super) calculation_results: NodeProviderCalculationResults,
@@ -51,6 +53,7 @@ pub(super) struct RewardsCalculatorContext<'a, T: ExecutionState> {
 impl<'a, T: ExecutionState> RewardsCalculatorContext<'a, T> {
     fn transition<S: ExecutionState>(self) -> RewardsCalculatorContext<'a, S> {
         RewardsCalculatorContext {
+            reward_period: self.reward_period,
             rewards_table: self.rewards_table,
             provider_nodes: self.provider_nodes,
             calculation_results: self.calculation_results,

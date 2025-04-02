@@ -2,6 +2,7 @@ use crate::calculation_results::NodeProviderCalculationResults;
 use crate::execution_context::performance_multipliers_calculator::{PerformanceCalculatorContext, StartPerformanceCalculator};
 use crate::execution_context::rewards_calculator::{RewardsCalculatorContext, StartRewardsCalculator};
 use crate::metrics::{NodeDailyFailureRate, SubnetDailyFailureRate};
+use crate::reward_period::RewardPeriod;
 use crate::types::RewardableNode;
 use ic_base_types::{NodeId, SubnetId};
 use ic_protobuf::registry::node_rewards::v2::NodeRewardsTable;
@@ -17,20 +18,22 @@ pub fn avg(values: &[Decimal]) -> Decimal {
     values.iter().sum::<Decimal>() / Decimal::from(values.len().max(1))
 }
 
-#[derive(Default)]
 pub struct ExecutionContext {
     pub subnets_fr: BTreeMap<SubnetId, Vec<SubnetDailyFailureRate>>,
+    reward_period: RewardPeriod,
     nodes_fr: BTreeMap<NodeId, Vec<NodeDailyFailureRate>>,
     rewards_table: NodeRewardsTable,
 }
 
 impl ExecutionContext {
     pub fn new(
+        reward_period: RewardPeriod,
         nodes_fr: BTreeMap<NodeId, Vec<NodeDailyFailureRate>>,
         subnets_fr: BTreeMap<SubnetId, Vec<SubnetDailyFailureRate>>,
         rewards_table: NodeRewardsTable,
     ) -> Self {
         ExecutionContext {
+            reward_period,
             nodes_fr,
             subnets_fr,
             rewards_table,
@@ -59,6 +62,7 @@ impl ExecutionContext {
 
         // Rewards Calculation.
         let ctx: RewardsCalculatorContext<StartRewardsCalculator> = RewardsCalculatorContext {
+            reward_period: &self.reward_period,
             rewards_table: &self.rewards_table,
             provider_nodes,
             calculation_results,
