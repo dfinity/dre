@@ -17,7 +17,7 @@ jobs:
       labels: dre-runner-custom
     # This image is based on ubuntu:20.04
     container: ghcr.io/dfinity/dre/actions-runner:6413f2909a49329ecbf5371ee7ddf07a9799b625
-    name: Release index checks
+    name: Check changed release index files
     steps:
       - uses: actions/checkout@v4
       - name: Run checks for release index
