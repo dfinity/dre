@@ -8,12 +8,14 @@ on:
       - "replica-releases/**"
       - "release-controller/**"
       - "node-labels/**"
+      - "facts-db/**"
   pull_request:
     paths-ignore:
       - "release-index.yaml"
       - "replica-releases/**"
       - "release-controller/**"
       - "node-labels/**"
+      - "facts-db/**"
   workflow_dispatch:
 
 concurrency:
