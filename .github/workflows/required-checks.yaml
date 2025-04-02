@@ -21,15 +21,23 @@ jobs:
         with:
           app-id: ${{ vars.PR_AUTOMATION_BOT_PUBLIC_APP_ID }}
           private-key: ${{ secrets.PR_AUTOMATION_BOT_PUBLIC_PRIVATE_KEY }}
+      - name: abc
+        env:
+          GITHUB_TOKEN: "${{ steps.app-token.outputs.token }}"
+          REF: "${{ github.ref }}"
+        run: |
+          curl -u "username:$GITHUB_TOKEN" https://api.github.com/repos/dfinity/dre/commits/$REF/check-runs
       - name: Wait for release controller pipeline
         uses: lewagon/wait-on-check-action@v1.3.4
         with:
           ref: ${{ github.ref }}
+          check-name: Release controller pipeline
           repo-token: "${{ steps.app-token.outputs.token }}"
           wait-interval: 10
       - name: Wait for build and test
         uses: lewagon/wait-on-check-action@v1.3.4
         with:
           ref: ${{ github.ref }}
+          check-name: Build and test pipeline
           repo-token: "${{ steps.app-token.outputs.token }}"
           wait-interval: 10
