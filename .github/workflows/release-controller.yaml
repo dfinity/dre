@@ -9,6 +9,7 @@ on:
       - pyproject.toml
       - "*.bazel"
       - bazel/**
+      - tools/**
       - .github/**
   pull_request:
     paths:
@@ -17,6 +18,7 @@ on:
       - pyproject.toml
       - "*.bazel"
       - bazel/**
+      - tools/**
       - .github/**
   workflow_dispatch:
 
