@@ -7,6 +7,9 @@ inputs:
     required: false
     default: >-
       kind("oci_push", ...)'
+  push-token:
+    description: "The token required to push OCI images"
+    required: true
 
 outputs:
   pushed:
@@ -23,7 +26,7 @@ runs:
       with:
         registry: ghcr.io
         username: ${{ github.actor }}
-        password: ${{ secrets.GITHUB_TOKEN }}
+        password: ${{ inputs.push-token }}
     - id: push
       name: "📦 Push images to GitHub Container Registry"
       shell: bash

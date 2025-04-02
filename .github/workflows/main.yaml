@@ -96,6 +96,7 @@ jobs:
         if: ${{ github.ref == 'refs/heads/main' }}
         with:
           spec: kind("oci_push", ...) except //release-controller/...
+          push-token: ${{ secrets.GITHUB_TOKEN }}
 
       ########################################
       # Deploy to github pages
