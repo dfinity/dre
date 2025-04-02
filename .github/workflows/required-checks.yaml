@@ -18,14 +18,14 @@ jobs:
       - name: Wait for release controller pipeline
         uses: lewagon/wait-on-check-action@v1.3.4
         with:
-          ref: ${{ github.ref }}
+          ref: ${{ github.sha }}
           check-name: bazel-release-controller
           repo-token: ${{ secrets.GITHUB_TOKEN }}
           wait-interval: 10
       - name: Wait for build and test
         uses: lewagon/wait-on-check-action@v1.3.4
         with:
-          ref: ${{ github.ref }}
+          ref: ${{ github.sha }}
           check-name: bazel
           repo-token: ${{ secrets.GITHUB_TOKEN }}
           wait-interval: 10
