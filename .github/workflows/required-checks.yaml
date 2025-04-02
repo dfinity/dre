@@ -5,6 +5,8 @@ on:
     workflows:
       - Release controller
       - Build and test
+    types:
+      - in_progress
 
 concurrency:
   group: ${{ github.workflow }}-required-checks-${{ github.event.pull_request.number || github.ref }}
