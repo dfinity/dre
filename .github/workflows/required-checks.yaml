@@ -21,4 +21,4 @@ jobs:
           ref: ${{ github.ref }}
           running-workflow-name: Wait for required jobs to complete or be skipped
           repo-token: "${{ secrets.GITHUB_TOKEN }}"
-          wait-interval: 10
+          wait-interval: 5
