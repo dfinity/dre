@@ -15,14 +15,14 @@ itertools = { workspace = true }
 num-traits = { workspace = true }
 rust_decimal = { workspace = true }
 rust_decimal_macros = { workspace = true }
-tabled = { workspace = true }
+ic-protobuf = { workspace = true }
+
+[dev-dependencies]
 chrono = { version = "0.4.38", default-features = false, features = [
     "alloc",
     "clock",
     "serde",
 ] }
-ic-protobuf = { workspace = true }
-indexmap = { workspace = true }
 
 [lib]
 name = "rewards_calculation"

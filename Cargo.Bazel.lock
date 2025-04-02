@@ -1,5 +1,5 @@
 {
-  "checksum": "f655431fb264fbf139b55cbd6b3a8eb87b68d65c9a309108a9d15de1ee5ea9da",
+  "checksum": "755c95c30c6d6f2173245ff4e70bf17abe5a042703fa549fbeb8cee9f15ff097",
   "crates": {
     "actix-codec 0.5.2": {
       "name": "actix-codec",
@@ -35848,15 +35848,6 @@
           "selects": {}
         },
         "edition": "2021",
-        "proc_macro_deps": {
-          "common": [
-            {
-              "id": "derive_more 0.99.18",
-              "target": "derive_more"
-            }
-          ],
-          "selects": {}
-        },
         "version": "0.6.2"
       },
       "license": "Apache-2.0",
@@ -35970,10 +35961,6 @@
             {
               "id": "node-provider-rewards-canister 0.6.2",
               "target": "build_script_build"
-            },
-            {
-              "id": "rust_decimal 1.37.1",
-              "target": "rust_decimal"
             },
             {
               "id": "serde 1.0.219",
@@ -62657,7 +62644,6 @@
     "cryptoki 0.7.0",
     "custom_error 1.9.2",
     "cycles-minting-canister 0.9.0",
-    "derive_more 0.99.18",
     "dfn_core 0.9.0",
     "dialoguer 0.11.0",
     "dirs 5.0.1",

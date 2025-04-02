@@ -7484,12 +7484,10 @@ dependencies = [
  "ic-cdk 0.17.1 (git+https://github.com/dfinity/cdk-rs.git?rev=929fd0b31e9ec69aad7cf6285df0394f25fe1815)",
  "ic-protobuf",
  "ic-types",
- "indexmap 2.8.0",
  "itertools 0.13.0",
  "num-traits",
  "rust_decimal",
  "rust_decimal_macros",
- "tabled",
 ]
 
 [[package]]
