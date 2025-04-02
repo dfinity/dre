@@ -267,11 +267,6 @@ class Reconciler:
 
         oar = oldest_active_release(config, active_versions)
 
-        logger.info(
-            "GuestOS versions active on subnets or unassigned nodes: %s",
-            ", ".join(active_versions),
-        )
-        logger.info("Oldest active release: %s", oar.rc_name)
         releases = config.root.releases[: config.root.releases.index(oar) + 1]
         # Remove ignored releases from list to process.
         releases = [r for r in releases if r.rc_name not in self.ignore_releases]
@@ -299,6 +294,11 @@ class Reconciler:
         ]
 
         if releases:
+            logger.info(
+                "GuestOS versions active on subnets or unassigned nodes: %s",
+                ", ".join(active_versions),
+            )
+            logger.info("Oldest active release: %s", oar.rc_name)
             logger.info("Processing the following releases:")
             for idx, rc in enumerate(releases):
                 logger.info(
@@ -417,7 +417,7 @@ class Reconciler:
                 with phase("proposal submission"):
                     if isinstance(prop, reconciler_state.SubmittedProposal):
                         revlogger.info(
-                            "%s.  Proposal done, but process not complete.",
+                            "%s.  We will check if forum post needs update.",
                             prop,
                         )
                     elif discovered_proposal := existing_proposals.get(release_commit):
@@ -484,7 +484,7 @@ class Reconciler:
                         v.version
                     ].forum_post_updated = True
 
-        logger.info("Iteration completed.")
+        logger.info("Iteration completed. %s releases processed.", len(releases))
 
 
 dre_repo = "dfinity/dre"
