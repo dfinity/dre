@@ -22,11 +22,11 @@ def _verify_release_instructions(version: str, security_fix: bool) -> str:
     return f"""
 # IC-OS Verification
 {with_security_caveat}
-To build and verify the IC-OS disk image, run:
+To build and verify the IC-OS disk image, after installing curl if necessary (`sudo apt install curl`), run:
 
 ```
 # From https://github.com/dfinity/ic#verifying-releases
-sudo apt-get install -y curl && curl --proto '=https' --tlsv1.2 -sSLO https://raw.githubusercontent.com/dfinity/ic/{version}/ci/tools/repro-check.sh && chmod +x repro-check.sh && ./repro-check.sh -c {version} --guestos
+curl -fsSL https://raw.githubusercontent.com/dfinity/ic/master/ci/tools/repro-check | python3 - -c {version} --guestos
 ```
 
 The two SHA256 sums printed above from a) the downloaded CDN image and b) the locally built image, must be identical, and must match the SHA256 from the payload of the NNS proposal.

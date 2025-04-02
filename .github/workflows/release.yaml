@@ -2,6 +2,13 @@ name: Release index checks
 
 on:
   pull_request:
+    paths:
+      - "release-index.yaml"
+      - "replica-releases/**"
+      - "release-controller/**"
+      - "node-labels/**"
+      - "facts-db/**"
+      - .github/**
   workflow_dispatch:
 
 jobs:
@@ -10,41 +17,10 @@ jobs:
       labels: dre-runner-custom
     # This image is based on ubuntu:20.04
     container: ghcr.io/dfinity/dre/actions-runner:6413f2909a49329ecbf5371ee7ddf07a9799b625
-    name: Release index checks
+    name: Check changed release index files
     steps:
       - uses: actions/checkout@v4
-      - name: Get all changed release files
-        id: changed-files
-        uses: step-security/changed-files@v45
-        with:
-          files: |
-            release-index.yaml
-            replica-releases/**
-            node-labels/**
-            facts-db/**
-
-      - name: Suppress bazel pipeline # because it should not run if only release files changed
-        uses: Sibz/github-status-action@v1
-        if: ${{ steps.changed-files.outputs.all_changed_files_count > 0 && steps.changed-files.outputs.other_changed_files_count == 0  }}
-        with:
-          authToken: ${{secrets.GITHUB_TOKEN}}
-          context: "bazel"
-          description: "Passed"
-          state: "success"
-          sha: ${{github.event.pull_request.head.sha || github.sha}}
-
-      - name: Mark bazel-release-controller as success # because it should not run if only release files changed
-        uses: Sibz/github-status-action@v1
-        if: ${{ steps.changed-files.outputs.all_changed_files_count > 0 && steps.changed-files.outputs.other_changed_files_count == 0  }}
-        with:
-          authToken: ${{secrets.GITHUB_TOKEN}}
-          context: "bazel-release-controller"
-          description: "Passed"
-          state: "success"
-          sha: ${{github.event.pull_request.head.sha || github.sha}}
-
       - name: Run checks for release index
-        if: ${{ steps.changed-files.outputs.any_changed == 'true' }}
         run: |
           rye sync
           export PYTHONPATH=$PWD/release-controller

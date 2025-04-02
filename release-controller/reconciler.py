@@ -210,6 +210,22 @@ class PhaseCollector(object):
             self.fail(self.current_phase)
 
 
+class VersionState(object):
+    """
+    Defines the state of completion of processing a release version.
+
+    The following flags represent are the events that must have taken
+    place to consider a release processed.
+    """
+
+    has_proposal: bool = False
+    forum_post_updated: bool = False
+
+    @property
+    def complete(self) -> bool:
+        return self.has_proposal and self.forum_post_updated
+
+
 class Reconciler:
     """Reconcile the state of the network with the release index, and create a forum post if needed."""
 
@@ -241,6 +257,7 @@ class Reconciler:
         self.ignore_releases = ignore_releases or []
         self.dre = dre
         self.slack_announcer = slack_announcer
+        self.local_release_state: dict[str, dict[str, VersionState]] = {}
 
     def reconcile(self, phase: PhaseCollector) -> None:
         """Reconcile the state of the network with the release index."""
@@ -248,16 +265,41 @@ class Reconciler:
         active_versions = self.ic_prometheus.active_versions()
         logger = LOGGER.getChild("reconciler")
 
+        oar = oldest_active_release(config, active_versions)
+
         logger.info(
             "GuestOS versions active on subnets or unassigned nodes: %s",
             ", ".join(active_versions),
         )
-        releases = config.root.releases[
-            : config.root.releases.index(oldest_active_release(config, active_versions))
-            + 1
+        logger.info("Oldest active release: %s", oar.rc_name)
+        releases = config.root.releases[: config.root.releases.index(oar) + 1]
+        # Remove ignored releases from list to process.
+        releases = [r for r in releases if r.rc_name not in self.ignore_releases]
+        # Preload the cache of known successfully processed releases.
+        for rc in releases:
+            if rc.rc_name not in self.local_release_state:
+                self.local_release_state[rc.rc_name] = {}
+            for v in rc.versions:
+                if v.version not in self.local_release_state[rc.rc_name]:
+                    self.local_release_state[rc.rc_name][v.version] = VersionState()
+                self.local_release_state[rc.rc_name][
+                    v.version
+                ].has_proposal = isinstance(
+                    self.state.version_proposal(v.version),
+                    reconciler_state.SubmittedProposal,
+                )
+        # Filter the releases to process by removing those which are complete.
+        releases = [
+            rc
+            for rc in releases
+            if not all(
+                version.complete
+                for version in self.local_release_state[rc.rc_name].values()
+            )
         ]
+
         if releases:
-            logger.info("Dealing with the following releases:")
+            logger.info("Processing the following releases:")
             for idx, rc in enumerate(releases):
                 logger.info(
                     "%s. %s (%s)",
@@ -265,15 +307,12 @@ class Reconciler:
                     rc.rc_name,
                     ", ".join([v.name for v in rc.versions]),
                 )
+            existing_proposals = self.dre.get_election_proposals_by_version()
         else:
-            logger.info("No releases to deal with")
+            existing_proposals = {}
 
         for rc in releases:
             rclogger = logger.getChild(f"{rc.rc_name}")
-
-            if rc.rc_name in self.ignore_releases:
-                rclogger.debug("In ignore list.  Skipping.")
-                continue
 
             for v_idx, v in enumerate(rc.versions):
                 release_tag, release_commit, is_security_fix = (
@@ -285,8 +324,10 @@ class Reconciler:
 
                 prop = self.state.version_proposal(release_commit)
                 if isinstance(prop, reconciler_state.SubmittedProposal):
-                    revlogger.debug("%s.  Nothing to do.", prop)
-                    continue
+                    revlogger.debug("%s.  Proposal not needed.", prop)
+                    self.local_release_state[rc.rc_name][
+                        release_commit
+                    ].has_proposal = True
                 elif (
                     isinstance(prop, reconciler_state.DREMalfunction)
                     and not prop.ready_to_retry()
@@ -294,28 +335,6 @@ class Reconciler:
                     phase.fail("proposal submission")
                     revlogger.debug("%s.  Not ready to retry yet.")
                     continue
-
-                # Here we must check, if the proposal has malfunctioned before,
-                # that the proposal went through (it may have gone through!)
-                # and therefore update posts accordingly (basically everything
-                # except actual proposal submission, since it succeeded before
-                # despite the failure returned to us by governance canister).
-
-                discovered_proposal: dre_cli.ElectionProposal | None = None
-                if isinstance(prop, reconciler_state.DREMalfunction):
-                    existing_proposals = self.dre.get_election_proposals_by_version()
-                    if discovered_proposal := existing_proposals.get(release_commit):
-                        revlogger.warning(
-                            "%s.  However, contrary to recorded failure, proposal"
-                            " to elect %s was indeed successfully submitted as ID %s.",
-                            prop,
-                            release_commit,
-                            discovered_proposal["id"],
-                        )
-                    else:
-                        revlogger.info("%s.  Retrying process.", prop)
-                else:
-                    revlogger.info("%s.  Proposal needed.  Beginning process.", prop)
 
                 # update to create posts for any releases
                 rclogger.debug("Ensuring forum post for release candidate exists.")
@@ -396,22 +415,44 @@ class Reconciler:
                         )
 
                 with phase("proposal submission"):
-                    unelect_versions = []
-                    if v_idx == 0:
-                        unelect_versions.extend(
-                            versions_to_unelect(
-                                config,
-                                active_versions=active_versions,
-                                elected_versions=self.dre.get_blessed_versions(),
-                            ),
+                    if isinstance(prop, reconciler_state.SubmittedProposal):
+                        revlogger.info(
+                            "%s.  Proposal done, but process not complete.",
+                            prop,
                         )
-
-                    if discovered_proposal is not None:
+                    elif discovered_proposal := existing_proposals.get(release_commit):
+                        if isinstance(prop, reconciler_state.NoProposal):
+                            revlogger.warning(
+                                "We have no record of a proposal being submitted.  However, contrary"
+                                " to our record, proposal to elect %s was indeed successfully"
+                                " submitted by someone else as ID %s.",
+                                release_commit,
+                                discovered_proposal["id"],
+                            )
+                        elif isinstance(prop, reconciler_state.DREMalfunction):
+                            revlogger.warning(
+                                "%s.  However, contrary to recorded failure, proposal"
+                                " to elect %s was indeed successfully submitted by us as ID %s.",
+                                prop,
+                                release_commit,
+                                discovered_proposal["id"],
+                            )
                         prop.record_submission(discovered_proposal["id"])
                     else:
+                        # No discovered proposal and either prior malfunction or no proposal.
+                        # Time to create a proposal proposal.
+                        revlogger.info("Preparing proposal for %s", release_commit)
                         checksum = version_package_checksum(release_commit)
                         urls = version_package_urls(release_commit)
-
+                        unelect_versions = []
+                        if v_idx == 0:
+                            unelect_versions.extend(
+                                versions_to_unelect(
+                                    config,
+                                    active_versions=active_versions,
+                                    elected_versions=self.dre.get_blessed_versions(),
+                                ),
+                            )
                         try:
                             proposal_id = (
                                 self.dre.propose_to_revise_elected_guestos_versions(
@@ -439,6 +480,9 @@ class Reconciler:
                         summary_retriever=self.loader.proposal_summary,
                         proposal_id_retriever=self.state.version_proposal,
                     )
+                    self.local_release_state[rc.rc_name][
+                        v.version
+                    ].forum_post_updated = True
 
         logger.info("Iteration completed.")
 
