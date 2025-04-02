@@ -1,5 +1,5 @@
 {
-  "checksum": "755c95c30c6d6f2173245ff4e70bf17abe5a042703fa549fbeb8cee9f15ff097",
+  "checksum": "c09508913bf3e385c576786c65c19dc6ac186bb0e5cffe4d3e4cf33361b823c4",
   "crates": {
     "actix-codec 0.5.2": {
       "name": "actix-codec",
@@ -45053,10 +45053,6 @@
         "deps": {
           "common": [
             {
-              "id": "chrono 0.4.40",
-              "target": "chrono"
-            },
-            {
               "id": "ic-base-types 0.9.0",
               "target": "ic_base_types"
             },
@@ -45073,10 +45069,6 @@
               "target": "ic_types"
             },
             {
-              "id": "indexmap 2.8.0",
-              "target": "indexmap"
-            },
-            {
               "id": "itertools 0.13.0",
               "target": "itertools"
             },
@@ -45087,10 +45079,15 @@
             {
               "id": "rust_decimal 1.37.1",
               "target": "rust_decimal"
-            },
+            }
+          ],
+          "selects": {}
+        },
+        "deps_dev": {
+          "common": [
             {
-              "id": "tabled 0.18.0",
-              "target": "tabled"
+              "id": "chrono 0.4.40",
+              "target": "chrono"
             }
           ],
           "selects": {}
