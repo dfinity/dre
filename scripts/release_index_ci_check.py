@@ -186,7 +186,7 @@ if __name__ == "__main__":
         with open(os.environ["GITHUB_STEP_SUMMARY"], "a") as log:
             print("## Release checks", file=log)
 
-    index = yaml.load(open(args.path, "r", encoding="utf8"), Loader=yaml.FullLoader)
+    index = yaml.load(open(args.path, "r", encoding="utf8"), Loader=yaml.SafeLoader)
 
     errors = []
 
