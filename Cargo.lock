@@ -6156,6 +6156,11 @@ name = "node-provider-rewards-api"
 version = "0.6.2"
 dependencies = [
  "candid",
+ "chrono",
+ "derive_more 0.99.18",
+ "ic-base-types",
+ "rewards-calculation",
+ "rust_decimal",
  "serde",
 ]
 

@@ -1,25 +1,25 @@
-use crate::execution_context::{nodes_ids, ExecutionContext, RewardsCalculationResult};
-use crate::metrics::{nodes_failure_rates_in_period, subnets_failure_rates, NodeMetricsDaily};
+use crate::calculation_results::NodeProviderCalculationResults;
+use crate::execution_context::{nodes_ids, ExecutionContext};
+use crate::metrics::{nodes_failure_rates_in_period, subnets_failure_rates, NodeMetricsDaily, SubnetDailyFailureRate};
 use crate::reward_period::{RewardPeriod, TimestampNanos};
 use crate::types::{rewardable_nodes_by_provider, RewardableNode};
-use ::tabled::Table;
-use ic_base_types::{NodeId, PrincipalId};
+use ic_base_types::{NodeId, PrincipalId, SubnetId};
 use ic_protobuf::registry::node_rewards::v2::NodeRewardsTable;
-use rust_decimal::Decimal;
 use std::cmp::PartialEq;
 use std::collections::{BTreeMap, HashSet};
 use std::error::Error;
 use std::fmt;
 
+pub mod calculation_results;
 mod execution_context;
 pub mod metrics;
 pub mod reward_period;
-mod tabled;
 pub mod types;
 
-pub struct RewardsPerNodeProvider {
-    pub rewards_per_provider: BTreeMap<PrincipalId, Decimal>,
-    pub computation_table_per_provider: BTreeMap<PrincipalId, Vec<Table>>,
+#[derive(Default)]
+pub struct RewardsCalculationResult {
+    pub subnets_failure_rates: BTreeMap<SubnetId, Vec<SubnetDailyFailureRate>>,
+    pub results_per_provider: BTreeMap<PrincipalId, NodeProviderCalculationResults>,
 }
 
 /// Computes rewards for node providers based on their nodes' performance during the specified `reward_period`.
@@ -34,9 +34,8 @@ pub fn calculate_rewards(
     rewards_table: &NodeRewardsTable,
     daily_metrics_by_node: &BTreeMap<NodeId, Vec<NodeMetricsDaily>>,
     rewardable_nodes: &[RewardableNode],
-) -> Result<RewardsPerNodeProvider, RewardCalculationError> {
-    let mut rewards_per_provider = BTreeMap::new();
-    let mut computation_table_per_provider = BTreeMap::new();
+) -> Result<RewardsCalculationResult, RewardCalculationError> {
+    let mut rewards_calculation_result = RewardsCalculationResult::default();
     let all_nodes = nodes_ids(rewardable_nodes);
 
     validate_input(reward_period, daily_metrics_by_node, &all_nodes)?;
@@ -48,19 +47,13 @@ pub fn calculate_rewards(
     );
 
     for (provider_id, provider_nodes) in rewardable_nodes_by_provider(rewardable_nodes) {
-        let RewardsCalculationResult {
-            rewards,
-            computation_log_tabled,
-        } = ctx.calculate_rewards(provider_nodes);
+        let node_provider_results: NodeProviderCalculationResults = ctx.calculate_rewards(provider_nodes);
 
-        rewards_per_provider.insert(provider_id, rewards);
-        computation_table_per_provider.insert(provider_id, computation_log_tabled);
+        rewards_calculation_result.results_per_provider.insert(provider_id, node_provider_results);
     }
+    rewards_calculation_result.subnets_failure_rates = ctx.subnets_fr;
 
-    Ok(RewardsPerNodeProvider {
-        rewards_per_provider,
-        computation_table_per_provider,
-    })
+    Ok(rewards_calculation_result)
 }
 
 fn validate_input(

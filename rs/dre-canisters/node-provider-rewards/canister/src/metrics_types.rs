@@ -12,7 +12,7 @@ const MAX_BYTES_NODE_METRICS_STORED_KEY: u32 = 60;
 const PRINCIPAL_MAX_LENGTH_IN_BYTES: usize = 29;
 
 pub const MIN_PRINCIPAL_ID: PrincipalId = PrincipalId(Principal::from_slice(&[]));
-pub const MAX_PRINCIPAL_ID: PrincipalId = PrincipalId(Principal::from_slice(&[0xFF; PRINCIPAL_MAX_LENGTH_IN_BYTES]));
+pub const MAX_PRINCIPAL_ID: PrincipalId = PrincipalId(Principal::from_slice(&[0xFF_u8; PRINCIPAL_MAX_LENGTH_IN_BYTES]));
 
 #[test]
 fn max_bound_size() {

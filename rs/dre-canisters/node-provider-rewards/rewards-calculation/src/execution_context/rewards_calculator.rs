@@ -1,4 +1,4 @@
-use crate::execution_context::results_tracker::{NodeCategoryResult, NodeResult, ResultsTracker, SingleResult};
+use crate::calculation_results::NodeProviderCalculationResults;
 use crate::execution_context::{avg, ExecutionState, RewardsTotalComputed};
 use crate::types::{NodeCategory, RewardableNode};
 use ic_protobuf::registry::node_rewards::v2::NodeRewardsTable;
@@ -44,7 +44,7 @@ fn nodes_count_by_category(rewardable_nodes: &[RewardableNode]) -> HashMap<NodeC
 pub(super) struct RewardsCalculatorContext<'a, T: ExecutionState> {
     pub(super) rewards_table: &'a NodeRewardsTable,
     pub(super) provider_nodes: Vec<RewardableNode>,
-    pub(super) results_tracker: ResultsTracker,
+    pub(super) calculation_results: NodeProviderCalculationResults,
     pub(super) _marker: PhantomData<T>,
 }
 
@@ -53,7 +53,7 @@ impl<'a, T: ExecutionState> RewardsCalculatorContext<'a, T> {
         RewardsCalculatorContext {
             rewards_table: self.rewards_table,
             provider_nodes: self.provider_nodes,
-            results_tracker: self.results_tracker,
+            calculation_results: self.calculation_results,
             _marker: PhantomData,
         }
     }
@@ -109,8 +109,7 @@ impl<'a> RewardsCalculatorContext<'a, ComputeBaseRewardsByCategory> {
             } else {
                 // For `rewardable_nodes` which are not type3* the base rewards for the sigle node is the entry
                 // in the rewards table for the specific region (DC Continent + DC Country + DC State/City) and node type.
-                self.results_tracker
-                    .record_category_result(NodeCategoryResult::RewardsByCategory, &category, &base_rewards);
+                self.calculation_results.rewards_by_category.insert(category, base_rewards);
             }
         }
 
@@ -128,8 +127,7 @@ impl<'a> RewardsCalculatorContext<'a, ComputeBaseRewardsByCategory> {
                 running_coefficient *= coefficients_avg;
             }
             let region_rewards_avg = avg(&region_rewards);
-            self.results_tracker
-                .record_category_result(NodeCategoryResult::RewardsByCategory, &type3_category, &region_rewards_avg);
+            self.calculation_results.rewards_by_category.insert(type3_category, region_rewards_avg);
         }
         RewardsCalculatorContext::transition(self)
     }
@@ -147,29 +145,31 @@ impl<'a> RewardsCalculatorContext<'a, AdjustNodesRewards> {
             .collect::<Vec<_>>();
 
         for node in sorted_nodes {
-            let performance_multipliers = self.results_tracker.get_nodes_result(NodeResult::PerformanceMultiplier);
-            let base_rewards_by_category = self.results_tracker.get_category_result(NodeCategoryResult::RewardsByCategory);
-
             let node_category = if is_type3(&node.node_type) {
                 type3_category(&node.region)
             } else {
                 node.category()
             };
-            let base_rewards = *base_rewards_by_category.get(&node_category).expect("Node category exist");
-            let node_performance_multiplier = performance_multipliers.get(&node.node_id).expect("Rewards multiplier exist");
+            let base_rewards = *self
+                .calculation_results
+                .rewards_by_category
+                .get(&node_category)
+                .expect("Node category exist");
+            let node_performance_multiplier = self
+                .calculation_results
+                .performance_multiplier
+                .get(&node.node_id)
+                .expect("Rewards multiplier exist");
 
             if nodes_count <= FULL_REWARDS_MACHINES_LIMIT {
                 // Node Providers with less than FULL_REWARDS_MACHINES_LIMIT machines are rewarded fully, independently of their performance
 
-                self.results_tracker
-                    .record_node_result(NodeResult::AdjustedRewards, &node.node_id, &base_rewards);
+                self.calculation_results.adjusted_rewards.insert(node.node_id, base_rewards);
             } else {
                 let adjusted_rewards = base_rewards * node_performance_multiplier;
-                self.results_tracker
-                    .record_node_result(NodeResult::AdjustedRewards, &node.node_id, &adjusted_rewards);
+                self.calculation_results.adjusted_rewards.insert(node.node_id, adjusted_rewards);
             }
-            self.results_tracker
-                .record_node_result(NodeResult::BaseRewards, &node.node_id, &base_rewards);
+            self.calculation_results.base_rewards.insert(node.node_id, base_rewards);
         }
 
         RewardsCalculatorContext::transition(self)
@@ -179,11 +179,14 @@ impl<'a> RewardsCalculatorContext<'a, AdjustNodesRewards> {
 /// Calculate the adjusted rewards for all the nodes based on their performance.
 impl<'a> RewardsCalculatorContext<'a, ComputeRewardsTotal> {
     pub fn next(mut self) -> RewardsCalculatorContext<'a, RewardsTotalComputed> {
-        let adjusted_rewards_by_node = self.results_tracker.get_nodes_result(NodeResult::AdjustedRewards);
+        let rewards_total = self
+            .calculation_results
+            .adjusted_rewards
+            .iter()
+            .map(|(_, reward)| *reward)
+            .sum::<Decimal>();
 
-        let rewards_total = adjusted_rewards_by_node.iter().map(|(_, reward)| *reward).sum::<Decimal>();
-
-        self.results_tracker.record_single_result(SingleResult::RewardsTotal, &rewards_total);
+        self.calculation_results.rewards_total = rewards_total;
         RewardsCalculatorContext::transition(self)
     }
 }

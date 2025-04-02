@@ -1,5 +1,5 @@
 use super::*;
-use crate::execution_context::results_tracker::{NodeResult, SingleResult};
+use crate::calculation_results::NodeProviderCalculationResults;
 use crate::metrics::NodeFailureRate;
 use rust_decimal::Decimal;
 use rust_decimal_macros::dec;
@@ -18,7 +18,7 @@ pub const MAX_REWARDS_REDUCTION: Decimal = dec!(0.8);
 pub(super) struct PerformanceCalculatorContext<'a, T: ExecutionState> {
     pub(super) subnets_fr: &'a BTreeMap<SubnetId, Vec<SubnetDailyFailureRate>>,
     pub(super) execution_nodes_fr: BTreeMap<NodeId, Vec<NodeDailyFailureRate>>,
-    pub(super) results_tracker: ResultsTracker,
+    pub(super) calculation_results: NodeProviderCalculationResults,
     pub(super) _marker: PhantomData<T>,
 }
 
@@ -27,7 +27,7 @@ impl<'a, T: ExecutionState> PerformanceCalculatorContext<'a, T> {
         PerformanceCalculatorContext {
             subnets_fr: self.subnets_fr,
             execution_nodes_fr: self.execution_nodes_fr,
-            results_tracker: self.results_tracker,
+            calculation_results: self.calculation_results,
             _marker: PhantomData,
         }
     }
@@ -78,8 +78,7 @@ impl<'a> PerformanceCalculatorContext<'a, ComputeRelativeFR> {
 impl<'a> PerformanceCalculatorContext<'a, ComputeExtrapolatedFR> {
     pub fn next(mut self) -> PerformanceCalculatorContext<'a, FillUndefinedFR> {
         if self.execution_nodes_fr.is_empty() {
-            self.results_tracker.record_single_result(SingleResult::ExtrapolatedFR, &dec!(1));
-
+            self.calculation_results.extrapolated_fr = dec!(1);
             return PerformanceCalculatorContext::transition(self);
         }
 
@@ -96,14 +95,11 @@ impl<'a> PerformanceCalculatorContext<'a, ComputeExtrapolatedFR> {
             // Do not consider nodes completely unassigned
             if !failure_rates.is_empty() {
                 let node_avg_fr = avg(&failure_rates);
-                self.results_tracker
-                    .record_node_result(NodeResult::AverageRelativeFR, node_id, &node_avg_fr);
+                self.calculation_results.average_relative_fr.insert(*node_id, node_avg_fr);
                 nodes_avg_fr.push(node_avg_fr);
             }
         }
-
-        let extrapolated_fr = avg(&nodes_avg_fr);
-        self.results_tracker.record_single_result(SingleResult::ExtrapolatedFR, &extrapolated_fr);
+        self.calculation_results.extrapolated_fr = avg(&nodes_avg_fr);
         PerformanceCalculatorContext::transition(self)
     }
 }
@@ -111,11 +107,9 @@ impl<'a> PerformanceCalculatorContext<'a, ComputeExtrapolatedFR> {
 /// Fills the `Undefined` failure rates with the extrapolated failure rate.
 impl<'a> PerformanceCalculatorContext<'a, FillUndefinedFR> {
     pub fn next(mut self) -> PerformanceCalculatorContext<'a, ComputeAverageExtrapolatedFR> {
-        let extrapolated_fr = self.results_tracker.get_single_result(SingleResult::ExtrapolatedFR);
-
         for failure_rate in self.execution_nodes_fr.values_mut().flatten() {
             if matches!(failure_rate.value, NodeFailureRate::Undefined) {
-                failure_rate.value = NodeFailureRate::Extrapolated(*extrapolated_fr);
+                failure_rate.value = NodeFailureRate::Extrapolated(self.calculation_results.extrapolated_fr);
             }
         }
         PerformanceCalculatorContext::transition(self)
@@ -136,9 +130,7 @@ impl<'a> PerformanceCalculatorContext<'a, ComputeAverageExtrapolatedFR> {
                 })
                 .collect();
 
-            let average_rate = avg(&raw_failure_rates);
-            self.results_tracker
-                .record_node_result(NodeResult::AverageExtrapolatedFR, node_id, &average_rate);
+            self.calculation_results.average_extrapolated_fr.insert(*node_id, avg(&raw_failure_rates));
         }
 
         PerformanceCalculatorContext::transition(self)
@@ -148,25 +140,22 @@ impl<'a> PerformanceCalculatorContext<'a, ComputeAverageExtrapolatedFR> {
 /// Calculates the performance multiplier for a node based on its average failure rate.
 impl<'a> PerformanceCalculatorContext<'a, ComputePerformanceMultipliers> {
     pub fn next(mut self) -> PerformanceCalculatorContext<'a, PerformanceMultipliersComputed> {
-        let average_extrapolated_fr = self.results_tracker.get_nodes_result(NodeResult::AverageExtrapolatedFR).clone();
-
-        for (node_id, average_failure_rate) in average_extrapolated_fr {
+        for (node_id, average_failure_rate) in self.calculation_results.average_extrapolated_fr.iter() {
             let rewards_reduction;
 
-            if average_failure_rate < MIN_FAILURE_RATE {
+            if average_failure_rate < &MIN_FAILURE_RATE {
                 rewards_reduction = MIN_REWARDS_REDUCTION;
-            } else if average_failure_rate > MAX_FAILURE_RATE {
+            } else if average_failure_rate > &MAX_FAILURE_RATE {
                 rewards_reduction = MAX_REWARDS_REDUCTION;
             } else {
                 // Linear interpolation between MIN_REWARDS_REDUCTION and MAX_REWARDS_REDUCTION
                 rewards_reduction = ((average_failure_rate - MIN_FAILURE_RATE) / (MAX_FAILURE_RATE - MIN_FAILURE_RATE)) * MAX_REWARDS_REDUCTION;
             };
 
-            self.results_tracker
-                .record_node_result(NodeResult::RewardsReduction, &node_id, &rewards_reduction);
+            self.calculation_results.rewards_reduction.insert(*node_id, rewards_reduction);
             let performance_multiplier = dec!(1) - rewards_reduction;
-            self.results_tracker
-                .record_node_result(NodeResult::PerformanceMultiplier, &node_id, &performance_multiplier);
+
+            self.calculation_results.performance_multiplier.insert(*node_id, performance_multiplier);
         }
 
         PerformanceCalculatorContext::transition(self)

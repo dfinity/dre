@@ -1,9 +1,13 @@
-type RewardsPerNodeProviderResponse = record {
-  rewards_per_provider : vec record { text; nat64 };
+type PrincipalId = text;
+type SubnetId = PrincipalId;
+type NodeId = PrincipalId;
+
+type NodeProvidersRewardsXDRTotal = record {
+  rewards_per_provider : vec record { PrincipalId; nat64 };
 };
 
 type GetNodeProvidersMonthlyXdrRewardsResponse = variant {
-  Ok : RewardsPerNodeProviderResponse;
+  Ok : NodeProvidersRewardsXDRTotal;
   Err : text;
 };
 
@@ -12,6 +16,52 @@ type RewardPeriodArgs = record {
   end_ts : nat64;
 };
 
+type NodeProviderRewardsCalculationArgs = record {
+    provider_id: PrincipalId;
+    reward_period: RewardPeriodArgs;
+};
+
+type DailyNodeResults = record {
+    utc_day: text;
+    subnet_assigned: SubnetId;
+    blocks_proposed: nat64;
+    blocks_failed: nat64;
+    original_failure_rate: float64;
+    relative_failure_rate: float64;
+};
+
+type NodeResults = record {
+    node_type: text;
+    region: text;
+    daily_node_results: opt vec DailyNodeResults;
+    average_fr: float64;
+    rewards_reduction: float64;
+    performance_multiplier: float64;
+    base_rewards: float64;
+    adjusted_rewards: float64;
+};
+
+type BaseRewardsByCategory = record {
+    node_type: text;
+    region: text;
+    base_rewards: float64;
+};
+
+type DailySubnetFailureRate = record {
+    utc_day: text;
+    fr: float64;
+};
+
+type NodeProviderRewardsCalculation = record {
+    daily_subnets_fr: vec record { SubnetId; vec DailySubnetFailureRate };
+    extrapolated_fr: float64;
+    results_by_node: vec record { NodeId; NodeResults };
+    rewards_by_category: vec BaseRewardsByCategory;
+    rewards_total: float64;
+};
+
+
 service : {
-    get_node_providers_xdr_rewards : (RewardPeriodArgs) -> (GetNodeProvidersMonthlyXdrRewardsResponse);
+    get_node_providers_xdr_rewards_total : (RewardPeriodArgs) -> (GetNodeProvidersMonthlyXdrRewardsResponse);
+    get_node_provider_rewards_calculation : (NodeProviderRewardsCalculationArgs) -> (GetNodeProvidersMonthlyXdrRewardsResponse);
 }
