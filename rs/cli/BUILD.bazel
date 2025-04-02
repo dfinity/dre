@@ -42,7 +42,8 @@ rust_binary(
 )
 
 rust_binary(
-    name = "dre-embedded", # Variant does not have an embedded git revision, which permits caching of dependents.
+    # Variant does not have an embedded git revision, which permits caching of dependents.
+    name = "dre-embedded",
     srcs = glob(["src/**/*.rs"]),
     aliases = aliases(),
     rustc_env_files = [],
@@ -78,7 +79,7 @@ rust_test(
         normal_dev = True,
         proc_macro_dev = True,
     ),
-    crate = ":dre",
+    crate = ":dre-embedded",
     proc_macro_deps = all_crate_deps(
         proc_macro_dev = True,
     ),
