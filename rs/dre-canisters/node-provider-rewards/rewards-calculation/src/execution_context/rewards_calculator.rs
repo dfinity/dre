@@ -179,12 +179,7 @@ impl<'a> RewardsCalculatorContext<'a, AdjustNodesRewards> {
 /// Calculate the adjusted rewards for all the nodes based on their performance.
 impl<'a> RewardsCalculatorContext<'a, ComputeRewardsTotal> {
     pub fn next(mut self) -> RewardsCalculatorContext<'a, RewardsTotalComputed> {
-        let rewards_total = self
-            .calculation_results
-            .adjusted_rewards
-            .iter()
-            .map(|(_, reward)| *reward)
-            .sum::<Decimal>();
+        let rewards_total = self.calculation_results.adjusted_rewards.values().copied().sum();
 
         self.calculation_results.rewards_total = rewards_total;
         RewardsCalculatorContext::transition(self)
