@@ -206,7 +206,7 @@ impl RewardsCalculationInput {
 
 #[query]
 #[candid_method(query)]
-fn get_node_providers_xdr_rewards_total(args: RewardPeriodArgs) -> Result<NodeProvidersRewardsXDRTotal, String> {
+fn get_node_providers_rewards_xdr_total(args: RewardPeriodArgs) -> Result<NodeProvidersRewardsXDRTotal, String> {
     let RewardsCalculationInput {
         reward_period,
         rewards_table,
@@ -214,7 +214,8 @@ fn get_node_providers_xdr_rewards_total(args: RewardPeriodArgs) -> Result<NodePr
         rewardable_nodes,
     } = RewardsCalculationInput::get_node_providers_xdr_rewards_total_input(args)?;
 
-    // Workaround till registry versions ready
+    // TODO: This is a workaround to filter out nodes that are not in the registry.
+    // This should be fixed once quering registry can return all nodes between two timestamps.
     let nodes_in_registry: HashSet<NodeId> = rewardable_nodes.iter().map(|n| n.node_id).collect();
     let daily_metrics_by_node = daily_metrics_by_node.into_iter().filter(|(n, _)| nodes_in_registry.contains(n)).collect();
 
@@ -228,8 +229,8 @@ fn get_node_providers_xdr_rewards_total(args: RewardPeriodArgs) -> Result<NodePr
     Ok(result)
 }
 
-#[update]
-#[candid_method(update)]
+#[query]
+#[candid_method(query)]
 fn get_node_provider_rewards_calculation(args: NodeProviderRewardsCalculationArgs) -> Result<NodeProviderRewardsCalculation, String> {
     let RewardsCalculationInput {
         reward_period,

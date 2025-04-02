@@ -77,7 +77,7 @@ pub struct NodeProviderRewardsCalculation {
     pub extrapolated_fr: f64,
     pub results_by_node: BTreeMap<NodeId, NodeResults>,
     pub rewards_by_category: Vec<BaseRewardsByCategory>,
-    pub rewards_total: f64,
+    pub rewards_total_xdr: u64,
 }
 
 impl From<RewardsCalculationResult> for NodeProviderRewardsCalculation {
@@ -188,14 +188,14 @@ impl From<RewardsCalculationResult> for NodeProviderRewardsCalculation {
             })
             .collect();
 
-        let rewards_total = rewards_total.round_dp(4).to_f64().unwrap();
+        let rewards_total_xdr = rewards_total.to_u64().unwrap();
 
         Self {
             daily_subnets_fr,
             extrapolated_fr,
             results_by_node,
             rewards_by_category,
-            rewards_total,
+            rewards_total_xdr,
         }
     }
 }

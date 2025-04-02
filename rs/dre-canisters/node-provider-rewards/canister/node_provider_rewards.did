@@ -3,11 +3,14 @@ type SubnetId = PrincipalId;
 type NodeId = PrincipalId;
 
 type NodeProvidersRewardsXDRTotal = record {
+// Total rewards in XDR for all providers
   rewards_per_provider : vec record { PrincipalId; nat64 };
 };
 
 type RewardPeriodArgs = record {
+// First timestamp of the day in nanoseconds
   start_ts : nat64;
+// Last timestamp of the day in nanoseconds
   end_ts : nat64;
 };
 
@@ -17,22 +20,39 @@ type NodeProviderRewardsCalculationArgs = record {
 };
 
 type DailyNodeResults = record {
+    // UTC Day with format "DD-MM-YYYY"
     utc_day: text;
     subnet_assigned: SubnetId;
     blocks_proposed: nat64;
     blocks_failed: nat64;
+    // The failure rate before subnet failure rate adjustment
     original_failure_rate: float64;
+    // [RFR]
+    // The daily failure rate after subnet failure rate adjustment
     relative_failure_rate: float64;
 };
 
 type NodeResults = record {
     node_type: text;
     region: text;
+    // None if the node is unassigned in the entire reward period
     daily_node_results: opt vec DailyNodeResults;
+    // [AEFR]
+    // Failure rate average for the entire reward period
+    // On days when the node is unassigned EFR is used
+    // On days when the node is assigned RFR is used
     average_fr: float64;
+    // [RR]
+    // * For nodes with AEFR < 0.1, the rewards reduction is 0
+    // * For nodes with AEFR > 0.6, the rewards reduction is 0.8
+    // * For nodes with 0.1 <= AEFR <= 0.6, the rewards reduction is linearly interpolated between 0 and 0.8
     rewards_reduction: float64;
+    // [PM]
+    // Performance multiplier is calculated as 1 - RR
     performance_multiplier: float64;
     base_rewards: float64;
+    // [AR]
+    // Adjusted rewards are calculated as base_rewards * PM
     adjusted_rewards: float64;
 };
 
@@ -49,10 +69,13 @@ type DailySubnetFailureRate = record {
 
 type NodeProviderRewardsCalculation = record {
     daily_subnets_fr: vec record { SubnetId; vec DailySubnetFailureRate };
+    // [EFR]
+    // Extrapolated failure rate used as replacement for days when the node is unassigned
     extrapolated_fr: float64;
     results_by_node: vec record { NodeId; NodeResults };
     rewards_by_category: vec BaseRewardsByCategory;
-    rewards_total: float64;
+    // Total rewards for the provider in XDR
+    rewards_total_xdr: nat64;
 };
 
 type GetNodeProviderRewardsCalculationResponse = variant {
@@ -60,13 +83,13 @@ type GetNodeProviderRewardsCalculationResponse = variant {
   Err : text;
 };
 
-type GetNodeProvidersMonthlyXdrRewardsResponse = variant {
+type GetNodeProvidersRewardsXDRTotalResponse = variant {
   Ok : NodeProvidersRewardsXDRTotal;
   Err : text;
 };
 
 
 service : {
-    get_node_providers_xdr_rewards_total : (RewardPeriodArgs) -> (GetNodeProvidersMonthlyXdrRewardsResponse);
-    get_node_provider_rewards_calculation : (NodeProviderRewardsCalculationArgs) -> (GetNodeProviderRewardsCalculationResponse);
+    get_node_providers_rewards_xdr_total : (RewardPeriodArgs) -> (GetNodeProvidersRewardsXDRTotalResponse) query;
+    get_node_provider_rewards_calculation : (NodeProviderRewardsCalculationArgs) -> (GetNodeProviderRewardsCalculationResponse) query;
 }
