@@ -1,19 +1,31 @@
 name: Required checks
 on:
   pull_request: {}
+  workflow_run:
+    workflows:
+      - Release controller
+      - Build and test
 
 concurrency:
   group: ${{ github.workflow }}-required-checks-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 
 jobs:
-  wait-for-checks:
+  wait-for-other-jobs:
+    name: Wait for required jobs to complete or be skipped
     runs-on: ubuntu-latest
     steps:
-      - name: Wait for other checks to succeed
+      - name: Wait for release controller pipeline
         uses: lewagon/wait-on-check-action@v1.3.4
         with:
           ref: ${{ github.ref }}
-          running-workflow-name: "Release controller"
+          check-name: "Release controller pipeline"
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+          wait-interval: 10
+      - name: Wait for build and test
+        uses: lewagon/wait-on-check-action@v1.3.4
+        with:
+          ref: ${{ github.ref }}
+          check-name: "bazel"
           repo-token: ${{ secrets.GITHUB_TOKEN }}
           wait-interval: 10
