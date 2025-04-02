@@ -13,7 +13,6 @@ rust_decimal = { workspace = true }
 rewards-calculation = { workspace = true }
 candid = { workspace = true }
 serde = { workspace = true }
-derive_more = "0.99"
 chrono = { version = "0.4.38", default-features = false, features = [
     "alloc",
     "clock",

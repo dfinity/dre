@@ -1,5 +1,5 @@
 use crate::storage::{METRICS_MANAGER, REGISTRY_STORE};
-use candid::{candid_method, Encode};
+use candid::candid_method;
 use ic_base_types::{NodeId, PrincipalId};
 use ic_canisters_http_types::{HttpRequest, HttpResponse, HttpResponseBuilder};
 use ic_cdk_macros::*;
