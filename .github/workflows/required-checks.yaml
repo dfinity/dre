@@ -26,6 +26,7 @@ jobs:
           GITHUB_TOKEN: "${{ steps.app-token.outputs.token }}"
           REF: "${{ github.ref }}"
         run: |
+          set -x
           curl -u "username:$GITHUB_TOKEN" https://api.github.com/repos/dfinity/dre/commits/$REF/check-runs
       - name: Wait for release controller pipeline
         uses: lewagon/wait-on-check-action@v1.3.4
