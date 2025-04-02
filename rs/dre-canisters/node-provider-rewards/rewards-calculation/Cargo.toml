@@ -1,5 +1,5 @@
 [package]
-name = "node-provider-rewards"
+name = "rewards-calculation"
 version.workspace = true
 authors.workspace = true
 description.workspace = true
@@ -21,11 +21,9 @@ chrono = { version = "0.4.38", default-features = false, features = [
     "clock",
     "serde",
 ] }
-candid = { workspace = true }
-serde = { workspace = true }
 ic-protobuf = { workspace = true }
 indexmap = { workspace = true }
 
 [lib]
-name = "node_provider_rewards"
+name = "rewards_calculation"
 path = "src/lib.rs"

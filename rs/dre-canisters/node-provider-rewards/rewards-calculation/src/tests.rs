@@ -1,5 +1,5 @@
 use super::*;
-use crate::reward_period::{TimestampNanosAtDayEnd, NANOS_PER_DAY};
+use crate::reward_period::{DayEndNanos, NANOS_PER_DAY};
 use ic_base_types::SubnetId;
 use ic_protobuf::registry::node_rewards::v2::{NodeRewardRate, NodeRewardRates};
 use itertools::Itertools;
@@ -18,9 +18,9 @@ fn provider_id(id: u64) -> PrincipalId {
     PrincipalId::new_user_test_id(id)
 }
 
-fn create_metrics_by_node() -> BTreeMap<NodeId, Vec<NodeDailyMetrics>> {
+fn create_metrics_by_node() -> BTreeMap<NodeId, Vec<NodeMetricsDaily>> {
     let mut metrics_by_node = BTreeMap::new();
-    metrics_by_node.insert(node_id(1), vec![NodeDailyMetrics::new(NANOS_PER_DAY, subnet_id(1), 0, 0)]);
+    metrics_by_node.insert(node_id(1), vec![NodeMetricsDaily::new(NANOS_PER_DAY, subnet_id(1), 0, 0)]);
     metrics_by_node
 }
 
@@ -46,7 +46,7 @@ fn test_metrics_out_of_range() {
     let reward_period = RewardPeriod::new(NANOS_PER_DAY, 30 * NANOS_PER_DAY).unwrap();
     let mut metrics_by_node = create_metrics_by_node();
 
-    let metrics_out_of_range = NodeDailyMetrics::new(0, subnet_id(1), 0, 0);
+    let metrics_out_of_range = NodeMetricsDaily::new(0, subnet_id(1), 0, 0);
     metrics_by_node.get_mut(&node_id(1)).unwrap().push(metrics_out_of_range.clone());
 
     let result = validate_input(&reward_period, &metrics_by_node, &[node_id(1)]);
@@ -55,7 +55,7 @@ fn test_metrics_out_of_range() {
         result,
         Err(RewardCalculationError::NodeMetricsOutOfRange {
             node_id: node_id(1),
-            timestamp: *metrics_out_of_range.ts,
+            timestamp: metrics_out_of_range.ts.get(),
             reward_period,
         })
     );
@@ -69,7 +69,7 @@ fn test_same_day_metrics_same_sub() {
     metrics_by_node
         .get_mut(&node_id(1))
         .unwrap()
-        .push(NodeDailyMetrics::new(NANOS_PER_DAY, subnet_id(1), 0, 0));
+        .push(NodeMetricsDaily::new(NANOS_PER_DAY, subnet_id(1), 0, 0));
     let result = validate_input(&reward_period, &metrics_by_node, &[node_id(1)]);
 
     assert_eq!(result, Err(RewardCalculationError::DuplicateMetrics(node_id(1))));
@@ -83,7 +83,7 @@ fn test_same_day_metrics_different_subs() {
     metrics_by_node
         .get_mut(&node_id(1))
         .unwrap()
-        .push(NodeDailyMetrics::new(NANOS_PER_DAY, subnet_id(2), 0, 0));
+        .push(NodeMetricsDaily::new(NANOS_PER_DAY, subnet_id(2), 0, 0));
     let result = validate_input(&reward_period, &metrics_by_node, &[node_id(1)]);
 
     assert_eq!(result, Ok(()));
@@ -116,7 +116,7 @@ fn test_node_provider_below_min_limit() {
 struct NPRInput {
     reward_period: RewardPeriod,
     rewards_table: NodeRewardsTable,
-    metrics_by_node: BTreeMap<NodeId, Vec<NodeDailyMetrics>>,
+    metrics_by_node: BTreeMap<NodeId, Vec<NodeMetricsDaily>>,
     rewardables: Vec<RewardableNode>,
 }
 
@@ -129,7 +129,7 @@ impl NPRInput {
 struct NPRInputBuilder {
     reward_period: Option<RewardPeriod>,
     rewards_table: Option<NodeRewardsTable>,
-    metrics_by_node: BTreeMap<NodeId, Vec<NodeDailyMetrics>>,
+    metrics_by_node: BTreeMap<NodeId, Vec<NodeMetricsDaily>>,
     rewardables: Vec<RewardableNode>,
 }
 
@@ -184,11 +184,11 @@ impl NPRInputBuilder {
     }
 
     pub fn with_node_metrics(&mut self, node_id: NodeId, ts_start: u64, failure_rates: Vec<Decimal>, subnet_id: SubnetId) -> &mut NPRInputBuilder {
-        let daily_metrics: Vec<NodeDailyMetrics> = failure_rates
+        let daily_metrics: Vec<NodeMetricsDaily> = failure_rates
             .iter()
             .enumerate()
-            .map(|(i, rate)| NodeDailyMetrics {
-                ts: TimestampNanosAtDayEnd::from(ts_start + i as u64 * NANOS_PER_DAY),
+            .map(|(i, rate)| NodeMetricsDaily {
+                ts: DayEndNanos::from(ts_start + i as u64 * NANOS_PER_DAY),
                 subnet_assigned: subnet_id,
                 num_blocks_proposed: 0,
                 num_blocks_failed: 0,

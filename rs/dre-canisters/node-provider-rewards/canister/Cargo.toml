@@ -33,8 +33,8 @@ ic-protobuf = { workspace = true }
 ic-registry-canister-client = { workspace = true }
 ic-types = { workspace = true }
 mockall = { workspace = true }
-node-provider-rewards = { workspace = true }
-prost = { workspace = true }
+rewards-calculation = { workspace = true }
+node-provider-rewards-api = { workspace = true }
 rust_decimal = { workspace = true }
 
 [dev-dependencies]

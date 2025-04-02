@@ -39,7 +39,7 @@ impl From<NodeDailyFailureRate> for DailyNodeFailureRateTabled {
                 .to_string()
         }
 
-        let utc_day = timestamp_to_utc_date(node_daily_fr.ts);
+        let utc_day = timestamp_to_utc_date(node_daily_fr.ts.get());
         match &node_daily_fr.value {
             NodeFailureRate::DefinedRelative {
                 subnet_assigned,

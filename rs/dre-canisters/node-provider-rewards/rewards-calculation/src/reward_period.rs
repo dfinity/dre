@@ -2,7 +2,6 @@ use ic_types::Time;
 use std::error::Error;
 use std::fmt;
 use std::fmt::Display;
-use std::ops::Deref;
 
 pub type TimestampNanos = u64;
 pub const NANOS_PER_DAY: TimestampNanos = 24 * 60 * 60 * 1_000_000_000;
@@ -21,34 +20,31 @@ fn current_time() -> Time {
 // Wrapper types for TimestampNanos.
 // Used to ensure that the wrapped timestamp is aligned to the start/end of the day.
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
-pub struct TimestampNanosAtDayStart(TimestampNanos);
-#[derive(Debug, Copy, Clone, PartialEq, Eq)]
-pub struct TimestampNanosAtDayEnd(TimestampNanos);
+pub struct DayStartNanos(TimestampNanos);
+#[derive(Debug, Copy, Clone, PartialEq, Eq, Ord, PartialOrd)]
+pub struct DayEndNanos(TimestampNanos);
 
-impl From<TimestampNanos> for TimestampNanosAtDayStart {
+impl From<TimestampNanos> for DayStartNanos {
     fn from(ts: TimestampNanos) -> Self {
         Self((ts / NANOS_PER_DAY) * NANOS_PER_DAY)
     }
 }
 
-impl From<TimestampNanos> for TimestampNanosAtDayEnd {
+impl From<TimestampNanos> for DayEndNanos {
     fn from(ts: TimestampNanos) -> Self {
         Self(((ts / NANOS_PER_DAY) + 1) * NANOS_PER_DAY - 1)
     }
 }
 
-impl Deref for TimestampNanosAtDayEnd {
-    type Target = TimestampNanos;
-
-    fn deref(&self) -> &Self::Target {
-        &self.0
+impl DayStartNanos {
+    pub fn get(&self) -> TimestampNanos {
+        self.0
     }
 }
-impl Deref for TimestampNanosAtDayStart {
-    type Target = TimestampNanos;
 
-    fn deref(&self) -> &Self::Target {
-        &self.0
+impl DayEndNanos {
+    pub fn get(&self) -> TimestampNanos {
+        self.0
     }
 }
 
@@ -60,17 +56,15 @@ impl Deref for TimestampNanosAtDayStart {
 ///
 /// This period ensures that all `BlockmakerMetrics` collected during the reward period are included consistently
 /// with the invariant defined in [`ic_replicated_state::metadata_state::BlockmakerMetricsTimeSeries`].
-///
-/// TODO: This should be moved to NPR canister crate.
 #[derive(Debug, Clone, PartialEq)]
 pub struct RewardPeriod {
-    pub start_ts: TimestampNanosAtDayStart,
-    pub end_ts: TimestampNanosAtDayEnd,
+    pub start_ts: DayStartNanos,
+    pub end_ts: DayEndNanos,
 }
 
 impl Display for RewardPeriod {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "RewardPeriod: {} - {}", *self.start_ts, *self.end_ts)
+        write!(f, "RewardPeriod: {} - {}", self.start_ts.get(), self.end_ts.get())
     }
 }
 
@@ -91,8 +85,8 @@ impl RewardPeriod {
 
         // Metrics are collected at the end of the day, so we need to ensure that
         // the end timestamp is not later than the first ts of today.
-        let today_first_ts: TimestampNanosAtDayStart = current_time().as_nanos_since_unix_epoch().into();
-        if unaligned_end_ts >= *today_first_ts {
+        let today_first_ts: DayStartNanos = current_time().as_nanos_since_unix_epoch().into();
+        if unaligned_end_ts >= today_first_ts.get() {
             return Err(RewardPeriodError::EndTimestampLaterThanToday);
         }
 
@@ -103,11 +97,11 @@ impl RewardPeriod {
     }
 
     pub fn contains(&self, ts: TimestampNanos) -> bool {
-        ts >= *self.start_ts && ts <= *self.end_ts
+        ts >= self.start_ts.get() && ts <= self.end_ts.get()
     }
 
     pub fn days_between(&self) -> u64 {
-        ((*self.end_ts - *self.start_ts) / NANOS_PER_DAY) + 1
+        ((self.end_ts.get() - self.start_ts.get()) / NANOS_PER_DAY) + 1
     }
 }
 
@@ -150,8 +144,8 @@ mod tests {
         let expected_start_ts = ymdh_to_ts(2020, 1, 12, 0);
         let expected_end_ts = ymdh_to_ts(2020, 1, 16, 0) - 1;
 
-        assert_eq!(*rp.start_ts, expected_start_ts);
-        assert_eq!(*rp.end_ts, expected_end_ts);
+        assert_eq!(rp.start_ts.get(), expected_start_ts);
+        assert_eq!(rp.end_ts.get(), expected_end_ts);
         assert_eq!(rp.days_between(), 4);
 
         let unaligned_end_ts = ymdh_to_ts(2020, 1, 12, 13);

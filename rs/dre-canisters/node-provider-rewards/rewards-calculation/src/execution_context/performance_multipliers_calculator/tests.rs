@@ -1,6 +1,6 @@
 use super::*;
-use crate::metrics::{nodes_failure_rates_in_period, subnets_failure_rates, NodeDailyMetrics};
-use crate::reward_period::{RewardPeriod, TimestampNanos, TimestampNanosAtDayEnd, NANOS_PER_DAY};
+use crate::metrics::{nodes_failure_rates_in_period, subnets_failure_rates, NodeMetricsDaily};
+use crate::reward_period::{DayEndNanos, RewardPeriod, TimestampNanos, NANOS_PER_DAY};
 use crate::types::RewardableNode;
 use ic_base_types::PrincipalId;
 use itertools::Itertools;
@@ -14,13 +14,13 @@ fn subnet_id(id: u64) -> SubnetId {
     PrincipalId::new_subnet_test_id(id).into()
 }
 
-fn ts_day_end(day: u64) -> TimestampNanos {
-    *TimestampNanosAtDayEnd::from(day * NANOS_PER_DAY)
+fn ts_day_end(day: u64) -> DayEndNanos {
+    DayEndNanos::from(day * NANOS_PER_DAY)
 }
 
 pub struct FailureRatesBuilder {
     daily_data: BTreeMap<TimestampNanos, Vec<(SubnetId, NodeId, Decimal)>>,
-    nodes_daily_metrics: BTreeMap<NodeId, Vec<NodeDailyMetrics>>,
+    nodes_daily_metrics: BTreeMap<NodeId, Vec<NodeMetricsDaily>>,
 }
 
 impl FailureRatesBuilder {
@@ -64,7 +64,7 @@ impl FailureRatesBuilder {
             node_id,
             metrics
                 .into_iter()
-                .map(|(ts, subnet_id, proposed, failed)| NodeDailyMetrics::new(ts, subnet_id, proposed, failed))
+                .map(|(ts, subnet_id, proposed, failed)| NodeMetricsDaily::new(ts, subnet_id, proposed, failed))
                 .collect(),
         );
 
@@ -83,8 +83,8 @@ impl FailureRatesBuilder {
         let mut metrics_by_node = self.nodes_daily_metrics;
         for (day, entries) in self.daily_data.into_iter() {
             for (subnet, node, rate) in entries {
-                let metrics = NodeDailyMetrics {
-                    ts: TimestampNanosAtDayEnd::from(day),
+                let metrics = NodeMetricsDaily {
+                    ts: DayEndNanos::from(day),
                     subnet_assigned: subnet,
                     num_blocks_proposed: 0,
                     num_blocks_failed: 0,
@@ -94,8 +94,8 @@ impl FailureRatesBuilder {
             }
         }
 
-        let start_ts = metrics_by_node.values().flat_map(|v| v.iter().map(|m| *m.ts)).min().unwrap();
-        let end_ts = metrics_by_node.values().flat_map(|v| v.iter().map(|m| *m.ts)).max().unwrap();
+        let start_ts = metrics_by_node.values().flat_map(|v| v.iter().map(|m| m.ts.get())).min().unwrap();
+        let end_ts = metrics_by_node.values().flat_map(|v| v.iter().map(|m| m.ts.get())).max().unwrap();
         let reward_period = RewardPeriod::new(start_ts, end_ts).unwrap();
         let all_nodes = metrics_by_node.keys().cloned().collect_vec();
 
