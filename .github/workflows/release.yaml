@@ -21,7 +21,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Run checks for release index
-        if: ${{ steps.changed-files.outputs.any_changed == 'true' }}
         run: |
           rye sync
           export PYTHONPATH=$PWD/release-controller
