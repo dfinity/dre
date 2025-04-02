@@ -53,7 +53,7 @@ def annotator() -> typing.Generator[GitRepoAnnotator, None, None]:
 def _test_guestos_changed(
     ann: GitRepoAnnotator, object: str, expect_changed: bool
 ) -> None:
-    assert target_determinator(object=object, ic_repo=ann) == expect_changed
+    assert target_determinator(parent_object=object, cwd=ann.dir) == expect_changed
 
 
 def test_guestos_changed__not_guestos_change(annotator: GitRepoAnnotator) -> None:
