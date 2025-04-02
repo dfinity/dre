@@ -99,20 +99,13 @@ jobs:
       ########################################
       # Upload container images
       ########################################
-      - name: "🔧 Login to GitHub Container Registry"
-        uses: docker/login-action@v3
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: "📦 Push images to GitHub Container Registry"
-        if: ${{ startsWith(github.head_ref, 'container') || startsWith(github.ref, 'refs/heads/container') || (github.ref == 'refs/heads/main') }}
-        shell: bash
-        run: |
-          set -ex -o pipefail
-          bazel query --noshow_progress 'kind("oci_push", ...) except //release-controller/...' \
-            | xargs -I_target bazel run _target -- --tag ${GITHUB_SHA}
+        id: push-images
+        uses: ./.github/workflows/push
+        if: ${{ github.ref == 'refs/heads/main' }}
+        with:
+          spec: kind("oci_push", ...) except //release-controller/...
 
       ########################################
       # Deploy to github pages
@@ -128,7 +121,7 @@ jobs:
       # Update k8s deployments
       ########################################
       - name: "🤖 Update k8s deployments"
-        if: ${{ github.ref == 'refs/heads/main' }}
+        if: ${{ github.ref == 'refs/heads/main' && steps.push-images.outputs.pushed == 'true' }}
         uses: ./.github/workflows/update-k8s-deployments
         with:
           files-to-update: bases/apps/mainnet-dashboard/backend/base/deployment.yaml bases/apps/mainnet-dashboard/statefulset-slack.yaml bases/apps/service-discovery/service-discovery.yaml .github/workflows/dre-vector-configs.yaml
