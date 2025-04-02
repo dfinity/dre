@@ -12,6 +12,11 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  unconditional:
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+          echo 'The triggering workflow triggered' >&2
   on-success:
     runs-on: ubuntu-latest
     if: ${{ github.event.workflow_run.conclusion == 'success' }}
