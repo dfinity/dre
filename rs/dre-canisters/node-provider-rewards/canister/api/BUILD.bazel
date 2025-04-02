@@ -12,10 +12,10 @@ rust_library(
     crate_name = "node_provider_rewards_api",
     srcs = glob(["src/**/*.rs"]),
     aliases = aliases(),
-    proc_macro_deps = DEPS + all_crate_deps(
+    proc_macro_deps = all_crate_deps(
         proc_macro = True,
     ),
-    deps = all_crate_deps(
+    deps = DEPS + all_crate_deps(
         normal = True,
     ),
 )
