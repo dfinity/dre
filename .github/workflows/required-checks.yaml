@@ -25,13 +25,11 @@ jobs:
         uses: lewagon/wait-on-check-action@v1.3.4
         with:
           ref: ${{ github.ref }}
-          check-name: bazel-release-controller
           repo-token: "${{ steps.app-token.outputs.token }}"
           wait-interval: 10
       - name: Wait for build and test
         uses: lewagon/wait-on-check-action@v1.3.4
         with:
           ref: ${{ github.ref }}
-          check-name: bazel
           repo-token: "${{ steps.app-token.outputs.token }}"
           wait-interval: 10
