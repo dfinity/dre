@@ -71,7 +71,7 @@ jobs:
         run: |
           set -e
           t=$(mktemp) ; t2=$(mktemp) ; trap 'rm -f "$t" "$t2"' EXIT
-          bazel query "//release-controller/... except attr(tags, 'manual', //...) except attr(name, '.*oci_image.*', //release-controller/...)" > "$t"
+          bazel query "tests(//release-controller/...) except attr(tags, 'manual', //...) except attr(name, '.*oci_image.*', //release-controller/...)" > "$t"
           set -x
           if [ "$(stat -c %s "$t")" = "0" ] ; then echo No testing targets found >&2 ; exit 0 ; fi
           r=0
