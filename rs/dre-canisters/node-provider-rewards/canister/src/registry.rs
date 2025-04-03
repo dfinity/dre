@@ -12,8 +12,9 @@ use ic_registry_keys::{
 };
 use ic_types::registry::RegistryClientError;
 use indexmap::IndexMap;
-use rewards_calculation::reward_period::TimestampNanos;
+use rewards_calculation::input_builder::RewardableNode;
 use rewards_calculation::types::RewardableNode;
+use rewards_calculation::types::TimestampNanos;
 use std::collections::btree_map::Entry;
 use std::collections::BTreeMap;
 use std::str::FromStr;
@@ -135,8 +136,12 @@ impl<S: RegistryDataStableMemory> RegistryClient<S> {
         }
     }
 
-    pub fn get_rewardable_nodes(&self, _start_ts: TimestampNanos, _end_ts: TimestampNanos) -> Vec<RewardableNode> {
-        let mut nodes = BTreeMap::new();
+    pub fn get_rewardable_nodes_per_provider(
+        &self,
+        _start_ts: TimestampNanos,
+        _end_ts: TimestampNanos,
+    ) -> BTreeMap<PrincipalId, Vec<RewardableNode>> {
+        let mut rewardable_nodes_per_provider = BTreeMap::new();
         let mut node_operator_rewardable_count = BTreeMap::new();
 
         // TODO: Extend to all the versions in the range once the registry supports it.
@@ -145,32 +150,28 @@ impl<S: RegistryDataStableMemory> RegistryClient<S> {
 
         for (principal_id, (_, node_record)) in nodes_record {
             let node_id: NodeId = PrincipalId::from_str(principal_id.as_str()).unwrap().into();
+            let node_operator_id: PrincipalId = node_record.node_operator_id.try_into().unwrap();
+            let node_operator_record = self
+                .get_value::<NodeOperatorRecord>(make_node_operator_record_key(node_operator_id).as_str())
+                .unwrap();
 
-            if let Entry::Vacant(node_entry) = nodes.entry(node_id) {
-                let node_operator_id: PrincipalId = node_record.node_operator_id.try_into().unwrap();
-                let node_operator_record = self
-                    .get_value::<NodeOperatorRecord>(make_node_operator_record_key(node_operator_id).as_str())
-                    .unwrap();
-
-                if let Entry::Vacant(e) = node_operator_rewardable_count.entry(node_operator_id) {
-                    e.insert(node_operator_record.rewardable_nodes);
-                }
-
-                let node_type = self.estimate_node_type(node_operator_rewardable_count.get_mut(&node_operator_id));
-
-                let node_provider_id: PrincipalId = node_operator_record.node_provider_principal_id.try_into().unwrap();
-                let data_center_record = self
-                    .get_value::<DataCenterRecord>(&make_data_center_record_key(&node_operator_record.dc_id))
-                    .unwrap();
-
-                node_entry.insert(RewardableNode {
-                    node_id,
-                    node_provider_id,
-                    region: data_center_record.region,
-                    node_type,
-                });
+            if let Entry::Vacant(e) = node_operator_rewardable_count.entry(node_operator_id) {
+                e.insert(node_operator_record.rewardable_nodes);
             }
+
+            let node_type = self.estimate_node_type(node_operator_rewardable_count.get_mut(&node_operator_id));
+
+            let node_provider_id: PrincipalId = node_operator_record.node_provider_principal_id.try_into().unwrap();
+            let data_center_record = self
+                .get_value::<DataCenterRecord>(&make_data_center_record_key(&node_operator_record.dc_id))
+                .unwrap();
+
+            rewardable_nodes_per_provider.entry(node_provider_id).or_default().push(RewardableNode {
+                node_id,
+                node_type: node_type.clone(),
+                region: data_center_record.region,
+            })
         }
-        nodes.into_values().collect()
+        rewardable_nodes_per_provider
     }
 }

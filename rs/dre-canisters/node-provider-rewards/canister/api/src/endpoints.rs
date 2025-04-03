@@ -1,10 +1,11 @@
 use chrono::DateTime;
 use ic_base_types::{NodeId, PrincipalId, SubnetId};
-use rewards_calculation::calculation_results::NodeProviderCalculationResults;
+use rewards_calculation::calculation_results::RewardsCalculatorResults;
 use rewards_calculation::metrics::NodeFailureRate;
-use rewards_calculation::reward_period::TimestampNanos;
+use rewards_calculation::types::TimestampNanos;
 use rewards_calculation::RewardsCalculationResult;
 use rust_decimal::prelude::ToPrimitive;
+use rust_decimal::Decimal;
 use std::collections::BTreeMap;
 
 #[derive(candid::CandidType, candid::Deserialize)]
@@ -18,14 +19,10 @@ pub struct NodeProvidersRewardsXDRTotal {
     pub rewards_per_provider: BTreeMap<PrincipalId, u64>,
 }
 
-impl From<RewardsCalculationResult> for NodeProvidersRewardsXDRTotal {
-    fn from(result: RewardsCalculationResult) -> Self {
+impl NodeProvidersRewardsXDRTotal {
+    pub fn new(result: BTreeMap<PrincipalId, Decimal>) -> Self {
         Self {
-            rewards_per_provider: result
-                .results_per_provider
-                .into_iter()
-                .map(|(k, v)| (k, v.rewards_total.to_u64().unwrap()))
-                .collect(),
+            rewards_per_provider: result.into_iter().map(|(k, v)| (k, v.to_u64().unwrap())).collect(),
         }
     }
 }
@@ -80,18 +77,18 @@ pub struct NodeProviderRewardsCalculation {
     pub rewards_total_xdr: u64,
 }
 
-impl From<RewardsCalculationResult> for NodeProviderRewardsCalculation {
-    fn from(result: RewardsCalculationResult) -> Self {
+impl From<RewardsCalculatorResults> for NodeProviderRewardsCalculation {
+    fn from(result: RewardsCalculatorResults) -> Self {
         let mut result = result;
-        let NodeProviderCalculationResults {
+        let RewardsCalculatorResults {
             provider_nodes,
             extrapolated_fr,
             rewards_by_category,
             rewards_total,
             mut nodes_fr,
             mut average_extrapolated_fr,
-            mut rewards_reduction,
-            mut performance_multiplier,
+            rewards_reductions: mut rewards_reduction,
+            performance_multipliers: mut performance_multiplier,
             mut base_rewards,
             mut adjusted_rewards,
             ..
