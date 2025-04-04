@@ -6,9 +6,9 @@ use ic_cdk::api::call::CallResult;
 use ic_management_canister_types_private::{NodeMetricsHistoryArgs, NodeMetricsHistoryResponse};
 use ic_stable_structures::StableBTreeMap;
 use itertools::Itertools;
-use rewards_calculation::input_builder::NodeMetricsDaily;
 use rewards_calculation::metrics::NodeMetricsDaily;
 use rewards_calculation::types::TimestampNanos;
+use rewards_calculation::types::{DayEndNanos, NodeMetricsDaily};
 use std::cell::RefCell;
 use std::collections::{BTreeMap, HashMap};
 
@@ -223,7 +223,12 @@ where
                     .into_iter()
                     .sorted_by_key(|(key, _)| key.timestamp_nanos)
                     .map(|(key, metrics)| {
-                        NodeMetricsDaily::new(key.timestamp_nanos, key.subnet_id, metrics.num_blocks_proposed, metrics.num_blocks_failed)
+                        NodeMetricsDaily::new(
+                            key.timestamp_nanos.into(),
+                            key.subnet_id,
+                            metrics.num_blocks_proposed,
+                            metrics.num_blocks_failed,
+                        )
                     })
                     .collect();
 

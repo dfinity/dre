@@ -8,8 +8,8 @@ use itertools::Itertools;
 use node_provider_rewards_api::endpoints::{
     NodeProviderRewardsCalculation, NodeProviderRewardsCalculationArgs, NodeProvidersRewardsXDRTotal, RewardPeriodArgs,
 };
-use rewards_calculation::input_builder::{RewardCalculationError, RewardableNode, RewardsCalculatorInput, RewardsCalculatorInputBuilder};
 use rewards_calculation::types::RewardPeriod;
+use rewards_calculation::types::{RewardCalculatorError, RewardPeriodData, RewardPeriodDataBuilder, RewardableNode};
 use std::cell::RefCell;
 use std::collections::{BTreeMap, HashSet};
 
@@ -158,9 +158,7 @@ fn http_request(request: HttpRequest) -> HttpResponse {
     }
 }
 
-fn from_reward_period_args(
-    args: RewardPeriodArgs,
-) -> Result<(RewardsCalculatorInput, BTreeMap<PrincipalId, Vec<RewardableNode>>), RewardCalculationError> {
+fn from_reward_period_args(args: RewardPeriodArgs) -> Result<(RewardPeriodData, BTreeMap<PrincipalId, Vec<RewardableNode>>), RewardCalculatorError> {
     let reward_period = RewardPeriod::new(args.start_ts, args.end_ts)?;
     let start_ts = reward_period.start_ts.get();
     let end_ts = reward_period.end_ts.get();
@@ -179,7 +177,7 @@ fn from_reward_period_args(
     //     .collect::<Vec<_>>();
     // assert!(daily_metrics_by_node.keys().all( |k| rewardables.contains(k)));
 
-    let input = RewardsCalculatorInputBuilder::default()
+    let input = RewardPeriodDataBuilder::default()
         .with_reward_period(reward_period)
         .with_rewards_table(rewards_table)
         .with_daily_metrics_by_node(daily_metrics_by_node)

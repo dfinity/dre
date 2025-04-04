@@ -12,7 +12,7 @@ use ic_registry_keys::{
 };
 use ic_types::registry::RegistryClientError;
 use indexmap::IndexMap;
-use rewards_calculation::input_builder::RewardableNode;
+use rewards_calculation::types::RewardableNode;
 use rewards_calculation::types::RewardableNode;
 use rewards_calculation::types::TimestampNanos;
 use std::collections::btree_map::Entry;

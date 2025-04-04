@@ -7485,6 +7485,7 @@ dependencies = [
  "ic-protobuf",
  "ic-types",
  "itertools 0.13.0",
+ "maplit",
  "num-traits",
  "rust_decimal",
  "rust_decimal_macros",

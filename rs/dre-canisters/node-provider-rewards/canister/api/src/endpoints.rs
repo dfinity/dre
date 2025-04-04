@@ -204,3 +204,78 @@ fn timestamp_to_utc_date(ts: TimestampNanos) -> String {
         .format("%d-%m-%Y")
         .to_string()
 }
+
+#[test]
+fn test_max_encoded_size() {
+    const MAX_PRINCIPAL_ID: PrincipalId = PrincipalId(Principal::from_slice(&[0xFF; 29]));
+
+    let max_f64_u64_bytes = 8;
+    let max_nodes = 1500;
+    let max_subnets = 100;
+    let max_days = 180;
+    let large_string = "X".repeat(100);
+
+    let daily_subnets_fr = (0..max_subnets)
+        .map(|_| {
+            (
+                MAX_PRINCIPAL_ID.into(),
+                (0..max_days)
+                    .map(|_| DailySubnetFailureRate {
+                        utc_day: "2025-05-04".to_string(),
+                        fr: max_f64,
+                    })
+                    .collect(),
+            )
+        })
+        .collect();
+
+    let results_by_node = (0..max_nodes)
+        .map(|_| {
+            (
+                MAX_PRINCIPAL_ID.into(),
+                NodeResults {
+                    node_type: large_string.clone(),
+                    region: large_string.clone(),
+                    daily_node_results: Some(
+                        (0..max_days)
+                            .map(|_| DailyNodeResults {
+                                utc_day: "2025-01-01".to_string(),
+                                subnet_assigned: MAX_PRINCIPAL_ID.into(),
+                                blocks_proposed: max_u64,
+                                blocks_failed: max_u64,
+                                original_failure_rate: max_f64,
+                                relative_failure_rate: max_f64,
+                            })
+                            .collect(),
+                    ),
+                    average_fr: max_f64,
+                    rewards_reduction: max_f64,
+                    performance_multiplier: max_f64,
+                    base_rewards: max_f64,
+                    adjusted_rewards: max_f64,
+                },
+            )
+        })
+        .collect::<BTreeMap<_, _>>();
+
+    let rewards_by_category = (0..max_days)
+        .map(|_| BaseRewardsByCategory {
+            node_type: large_string.clone(),
+            region: large_string.clone(),
+            base_rewards: max_f64,
+        })
+        .collect();
+
+    let rewards_calculation = NodeProviderRewardsCalculation {
+        daily_subnets_fr,
+        extrapolated_fr: max_f64,
+        results_by_node,
+        rewards_by_category,
+        rewards_total: max_f64,
+    };
+
+    let encoded = Encode!(&rewards_calculation).unwrap();
+    let size_mb = encoded.len() as f64 / (1024.0 * 1024.0);
+    println!("Encoded size: {:.2} MB", size_mb);
+    assert!(size_mb < 2.0, "Encoded size is too large!");
+}
