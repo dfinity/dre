@@ -3,6 +3,10 @@ load("@rules_rust//rust:defs.bzl", "rust_library", "rust_test")
 
 package(default_visibility = ["//visibility:public"])
 
+DEPS = [
+    "//rs/dre-canisters/node-provider-rewards/rewards-calculation",
+]
+
 rust_library(
     name = "api",
     crate_name = "node_provider_rewards_api",
@@ -11,7 +15,7 @@ rust_library(
     proc_macro_deps = all_crate_deps(
         proc_macro = True,
     ),
-    deps = all_crate_deps(
+    deps = DEPS + all_crate_deps(
         normal = True,
     ),
 )

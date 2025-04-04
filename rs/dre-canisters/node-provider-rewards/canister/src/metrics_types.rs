@@ -2,7 +2,7 @@ use candid::{CandidType, Decode, Encode, Principal};
 use ic_base_types::{NodeId, PrincipalId, SubnetId};
 use ic_stable_structures::storable::Bound;
 use ic_stable_structures::Storable;
-use rewards_calculation::reward_period::TimestampNanos;
+use rewards_calculation::types::TimestampNanos;
 use serde::Deserialize;
 use std::borrow::Cow;
 
@@ -12,7 +12,7 @@ const MAX_BYTES_NODE_METRICS_STORED_KEY: u32 = 60;
 const PRINCIPAL_MAX_LENGTH_IN_BYTES: usize = 29;
 
 pub const MIN_PRINCIPAL_ID: PrincipalId = PrincipalId(Principal::from_slice(&[]));
-pub const MAX_PRINCIPAL_ID: PrincipalId = PrincipalId(Principal::from_slice(&[0xFF; PRINCIPAL_MAX_LENGTH_IN_BYTES]));
+pub const MAX_PRINCIPAL_ID: PrincipalId = PrincipalId(Principal::from_slice(&[0xFF_u8; PRINCIPAL_MAX_LENGTH_IN_BYTES]));
 
 #[test]
 fn max_bound_size() {
