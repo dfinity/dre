@@ -158,13 +158,13 @@ def get_rc_branch(repo_dir, commit_hash):
 def memoize(f):
     def inner(*args, **kwargs):
         nonlocal f
-        os.makedirs(os.path.expanduser("~/.cache/memoized-x"), exist_ok=True)
+        os.makedirs(os.path.expanduser("~/.cache/host-os-release-notes"), exist_ok=True)
         args_sum_hasher = hashlib.md5()
         args_sum_hasher.update(
             (str(f.__name__) + str(args) + str(kwargs)).encode("utf-8")
         )
         args_sum = args_sum_hasher.hexdigest()
-        cachefile = os.path.expanduser(f"~/.cache/memoized-x/{args_sum}")
+        cachefile = os.path.expanduser(f"~/.cache/host-os-release-notes/{args_sum}")
         try:
             with open(cachefile, "rb") as fob:
                 return pickle.load(fob)
