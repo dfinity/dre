@@ -260,7 +260,7 @@ impl Runner {
         Ok(IcAdminProposal::new(
             IcAdminProposalCommand::ReviseElectedVersions {
                 release_artifact: update_version.release_artifact.clone(),
-                args: update_version.get_update_cmd_args(),
+                args: update_version.get_update_cmd_args(&update_version.release_artifact),
             },
             IcAdminProposalOptions {
                 title: Some(update_version.title),
@@ -1143,11 +1143,14 @@ pub struct UpdateVersion {
 }
 
 impl UpdateVersion {
-    pub fn get_update_cmd_args(&self) -> Vec<String> {
+    pub fn get_update_cmd_args(&self, release_artifact: &Artifact) -> Vec<String> {
         [
             [
                 vec![
-                    "--replica-version-to-elect".to_string(),
+                    match release_artifact {
+                        Artifact::GuestOs => "--replica-version-to-elect".to_string(),
+                        Artifact::HostOs => "--hostos-version-to-elect".to_string(),
+                    },
                     self.version.to_string(),
                     "--release-package-sha256-hex".to_string(),
                     self.stringified_hash.to_string(),
@@ -1157,7 +1160,14 @@ impl UpdateVersion {
             ]
             .concat(),
             match self.versions_to_retire.clone() {
-                Some(versions) => [vec!["--replica-versions-to-unelect".to_string()], versions].concat(),
+                Some(versions) => [
+                    vec![match release_artifact {
+                        Artifact::GuestOs => "--replica-versions-to-unelect".to_string(),
+                        Artifact::HostOs => "--hostos-versions-to-unelect".to_string(),
+                    }],
+                    versions,
+                ]
+                .concat(),
                 None => vec![],
             },
         ]
@@ -1170,13 +1180,25 @@ pub fn format_regular_version_upgrade_summary(version: &str, release_artifact: &
         Some(git_tag) => git_tag,
         None => return Err(anyhow::anyhow!("Release tag is required for non-security versions")),
     };
+    let (artifact_str, artifact_name) = match release_artifact {
+        Artifact::GuestOs => ("--guestos", "GuestOS"),
+        Artifact::HostOs => ("--hostos", "HostOS"),
+    };
+    let guestos_only_text = match release_artifact {
+        Artifact::GuestOs => {
+            r#"
+
+While not required for this NNS proposal, as we are only electing a new GuestOS version here, you have the option to verify the build reproducibility of the HostOS by passing `--hostos` to the script above instead of `--guestos`, or the SetupOS by passing `--setupos`."#
+        }
+        Artifact::HostOs => "",
+    };
     let template = format!(
-        r#"Elect new {release_artifact} binary revision [{version}](https://github.com/dfinity/ic/tree/{release_tag})
+        r#"Elect new {artifact_name} binary revision [{version}](https://github.com/dfinity/ic/tree/{release_tag})
 
 # Release Notes:
 
 [comment]: <> Remove this block of text from the proposal.
-[comment]: <> Then, add the {release_artifact} binary release notes as bullet points here.
+[comment]: <> Then, add the {artifact_name} binary release notes as bullet points here.
 [comment]: <> Any [commit ID] within square brackets will auto-link to the specific changeset.
 
 # IC-OS Verification
@@ -1185,13 +1207,11 @@ To build and verify the IC-OS disk image, after installing curl if necessary (`s
 
 ```
 # From https://github.com/dfinity/ic#verifying-releases
-curl -fsSL https://raw.githubusercontent.com/dfinity/ic/master/ci/tools/repro-check | python3 - -c {version} --guestos
+curl -fsSL https://raw.githubusercontent.com/dfinity/ic/master/ci/tools/repro-check | python3 - -c {version} {artifact_str}
 ```
 
 The two SHA256 sums printed above from a) the downloaded CDN image and b) the locally built image,
-must be identical, and must match the SHA256 from the payload of the NNS proposal.
-
-While not required for this NNS proposal, as we are only electing a new GuestOS version here, you have the option to verify the build reproducibility of the HostOS by passing `--hostos` to the script above instead of `--guestos`, or the SetupOS by passing `--setupos`.
+must be identical, and must match the SHA256 from the payload of the NNS proposal.{guestos_only_text}
 "#
     );
 
