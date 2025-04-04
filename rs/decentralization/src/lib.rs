@@ -129,6 +129,22 @@ impl Display for SubnetChangeResponse {
                 "\nImpact on business rules penalties: {} -> {}",
                 self.penalties_before_change.0, self.penalties_after_change.0
             )?;
+
+            if !self.penalties_before_change.1.is_empty() {
+                writeln!(
+                    f,
+                    "\nBusiness rules check results *before* the membership change:\n{}",
+                    self.penalties_before_change.1.iter().map(|l| format!("- {}", l)).join("\n")
+                )?;
+            }
+
+            if !self.penalties_after_change.1.is_empty() {
+                writeln!(
+                    f,
+                    "\nBusiness rules check results *after* the membership change:\n{}",
+                    self.penalties_after_change.1.iter().map(|l| format!("- {}", l)).join("\n")
+                )?;
+            }
         }
 
         writeln!(f, "\n\n# Details\n\nNodes removed:")?;
@@ -184,22 +200,6 @@ impl Display for SubnetChangeResponse {
         }
 
         writeln!(f, "\n\n```\n{}```", table)?;
-
-        if !self.penalties_before_change.1.is_empty() {
-            writeln!(
-                f,
-                "\n\nBusiness rules check results *before* the membership change:\n{}",
-                self.penalties_before_change.1.iter().map(|l| format!("- {}", l)).join("\n")
-            )?;
-        }
-
-        if !self.penalties_after_change.1.is_empty() {
-            writeln!(
-                f,
-                "\n\nBusiness rules check results *after* the membership change:\n{}",
-                self.penalties_after_change.1.iter().map(|l| format!("- {}", l)).join("\n")
-            )?;
-        }
 
         Ok(())
     }
