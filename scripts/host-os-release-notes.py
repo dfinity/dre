@@ -13,7 +13,6 @@ import re
 import subprocess
 import sys
 import time
-import webbrowser
 
 COMMIT_HASH_LENGTH = 9
 
@@ -610,7 +609,7 @@ def main():
 
         output.write("</div>")
 
-    subprocess.Popen(["xdg-open", html_path])
+    subprocess.Popen(["open", html_path])
 
 
 if __name__ == "__main__":
