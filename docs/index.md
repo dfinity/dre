@@ -51,6 +51,7 @@ Comprehensive logging solutions for:
 ## Quick Links
 
 - [Create a Neuron](create-a-neuron.md)
+- [Set Up Neuron Following](neuron-following-setup.md)
 - [Submit NNS Proposals](nns-proposals.md)
 - [Run Qualification Tests](qualification/running-qualification.md)
 - [Manage Releases](make-release.md)
