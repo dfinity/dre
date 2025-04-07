@@ -26,6 +26,7 @@ To set up neuron following, you'll need:
 ### Command to Set Up Following
 
 ```bash
+cd <path>/ic/rs/nns
 # Export required variables
 export NEURON_ID=<Your neuron ID>
 export NEURON_TO_FOLLOW=<Neuron ID to follow>
