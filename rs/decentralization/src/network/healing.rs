@@ -286,7 +286,7 @@ impl NetworkHealRequest {
                     .expect("Failed to find the expected replacement with the maximum Nakamoto Coefficient")
             } else {
                 info!("No reduction in business-rules penalty, choosing the first change");
-                &best_changes[0]
+                best_changes[0]
             };
 
             if change.node_ids_removed.is_empty() {
