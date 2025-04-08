@@ -259,15 +259,17 @@ impl NetworkHealRequest {
                 .skip(1)
                 .map(|(num_opt, change)| {
                     let previous_index = num_opt.saturating_sub(1);
+                    let penalty_before = changes[previous_index].penalties_after_change.0;
+                    let penalty_after = change.penalties_after_change.0;
                     format!(
                         "- {} additional node{} would result in: {}{}",
                         num_opt,
                         if num_opt > 1 { "s" } else { "" },
                         change.score_after.describe_difference_from(&changes[previous_index].score_after).1,
-                        if change.penalties_after_change.0 > 0 || change.penalties_before_change.0 != change.penalties_after_change.0 {
+                        if penalty_after > 0 || penalty_before != penalty_after {
                             format!(
                                 " and subnet topology penalty before {} => {} after the change",
-                                changes[previous_index].penalties_before_change.0, change.penalties_after_change.0
+                                penalty_before, penalty_after
                             )
                         } else {
                             "".to_string()
