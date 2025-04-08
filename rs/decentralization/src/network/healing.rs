@@ -226,6 +226,7 @@ impl NetworkHealRequest {
                 );
             }
 
+            // There is already a check above that "changes" isn't empty
             let penalty_original = changes[0].penalties_before_change.0;
             // Some community members have expressed concern about the business-rules penalty.
             // https://forum.dfinity.org/t/subnet-management-tdb26-nns/33663/26 and a few comments below.
@@ -259,12 +260,12 @@ impl NetworkHealRequest {
                 .enumerate()
                 .skip(1)
                 .map(|(num_opt, change)| {
-                    let prev_opt = num_opt.saturating_sub(1);
+                    let previous_index = num_opt.saturating_sub(1);
                     format!(
                         "- {} additional node{} would result in: {}{}",
                         num_opt,
                         if num_opt > 1 { "s" } else { "" },
-                        change.score_after.describe_difference_from(&changes[prev_opt].score_after).1,
+                        change.score_after.describe_difference_from(&changes[previous_index].score_after).1,
                         if change.penalties_after_change.0 > 0 || change.penalties_before_change.0 != change.penalties_after_change.0 {
                             format!(
                                 " (solution penalty: {} -> {})",
