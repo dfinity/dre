@@ -131,7 +131,7 @@ impl NetworkHealRequest {
         }
 
         if subnets_to_fix.is_empty() {
-            info!("Nothing to do! All subnets are healthy and compliant with business rules.")
+            info!("Nothing to do! All subnets are healthy and compliant with the topology checks.")
         }
 
         // Re-sort all subnets together to maintain priority ordering and fix the most important subnets first.
@@ -218,7 +218,7 @@ impl NetworkHealRequest {
 
             for change in &changes {
                 info!(
-                    "Replacing {} nodes in subnet {} results in subnet with business-rules penalty {} and Nakamoto coefficient: {}\n",
+                    "Replacing {} nodes in subnet {} results in subnet topology penalty {} and Nakamoto coefficient: {}\n",
                     change.node_ids_removed.len(),
                     subnet.decentralized_subnet.id,
                     change.penalties_after_change.0,
@@ -228,13 +228,13 @@ impl NetworkHealRequest {
 
             // There is already a check above that "changes" isn't empty
             let penalty_original = changes[0].penalties_before_change.0;
-            // Some community members have expressed concern about the business-rules penalty.
+            // Some community members have expressed concern about the subnet-topology (business rules) penalty.
             // https://forum.dfinity.org/t/subnet-management-tdb26-nns/33663/26 and a few comments below.
             // As a compromise, we will choose the change that has the lowest business-rules penalty,
             // or if there is no improvement in the business-rules penalty, we will choose the change
             // that replaces the fewest nodes.
             let penalty_optimize_min = changes.iter().map(|change| change.penalties_after_change.0).min().unwrap();
-            info!("Min business-rules penalty: {}", penalty_optimize_min);
+            info!("Min subnet topology penalty: {}", penalty_optimize_min);
 
             // Include only solutions with the minimal penalty
             let best_changes = changes
@@ -245,14 +245,12 @@ impl NetworkHealRequest {
             // Then from those with the minimal penalty, find the ones with the maximum Nakamoto Coefficient (best decentralization)
             let changes_max_score = best_changes
                 .iter()
-                .max_by_key(|change| change.score_after.clone())
+                .max_by_key(|change| &change.score_after)
                 .expect("Failed to find a replacement with the highest Nakamoto coefficient");
             info!("Best Nakamoto coefficient after the change: {}", changes_max_score.score_after);
 
-            // A solution (subnet membership) gets a penalty based on how far it is from the set business rules,
-            // or effectively target topology and some other rules that may not be represented in the target topology
-            // but are necessary from the operational point of view.
-            // Lowering the penalty means getting closer to the solution that satisfies all these rules.
+            // A solution (subnet membership) gets a penalty based on how far it is from the optimal topology.
+            // Lowering the penalty means getting closer to the solution that satisfies all rules of the optimal topology.
             let is_solution_penalty_improving = penalty_optimize_min < penalty_original;
 
             let all_optimizations_desc = changes
@@ -268,8 +266,8 @@ impl NetworkHealRequest {
                         change.score_after.describe_difference_from(&changes[previous_index].score_after).1,
                         if change.penalties_after_change.0 > 0 || change.penalties_before_change.0 != change.penalties_after_change.0 {
                             format!(
-                                " (solution penalty: {} -> {})",
-                                change.penalties_before_change.0, change.penalties_after_change.0
+                                " and subnet topology penalty before {} => {} after the change",
+                                changes[previous_index].penalties_before_change.0, change.penalties_after_change.0
                             )
                         } else {
                             "".to_string()
@@ -285,7 +283,7 @@ impl NetworkHealRequest {
                     .cloned()
                     .expect("Failed to find the expected replacement with the maximum Nakamoto Coefficient")
             } else {
-                info!("No reduction in business-rules penalty, choosing the first change");
+                info!("No reduction in the subnet topology penalty, choosing the first change");
                 best_changes[0]
             };
 
