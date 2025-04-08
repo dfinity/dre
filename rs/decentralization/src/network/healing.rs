@@ -226,6 +226,7 @@ impl NetworkHealRequest {
                 );
             }
 
+            let penalty_original = changes[0].penalties_before_change.0;
             // Some community members have expressed concern about the business-rules penalty.
             // https://forum.dfinity.org/t/subnet-management-tdb26-nns/33663/26 and a few comments below.
             // As a compromise, we will choose the change that has the lowest business-rules penalty,
@@ -234,21 +235,41 @@ impl NetworkHealRequest {
             let penalty_optimize_min = changes.iter().map(|change| change.penalties_after_change.0).min().unwrap();
             info!("Min business-rules penalty: {}", penalty_optimize_min);
 
+            // Include only solutions with the minimal penalty
+            let best_changes = changes
+                .iter()
+                .filter(|change| change.penalties_after_change.0 == penalty_optimize_min)
+                .collect::<Vec<_>>();
+
+            // Then from those with the minimal penalty, find the ones with the maximum Nakamoto Coefficient (best decentralization)
+            let changes_max_score = best_changes
+                .iter()
+                .max_by_key(|change| change.score_after.clone())
+                .expect("Failed to find a replacement with the highest Nakamoto coefficient");
+            info!("Best Nakamoto coefficient after the change: {}", changes_max_score.score_after);
+
+            // A solution (subnet membership) gets a penalty based on how far it is from the set business rules,
+            // or effectively target topology and some other rules that may not be represented in the target topology
+            // but are necessary from the operational point of view.
+            // Lowering the penalty means getting closer to the solution that satisfies all these rules.
+            let is_solution_penalty_improving = penalty_optimize_min < penalty_original;
+
             let all_optimizations_desc = changes
                 .iter()
                 .enumerate()
                 .skip(1)
                 .map(|(num_opt, change)| {
+                    let prev_opt = num_opt.saturating_sub(1);
                     format!(
                         "- {} additional node{} would result in: {}{}",
                         num_opt,
                         if num_opt > 1 { "s" } else { "" },
-                        change
-                            .score_after
-                            .describe_difference_from(&changes[num_opt.saturating_sub(1)].score_after)
-                            .1,
-                        if change.penalties_after_change.0 > 0 {
-                            format!(" (solution penalty: {})", change.penalties_after_change.0)
+                        change.score_after.describe_difference_from(&changes[prev_opt].score_after).1,
+                        if change.penalties_after_change.0 > 0 || change.penalties_before_change.0 != change.penalties_after_change.0 {
+                            format!(
+                                " (solution penalty: {} -> {})",
+                                change.penalties_before_change.0, change.penalties_after_change.0
+                            )
                         } else {
                             "".to_string()
                         },
@@ -256,25 +277,15 @@ impl NetworkHealRequest {
                 })
                 .collect::<Vec<_>>();
 
-            let best_changes = changes
-                .into_iter()
-                .filter(|change| change.penalties_after_change.0 == penalty_optimize_min)
-                .collect::<Vec<_>>();
-
-            let changes_max_score = best_changes
-                .iter()
-                .max_by_key(|change| change.score_after.clone())
-                .expect("Failed to find a replacement with the highest Nakamoto coefficient");
-            info!("Best Nakamoto coefficient after the change: {}", changes_max_score.score_after);
-
-            let change = if penalty_optimize_min > 0 && penalty_optimize_min == best_changes[0].penalties_after_change.0 {
-                info!("No reduction in business-rules penalty, choosing the first change");
-                &best_changes[0]
-            } else {
+            let change = if is_solution_penalty_improving {
                 best_changes
                     .iter()
-                    .find(|change: &&SubnetChangeResponse| change.score_after == changes_max_score.score_after)
-                    .expect("No suitable changes found")
+                    .find(|change| change.score_after == changes_max_score.score_after)
+                    .cloned()
+                    .expect("Failed to find the expected replacement with the maximum Nakamoto Coefficient")
+            } else {
+                info!("No reduction in business-rules penalty, choosing the first change");
+                &best_changes[0]
             };
 
             if change.node_ids_removed.is_empty() {
@@ -345,6 +356,8 @@ https://github.com/dfinity/dre/blob/79066127f58c852eaf4adda11610e815a426878c/rs/
                     ));
                 } else if cordoned_nodes_ids.contains(&node.principal) {
                     motivations.push(format!("replacing cordoned node {} ({})", node_id_short, desc));
+                } else if is_solution_penalty_improving {
+                    motivations.push(format!("replacing node {} to reduce subnet topology penalty", node_id_short));
                 } else {
                     motivations.push(format!("replacing node {} to optimize network topology", node_id_short));
                 };
