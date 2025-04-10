@@ -1,10 +1,11 @@
 import json
 import logging
-import pathlib
 import subprocess
 import typing
 from util import resolve_binary
 import os
+
+from const import OsKind, HOSTOS
 
 
 class Auth(typing.TypedDict):
@@ -83,20 +84,22 @@ class DRECli:
             ),
         )
 
-    def get_blessed_versions(self) -> list[str]:
-        """Query the blessed versions."""
-        return typing.cast(
-            list[str],
-            json.loads(
-                subprocess.check_output(
-                    [self.cli, "get", "blessed-replica-versions", "--json"],
-                    env=self.env,
-                )
-            )["value"]["blessed_version_ids"],
+    def get_blessed_guestos_versions(self) -> set[str]:
+        """Query the blessed GuestOS versions."""
+        return set(
+            typing.cast(
+                list[str],
+                json.loads(
+                    subprocess.check_output(
+                        [self.cli, "get", "blessed-replica-versions", "--json"],
+                        env=self.env,
+                    )
+                )["value"]["blessed_version_ids"],
+            )
         )
 
     def get_blessed_hostos_versions(self) -> set[str]:
-        """Query the blessed versions."""
+        """Query the blessed HostOS versions."""
         return set(
             typing.cast(
                 list[str],
@@ -111,7 +114,7 @@ class DRECli:
         )
 
     def get_past_election_proposals(self) -> list[ElectionProposal]:
-        """Get all known GuestOS election proposals."""
+        """Get all known GuestOS / HostOS election proposals."""
         return typing.cast(
             list[ElectionProposal],
             json.loads(
@@ -122,37 +125,49 @@ class DRECli:
             ),
         )
 
-    def get_election_proposals_by_version(self) -> dict[str, ElectionProposal]:
-        """Get all GuestOS election proposals keyed by version."""
+    def get_election_proposals_by_version(
+        self,
+    ) -> tuple[dict[str, ElectionProposal], dict[str, ElectionProposal]]:
+        """
+        Get all IC OS election proposals in two separate dictionaries keyed
+        by version -- the first dictionary contains GuestOS proposals, and
+        the second contains HostOS proposals."""
         d: dict[str, ElectionProposal] = {}
+        od: dict[str, ElectionProposal] = {}
         known_proposals = self.get_past_election_proposals()
         for proposal in known_proposals:
             for proposal in known_proposals:
                 payload = proposal["payload"]
-                if "replica_version_to_elect" not in payload:
-                    continue
-                replica_version = typing.cast(
-                    GuestosElectionProposalPayload, payload
-                ).get("replica_version_to_elect")
-                if not replica_version:
-                    continue
-                if replica_version in d:
-                    continue
-                d[replica_version] = proposal
-        return d
+                if "replica_version_to_elect" in payload:
+                    replica_version = typing.cast(
+                        GuestosElectionProposalPayload, payload
+                    ).get("replica_version_to_elect")
+                    if not replica_version:
+                        continue
+                    d[replica_version] = proposal
+                if "hostos_version_to_elect" in payload:
+                    hostos_version = typing.cast(
+                        HostosElectionProposalPayload, payload
+                    ).get("hostos_version_to_elect")
+                    if not hostos_version:
+                        continue
+                    od[hostos_version] = proposal
+        return d, od
 
-    def propose_to_revise_elected_guestos_versions(
+    def propose_to_revise_elected_os_versions(
         self,
         changelog: str,
         version: str,
+        os_kind: OsKind,
         forum_post_url: str,
         unelect_versions: list[str],
         package_checksum: str,
         package_urls: list[str],
         dry_run: bool = False,
     ) -> int:
+        x = "hostos" if os_kind is HOSTOS else "replica"
         unelect_versions_args = (
-            (["--replica-versions-to-unelect"] + list(unelect_versions))
+            ([f"--{x}-versions-to-unelect"] + list(unelect_versions))
             if len(unelect_versions) > 0
             else []
         )
@@ -162,16 +177,16 @@ class DRECli:
             *_mode_flags(dry_run),
             "--proposal-url",
             forum_post_url,
-            "revise-elected-guestos-versions",
+            f"revise-elected-{x}-versions",
             "--proposal-title",
-            f"Elect new IC/Replica revision (commit {version[:7]})",
+            f"Elect new IC/{os_kind} revision (commit {version[:7]})",
             "--summary",
             changelog,
             "--release-package-sha256-hex",
             package_checksum,
             "--release-package-urls",
             *package_urls,
-            "--replica-version-to-elect",
+            f"--{x}-version-to-elect",
             version,
             *unelect_versions_args,
         )

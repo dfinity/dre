@@ -1,24 +1,41 @@
 #!/usr/bin/env python3
 import argparse
 import fnmatch
+import functools
+import logging
 import os
 import pathlib
 import re
 import subprocess
-import tempfile
+import sys
 import textwrap
 import typing
-import logging
+import urllib
 
 from dataclasses import dataclass
 
-from const import GUESTOS_CHANGED_NOTES_NAMESPACE
-from git_repo import GitRepo
-from util import auto_progressbar_with_item_descriptions
+mydir = os.path.join(os.path.dirname(__file__))
+if mydir not in sys.path:
+    sys.path.append(mydir)
 
-import markdown
+from const import (  # noqa: E402
+    OsKind,
+    OS_KINDS,
+    GUESTOS,
+)
+from git_repo import GitRepo, GitRepoAnnotator, FileChange, CHANGED_NOTES_NAMESPACES  # noqa: E402
+from util import auto_progressbar_with_item_descriptions  # noqa: E402
+
+import markdown  # noqa: E402
 
 _LOGGER = logging.getLogger(__name__)
+
+# Signature for a callable that, given a commit and an OS kind,
+# can determine whether the commit has changed that OS.
+# Such functions should return NotReady when a commit is not yet
+# annotated.
+OSChangeDeterminator = typing.Callable[[str, OsKind], bool]
+
 
 COMMIT_HASH_LENGTH = 9
 
@@ -56,7 +73,7 @@ class Change(typing.TypedDict):
     message: str
     commiter: str
     exclusion_reason: typing.Optional[str]
-    guestos_change: bool
+    belongs_to_this_release: bool
 
 
 @dataclass
@@ -201,38 +218,25 @@ def get_rc_branch(repo_dir: str, commit_hash: str) -> str:
     return ""
 
 
-# Cache codeowners across commits.
-__codeowners_cache: dict[str, dict[str, list[str]]] = {}
+def parse_codeowners(codeowners_text: str) -> dict[str, list[str]]:
+    codeowners = codeowners_text.splitlines(True)
+    filtered = [line.strip() for line in codeowners]
+    filtered = [line for line in filtered if line and not line.startswith("#")]
+    parsed = {}
+    for line in filtered:
+        # _LOGGER.debug("Parsing CODEOWNERS, line: %s" % line)
+        result = line.split()
+        if len(result) <= 1:
+            continue
+        teams = [
+            team.split("@dfinity/")[1] for team in result[1:] if "@dfinity/" in team
+        ]
+        pattern = result[0]
+        pattern = pattern if pattern.startswith("/") else "/" + pattern
+        pattern = pattern if not pattern.endswith("/") else pattern + "*"
 
-
-def parse_codeowners(
-    commit_id: str, codeowners_path: str | pathlib.Path
-) -> dict[str, list[str]]:
-    cachekey = commit_id + str(codeowners_path)
-    global __codeowners_cache
-    if cachekey not in __codeowners_cache:
-        with open(codeowners_path, encoding="utf8") as f:
-            codeowners = f.readlines()
-            filtered = [line.strip() for line in codeowners]
-            filtered = [line for line in filtered if line and not line.startswith("#")]
-            parsed = {}
-            for line in filtered:
-                _LOGGER.debug("Parsing CODEOWNERS, line: %s" % line)
-                result = line.split()
-                if len(result) <= 1:
-                    continue
-                teams = [
-                    team.split("@dfinity/")[1]
-                    for team in result[1:]
-                    if "@dfinity/" in team
-                ]
-                pattern = result[0]
-                pattern = pattern if pattern.startswith("/") else "/" + pattern
-                pattern = pattern if not pattern.endswith("/") else pattern + "*"
-
-                parsed[pattern] = teams
-        __codeowners_cache[cachekey] = parsed
-    return __codeowners_cache[cachekey]
+        parsed[pattern] = teams
+    return parsed
 
 
 class ConventionalCommit(typing.TypedDict):
@@ -267,6 +271,8 @@ def release_changes(
     ic_repo: GitRepo,
     base_release_commit: str,
     release_commit: str,
+    belongs_determinator: OSChangeDeterminator,
+    os_kind: OsKind,
     max_commits: int = 1000,
 ) -> dict[str, list[Change]]:
     changes: dict[str, list[Change]] = {}
@@ -286,6 +292,7 @@ def release_changes(
         change = get_change_description_for_commit(
             commit_hash=commits[i],
             ic_repo=ic_repo,
+            belongs=belongs_determinator(commits[i], os_kind),
         )
         if change is None:
             continue
@@ -299,9 +306,10 @@ def release_changes(
 
 
 class ReleaseNotesRequest(object):
-    def __init__(self, release_tag: str, release_commit: str):
+    def __init__(self, release_tag: str, release_commit: str, os_kind: OsKind):
         self.release_tag = release_tag
         self.release_commit = release_commit
+        self.os_kind = os_kind
 
 
 class SecurityReleaseNotesRequest(ReleaseNotesRequest):
@@ -315,8 +323,9 @@ class OrdinaryReleaseNotesRequest(ReleaseNotesRequest):
         release_commit: str,
         base_release_tag: str,
         base_release_commit: str,
+        os_kind: OsKind,
     ):
-        super().__init__(release_tag, release_commit)
+        super().__init__(release_tag, release_commit, os_kind)
         self.base_release_tag = base_release_tag
         self.base_release_commit = base_release_commit
 
@@ -325,8 +334,24 @@ class PreparedReleaseNotes(str):
     pass
 
 
+class NotReady(Exception):
+    """Exception raised when a commit is not yet annotated."""
+
+    pass
+
+
+def boolstr(changed: str) -> bool:
+    if changed.strip() == "True":
+        return True
+    elif changed.strip() == "False":
+        return False
+    raise ValueError(f"Invalid value for changed note {changed}: %r" % changed)
+
+
 def prepare_release_notes(
     request: SecurityReleaseNotesRequest | OrdinaryReleaseNotesRequest,
+    ic_repo: GitRepo,
+    os_change_determinator: OSChangeDeterminator,
     max_commits: int = 1000,
 ) -> PreparedReleaseNotes:
     if isinstance(request, SecurityReleaseNotesRequest):
@@ -348,13 +373,6 @@ def prepare_release_notes(
             )
         )
 
-    ic_repo = GitRepo("https://github.com/dfinity/ic.git", main_branch="master")
-    changes = release_changes(
-        ic_repo,
-        request.base_release_commit,
-        request.release_commit,
-        max_commits,
-    )
     return PreparedReleaseNotes(
         release_notes_markdown(
             ic_repo,
@@ -362,14 +380,26 @@ def prepare_release_notes(
             request.base_release_commit,
             request.release_tag,
             request.release_commit,
-            changes,
+            request.os_kind,
+            release_changes(
+                ic_repo,
+                request.base_release_commit,
+                request.release_commit,
+                os_change_determinator,
+                request.os_kind,
+                max_commits,
+            ),
         )
     )
 
 
-def get_change_description_for_commit(
+def compose_change_description(
     commit_hash: str,
-    ic_repo: GitRepo,
+    commit_message: str,
+    commiter: str,
+    file_changes: list[FileChange],
+    codeowners: dict[str, list[str]],
+    belongs: bool,
 ) -> Change:
     # Conventional commit regex pattern
     conv_commit_pattern = re.compile(r"^(\w+)(\([^\)]*\))?: (.+)$")
@@ -378,15 +408,9 @@ def get_change_description_for_commit(
     # Sometimes Jira tickets are in square brackets
     empty_brackets_regex = r" *\[ *\]:?"
 
-    commit_message = ic_repo.get_commit_info("%s", commit_hash)
-    commiter = ic_repo.get_commit_info("%an", commit_hash)
-
-    ic_repo.checkout(commit_hash)
-    file_changes = ic_repo.file_changes_for_commit(commit_hash)
     exclusion_reason = None
-    guestos_change = is_guestos_change(ic_repo, commit_hash)
     if (
-        guestos_change
+        belongs
         and not exclusion_reason
         and not any(
             f
@@ -413,7 +437,6 @@ def get_change_description_for_commit(
 
     conventional = parse_conventional_commit(stripped_message, conv_commit_pattern)
 
-    codeowners = parse_codeowners(commit_hash, ic_repo.file(".github/CODEOWNERS"))
     for change in file_changes:
         teams = set(
             sum(
@@ -461,16 +484,14 @@ def get_change_description_for_commit(
     commit_type = conventional["type"].lower()
     commit_type = commit_type if commit_type in TYPE_PRETTY_MAP else "other"
 
-    if (
-        guestos_change
-        and not exclusion_reason
-        and not REPLICA_TEAMS.intersection(teams)
-    ):
-        exclusion_reason = "The change is not owned by any replica team"
+    if belongs and not exclusion_reason and not REPLICA_TEAMS.intersection(teams):
+        exclusion_reason = "The change is not owned by any replica or HostOS team"
 
     scope = conventional["scope"] if conventional["scope"] else ""
-    if guestos_change and not exclusion_reason and scope in EXCLUDED_SCOPES:
-        exclusion_reason = f"Scope of the change ({scope}) is not related to GuestOS"
+    if belongs and not exclusion_reason and scope in EXCLUDED_SCOPES:
+        exclusion_reason = (
+            f"Scope of the change ({scope}) is not related to the artifact"
+        )
 
     commiter_parts = commiter.split()
     commiter = "{:<4} {:<4}".format(
@@ -486,22 +507,47 @@ def get_change_description_for_commit(
         message=conventional["message"],
         commiter=commiter,
         exclusion_reason=exclusion_reason,
-        guestos_change=guestos_change,
+        belongs_to_this_release=belongs,
     )
 
 
-def release_notes_html(notes_markdown: str) -> None:
-    """Generate release notes in HTML format, typically for local testing."""
-    import webbrowser
+def get_change_description_for_commit(
+    commit_hash: str,
+    ic_repo: GitRepo,
+    belongs: bool,
+) -> Change:
+    @functools.cache
+    def parse_and_cache_codeowners(commit_id: str) -> dict[str, list[str]]:
+        codeowners_text = ic_repo.file_contents(
+            commit_hash,
+            pathlib.Path(".github/CODEOWNERS"),
+        ).decode("utf-8")
+        return parse_codeowners(codeowners_text)
 
+    commit_message = ic_repo.get_commit_info("%s", commit_hash)
+    committer = ic_repo.get_commit_info("%an", commit_hash)
+    file_changes_for_commit = ic_repo.file_changes_for_commit(commit_hash)
+    codeowners = parse_and_cache_codeowners(commit_hash)
+
+    return compose_change_description(
+        commit_hash,
+        commit_message,
+        committer,
+        file_changes_for_commit,
+        codeowners,
+        belongs,
+    )
+
+
+def release_notes_html(notes_markdown: str, output_file: pathlib.Path) -> None:
+    """Generate release notes in HTML format, typically for local testing."""
     md = markdown.Markdown(
         extensions=["pymdownx.tilde", "pymdownx.details"],
     )
 
-    with tempfile.NamedTemporaryFile(suffix=".html", delete=False) as output:
-        output.write(str.encode(md.convert(notes_markdown)))
-        filename = "file://{}".format(output.name)
-        webbrowser.open_new_tab(filename)
+    with open(output_file, "w") as output:
+        output.write(md.convert(notes_markdown))
+        subprocess.Popen(["open", output.name])
 
 
 def release_notes_markdown(
@@ -510,6 +556,7 @@ def release_notes_markdown(
     base_release_commit: str,
     release_tag: str,
     release_commit: str,
+    os_kind: OsKind,
     change_infos: dict[str, list[Change]],
 ) -> str:
     """Generate release notes in markdown format."""
@@ -533,7 +580,7 @@ def release_notes_markdown(
 # Release Notes for [{release_tag}](https://github.com/dfinity/ic/tree/{release_tag}) (`{release_commit}`)
 This release is based on changes since [{base_release_tag}](https://dashboard.internetcomputer.org/release/{base_release_commit}) (`{base_release_commit}`).
 
-Please note that some commits may be excluded from this release if they're not relevant, or not modifying the GuestOS image.
+Please note that some commits may be excluded from this release if they're not relevant, or not modifying the {os_kind} image.
 Additionally, descriptions of some changes might have been slightly modified to fit the release notes format.
 
 To see a full list of commits added since last release, compare the revisions on [GitHub](https://github.com/dfinity/ic/compare/{base_release_tag}...{release_tag}).
@@ -543,6 +590,7 @@ To see a full list of commits added since last release, compare the revisions on
         release_tag=release_tag,
         release_commit=release_commit,
         reviewers_text=reviewers_text,
+        os_kind=os_kind,
     )
     if merge_base != base_release_commit:
         notes += """
@@ -573,16 +621,16 @@ Changes [were removed](https://github.com/dfinity/ic/compare/{release_tag}...{ba
         text = "{4} | {0} {1}{2} {3}".format(
             commit_part, team_part, scope_part, message_part, commiter_part
         )
-        if change["exclusion_reason"] or not change["guestos_change"]:
+        if change["exclusion_reason"] or not change["belongs_to_this_release"]:
             text = "~~{} [AUTO-EXCLUDED:{}]~~".format(
                 text,
-                "Not modifying GuestOS"
-                if not change["guestos_change"]
+                f"Not modifying {os_kind}"
+                if not change["belongs_to_this_release"]
                 else change["exclusion_reason"],
             )
         return "* " + text + "\n"
 
-    non_guestos_changes = []
+    non_belonging_change = []
     for current_type in sorted(TYPE_PRETTY_MAP, key=lambda x: TYPE_PRETTY_MAP[x][1]):
         if current_type not in change_infos or not change_infos[current_type]:
             continue
@@ -591,34 +639,76 @@ Changes [were removed](https://github.com/dfinity/ic/compare/{release_tag}...{ba
         for change in sorted(
             change_infos[current_type], key=lambda x: ",".join(x["teams"])
         ):
-            if not change["guestos_change"]:
-                non_guestos_changes.append(change)
+            if not change["belongs_to_this_release"]:
+                non_belonging_change.append(change)
                 continue
-
             notes += format_change(change)
 
-    if non_guestos_changes:
-        notes += "## ~~Other changes not modifying GuestOS~~\n"
-        for change in non_guestos_changes:
+    if non_belonging_change:
+        notes += f"## ~~Other changes not modifying {os_kind}~~\n"
+        for change in non_belonging_change:
             notes += format_change(change)
     return notes
 
 
-def is_guestos_change(ic_repo: GitRepo, commit: str) -> bool:
-    """Check if GuestOS changed for the commit by querying git notes populated by commit annotator."""
-    with ic_repo.annotator([GUESTOS_CHANGED_NOTES_NAMESPACE]) as ann:
-        changed = ann.get(namespace=GUESTOS_CHANGED_NOTES_NAMESPACE, object=commit)
-    if not changed:
-        raise ValueError(
-            f"Could not find GuestOS label for commit {commit}. Check out commit annotator logs and runbook: https://dfinity.github.io/dre/release.html#missing-guestos-label."
+class LocalCommitChangeDeterminator(object):
+    """Retrieves annotations from a local Git repository."""
+
+    def __init__(self, ic_repo: GitRepo):
+        """
+        Creates a new commit change determinator.
+
+        Upon creation, the freshest notes are fetched.
+        """
+        self.annotator = GitRepoAnnotator(
+            ic_repo,
+            list(CHANGED_NOTES_NAMESPACES.values()),
+            save_annotations=False,
         )
-    changed = changed.strip()
-    if changed == "True":
-        return True
-    elif changed == "False":
-        return False
-    else:
-        raise ValueError(f"Invalid value for changed note {changed}")
+        self.annotator.fetch()
+
+    def commit_changes_artifact(self, commit: str, os_kind: OsKind) -> bool:
+        """
+        Check if the os_kind (artifact) changed in the specifed commit
+        by querying the local repo for git notes populated and pushed
+        by commit annotator.
+        """
+        namespace = CHANGED_NOTES_NAMESPACES[os_kind]
+        try:
+            changed = self.annotator.get(namespace=namespace, object=commit)
+        except KeyError:
+            raise NotReady(
+                f"Could not find {os_kind} label for commit {commit}. Check out commit annotator logs and runbook: https://dfinity.github.io/dre/release.html#missing-guestos-label."
+            )
+        return boolstr(changed.decode("utf-8"))
+
+
+class CommitAnnotatorClientCommitChangeDeterminator(object):
+    """Retrieves annotations from a commit annotator API server."""
+
+    def __init__(self, base_url: str):
+        self.base_url = base_url
+
+    def commit_changes_artifact(self, commit: str, os_kind: OsKind) -> bool:
+        """
+        Check if the os_kind (artifact) changed in the specifed commit
+        by querying the commit annotator for git notes.
+        """
+        namespace = CHANGED_NOTES_NAMESPACES[os_kind]
+        url = (
+            self.base_url.rstrip("/")
+            + f"/api/v1/commit/{commit}/annotation/{namespace}"
+        )
+        try:
+            with urllib.request.urlopen(url) as response:
+                changed = response.read().decode("utf-8")
+        except urllib.error.HTTPError as he:
+            if he.code == 404:
+                raise NotReady(
+                    f"Could not find {os_kind} label for commit {commit}. Check out commit annotator logs and runbook: https://dfinity.github.io/dre/release.html#missing-guestos-label."
+                ) from he
+            raise
+        return boolstr(changed)
 
 
 def main() -> None:
@@ -629,10 +719,43 @@ def main() -> None:
     parser.add_argument("release_commit", type=str, help="release commit")
     parser.add_argument(
         "--max-commits",
+        type=int,
         default=os.environ.get("MAX_COMMITS", 1000),
         help="Maximum number of commits to include in the release notes",
     )
+    parser.add_argument(
+        "--commit-annotator-url",
+        type=str,
+        default=None,
+        help="Base URL of a commit annotator to use in order to determine commit"
+        " relevance for a target when composing release notes; if none specified, by default it uses local annotations",
+    )
+    parser.add_argument(
+        "--os-kind",
+        default=GUESTOS,
+        choices=OS_KINDS,
+        help="Release artifact for which the notes should be prepared",
+    )
+    parser.add_argument(
+        "--output",
+        type=pathlib.Path,
+        help="Generate an HTML file with the output besides printing"
+        " it to standard output, and launch your operating system's HTML viewer;"
+        " when running via Bazel, please ensure this is an absolute path",
+    )
     args = parser.parse_args()
+
+    ic_repo = GitRepo("https://github.com/dfinity/ic.git", main_branch="master")
+
+    if args.commit_annotator_url is None:
+        annotator: (
+            LocalCommitChangeDeterminator
+            | CommitAnnotatorClientCommitChangeDeterminator
+        ) = LocalCommitChangeDeterminator(ic_repo)
+    else:
+        annotator = CommitAnnotatorClientCommitChangeDeterminator(
+            args.commit_annotator_url
+        )
 
     release_notes = prepare_release_notes(
         OrdinaryReleaseNotesRequest(
@@ -640,11 +763,15 @@ def main() -> None:
             args.release_commit,
             args.base_release_tag,
             args.base_release_commit,
+            args.os_kind,
         ),
+        os_change_determinator=annotator.commit_changes_artifact,
+        ic_repo=ic_repo,
         max_commits=args.max_commits,
     )
     print(release_notes)
-    release_notes_html(release_notes)
+    if args.output:
+        release_notes_html(release_notes, args.output)
 
 
 if __name__ == "__main__":

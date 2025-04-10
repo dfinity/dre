@@ -1,4 +1,5 @@
 import argparse
+import functools
 import logging
 import os
 import pathlib
@@ -15,13 +16,13 @@ import dryrun
 import release_index
 import slack_announce
 import reconciler_state
+from const import OsKind, OS_KINDS, GUESTOS, HOSTOS
 from dotenv import load_dotenv
 from forum import ReleaseCandidateForumClient, ForumClientProtocol
 from git_repo import GitRepo
 from github import Auth
 from github import Github
 from google_docs import ReleaseNotesClient, ReleaseNotesClientProtocol
-from governance import GovernanceCanister
 from prometheus import ICPrometheus
 from prometheus_client import start_http_server, Gauge
 from publish_notes import PublishNotesClient, PublishNotesClientProtocol
@@ -33,6 +34,10 @@ from release_notes import (
     prepare_release_notes,
     SecurityReleaseNotesRequest,
     OrdinaryReleaseNotesRequest,
+    LocalCommitChangeDeterminator,
+    CommitAnnotatorClientCommitChangeDeterminator,
+    OSChangeDeterminator,
+    NotReady,
 )
 from util import version_name, conventional_logging, sha256sum_http_response
 from watchdog import Watchdog
@@ -53,7 +58,7 @@ LAST_CYCLE_START_TIMESTAMP_SECONDS = Gauge(
 LAST_CYCLE_SUCCESSFUL = Gauge(
     "last_cycle_successful",
     "1 if the last cycle was successful, 0 if it was not",
-    labelnames=["phase"],
+    labelnames=["os_kind", "rc", "version", "phase"],
 )
 
 
@@ -68,7 +73,7 @@ def oldest_active_release(
             if v.version in active_versions:
                 return rc
 
-    raise RuntimeError("invalid configuration, cannot find an active release")
+    raise ValueError("invalid configuration, cannot find an active release")
 
 
 def versions_to_unelect(
@@ -125,17 +130,17 @@ def find_base_release(
     )
 
 
-def version_package_urls(version: str) -> list[str]:
+def version_package_urls(version: str, os_kind: OsKind) -> list[str]:
+    v = "host-os" if os_kind is HOSTOS else "guest-os"
     return [
-        f"https://download.dfinity.systems/ic/{version}/guest-os/update-img/update-img.tar.zst",
-        f"https://download.dfinity.network/ic/{version}/guest-os/update-img/update-img.tar.zst",
+        f"https://download.dfinity.systems/ic/{version}/{v}/update-img/update-img.tar.zst",
+        f"https://download.dfinity.network/ic/{version}/{v}/update-img/update-img.tar.zst",
     ]
 
 
-def version_package_checksum(version: str) -> str:
-    hashurl = (
-        f"https://download.dfinity.systems/ic/{version}/guest-os/update-img/SHA256SUMS"
-    )
+def version_package_checksum(version: str, os_kind: OsKind) -> str:
+    v = "host-os" if os_kind is HOSTOS else "guest-os"
+    hashurl = f"https://download.dfinity.systems/ic/{version}/{v}/update-img/SHA256SUMS"
     response = requests.get(hashurl, timeout=10)
     checksum = typing.cast(
         str,
@@ -146,7 +151,7 @@ def version_package_checksum(version: str) -> str:
         ][0].split(" ")[0],
     )
 
-    for u in version_package_urls(version):
+    for u in version_package_urls(version, os_kind):
         LOGGER.getChild("version_package_checksum").debug("fetching package %s", u)
         with requests.get(u, timeout=10, stream=True) as resp:
             resp.raise_for_status()
@@ -160,14 +165,16 @@ def version_package_checksum(version: str) -> str:
 
 
 class ActiveVersionProvider(typing.Protocol):
-    def active_versions(self) -> list[str]: ...
+    def active_guestos_versions(self) -> list[str]: ...
+    def active_hostos_versions(self) -> list[str]: ...
 
 
 class ReplicaVersionProposalProvider(typing.Protocol):
     def replica_version_proposals(self) -> dict[str, int]: ...
+    def hostos_version_proposals(self) -> dict[str, int]: ...
 
 
-Phases = (
+Phase = (
     typing.Literal["forum post creation"]
     | typing.Literal["release notes preparation"]
     | typing.Literal["release notes pull request"]
@@ -176,38 +183,11 @@ Phases = (
 )
 
 
-class PhaseCollector(object):
-    def __init__(self) -> None:
-        self.phases = {
-            "forum post creation": True,
-            "release notes preparation": True,
-            "releas notes pull request": True,
-            "proposal submission": True,
-            "forum post update": True,
-        }
-        self.current_phase: Phases = "forum post creation"
+class Failed(object):
+    pass
 
-    def fail(
-        self,
-        phase: Phases,
-    ) -> None:
-        self.phases[phase] = False
 
-    def __call__(self, phase: Phases) -> "PhaseCollector":
-        self.current_phase = phase
-        return self
-
-    def __enter__(self) -> "PhaseCollector":
-        return self
-
-    def __exit__(
-        self,
-        exc_type: type[BaseException] | None,
-        exc_val: BaseException | None,
-        exc_tb: typing.Any,
-    ) -> None:
-        if exc_type:
-            self.fail(self.current_phase)
+FAILED = Failed()
 
 
 class VersionState(object):
@@ -218,12 +198,95 @@ class VersionState(object):
     place to consider a release processed.
     """
 
-    has_proposal: bool = False
-    forum_post_updated: bool = False
+    rc_name: str
+    version_name: str
+    git_revision: str
+    security_fix: bool
+    os_kind: OsKind
+    is_base: bool
+    rc: release_index.Release
+
+    current_phase: Phase | None = None
+    has_forum_post: bool | Failed = False
+    has_prepared_release_notes: bool | Failed = False
+    has_release_notes_submitted_as_pr: bool | Failed = False
+    has_proposal: bool | Failed = False
+    forum_post_updated: bool | Failed = False
+
+    def __init__(
+        self,
+        rc_name: str,
+        version_name: str,
+        git_revision: str,
+        os_kind: OsKind,
+        security_fix: bool,
+        is_base: bool,
+        rc: release_index.Release,
+    ):
+        self.rc_name = rc_name
+        self.version_name = version_name
+        self.git_revision = git_revision
+        self.os_kind = os_kind
+        self.security_fix = security_fix
+        self.is_base = is_base
+        self.rc = rc
+
+        self.phase_not_done = False
 
     @property
     def complete(self) -> bool:
-        return self.has_proposal and self.forum_post_updated
+        return self.has_proposal is True and self.forum_post_updated is True
+
+    def __call__(self, phase: Phase) -> "VersionState":
+        self.current_phase = phase
+        return self
+
+    def __enter__(self) -> "VersionState":
+        return self
+
+    def failed(self, phase: Phase) -> None:
+        self.current_phase = phase
+        self.__exit__(Exception, None, None)
+
+    def incomplete(self) -> None:
+        "Mark the phase as not done."
+        self.phase_not_done = True
+
+    def completed(self, phase: Phase) -> None:
+        "Mark the phase as completed"
+        self.current_phase = phase
+        self.__exit__(None, None, None)
+
+    def __exit__(
+        self,
+        exc_type: type[BaseException] | None,
+        exc_val: BaseException | None,
+        exc_tb: typing.Any,
+    ) -> None:
+        p = functools.partial(
+            LAST_CYCLE_SUCCESSFUL.labels, self.os_kind, self.rc_name, self.version_name
+        )
+        val = FAILED if exc_type else not (self.phase_not_done)
+        if self.current_phase == "forum post creation":
+            self.has_forum_post = val
+            obj = p("forum post creation")
+        elif self.current_phase == "release notes preparation":
+            self.has_prepared_release_notes = val
+            obj = p("release notes preparation")
+        elif self.current_phase == "release notes pull request":
+            self.has_release_notes_submitted_as_pr = val
+            obj = p("release notes pull request")
+        elif self.current_phase == "proposal submission":
+            self.has_proposal = val
+            obj = p("proposal submission")
+        elif self.current_phase == "forum post update":
+            self.forum_post_updated = val
+            obj = p("forum post update")
+        else:
+            assert 0, "phase not reached %s" % self.current_phase
+        obj.set(0 if exc_type else 1)
+        self.current_phase = None
+        self.phase_not_done = False
 
 
 class Reconciler:
@@ -238,8 +301,8 @@ class Reconciler:
         nns_url: str,
         state: reconciler_state.ReconcilerState,
         ic_repo: GitRepo,
+        change_determinator_factory: typing.Callable[[], OSChangeDeterminator],
         active_version_provider: ActiveVersionProvider,
-        replica_version_proposal_provider: ReplicaVersionProposalProvider,
         dre: dre_cli.DRECli,
         slack_announcer: slack_announce.SlackAnnouncerProtocol,
         ignore_releases: list[str] | None = None,
@@ -250,239 +313,314 @@ class Reconciler:
         self.notes_client = notes_client
         self.publish_client = publish_client
         self.nns_url = nns_url
-        self.governance_canister = replica_version_proposal_provider
         self.state = state
         self.ic_prometheus = active_version_provider
         self.ic_repo = ic_repo
         self.ignore_releases = ignore_releases or []
         self.dre = dre
         self.slack_announcer = slack_announcer
-        self.local_release_state: dict[str, dict[str, VersionState]] = {}
+        self.change_determinator_factory = change_determinator_factory
+        self.local_release_state: dict[str, dict[str, dict[OsKind, VersionState]]] = {}
 
-    def reconcile(self, phase: PhaseCollector) -> None:
+    def reconcile(self) -> None:
         """Reconcile the state of the network with the release index."""
         config = self.loader.index()
-        active_versions = self.ic_prometheus.active_versions()
+        active_guestos_versions = self.ic_prometheus.active_guestos_versions()
+        active_hostos_versions = self.ic_prometheus.active_hostos_versions()
         logger = LOGGER.getChild("reconciler")
 
-        oar = oldest_active_release(config, active_versions)
-
-        releases = config.root.releases[: config.root.releases.index(oar) + 1]
+        oldest_active_guestos = oldest_active_release(config, active_guestos_versions)
+        oldest_active_hostos = oldest_active_release(config, active_hostos_versions)
+        oldest_active_index = max(
+            [
+                config.root.releases.index(oldest_active_guestos),
+                config.root.releases.index(oldest_active_hostos),
+            ]
+        )
+        releases = config.root.releases[: oldest_active_index + 1]
         # Remove ignored releases from list to process.
         releases = [r for r in releases if r.rc_name not in self.ignore_releases]
+
         # Preload the cache of known successfully processed releases.
-        for rc in releases:
-            if rc.rc_name not in self.local_release_state:
-                self.local_release_state[rc.rc_name] = {}
-            for v in rc.versions:
-                if v.version not in self.local_release_state[rc.rc_name]:
-                    self.local_release_state[rc.rc_name][v.version] = VersionState()
-                self.local_release_state[rc.rc_name][
-                    v.version
-                ].has_proposal = isinstance(
-                    self.state.version_proposal(v.version),
-                    reconciler_state.SubmittedProposal,
-                )
+        # We will use this information as an operation plan.
+        for relcand in releases:
+            if relcand.rc_name not in self.local_release_state:
+                self.local_release_state[relcand.rc_name] = {}
+            for v_idx, rcver in enumerate(relcand.versions):
+                if rcver.name not in self.local_release_state[relcand.rc_name]:
+                    self.local_release_state[relcand.rc_name][rcver.name] = {}
+                for os_kind in OS_KINDS:
+                    if os_kind is GUESTOS or v_idx == 0:  # Do HostOS for base release.
+                        if (
+                            os_kind
+                            not in self.local_release_state[relcand.rc_name][rcver.name]
+                        ):
+                            self.local_release_state[relcand.rc_name][rcver.name][
+                                os_kind
+                            ] = VersionState(
+                                relcand.rc_name,
+                                rcver.name,
+                                rcver.version,
+                                os_kind,
+                                rcver.security_fix,
+                                is_base=v_idx == 0,
+                                rc=relcand,
+                            )
+                        version = self.local_release_state[relcand.rc_name][rcver.name][
+                            os_kind
+                        ]
+                        # Update this just in case the commit ID changed for this version name.
+                        version.git_revision = rcver.version
+                        version.security_fix = rcver.security_fix
+                        version.is_base = v_idx == 0
+                        version.rc = relcand
+                        if isinstance(
+                            self.state.version_proposal(rcver.version, os_kind),
+                            reconciler_state.SubmittedProposal,
+                        ):
+                            version.completed("proposal submission")
+
         # Filter the releases to process by removing those which are complete.
-        releases = [
-            rc
-            for rc in releases
-            if not all(
-                version.complete
-                for version in self.local_release_state[rc.rc_name].values()
-            )
+        versions = [
+            version
+            for rc in self.local_release_state.values()
+            for version_batch in rc.values()
+            for version in version_batch.values()
+            if not version.complete
         ]
 
-        if releases:
+        if [x for x in versions if x.os_kind is GUESTOS]:
             logger.info(
                 "GuestOS versions active on subnets or unassigned nodes: %s",
-                ", ".join(active_versions),
+                ", ".join(active_guestos_versions),
             )
-            logger.info("Oldest active release: %s", oar.rc_name)
-            logger.info("Processing the following releases:")
-            for idx, rc in enumerate(releases):
-                logger.info(
-                    "%s. %s (%s)",
-                    idx + 1,
-                    rc.rc_name,
-                    ", ".join([v.name for v in rc.versions]),
-                )
-            existing_proposals = self.dre.get_election_proposals_by_version()
+            logger.info(
+                "Oldest active GuestOS release: %s", oldest_active_guestos.rc_name
+            )
+        if [x for x in versions if x.os_kind is HOSTOS]:
+            logger.info(
+                "HostOS versions active on subnets or unassigned nodes: %s",
+                ", ".join(active_hostos_versions),
+            )
+            logger.info(
+                "Oldest active HostOS release: %s", oldest_active_hostos.rc_name
+            )
+
+        if versions:
+            existing_guestos_proposals, existing_hostos_proposals = (
+                self.dre.get_election_proposals_by_version()
+            )
         else:
-            existing_proposals = {}
+            existing_guestos_proposals, existing_hostos_proposals = ({}, {})
 
-        for rc in releases:
-            rclogger = logger.getChild(f"{rc.rc_name}")
-
-            for v_idx, v in enumerate(rc.versions):
-                release_tag, release_commit, is_security_fix = (
-                    version_name(rc_name=rc.rc_name, name=v.name),
-                    v.version,
-                    v.security_fix,
+        if versions:
+            logger.info("Processing the following release versions:")
+            for idx, vv in enumerate(versions):
+                logger.info(
+                    "%s. %s-%s (%s)", idx + 1, vv.rc_name, vv.version_name, vv.os_kind
                 )
-                revlogger = rclogger.getChild(f"{release_tag}")
 
-                prop = self.state.version_proposal(release_commit)
-                if isinstance(prop, reconciler_state.SubmittedProposal):
-                    revlogger.debug("%s.  Proposal not needed.", prop)
-                    self.local_release_state[rc.rc_name][
-                        release_commit
-                    ].has_proposal = True
-                elif (
-                    isinstance(prop, reconciler_state.DREMalfunction)
-                    and not prop.ready_to_retry()
-                ):
-                    phase.fail("proposal submission")
-                    revlogger.debug("%s.  Not ready to retry yet.")
-                    continue
+        for v in versions:
+            rclogger = logger.getChild(f"{v.rc_name}")
+            revlogger = rclogger.getChild(f"{v.version_name}.{v.os_kind}")
 
-                # update to create posts for any releases
+            phase = v
+
+            release_tag, release_commit, is_security_fix = (
+                version_name(rc_name=v.rc_name, name=v.version_name),
+                v.git_revision,
+                v.security_fix,
+            )
+
+            prop = self.state.version_proposal(release_commit, v.os_kind)
+            if isinstance(prop, reconciler_state.SubmittedProposal):
+                revlogger.debug("%s.  Proposal not needed.", prop)
+                phase.completed("proposal submission")
+            elif (
+                isinstance(prop, reconciler_state.DREMalfunction)
+                and not prop.ready_to_retry()
+            ):
+                phase.failed("proposal submission")
+                revlogger.debug("%s.  Not ready to retry yet.")
+                continue
+
+            # update to create posts for any releases
+            with phase("forum post creation"):
                 rclogger.debug("Ensuring forum post for release candidate exists.")
-                with phase("forum post creation"):
-                    rc_forum_topic = self.forum_client.get_or_create(rc)
+                rc_forum_topic = self.forum_client.get_or_create(v.rc)
 
-                with phase("forum post update"):
-                    rclogger.debug("Updating forum post preemptively.")
-                    rc_forum_topic.update(
-                        summary_retriever=self.loader.proposal_summary,
-                        proposal_id_retriever=self.state.version_proposal,
-                    )
-
-                if markdown_file := self.notes_client.markdown_file(release_commit):
+            if markdown_file := self.notes_client.markdown_file(
+                release_commit, v.os_kind
+            ):
+                revlogger.info("Has release notes in editor.  No need to create them.")
+            else:
+                revlogger.info("No release notes found in editor.  Creating.")
+                if is_security_fix:
                     revlogger.info(
-                        "Has release notes in editor.  No need to create them."
+                        "It's a security fix.  Skipping base release investigation."
+                    )
+                    # FIXME: how to push the release tags and artifacts
+                    # of security fixes 10 days after their rollout?
+                    request: (
+                        OrdinaryReleaseNotesRequest | SecurityReleaseNotesRequest
+                    ) = SecurityReleaseNotesRequest(
+                        release_tag, release_commit, v.os_kind
                     )
                 else:
-                    revlogger.info("No release notes found in editor.  Creating.")
-                    if is_security_fix:
-                        revlogger.info(
-                            "It's a security fix.  Skipping base release investigation."
-                        )
-                        # FIXME: how to push the release tags and artifacts
-                        # of security fixes 10 days after their rollout?
-                        request: (
-                            OrdinaryReleaseNotesRequest | SecurityReleaseNotesRequest
-                        ) = SecurityReleaseNotesRequest(release_tag, release_commit)
-                    else:
-                        revlogger.info(
-                            "It's an ordinary release.  Generating full changelog."
-                        )
-                        self.ic_repo.push_release_tags(rc)
-                        base_release_commit, base_release_tag = find_base_release(
-                            self.ic_repo, config, release_commit
-                        )
-                        request = OrdinaryReleaseNotesRequest(
-                            release_tag,
-                            release_commit,
-                            base_release_tag,
-                            base_release_commit,
-                        )
-
-                    with phase("release notes preparation"):
-                        revlogger.info("Preparing release notes.")
-                        content = prepare_release_notes(request)
-                        revlogger.info("Uploading release notes.")
-                        gdoc = self.notes_client.ensure(
-                            release_tag=release_tag,
-                            release_commit=release_commit,
-                            content=content,
-                        )
-                        if "SLACK_WEBHOOK_URL" in os.environ:
-                            # This should have never been in the Google Docs code.
-                            revlogger.info("Announcing release notes")
-                            self.slack_announcer.announce_release(
-                                webhook=os.environ["SLACK_WEBHOOK_URL"],
-                                version_name=release_tag,
-                                google_doc_url=gdoc["alternateLink"],
-                                tag_all_teams=v_idx == 0,
-                            )
-
-                with phase("release notes pull request"):
-                    self.publish_client.publish_if_ready(
-                        google_doc_markdownified=markdown_file,
-                        version=release_commit,
+                    revlogger.info(
+                        "It's an ordinary release.  Generating full changelog."
                     )
-                    # returns a result only if changelog is published
-                    changelog = self.loader.proposal_summary(
-                        release_commit, is_security_fix
+                    self.ic_repo.push_release_tags(v.rc)
+                    self.ic_repo.fetch()
+                    base_release_commit, base_release_tag = find_base_release(
+                        self.ic_repo, config, release_commit
                     )
-                    if not changelog:
-                        revlogger.debug("No changelog ready for proposal submission.")
+                    request = OrdinaryReleaseNotesRequest(
+                        release_tag,
+                        release_commit,
+                        base_release_tag,
+                        base_release_commit,
+                        v.os_kind,
+                    )
+
+                with phase("release notes preparation"):
+                    revlogger.info("Preparing release notes.")
+                    # FIXME!  Make this pluggable from main().
+                    # Big problem is that the change determinator needs
+                    # to fetch notes, these are not fetched automatically,
+                    # so the client needs to provide an interface to do
+                    # this.
+                    try:
+                        content = prepare_release_notes(
+                            request,
+                            self.ic_repo,
+                            self.change_determinator_factory(),
+                        )
+                    except NotReady:
+                        phase.incomplete()
+                        revlogger.warning(
+                            "Release notes cannot be prepared because the commit"
+                            " annotator is not done annotating all the commits of"
+                            " this release.  Verify that the commit annotator is"
+                            " operating properly."
+                        )
                         continue
-                    else:
-                        revlogger.info(
-                            "The changelog is now ready for proposal submission."
-                        )
 
-                with phase("proposal submission"):
-                    if isinstance(prop, reconciler_state.SubmittedProposal):
-                        revlogger.info(
-                            "%s.  We will check if forum post needs update.",
-                            prop,
-                        )
-                    elif discovered_proposal := existing_proposals.get(release_commit):
-                        if isinstance(prop, reconciler_state.NoProposal):
-                            revlogger.warning(
-                                "We have no record of a proposal being submitted.  However, contrary"
-                                " to our record, proposal to elect %s was indeed successfully"
-                                " submitted by someone else as ID %s.",
-                                release_commit,
-                                discovered_proposal["id"],
-                            )
-                        elif isinstance(prop, reconciler_state.DREMalfunction):
-                            revlogger.warning(
-                                "%s.  However, contrary to recorded failure, proposal"
-                                " to elect %s was indeed successfully submitted by us as ID %s.",
-                                prop,
-                                release_commit,
-                                discovered_proposal["id"],
-                            )
-                        prop.record_submission(discovered_proposal["id"])
-                    else:
-                        # No discovered proposal and either prior malfunction or no proposal.
-                        # Time to create a proposal proposal.
-                        revlogger.info("Preparing proposal for %s", release_commit)
-                        checksum = version_package_checksum(release_commit)
-                        urls = version_package_urls(release_commit)
-                        unelect_versions = []
-                        if v_idx == 0:
-                            unelect_versions.extend(
-                                versions_to_unelect(
-                                    config,
-                                    active_versions=active_versions,
-                                    elected_versions=self.dre.get_blessed_versions(),
-                                ),
-                            )
-                        try:
-                            proposal_id = (
-                                self.dre.propose_to_revise_elected_guestos_versions(
-                                    changelog=changelog,
-                                    version=release_commit,
-                                    forum_post_url=rc_forum_topic.post_url(
-                                        release_commit
-                                    ),
-                                    unelect_versions=unelect_versions,
-                                    package_checksum=checksum,
-                                    package_urls=urls,
-                                )
-                            )
-                            success = prop.record_submission(proposal_id)
-                            revlogger.info("%s", success)
-                        except Exception:
-                            fail = prop.record_malfunction()
-                            revlogger.error("%s", fail)
-                            raise
-
-                with phase("forum post update"):
-                    rclogger.debug("Updating forum posts after processing versions.")
-                    # Update the forum posts in case the proposal was created.
-                    rc_forum_topic.update(
-                        summary_retriever=self.loader.proposal_summary,
-                        proposal_id_retriever=self.state.version_proposal,
+                    revlogger.info("Uploading release notes.")
+                    gdoc = self.notes_client.ensure(
+                        release_tag=release_tag,
+                        release_commit=release_commit,
+                        content=content,
+                        os_kind=v.os_kind,
                     )
-                    self.local_release_state[rc.rc_name][
-                        v.version
-                    ].forum_post_updated = True
+                    if "SLACK_WEBHOOK_URL" in os.environ:
+                        # This should have never been in the Google Docs code.
+                        revlogger.info("Announcing release notes")
+                        self.slack_announcer.announce_release(
+                            webhook=os.environ["SLACK_WEBHOOK_URL"],
+                            version_name=release_tag,
+                            google_doc_url=gdoc["alternateLink"],
+                            tag_all_teams=v.is_base,
+                            os_kind=v.os_kind,
+                        )
+
+            with phase("release notes pull request") as p:
+                self.publish_client.publish_if_ready(
+                    google_doc_markdownified=markdown_file,
+                    version=release_commit,
+                    os_kind=v.os_kind,
+                )
+                # returns a result only if changelog is published
+                changelog = self.loader.proposal_summary(
+                    release_commit, v.os_kind, is_security_fix
+                )
+                if not changelog:
+                    revlogger.debug("No changelog ready for proposal submission.")
+                    p.incomplete()
+                    continue
+                else:
+                    revlogger.info(
+                        "The changelog is now ready for proposal submission."
+                    )
+
+            with phase("proposal submission"):
+                if isinstance(prop, reconciler_state.SubmittedProposal):
+                    revlogger.info(
+                        "%s.  We will check if forum post needs update.",
+                        prop,
+                    )
+                elif discovered_proposal := (
+                    existing_hostos_proposals
+                    if v.os_kind is HOSTOS
+                    else existing_guestos_proposals
+                ).get(release_commit):
+                    if isinstance(prop, reconciler_state.NoProposal):
+                        revlogger.warning(
+                            "We have no record of a proposal being submitted.  However, contrary"
+                            " to our record, proposal to elect %s was indeed successfully"
+                            " submitted by someone else as ID %s.",
+                            release_commit,
+                            discovered_proposal["id"],
+                        )
+                    elif isinstance(prop, reconciler_state.DREMalfunction):
+                        revlogger.warning(
+                            "%s.  However, contrary to recorded failure, proposal"
+                            " to elect %s was indeed successfully submitted by us as ID %s.",
+                            prop,
+                            release_commit,
+                            discovered_proposal["id"],
+                        )
+                    prop.record_submission(discovered_proposal["id"])
+                else:
+                    # No discovered proposal and either prior malfunction or no proposal.
+                    # Time to create a proposal proposal.
+                    revlogger.info("Preparing proposal for %s", release_commit)
+                    checksum = version_package_checksum(release_commit, v.os_kind)
+                    urls = version_package_urls(release_commit, v.os_kind)
+                    unelect_versions = []
+                    if v.is_base == 0:
+                        unelect_versions.extend(
+                            versions_to_unelect(
+                                config,
+                                active_versions=(
+                                    active_hostos_versions
+                                    if v.os_kind is HOSTOS
+                                    else active_guestos_versions
+                                ),
+                                elected_versions=[
+                                    v
+                                    for v in (
+                                        self.dre.get_blessed_hostos_versions()
+                                        if v.os_kind is HOSTOS
+                                        else self.dre.get_blessed_guestos_versions()
+                                    )
+                                ],
+                            ),
+                        )
+                    try:
+                        proposal_id = self.dre.propose_to_revise_elected_os_versions(
+                            changelog=changelog,
+                            version=release_commit,
+                            os_kind=v.os_kind,
+                            forum_post_url=rc_forum_topic.post_url(release_commit),
+                            unelect_versions=unelect_versions,
+                            package_checksum=checksum,
+                            package_urls=urls,
+                        )
+                        success = prop.record_submission(proposal_id)
+                        revlogger.info("%s", success)
+                    except Exception:
+                        fail = prop.record_malfunction()
+                        revlogger.error("%s", fail)
+                        raise
+
+            with phase("forum post update"):
+                rclogger.debug("Updating forum posts after processing versions.")
+                # Update the forum posts in case the proposal was created.
+                rc_forum_topic.update(
+                    summary_retriever=self.loader.proposal_summary,
+                    proposal_id_retriever=self.state.version_proposal,
+                )
 
         logger.info("Iteration completed. %s releases processed.", len(releases))
 
@@ -499,6 +637,18 @@ def main() -> None:
         action="store_true",
         dest="dry_run",
         help="Make no changes anywhere, including but not limited to proposals, forum posts, or Google documents.",
+    )
+    parser.add_argument(
+        "--commit-annotator-url",
+        dest="commit_annotator_url",
+        type=str,
+        default="http://localhost:9469/",
+        help="Base URL of a commit annotator to use in order to determine commit"
+        " relevance for a target when composing release notes.  If the string"
+        ""
+        " 'local' is specified, it uses local annotations from the Git repository;"
+        " this mode allows for execution without a commit annotator running"
+        " in parallel on your computer.",
     )
     parser.add_argument("--verbose", "--debug", action="store_true", dest="verbose")
     parser.add_argument(
@@ -586,6 +736,7 @@ def main() -> None:
         GitRepo(
             f"https://oauth2:{os.environ['GITHUB_TOKEN']}@github.com/dfinity/ic.git",
             main_branch="master",
+            repo_cache_dir=pathlib.Path.home() / ".cache/reconciler",
         )
         if not dry_run
         else dryrun.GitRepo(
@@ -614,26 +765,81 @@ def main() -> None:
     state = reconciler_state.ReconcilerState(
         None if skip_preloading_state else dre.get_election_proposals_by_version,
     )
-    slack_announcer = (
+    slack_announcer: slack_announce.SlackAnnouncerProtocol = (
         slack_announce.SlackAnnouncer() if not dry_run else dryrun.MockSlackAnnouncer()
     )
+
+    def change_determinator_factory() -> OSChangeDeterminator:
+        if opts.commit_annotator_url == "local":
+            LOGGER.debug("Using local commit annotator to determine OS changes")
+            return LocalCommitChangeDeterminator(ic_repo).commit_changes_artifact
+        LOGGER.debug(
+            "Using API at %s to determine OS changes", opts.commit_annotator_url
+        )
+        return CommitAnnotatorClientCommitChangeDeterminator(
+            opts.commit_annotator_url
+        ).commit_changes_artifact
 
     reconciler = Reconciler(
         forum_client=forum_client,
         loader=config_loader,
         notes_client=release_notes_client,
         publish_client=publish_notes_client,
+        change_determinator_factory=change_determinator_factory,
         nns_url="https://ic0.app",
         state=state,
         ignore_releases=[
             "rc--2024-03-06_23-01",
             "rc--2024-03-20_23-01",
+            # From here on now we prevent the processing of releases that
+            # would screw with the forum posts since their contents and
+            # ordering in the threads have changed from this point on,
+            # due to the addition of support for HostOS releases.
+            "rc--2024-06-26_23-01",
+            "rc--2024-07-03_23-01",
+            "rc--2024-07-10_23-01",
+            "rc--2024-07-25_21-03",
+            "rc--2024-08-02_01-30",
+            "rc--2024-08-08_07-48",
+            "rc--2024-08-15_01-30",
+            "rc--2024-08-21_15-36",
+            "rc--2024-08-29_01-30",
+            "rc--2024-09-06_01-30",
+            "rc--2024-09-12_01-30",
+            "rc--2024-09-19_01-31",
+            "rc--2024-09-26_01-31",
+            "rc--2024-10-03_01-30",
+            "rc--2024-10-11_14-35",
+            "rc--2024-10-17_03-07",
+            "rc--2024-10-23_03-07",
+            "rc--2024-10-31_03-09",
+            "rc--2024-11-07_03-07",
+            "rc--2024-11-14_03-07",
+            "rc--2024-11-21_03-11",
+            "rc--2024-11-28_03-15",
+            "rc--2024-12-06_03-16",
+            "rc--2025-01-03_03-07",
+            "rc--2025-01-09_03-19",
+            "rc--2025-01-16_16-18",
+            "rc--2025-01-23_03-04",
+            "rc--2025-01-30_03-03",
+            "rc--2025-02-06_12-26",
+            "rc--2025-02-13_03-06",
+            "rc--2025-02-20_10-16",
+            "rc--2025-02-27_03-09",
+            "rc--2025-03-06_03-10",
+            "rc--2025-03-14_03-10",
+            "rc--2025-03-20_03-11",
+            "rc--2025-03-27_03-14",
+            "rc--2025-04-03_03-15",
+            "rc--2025-04-10_03-16",
+            # "rc--2025-03-27_03-14",
+            # "rc--2025-04-03_03-15",
         ],
         ic_repo=ic_repo,
         active_version_provider=ICPrometheus(
             url="https://victoria.mainnet.dfinity.network/select/0/prometheus"
         ),
-        replica_version_proposal_provider=GovernanceCanister(),
         slack_announcer=slack_announcer,
         dre=dre,
     )
@@ -642,16 +848,13 @@ def main() -> None:
         start_http_server(port=int(opts.telemetry_port))
 
     while True:
-        phase_collector = PhaseCollector()
         try:
             now = time.time()
             LAST_CYCLE_START_TIMESTAMP_SECONDS.set(int(now))
-            reconciler.reconcile(phase_collector)
+            reconciler.reconcile()
             and_now = time.time()
             LAST_CYCLE_SUCCESS_TIMESTAMP_SECONDS.set(int(and_now))
             LAST_CYCLE_END_TIMESTAMP_SECONDS.set(int(and_now))
-            for phase, result in phase_collector.phases.items():
-                LAST_CYCLE_SUCCESSFUL.labels(phase).set(1 if result else 0)
             watchdog.report_healthy()
             if opts.loop_every <= 0:
                 break
@@ -668,8 +871,6 @@ def main() -> None:
             else:
                 and_now = time.time()
                 LAST_CYCLE_END_TIMESTAMP_SECONDS.set(int(and_now))
-                for phase, result in phase_collector.phases.items():
-                    LAST_CYCLE_SUCCESSFUL.labels(phase).set(1 if result else 0)
                 LOGGER.exception(
                     f"Failed to reconcile.  Retrying in {opts.loop_every} seconds.  Traceback:"
                 )
@@ -682,17 +883,18 @@ def main() -> None:
 def oneoff() -> None:
     release_loader = GitReleaseLoader(f"https://github.com/{dre_repo}.git")
     version = "ac971e7b4c851b89b312bee812f6de542ed907c5"
-    changelog = release_loader.proposal_summary(version, False)
+    changelog = release_loader.proposal_summary(version, GUESTOS, False)
     assert changelog
 
     dre = dre_cli.DRECli()
-    dre.propose_to_revise_elected_guestos_versions(
+    dre.propose_to_revise_elected_os_versions(
         changelog=changelog,
         version=version,
+        os_kind=GUESTOS,
         forum_post_url="https://forum.dfinity.org/t/proposal-to-elect-new-release-rc-2024-03-27-23-01/29042/7",
         unelect_versions=[],
-        package_checksum=version_package_checksum(version),
-        package_urls=version_package_urls(version),
+        package_checksum=version_package_checksum(version, GUESTOS),
+        package_urls=version_package_urls(version, GUESTOS),
     )
 
 

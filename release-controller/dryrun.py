@@ -15,15 +15,13 @@ if me not in sys.path:
 
 import git_repo  # noqa: E402
 import dre_cli  # noqa: E402
+from const import OsKind, GUESTOS  # noqa: E402
 from google_docs import DocInfo  # noqa: E402
 from release_notes import PreparedReleaseNotes  # noqa: E402
 from release_index import Release  # noqa: E402
 
 import forum  # noqa: E402
 
-
-# FIXME: types in callsites for the bottom classes (in particular reconciler.py)
-# should all be made protocols.
 
 LOGGER = logging.getLogger(__name__)
 
@@ -176,9 +174,13 @@ class ReleaseNotesClient(object):
         self._logger = LOGGER.getChild(self.__class__.__name__)
 
     def ensure(
-        self, release_tag: str, release_commit: str, content: PreparedReleaseNotes
+        self,
+        release_tag: str,
+        release_commit: str,
+        os_kind: OsKind,
+        content: PreparedReleaseNotes,
     ) -> DocInfo:
-        t = self.release_notes_folder / release_commit
+        t = self.release_notes_folder / (release_commit + os_kind)
         if t.exists():
             return {"alternateLink": str(t)}
         with open(t, "w") as f:
@@ -186,9 +188,11 @@ class ReleaseNotesClient(object):
         self._logger.warning("Stored release notes in %s", t)
         return {"alternateLink": str(t)}
 
-    def markdown_file(self, version: str) -> PreparedReleaseNotes | None:
+    def markdown_file(
+        self, version: str, os_kind: OsKind
+    ) -> PreparedReleaseNotes | None:
         try:
-            with open((self.release_notes_folder / version), "r") as f:
+            with open((self.release_notes_folder / (version + os_kind)), "r") as f:
                 return PreparedReleaseNotes(f.read())
         except FileNotFoundError:
             return None
@@ -203,9 +207,6 @@ class GitRepo(git_repo.GitRepo):
         super().__init__(repo, **kwargs)
         self._logger = LOGGER.getChild(self.__class__.__name__)
 
-    def add_note(self, namespace: str, object: str, content: str) -> None:
-        raise NotImplementedError()
-
     def push_release_tags(self, release: Release) -> None:
         self._logger.warning(
             "Simulating push of tags associated with release %s", release
@@ -217,7 +218,10 @@ class PublishNotesClient(object):
         self._logger = LOGGER.getChild(self.__class__.__name__)
 
     def publish_if_ready(
-        self, google_doc_markdownified: PreparedReleaseNotes | None, version: str
+        self,
+        google_doc_markdownified: PreparedReleaseNotes | None,
+        version: str,
+        os_kind: OsKind,
     ) -> None:
         self._logger.warning(
             "Simulating that notes for release %s are not ready", version
@@ -231,19 +235,21 @@ class DRECli(dre_cli.DRECli):
         super().__init__()
         self._logger = LOGGER.getChild(self.__class__.__name__)
 
-    def propose_to_revise_elected_guestos_versions(
+    def propose_to_revise_elected_os_versions(
         self,
         changelog: str,
         version: str,
+        os_kind: OsKind,
         forum_post_url: str,
         unelect_versions: list[str],
         package_checksum: str,
         package_urls: list[str],
         dry_run: bool = False,
     ) -> int:
-        super().propose_to_revise_elected_guestos_versions(
+        super().propose_to_revise_elected_os_versions(
             changelog,
             version,
+            os_kind,
             forum_post_url,
             unelect_versions,
             package_checksum,
@@ -259,17 +265,25 @@ class MockSlackAnnouncer(object):
         self._logger = LOGGER.getChild(self.__class__.__name__)
 
     def announce_release(
-        self, webhook: str, version_name: str, google_doc_url: str, tag_all_teams: bool
+        self,
+        webhook: str,
+        version_name: str,
+        google_doc_url: str,
+        tag_all_teams: bool,
+        os_kind: OsKind,
     ) -> None:
-        self._logger.warning("Simulating announcement of %s in slack", version_name)
+        self._logger.warning(
+            "Simulating announcement of %s %s in slack", os_kind, version_name
+        )
 
 
 def oneoff_dre_place_proposal() -> None:
     changelog = "Fake changelog"
     dre = DRECli()
-    dre.propose_to_revise_elected_guestos_versions(
+    dre.propose_to_revise_elected_os_versions(
         changelog=changelog,
         version="0" * 40,
+        os_kind=GUESTOS,
         forum_post_url="https://forum.dfinity.org/t/proposal-to-elect-new-release-rc-2024-03-27-23-01/29042/7",
         unelect_versions=[],
         package_checksum="0" * 40,
