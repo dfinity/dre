@@ -14,7 +14,7 @@ on:
 jobs:
   changed_files:
     runs-on:
-      labels: dre-runner-custom
+      labels: dind-small
     # This image is based on ubuntu:20.04
     container: ghcr.io/dfinity/dre/actions-runner:6413f2909a49329ecbf5371ee7ddf07a9799b625
     name: Check changed release index files
