@@ -6,12 +6,6 @@ releases:
       # https://github.com/dfinity/ic/actions/runs/14401994484
       - name: base
         version: 579b8ba3a31341f354f4ddb3d60ac44548a91bc2
-  - rc_name: rc--2025-04-10_03-16
-    versions:
-      # Qualification pipeline:
-      # https://github.com/dfinity/ic/actions/runs/14371517559
-      - name: base
-        version: 7fb2409c64e42a3e26558657fde012f438fa2c31
   - rc_name: rc--2025-04-03_03-15
     versions:
       # Qualification pipeline:
