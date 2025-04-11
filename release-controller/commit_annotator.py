@@ -1,28 +1,38 @@
 import argparse
-import concurrent.futures
+import http.server
 import logging
 import os
 import pathlib
 import subprocess
 import sys
 import re
+import threading
 import time
 import typing
 from prometheus_client import start_http_server, Gauge
 
 sys.path.append(os.path.join(os.path.dirname(__file__)))
 
-from git_repo import GitRepo, GitRepoAnnotator, GitRepoBehavior
+from git_repo import GitRepo, GitRepoAnnotator, CHANGED_NOTES_NAMESPACES
 from datetime import datetime
 from tenacity import retry, stop_after_delay, retry_if_exception_type, after_log
 from util import resolve_binary, conventional_logging
 from watchdog import Watchdog
 
-from const import GUESTOS_CHANGED_NOTES_NAMESPACE
+from const import (
+    OsKind,
+    GUESTOS,
+    HOSTOS,
+    OS_KINDS,
+)
 
-GUESTOS_TARGETS_NOTES_NAMESPACE = "guestos-targets"
-GUESTOS_BAZEL_TARGETS = "//ic-os/guestos/envs/prod:update-img.tar.zst union //ic-os/setupos/envs/prod:disk-img.tar.zst"
-CUTOFF_COMMIT = "8646665552677436c8a889ce970857e531fee49b"
+TARGETS_NOTES_NAMESPACES = {GUESTOS: "guestos-targets", HOSTOS: "hostos-targets"}
+BAZEL_TARGETS = {
+    GUESTOS: "//ic-os/guestos/envs/prod:update-img.tar.zst",
+    HOSTOS: "//ic-os/hostos/envs/prod:disk-img.tar.zst union //ic-os/setupos/envs/prod:disk-img.tar.zst",
+}
+# Last manual HostOS release performed by Manuel Amador.
+CUTOFF_COMMIT = "68fc31a141b25f842f078c600168d8211339f422"
 
 LAST_CYCLE_END_TIMESTAMP_SECONDS = Gauge(
     "last_cycle_end_timestamp_seconds",
@@ -66,7 +76,9 @@ def release_branch_date(branch: str) -> typing.Optional[datetime]:
     retry=retry_if_exception_type(subprocess.CalledProcessError),
     after=after_log(_LOGGER, logging.ERROR),
 )
-def target_determinator(cwd: pathlib.Path, parent_object: str) -> bool:
+def target_determinator(
+    cwd: pathlib.Path, parent_object: str, bazel_targets: str
+) -> bool:
     logger = _LOGGER.getChild("target_determinator").getChild(parent_object)
     p = subprocess.run(
         [
@@ -74,7 +86,7 @@ def target_determinator(cwd: pathlib.Path, parent_object: str) -> bool:
             "-before-query-error-behavior=fatal",
             f"-bazel={resolve_binary("bazel")}",
             "--targets",
-            GUESTOS_BAZEL_TARGETS,
+            bazel_targets,
             parent_object,
         ],
         cwd=cwd,
@@ -90,37 +102,36 @@ def target_determinator(cwd: pathlib.Path, parent_object: str) -> bool:
     return output != ""
 
 
-def annotate_object(ic_repo: GitRepoAnnotator, object: str) -> None:
-    logger = _LOGGER.getChild("annotate_object").getChild(object)
+def annotate_object(annotator: GitRepoAnnotator, object: str, os_kind: OsKind) -> None:
+    logger = _LOGGER.getChild("annotate_object").getChild(object).getChild(os_kind)
     logger.debug("Attempting to annotate")
     start = time.time()
-    ic_repo.checkout(object)
+    targets = BAZEL_TARGETS[os_kind]
 
-    with concurrent.futures.ThreadPoolExecutor(max_workers=2) as executor:
-        logger.debug(f"Running bazel query deps({GUESTOS_BAZEL_TARGETS})")
-        bazel_query_output_future = executor.submit(
-            subprocess.check_output,
-            [
-                resolve_binary("bazel"),
-                "query",
-                f"deps({GUESTOS_BAZEL_TARGETS})",
-            ],
-            text=True,
-            cwd=ic_repo.dir,
-        )
-        target_determinator_future = executor.submit(
-            target_determinator, ic_repo.dir, ic_repo.parent(object)
-        )
-        bazel_query_output = bazel_query_output_future.result()
-        lap = time.time() - start
-        logger.debug("Bazel query finished in %.2f seconds", lap)
-        target_determinator_output = target_determinator_future.result()
-        lap = time.time() - start
-        logger.debug("Target determinator finished in %.2f seconds", lap)
+    # The following two external operations were being run in parallel
+    # to speed things up, but it turns out one of them often modifies
+    # the working directory, making the other one much slower.  Thus,
+    # we run them serially now, and -- in between them -- we clean the
+    # repository's working directory.
+    annotator.checkout(object)
+    bazel_query_output = subprocess.check_output(
+        [resolve_binary("bazel"), "query", f"deps({targets})"],
+        text=True,
+        cwd=annotator.dir,
+    )
+    lap = time.time() - start
+    logger.debug("cquery finished in %.2f seconds", lap)
 
-    ic_repo.add(
+    annotator.checkout(object)
+    target_determinator_output = target_determinator(
+        annotator.dir, annotator.parent(object), targets
+    )
+    lap = time.time() - start
+    logger.debug("target-determinator finished in %.2f seconds", lap)
+
+    annotator.add(
         object=object,
-        namespace=GUESTOS_TARGETS_NOTES_NAMESPACE,
+        namespace=TARGETS_NOTES_NAMESPACES[os_kind],
         content="\n".join(
             [
                 line
@@ -129,52 +140,128 @@ def annotate_object(ic_repo: GitRepoAnnotator, object: str) -> None:
             ]
         ),
     )
-    ic_repo.add(
+    annotator.add(
         object=object,
-        namespace=GUESTOS_CHANGED_NOTES_NAMESPACE,
+        namespace=CHANGED_NOTES_NAMESPACES[os_kind],
         content=str(target_determinator_output),
     )
     lap = time.time() - start
     logger.debug("Annotation finished in %.2f seconds", lap)
 
 
-def plan_to_annotate_branch(annotator: GitRepoAnnotator, branch: str) -> list[str]:
+def plan_to_annotate_branch(
+    annotator: GitRepoAnnotator,
+    branch: str,
+    skip_checking_commits: dict[OsKind, set[str]],
+) -> dict[OsKind, list[str]]:
     logger = _LOGGER.getChild(branch)
     logger.info("Preparing annotation plan")
-    # Reverse to annotate oldest objects first so that loop can be easily restarted if it breaks.
-    commits = []
+    commits: dict[OsKind, list[str]] = {}
     annotator.checkout(branch)
-    current_commit = branch
-    while True:
-        if current_commit == CUTOFF_COMMIT:
-            break
-        if annotator.get(
-            namespace=GUESTOS_CHANGED_NOTES_NAMESPACE, object=current_commit
-        ):
-            logger.debug("Found annotated commit %s", current_commit)
-            break
-        logger.debug("Found unannotated commit %s", current_commit)
-        commits.append(current_commit)
-        current_commit = annotator.parent(current_commit)
-    if commits:
-        logger.info("Has %s commits to annotate", len(commits))
-    COMMITS_BEHIND.labels(branch).set(len(commits))
+    for kind in OS_KINDS:
+        current_commit = branch
+        commits[kind] = []
+        while True:
+            if current_commit == CUTOFF_COMMIT:
+                break
+            if current_commit not in skip_checking_commits[kind]:
+                if annotator.has(
+                    namespace=CHANGED_NOTES_NAMESPACES[kind], object=current_commit
+                ):
+                    logger.debug(
+                        "Found wholly annotated %s commit %s", kind, current_commit
+                    )
+                    break
+            commits[kind].append(current_commit)
+            current_commit = annotator.parent(current_commit)
+    for kind in OS_KINDS:
+        if commits[kind]:
+            logger.info(
+                "Has %s unannotated %s commits to annotate",
+                len(set(commits[kind]) - set(skip_checking_commits[kind])),
+                kind,
+            )
+    COMMITS_BEHIND.labels(branch).set(sum(len(cs) for cs in commits.values()))
     return commits
 
 
 def annotate_commits_of_branch(
-    annotator: GitRepoAnnotator, branch: str, commits: list[str]
+    annotator: GitRepoAnnotator,
+    branch: str,
+    commits: list[str],
+    os_kind: OsKind,
+    watchdog: Watchdog,
 ) -> None:
-    logger = _LOGGER.getChild(branch)
+    logger = _LOGGER.getChild(branch).getChild(os_kind)
     unannotated_commits = len(commits)
     if commits:
+        # Reverse to annotate oldest objects first so that loop
+        # can be easily restarted if it breaks.
         for c in reversed(commits):
-            annotate_object(ic_repo=annotator, object=c)
+            annotate_object(annotator=annotator, object=c, os_kind=os_kind)
             unannotated_commits = unannotated_commits - 1
             COMMITS_BEHIND.labels(branch).set(unannotated_commits)
+            watchdog.report_healthy()
         logger.info("Successfully annotated %s commits", len(commits))
     else:
         COMMITS_BEHIND.labels(branch).set(0)
+
+
+class APIHandler(http.server.BaseHTTPRequestHandler):
+    server: "APIServer"
+
+    def do_GET(self) -> None:
+        m = re.match(
+            r"/api/v1/commit/([0-9a-f]{6,64})/annotation/(%s|%s)"
+            % (
+                CHANGED_NOTES_NAMESPACES[GUESTOS],
+                CHANGED_NOTES_NAMESPACES[HOSTOS],
+            ),
+            self.path,
+        )
+        if m:
+            commit, namespace = m.group(1), m.group(2)
+            try:
+                data = self.server.annotator.get(namespace=namespace, object=commit)
+                self.send_response(code=200, message="OK")
+                self.send_header("Content-Type", "text/plain")
+                self.send_header("Content-Length", f"{len(data)}")
+                self.end_headers()
+                self.wfile.write(data)
+            except KeyError:
+                msg = f"No {namespace} annotation for commit {commit}"
+                self.send_response(code=404, message=msg)
+                self.send_header("Content-Type", "text/plain")
+                self.end_headers()
+                self.wfile.write(msg.encode("utf-8"))
+            except Exception as e:
+                self.log_error(
+                    "%s while retrieving %s annotation on commit %s: %s",
+                    e.__class__.__name__,
+                    namespace,
+                    commit,
+                    e,
+                )
+                self.send_response(code=500, message=str(e.__class__.__name__))
+                self.send_header("Content-Type", "text/plain")
+                self.end_headers()
+                self.wfile.write(str(e).encode("utf-8"))
+                return
+        else:
+            self.send_response(code=404, message="Endpoint not found")
+            self.end_headers()
+
+
+class APIServer(http.server.HTTPServer):
+    def __init__(self, address: typing.Any, annotator: GitRepoAnnotator):
+        http.server.HTTPServer.__init__(self, address, APIHandler)
+        self.annotator = annotator
+
+
+def start_api_server(annotator: GitRepoAnnotator, port: int) -> None:
+    httpd = APIServer(("", port), annotator)
+    t = threading.Thread(target=httpd.serve_forever, daemon=True)
+    t.start()
 
 
 def main() -> None:
@@ -237,19 +324,21 @@ def main() -> None:
         help="Skip annotating branches older than this value (in days).",
     )
     parser.add_argument(
-        "--telemetry_port",
+        "--api-port",
+        type=int,
+        dest="api_port",
+        default=9469,
+        help="Port for API service to retrieve annotations.  Only served if --loop-every is greater than 0.  Disabled if less than 1.",
+    )
+    parser.add_argument(
+        "--telemetry-port",
         type=int,
         dest="telemetry_port",
         default=9468,
-        help="Set the Prometheus telemetry port to listen on.  Telemetry is only served if --loop-every is greater than 0.",
+        help="Set the Prometheus telemetry port to listen on.  Telemetry is only served if --loop-every is greater than 0.  Disabled if less than 1.",
     )
     opts = parser.parse_args()
 
-    behavior: GitRepoBehavior = {
-        "push_annotations": opts.push_annotations,
-        "save_annotations": opts.save_annotations,
-        "fetch_annotations": opts.fetch_annotations,
-    }
     github_token = os.getenv("GITHUB_TOKEN", None)
     github_org = os.getenv("GITHUB_ORG", "dfinity")
     creds = f"oauth2:{github_token}@" if github_token else ""
@@ -259,7 +348,13 @@ def main() -> None:
     ic_repo = GitRepo(
         f"https://{creds}github.com/{github_org}/ic.git",
         main_branch="master",
-        behavior=behavior,
+        repo_cache_dir=pathlib.Path.home() / ".cache/commit_annotator",
+    )
+    annotator = GitRepoAnnotator(
+        ic_repo,
+        list(TARGETS_NOTES_NAMESPACES.values())
+        + list(CHANGED_NOTES_NAMESPACES.values()),
+        opts.save_annotations,
     )
 
     # Watchdog needs to be fed (to report healthy progress) every watchdog_timer seconds
@@ -270,52 +365,71 @@ def main() -> None:
     branch_globs = opts.branch_globs.split(",")
 
     if opts.loop_every > 0:
-        start_http_server(port=int(opts.telemetry_port))
+        if int(opts.telemetry_port) > 0:
+            start_http_server(port=int(opts.telemetry_port))
+        if int(opts.api_port) > 0:
+            start_api_server(annotator, port=int(opts.api_port))
 
     while True:
         try:
             now = time.time()
             LAST_CYCLE_START_TIMESTAMP_SECONDS.set(int(now))
             ic_repo.fetch()
-            with ic_repo.annotator(
-                [GUESTOS_CHANGED_NOTES_NAMESPACE, GUESTOS_TARGETS_NOTES_NAMESPACE]
-            ) as annotator:
-                unannotated_commits_by_ref: dict[str, list[str]] = {}
-                for b in [
-                    branch
-                    for glob in branch_globs
-                    for branch in ic_repo.branch_list(glob)
-                ]:
-                    # if b is a directly-specified branch instead of a glob
-                    # then assume the date is "now" rather than fool around
-                    # with trying to determine the branch date.
-                    branch_date = (
-                        datetime.now() if b in branch_globs else release_branch_date(b)
+
+            if opts.fetch_annotations:
+                annotator.fetch()
+
+            # Performance optimization to avoid calling git notes on every
+            # commit once per branch.  Should only need to call it once.
+            commits_to_annotate: dict[OsKind, set[str]] = {k: set() for k in OS_KINDS}
+            unannotated_commits_by_ref: dict[str, dict[OsKind, list[str]]] = {}
+            for b in [
+                branch for glob in branch_globs for branch in ic_repo.branch_list(glob)
+            ]:
+                # if b is a directly-specified branch instead of a glob
+                # then assume the date is "now" rather than fool around
+                # with trying to determine the branch date.
+                branch_date = (
+                    datetime.now() if b in branch_globs else release_branch_date(b)
+                )
+                if (
+                    not branch_date
+                    or (datetime.now() - branch_date).days > opts.max_branch_age_days
+                ):
+                    logger.debug(
+                        "Ignoring branch as older than %s days: %s",
+                        opts.max_branch_age_days,
+                        b,
                     )
-                    if (
-                        not branch_date
-                        or (datetime.now() - branch_date).days
-                        > opts.max_branch_age_days
-                    ):
-                        logger.debug(
-                            "Ignoring branch as older than %s days: %s",
-                            opts.max_branch_age_days,
-                            b,
-                        )
-                        continue
-                    outstanding_commits = plan_to_annotate_branch(annotator, branch=b)
-                    unannotated_commits_by_ref[b] = outstanding_commits
-                # Make a little cache for this loop's run, saving time not invoking
-                # the annotation for a simgle commit twice.  Git history of different
-                # branches often shares commits in both branches.
-                annotated_commits: set[str] = set()
-                for b, outstanding_commits in unannotated_commits_by_ref.items():
-                    # Remove any commits already annotated so as to not waste time,
-                    # but preserve the ordering since that seems (to me) to matter.
-                    tbd = [c for c in outstanding_commits if c not in annotated_commits]
-                    annotate_commits_of_branch(annotator, b, tbd)
+                    continue
+                outstanding_commits = plan_to_annotate_branch(
+                    annotator,
+                    branch=b,
+                    skip_checking_commits=commits_to_annotate,
+                )
+                unannotated_commits_by_ref[b] = outstanding_commits
+                for k, v in commits_to_annotate.items():
+                    v.update(outstanding_commits[k])
+            # Make a little cache for this loop's run, saving time not invoking
+            # the annotation for a simgle commit twice.  Git history of different
+            # branches often shares commits in both branches.
+            annotated_commits: dict[OsKind, set[str]] = {k: set() for k in OS_KINDS}
+            for b, kinds_and_commits in unannotated_commits_by_ref.items():
+                # Remove any commits already annotated so as to not waste time,
+                # but preserve the ordering since that seems (to me) to matter.
+                for kind, outstanding_commits_by_kind in kinds_and_commits.items():
+                    tbd = [
+                        c
+                        for c in outstanding_commits_by_kind
+                        if c not in annotated_commits[kind]
+                    ]
+                    annotate_commits_of_branch(annotator, b, tbd, kind, watchdog)
                     # Remember these were annotated, avoid wasting time next loop.
-                    annotated_commits.update(tbd)
+                    annotated_commits[kind].update(tbd)
+
+            if opts.push_annotations:
+                annotator.push()
+
             and_now = time.time()
             LAST_CYCLE_SUCCESS_TIMESTAMP_SECONDS.set(int(and_now))
             LAST_CYCLE_END_TIMESTAMP_SECONDS.set(int(and_now))

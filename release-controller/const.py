@@ -1,1 +1,8 @@
-GUESTOS_CHANGED_NOTES_NAMESPACE: str = "guestos-changed"
+import typing
+
+OsKind = typing.Literal["GuestOS"] | typing.Literal["HostOS"]
+
+GUESTOS: typing.Literal["GuestOS"] = "GuestOS"
+HOSTOS: typing.Literal["HostOS"] = "HostOS"
+
+OS_KINDS: list[OsKind] = [GUESTOS, HOSTOS]

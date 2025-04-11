@@ -4,36 +4,43 @@ import time
 import typing
 import dre_cli
 
+from const import OsKind, GUESTOS, HOSTOS
+
 
 LOGGER = logging.getLogger()
 
 
 class ProposalState(object):
-    def __init__(self, version_id: str, state_store: "ReconcilerState"):
+    def __init__(
+        self, version_id: str, os_kind: OsKind, state_store: "ReconcilerState"
+    ):
+        self._os_kind = os_kind
         self._version_id = version_id
         self._store = state_store
 
 
 class NoProposal(ProposalState):
     def __str__(self) -> str:
-        return "No proposal for version %s" % self._version_id
+        return "No %s proposal for version %s" % (self._os_kind, self._version_id)
 
     def record_submission(self, proposal_id: int) -> "SubmittedProposal":
-        return self._store._record_proposal_id(self._version_id, proposal_id)
+        return self._store._record_proposal_id(
+            self._version_id, self._os_kind, proposal_id
+        )
 
     def record_malfunction(self) -> "DREMalfunction":
-        return self._store._record_malfunction(self._version_id)
+        return self._store._record_malfunction(self._version_id, self._os_kind)
 
 
 class DREMalfunction(NoProposal):
     def __str__(self) -> str:
         return "Proposal attempt for version %s failed at %s" % (
             self._version_id,
-            self._store._get_proposal_age(self._version_id),
+            self._store._get_proposal_age(self._version_id, self._os_kind),
         )
 
     def ready_to_retry(self) -> bool:
-        malfunction_age = self._store._get_proposal_age(self._version_id)
+        malfunction_age = self._store._get_proposal_age(self._version_id, self._os_kind)
         remaining_time_until_retry = datetime.timedelta(minutes=10) - (
             datetime.datetime.now() - malfunction_age
         )
@@ -56,14 +63,18 @@ class SubmittedProposal(ProposalState):
         )
 
     def __init__(
-        self, version_id: str, state_store: "ReconcilerState", proposal_id: int
+        self,
+        version_id: str,
+        os_kind: OsKind,
+        state_store: "ReconcilerState",
+        proposal_id: int,
     ):
-        super().__init__(version_id, state_store)
+        super().__init__(version_id, os_kind, state_store)
         self.proposal_id = proposal_id
 
 
 ProposalRetriever = typing.Callable[
-    [str], NoProposal | DREMalfunction | SubmittedProposal
+    [str, OsKind], NoProposal | DREMalfunction | SubmittedProposal
 ]
 
 
@@ -73,7 +84,11 @@ class ReconcilerState:
     def __init__(
         self,
         known_proposal_retriever: typing.Callable[
-            [], dict[str, dre_cli.ElectionProposal]
+            [],
+            tuple[
+                dict[str, dre_cli.ElectionProposal],
+                dict[str, dre_cli.ElectionProposal],
+            ],
         ]
         | None = None,
     ):
@@ -91,38 +106,50 @@ class ReconcilerState:
 
         self._logger = logging.getLogger(self.__class__.__name__)
         if known_proposal_retriever:
-            for replica_version, proposal in known_proposal_retriever().items():
-                p = self.version_proposal(replica_version)
-                if not isinstance(p, SubmittedProposal):
-                    self._logger.debug(
-                        "Preemptively recording submission of proposal %s for version %s",
-                        proposal["id"],
-                        replica_version,
-                    )
-                    p.record_submission(proposal["id"])
+            replica_version_proposals, hostos_version_proposals = (
+                known_proposal_retriever()
+            )
+            for os_kind, version_to_proposal in [
+                (typing.cast(OsKind, GUESTOS), replica_version_proposals),
+                (typing.cast(OsKind, HOSTOS), hostos_version_proposals),
+            ]:
+                for version, proposal in version_to_proposal.items():
+                    p = self.version_proposal(version, os_kind)
+                    if not isinstance(p, SubmittedProposal):
+                        self._logger.debug(
+                            "Preemptively recording submission of %s proposal %s for version %s",
+                            os_kind,
+                            proposal["id"],
+                            version,
+                        )
+                        p.record_submission(proposal["id"])
 
     def version_proposal(
-        self, version: str
+        self,
+        version: str,
+        os_kind: OsKind,
     ) -> NoProposal | SubmittedProposal | DREMalfunction:
         """Get the proposal ID for the given version. If the version has not been submitted, return None."""
-        res = self.state.get(version)
+        res = self.state.get(version + os_kind)
         if res is None:
-            return NoProposal(version, self)
+            return NoProposal(version, os_kind, self)
         elif isinstance(res, tuple) and res[0] == "malfunction":
-            return DREMalfunction(version, self)
+            return DREMalfunction(version, os_kind, self)
         else:
-            return SubmittedProposal(version, self, res[2])
+            return SubmittedProposal(version, os_kind, self, res[2])
 
-    def _get_proposal_age(self, version: str) -> datetime.datetime:
-        state = self.state[version]
+    def _get_proposal_age(self, version: str, os_kind: OsKind) -> datetime.datetime:
+        state = self.state[version + os_kind]
         return datetime.datetime.fromtimestamp(state[1])
 
-    def _record_malfunction(self, version: str) -> DREMalfunction:
+    def _record_malfunction(self, version: str, os_kind: OsKind) -> DREMalfunction:
         """Mark a proposal as submitted."""
-        self.state[version] = ("malfunction", time.time())
-        return DREMalfunction(version, self)
+        self.state[version + os_kind] = ("malfunction", time.time())
+        return DREMalfunction(version, os_kind, self)
 
-    def _record_proposal_id(self, version: str, proposal_id: int) -> SubmittedProposal:
+    def _record_proposal_id(
+        self, version: str, os_kind: OsKind, proposal_id: int
+    ) -> SubmittedProposal:
         """Save the proposal ID for the given version."""
-        self.state[version] = ("submitted", time.time(), proposal_id)
-        return SubmittedProposal(version, self, proposal_id)
+        self.state[version + os_kind] = ("submitted", time.time(), proposal_id)
+        return SubmittedProposal(version, os_kind, self, proposal_id)

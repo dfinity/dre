@@ -1,6 +1,7 @@
 import pathlib
 import tempfile
 
+from const import GUESTOS
 from git_repo import GitRepo
 from release_index_loader import GitReleaseLoader
 
@@ -14,7 +15,9 @@ def test_remove_excluded_changes() -> None:
             )
         )
         res = loader.proposal_summary(
-            "35bfcadd0f2a474057e42393917b8b3ac269627a", security_fix=False
+            "35bfcadd0f2a474057e42393917b8b3ac269627a",
+            security_fix=False,
+            os_kind=GUESTOS,
         )
         assert (
             res
@@ -106,7 +109,7 @@ Full list of changes (including the ones that are not relevant to GuestOS) can b
 
 # IC-OS Verification
 
-To build and verify the IC-OS disk image, after installing curl if necessary (`sudo apt install curl`), run:
+To build and verify the IC-OS GuestOS disk image, after installing curl if necessary (`sudo apt install curl`), run:
 
 ```
 # From https://github.com/dfinity/ic#verifying-releases
@@ -120,7 +123,7 @@ While not required for this NNS proposal, as we are only electing a new GuestOS 
         )
 
     res = loader.proposal_summary(
-        "35bfcadd0f2a474057e42393917b8b3ac269627a", security_fix=True
+        "35bfcadd0f2a474057e42393917b8b3ac269627a", security_fix=True, os_kind=GUESTOS
     )
     assert res is not None and (
         "You will be able to follow" in res

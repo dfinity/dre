@@ -5,6 +5,7 @@ on:
     paths:
       - "release-index.yaml"
       - "replica-releases/**"
+      - "hostos-releases/**"
       - "release-controller/**"
       - "node-labels/**"
       - "facts-db/**"

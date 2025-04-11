@@ -4,10 +4,10 @@ from typing import cast, Callable, TypedDict, Protocol
 
 from dotenv import load_dotenv
 from pydiscourse import DiscourseClient
-from release_index import Release
+from release_index import Release, Version
 from util import version_name
 import reconciler_state
-
+from const import OsKind, GUESTOS, HOSTOS
 
 LOGGER = logging.getLogger(__name__)
 
@@ -15,6 +15,7 @@ LOGGER = logging.getLogger(__name__)
 def _post_template(
     changelog: str | None,
     version_name: str,
+    os_kind: OsKind,
     proposal: reconciler_state.NoProposal
     | reconciler_state.DREMalfunction
     | reconciler_state.SubmittedProposal,
@@ -24,7 +25,7 @@ def _post_template(
 
     elif isinstance(proposal, reconciler_state.DREMalfunction):
         return (
-            f"A proposal to adopt [a new IC release](https://github.com/dfinity/ic/tree/{version_name}) has been prepared,"
+            f"A proposal to adopt [a new {os_kind} release](https://github.com/dfinity/ic/tree/{version_name}) has been prepared,"
             " but a temporary hiccup has taken place, preventing the proposal ID from being obtained."
             " The proposal ID and the changelog will be announced soon."
         )
@@ -32,10 +33,10 @@ def _post_template(
     return f"""\
 Hello there!
 
-We are happy to announce that voting is now open for [a new IC release](https://github.com/dfinity/ic/tree/{version_name}).
+We are happy to announce that voting is now open for [a new {os_kind} release](https://github.com/dfinity/ic/tree/{version_name}).
 The NNS proposal is here: [IC NNS Proposal {proposal.proposal_id}](https://dashboard.internetcomputer.org/proposal/{proposal.proposal_id}).
 
-Here is a summary of the changes since the last release:
+Here is a summary of the changes since the last {os_kind} release:
 
 {changelog}
 """
@@ -51,16 +52,18 @@ class ReleaseCandidateForumPost:
         proposal: reconciler_state.NoProposal
         | reconciler_state.DREMalfunction
         | reconciler_state.SubmittedProposal,
+        os_kind: OsKind,
         security_fix: bool = False,
     ):
         """Create a new post."""
         self.version_name = version_name
         self.changelog = changelog
         self.proposal = proposal
+        self.os_kind = os_kind
         self.security_fix = security_fix
 
 
-SummaryRetriever = Callable[[str, bool], str | None]
+SummaryRetriever = Callable[[str, OsKind, bool], str | None]
 
 
 class Post(TypedDict):
@@ -118,7 +121,7 @@ class ReleaseCandidateForumTopic:
                 category_id=nns_proposal_discussions_category_id,
                 content="The proposal for the next release will be announced soon.",
                 tags=["IC-OS-election", "release"],
-                title="Proposal to elect new release {}".format(self.release.rc_name),
+                title=f"Proposal to elect new release {self.release.rc_name}",
             )
             if post:
                 self.topic_id = post["topic_id"]
@@ -146,14 +149,29 @@ class ReleaseCandidateForumTopic:
         proposal_id_retriever: reconciler_state.ProposalRetriever,
     ) -> None:
         """Update the topic with the latest release information."""
-        posts = [
-            ReleaseCandidateForumPost(
-                version_name=version_name(self.release.rc_name, v.name),
-                changelog=summary_retriever(v.version, v.security_fix),
-                proposal=proposal_id_retriever(v.version),
-                security_fix=v.security_fix,
+        posts: list[ReleaseCandidateForumPost] = [
+            poast
+            for os_kind, vers in cast(
+                list[tuple[OsKind, list[Version]]],
+                [
+                    (GUESTOS, self.release.versions[:1]),  # base release guestos
+                    (HOSTOS, self.release.versions[:1]),  # base release hostos
+                    (
+                        GUESTOS,
+                        self.release.versions[1:],
+                    ),  # all other feature releases, not supported for hostos
+                ],
             )
-            for v in self.release.versions
+            for v in vers
+            for poast in [
+                ReleaseCandidateForumPost(
+                    version_name=version_name(self.release.rc_name, v.name),
+                    changelog=summary_retriever(v.version, os_kind, v.security_fix),
+                    proposal=proposal_id_retriever(v.version, os_kind),
+                    security_fix=v.security_fix,
+                    os_kind=os_kind,
+                )
+            ]
         ]
 
         created_posts = self.created_posts()
@@ -164,24 +182,26 @@ class ReleaseCandidateForumTopic:
                     version_name=p.version_name,
                     changelog=p.changelog,
                     proposal=p.proposal,
+                    os_kind=p.os_kind,
                 )
-                post = cast(Post, self.client.post_by_id(post_id))  # type: ignore[no-untyped-call]
+                post = cast(Post, self.client.post_by_id(post_id))  # type: ignore
                 if post["raw"] == content_expected:
                     # log the complete URL of the post
                     self._logger.debug("Post up to date: %s.", self.post_to_url(post))
                     continue
                 elif post["can_edit"]:
                     self._logger.info("Updating post %s.", post_id)
-                    self.client.update_post(post_id=post_id, content=content_expected)  # type: ignore[no-untyped-call]
+                    self.client.update_post(post_id=post_id, content=content_expected)  # type: ignore
                 else:
                     self._logger.warning("Post %s is not editable.  Ignoring.", post_id)
             else:
-                self.client.create_post(  # type: ignore[no-untyped-call]
+                self.client.create_post(  # type: ignore
                     topic_id=self.topic_id,
                     content=_post_template(
                         version_name=p.version_name,
                         changelog=p.changelog,
                         proposal=p.proposal,
+                        os_kind=p.os_kind,
                     ),
                 )
 

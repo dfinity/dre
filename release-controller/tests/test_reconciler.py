@@ -3,9 +3,11 @@ import tempfile
 from unittest.mock import Mock
 import pytest_mock.plugin
 
+import const
 import git_repo
 import pytest
 import release_index
+import release_notes
 import typing
 import dryrun
 from github import Github
@@ -13,7 +15,7 @@ from dryrun import ReleaseNotesClient as ReleaseNotesClientMock
 from publish_notes import PublishNotesClient
 from pydantic_yaml import parse_yaml_raw_as
 from reconciler import find_base_release, oldest_active_release
-from reconciler import Reconciler, PhaseCollector
+from reconciler import Reconciler
 from reconciler_state import ReconcilerState
 from reconciler import version_package_checksum
 from reconciler import versions_to_unelect
@@ -31,18 +33,11 @@ class MockActiveVersionProvider(object):
     def __init__(self, active_versions: list[str] | None = None):
         self.vers = active_versions if active_versions else []
 
-    def active_versions(self) -> list[str]:
+    def active_guestos_versions(self) -> list[str]:
         return self.vers
 
-
-class MockReplicaVersionProposalProvider(object):
-    def __init__(self, proposal_to_version_map: dict[str, int] | None = None):
-        self.rep: dict[str, int] = (
-            proposal_to_version_map if proposal_to_version_map else {}
-        )
-
-    def replica_version_proposals(self) -> dict[str, int]:
-        return self.rep
+    def active_hostos_versions(self) -> list[str]:
+        return self.vers
 
 
 @pytest.mark.skip(reason="not finished")
@@ -74,33 +69,38 @@ releases:
 """
     publish_client = PublishNotesClient(repo)
     mocker.patch.object(publish_client, "ensure_published")
+
+    def cdf() -> release_notes.OSChangeDeterminator:
+        return release_notes.LocalCommitChangeDeterminator(repo).commit_changes_artifact  # type: ignore
+
     reconciler = Reconciler(
         forum_client=forum_client,
         notes_client=notes_client,
         loader=StaticReleaseLoader(config),
         publish_client=publish_client,
+        change_determinator_factory=cdf,
         nns_url="",
         state=AmnesiacReconcilerState(),
         ic_repo=ic_repo_mock,
         ignore_releases=[""],
-        # FIXME: mock next two lines properly
         active_version_provider=MockActiveVersionProvider(),
-        replica_version_proposal_provider=MockReplicaVersionProposalProvider(),
         dre=dre,
         slack_announcer=slack_announcer,
     )
 
-    assert not notes_client.markdown_file("2e921c9adfc71f3edc96a9eb5d85fc742e7d8a9f")
+    assert not notes_client.markdown_file(
+        "2e921c9adfc71f3edc96a9eb5d85fc742e7d8a9f", const.GUESTOS
+    )
     assert discourse_client.topics == []
     # This test is out of date.
     # The logic of the following two lines is not valid anymore:
     # assert reconciler.publish_client.ensure_published.call_count == 0
     # assert git_repo.push_release_tags.call_count == 0  # pylint: disable=no-member
 
-    reconciler.reconcile(PhaseCollector())
+    reconciler.reconcile()
 
     created_changelog = notes_client.markdown_file(
-        "2e921c9adfc71f3edc96a9eb5d85fc742e7d8a9f"
+        "2e921c9adfc71f3edc96a9eb5d85fc742e7d8a9f", const.GUESTOS
     )
     assert "TODO:" == created_changelog
     assert discourse_client.topics == []
@@ -133,7 +133,7 @@ releases:
     reconciler.loader = StaticReleaseLoader(config)
     # TODO: mock modifying google docs contents
 
-    reconciler.reconcile(PhaseCollector())
+    reconciler.reconcile()
 
     # This test is out of date.
     # reconciler.publish_client.ensure_published.assert_called_once_with(
@@ -145,14 +145,17 @@ releases:
     # Changelog merged into main
     mocker.patch.object(reconciler.publish_client, "ensure_published")
     mocker.patch.object(
-        reconciler.governance_canister,
-        "replica_version_proposals",
-        return_value={"2e921c9adfc71f3edc96a9eb5d85fc742e7d8a9f": [{"id": 12345}]},
+        reconciler.dre,
+        "get_election_proposals_by_version",
+        return_value=(
+            {"2e921c9adfc71f3edc96a9eb5d85fc742e7d8a9f": [{"id": 12345}]},
+            {"2e921c9adfc71f3edc96a9eb5d85fc742e7d8a9f": [{"id": 12346}]},
+        ),
     )
     reconciler.loader = StaticReleaseLoader(
         config, changelogs={"2e921c9adfc71f3edc96a9eb5d85fc742e7d8a9f": "TODO:"}
     )
-    reconciler.reconcile(PhaseCollector())
+    reconciler.reconcile()
 
     # TODO: change to not called
     # assert reconciler.publish_client.ensure_published.call_count == 0
@@ -335,7 +338,7 @@ dff2072e34071110234b0cb169705efc13284e4a99b7795ef1951af1fe7b41ac *update-img.tar
 
     mocker.patch("requests.get", new=mock_request_get(content_getter))
     assert (
-        version_package_checksum("notimporant")
+        version_package_checksum("notimporant", const.GUESTOS)
         == "9ca7002a723b932c3fb25293fc541e0b156170ec1e9a2c6a83c9733995051187"
     )
 
@@ -359,7 +362,7 @@ dff2072e34071110234b0cb169705efc13284e4a99b7795ef1951af1fe7b41ac *update-img.tar
     mocker.patch("requests.get", new=mock_request_get(content_getter))
 
     with pytest.raises(Exception) as e:
-        version_package_checksum("notimporant")
+        version_package_checksum("notimporant", const.GUESTOS)
         assert "do not match contents" in str(e.value)
 
 

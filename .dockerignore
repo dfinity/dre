@@ -11,6 +11,7 @@ node-labels
 pylib
 release-controller
 replica-releases
+hostos-releases
 rs
 scripts
 target

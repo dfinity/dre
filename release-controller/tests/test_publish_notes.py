@@ -6,6 +6,7 @@ from github import Github
 from publish_notes import PublishNotesClient
 import pathlib
 from google_docs import google_doc_to_markdown
+from const import GUESTOS
 
 
 # @pytest.mark.skip(
@@ -26,6 +27,7 @@ def test_publish_if_ready__ready(mocker) -> None:
     publish_client.publish_if_ready(
         md,
         "b0ade55f7e8999e2842fe3f49df163ba224b71a2",
+        GUESTOS,
     )
 
     publish_client.ensure_published.assert_called_once_with(  # pylint: disable=no-member
@@ -153,6 +155,7 @@ Tests:
 * [`b388425da`](https://github.com/dfinity/ic/commit/b388425da) Interface(icrc\\_ledger): Add ledger state verification for golden state upgrade test of SNS ledger ([#720](https://github.com/dfinity/ic/pull/720))
 * [`a2f7d24f4`](https://github.com/dfinity/ic/commit/a2f7d24f4) Interface,Networking(network-simulation): Increase transmission control buffers ([#908](https://github.com/dfinity/ic/pull/908))
 """,
+        os_kind=GUESTOS,
     )
 
 
@@ -218,6 +221,7 @@ Other:
 ------
 """,
         "2e921c9adfc71f3edc96a9eb5d85fc742e7d8a9f",
+        GUESTOS,
     )
 
     # assert publish_client.ensure_published.call_count == 1
@@ -253,6 +257,7 @@ Chores:
 * [`6a4d8962c`](https://github.com/dfinity/ic/commit/6a4d8962c) Consensus(ecdsa): Make masked kappa config optional
 * [`2d63da24c`](https://github.com/dfinity/ic/commit/2d63da24c) Consensus(ecdsa): Add optional kappa\\_unmasked config to QuadrupleInCreation
 """,
+        os_kind=GUESTOS,
     )
 
 
@@ -300,6 +305,7 @@ Features:
 * author: Leo Eich | [2d63da24c](https://github.com/dfinity/ic/commit/2d63da24c) Consensus(ecdsa): Add optional kappa\\_unmasked config to QuadrupleInCreation
 """,
         "2e921c9adfc71f3edc96a9eb5d85fc742e7d8a9f",
+        GUESTOS,
     )
 
     assert publish_client.ensure_published.call_count == 0  # pylint: disable=no-member
@@ -352,6 +358,7 @@ Features:
 ---------
 """,
         "2e921c9adfc71f3edc96a9eb5d85fc742e7d8a9f",
+        GUESTOS,
     )
 
     assert publish_client.ensure_published.call_count == 0  # pylint: disable=no-member
@@ -402,6 +409,7 @@ To see a full list of commits added since last release, compare the revisions on
 * ~~author: Leo Eich |~~ [2d63da24c](https://github.com/dfinity/ic/commit/2d63da24c) Consensus(ecdsa): Add optional kappa\\_unmasked config to QuadrupleInCreation
 """,
             "2e921c9adfc71f3edc96a9eb5d85fc742e7d8a9f",
+            GUESTOS,
         )
 
     assert publish_client.ensure_published.call_count == 0  # pylint: disable=no-member
