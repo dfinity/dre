@@ -141,7 +141,9 @@ def version_package_urls(version: str, os_kind: OsKind) -> list[str]:
 def version_package_checksum(version: str, os_kind: OsKind) -> str:
     v = "host-os" if os_kind is HOSTOS else "guest-os"
     hashurl = f"https://download.dfinity.systems/ic/{version}/{v}/update-img/SHA256SUMS"
+    LOGGER.getChild("version_package_checksum").debug("fetching checksums")
     response = requests.get(hashurl, timeout=10)
+    response.raise_for_status()
     checksum = typing.cast(
         str,
         [
@@ -575,7 +577,19 @@ class Reconciler:
                     # No discovered proposal and either prior malfunction or no proposal.
                     # Time to create a proposal proposal.
                     revlogger.info("Preparing proposal for %s", release_commit)
-                    checksum = version_package_checksum(release_commit, v.os_kind)
+                    try:
+                        checksum = version_package_checksum(release_commit, v.os_kind)
+                    except requests.exceptions.HTTPError as e:
+                        if e.response.status_code == 404:
+                            phase.incomplete()
+                            revlogger.warning(
+                                "Proposal cannot be placed because one of the URLs"
+                                " to be fetched does not exist (%s)."
+                                "  Verify that the IC OS merge pipeline has uploaded"
+                                " all the URLs required for the proposal."
+                            )
+                            continue
+
                     urls = version_package_urls(release_commit, v.os_kind)
                     unelect_versions = []
                     if v.is_base == 0:
