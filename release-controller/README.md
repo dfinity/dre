@@ -60,9 +60,10 @@ Reconciler is responsible for generating release notes (1), publishing them as g
 
 ## Resolving issues
 
-### View logs in production
+### Diagnostics
 
-[Use Grafana to view the logs](https://grafana.ch1-rel1.dfinity.network/explore?schemaVersion=1&panes=%7B%22tvd%22:%7B%22datasource%22:%22P8E80F9AEF21F6940%22,%22queries%22:%5B%7B%22refId%22:%22A%22,%22expr%22:%22%7Bnamespace%3D%5C%22release-controller%5C%22%7D%20%7C%20line_format%20%60%7B%7B.pod%7D%7D%20%7B%7B__line__%7D%7D%60%22,%22queryType%22:%22range%22,%22datasource%22:%7B%22type%22:%22loki%22,%22uid%22:%22P8E80F9AEF21F6940%22%7D,%22editorMode%22:%22builder%22%7D%5D,%22range%22:%7B%22from%22:%22now-15m%22,%22to%22:%22now%22%7D%7D%7D&orgId=1) in real time.
+The release controller [has its own dashboard](https://grafana.ch1-rel1.dfinity.network/d/release-controller/release-controller).
+Use the dashboard to supervise the progress of the components that comprise the release controller.
 
 ### Google Docs generation was wrong for particular commit
 
