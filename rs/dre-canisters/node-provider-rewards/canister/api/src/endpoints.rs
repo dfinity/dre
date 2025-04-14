@@ -27,7 +27,9 @@ impl TryFrom<BTreeMap<PrincipalId, Decimal>> for NodeProvidersRewardsXDRTotal {
             .into_iter()
             .map(|(k, v)| Ok::<(PrincipalId, u64), String>((k, v.to_u64().err_u64()?)))
             .collect::<Result<BTreeMap<_, _>, _>>()?;
-        Ok(Self { rewards_xdr_permyriad_per_provider })
+        Ok(Self {
+            rewards_xdr_permyriad_per_provider,
+        })
     }
 }
 
