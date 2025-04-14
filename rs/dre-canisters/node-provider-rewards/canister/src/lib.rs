@@ -3,11 +3,14 @@ use candid::candid_method;
 use ic_canisters_http_types::{HttpRequest, HttpResponse, HttpResponseBuilder};
 use ic_cdk_macros::*;
 use ic_nervous_system_common::serve_metrics;
-use node_provider_rewards_api::endpoints::{RewardPeriodArgs, RewardsPerNodeProviderResponse};
-use rewards_calculation::calculate_rewards;
-use rewards_calculation::reward_period::RewardPeriod;
-use rust_decimal::prelude::ToPrimitive;
+use node_provider_rewards_api::endpoints::{
+    NodeProviderRewardsCalculation, NodeProviderRewardsCalculationArgs, NodeProvidersRewardsXDRTotal, RewardPeriodArgs,
+};
+use rewards_calculation::rewards_calculator::RewardsCalculator;
+use rewards_calculation::rewards_calculator_results::{RewardCalculatorError, RewardsCalculatorResults};
+use rewards_calculation::types::RewardPeriod;
 use std::cell::RefCell;
+use std::collections::BTreeMap;
 
 mod metrics;
 mod metrics_types;
@@ -154,29 +157,43 @@ fn http_request(request: HttpRequest) -> HttpResponse {
     }
 }
 
-#[update]
-#[candid_method(update)]
-fn get_node_providers_xdr_rewards(args: RewardPeriodArgs) -> Result<RewardsPerNodeProviderResponse, String> {
-    let reward_period = RewardPeriod::new(args.start_ts, args.end_ts).map_err(|e| format!("Error creating period: {}", e))?;
-    let start_ts = reward_period.start_ts.get();
-    let end_ts = reward_period.end_ts.get();
-
+fn rewards_calculator_builder(reward_period: RewardPeriodArgs) -> Result<RewardsCalculator, RewardCalculatorError> {
+    let reward_period = RewardPeriod::new(reward_period.start_ts, reward_period.end_ts)?;
     let metrics_manager = METRICS_MANAGER.with(|m| m.clone());
     let registry_store = REGISTRY_STORE.with(|m| m.clone());
 
-    let daily_metrics_by_node = metrics_manager.daily_metrics_by_node(start_ts, end_ts);
-
     let rewards_table = registry_store.get_rewards_table();
-    let rewardable_nodes = registry_store.get_rewardable_nodes(start_ts, end_ts);
+    let daily_metrics_by_subnet = metrics_manager.daily_metrics_by_subnet(reward_period.start_ts.get(), reward_period.end_ts.get());
 
-    let rewards = calculate_rewards(&reward_period, &rewards_table, &daily_metrics_by_node, &rewardable_nodes)
-        .map_err(|e| format!("Error calculating rewards: {}", e))?;
+    RewardsCalculator::from_subnets_metrics(reward_period, rewards_table, daily_metrics_by_subnet)
+}
 
-    Ok(RewardsPerNodeProviderResponse {
-        rewards_per_provider: rewards
-            .rewards_per_provider
-            .into_iter()
-            .map(|(k, v)| (k.to_string(), v.to_u64().unwrap()))
-            .collect(),
-    })
+#[query]
+#[candid_method(query)]
+fn get_node_providers_rewards_xdr_total(args: RewardPeriodArgs) -> Result<NodeProvidersRewardsXDRTotal, String> {
+    let calculator = rewards_calculator_builder(args).map_err(|err| err.to_string())?;
+    let registry_store = REGISTRY_STORE.with(|m| m.clone());
+    let rewardable_nodes_per_provider = registry_store.get_rewardable_nodes_per_provider();
+
+    let mut rewards_per_provider = BTreeMap::new();
+    for (provider_id, rewardable_nodes) in rewardable_nodes_per_provider {
+        let rewards_result = calculator.calculate_provider_rewards(rewardable_nodes);
+        rewards_per_provider.insert(provider_id, rewards_result.rewards_total_xdr_permyriad);
+    }
+
+    rewards_per_provider.try_into()
+}
+
+#[query]
+#[candid_method(query)]
+fn get_node_provider_rewards_calculation(args: NodeProviderRewardsCalculationArgs) -> Result<NodeProviderRewardsCalculation, String> {
+    let calculator = rewards_calculator_builder(args.reward_period).map_err(|err| err.to_string())?;
+    let registry_store = REGISTRY_STORE.with(|m| m.clone());
+    let rewardable_nodes = registry_store
+        .get_rewardable_nodes_per_provider()
+        .remove(&args.provider_id)
+        .ok_or(format!("No rewardable nodes found for provider {}", args.provider_id))?;
+    let node_provider_result: RewardsCalculatorResults = calculator.calculate_provider_rewards(rewardable_nodes);
+
+    node_provider_result.try_into()
 }
