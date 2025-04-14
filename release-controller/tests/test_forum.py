@@ -30,9 +30,9 @@ def test_create_release_notes_on_new_release() -> None:
     def proposal(v: str, os_kind: OsKind) -> reconciler_state.SubmittedProposal:
         proposal_id = (
             1
-            if (v == "test1" and os_kind is GUESTOS)
+            if (v == "test1" and os_kind == GUESTOS)
             else 2
-            if (v == "test1" and os_kind is HOSTOS)
+            if (v == "test1" and os_kind == HOSTOS)
             else 3
         )
         return reconciler_state.SubmittedProposal(v, os_kind, None, proposal_id)

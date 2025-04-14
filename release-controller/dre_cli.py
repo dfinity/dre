@@ -165,7 +165,7 @@ class DRECli:
         package_urls: list[str],
         dry_run: bool = False,
     ) -> int:
-        x = "hostos" if os_kind is HOSTOS else "replica"
+        x = "hostos" if os_kind == HOSTOS else "replica"
         unelect_versions_args = (
             ([f"--{x}-versions-to-unelect"] + list(unelect_versions))
             if len(unelect_versions) > 0

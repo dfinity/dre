@@ -131,7 +131,7 @@ def find_base_release(
 
 
 def version_package_urls(version: str, os_kind: OsKind) -> list[str]:
-    v = "host-os" if os_kind is HOSTOS else "guest-os"
+    v = "host-os" if os_kind == HOSTOS else "guest-os"
     return [
         f"https://download.dfinity.systems/ic/{version}/{v}/update-img/update-img.tar.zst",
         f"https://download.dfinity.network/ic/{version}/{v}/update-img/update-img.tar.zst",
@@ -139,7 +139,7 @@ def version_package_urls(version: str, os_kind: OsKind) -> list[str]:
 
 
 def version_package_checksum(version: str, os_kind: OsKind) -> str:
-    v = "host-os" if os_kind is HOSTOS else "guest-os"
+    v = "host-os" if os_kind == HOSTOS else "guest-os"
     hashurl = f"https://download.dfinity.systems/ic/{version}/{v}/update-img/SHA256SUMS"
     LOGGER.getChild("version_package_checksum").debug("fetching checksums")
     response = requests.get(hashurl, timeout=10)
@@ -352,7 +352,7 @@ class Reconciler:
                 if rcver.name not in self.local_release_state[relcand.rc_name]:
                     self.local_release_state[relcand.rc_name][rcver.name] = {}
                 for os_kind in OS_KINDS:
-                    if os_kind is GUESTOS or v_idx == 0:  # Do HostOS for base release.
+                    if os_kind == GUESTOS or v_idx == 0:  # Do HostOS for base release.
                         if (
                             os_kind
                             not in self.local_release_state[relcand.rc_name][rcver.name]
@@ -391,7 +391,7 @@ class Reconciler:
             if not version.complete
         ]
 
-        if [x for x in versions if x.os_kind is GUESTOS]:
+        if [x for x in versions if x.os_kind == GUESTOS]:
             logger.info(
                 "GuestOS versions active on subnets or unassigned nodes: %s",
                 ", ".join(active_guestos_versions),
@@ -399,7 +399,7 @@ class Reconciler:
             logger.info(
                 "Oldest active GuestOS release: %s", oldest_active_guestos.rc_name
             )
-        if [x for x in versions if x.os_kind is HOSTOS]:
+        if [x for x in versions if x.os_kind == HOSTOS]:
             logger.info(
                 "HostOS versions active on subnets or unassigned nodes: %s",
                 ", ".join(active_hostos_versions),
@@ -553,7 +553,7 @@ class Reconciler:
                     )
                 elif discovered_proposal := (
                     existing_hostos_proposals
-                    if v.os_kind is HOSTOS
+                    if v.os_kind == HOSTOS
                     else existing_guestos_proposals
                 ).get(release_commit):
                     if isinstance(prop, reconciler_state.NoProposal):
@@ -598,14 +598,14 @@ class Reconciler:
                                 config,
                                 active_versions=(
                                     active_hostos_versions
-                                    if v.os_kind is HOSTOS
+                                    if v.os_kind == HOSTOS
                                     else active_guestos_versions
                                 ),
                                 elected_versions=[
                                     v
                                     for v in (
                                         self.dre.get_blessed_hostos_versions()
-                                        if v.os_kind is HOSTOS
+                                        if v.os_kind == HOSTOS
                                         else self.dre.get_blessed_guestos_versions()
                                     )
                                 ],

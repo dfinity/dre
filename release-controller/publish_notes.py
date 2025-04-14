@@ -20,7 +20,7 @@ LOGGER = logging.getLogger(__name__)
 
 
 def release_directory(os_kind: OsKind) -> str:
-    return REPLICA_RELEASES_DIR if os_kind is GUESTOS else HOSTOS_RELEASES_DIR
+    return REPLICA_RELEASES_DIR if os_kind == GUESTOS else HOSTOS_RELEASES_DIR
 
 
 def post_process_release_notes(release_notes: str) -> str:

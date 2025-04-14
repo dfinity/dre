@@ -19,7 +19,7 @@ LOGGER = logging.getLogger(__name__)
 def _verify_release_instructions(
     version: str, os_kind: OsKind, security_fix: bool
 ) -> str:
-    other_os_kind = HOSTOS if os_kind is GUESTOS else GUESTOS
+    other_os_kind = HOSTOS if os_kind == GUESTOS else GUESTOS
     with_security_caveat = ""
     if security_fix:
         with_security_caveat = "\n_You will be able to follow the instructions below as soon as the source code has been released._\n"
