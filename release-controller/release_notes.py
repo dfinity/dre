@@ -687,7 +687,7 @@ class LocalCommitChangeDeterminator(object):
             COMMIT_BELONGS,
             COMMIT_DOES_NOT_BELONG,
             COMMIT_COULD_NOT_BE_ANNOTATED,
-        ]
+        ], "Expected a specific CommitInclusionState, not %r" % changed
         return typing.cast(CommitInclusionState, changed)
 
 
@@ -718,6 +718,11 @@ class CommitAnnotatorClientCommitChangeDeterminator(object):
                     f"Could not find {os_kind} label for commit {commit}. Check out commit annotator logs and runbook: https://dfinity.github.io/dre/release.html#missing-guestos-label."
                 ) from he
             raise
+        assert changed in [
+            COMMIT_BELONGS,
+            COMMIT_DOES_NOT_BELONG,
+            COMMIT_COULD_NOT_BE_ANNOTATED,
+        ], "Expected a specific CommitInclusionState, not %r" % changed
         return typing.cast(CommitInclusionState, changed)
 
 
