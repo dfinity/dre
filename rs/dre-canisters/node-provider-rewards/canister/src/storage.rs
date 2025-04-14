@@ -17,6 +17,7 @@ const SUBNETS_TO_RETRY_MEMORY_ID: MemoryId = MemoryId::new(3);
 pub fn stable_btreemap_init<K: Storable + Clone + Ord, V: Storable>(memory_id: MemoryId) -> StableBTreeMap<K, V, VM> {
     with_memory_manager(|mgr| StableBTreeMap::init(mgr.get(memory_id)))
 }
+
 fn with_memory_manager<R>(f: impl FnOnce(&MemoryManager<DefaultMemoryImpl>) -> R) -> R {
     MEMORY_MANAGER.with(|memory_manager| f(&memory_manager.borrow()))
 }
