@@ -1,4 +1,4 @@
-use crate::types::{DayEndNanos, NodeMetricsDailyProcessed, RewardPeriod, RewardPeriodError, SubnetFailureRateDaily, TimestampNanos};
+use crate::types::{DayEndNanos, RewardPeriod, RewardPeriodError, TimestampNanos};
 use ic_base_types::{NodeId, SubnetId};
 use rust_decimal::Decimal;
 use std::collections::BTreeMap;
@@ -11,24 +11,35 @@ pub struct NodeCategory {
     pub node_type: String,
 }
 
-#[derive(Default, Debug)]
+/// Represents the daily metrics recorded for a node.
+#[derive(Clone, PartialEq, Debug)]
+pub struct NodeMetricsDailyProcessed {
+    pub ts: DayEndNanos,
+    pub subnet_assigned: SubnetId,
+    pub subnet_assigned_fr: Decimal,
+    pub num_blocks_proposed: u64,
+    pub num_blocks_failed: u64,
+    pub original_fr: Decimal,
+    pub relative_fr: Decimal,
+}
+
+#[derive(Debug, Default)]
 pub struct NodeResults {
     pub region: String,
     pub node_type: String,
-    pub daily_metrics_processed: Vec<NodeMetricsDailyProcessed>,
-    pub average_relative_fr: Decimal,
-    pub average_extrapolated_fr: Decimal,
+    pub daily_metrics: Vec<NodeMetricsDailyProcessed>,
+    // None if node unassigned in reward period
+    pub avg_relative_fr: Option<Decimal>,
+    pub avg_relative_extrapolated_fr: Decimal,
     pub rewards_reduction: Decimal,
     pub performance_multiplier: Decimal,
-    pub base_rewards: Decimal,
     pub adjusted_rewards: Decimal,
 }
 
 #[derive(Default, Debug)]
 pub struct RewardsCalculatorResults {
-    pub daily_subnets_fr: BTreeMap<SubnetId, Vec<SubnetFailureRateDaily>>,
-    pub nodes_results: BTreeMap<NodeId, NodeResults>,
-    pub rewards_by_category: BTreeMap<NodeCategory, Decimal>,
+    pub base_rewards_by_category: BTreeMap<NodeCategory, Decimal>,
+    pub results_by_node: BTreeMap<NodeId, NodeResults>,
     pub extrapolated_fr: Decimal,
     pub rewards_total: Decimal,
 }
@@ -37,12 +48,12 @@ pub struct RewardsCalculatorResults {
 pub enum RewardCalculatorError {
     RewardPeriodError(RewardPeriodError),
     EmptyMetrics,
-    NodeMetricsOutOfRange {
-        node_id: NodeId,
+    SubnetMetricsOutOfRange {
+        subnet_id: SubnetId,
         timestamp: TimestampNanos,
         reward_period: RewardPeriod,
     },
-    DuplicateMetrics(NodeId),
+    DuplicateMetrics(SubnetId, DayEndNanos),
 }
 
 impl From<RewardPeriodError> for RewardCalculatorError {
@@ -59,19 +70,19 @@ impl fmt::Display for RewardCalculatorError {
             RewardCalculatorError::EmptyMetrics => {
                 write!(f, "No daily_metrics_by_node")
             }
-            RewardCalculatorError::NodeMetricsOutOfRange {
-                node_id,
+            RewardCalculatorError::SubnetMetricsOutOfRange {
+                subnet_id,
                 timestamp,
                 reward_period,
             } => {
                 write!(
                     f,
                     "Node {} has metrics outside the reward period: timestamp: {} not in {}",
-                    node_id, timestamp, reward_period
+                    subnet_id, timestamp, reward_period
                 )
             }
-            RewardCalculatorError::DuplicateMetrics(node_id) => {
-                write!(f, "Node {} has multiple metrics for the same day", node_id)
+            RewardCalculatorError::DuplicateMetrics(subnet_id, ts) => {
+                write!(f, "Subnet {} has multiple metrics for the same node at ts {}", subnet_id, ts.get())
             }
             RewardCalculatorError::RewardPeriodError(err) => {
                 write!(f, "Reward period error: {}", err)

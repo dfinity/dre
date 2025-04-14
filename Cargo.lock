@@ -6158,6 +6158,7 @@ dependencies = [
  "candid",
  "chrono",
  "ic-base-types",
+ "itertools 0.13.0",
  "rewards-calculation",
  "rust_decimal",
  "serde",
@@ -6186,11 +6187,11 @@ dependencies = [
  "ic-stable-structures",
  "ic-types",
  "indexmap 2.8.0",
- "itertools 0.13.0",
  "mockall",
  "node-provider-rewards-api",
  "rewards-calculation",
  "serde",
+ "serde_cbor",
  "tokio",
 ]
 
@@ -7486,7 +7487,6 @@ dependencies = [
  "ic-types",
  "itertools 0.13.0",
  "maplit",
- "num-traits",
  "rust_decimal",
  "rust_decimal_macros",
 ]

@@ -13,8 +13,6 @@ use ic_registry_keys::{
 use ic_types::registry::RegistryClientError;
 use indexmap::IndexMap;
 use rewards_calculation::types::RewardableNode;
-use rewards_calculation::types::RewardableNode;
-use rewards_calculation::types::TimestampNanos;
 use std::collections::btree_map::Entry;
 use std::collections::BTreeMap;
 use std::str::FromStr;
@@ -136,16 +134,15 @@ impl<S: RegistryDataStableMemory> RegistryClient<S> {
         }
     }
 
-    pub fn get_rewardable_nodes_per_provider(
-        &self,
-        _start_ts: TimestampNanos,
-        _end_ts: TimestampNanos,
-    ) -> BTreeMap<PrincipalId, Vec<RewardableNode>> {
-        let mut rewardable_nodes_per_provider = BTreeMap::new();
+    pub fn get_rewardable_nodes_per_provider(&self) -> BTreeMap<PrincipalId, Vec<RewardableNode>> {
+        let mut rewardable_nodes_per_provider: BTreeMap<_, Vec<_>> = BTreeMap::new();
         let mut node_operator_rewardable_count = BTreeMap::new();
 
         // TODO: Extend to all the versions in the range once the registry supports it.
         // https://github.com/dfinity/ic/pull/4450
+        //
+        // _start_ts: TimestampNanos,
+        // _end_ts: TimestampNanos,
         let nodes_record = self.get_family_entries::<NodeRecord>();
 
         for (principal_id, (_, node_record)) in nodes_record {
@@ -168,7 +165,7 @@ impl<S: RegistryDataStableMemory> RegistryClient<S> {
 
             rewardable_nodes_per_provider.entry(node_provider_id).or_default().push(RewardableNode {
                 node_id,
-                node_type: node_type.clone(),
+                node_type,
                 region: data_center_record.region,
             })
         }
