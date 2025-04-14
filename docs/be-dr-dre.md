@@ -4,21 +4,21 @@ To enhance our team's effectiveness, we have implemented a weekly rotation syste
 
 ## Where to find the rotation
 
-The rotation schedules can be found on our [Jira Team Operations page](https://dfinity.atlassian.net/jira/ops/teams/og-a6d6c0d5-2641-4c54-8a2c-5860ef5e8f53/on-call). There are two schedules, both following the same round-robin system:
+The rotation schedules can be found on our [Jira Team Operations page](https://dfinity.atlassian.net/jira/ops/teams/og-a6d6c0d5-2641-4c54-8a2c-5860ef5e8f53/on-call) (requires DFINITY Jira access which can be obtained through Okta). There are two schedules, both following the same round-robin system:
 
-1. **DRE Alerts**: Handles automatic paging related to our infrastructure.  
+1. **DRE Alerts**: Handles automatic paging related to our infrastructure.
 2. **DRE Ops Rotation**: Determines who will act as `@dr-dre` (our Slack handle).
 
 ??? question "Why are there two schedules?"
-    The two-schedule system was designed to separate responsibilities and ensure balance.  
+    The two-schedule system was designed to separate responsibilities and ensure balance.
 
-    - **DRE Alerts** focuses on managing infrastructure alerts and operates only during working hours, as we don’t adhere to any strict SLA/SLO requirements.  
-    - **DRE Ops Rotation** handles Slack pings and general team operations.  
+    - **DRE Alerts** focuses on managing infrastructure alerts and operates only during working hours, as we don’t adhere to any strict SLA/SLO requirements.
+    - **DRE Ops Rotation** handles Slack pings and general team operations.
 
 ??? question "I am not getting paged for alerts?"
     We use the [Jira cloud app](https://www.atlassian.com/software/jira/mobile-app) for on-call and rotations.
 
-    To set it up follow the document on [Notion](https://www.notion.so/dfinityorg/Setting-up-Jira-App-for-oncall-rotation-17def9d9b80c80439418ec7e60a32a15)!
+    To set it up follow the document on [Notion](https://www.notion.so/dfinityorg/Setting-up-Jira-App-for-oncall-rotation-17def9d9b80c80439418ec7e60a32a15).
 
 ## Regular activities
 
@@ -30,10 +30,11 @@ The release process [is documented here](https://www.notion.so/dfinityorg/IC-OS-
 
 * Follow the schedule presented on the [rollout dashboard](https://rollout-dashboard.ch1-rel1.dfinity.network/).
 * Follow the statuses visible in [airflow](https://airflow.ch1-rel1.dfinity.network/dags/rollout_ic_os_to_mainnet_subnets/grid).
-* Vote on the proposals being submitted by the automation.
-* Cut a new release on Thrusday and create any additional feature builds.
-* If needed, create ordinary hotfixes or [security hotfixes](https://docs.google.com/document/d/19iYuAxwvWFbxfM3AdhydA5GzfaCITNhueSDhkxKevYQ/edit?tab=t.0#heading=h.i2ciz6mp3ue0) for that week.
-* In-depth explaination of the release process can be found on [Notion](https://www.notion.so/dfinityorg/IC-OS-release-technical-aspects-1e3c3274ba4d406ebe222aa6eb569e3a#9621e1dc378c4b3ba28c9d2d1ac5b3a7).
+* Cut a new GuestOS & HostOS release on Thursday and create any additional feature builds.
+* Team engineers review the release notes through Friday.
+* Submit GuestOS & HostOS version elect proposals on Friday (not earlier) to allow sufficient time for community and DFINITY voters to review and vote without rush.
+* If needed, create feature builds or [security hotfixes](https://docs.google.com/document/d/19iYuAxwvWFbxfM3AdhydA5GzfaCITNhueSDhkxKevYQ/edit?tab=t.0#heading=h.i2ciz6mp3ue0) for that week.
+* In-depth explanation of the release process can be found on [Notion](https://www.notion.so/dfinityorg/IC-OS-release-technical-aspects-1e3c3274ba4d406ebe222aa6eb569e3a#9621e1dc378c4b3ba28c9d2d1ac5b3a7).
 
 ??? tip "Regular week"
     Usually most of this work boils down to running
@@ -47,14 +48,14 @@ The release process [is documented here](https://www.notion.so/dfinityorg/IC-OS-
 * Heartbeats are present [here](https://dfinity.atlassian.net/jira/ops/teams/og-a6d6c0d5-2641-4c54-8a2c-5860ef5e8f53/heartbeats).
 
 ??? tip "What should I do if there are alerts?"
-    
+
     - It's not expected that every alert can be resolved immediately or by a single team member.
     - The key objective is to maintain the stability of our clusters.
     - Evaluate the alert based on its severity and the affected cluster to determine if further action is required.
     - Escalate or address issues as needed to ensure operations continue smoothly.
 
 ### 3. **Handle all notifications and answer all questions asked in the team's slack channels**
-    
+
 * [`#eng-dre`](https://dfinity.enterprise.slack.com/archives/C05LD0CEAHY): General channel for activities
 * [`#eng-release`](https://dfinity.enterprise.slack.com/archives/C01DB8MQ5M1): Questions related to release process
 * [`#eng-release-bots`](https://dfinity.enterprise.slack.com/archives/C02NQC42C2F): Automations send important notifications to this channel, which you must handle
@@ -69,7 +70,10 @@ The release process [is documented here](https://www.notion.so/dfinityorg/IC-OS-
 
 ### 4. **Submit requested proposals**
 
-Requested proposals [should get a ticket in the DRE Ops Rotation queue](https://dfinity.atlassian.net/browse/DRE-350) and followed through as soon as possible.
+All requested proposals must:
+1. Be registered as a ticket in the [DRE Ops Rotation queue](https://dfinity.atlassian.net/browse/DRE-350)
+2. Include clear requirements and expected outcomes
+3. Be followed through in a timely manner based on priority
 
 Typical types of requested proposals are:
 
@@ -89,7 +93,7 @@ Typical types of requested proposals are:
 
 Please [register proposals as tickets under the DRE Ops Rotation queue](https://dfinity.atlassian.net/browse/DRE-350), so adoption and progress can be tracked, and context can be observed by your teammates.
 
-### 6. **Monitor status and health of CI**  
+### 6. **Monitor status and health of CI**
 
 - **Weekly dependency upgrade jobs**:
 
@@ -98,9 +102,9 @@ Please [register proposals as tickets under the DRE Ops Rotation queue](https://
    - While some weeks result in straightforward updates, others may require manual intervention due to API changes or other breaking updates.
    - Review and address any issues with the generated pull request
      - Find the automation PRs [here](https://github.com/dfinity/dre/issues?q=is%3Apr+is%3Aopen+author%3Aapp%2Fpr-automation-bot-public).
-     - Find the Dependabot PRs [here](https://github.com/dfinity/dre/issues?q=is%3Apr+is%3Aopen+author%3Aapp%2Fdependabot).  
-   - Ensure the fixes are implemented and attempt to merge the PR into the repository.  
-   - Maintaining compatibility between the IC repo and our repo reduces friction and ensures our tooling operates smoothly. 
+     - Find the Dependabot PRs [here](https://github.com/dfinity/dre/issues?q=is%3Apr+is%3Aopen+author%3Aapp%2Fdependabot).
+   - Ensure the fixes are implemented and attempt to merge the PR into the repository.
+   - Maintaining compatibility between the IC repo and our repo reduces friction and ensures our tooling operates smoothly.
 
 ### 7. **Drive progress on the DRE Ops Rotation task queue**
 
@@ -115,9 +119,9 @@ Tend to the queue at least once a day.  Read and heed the guidelines in the umbr
 * Provide enough context there for your teammates to pick up ongoing work the week after.
 * Move work tickets that change scope, out of the queue, and into its own epic or project.
 
-### 7. **Handoff operations**  
+### 8. **Handoff operations**
 
-- If there are any pending tasks or unresolved operations, it is your responsibility to inform the next on-call team member.  
+- If there are any pending tasks or unresolved operations, it is your responsibility to inform the next on-call team member.
 - Provide clear details on what needs to be addressed and any context that might help them pick up where you left off.
 - Pass on information about node rewards adjustments requested to the next on-call team member.
 
