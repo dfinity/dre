@@ -6,6 +6,7 @@ on:
     paths-ignore:
       - "release-index.yaml"
       - "replica-releases/**"
+      - "hostos-releases/**"
       - "release-controller/**"
       - "node-labels/**"
       - "facts-db/**"
@@ -13,6 +14,7 @@ on:
     paths-ignore:
       - "release-index.yaml"
       - "replica-releases/**"
+      - "hostos-releases/**"
       - "release-controller/**"
       - "trusted-neurons-alerts/**"
       - "node-labels/**"

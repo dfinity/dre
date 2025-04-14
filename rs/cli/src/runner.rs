@@ -1184,13 +1184,17 @@ pub fn format_regular_version_upgrade_summary(version: &str, release_artifact: &
         Artifact::GuestOs => ("--guestos", "GuestOS"),
         Artifact::HostOs => ("--hostos", "HostOS"),
     };
-    let guestos_only_text = match release_artifact {
+    let otheros_text = match release_artifact {
         Artifact::GuestOs => {
             r#"
 
 While not required for this NNS proposal, as we are only electing a new GuestOS version here, you have the option to verify the build reproducibility of the HostOS by passing `--hostos` to the script above instead of `--guestos`, or the SetupOS by passing `--setupos`."#
         }
-        Artifact::HostOs => "",
+        Artifact::HostOs => {
+            r#"
+
+While not required for this NNS proposal, as we are only electing a new HostOS version here, you have the option to verify the build reproducibility of the HostOS by passing `--guestos` to the script above instead of `--hostos`, or the SetupOS by passing `--setupos`."#
+        }
     };
     let template = format!(
         r#"Elect new {artifact_name} binary revision [{version}](https://github.com/dfinity/ic/tree/{release_tag})
@@ -1203,7 +1207,7 @@ While not required for this NNS proposal, as we are only electing a new GuestOS 
 
 # IC-OS Verification
 
-To build and verify the IC-OS disk image, after installing curl if necessary (`sudo apt install curl`), run:
+To build and verify the IC-OS {artifact_name} disk image, after installing curl if necessary (`sudo apt install curl`), run:
 
 ```
 # From https://github.com/dfinity/ic#verifying-releases
@@ -1211,7 +1215,7 @@ curl -fsSL https://raw.githubusercontent.com/dfinity/ic/master/ci/tools/repro-ch
 ```
 
 The two SHA256 sums printed above from a) the downloaded CDN image and b) the locally built image,
-must be identical, and must match the SHA256 from the payload of the NNS proposal.{guestos_only_text}
+must be identical, and must match the SHA256 from the payload of the NNS proposal.{otheros_text}
 "#
     );
 

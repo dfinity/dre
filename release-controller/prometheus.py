@@ -18,12 +18,20 @@ class PrometheusQueryResponse(typing.TypedDict):
 # plus a count per replica version of all unassigned nodes
 # (both aggregated) so long as the overall ount per replica version is
 # greater than 10 nodes, which means we deem said replica version active.
-ACTIVE_VERSIONS_QUERY = """
+ACTIVE_GUESTOS_VERSIONS_QUERY = """
 max_over_time(
   sum by (ic_active_version) (
     label_replace(count by (ic_active_version) (ic_replica_info), "kind", "assigned", "ic_active_version", ".+")
     or
     label_replace(count by (ic_active_version) (ic_orchestrator_info{ic_subnet=""}), "kind", "unassigned", "ic_active_version", ".+")
+  )[1h]
+) > 10
+"""
+
+ACTIVE_HOSTOS_VERSIONS_QUERY = """
+max_over_time(
+  sum by (version) (
+    count by (version) (hostos_version)
   )[1h]
 ) > 10
 """
@@ -36,11 +44,21 @@ class ICPrometheus:
         """Create a new ICPrometheus client."""
         self.prometheus_url = url
 
-    def active_versions(self) -> list[str]:
-        """Return a list of active versions."""
+    def active_guestos_versions(self) -> list[str]:
+        """Return a list of active GuestOS versions."""
         versions = [
             r["metric"]["ic_active_version"]
-            for r in self.query(ACTIVE_VERSIONS_QUERY)["data"]["result"]
+            for r in self.query(ACTIVE_GUESTOS_VERSIONS_QUERY)["data"]["result"]
+        ]
+        if not versions:
+            raise Exception("expected at least one active version")
+        return versions
+
+    def active_hostos_versions(self) -> list[str]:
+        """Return a list of active HostOS versions."""
+        versions = [
+            r["metric"]["version"]
+            for r in self.query(ACTIVE_HOSTOS_VERSIONS_QUERY)["data"]["result"]
         ]
         if not versions:
             raise Exception("expected at least one active version")
@@ -62,7 +80,7 @@ def main() -> None:
     icprom = ICPrometheus(
         url="https://victoria.mainnet.dfinity.network/select/0/prometheus"
     )
-    print(icprom.active_versions())
+    print(icprom.active_guestos_versions())
 
 
 if __name__ == "__main__":

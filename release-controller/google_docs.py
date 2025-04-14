@@ -8,7 +8,9 @@ from markdownify import markdownify
 from pydrive2.auth import GoogleAuth
 from pydrive2.drive import GoogleDrive
 
-from release_notes import PreparedReleaseNotes
+from const import OsKind, GUESTOS
+from git_repo import GitRepo
+from release_notes import PreparedReleaseNotes, LocalCommitChangeDeterminator
 
 md = markdown.Markdown(
     extensions=["pymdownx.tilde", "pymdownx.details"],
@@ -24,10 +26,16 @@ class DocInfo(typing.TypedDict):
 
 class ReleaseNotesClientProtocol(typing.Protocol):
     def ensure(
-        self, release_tag: str, release_commit: str, content: PreparedReleaseNotes
+        self,
+        release_tag: str,
+        release_commit: str,
+        os_kind: OsKind,
+        content: PreparedReleaseNotes,
     ) -> DocInfo: ...
 
-    def markdown_file(self, version: str) -> PreparedReleaseNotes | None: ...
+    def markdown_file(
+        self, version: str, os_kind: OsKind
+    ) -> PreparedReleaseNotes | None: ...
 
 
 class ReleaseNotesClient:
@@ -55,6 +63,7 @@ class ReleaseNotesClient:
         self,
         release_tag: str,
         release_commit: str,
+        os_kind: OsKind,
         content: PreparedReleaseNotes,
     ) -> DocInfo:
         """
@@ -63,13 +72,13 @@ class ReleaseNotesClient:
         No changes are effected if the document mapped to this release commit
         already exists.
         """
-        existing_file = self._file(release_commit)
+        existing_file = self._file(release_commit, os_kind)
         if existing_file:
             return typing.cast(DocInfo, existing_file)
         htmldoc = md.convert(content)
         gdoc = self.drive.CreateFile(  # type: ignore[no-untyped-call]
             {
-                "title": f"Release Notes - {release_tag} ({release_commit})",
+                "title": f"{os_kind} Release Notes - {release_tag} ({release_commit})",
                 "mimeType": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
                 "parents": [
                     {"kind": "drive#fileLink", "id": self.release_notes_folder}
@@ -80,19 +89,21 @@ class ReleaseNotesClient:
         gdoc.Upload()
         return typing.cast(DocInfo, gdoc)
 
-    def _file(self, version: str) -> DocInfo | None:
+    def _file(self, version: str, os_kind: OsKind) -> DocInfo | None:
         """Get the file for the given version."""
         release_notes = self.drive.ListFile(  # type: ignore[no-untyped-call]
             {"q": "'{}' in parents".format(self.release_notes_folder)}
         ).GetList()
         for file in release_notes:
-            if version in file["title"]:
+            if version in file["title"] and os_kind in file["title"]:
                 return typing.cast(DocInfo, file)
         return None
 
-    def markdown_file(self, version: str) -> PreparedReleaseNotes | None:
+    def markdown_file(
+        self, version: str, os_kind: OsKind
+    ) -> PreparedReleaseNotes | None:
         """Get the markdown content of the release notes for the given version."""
-        f = self._file(version)
+        f = self._file(version, os_kind)
         if not f:
             return None
         with tempfile.TemporaryDirectory() as d:
@@ -130,14 +141,19 @@ def main() -> None:
         version,
         "release-2024-07-25_21-03-base",
         "2c0b76cfc7e596d5c4304cff5222a2619294c8c1",
+        GUESTOS,
     )
-    content = prepare_release_notes(request)
+    ic_repo = GitRepo("https://github.com/dfinity/ic.git", main_branch="master")
+    content = prepare_release_notes(
+        request, ic_repo, LocalCommitChangeDeterminator(ic_repo).commit_changes_artifact
+    )
     gdoc = client.ensure(
         release_tag="release-2024-08-02_01-30-base",
         release_commit=version,
         content=content,
+        os_kind=GUESTOS,
     )
-    print(client.markdown_file(version))
+    print(client.markdown_file(version, GUESTOS))
     print(gdoc["alternateLink"])
 
 

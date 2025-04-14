@@ -50,13 +50,23 @@ py_binary(
 py_binary(
     name = "commit-annotator",
     main = "commit_annotator.py",
-    srcs = glob(["*.py"], exclude = ["reconciler.py"]),
+    srcs = ["commit_annotator.py", "git_repo.py", "const.py", "release_index.py", "util.py", "watchdog.py"],
     tags = ["typecheck"],
     data = [":bazelisk", ":target_determinator"],
     env = env,
     deps = deps + [
         requirement("prometheus-client"),
     ],
+)
+
+py_binary(
+    name = "release-notes",
+    main = "release_notes.py",
+    srcs = ["release_notes.py", "git_repo.py", "const.py", "release_index.py", "util.py"],
+    tags = ["typecheck"],
+    data = [],
+    env = env,
+    deps = deps
 )
 
 native_binary(
@@ -82,7 +92,7 @@ genrule(
     tags = ["no-sandbox"] + ["manual"],
 )
 
-medium_tests = ["tests/test_release_notes.py"]
+medium_tests = ["tests/test_release_notes.py", "tests/test_reconciler.py"]
 
 # Add file here if you do not want to run the test automatically.
 long_tests = ["tests/test_commit_annotator.py"]

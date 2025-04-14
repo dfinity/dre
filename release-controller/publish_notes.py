@@ -12,8 +12,15 @@ from google_docs import ReleaseNotesClient
 from release_notes import PreparedReleaseNotes
 import pathlib
 
+from const import OsKind, GUESTOS
+
 REPLICA_RELEASES_DIR = "replica-releases"
+HOSTOS_RELEASES_DIR = "hostos-releases"
 LOGGER = logging.getLogger(__name__)
+
+
+def release_directory(os_kind: OsKind) -> str:
+    return REPLICA_RELEASES_DIR if os_kind == GUESTOS else HOSTOS_RELEASES_DIR
 
 
 def post_process_release_notes(release_notes: str) -> str:
@@ -78,7 +85,10 @@ def post_process_release_notes(release_notes: str) -> str:
 
 class PublishNotesClientProtocol(typing.Protocol):
     def publish_if_ready(
-        self, google_doc_markdownified: PreparedReleaseNotes | None, version: str
+        self,
+        google_doc_markdownified: PreparedReleaseNotes | None,
+        version: str,
+        os_kind: OsKind,
     ) -> None: ...
 
 
@@ -89,10 +99,11 @@ class PublishNotesClient:
         """Initialize the client with the given repository."""
         self.repo = repo
 
-    def ensure_published(self, version: str, changelog: str) -> None:
+    def ensure_published(self, version: str, changelog: str, os_kind: OsKind) -> None:
         """Publish the release notes for the given version."""
         logger = LOGGER.getChild(version)
-        published_releases = self.repo.get_contents(f"/{REPLICA_RELEASES_DIR}")
+        reldir = release_directory(os_kind)
+        published_releases = self.repo.get_contents(f"/{reldir}")
         if not isinstance(published_releases, list):
             return
         if any(version in f.path for f in published_releases):
@@ -106,7 +117,7 @@ class PublishNotesClient:
             )
             return
 
-        version_path = f"{REPLICA_RELEASES_DIR}/{version}.md"
+        version_path = f"{reldir}/{version}.md"
         if not [b for b in self.repo.get_branches() if b.name == branch_name]:
             logger.info("Creating branch %s", branch_name)
             self.repo.create_git_ref(
@@ -136,7 +147,10 @@ class PublishNotesClient:
         )
 
     def publish_if_ready(
-        self, google_doc_markdownified: PreparedReleaseNotes | None, version: str
+        self,
+        google_doc_markdownified: PreparedReleaseNotes | None,
+        version: str,
+        os_kind: OsKind,
     ) -> None:
         """Publish the release notes if they are ready."""
         logger = LOGGER.getChild(version)
@@ -167,7 +181,7 @@ class PublishNotesClient:
             )
             return
         # TODO: parse markdown to check formatting is correct
-        self.ensure_published(version=version, changelog=changelog)
+        self.ensure_published(version=version, changelog=changelog, os_kind=os_kind)
 
 
 def check_number_of_changes(changelog: str) -> int:
@@ -196,7 +210,7 @@ def main() -> None:
     load_dotenv()
     github_client = Github(auth=Auth.Token(os.environ["GITHUB_TOKEN"]))
     client = PublishNotesClient(github_client.get_repo("dfinity/dre-testing"))
-    client.ensure_published("85bd56a70e55b2cea75cae6405ae11243e5fdad8", "test")
+    client.ensure_published("85bd56a70e55b2cea75cae6405ae11243e5fdad8", "test", GUESTOS)
 
     # For testing the `check_number_of_changes`
     release_notes_client = ReleaseNotesClient(
@@ -211,7 +225,9 @@ def main() -> None:
     version = "c6847128f3a872e0e084b2920bfcd21f881c69fa"
     # Should publish this one
     # version = "f88938214b16584075196e13d0af7c50f671131a"
-    client.publish_if_ready(release_notes_client.markdown_file(version), version)
+    client.publish_if_ready(
+        release_notes_client.markdown_file(version, GUESTOS), version, GUESTOS
+    )
 
 
 if __name__ == "__main__":
