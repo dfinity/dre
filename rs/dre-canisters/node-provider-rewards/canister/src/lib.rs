@@ -158,14 +158,12 @@ fn http_request(request: HttpRequest) -> HttpResponse {
 }
 
 fn rewards_calculator_builder(reward_period: RewardPeriodArgs) -> Result<RewardsCalculator, RewardCalculatorError> {
-    let start_ts = reward_period.start_ts;
-    let end_ts = reward_period.end_ts;
-    let reward_period = RewardPeriod::new(start_ts, end_ts)?;
+    let reward_period = RewardPeriod::new(reward_period.start_ts, reward_period.end_ts)?;
     let metrics_manager = METRICS_MANAGER.with(|m| m.clone());
     let registry_store = REGISTRY_STORE.with(|m| m.clone());
 
     let rewards_table = registry_store.get_rewards_table();
-    let daily_metrics_by_subnet = metrics_manager.daily_metrics_by_subnet(start_ts, end_ts);
+    let daily_metrics_by_subnet = metrics_manager.daily_metrics_by_subnet(reward_period.start_ts.get(), reward_period.end_ts.get());
 
     RewardsCalculator::from_subnets_metrics(reward_period, rewards_table, daily_metrics_by_subnet)
 }
@@ -180,7 +178,7 @@ fn get_node_providers_rewards_xdr_total(args: RewardPeriodArgs) -> Result<NodePr
     let mut rewards_per_provider = BTreeMap::new();
     for (provider_id, rewardable_nodes) in rewardable_nodes_per_provider {
         let rewards_result = calculator.calculate_provider_rewards(rewardable_nodes);
-        rewards_per_provider.insert(provider_id, rewards_result.rewards_total);
+        rewards_per_provider.insert(provider_id, rewards_result.rewards_total_xdr_permyriad);
     }
 
     rewards_per_provider.try_into()

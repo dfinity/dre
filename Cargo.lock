@@ -6161,6 +6161,7 @@ dependencies = [
  "itertools 0.13.0",
  "rewards-calculation",
  "rust_decimal",
+ "rust_decimal_macros",
  "serde",
 ]
 

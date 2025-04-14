@@ -10,6 +10,7 @@ license.workspace = true
 [dependencies]
 ic-base-types = { workspace = true }
 rust_decimal = { workspace = true }
+rust_decimal_macros = { workspace = true }
 rewards-calculation = { workspace = true }
 candid = { workspace = true }
 serde = { workspace = true }

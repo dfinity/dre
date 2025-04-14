@@ -123,7 +123,7 @@ fn test_node_provider_below_min_limit() {
         .unwrap()
         .calculate_provider_rewards(rewardable_nodes);
 
-    assert_eq!(result.rewards_total, dec!(2));
+    assert_eq!(result.rewards_total_xdr_permyriad, dec!(2));
 }
 
 #[derive(Default)]
@@ -482,5 +482,5 @@ fn test_node_provider_rewards_one_assigned() {
     //     ├─────────────────────────────┼───────────┼─────────────┼──────────────┼────────┼        ┼────────┼────────┼────────┼────────────┼             ┤
     //     │ 2o3ay-vafaa-aaaaa-aaaap-2ai │   type1   │     A,B     │ 1000 myrXDR  │   -    │        │ 0.325  │ 0.360  │ 0.640  │ 640 myrXDR │             │
     //     └─────────────────────────────┴───────────┴─────────────┴──────────────┴────────┴────────┴────────┴────────┴────────┴────────────┴─────────────┘
-    assert_eq!(results.rewards_total, dec!(3200));
+    assert_eq!(results.rewards_total_xdr_permyriad, dec!(3200));
 }

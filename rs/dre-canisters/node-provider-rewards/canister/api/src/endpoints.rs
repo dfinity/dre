@@ -5,6 +5,7 @@ use rewards_calculation::rewards_calculator_results::RewardsCalculatorResults;
 use rewards_calculation::types::TimestampNanos;
 use rust_decimal::prelude::ToPrimitive;
 use rust_decimal::Decimal;
+use rust_decimal_macros::dec;
 use std::collections::BTreeMap;
 
 #[derive(candid::CandidType, candid::Deserialize)]
@@ -15,18 +16,18 @@ pub struct RewardPeriodArgs {
 
 #[derive(candid::CandidType, candid::Deserialize)]
 pub struct NodeProvidersRewardsXDRTotal {
-    pub rewards_per_provider: BTreeMap<PrincipalId, u64>,
+    pub rewards_xdr_permyriad_per_provider: BTreeMap<PrincipalId, u64>,
 }
 
 impl TryFrom<BTreeMap<PrincipalId, Decimal>> for NodeProvidersRewardsXDRTotal {
     type Error = String;
 
     fn try_from(result: BTreeMap<PrincipalId, Decimal>) -> Result<Self, Self::Error> {
-        let rewards_per_provider = result
+        let rewards_xdr_permyriad_per_provider = result
             .into_iter()
             .map(|(k, v)| Ok::<(PrincipalId, u64), String>((k, v.to_u64().err_u64()?)))
             .collect::<Result<BTreeMap<_, _>, _>>()?;
-        Ok(Self { rewards_per_provider })
+        Ok(Self { rewards_xdr_permyriad_per_provider })
     }
 }
 
@@ -85,10 +86,10 @@ impl TryFrom<RewardsCalculatorResults> for NodeProviderRewardsCalculation {
 
     fn try_from(result: RewardsCalculatorResults) -> Result<Self, Self::Error> {
         let RewardsCalculatorResults {
-            base_rewards_by_category,
+            base_rewards_xdr_permyriad_by_category,
             results_by_node,
             extrapolated_fr,
-            rewards_total,
+            rewards_total_xdr_permyriad,
         } = result;
 
         let mut daily_subnets_fr = BTreeMap::new();
@@ -113,13 +114,13 @@ impl TryFrom<RewardsCalculatorResults> for NodeProviderRewardsCalculation {
             .into_iter()
             .collect();
 
-        let rewards_by_category: Vec<_> = base_rewards_by_category
+        let rewards_by_category: Vec<_> = base_rewards_xdr_permyriad_by_category
             .into_iter()
             .map(|(category, rewards)| {
                 Ok(BaseRewardsByCategory {
                     node_type: category.node_type.to_string(),
                     region: category.region.to_string(),
-                    base_rewards: rewards.round_dp(4).to_f64().err_f64()?,
+                    base_rewards: (rewards / dec!(10000)).round_dp(4).to_f64().err_f64()?,
                 })
             })
             .collect::<Result<Vec<_>, String>>()?
@@ -128,7 +129,7 @@ impl TryFrom<RewardsCalculatorResults> for NodeProviderRewardsCalculation {
 
         let extrapolated_fr = extrapolated_fr.round_dp(4).to_f64().err_f64()?;
 
-        let rewards_total_xdr = rewards_total.to_u64().err_u64()?;
+        let rewards_total_xdr = (rewards_total_xdr_permyriad / dec!(10000)).to_u64().err_u64()?;
 
         let results_by_node = results_by_node
             .into_iter()
@@ -137,7 +138,7 @@ impl TryFrom<RewardsCalculatorResults> for NodeProviderRewardsCalculation {
                 let region = node_results.region.clone();
                 let rewards_reduction = node_results.rewards_reduction.round_dp(4).to_f64().err_f64()?;
                 let performance_multiplier = node_results.performance_multiplier.round_dp(4).to_f64().err_f64()?;
-                let adjusted_rewards = node_results.adjusted_rewards.round_dp(4).to_f64().err_f64()?;
+                let adjusted_rewards = node_results.adjusted_rewards_xdr_permyriad.round_dp(4).to_f64().err_f64()?;
                 let average_fr = node_results
                     .avg_relative_fr
                     .map_or(extrapolated_fr, |fr| fr.round_dp(4).to_f64().unwrap());

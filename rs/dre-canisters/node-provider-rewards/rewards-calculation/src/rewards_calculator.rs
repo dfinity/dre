@@ -356,7 +356,9 @@ impl<'a> RewardsCalculatorPipeline<'a, ComputeBaseRewardsByCategory> {
             } else {
                 // For `rewardable_nodes` which are not type3* the base rewards for the sigle node is the entry
                 // in the rewards table for the specific region (DC Continent + DC Country + DC State/City) and node type.
-                self.calculator_results.base_rewards_by_category.insert(category.clone(), base_rewards);
+                self.calculator_results
+                    .base_rewards_xdr_permyriad_by_category
+                    .insert(category.clone(), base_rewards);
             }
         }
 
@@ -376,7 +378,9 @@ impl<'a> RewardsCalculatorPipeline<'a, ComputeBaseRewardsByCategory> {
             let region_rewards_avg = avg(&region_rewards);
 
             for node_category in type3_rewards.nodes_categories {
-                self.calculator_results.base_rewards_by_category.insert(node_category, region_rewards_avg);
+                self.calculator_results
+                    .base_rewards_xdr_permyriad_by_category
+                    .insert(node_category, region_rewards_avg);
             }
         }
         RewardsCalculatorPipeline::transition(self)
@@ -395,16 +399,16 @@ impl<'a> RewardsCalculatorPipeline<'a, AdjustNodesRewards> {
             };
             let base_rewards = *self
                 .calculator_results
-                .base_rewards_by_category
+                .base_rewards_xdr_permyriad_by_category
                 .get(&node_category)
                 .expect("Node category exist");
 
             if nodes_count <= FULL_REWARDS_MACHINES_LIMIT {
                 // Node Providers with less than FULL_REWARDS_MACHINES_LIMIT machines are rewarded fully, independently of their performance
 
-                node_results.adjusted_rewards = base_rewards;
+                node_results.adjusted_rewards_xdr_permyriad = base_rewards;
             } else {
-                node_results.adjusted_rewards = base_rewards * node_results.performance_multiplier;
+                node_results.adjusted_rewards_xdr_permyriad = base_rewards * node_results.performance_multiplier;
             }
         }
 
@@ -419,10 +423,10 @@ impl<'a> RewardsCalculatorPipeline<'a, ComputeRewardsTotal> {
             .calculator_results
             .results_by_node
             .values()
-            .map(|node_results| node_results.adjusted_rewards)
+            .map(|node_results| node_results.adjusted_rewards_xdr_permyriad)
             .sum::<Decimal>();
 
-        self.calculator_results.rewards_total = rewards_total;
+        self.calculator_results.rewards_total_xdr_permyriad = rewards_total;
         RewardsCalculatorPipeline::transition(self)
     }
 }

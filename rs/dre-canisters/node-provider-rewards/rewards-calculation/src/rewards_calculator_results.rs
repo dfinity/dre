@@ -33,15 +33,15 @@ pub struct NodeResults {
     pub avg_relative_extrapolated_fr: Decimal,
     pub rewards_reduction: Decimal,
     pub performance_multiplier: Decimal,
-    pub adjusted_rewards: Decimal,
+    pub adjusted_rewards_xdr_permyriad: Decimal,
 }
 
 #[derive(Default, Debug)]
 pub struct RewardsCalculatorResults {
-    pub base_rewards_by_category: BTreeMap<NodeCategory, Decimal>,
+    pub base_rewards_xdr_permyriad_by_category: BTreeMap<NodeCategory, Decimal>,
     pub results_by_node: BTreeMap<NodeId, NodeResults>,
     pub extrapolated_fr: Decimal,
-    pub rewards_total: Decimal,
+    pub rewards_total_xdr_permyriad: Decimal,
 }
 
 #[derive(Debug, PartialEq)]
