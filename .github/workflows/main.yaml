@@ -6,6 +6,7 @@ on:
     paths-ignore:
       - "release-index.yaml"
       - "replica-releases/**"
+      - "hostos-releases/**"
       - "release-controller/**"
       - "node-labels/**"
       - "facts-db/**"
@@ -13,6 +14,7 @@ on:
     paths-ignore:
       - "release-index.yaml"
       - "replica-releases/**"
+      - "hostos-releases/**"
       - "release-controller/**"
       - "trusted-neurons-alerts/**"
       - "node-labels/**"
@@ -43,7 +45,7 @@ jobs:
       # If regular secrets.GITHUB_TOKEN is used instead, the push will not trigger any actions
       # https://github.com/orgs/community/discussions/25702
       - name: Create GitHub App Token
-        uses: actions/create-github-app-token@v1
+        uses: actions/create-github-app-token@v2
         id: app-token
         with:
           app-id: ${{ vars.PR_AUTOMATION_BOT_PUBLIC_APP_ID }}

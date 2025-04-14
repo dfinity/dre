@@ -1,19 +1,27 @@
-import contextlib
 import logging
 import os
 import collections.abc
 import pathlib
 import subprocess
+import sys
 import tempfile
+import threading
 import typing
 
 from dotenv import load_dotenv
 from release_index import Release
 from release_index import Version
 from util import version_name
+from const import GUESTOS, HOSTOS, OsKind
 
 
 _LOGGER = logging.getLogger(__name__)
+
+
+CHANGED_NOTES_NAMESPACES: dict[OsKind, str] = {
+    GUESTOS: "guestos-changed",
+    HOSTOS: "hostos-changed",
+}
 
 
 class FileChange(typing.TypedDict):
@@ -29,9 +37,24 @@ def check_output(cmd: list[str], **kwargs: typing.Any) -> str:
     return typing.cast(str, subprocess.check_output(cmd, **kwargs))
 
 
+def check_output_binary(cmd: list[str], **kwargs: typing.Any) -> bytes:
+    # _LOGGER.warning("CMD: %s", cmd)
+    kwargs = kwargs or {}
+    kwargs["text"] = False
+    return typing.cast(bytes, check_output(cmd, **kwargs))
+
+
 def check_call(cmd: list[str], **kwargs: typing.Any) -> int:
     # _LOGGER.warning("CMD: %s", cmd)
     return subprocess.check_call(cmd, **kwargs)
+
+
+def repr_ellipsized(s: str, max_length: int = 80) -> str:
+    if len(s) < max_length:
+        return repr(s)
+    return (
+        repr(s[: int(max_length / 2) - 2]) + "..." + repr(s[-int(max_length / 2) - 2 :])
+    )
 
 
 class Commit:
@@ -48,25 +71,23 @@ class Commit:
         self.branches = branches
 
 
-class GitRepoBehavior(typing.TypedDict):
-    push_annotations: bool
-    save_annotations: bool
-    fetch_annotations: bool
-
-
 class GitRepoAnnotator(object):
     def __init__(
         self,
         repo: "GitRepo",
-        namespaces: collections.abc.Container[str],
+        namespaces: collections.abc.Iterable[str],
+        save_annotations: bool,
     ):
+        """
+        Returns a new GitRepoAnnotator based on the provided GitRepo.
+
+        Annotations are not fetched by default!  Caller must call .fetch().
+        If annotations are changed, caller must also call .push().
+        """
         self.repo = repo
         self.namespaces = namespaces
-        self.cache: dict[str, str | None] = {}
-        md = self.dir / ".git" / "temp-notes"
-        os.makedirs(md, exist_ok=True)
-        self.td = tempfile.TemporaryDirectory(dir=md)
         self.changed = False
+        self.save_annotations = save_annotations
 
     def add(self, object: str, namespace: str, content: str) -> None:
         if namespace not in self.namespaces:
@@ -74,31 +95,54 @@ class GitRepoAnnotator(object):
                 "cannot add note for %r with annotator limited to namespaces %s"
                 % (namespace, self.namespaces)
             )
-        cachekey = f"{namespace}-{object}".replace("/", "_").replace(".", "_")
-        f = os.path.join(self.td.name, cachekey)
-        if self.repo.behavior["save_annotations"]:
-            with open(f, "w") as fh:
-                fh.write(content)
-            self.repo._notes(namespace, "add", f"--file={f}", object, "-f")
-        self.cache[cachekey] = content
+        _LOGGER.debug(
+            "Adding note for commit %s in namespace %s: %s",
+            object,
+            namespace,
+            repr_ellipsized(content),
+        )
+        if self.save_annotations:
+            subprocess.run(
+                args=[
+                    "git",
+                    "notes",
+                    f"--ref={namespace}",
+                    "add",
+                    "--file=/dev/stdin",
+                    "-f",
+                    object,
+                ],
+                text=True,
+                check=True,
+                input=content,
+                cwd=self.dir,
+                stderr=subprocess.DEVNULL,
+            )
         self.changed = True
 
-    def get(self, object: str, namespace: str) -> typing.Optional[str]:
+    def has(self, object: str, namespace: str) -> bool:
+        try:
+            self.get(object, namespace)
+            return True
+        except KeyError:
+            return False
+
+    def get(self, object: str, namespace: str) -> bytes:
         if namespace not in self.namespaces:
             raise ValueError(
-                "cannot add note for %r with annotator limited to namespaces %s"
+                "cannot get note for %r with annotator limited to namespaces %s"
                 % (namespace, self.namespaces)
             )
-        cachekey = f"{namespace}-{object}"
-        if cachekey not in self.cache:
-            try:
-                self.cache[cachekey] = self.repo._notes(
-                    namespace, "show", object, silence_stderr=True
-                )
-            except subprocess.CalledProcessError:
-                # It's not there!
-                self.cache[cachekey] = None
-        return self.cache[cachekey]
+        try:
+            cmd = ["git", "notes", f"--ref={namespace}", "show", object]
+            return check_output_binary(
+                cmd,
+                cwd=self.dir,
+                stderr=subprocess.DEVNULL,
+            )
+        except subprocess.CalledProcessError:
+            # It's not there!
+            raise KeyError((namespace, object))
 
     def checkout(self, object: str) -> None:
         return self.repo.checkout(object)
@@ -110,6 +154,28 @@ class GitRepoAnnotator(object):
     def dir(self) -> pathlib.Path:
         return self.repo.dir
 
+    def fetch(self) -> None:
+        ref = "refs/notes/*"
+        check_call(
+            ["git", "fetch", "origin", f"{ref}:{ref}", "-f", "--quiet"],
+            cwd=self.dir,
+        )
+
+    def push(self) -> None:
+        if self.changed:
+            for namespace in self.namespaces:
+                check_call(
+                    [
+                        "git",
+                        "push",
+                        "origin",
+                        f"refs/notes/{namespace}",
+                        "-f",
+                        "--quiet",
+                    ],
+                    cwd=self.dir,
+                )
+
 
 class GitRepo:
     """Class for interacting with a git repository."""
@@ -119,13 +185,18 @@ class GitRepo:
         repo: str,
         repo_cache_dir: pathlib.Path = pathlib.Path.home() / ".cache/git",
         main_branch: str = "main",
-        behavior: GitRepoBehavior | None = None,
     ) -> None:
-        """Create a new GitRepo object."""
+        """
+        Create a new GitRepo object.
+
+        The repository will be cloned into the cache directory if it does
+        not exist, and then fetched to the latest content present on the remote.
+        """
         if not repo.startswith("https://"):
             raise ValueError("invalid repo")
 
         self.repo = repo
+        self.operation_lock = threading.Lock()
         self.main_branch = main_branch
 
         if not repo_cache_dir:
@@ -138,15 +209,6 @@ class GitRepo:
             else repo.removeprefix("https://")
         )
         self.cache: dict[str, Commit] = {}
-        self.behavior = (
-            behavior
-            if behavior
-            else {
-                "push_annotations": True,
-                "save_annotations": True,
-                "fetch_annotations": True,
-            }
-        )
         self.fetch()
 
     def __del__(self) -> None:
@@ -330,6 +392,33 @@ class GitRepo:
         """Get the file for the given path."""
         return self.dir / path
 
+    def file_contents(self, commit: str, path: pathlib.Path) -> bytes:
+        """
+        Get the contents file for the given path at a specific revision.
+
+        This does not require the repository to be checked out -- only
+        that the commit ID is fetched and present.
+
+        path should be relative to the root of the repository.
+
+        Raises FileNotFoundError if the git show command cannot find the file
+        at that specific revision.
+        """
+        try:
+            return subprocess.run(
+                ["git", "show", f"{commit}:{path}"],
+                capture_output=True,
+                check=True,
+                cwd=self.dir,
+            ).stdout
+        except subprocess.CalledProcessError as e:
+            if b"fatal:" in e.stderr and b"does not exist" in e.stderr:
+                raise FileNotFoundError(path) from e
+            if b"fatal:" in e.stderr and b"invalid object name" in e.stderr:
+                raise FileNotFoundError(path) from e
+            sys.stderr.buffer.write(e.stderr)
+            raise
+
     def file_changes_for_commit(self, commit_hash: str) -> list[FileChange]:
         cmd = [
             "git",
@@ -361,9 +450,13 @@ class GitRepo:
         return changes
 
     def checkout(self, ref: str) -> None:
-        """Checkout the given ref."""
+        """Checkout the given ref.  The workspace will be clean after this."""
         check_call(
             ["git", "reset", "--hard", "--quiet"],
+            cwd=self.dir,
+        )
+        check_call(
+            ["git", "clean", "-fxdq"],
             cwd=self.dir,
         )
         check_call(
@@ -393,40 +486,6 @@ class GitRepo:
                 cwd=self.dir,
             ).splitlines()
         ]
-
-    def _fetch_notes(self) -> None:
-        ref = "refs/notes/*"
-        check_call(
-            ["git", "fetch", "origin", f"{ref}:{ref}", "-f", "--prune", "--quiet"],
-            cwd=self.dir,
-        )
-
-    def _push_notes(self, namespace: str) -> None:
-        check_call(
-            ["git", "push", "origin", f"refs/notes/{namespace}", "-f", "--quiet"],
-            cwd=self.dir,
-        )
-
-    def _notes(self, namespace: str, *args: str, silence_stderr: bool = False) -> str:
-        cmd = ["git", "notes", f"--ref={namespace}", *args]
-        return check_output(
-            cmd,
-            cwd=self.dir,
-            stderr=subprocess.DEVNULL if silence_stderr else None,
-        )
-
-    @contextlib.contextmanager
-    def annotator(
-        self, namespaces: list[str]
-    ) -> typing.Generator[GitRepoAnnotator, None, None]:
-        if self.behavior["fetch_annotations"]:
-            self._fetch_notes()
-        ann = GitRepoAnnotator(self, namespaces)
-        yield ann
-        if ann.changed:
-            for namespace in namespaces:
-                if self.behavior["push_annotations"]:
-                    self._push_notes(namespace)
 
     def latest_commit_for_file(self, file: str) -> str:
         return check_output(
