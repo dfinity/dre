@@ -232,10 +232,10 @@ impl<'a> RewardsCalculatorPipeline<'a, ComputeExtrapolatedFR> {
 
 /// Calculates the average of the failure rates for each node in the reward period.
 ///
+/// The average failure rate is used then to calculate the performance multiplier for each node.
 /// The average failure rate is calculated as the average of:
 ///    - the `relative_fr` for each day in which the node is assigned to a subnet.
 ///    - the `extrapolated_fr` for each day in which the node is not assigned to a subnet.
-/// The average failure rate is used then to calculate the performance multiplier for each node.
 impl<'a> RewardsCalculatorPipeline<'a, ComputeAverageExtrapolatedFR> {
     pub fn next(mut self) -> RewardsCalculatorPipeline<'a, ComputePerformanceMultipliers> {
         for (_, node_results) in self.calculator_results.results_by_node.iter_mut() {

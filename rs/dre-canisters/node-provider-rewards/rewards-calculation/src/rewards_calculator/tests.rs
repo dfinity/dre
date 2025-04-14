@@ -47,7 +47,7 @@ fn test_error_metrics_out_of_range() {
     let out_of_range = hashmap! {
         SubnetMetricsDailyKey {
             subnet_id: subnet_id(1),
-            ts: DayEndNanos::from(31 * NANOS_PER_DAY).into(),
+            ts: DayEndNanos::from(31 * NANOS_PER_DAY),
         } => vec![],
     };
 
@@ -215,7 +215,7 @@ impl RewardCalculatorTestBuilder {
                 .values()
                 .flat_map(|nodes| {
                     nodes.iter().map(|node| RewardableNode {
-                        node_id: node.1.clone(),
+                        node_id: node.1,
                         ..Default::default()
                     })
                 })
