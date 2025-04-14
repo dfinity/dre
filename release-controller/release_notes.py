@@ -22,6 +22,10 @@ from const import (  # noqa: E402
     OsKind,
     OS_KINDS,
     GUESTOS,
+    COMMIT_BELONGS,
+    COMMIT_COULD_NOT_BE_ANNOTATED,
+    COMMIT_DOES_NOT_BELONG,
+    CommitInclusionState,
 )
 from git_repo import GitRepo, GitRepoAnnotator, FileChange, CHANGED_NOTES_NAMESPACES  # noqa: E402
 from util import auto_progressbar_with_item_descriptions  # noqa: E402
@@ -34,7 +38,7 @@ _LOGGER = logging.getLogger(__name__)
 # can determine whether the commit has changed that OS.
 # Such functions should return NotReady when a commit is not yet
 # annotated.
-OSChangeDeterminator = typing.Callable[[str, OsKind], bool]
+OSChangeDeterminator = typing.Callable[[str, OsKind], CommitInclusionState]
 
 
 COMMIT_HASH_LENGTH = 9
@@ -292,7 +296,8 @@ def release_changes(
         change = get_change_description_for_commit(
             commit_hash=commits[i],
             ic_repo=ic_repo,
-            belongs=belongs_determinator(commits[i], os_kind),
+            belongs=belongs_determinator(commits[i], os_kind)
+            in [COMMIT_BELONGS, COMMIT_COULD_NOT_BE_ANNOTATED],
         )
         if change is None:
             continue
@@ -338,14 +343,6 @@ class NotReady(Exception):
     """Exception raised when a commit is not yet annotated."""
 
     pass
-
-
-def boolstr(changed: str) -> bool:
-    if changed.strip() == "True":
-        return True
-    elif changed.strip() == "False":
-        return False
-    raise ValueError(f"Invalid value for changed note {changed}: %r" % changed)
 
 
 def prepare_release_notes(
@@ -667,7 +664,9 @@ class LocalCommitChangeDeterminator(object):
         )
         self.annotator.fetch()
 
-    def commit_changes_artifact(self, commit: str, os_kind: OsKind) -> bool:
+    def commit_changes_artifact(
+        self, commit: str, os_kind: OsKind
+    ) -> CommitInclusionState:
         """
         Check if the os_kind (artifact) changed in the specifed commit
         by querying the local repo for git notes populated and pushed
@@ -675,12 +674,21 @@ class LocalCommitChangeDeterminator(object):
         """
         namespace = CHANGED_NOTES_NAMESPACES[os_kind]
         try:
-            changed = self.annotator.get(namespace=namespace, object=commit)
+            changed = (
+                self.annotator.get(namespace=namespace, object=commit)
+                .decode("utf-8")
+                .strip()
+            )
         except KeyError:
             raise NotReady(
                 f"Could not find {os_kind} label for commit {commit}. Check out commit annotator logs and runbook: https://dfinity.github.io/dre/release.html#missing-guestos-label."
             )
-        return boolstr(changed.decode("utf-8"))
+        assert changed in [
+            COMMIT_BELONGS,
+            COMMIT_DOES_NOT_BELONG,
+            COMMIT_COULD_NOT_BE_ANNOTATED,
+        ]
+        return typing.cast(CommitInclusionState, changed)
 
 
 class CommitAnnotatorClientCommitChangeDeterminator(object):
@@ -689,7 +697,9 @@ class CommitAnnotatorClientCommitChangeDeterminator(object):
     def __init__(self, base_url: str):
         self.base_url = base_url
 
-    def commit_changes_artifact(self, commit: str, os_kind: OsKind) -> bool:
+    def commit_changes_artifact(
+        self, commit: str, os_kind: OsKind
+    ) -> CommitInclusionState:
         """
         Check if the os_kind (artifact) changed in the specifed commit
         by querying the commit annotator for git notes.
@@ -701,14 +711,14 @@ class CommitAnnotatorClientCommitChangeDeterminator(object):
         )
         try:
             with urllib.request.urlopen(url) as response:
-                changed = response.read().decode("utf-8")
+                changed = response.read().decode("utf-8").strip()
         except urllib.error.HTTPError as he:
             if he.code == 404:
                 raise NotReady(
                     f"Could not find {os_kind} label for commit {commit}. Check out commit annotator logs and runbook: https://dfinity.github.io/dre/release.html#missing-guestos-label."
                 ) from he
             raise
-        return boolstr(changed)
+        return typing.cast(CommitInclusionState, changed)
 
 
 def main() -> None:

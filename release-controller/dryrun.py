@@ -224,7 +224,8 @@ class PublishNotesClient(object):
         os_kind: OsKind,
     ) -> None:
         self._logger.warning(
-            "Simulating that notes for release %s are not ready", version
+            "Simulating that notes for release %s are not ready to be published",
+            version,
         )
 
 

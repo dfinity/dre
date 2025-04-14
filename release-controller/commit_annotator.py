@@ -24,6 +24,9 @@ from const import (
     GUESTOS,
     HOSTOS,
     OS_KINDS,
+    COMMIT_BELONGS,
+    COMMIT_DOES_NOT_BELONG,
+    COMMIT_COULD_NOT_BE_ANNOTATED,
 )
 
 TARGETS_NOTES_NAMESPACES = {GUESTOS: "guestos-targets", HOSTOS: "hostos-targets"}
@@ -31,8 +34,9 @@ BAZEL_TARGETS = {
     GUESTOS: "//ic-os/guestos/envs/prod:update-img.tar.zst",
     HOSTOS: "//ic-os/hostos/envs/prod:disk-img.tar.zst union //ic-os/setupos/envs/prod:disk-img.tar.zst",
 }
-# Last manual HostOS release performed by Manuel Amador.
-CUTOFF_COMMIT = "68fc31a141b25f842f078c600168d8211339f422"
+# One commit before last manual HostOS release performed by Manuel Amador.
+CUTOFF_COMMIT = "6f3739270268208945648cc70d8010bda753e827"
+# List of branches to ignore from annotation (before the cutoff commit).
 
 LAST_CYCLE_END_TIMESTAMP_SECONDS = Gauge(
     "last_cycle_end_timestamp_seconds",
@@ -84,6 +88,7 @@ def target_determinator(
         [
             resolve_binary("target-determinator"),
             "-before-query-error-behavior=fatal",
+            "-delete-cached-worktree",
             f"-bazel={resolve_binary("bazel")}",
             "--targets",
             bazel_targets,
@@ -113,46 +118,56 @@ def annotate_object(annotator: GitRepoAnnotator, object: str, os_kind: OsKind) -
     # the working directory, making the other one much slower.  Thus,
     # we run them serially now, and -- in between them -- we clean the
     # repository's working directory.
-    annotator.checkout(object)
-    bazel_query_output = subprocess.check_output(
-        [resolve_binary("bazel"), "query", f"deps({targets})"],
-        text=True,
-        cwd=annotator.dir,
-    )
-    lap = time.time() - start
-    logger.debug("cquery finished in %.2f seconds", lap)
+    try:
+        annotator.checkout(object)
+        bazel_query_output = subprocess.check_output(
+            [resolve_binary("bazel"), "query", f"deps({targets})"],
+            text=True,
+            cwd=annotator.dir,
+        )
+        lap = time.time() - start
+        logger.debug("bazel query finished in %.2f seconds", lap)
 
-    annotator.checkout(object)
-    target_determinator_output = target_determinator(
-        annotator.dir, annotator.parent(object), targets
-    )
-    lap = time.time() - start
-    logger.debug("target-determinator finished in %.2f seconds", lap)
+        target_determinator_output = target_determinator(
+            annotator.dir, annotator.parent(object), targets
+        )
+        lap = time.time() - start
+        logger.debug("target-determinator finished in %.2f seconds", lap)
 
-    annotator.add(
-        object=object,
-        namespace=TARGETS_NOTES_NAMESPACES[os_kind],
-        content="\n".join(
-            [
-                line
-                for line in bazel_query_output.splitlines()
-                if line.strip() and not line.startswith("@")
-            ]
-        ),
-    )
-    annotator.add(
-        object=object,
-        namespace=CHANGED_NOTES_NAMESPACES[os_kind],
-        content=str(target_determinator_output),
-    )
-    lap = time.time() - start
-    logger.debug("Annotation finished in %.2f seconds", lap)
+        annotator.add(
+            object=object,
+            namespace=TARGETS_NOTES_NAMESPACES[os_kind],
+            content="\n".join(
+                [
+                    line
+                    for line in bazel_query_output.splitlines()
+                    if line.strip() and not line.startswith("@")
+                ]
+            ),
+        )
+        annotator.add(
+            object=object,
+            namespace=CHANGED_NOTES_NAMESPACES[os_kind],
+            content=COMMIT_BELONGS
+            if target_determinator_output
+            else COMMIT_DOES_NOT_BELONG,
+        )
+        lap = time.time() - start
+        logger.debug("Annotation finished in %.2f seconds", lap)
+    except Exception:
+        logger.exception("Annotation failed.  Saving a record of the failure.")
+        annotator.add(
+            object=object,
+            namespace=CHANGED_NOTES_NAMESPACES[os_kind],
+            content=COMMIT_COULD_NOT_BE_ANNOTATED,
+        )
 
 
 def plan_to_annotate_branch(
     annotator: GitRepoAnnotator,
     branch: str,
     skip_checking_commits: dict[OsKind, set[str]],
+    max_commit_depth: int,
 ) -> dict[OsKind, list[str]]:
     logger = _LOGGER.getChild(branch)
     logger.info("Preparing annotation plan")
@@ -161,7 +176,7 @@ def plan_to_annotate_branch(
     for kind in OS_KINDS:
         current_commit = branch
         commits[kind] = []
-        while True:
+        for n in range(max_commit_depth):
             if current_commit == CUTOFF_COMMIT:
                 break
             if current_commit not in skip_checking_commits[kind]:
@@ -174,6 +189,10 @@ def plan_to_annotate_branch(
                     break
             commits[kind].append(current_commit)
             current_commit = annotator.parent(current_commit)
+        if n == max_commit_depth - 1:
+            logger.info(
+                "Stopped traveling back at commit number %s (%s)", n + 1, current_commit
+            )
     for kind in OS_KINDS:
         if commits[kind]:
             logger.info(
@@ -324,6 +343,13 @@ def main() -> None:
         help="Skip annotating branches older than this value (in days).",
     )
     parser.add_argument(
+        "--max-commit-depth",
+        default=500,
+        type=int,
+        dest="max_commit_depth",
+        help="Maximum number of commits to annotate starting from each branch and going back.",
+    )
+    parser.add_argument(
         "--api-port",
         type=int,
         dest="api_port",
@@ -406,6 +432,7 @@ def main() -> None:
                     annotator,
                     branch=b,
                     skip_checking_commits=commits_to_annotate,
+                    max_commit_depth=opts.max_commit_depth,
                 )
                 unannotated_commits_by_ref[b] = outstanding_commits
                 for k, v in commits_to_annotate.items():
