@@ -170,7 +170,7 @@ def plan_to_annotate_branch(
     max_commit_depth: int,
 ) -> dict[OsKind, list[str]]:
     logger = _LOGGER.getChild(branch)
-    logger.info("Preparing annotation plan")
+    logger.debug("Preparing annotation plan")
     commits: dict[OsKind, list[str]] = {}
     annotator.checkout(branch)
     for kind in OS_KINDS:
