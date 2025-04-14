@@ -9,7 +9,7 @@ from release_notes import (
     Change,
 )
 from git_repo import GitRepo
-from const import GUESTOS
+from const import GUESTOS, COMMIT_BELONGS
 
 
 def test_get_change_description_for_commit() -> None:
@@ -26,7 +26,8 @@ def test_get_change_description_for_commit() -> None:
             return get_change_description_for_commit(
                 commit_hash=commit_hash,
                 ic_repo=ic_repo,
-                belongs=determinator.commit_changes_artifact(commit_hash, GUESTOS),
+                belongs=determinator.commit_changes_artifact(commit_hash, GUESTOS)
+                is COMMIT_BELONGS,
             )
 
         assert testme(commit_hash="00dc67f8d") == Change(
