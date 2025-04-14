@@ -7,6 +7,10 @@ HOSTOS: typing.Literal["HostOS"] = "HostOS"
 
 OS_KINDS: list[OsKind] = [GUESTOS, HOSTOS]
 
+
+# It is safe to delete releases from this list once
+# they disappear from file
+# https://github.com/dfinity/dre/blob/main/release-index.yaml
 IGNORED_RELEASES = [
     "rc--2024-03-06_23-01",
     "rc--2024-03-20_23-01",
@@ -52,11 +56,8 @@ IGNORED_RELEASES = [
     "rc--2025-03-27_03-14",
     "rc--2025-04-03_03-15",
     "rc--2025-04-10_03-16",
-    # "rc--2025-03-27_03-14",
-    # "rc--2025-04-03_03-15",
+    "rc--2025-04-11_13-20",
 ]
-
-
 COMMIT_BELONGS: typing.Literal["True"] = "True"
 COMMIT_DOES_NOT_BELONG: typing.Literal["False"] = "False"
 COMMIT_COULD_NOT_BE_ANNOTATED: typing.Literal["Failed"] = "Failed"
