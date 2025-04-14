@@ -140,7 +140,10 @@ impl TryFrom<RewardsCalculatorResults> for NodeProviderRewardsCalculation {
                 let region = node_results.region.clone();
                 let rewards_reduction = node_results.rewards_reduction.round_dp(4).to_f64().err_f64()?;
                 let performance_multiplier = node_results.performance_multiplier.round_dp(4).to_f64().err_f64()?;
-                let adjusted_rewards = node_results.adjusted_rewards_xdr_permyriad.round_dp(4).to_f64().err_f64()?;
+                let adjusted_rewards = (node_results.adjusted_rewards_xdr_permyriad / dec!(10000))
+                    .round_dp(4)
+                    .to_f64()
+                    .err_f64()?;
                 let average_fr = node_results
                     .avg_relative_fr
                     .map_or(extrapolated_fr, |fr| fr.round_dp(4).to_f64().unwrap());

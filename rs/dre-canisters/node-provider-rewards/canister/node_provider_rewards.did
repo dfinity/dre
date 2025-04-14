@@ -3,8 +3,8 @@ type SubnetId = PrincipalId;
 type NodeId = PrincipalId;
 
 type NodeProvidersRewardsXDRTotal = record {
-  // Total rewards in XDR for all providers
-  rewards_per_provider : vec record { PrincipalId; nat64 };
+  // Total rewards in permyriad XDR for all providers
+  rewards_xdr_permyriad_per_provider : vec record { PrincipalId; nat64 };
 };
 
 type RewardPeriodArgs = record {
