@@ -1,6 +1,6 @@
 # Release controller
 
-Automates parts of the process of proposing new releases for
+Automates parts of the process of proposing new releases for IC HostOS and GuestOS.
 
 ## Usage
 
@@ -59,6 +59,10 @@ Reconciler is responsible for generating release notes (1), publishing them as g
   It's important to note that forum logic depends on finding alredy created blog posts by querying posts from authenticated user (@DRETeam). For those reasons, it won't be able to find manually created posts by other users.
 
 ## Resolving issues
+
+### View logs in production
+
+[Use Grafana to view the logs](https://grafana.ch1-rel1.dfinity.network/explore?schemaVersion=1&panes=%7B%22tvd%22:%7B%22datasource%22:%22P8E80F9AEF21F6940%22,%22queries%22:%5B%7B%22refId%22:%22A%22,%22expr%22:%22%7Bnamespace%3D%5C%22release-controller%5C%22%7D%20%7C%20line_format%20%60%7B%7B.pod%7D%7D%20%7B%7B__line__%7D%7D%60%22,%22queryType%22:%22range%22,%22datasource%22:%7B%22type%22:%22loki%22,%22uid%22:%22P8E80F9AEF21F6940%22%7D,%22editorMode%22:%22builder%22%7D%5D,%22range%22:%7B%22from%22:%22now-15m%22,%22to%22:%22now%22%7D%7D%7D&orgId=1) in real time.
 
 ### Google Docs generation was wrong for particular commit
 
@@ -199,7 +203,7 @@ The optional argument `--skip-preloading-state` makes it so that the reconciler
 will not preload its list of known proposals by version from the governance
 canister.  It is useful (in conjunction with an empty reconciler state folder)
 to make the reconciler do all the work of submitting proposals again.  It should
-not be used without `--dry-run`, to avoid submitting proposals twice.
+only be used alongside `--dry-run`, to avoid submitting proposals twice.
 
 ### Running the reconciler in the container it ships
 
@@ -238,20 +242,24 @@ Please consult `--help` for additional options.
 #### Unit tests
 
 ```sh
-bazel test //release-controller:pytest
+bazel test //release-controller/...
 ```
 
-With the .venv setup, you can also run (with varying levels of success):
+The above runs all tests and typechecks tested files.
+
+With a `.venv` setup by `rye`, you can also run (with varying levels of success):
 
 ```sh
 .venv/bin/python3 -m pytest release-controller/
 ```
 
-The above runs all tests.  If you want to run a specific test file,
-specify it as a path instead of the folder specified above.
+If you want to run a specific test file, specify it as a path instead of the
+folder specified above.
 
 #### Typing correctness
 
+Building it all tests MyPy types:
+
 ```sh
-bazel build //release-controller:release-controller
+bazel build //release-controller/...
 ```
