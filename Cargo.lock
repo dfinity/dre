@@ -6156,6 +6156,12 @@ name = "node-provider-rewards-api"
 version = "0.6.2"
 dependencies = [
  "candid",
+ "chrono",
+ "ic-base-types",
+ "itertools 0.13.0",
+ "rewards-calculation",
+ "rust_decimal",
+ "rust_decimal_macros",
  "serde",
 ]
 
@@ -6182,12 +6188,11 @@ dependencies = [
  "ic-stable-structures",
  "ic-types",
  "indexmap 2.8.0",
- "itertools 0.13.0",
  "mockall",
  "node-provider-rewards-api",
  "rewards-calculation",
- "rust_decimal",
  "serde",
+ "serde_cbor",
  "tokio",
 ]
 
@@ -7481,12 +7486,10 @@ dependencies = [
  "ic-cdk 0.17.1 (git+https://github.com/dfinity/cdk-rs.git?rev=929fd0b31e9ec69aad7cf6285df0394f25fe1815)",
  "ic-protobuf",
  "ic-types",
- "indexmap 2.8.0",
  "itertools 0.13.0",
- "num-traits",
+ "maplit",
  "rust_decimal",
  "rust_decimal_macros",
- "tabled",
 ]
 
 [[package]]
