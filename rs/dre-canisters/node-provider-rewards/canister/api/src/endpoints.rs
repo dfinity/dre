@@ -10,12 +10,15 @@ use std::collections::BTreeMap;
 
 #[derive(candid::CandidType, candid::Deserialize)]
 pub struct RewardPeriodArgs {
+    // First timestamp of the day in nanoseconds
     pub start_ts: u64,
+    // Last timestamp of the day in nanoseconds
     pub end_ts: u64,
 }
 
 #[derive(candid::CandidType, candid::Deserialize)]
 pub struct NodeProvidersRewardsXDRTotal {
+    // Total rewards in permyriad XDR for all providers
     pub rewards_xdr_permyriad_per_provider: BTreeMap<PrincipalId, u64>,
 }
 
@@ -41,11 +44,15 @@ pub struct NodeProviderRewardsCalculationArgs {
 
 #[derive(candid::CandidType, candid::Deserialize)]
 pub struct DailyNodeResults {
+    // UTC Day with format "DD-MM-YYYY"
     pub utc_day: String,
     pub subnet_assigned: SubnetId,
     pub blocks_proposed: u64,
     pub blocks_failed: u64,
+    // The failure rate before subnet failure rate adjustment
     pub original_failure_rate: f64,
+    // [RFR]
+    // The daily failure rate after subnet failure rate adjustment
     pub relative_failure_rate: f64,
 }
 
@@ -53,11 +60,24 @@ pub struct DailyNodeResults {
 pub struct NodeResults {
     pub node_type: String,
     pub region: String,
+    // None if the node is unassigned in the entire reward period
     pub daily_node_results: Option<Vec<DailyNodeResults>>,
+    // [AEFR]
+    // Failure rate average for the entire reward period
+    // On days when the node is unassigned EFR is used
+    // On days when the node is assigned RFR is used
     pub average_fr: f64,
+    // [RR]
+    // * For nodes with AEFR < 0.1, the rewards reduction is 0
+    // * For nodes with AEFR > 0.6, the rewards reduction is 0.8
+    // * For nodes with 0.1 <= AEFR <= 0.6, the rewards reduction is linearly interpolated between 0 and 0.8
     pub rewards_reduction: f64,
+    // [PM]
+    // Performance multiplier is calculated as 1 - RR
     pub performance_multiplier: f64,
     pub base_rewards: f64,
+    // [AR]
+    // Adjusted rewards are calculated as base_rewards * PM
     pub adjusted_rewards: f64,
 }
 
@@ -77,9 +97,12 @@ pub struct DailySubnetFailureRate {
 #[derive(candid::CandidType, candid::Deserialize)]
 pub struct NodeProviderRewardsCalculation {
     pub daily_subnets_fr: BTreeMap<SubnetId, Vec<DailySubnetFailureRate>>,
+    // [EFR]
+    // Extrapolated failure rate used as replacement for days when the node is unassigned
     pub extrapolated_fr: f64,
     pub results_by_node: BTreeMap<NodeId, NodeResults>,
     pub rewards_by_category: Vec<BaseRewardsByCategory>,
+    // Total rewards for the provider in XDR
     pub rewards_total_xdr: u64,
 }
 
