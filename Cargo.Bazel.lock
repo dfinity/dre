@@ -1,5 +1,5 @@
 {
-  "checksum": "34097ca50e15a81e3fdba144fe7c424fb111d24be17ae2d11b3bc0d8cf8cf5c6",
+  "checksum": "80952ab119da0fffd649e1cbcadde128ebb36d72264184b293d01bc4667dc81b",
   "crates": {
     "actix-codec 0.5.2": {
       "name": "actix-codec",
@@ -35829,6 +35829,22 @@
               "target": "candid"
             },
             {
+              "id": "chrono 0.4.40",
+              "target": "chrono"
+            },
+            {
+              "id": "ic-base-types 0.9.0",
+              "target": "ic_base_types"
+            },
+            {
+              "id": "itertools 0.13.0",
+              "target": "itertools"
+            },
+            {
+              "id": "rust_decimal 1.37.1",
+              "target": "rust_decimal"
+            },
+            {
               "id": "serde 1.0.219",
               "target": "serde"
             }
@@ -35836,6 +35852,15 @@
           "selects": {}
         },
         "edition": "2021",
+        "proc_macro_deps": {
+          "common": [
+            {
+              "id": "rust_decimal_macros 1.37.1",
+              "target": "rust_decimal_macros"
+            }
+          ],
+          "selects": {}
+        },
         "version": "0.6.2"
       },
       "license": "Apache-2.0",
@@ -35939,10 +35964,6 @@
               "target": "indexmap"
             },
             {
-              "id": "itertools 0.13.0",
-              "target": "itertools"
-            },
-            {
               "id": "mockall 0.13.1",
               "target": "mockall"
             },
@@ -35951,12 +35972,12 @@
               "target": "build_script_build"
             },
             {
-              "id": "rust_decimal 1.37.1",
-              "target": "rust_decimal"
-            },
-            {
               "id": "serde 1.0.219",
               "target": "serde"
+            },
+            {
+              "id": "serde_cbor 0.11.2",
+              "target": "serde_cbor"
             }
           ],
           "selects": {}
@@ -45045,10 +45066,6 @@
         "deps": {
           "common": [
             {
-              "id": "chrono 0.4.40",
-              "target": "chrono"
-            },
-            {
               "id": "ic-base-types 0.9.0",
               "target": "ic_base_types"
             },
@@ -45065,24 +45082,25 @@
               "target": "ic_types"
             },
             {
-              "id": "indexmap 2.8.0",
-              "target": "indexmap"
-            },
-            {
               "id": "itertools 0.13.0",
               "target": "itertools"
             },
             {
-              "id": "num-traits 0.2.19",
-              "target": "num_traits"
-            },
-            {
               "id": "rust_decimal 1.37.1",
               "target": "rust_decimal"
+            }
+          ],
+          "selects": {}
+        },
+        "deps_dev": {
+          "common": [
+            {
+              "id": "chrono 0.4.40",
+              "target": "chrono"
             },
             {
-              "id": "tabled 0.18.0",
-              "target": "tabled"
+              "id": "maplit 1.0.2",
+              "target": "maplit"
             }
           ],
           "selects": {}
@@ -62702,7 +62720,6 @@
     "lazy_static 1.5.0",
     "log 0.4.26",
     "mockall 0.13.1",
-    "num-traits 0.2.19",
     "octocrab 0.41.2",
     "opentelemetry 0.22.0",
     "pretty_env_logger 0.5.0",
@@ -62720,6 +62737,7 @@
     "rust_decimal_macros 1.37.1",
     "self_update 0.41.0",
     "serde 1.0.219",
+    "serde_cbor 0.11.2",
     "serde_json 1.0.140",
     "serde_yaml 0.9.34+deprecated",
     "sha2 0.10.8",
@@ -62742,6 +62760,7 @@
   "direct_dev_deps": [
     "actix-rt 2.10.0",
     "assert_cmd 2.0.16",
+    "maplit 1.0.2",
     "wiremock 0.6.3"
   ],
   "unused_patches": []
