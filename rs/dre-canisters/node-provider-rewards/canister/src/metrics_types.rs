@@ -2,8 +2,8 @@ use candid::{CandidType, Decode, Encode, Principal};
 use ic_base_types::{NodeId, PrincipalId, SubnetId};
 use ic_stable_structures::storable::Bound;
 use ic_stable_structures::Storable;
-use rewards_calculation::reward_period::TimestampNanos;
-use serde::Deserialize;
+use rewards_calculation::types::{NodeMetricsDaily, SubnetMetricsDailyKey, TimestampNanos};
+use serde::{Deserialize, Serialize};
 use std::borrow::Cow;
 
 // Maximum sizes for the storable types chosen as result of test `max_bound_size`
@@ -12,13 +12,13 @@ const MAX_BYTES_NODE_METRICS_STORED_KEY: u32 = 60;
 const PRINCIPAL_MAX_LENGTH_IN_BYTES: usize = 29;
 
 pub const MIN_PRINCIPAL_ID: PrincipalId = PrincipalId(Principal::from_slice(&[]));
-pub const MAX_PRINCIPAL_ID: PrincipalId = PrincipalId(Principal::from_slice(&[0xFF; PRINCIPAL_MAX_LENGTH_IN_BYTES]));
+pub const MAX_PRINCIPAL_ID: PrincipalId = PrincipalId(Principal::from_slice(&[0xFF_u8; PRINCIPAL_MAX_LENGTH_IN_BYTES]));
 
 #[test]
 fn max_bound_size() {
-    let max_subnet_id_stored = SubnetIdStored(MAX_PRINCIPAL_ID.into());
-    let max_subnet_metrics_stored_key = SubnetMetricsStoredKey {
-        timestamp_nanos: u64::MAX,
+    let max_subnet_id_stored = SubnetIdKey(MAX_PRINCIPAL_ID.into());
+    let max_subnet_metrics_stored_key = SubnetMetricsDailyKeyStored {
+        ts: u64::MAX,
         subnet_id: MAX_PRINCIPAL_ID.into(),
     };
 
@@ -28,8 +28,8 @@ fn max_bound_size() {
 }
 
 #[derive(Clone, Debug, CandidType, Deserialize, PartialEq, Eq, PartialOrd, Ord)]
-pub struct SubnetIdStored(pub SubnetId);
-impl Storable for SubnetIdStored {
+pub struct SubnetIdKey(pub SubnetId);
+impl Storable for SubnetIdKey {
     fn to_bytes(&self) -> std::borrow::Cow<[u8]> {
         Cow::Owned(Encode!(self).unwrap())
     }
@@ -44,7 +44,7 @@ impl Storable for SubnetIdStored {
     };
 }
 
-impl From<SubnetId> for SubnetIdStored {
+impl From<SubnetId> for SubnetIdKey {
     fn from(subnet_id: SubnetId) -> Self {
         Self(subnet_id)
     }
@@ -55,35 +55,28 @@ pub trait KeyRange {
     fn max_key() -> Self;
 }
 
-#[derive(Clone, Debug, CandidType, Deserialize, PartialEq, Eq, PartialOrd, Ord)]
-pub struct SubnetMetricsStoredKey {
-    pub timestamp_nanos: TimestampNanos,
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq, PartialOrd, Ord)]
+pub struct SubnetMetricsDailyKeyStored {
+    pub ts: TimestampNanos,
     pub subnet_id: SubnetId,
 }
 
-impl KeyRange for SubnetMetricsStoredKey {
-    fn min_key() -> Self {
+impl From<SubnetMetricsDailyKeyStored> for SubnetMetricsDailyKey {
+    fn from(key: SubnetMetricsDailyKeyStored) -> Self {
         Self {
-            timestamp_nanos: u64::MIN,
-            subnet_id: MIN_PRINCIPAL_ID.into(),
-        }
-    }
-
-    fn max_key() -> Self {
-        Self {
-            timestamp_nanos: u64::MAX,
-            subnet_id: MAX_PRINCIPAL_ID.into(),
+            ts: key.ts.into(),
+            subnet_id: key.subnet_id,
         }
     }
 }
 
-impl Storable for SubnetMetricsStoredKey {
-    fn to_bytes(&self) -> std::borrow::Cow<[u8]> {
-        Cow::Owned(Encode!(self).unwrap())
+impl Storable for SubnetMetricsDailyKeyStored {
+    fn to_bytes(&self) -> Cow<[u8]> {
+        Cow::Owned(serde_cbor::to_vec(self).unwrap())
     }
 
-    fn from_bytes(bytes: std::borrow::Cow<[u8]>) -> Self {
-        Decode!(bytes.as_ref(), Self).unwrap()
+    fn from_bytes(bytes: Cow<[u8]>) -> Self {
+        serde_cbor::from_slice(bytes.as_ref()).unwrap()
     }
 
     const BOUND: Bound = Bound::Bounded {
@@ -92,23 +85,57 @@ impl Storable for SubnetMetricsStoredKey {
     };
 }
 
-#[derive(Clone, Debug, CandidType, Deserialize, PartialEq, Eq, PartialOrd, Ord)]
+impl KeyRange for SubnetMetricsDailyKeyStored {
+    fn min_key() -> Self {
+        Self {
+            ts: u64::MIN,
+            subnet_id: MIN_PRINCIPAL_ID.into(),
+        }
+    }
+
+    fn max_key() -> Self {
+        Self {
+            ts: u64::MAX,
+            subnet_id: MAX_PRINCIPAL_ID.into(),
+        }
+    }
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct NodeMetricsDailyStored {
     pub node_id: NodeId,
     pub num_blocks_proposed: u64,
     pub num_blocks_failed: u64,
 }
 
-#[derive(Clone, Debug, CandidType, Deserialize)]
-pub struct SubnetMetricsStoredValue(pub Vec<NodeMetricsDailyStored>);
+impl From<NodeMetricsDailyStored> for NodeMetricsDaily {
+    fn from(node_metrics: NodeMetricsDailyStored) -> Self {
+        Self {
+            node_id: node_metrics.node_id,
+            num_blocks_proposed: node_metrics.num_blocks_proposed,
+            num_blocks_failed: node_metrics.num_blocks_failed,
+        }
+    }
+}
 
-impl Storable for SubnetMetricsStoredValue {
-    fn to_bytes(&self) -> std::borrow::Cow<[u8]> {
-        Cow::Owned(Encode!(self).unwrap())
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct SubnetMetricsDailyValueStored {
+    pub nodes_metrics: Vec<NodeMetricsDailyStored>,
+}
+
+impl From<SubnetMetricsDailyValueStored> for Vec<NodeMetricsDaily> {
+    fn from(subnet_metrics: SubnetMetricsDailyValueStored) -> Self {
+        subnet_metrics.nodes_metrics.into_iter().map(NodeMetricsDaily::from).collect()
+    }
+}
+
+impl Storable for SubnetMetricsDailyValueStored {
+    fn to_bytes(&self) -> Cow<[u8]> {
+        Cow::Owned(serde_cbor::to_vec(self).unwrap())
     }
 
-    fn from_bytes(bytes: std::borrow::Cow<[u8]>) -> Self {
-        Decode!(bytes.as_ref(), Self).unwrap()
+    fn from_bytes(bytes: Cow<[u8]>) -> Self {
+        serde_cbor::from_slice(bytes.as_ref()).unwrap()
     }
 
     const BOUND: Bound = Bound::Unbounded;
