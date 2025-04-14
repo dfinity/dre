@@ -8,7 +8,7 @@ use std::borrow::Cow;
 
 // Maximum sizes for the storable types chosen as result of test `max_bound_size`
 const MAX_BYTES_SUBNET_ID_STORED: u32 = 38;
-const MAX_BYTES_NODE_METRICS_STORED_KEY: u32 = 60;
+const MAX_BYTES_NODE_METRICS_STORED_KEY: u32 = 54;
 const PRINCIPAL_MAX_LENGTH_IN_BYTES: usize = 29;
 
 pub const MIN_PRINCIPAL_ID: PrincipalId = PrincipalId(Principal::from_slice(&[]));
