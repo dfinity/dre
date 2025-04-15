@@ -6,6 +6,7 @@ use axum::http::StatusCode;
 use axum::routing::{delete, get, post, put};
 use axum::Router;
 use axum_otel_metrics::HttpMetricsLayer;
+use prometheus::{Encoder, TextEncoder};
 use slog::{debug, info, Logger};
 
 use crate::definition::DefinitionsSupervisor;
@@ -87,7 +88,17 @@ impl Server {
     }
     pub(crate) async fn run(self, recv: tokio::sync::oneshot::Receiver<()>, metrics_layer: HttpMetricsLayer) {
         let app = Router::new()
-            .merge(metrics_layer.routes())
+            .without_v07_checks()
+            .route(
+                "/metrics",
+                get(|| async {
+                    let mut buffer = Vec::new();
+                    let encoder = TextEncoder::new();
+                    encoder.encode(&prometheus::gather(), &mut buffer).unwrap();
+                    // return metrics
+                    String::from_utf8(buffer).unwrap()
+                }),
+            )
             .route("/", post(add_definition))
             .route("/", put(replace_definitions))
             .route("/", get(get_definitions))
