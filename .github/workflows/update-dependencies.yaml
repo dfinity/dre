@@ -7,7 +7,7 @@ on:
 
 jobs:
   update:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     container: ghcr.io/dfinity/dre/actions-runner:6413f2909a49329ecbf5371ee7ddf07a9799b625
     steps:
       - name: Create GitHub App Token
@@ -34,8 +34,9 @@ jobs:
           sudo apt remove gcc-9 -y
           sudo apt install clang -y
 
-          cargo install cargo-upgrades
-          cargo install cargo-edit
+          rustup update stable
+          cargo +stable install --locked cargo-upgrades
+          cargo +stable install --locked cargo-edit
           cargo upgrade --recursive
 
           # Install taplo cli
