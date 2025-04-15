@@ -2,16 +2,19 @@ type PrincipalId = principal;
 type SubnetId = PrincipalId;
 type NodeId = PrincipalId;
 
-type NodeProvidersRewardsXDRTotal = record {
-  // Total rewards in permyriad XDR for all providers
-  rewards_xdr_permyriad_per_provider : vec record { PrincipalId; nat64 };
+type XDRPermyriad = float64;
+type Percent = float64;
+type DayUTC = text;
+
+type NodeProvidersRewards = record {
+    rewards_per_provider : vec record { PrincipalId; XDRPermyriad };
 };
 
 type RewardPeriodArgs = record {
-  // First timestamp of the day in nanoseconds
-  start_ts : nat64;
-  // Last timestamp of the day in nanoseconds
-  end_ts : nat64;
+    // First timestamp of the day in nanoseconds
+    start_ts : nat64;
+    // Last timestamp of the day in nanoseconds
+    end_ts : nat64;
 };
 
 type NodeProviderRewardsCalculationArgs = record {
@@ -19,77 +22,81 @@ type NodeProviderRewardsCalculationArgs = record {
     reward_period: RewardPeriodArgs;
 };
 
-type DailyNodeResults = record {
-    // UTC Day with format "DD-MM-YYYY"
-    utc_day: text;
+type NodeMetricsDailyProcessed = record {
+    day: DayUTC;
     subnet_assigned: SubnetId;
-    blocks_proposed: nat64;
-    blocks_failed: nat64;
-    // The failure rate before subnet failure rate adjustment
-    original_failure_rate: float64;
-    // [RFR]
-    // The daily failure rate after subnet failure rate adjustment
-    relative_failure_rate: float64;
+    /// Subnet Assigned Failure Rate.
+    ///
+    /// The failure rate of the entire subnet.
+    /// Calculated as 75th percentile of the failure rate of all nodes in the subnet.
+    subnet_assigned_fr: Percent;
+    num_blocks_proposed: nat64;
+    num_blocks_failed: nat64;
+    /// Original Failure Rate.
+    ///
+    /// The failure rate before subnet failure rate reduction.
+    /// Calculated as `blocks_failed` / (`blocks_proposed` + `blocks_failed`)
+    original_fr: Percent;
+    /// Relative Failure Rate (`RFR`).
+    ///
+    /// The failure rate reduced by the subnet assigned failure rate.
+    /// Calculated as Max(0, `original_fr` - `subnet_assigned_fr`)
+    relative_fr: Percent;
 };
 
 type NodeResults = record {
     node_type: text;
     region: text;
-    // None if the node is unassigned in the entire reward period
-    daily_node_results: opt vec DailyNodeResults;
-    // [AEFR]
-    // Failure rate average for the entire reward period
-    // On days when the node is unassigned EFR is used
-    // On days when the node is assigned RFR is used
-    average_fr: float64;
-    // [RR]
-    // * For nodes with AEFR < 0.1, the rewards reduction is 0
-    // * For nodes with AEFR > 0.6, the rewards reduction is 0.8
-    // * For nodes with 0.1 <= AEFR <= 0.6, the rewards reduction is linearly interpolated between 0 and 0.8
-    rewards_reduction: float64;
-    // [PM]
-    // Performance multiplier is calculated as 1 - RR
-    performance_multiplier: float64;
-    base_rewards: float64;
-    // [AR]
-    // Adjusted rewards are calculated as base_rewards * PM
-    adjusted_rewards: float64;
+    dc_id: text;
+    daily_metrics: vec NodeMetricsDailyProcessed;
+    /// Average Relative Failure Rate (`ARFR`).
+    ///
+    /// Average of `RFR` for the entire reward period.
+    /// None if the node is unassigned in the entire reward period
+    avg_relative_fr: opt Percent;
+    /// Average Extrapolated Failure Rate (`AEFR`).
+    ///
+    /// Failure rate average for the entire reward period
+    /// - On days when the node is unassigned `AEFR` is used
+    /// - On days when the node is assigned `RFR` is used
+    avg_extrapolated_fr: Percent;
+    /// Rewards reduction (`RR`).
+    ///
+    /// - For nodes with `AEFR` < 0.1, the rewards reduction is 0
+    /// - For nodes with `AEFR` > 0.6, the rewards reduction is 0.8
+    /// - For nodes with 0.1 <= `AEFR` <= 0.6, the rewards reduction is linearly interpolated between 0 and 0.8
+    rewards_reduction: Percent;
+    /// Performance multiplier (`PM`).
+    ///
+    /// Calculated as 1 - 'RR'
+    performance_multiplier: Percent;
+    base_rewards: XDRPermyriad;
+    /// Adjusted rewards (`AR`).
+    ///
+    /// Calculated as base_rewards * `PM`
+    adjusted_rewards: XDRPermyriad;
 };
 
-type BaseRewardsByCategory = record {
-    node_type: text;
-    region: text;
-    base_rewards: float64;
-};
-
-type DailySubnetFailureRate = record {
-    utc_day: text;
-    fr: float64;
-};
-
-type NodeProviderRewardsCalculation = record {
-    daily_subnets_fr: vec record { SubnetId; vec DailySubnetFailureRate };
-    // [EFR]
-    // Extrapolated failure rate used as replacement for days when the node is unassigned
-    extrapolated_fr: float64;
+type RewardsCalculatorResults = record {
     results_by_node: vec record { NodeId; NodeResults };
-    rewards_by_category: vec BaseRewardsByCategory;
-    // Total rewards for the provider in XDR
-    rewards_total_xdr: nat64;
+    /// Extrapolated failure rate used as replacement for days when the node is unassigned
+    extrapolated_fr: Percent;
+    /// Rewards Total
+    /// The total rewards for the entire reward period computed as sum of the `AR`
+    rewards_total: XDRPermyriad;
 };
-
 type GetNodeProviderRewardsCalculationResponse = variant {
-  Ok : NodeProviderRewardsCalculation;
-  Err : text;
+    Ok : RewardsCalculatorResults;
+    Err : text;
 };
 
-type GetNodeProvidersRewardsXDRTotalResponse = variant {
-  Ok : NodeProvidersRewardsXDRTotal;
-  Err : text;
+type GetNodeProvidersRewardsResponse = variant {
+    Ok : NodeProvidersRewards;
+    Err : text;
 };
 
 
 service : {
-    get_node_providers_rewards_xdr_total : (RewardPeriodArgs) -> (GetNodeProvidersRewardsXDRTotalResponse) query;
+    get_node_providers_rewards : (RewardPeriodArgs) -> (GetNodeProvidersRewardsResponse) query;
     get_node_provider_rewards_calculation : (NodeProviderRewardsCalculationArgs) -> (GetNodeProviderRewardsCalculationResponse) query;
 }

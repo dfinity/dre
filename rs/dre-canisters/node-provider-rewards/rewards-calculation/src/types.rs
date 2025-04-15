@@ -132,6 +132,7 @@ pub struct RewardableNode {
     pub node_id: NodeId,
     pub region: String,
     pub node_type: String,
+    pub dc_id: String,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]

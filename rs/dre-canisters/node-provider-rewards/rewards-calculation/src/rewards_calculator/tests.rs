@@ -37,6 +37,7 @@ impl Default for RewardableNode {
             node_id: NodeId::from(PrincipalId::default()),
             region: Default::default(),
             node_type: Default::default(),
+            dc_id: Default::default(),
         }
     }
 }
@@ -123,7 +124,7 @@ fn test_node_provider_below_min_limit() {
         .unwrap()
         .calculate_provider_rewards(rewardable_nodes);
 
-    assert_eq!(result.rewards_total_xdr_permyriad, dec!(2));
+    assert_eq!(result.rewards_total.get(), dec!(2));
 }
 
 #[derive(Default)]
@@ -194,6 +195,7 @@ impl RewardCalculatorTestBuilder {
             node_id,
             region: region.to_string(),
             node_type: node_type.to_string(),
+            dc_id: Default::default(),
         });
         if let Some(rewardable_nodes) = self.rewardable_nodes.as_mut() {
             rewardable_nodes.extend(rewardables);
@@ -305,14 +307,14 @@ fn test_calculates_node_failure_rates_correctly() {
 
     // Expected subnet 2 to be selected as the primary subnet because it has the highest number of proposed blocks
     assert_eq!(node_0_fr[0].subnet_assigned, subnet_id(2));
-    assert_eq!(node_0_fr[0].original_fr, dec!(0.1));
-    assert_eq!(node_0_fr[0].relative_fr, dec!(0));
+    assert_eq!(node_0_fr[0].original_fr.get(), dec!(0.1));
+    assert_eq!(node_0_fr[0].relative_fr.get(), dec!(0));
 
     let node_1_fr = &nodes_results.get(&node_id(1)).unwrap().daily_metrics;
 
     assert_eq!(node_1_fr[0].subnet_assigned, subnet_id(1));
-    assert_eq!(node_1_fr[0].original_fr, dec!(0.4));
-    assert_eq!(node_1_fr[0].relative_fr, dec!(0));
+    assert_eq!(node_1_fr[0].original_fr.get(), dec!(0.4));
+    assert_eq!(node_1_fr[0].relative_fr.get(), dec!(0));
 }
 
 #[test]
@@ -321,7 +323,7 @@ fn test_scenario_1() {
     let mut subnet_rates = BTreeMap::new();
     for (_, metrics) in results.results_by_node.iter() {
         for metric in metrics.daily_metrics.clone().into_iter() {
-            subnet_rates.insert((metric.subnet_assigned, metric.ts), metric.subnet_assigned_fr);
+            subnet_rates.insert((metric.subnet_assigned, metric.day), metric.subnet_assigned_fr);
         }
     }
     let nodes_results = results.results_by_node;
@@ -333,10 +335,10 @@ fn test_scenario_1() {
         .cloned()
         .collect_vec();
 
-    assert_eq!(subnet_1_rates[0], dec!(0.5));
-    assert_eq!(subnet_1_rates[1], dec!(0.2));
-    assert_eq!(subnet_1_rates[2], dec!(0.3));
-    assert_eq!(subnet_1_rates[3], dec!(0.2));
+    assert_eq!(subnet_1_rates[0].get(), dec!(0.5));
+    assert_eq!(subnet_1_rates[1].get(), dec!(0.2));
+    assert_eq!(subnet_1_rates[2].get(), dec!(0.3));
+    assert_eq!(subnet_1_rates[3].get(), dec!(0.2));
 
     let subnet_2_rates = subnet_rates
         .iter()
@@ -345,14 +347,14 @@ fn test_scenario_1() {
         .cloned()
         .collect_vec();
 
-    assert_eq!(subnet_2_rates[0], dec!(0.34));
-    assert_eq!(subnet_2_rates[1], dec!(0.7));
-    assert_eq!(subnet_2_rates[2], dec!(0.4));
-    assert_eq!(subnet_2_rates[3], dec!(0.5));
+    assert_eq!(subnet_2_rates[0].get(), dec!(0.34));
+    assert_eq!(subnet_2_rates[1].get(), dec!(0.7));
+    assert_eq!(subnet_2_rates[2].get(), dec!(0.4));
+    assert_eq!(subnet_2_rates[3].get(), dec!(0.5));
 
     // Extrapolated failure rate
 
-    assert_eq!(results.extrapolated_fr, dec!(0.05));
+    assert_eq!(results.extrapolated_fr.get(), dec!(0.05));
 
     // Node 5
     let node_5_results = &nodes_results.get(&node_id(5)).unwrap();
@@ -361,23 +363,23 @@ fn test_scenario_1() {
     assert_eq!(node_5_metrics.len(), 3);
 
     assert_eq!(node_5_metrics[0].subnet_assigned, subnet_id(2));
-    assert_eq!(node_5_metrics[0].original_fr, dec!(0.34));
-    assert_eq!(node_5_metrics[0].relative_fr, dec!(0));
+    assert_eq!(node_5_metrics[0].original_fr.get(), dec!(0.34));
+    assert_eq!(node_5_metrics[0].relative_fr.get(), dec!(0));
 
     assert_eq!(node_5_metrics[1].subnet_assigned, subnet_id(2));
-    assert_eq!(node_5_metrics[1].original_fr, dec!(1));
-    assert_eq!(node_5_metrics[1].relative_fr, dec!(0.3));
+    assert_eq!(node_5_metrics[1].original_fr.get(), dec!(1));
+    assert_eq!(node_5_metrics[1].relative_fr.get(), dec!(0.3));
 
     assert_eq!(node_5_metrics[2].subnet_assigned, subnet_id(2));
-    assert_eq!(node_5_metrics[2].original_fr, dec!(1));
-    assert_eq!(node_5_metrics[2].relative_fr, dec!(0.6));
+    assert_eq!(node_5_metrics[2].original_fr.get(), dec!(1));
+    assert_eq!(node_5_metrics[2].relative_fr.get(), dec!(0.6));
 
     // node_5_fr = [0, 0.3, 0.6, 0.05 (Extrapolated)] -> avg = 0.2375
     // rewards_reduction: ((0.2375 - 0.1) / (0.6 - 0.1)) * 0.8 = 0.22
-    assert_eq!(node_5_results.rewards_reduction, dec!(0.22));
+    assert_eq!(node_5_results.rewards_reduction.get(), dec!(0.22));
 
     // rewards_multiplier: 1 - 0.22 = 0.78
-    assert_eq!(node_5_results.performance_multiplier, dec!(0.78));
+    assert_eq!(node_5_results.performance_multiplier.get(), dec!(0.78));
 }
 
 #[test]
@@ -482,5 +484,5 @@ fn test_node_provider_rewards_one_assigned() {
     //     ├─────────────────────────────┼───────────┼─────────────┼──────────────┼────────┼        ┼────────┼────────┼────────┼────────────┼             ┤
     //     │ 2o3ay-vafaa-aaaaa-aaaap-2ai │   type1   │     A,B     │ 1000 myrXDR  │   -    │        │ 0.325  │ 0.360  │ 0.640  │ 640 myrXDR │             │
     //     └─────────────────────────────┴───────────┴─────────────┴──────────────┴────────┴────────┴────────┴────────┴────────┴────────────┴─────────────┘
-    assert_eq!(results.rewards_total_xdr_permyriad, dec!(3200));
+    assert_eq!(results.rewards_total.get(), dec!(3200));
 }

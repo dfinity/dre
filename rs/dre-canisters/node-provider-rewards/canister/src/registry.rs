@@ -151,22 +151,22 @@ impl<S: RegistryDataStableMemory> RegistryClient<S> {
             let node_operator_record = self
                 .get_value::<NodeOperatorRecord>(make_node_operator_record_key(node_operator_id).as_str())
                 .unwrap();
-
             if let Entry::Vacant(e) = node_operator_rewardable_count.entry(node_operator_id) {
                 e.insert(node_operator_record.rewardable_nodes);
             }
 
-            let node_type = self.estimate_node_type(node_operator_rewardable_count.get_mut(&node_operator_id));
-
             let node_provider_id: PrincipalId = node_operator_record.node_provider_principal_id.try_into().unwrap();
-            let data_center_record = self
-                .get_value::<DataCenterRecord>(&make_data_center_record_key(&node_operator_record.dc_id))
-                .unwrap();
+
+            let dc_id = node_operator_record.dc_id;
+            let node_type = self.estimate_node_type(node_operator_rewardable_count.get_mut(&node_operator_id));
+            let data_center_record = self.get_value::<DataCenterRecord>(&make_data_center_record_key(&dc_id)).unwrap();
+            let region = data_center_record.region;
 
             rewardable_nodes_per_provider.entry(node_provider_id).or_default().push(RewardableNode {
                 node_id,
                 node_type,
-                region: data_center_record.region,
+                region,
+                dc_id,
             })
         }
         rewardable_nodes_per_provider

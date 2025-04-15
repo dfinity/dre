@@ -58,13 +58,13 @@ impl RewardsCalculator {
                     (
                         metrics.node_id,
                         NodeMetricsDailyProcessed {
-                            ts: key.ts,
-                            subnet_assigned: key.subnet_id,
-                            subnet_assigned_fr: subnet_fr,
                             num_blocks_proposed,
                             num_blocks_failed,
-                            original_fr,
-                            relative_fr,
+                            subnet_assigned: key.subnet_id,
+                            day: key.ts.into(),
+                            subnet_assigned_fr: subnet_fr.into(),
+                            original_fr: original_fr.into(),
+                            relative_fr: relative_fr.into(),
                         },
                     )
                 })
@@ -182,11 +182,12 @@ impl<'a> RewardsCalculatorPipeline<'a, ComputeRewardableNodesMetrics> {
             let node_results = self.calculator_results.results_by_node.entry(node.node_id).or_default();
             node_results.region = node.region.clone();
             node_results.node_type = node.node_type.clone();
+            node_results.dc_id = node.dc_id.clone();
 
             if let Some(rewardable_node_metrics) = self.metrics_by_node.get(&node.node_id) {
                 rewardable_node_metrics
                     .iter()
-                    .into_group_map_by(|daily_metrics| daily_metrics.ts)
+                    .into_group_map_by(|daily_metrics| daily_metrics.day)
                     .into_values()
                     .for_each(|single_day_metrics| {
                         // Node can be assigned to different subnets on the same day.
@@ -200,7 +201,7 @@ impl<'a> RewardsCalculatorPipeline<'a, ComputeRewardableNodesMetrics> {
                         node_results.daily_metrics.push(selected);
                     })
             }
-            node_results.daily_metrics.sort_by_key(|daily_metrics| daily_metrics.ts);
+            node_results.daily_metrics.sort_by_key(|daily_metrics| daily_metrics.day);
         }
         RewardsCalculatorPipeline::transition(self)
     }
@@ -216,16 +217,20 @@ impl<'a> RewardsCalculatorPipeline<'a, ComputeExtrapolatedFR> {
     pub fn next(mut self) -> RewardsCalculatorPipeline<'a, ComputeAverageExtrapolatedFR> {
         let mut nodes_avg_rel_fr = Vec::new();
         for node_results in self.calculator_results.results_by_node.values_mut() {
-            let rel_fr: Vec<Decimal> = node_results.daily_metrics.iter().map(|daily_metrics| daily_metrics.relative_fr).collect();
+            let rel_fr: Vec<Decimal> = node_results
+                .daily_metrics
+                .iter()
+                .map(|daily_metrics| daily_metrics.relative_fr.get())
+                .collect();
 
             // Do not consider nodes completely unassigned
             if !rel_fr.is_empty() {
                 let avg_rel_fr = avg(&rel_fr);
-                node_results.avg_relative_fr = Some(avg_rel_fr);
+                node_results.avg_relative_fr = Some(avg_rel_fr.into());
                 nodes_avg_rel_fr.push(avg_rel_fr);
             }
         }
-        self.calculator_results.extrapolated_fr = avg(&nodes_avg_rel_fr);
+        self.calculator_results.extrapolated_fr = avg(&nodes_avg_rel_fr).into();
         RewardsCalculatorPipeline::transition(self)
     }
 }
@@ -239,13 +244,17 @@ impl<'a> RewardsCalculatorPipeline<'a, ComputeExtrapolatedFR> {
 impl<'a> RewardsCalculatorPipeline<'a, ComputeAverageExtrapolatedFR> {
     pub fn next(mut self) -> RewardsCalculatorPipeline<'a, ComputePerformanceMultipliers> {
         for (_, node_results) in self.calculator_results.results_by_node.iter_mut() {
-            let mut rel_fr: Vec<Decimal> = node_results.daily_metrics.iter().map(|daily_metrics| daily_metrics.relative_fr).collect();
+            let mut rel_fr: Vec<Decimal> = node_results
+                .daily_metrics
+                .iter()
+                .map(|daily_metrics| daily_metrics.relative_fr.get())
+                .collect();
 
             // Use the extrapolated failure rate on days in which the node is not assigned.
             // This covers also the case of nodes completely unassigned in the reward period
-            rel_fr.resize(self.reward_period.days_between() as usize, self.calculator_results.extrapolated_fr);
+            rel_fr.resize(self.reward_period.days_between() as usize, self.calculator_results.extrapolated_fr.get());
 
-            node_results.avg_relative_extrapolated_fr = avg(&rel_fr);
+            node_results.avg_extrapolated_fr = avg(&rel_fr).into();
         }
 
         RewardsCalculatorPipeline::transition(self)
@@ -257,7 +266,7 @@ impl<'a> RewardsCalculatorPipeline<'a, ComputePerformanceMultipliers> {
     pub fn next(mut self) -> RewardsCalculatorPipeline<'a, ComputeBaseRewardsByCategory> {
         for (_, node_results) in self.calculator_results.results_by_node.iter_mut() {
             let rewards_reduction;
-            let avg_rel_ext_fr = node_results.avg_relative_extrapolated_fr;
+            let avg_rel_ext_fr = node_results.avg_extrapolated_fr.get();
 
             if avg_rel_ext_fr < MIN_FAILURE_RATE {
                 rewards_reduction = MIN_REWARDS_REDUCTION;
@@ -268,8 +277,8 @@ impl<'a> RewardsCalculatorPipeline<'a, ComputePerformanceMultipliers> {
                 rewards_reduction = ((avg_rel_ext_fr - MIN_FAILURE_RATE) / (MAX_FAILURE_RATE - MIN_FAILURE_RATE)) * MAX_REWARDS_REDUCTION;
             };
 
-            node_results.rewards_reduction = rewards_reduction;
-            node_results.performance_multiplier = dec!(1) - rewards_reduction;
+            node_results.rewards_reduction = rewards_reduction.into();
+            node_results.performance_multiplier = (dec!(1) - rewards_reduction).into();
         }
 
         RewardsCalculatorPipeline::transition(self)
@@ -286,24 +295,26 @@ fn is_type3(node_type: &str) -> bool {
     node_type.starts_with("type3")
 }
 
-fn type3_category(region: &str) -> NodeCategory {
-    // The rewards table contains entries of this form DC Continent + DC Country + DC State/City.
-    // The grouping for type3* nodes will be on DC Continent + DC Country level. This group is used for computing
-    // the reduction coefficient and base reward for the group.
-    let region_key = region.splitn(3, ',').take(2).collect::<Vec<&str>>().join(":");
-    NodeCategory {
-        region: region_key,
-        node_type: "type3*".to_string(),
-    }
-}
-
 /// Calculate the base rewards for all the [NodeCategory].
 ///
 /// The base rewards are calculated based on the rewards table entries for the specific region and node type.
 /// For type3* nodes the base rewards are computed as the average of base rewards on DC Country level.
 impl<'a> RewardsCalculatorPipeline<'a, ComputeBaseRewardsByCategory> {
+    fn fill_nodes_base_rewards(&mut self, rewards_by_category: HashMap<NodeCategory, Decimal>) {
+        for node_results in self.calculator_results.results_by_node.values_mut() {
+            let node_category = NodeCategory {
+                region: node_results.region.clone(),
+                node_type: node_results.node_type.clone(),
+            };
+            let base_rewards = *rewards_by_category.get(&node_category).expect("Node category exist");
+
+            node_results.base_rewards = base_rewards.into();
+        }
+    }
+
     pub fn next(mut self) -> RewardsCalculatorPipeline<'a, AdjustNodesRewards> {
-        let mut type3_rewards_by_category: HashMap<NodeCategory, Type3Rewards> = HashMap::default();
+        let mut rewards_by_category: HashMap<NodeCategory, Decimal> = HashMap::default();
+        let mut type3_category_rewards: HashMap<String, Type3Rewards> = HashMap::default();
 
         let nodes_count_by_category = self
             .rewardable_nodes
@@ -339,10 +350,14 @@ impl<'a> RewardsCalculatorPipeline<'a, ComputeBaseRewardsByCategory> {
             if is_type3(&category.node_type) && nodes_count > 0 {
                 let coefficients = vec![coefficient; nodes_count];
                 let base_rewards = vec![base_rewards; nodes_count];
-                let type3_category = type3_category(&category.region);
 
-                type3_rewards_by_category
-                    .entry(type3_category)
+                // The rewards table contains entries of this form DC Continent + DC Country + DC State/City.
+                // The grouping for type3* nodes will be on DC Continent + DC Country level. This group is used for computing
+                // the reduction coefficient and base reward for the group.
+                let region_key = category.region.splitn(3, ',').take(2).collect::<Vec<&str>>().join(":");
+
+                type3_category_rewards
+                    .entry(region_key)
                     .and_modify(|type3_rewards| {
                         type3_rewards.coefficients.extend(&coefficients);
                         type3_rewards.base_rewards.extend(&base_rewards);
@@ -356,14 +371,12 @@ impl<'a> RewardsCalculatorPipeline<'a, ComputeBaseRewardsByCategory> {
             } else {
                 // For `rewardable_nodes` which are not type3* the base rewards for the sigle node is the entry
                 // in the rewards table for the specific region (DC Continent + DC Country + DC State/City) and node type.
-                self.calculator_results
-                    .base_rewards_xdr_permyriad_by_category
-                    .insert(category.clone(), base_rewards);
+                rewards_by_category.insert(category.clone(), base_rewards);
             }
         }
 
         // Computes node rewards for type3* nodes in all regions and add it to region_nodetype_rewards
-        for (_, type3_rewards) in type3_rewards_by_category {
+        for (_, type3_rewards) in type3_category_rewards {
             let rewards_len = type3_rewards.base_rewards.len();
 
             let coefficients_avg = avg(&type3_rewards.coefficients);
@@ -378,11 +391,11 @@ impl<'a> RewardsCalculatorPipeline<'a, ComputeBaseRewardsByCategory> {
             let region_rewards_avg = avg(&region_rewards);
 
             for node_category in type3_rewards.nodes_categories {
-                self.calculator_results
-                    .base_rewards_xdr_permyriad_by_category
-                    .insert(node_category, region_rewards_avg);
+                rewards_by_category.insert(node_category, region_rewards_avg);
             }
         }
+
+        self.fill_nodes_base_rewards(rewards_by_category);
         RewardsCalculatorPipeline::transition(self)
     }
 }
@@ -393,22 +406,13 @@ impl<'a> RewardsCalculatorPipeline<'a, AdjustNodesRewards> {
         let nodes_count = self.calculator_results.results_by_node.len() as u32;
 
         for node_results in self.calculator_results.results_by_node.values_mut() {
-            let node_category = NodeCategory {
-                region: node_results.region.clone(),
-                node_type: node_results.node_type.clone(),
-            };
-            let base_rewards = *self
-                .calculator_results
-                .base_rewards_xdr_permyriad_by_category
-                .get(&node_category)
-                .expect("Node category exist");
-
+            let base_rewards = node_results.base_rewards.clone();
             if nodes_count <= FULL_REWARDS_MACHINES_LIMIT {
                 // Node Providers with less than FULL_REWARDS_MACHINES_LIMIT machines are rewarded fully, independently of their performance
 
-                node_results.adjusted_rewards_xdr_permyriad = base_rewards;
+                node_results.adjusted_rewards = base_rewards;
             } else {
-                node_results.adjusted_rewards_xdr_permyriad = base_rewards * node_results.performance_multiplier;
+                node_results.adjusted_rewards = (base_rewards.get() * node_results.performance_multiplier.get()).into();
             }
         }
 
@@ -423,10 +427,10 @@ impl<'a> RewardsCalculatorPipeline<'a, ComputeRewardsTotal> {
             .calculator_results
             .results_by_node
             .values()
-            .map(|node_results| node_results.adjusted_rewards_xdr_permyriad)
+            .map(|node_results| node_results.adjusted_rewards.get())
             .sum::<Decimal>();
 
-        self.calculator_results.rewards_total_xdr_permyriad = rewards_total;
+        self.calculator_results.rewards_total = rewards_total.into();
         RewardsCalculatorPipeline::transition(self)
     }
 }
