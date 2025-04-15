@@ -88,7 +88,7 @@ jobs:
       - name: "📦 Push images to GitHub Container Registry"
         id: push-images
         uses: ./.github/workflows/push
-        if: ${{ github.ref == 'refs/heads/main' }}
+        if: ${{ github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch' }}
         with:
           spec: kind("oci_push", ...) intersect //release-controller/...
           push-token: ${{ secrets.GITHUB_TOKEN }}
@@ -98,7 +98,7 @@ jobs:
       ########################################
 
       - name: "🤖 Update k8s deployments for release controller"
-        if: ${{ github.ref == 'refs/heads/main' && steps.push-images.outputs.pushed == 'true' }}
+        if: ${{ github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch' }}
         uses: ./.github/workflows/update-k8s-deployments
         with:
           files-to-update: bases/apps/ic-release-controller/controller/controller.yaml bases/apps/ic-release-controller/commit-annotator/commit-annotator.yaml
