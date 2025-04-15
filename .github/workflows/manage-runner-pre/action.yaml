@@ -45,6 +45,7 @@ runs:
 
 
     - name: "clean"
+      if: ${{ !startsWith(runner.name, 'dre-runner-custom') }}
       # This is desirable to make sure bazel does not use stale pre-built binaries
       # Bazel actually keeps all intermediate objects so builds are still fast
       run: bazel clean
