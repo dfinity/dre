@@ -43,13 +43,13 @@ actix-web = { version = "4.10.2", default-features = false, features = [
 ] }
 actix-rt = "2.10.0"
 ahash = "0.8.11"
-anyhow = "1.0.97"
+anyhow = "1.0.98"
 async-recursion = "1.1.1"
 async-trait = "0.1.88"
 axum-otel-metrics = "0.8.1"
-axum = "0.7.9"
+axum = "0.8.1"
 backoff = { version = "0.4.0", features = ["tokio"] }
-backon = "1.4.1"
+backon = "1.5.0"
 candid = "0.10.13"
 chrono = { version = "0.4.40", features = ["serde"] }
 clap-num = "1.2"
@@ -70,7 +70,7 @@ colored = "2.2.0"
 comfy-table = "7.1.4"
 assert_cmd = "2.0.16"
 crossbeam = "0.8.4"
-crossbeam-channel = "0.5.14"
+crossbeam-channel = "0.5.15"
 cryptoki = "0.7.0"
 custom_error = "1.9.2"
 decentralization = { path = "rs/decentralization" }
@@ -80,9 +80,9 @@ dirs = "5.0.1"
 dotenv = "0.15.0"
 base64 = "0.22.1"
 edit = "0.1.5"
-env_logger = "0.11.7"
+env_logger = "0.11.8"
 erased-serde = "0.4.6"
-flate2 = "1.1.0"
+flate2 = "1.1.1"
 fs-err = "3.1.0"
 fs2 = "0.4.3"
 function_name = "0.3"
@@ -149,7 +149,7 @@ keyring = { version = "3.6.2", features = [
     "sync-secret-service",
 ] }
 lazy_static = "1.5.0"
-log = "0.4.26"
+log = "0.4.27"
 lru = "0.12.5"
 num-traits = "0.2"
 opentelemetry = { version = "0.22.0", features = ["metrics"] }
@@ -168,7 +168,7 @@ reqwest = { version = "0.12", default-features = false, features = [
     "rustls-tls-webpki-roots",
     "blocking",
 ] }
-retry = "2.0.0"
+retry = "2.1.0"
 rstest = { version = "0.23.0", default-features = false }
 rust_decimal = "1.37.1"
 rust_decimal_macros = "1.37.1"
@@ -195,7 +195,7 @@ tabled = "0.18.0"
 tabular = "0.2"
 tempfile = "3.19.1"
 thiserror = "2.0.12"
-tokio = { version = "1.44.1", features = ["full"] }
+tokio = { version = "1.44.2", features = ["full"] }
 tokio-util = "0.7.14"
 url = "2.5.4"
 wiremock = "0.6.3"
@@ -211,7 +211,7 @@ rewards-calculation = { path = "rs/dre-canisters/node-provider-rewards/rewards-c
 node-provider-rewards-api = { path = "rs/dre-canisters/node-provider-rewards/canister/api" }
 
 # dre-airflow deps, should be replaced with dre-airflow once
-indexmap = { version = "2.8.0", features = ["serde"] }
+indexmap = { version = "2.9.0", features = ["serde"] }
 
 [profile.release]
 # Add debug information to the release build (does NOT reduce the level of optimization!)
