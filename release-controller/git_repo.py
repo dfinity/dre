@@ -290,7 +290,7 @@ class GitRepo:
     def fetch(self) -> None:
         """Fetch the repository."""
         if (self.dir / ".git").exists():
-            _LOGGER.info(
+            _LOGGER.debug(
                 "Updating repository in %s to latest origin/%s",
                 self.dir,
                 self.main_branch,
