@@ -101,7 +101,7 @@ jobs:
         if: ${{ github.ref == 'refs/heads/main' && steps.push-images.outputs.pushed == 'true' }}
         uses: ./.github/workflows/update-k8s-deployments
         with:
-          files-to-update: bases/apps/ic-release-controller/controller/controller.yaml bases/apps/ic-release-controller/commit-annotator/commit-annotator.yaml
+          files-to-update: bases/apps/ic-release-controller/controller/controller.yaml
           push-token: ${{ secrets.K8S_API_TOKEN }}
           component: release controller
 
