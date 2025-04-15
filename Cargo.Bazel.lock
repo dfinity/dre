@@ -1,5 +1,5 @@
 {
-  "checksum": "34097ca50e15a81e3fdba144fe7c424fb111d24be17ae2d11b3bc0d8cf8cf5c6",
+  "checksum": "3f35a241c67c1ce13ab181348b03b49c2835f4bf9177b5b8e0eb554331dd7c24",
   "crates": {
     "actix-codec 0.5.2": {
       "name": "actix-codec",
@@ -57,7 +57,7 @@
               "target": "pin_project_lite"
             },
             {
-              "id": "tokio 1.44.1",
+              "id": "tokio 1.44.2",
               "target": "tokio"
             },
             {
@@ -162,7 +162,7 @@
               "target": "encoding_rs"
             },
             {
-              "id": "flate2 1.1.0",
+              "id": "flate2 1.1.1",
               "target": "flate2"
             },
             {
@@ -222,7 +222,7 @@
               "target": "smallvec"
             },
             {
-              "id": "tokio 1.44.1",
+              "id": "tokio 1.44.2",
               "target": "tokio"
             },
             {
@@ -416,7 +416,7 @@
               "target": "futures_core"
             },
             {
-              "id": "tokio 1.44.1",
+              "id": "tokio 1.44.2",
               "target": "tokio"
             }
           ],
@@ -507,7 +507,7 @@
               "target": "socket2"
             },
             {
-              "id": "tokio 1.44.1",
+              "id": "tokio 1.44.2",
               "target": "tokio"
             },
             {
@@ -752,7 +752,7 @@
               "target": "language_tags"
             },
             {
-              "id": "log 0.4.26",
+              "id": "log 0.4.27",
               "target": "log"
             },
             {
@@ -1787,14 +1787,14 @@
       ],
       "license_file": "LICENSE-APACHE"
     },
-    "anyhow 1.0.97": {
+    "anyhow 1.0.98": {
       "name": "anyhow",
-      "version": "1.0.97",
+      "version": "1.0.98",
       "package_url": "https://github.com/dtolnay/anyhow",
       "repository": {
         "Http": {
-          "url": "https://static.crates.io/crates/anyhow/1.0.97/download",
-          "sha256": "dcfed56ad506cb2c684a14971b8861fdc3baaaae314b9e5f9bb532cbe3ba7a4f"
+          "url": "https://static.crates.io/crates/anyhow/1.0.98/download",
+          "sha256": "e16d2d3311acee920a9eb8d33b8cbc1787ce4a264e85f964c2404b969bdcd487"
         }
       },
       "targets": [
@@ -1838,14 +1838,14 @@
         "deps": {
           "common": [
             {
-              "id": "anyhow 1.0.97",
+              "id": "anyhow 1.0.98",
               "target": "build_script_build"
             }
           ],
           "selects": {}
         },
         "edition": "2018",
-        "version": "1.0.97"
+        "version": "1.0.98"
       },
       "build_script_attrs": {
         "compile_data_glob": [
@@ -2948,7 +2948,7 @@
               "target": "sync_wrapper"
             },
             {
-              "id": "tokio 1.44.1",
+              "id": "tokio 1.44.2",
               "target": "tokio"
             },
             {
@@ -3119,7 +3119,7 @@
               "target": "sync_wrapper"
             },
             {
-              "id": "tokio 1.44.1",
+              "id": "tokio 1.44.2",
               "target": "tokio"
             },
             {
@@ -3517,7 +3517,7 @@
               "target": "rand"
             },
             {
-              "id": "tokio 1.44.1",
+              "id": "tokio 1.44.2",
               "target": "tokio",
               "alias": "tokio_1"
             }
@@ -3534,14 +3534,14 @@
       ],
       "license_file": "LICENSE-APACHE"
     },
-    "backon 1.4.1": {
+    "backon 1.5.0": {
       "name": "backon",
-      "version": "1.4.1",
+      "version": "1.5.0",
       "package_url": "https://github.com/Xuanwo/backon",
       "repository": {
         "Http": {
-          "url": "https://static.crates.io/crates/backon/1.4.1/download",
-          "sha256": "970d91570c01a8a5959b36ad7dd1c30642df24b6b3068710066f6809f7033bb7"
+          "url": "https://static.crates.io/crates/backon/1.5.0/download",
+          "sha256": "fd0b50b1b78dbadd44ab18b3c794e496f3a139abb9fbc27d9c94c4eebbb96496"
         }
       },
       "targets": [
@@ -3686,139 +3686,139 @@
           "selects": {
             "aarch64-apple-darwin": [
               {
-                "id": "tokio 1.44.1",
+                "id": "tokio 1.44.2",
                 "target": "tokio"
               }
             ],
             "aarch64-apple-ios": [
               {
-                "id": "tokio 1.44.1",
+                "id": "tokio 1.44.2",
                 "target": "tokio"
               }
             ],
             "aarch64-apple-ios-sim": [
               {
-                "id": "tokio 1.44.1",
+                "id": "tokio 1.44.2",
                 "target": "tokio"
               }
             ],
             "aarch64-linux-android": [
               {
-                "id": "tokio 1.44.1",
+                "id": "tokio 1.44.2",
                 "target": "tokio"
               }
             ],
             "aarch64-pc-windows-msvc": [
               {
-                "id": "tokio 1.44.1",
+                "id": "tokio 1.44.2",
                 "target": "tokio"
               }
             ],
             "aarch64-unknown-fuchsia": [
               {
-                "id": "tokio 1.44.1",
+                "id": "tokio 1.44.2",
                 "target": "tokio"
               }
             ],
             "aarch64-unknown-linux-gnu": [
               {
-                "id": "tokio 1.44.1",
+                "id": "tokio 1.44.2",
                 "target": "tokio"
               }
             ],
             "aarch64-unknown-nixos-gnu": [
               {
-                "id": "tokio 1.44.1",
+                "id": "tokio 1.44.2",
                 "target": "tokio"
               }
             ],
             "aarch64-unknown-nto-qnx710": [
               {
-                "id": "tokio 1.44.1",
+                "id": "tokio 1.44.2",
                 "target": "tokio"
               }
             ],
             "arm-unknown-linux-gnueabi": [
               {
-                "id": "tokio 1.44.1",
+                "id": "tokio 1.44.2",
                 "target": "tokio"
               }
             ],
             "armv7-linux-androideabi": [
               {
-                "id": "tokio 1.44.1",
+                "id": "tokio 1.44.2",
                 "target": "tokio"
               }
             ],
             "armv7-unknown-linux-gnueabi": [
               {
-                "id": "tokio 1.44.1",
+                "id": "tokio 1.44.2",
                 "target": "tokio"
               }
             ],
             "i686-apple-darwin": [
               {
-                "id": "tokio 1.44.1",
+                "id": "tokio 1.44.2",
                 "target": "tokio"
               }
             ],
             "i686-linux-android": [
               {
-                "id": "tokio 1.44.1",
+                "id": "tokio 1.44.2",
                 "target": "tokio"
               }
             ],
             "i686-pc-windows-msvc": [
               {
-                "id": "tokio 1.44.1",
+                "id": "tokio 1.44.2",
                 "target": "tokio"
               }
             ],
             "i686-unknown-freebsd": [
               {
-                "id": "tokio 1.44.1",
+                "id": "tokio 1.44.2",
                 "target": "tokio"
               }
             ],
             "i686-unknown-linux-gnu": [
               {
-                "id": "tokio 1.44.1",
+                "id": "tokio 1.44.2",
                 "target": "tokio"
               }
             ],
             "powerpc-unknown-linux-gnu": [
               {
-                "id": "tokio 1.44.1",
+                "id": "tokio 1.44.2",
                 "target": "tokio"
               }
             ],
             "riscv32imc-unknown-none-elf": [
               {
-                "id": "tokio 1.44.1",
+                "id": "tokio 1.44.2",
                 "target": "tokio"
               }
             ],
             "riscv64gc-unknown-none-elf": [
               {
-                "id": "tokio 1.44.1",
+                "id": "tokio 1.44.2",
                 "target": "tokio"
               }
             ],
             "s390x-unknown-linux-gnu": [
               {
-                "id": "tokio 1.44.1",
+                "id": "tokio 1.44.2",
                 "target": "tokio"
               }
             ],
             "thumbv7em-none-eabi": [
               {
-                "id": "tokio 1.44.1",
+                "id": "tokio 1.44.2",
                 "target": "tokio"
               }
             ],
             "thumbv8m.main-none-eabi": [
               {
-                "id": "tokio 1.44.1",
+                "id": "tokio 1.44.2",
                 "target": "tokio"
               }
             ],
@@ -3836,62 +3836,62 @@
             ],
             "x86_64-apple-darwin": [
               {
-                "id": "tokio 1.44.1",
+                "id": "tokio 1.44.2",
                 "target": "tokio"
               }
             ],
             "x86_64-apple-ios": [
               {
-                "id": "tokio 1.44.1",
+                "id": "tokio 1.44.2",
                 "target": "tokio"
               }
             ],
             "x86_64-linux-android": [
               {
-                "id": "tokio 1.44.1",
+                "id": "tokio 1.44.2",
                 "target": "tokio"
               }
             ],
             "x86_64-pc-windows-msvc": [
               {
-                "id": "tokio 1.44.1",
+                "id": "tokio 1.44.2",
                 "target": "tokio"
               }
             ],
             "x86_64-unknown-freebsd": [
               {
-                "id": "tokio 1.44.1",
+                "id": "tokio 1.44.2",
                 "target": "tokio"
               }
             ],
             "x86_64-unknown-fuchsia": [
               {
-                "id": "tokio 1.44.1",
+                "id": "tokio 1.44.2",
                 "target": "tokio"
               }
             ],
             "x86_64-unknown-linux-gnu": [
               {
-                "id": "tokio 1.44.1",
+                "id": "tokio 1.44.2",
                 "target": "tokio"
               }
             ],
             "x86_64-unknown-nixos-gnu": [
               {
-                "id": "tokio 1.44.1",
+                "id": "tokio 1.44.2",
                 "target": "tokio"
               }
             ],
             "x86_64-unknown-none": [
               {
-                "id": "tokio 1.44.1",
+                "id": "tokio 1.44.2",
                 "target": "tokio"
               }
             ]
           }
         },
         "edition": "2021",
-        "version": "1.4.1"
+        "version": "1.5.0"
       },
       "license": "Apache-2.0",
       "license_ids": [
@@ -5254,7 +5254,7 @@
         "deps": {
           "common": [
             {
-              "id": "anyhow 1.0.97",
+              "id": "anyhow 1.0.98",
               "target": "anyhow"
             },
             {
@@ -5560,7 +5560,7 @@
         "deps": {
           "common": [
             {
-              "id": "anyhow 1.0.97",
+              "id": "anyhow 1.0.98",
               "target": "anyhow"
             },
             {
@@ -6337,7 +6337,7 @@
         "deps": {
           "common": [
             {
-              "id": "anyhow 1.0.97",
+              "id": "anyhow 1.0.98",
               "target": "anyhow"
             },
             {
@@ -6489,11 +6489,11 @@
         "deps": {
           "common": [
             {
-              "id": "anyhow 1.0.97",
+              "id": "anyhow 1.0.98",
               "target": "anyhow"
             },
             {
-              "id": "clap 4.5.32",
+              "id": "clap 4.5.36",
               "target": "clap"
             },
             {
@@ -6501,7 +6501,7 @@
               "target": "humantime"
             },
             {
-              "id": "log 0.4.26",
+              "id": "log 0.4.27",
               "target": "log"
             },
             {
@@ -6521,7 +6521,7 @@
               "target": "serde_json"
             },
             {
-              "id": "tokio 1.44.1",
+              "id": "tokio 1.44.2",
               "target": "tokio"
             },
             {
@@ -7200,14 +7200,14 @@
       ],
       "license_file": "LICENSE"
     },
-    "clap 4.5.32": {
+    "clap 4.5.36": {
       "name": "clap",
-      "version": "4.5.32",
+      "version": "4.5.36",
       "package_url": "https://github.com/clap-rs/clap",
       "repository": {
         "Http": {
-          "url": "https://static.crates.io/crates/clap/4.5.32/download",
-          "sha256": "6088f3ae8c3608d19260cd7445411865a485688711b78b5be70d78cd96136f83"
+          "url": "https://static.crates.io/crates/clap/4.5.36/download",
+          "sha256": "2df961d8c8a0d08aa9945718ccf584145eee3f3aa06cddbeac12933781102e04"
         }
       },
       "targets": [
@@ -7249,7 +7249,7 @@
         "deps": {
           "common": [
             {
-              "id": "clap_builder 4.5.32",
+              "id": "clap_builder 4.5.36",
               "target": "clap_builder"
             }
           ],
@@ -7265,7 +7265,7 @@
           ],
           "selects": {}
         },
-        "version": "4.5.32"
+        "version": "4.5.36"
       },
       "license": "MIT OR Apache-2.0",
       "license_ids": [
@@ -7321,14 +7321,14 @@
       ],
       "license_file": "LICENSE"
     },
-    "clap_builder 4.5.32": {
+    "clap_builder 4.5.36": {
       "name": "clap_builder",
-      "version": "4.5.32",
+      "version": "4.5.36",
       "package_url": "https://github.com/clap-rs/clap",
       "repository": {
         "Http": {
-          "url": "https://static.crates.io/crates/clap_builder/4.5.32/download",
-          "sha256": "22a7ef7f676155edfb82daa97f99441f3ebf4a58d5e32f295a56259f1b6facc8"
+          "url": "https://static.crates.io/crates/clap_builder/4.5.36/download",
+          "sha256": "132dbda40fb6753878316a489d5a1242a8ef2f0d9e47ba01c951ea8aa7d013a5"
         }
       },
       "targets": [
@@ -7391,7 +7391,7 @@
           "selects": {}
         },
         "edition": "2021",
-        "version": "4.5.32"
+        "version": "4.5.36"
       },
       "license": "MIT OR Apache-2.0",
       "license_ids": [
@@ -7438,7 +7438,7 @@
         "deps": {
           "common": [
             {
-              "id": "clap 4.5.32",
+              "id": "clap 4.5.36",
               "target": "clap"
             }
           ],
@@ -7992,7 +7992,7 @@
               "target": "crossbeam"
             },
             {
-              "id": "crossbeam-channel 0.5.14",
+              "id": "crossbeam-channel 0.5.15",
               "target": "crossbeam_channel"
             },
             {
@@ -8619,7 +8619,7 @@
         "deps": {
           "common": [
             {
-              "id": "crossbeam-channel 0.5.14",
+              "id": "crossbeam-channel 0.5.15",
               "target": "crossbeam_channel"
             },
             {
@@ -8651,14 +8651,14 @@
       ],
       "license_file": "LICENSE-APACHE"
     },
-    "crossbeam-channel 0.5.14": {
+    "crossbeam-channel 0.5.15": {
       "name": "crossbeam-channel",
-      "version": "0.5.14",
+      "version": "0.5.15",
       "package_url": "https://github.com/crossbeam-rs/crossbeam",
       "repository": {
         "Http": {
-          "url": "https://static.crates.io/crates/crossbeam-channel/0.5.14/download",
-          "sha256": "06ba6d68e24814cb8de6bb986db8222d3a027d15872cabc0d18817bc3c0e4471"
+          "url": "https://static.crates.io/crates/crossbeam-channel/0.5.15/download",
+          "sha256": "82b8f8f868b36967f9606790d1903570de9ceaf870a7bf9fbbd3016d636a2cb2"
         }
       },
       "targets": [
@@ -8697,7 +8697,7 @@
           "selects": {}
         },
         "edition": "2021",
-        "version": "0.5.14"
+        "version": "0.5.15"
       },
       "license": "MIT OR Apache-2.0",
       "license_ids": [
@@ -9338,7 +9338,7 @@
               "target": "libloading"
             },
             {
-              "id": "log 0.4.26",
+              "id": "log 0.4.27",
               "target": "log"
             },
             {
@@ -10573,7 +10573,7 @@
               "target": "num_cpus"
             },
             {
-              "id": "tokio 1.44.1",
+              "id": "tokio 1.44.2",
               "target": "tokio"
             }
           ],
@@ -10672,7 +10672,7 @@
               "target": "ahash"
             },
             {
-              "id": "anyhow 1.0.97",
+              "id": "anyhow 1.0.98",
               "target": "anyhow"
             },
             {
@@ -10684,7 +10684,7 @@
               "target": "ic_base_types"
             },
             {
-              "id": "indexmap 2.8.0",
+              "id": "indexmap 2.9.0",
               "target": "indexmap"
             },
             {
@@ -10696,7 +10696,7 @@
               "target": "lazy_static"
             },
             {
-              "id": "log 0.4.26",
+              "id": "log 0.4.27",
               "target": "log"
             },
             {
@@ -10729,7 +10729,7 @@
               "target": "regex"
             },
             {
-              "id": "tokio 1.44.1",
+              "id": "tokio 1.44.2",
               "target": "tokio"
             }
           ],
@@ -12238,11 +12238,11 @@
               "target": "ahash"
             },
             {
-              "id": "anyhow 1.0.97",
+              "id": "anyhow 1.0.98",
               "target": "anyhow"
             },
             {
-              "id": "backon 1.4.1",
+              "id": "backon 1.5.0",
               "target": "backon"
             },
             {
@@ -12254,7 +12254,7 @@
               "target": "chrono"
             },
             {
-              "id": "clap 4.5.32",
+              "id": "clap 4.5.36",
               "target": "clap"
             },
             {
@@ -12298,7 +12298,7 @@
               "target": "edit"
             },
             {
-              "id": "flate2 1.1.0",
+              "id": "flate2 1.1.1",
               "target": "flate2"
             },
             {
@@ -12394,7 +12394,7 @@
               "target": "icp_ledger"
             },
             {
-              "id": "indexmap 2.8.0",
+              "id": "indexmap 2.9.0",
               "target": "indexmap"
             },
             {
@@ -12406,7 +12406,7 @@
               "target": "keyring"
             },
             {
-              "id": "log 0.4.26",
+              "id": "log 0.4.27",
               "target": "log"
             },
             {
@@ -12482,7 +12482,7 @@
               "target": "tempfile"
             },
             {
-              "id": "tokio 1.44.1",
+              "id": "tokio 1.44.2",
               "target": "tokio"
             },
             {
@@ -12523,7 +12523,7 @@
         "deps": {
           "common": [
             {
-              "id": "clap 4.5.32",
+              "id": "clap 4.5.36",
               "target": "clap"
             },
             {
@@ -13334,7 +13334,7 @@
         "deps": {
           "common": [
             {
-              "id": "log 0.4.26",
+              "id": "log 0.4.27",
               "target": "log"
             },
             {
@@ -13404,7 +13404,7 @@
               "target": "is_terminal"
             },
             {
-              "id": "log 0.4.26",
+              "id": "log 0.4.27",
               "target": "log"
             },
             {
@@ -13428,14 +13428,14 @@
       ],
       "license_file": "LICENSE-APACHE"
     },
-    "env_logger 0.11.7": {
+    "env_logger 0.11.8": {
       "name": "env_logger",
-      "version": "0.11.7",
+      "version": "0.11.8",
       "package_url": "https://github.com/rust-cli/env_logger",
       "repository": {
         "Http": {
-          "url": "https://static.crates.io/crates/env_logger/0.11.7/download",
-          "sha256": "c3716d7a920fb4fac5d84e9d4bce8ceb321e9414b4409da61b07b75c1e3d0697"
+          "url": "https://static.crates.io/crates/env_logger/0.11.8/download",
+          "sha256": "13c863f0904021b108aa8b2f55046443e6b1ebde8fd4a15c399893aae4fa069f"
         }
       },
       "targets": [
@@ -13486,14 +13486,14 @@
               "target": "jiff"
             },
             {
-              "id": "log 0.4.26",
+              "id": "log 0.4.27",
               "target": "log"
             }
           ],
           "selects": {}
         },
         "edition": "2021",
-        "version": "0.11.7"
+        "version": "0.11.8"
       },
       "license": "MIT OR Apache-2.0",
       "license_ids": [
@@ -14443,14 +14443,14 @@
       ],
       "license_file": "LICENSE-APACHE"
     },
-    "flate2 1.1.0": {
+    "flate2 1.1.1": {
       "name": "flate2",
-      "version": "1.1.0",
+      "version": "1.1.1",
       "package_url": "https://github.com/rust-lang/flate2-rs",
       "repository": {
         "Http": {
-          "url": "https://static.crates.io/crates/flate2/1.1.0/download",
-          "sha256": "11faaf5a5236997af9848be0bef4db95824b1d534ebc64d0f0c6cf3e67bd38dc"
+          "url": "https://static.crates.io/crates/flate2/1.1.1/download",
+          "sha256": "7ced92e76e966ca2fd84c8f7aa01a4aea65b0eb6648d72f7c8f3e2764a67fece"
         }
       },
       "targets": [
@@ -14495,7 +14495,7 @@
           "selects": {}
         },
         "edition": "2018",
-        "version": "1.1.0"
+        "version": "1.1.1"
       },
       "license": "MIT OR Apache-2.0",
       "license_ids": [
@@ -15431,11 +15431,11 @@
         "deps": {
           "common": [
             {
-              "id": "anyhow 1.0.97",
+              "id": "anyhow 1.0.98",
               "target": "anyhow"
             },
             {
-              "id": "axum 0.7.9",
+              "id": "axum 0.8.1",
               "target": "axum"
             },
             {
@@ -15447,7 +15447,7 @@
               "target": "chrono"
             },
             {
-              "id": "clap 4.5.32",
+              "id": "clap 4.5.36",
               "target": "clap"
             },
             {
@@ -15467,7 +15467,7 @@
               "target": "opentelemetry"
             },
             {
-              "id": "retry 2.0.0",
+              "id": "retry 2.1.0",
               "target": "retry"
             },
             {
@@ -15491,7 +15491,7 @@
               "target": "slog_term"
             },
             {
-              "id": "tokio 1.44.1",
+              "id": "tokio 1.44.2",
               "target": "tokio"
             },
             {
@@ -16175,7 +16175,7 @@
               "target": "http"
             },
             {
-              "id": "indexmap 2.8.0",
+              "id": "indexmap 2.9.0",
               "target": "indexmap"
             },
             {
@@ -16183,7 +16183,7 @@
               "target": "slab"
             },
             {
-              "id": "tokio 1.44.1",
+              "id": "tokio 1.44.2",
               "target": "tokio"
             },
             {
@@ -17479,7 +17479,7 @@
               "target": "smallvec"
             },
             {
-              "id": "tokio 1.44.1",
+              "id": "tokio 1.44.2",
               "target": "tokio"
             },
             {
@@ -17688,7 +17688,7 @@
               "target": "hyper_util"
             },
             {
-              "id": "log 0.4.26",
+              "id": "log 0.4.27",
               "target": "log"
             },
             {
@@ -17705,7 +17705,7 @@
               "alias": "pki_types"
             },
             {
-              "id": "tokio 1.44.1",
+              "id": "tokio 1.44.2",
               "target": "tokio"
             },
             {
@@ -17967,7 +17967,7 @@
               "target": "pin_project_lite"
             },
             {
-              "id": "tokio 1.44.1",
+              "id": "tokio 1.44.2",
               "target": "tokio"
             },
             {
@@ -18067,7 +18067,7 @@
               "target": "socket2"
             },
             {
-              "id": "tokio 1.44.1",
+              "id": "tokio 1.44.2",
               "target": "tokio"
             },
             {
@@ -18310,7 +18310,7 @@
               "target": "slog"
             },
             {
-              "id": "tokio 1.44.1",
+              "id": "tokio 1.44.2",
               "target": "tokio"
             },
             {
@@ -18615,7 +18615,7 @@
           "selects": {
             "cfg(not(target_family = \"wasm\"))": [
               {
-                "id": "tokio 1.44.1",
+                "id": "tokio 1.44.2",
                 "target": "tokio"
               }
             ]
@@ -18978,7 +18978,7 @@
               "target": "serde_cbor"
             },
             {
-              "id": "tokio 1.44.1",
+              "id": "tokio 1.44.2",
               "target": "tokio"
             },
             {
@@ -19200,7 +19200,7 @@
         "deps": {
           "common": [
             {
-              "id": "anyhow 1.0.97",
+              "id": "anyhow 1.0.98",
               "target": "anyhow"
             },
             {
@@ -19292,7 +19292,7 @@
               "target": "icrc_ledger_types"
             },
             {
-              "id": "log 0.4.26",
+              "id": "log 0.4.27",
               "target": "log"
             },
             {
@@ -21865,7 +21865,7 @@
         "deps": {
           "common": [
             {
-              "id": "anyhow 1.0.97",
+              "id": "anyhow 1.0.98",
               "target": "anyhow"
             },
             {
@@ -21897,7 +21897,7 @@
               "target": "slog"
             },
             {
-              "id": "tokio 1.44.1",
+              "id": "tokio 1.44.2",
               "target": "tokio"
             },
             {
@@ -21977,7 +21977,7 @@
               "target": "thiserror"
             },
             {
-              "id": "tokio 1.44.1",
+              "id": "tokio 1.44.2",
               "target": "tokio"
             },
             {
@@ -23244,11 +23244,11 @@
               "target": "actix_web"
             },
             {
-              "id": "anyhow 1.0.97",
+              "id": "anyhow 1.0.98",
               "target": "anyhow"
             },
             {
-              "id": "backon 1.4.1",
+              "id": "backon 1.5.0",
               "target": "backon"
             },
             {
@@ -23260,7 +23260,7 @@
               "target": "chrono"
             },
             {
-              "id": "clap 4.5.32",
+              "id": "clap 4.5.36",
               "target": "clap"
             },
             {
@@ -23276,7 +23276,7 @@
               "target": "dotenv"
             },
             {
-              "id": "env_logger 0.11.7",
+              "id": "env_logger 0.11.8",
               "target": "env_logger"
             },
             {
@@ -23364,7 +23364,7 @@
               "target": "ic_types"
             },
             {
-              "id": "indexmap 2.8.0",
+              "id": "indexmap 2.9.0",
               "target": "indexmap"
             },
             {
@@ -23376,7 +23376,7 @@
               "target": "lazy_static"
             },
             {
-              "id": "log 0.4.26",
+              "id": "log 0.4.27",
               "target": "log"
             },
             {
@@ -23420,7 +23420,7 @@
               "target": "strum"
             },
             {
-              "id": "tokio 1.44.1",
+              "id": "tokio 1.44.2",
               "target": "tokio"
             },
             {
@@ -23593,7 +23593,7 @@
               "target": "ahash"
             },
             {
-              "id": "anyhow 1.0.97",
+              "id": "anyhow 1.0.98",
               "target": "anyhow"
             },
             {
@@ -23633,7 +23633,7 @@
               "target": "ic_types"
             },
             {
-              "id": "indexmap 2.8.0",
+              "id": "indexmap 2.9.0",
               "target": "indexmap"
             },
             {
@@ -23657,7 +23657,7 @@
               "target": "strum"
             },
             {
-              "id": "tokio 1.44.1",
+              "id": "tokio 1.44.2",
               "target": "tokio"
             },
             {
@@ -23749,7 +23749,7 @@
               "target": "prometheus"
             },
             {
-              "id": "tokio 1.44.1",
+              "id": "tokio 1.44.2",
               "target": "tokio"
             },
             {
@@ -26461,7 +26461,7 @@
         "deps": {
           "common": [
             {
-              "id": "anyhow 1.0.97",
+              "id": "anyhow 1.0.98",
               "target": "anyhow"
             },
             {
@@ -26562,7 +26562,7 @@
         "deps": {
           "common": [
             {
-              "id": "crossbeam-channel 0.5.14",
+              "id": "crossbeam-channel 0.5.15",
               "target": "crossbeam_channel"
             },
             {
@@ -26926,7 +26926,7 @@
               "target": "thiserror"
             },
             {
-              "id": "tokio 1.44.1",
+              "id": "tokio 1.44.2",
               "target": "tokio"
             },
             {
@@ -27865,7 +27865,7 @@
               "target": "candid"
             },
             {
-              "id": "clap 4.5.32",
+              "id": "clap 4.5.36",
               "target": "clap"
             },
             {
@@ -28167,7 +28167,7 @@
               "target": "candid"
             },
             {
-              "id": "clap 4.5.32",
+              "id": "clap 4.5.36",
               "target": "clap"
             },
             {
@@ -29326,7 +29326,7 @@
               "target": "prost"
             },
             {
-              "id": "tokio 1.44.1",
+              "id": "tokio 1.44.2",
               "target": "tokio"
             },
             {
@@ -29756,7 +29756,7 @@
               "target": "time"
             },
             {
-              "id": "tokio 1.44.1",
+              "id": "tokio 1.44.2",
               "target": "tokio"
             }
           ],
@@ -29819,7 +29819,7 @@
         "deps": {
           "common": [
             {
-              "id": "crossbeam-channel 0.5.14",
+              "id": "crossbeam-channel 0.5.15",
               "target": "crossbeam_channel"
             }
           ],
@@ -30054,7 +30054,7 @@
         "deps": {
           "common": [
             {
-              "id": "anyhow 1.0.97",
+              "id": "anyhow 1.0.98",
               "target": "anyhow"
             },
             {
@@ -30062,7 +30062,7 @@
               "target": "candid"
             },
             {
-              "id": "clap 4.5.32",
+              "id": "clap 4.5.36",
               "target": "clap"
             },
             {
@@ -31834,14 +31834,14 @@
       ],
       "license_file": "LICENSE-APACHE"
     },
-    "indexmap 2.8.0": {
+    "indexmap 2.9.0": {
       "name": "indexmap",
-      "version": "2.8.0",
+      "version": "2.9.0",
       "package_url": "https://github.com/indexmap-rs/indexmap",
       "repository": {
         "Http": {
-          "url": "https://static.crates.io/crates/indexmap/2.8.0/download",
-          "sha256": "3954d50fe15b02142bf25d3b8bdadb634ec3948f103d04ffe3031bc8fe9d7058"
+          "url": "https://static.crates.io/crates/indexmap/2.9.0/download",
+          "sha256": "cea70ddb795996207ad57735b50c5982d8844f38ba9ee5f1aedcfb708a2aa11e"
         }
       },
       "targets": [
@@ -31889,7 +31889,7 @@
           "selects": {}
         },
         "edition": "2021",
-        "version": "2.8.0"
+        "version": "2.9.0"
       },
       "license": "Apache-2.0 OR MIT",
       "license_ids": [
@@ -32933,7 +32933,7 @@
         "deps": {
           "common": [
             {
-              "id": "log 0.4.26",
+              "id": "log 0.4.27",
               "target": "log"
             }
           ],
@@ -34205,14 +34205,14 @@
       ],
       "license_file": "LICENSE-APACHE"
     },
-    "log 0.4.26": {
+    "log 0.4.27": {
       "name": "log",
-      "version": "0.4.26",
+      "version": "0.4.27",
       "package_url": "https://github.com/rust-lang/log",
       "repository": {
         "Http": {
-          "url": "https://static.crates.io/crates/log/0.4.26/download",
-          "sha256": "30bde2b3dc3671ae49d8e2e9f044c7c005836e7a023ee57cffa25ab82764bb9e"
+          "url": "https://static.crates.io/crates/log/0.4.27/download",
+          "sha256": "13dc2df351e3202783a1fe0d44375f7295ffb4049267b0f3018346dc122a1d94"
         }
       },
       "targets": [
@@ -34241,7 +34241,7 @@
           "selects": {}
         },
         "edition": "2021",
-        "version": "0.4.26"
+        "version": "0.4.27"
       },
       "license": "MIT OR Apache-2.0",
       "license_ids": [
@@ -34264,15 +34264,15 @@
         "deps": {
           "common": [
             {
-              "id": "anyhow 1.0.97",
+              "id": "anyhow 1.0.98",
               "target": "anyhow"
             },
             {
-              "id": "clap 4.5.32",
+              "id": "clap 4.5.36",
               "target": "clap"
             },
             {
-              "id": "log 0.4.26",
+              "id": "log 0.4.27",
               "target": "log"
             },
             {
@@ -34292,7 +34292,7 @@
               "target": "serde_json"
             },
             {
-              "id": "tokio 1.44.1",
+              "id": "tokio 1.44.2",
               "target": "tokio"
             },
             {
@@ -34338,11 +34338,11 @@
         "deps": {
           "common": [
             {
-              "id": "axum 0.7.9",
+              "id": "axum 0.8.1",
               "target": "axum"
             },
             {
-              "id": "clap 4.5.32",
+              "id": "clap 4.5.36",
               "target": "clap"
             },
             {
@@ -34370,7 +34370,7 @@
               "target": "slog_term"
             },
             {
-              "id": "tokio 1.44.1",
+              "id": "tokio 1.44.2",
               "target": "tokio"
             }
           ],
@@ -34399,11 +34399,11 @@
         "deps": {
           "common": [
             {
-              "id": "anyhow 1.0.97",
+              "id": "anyhow 1.0.98",
               "target": "anyhow"
             },
             {
-              "id": "clap 4.5.32",
+              "id": "clap 4.5.36",
               "target": "clap"
             },
             {
@@ -34431,7 +34431,7 @@
               "target": "slog_term"
             },
             {
-              "id": "tokio 1.44.1",
+              "id": "tokio 1.44.2",
               "target": "tokio"
             },
             {
@@ -35179,7 +35179,7 @@
         "deps": {
           "common": [
             {
-              "id": "log 0.4.26",
+              "id": "log 0.4.27",
               "target": "log"
             }
           ],
@@ -35433,7 +35433,7 @@
         "deps": {
           "common": [
             {
-              "id": "axum 0.7.9",
+              "id": "axum 0.8.1",
               "target": "axum"
             },
             {
@@ -35445,7 +35445,7 @@
               "target": "base64"
             },
             {
-              "id": "clap 4.5.32",
+              "id": "clap 4.5.36",
               "target": "clap"
             },
             {
@@ -35453,7 +35453,7 @@
               "target": "crossbeam"
             },
             {
-              "id": "crossbeam-channel 0.5.14",
+              "id": "crossbeam-channel 0.5.15",
               "target": "crossbeam_channel"
             },
             {
@@ -35489,7 +35489,7 @@
               "target": "opentelemetry"
             },
             {
-              "id": "retry 2.0.0",
+              "id": "retry 2.1.0",
               "target": "retry"
             },
             {
@@ -35513,7 +35513,7 @@
               "target": "slog_term"
             },
             {
-              "id": "tokio 1.44.1",
+              "id": "tokio 1.44.2",
               "target": "tokio"
             },
             {
@@ -35526,7 +35526,7 @@
         "deps_dev": {
           "common": [
             {
-              "id": "anyhow 1.0.97",
+              "id": "anyhow 1.0.98",
               "target": "anyhow"
             },
             {
@@ -35534,7 +35534,7 @@
               "target": "assert_cmd"
             },
             {
-              "id": "flate2 1.1.0",
+              "id": "flate2 1.1.1",
               "target": "flate2"
             },
             {
@@ -35571,7 +35571,7 @@
         "deps": {
           "common": [
             {
-              "id": "clap 4.5.32",
+              "id": "clap 4.5.36",
               "target": "clap"
             },
             {
@@ -35579,7 +35579,7 @@
               "target": "crossbeam"
             },
             {
-              "id": "crossbeam-channel 0.5.14",
+              "id": "crossbeam-channel 0.5.15",
               "target": "crossbeam_channel"
             },
             {
@@ -35619,7 +35619,7 @@
               "target": "slog_term"
             },
             {
-              "id": "tokio 1.44.1",
+              "id": "tokio 1.44.2",
               "target": "tokio"
             },
             {
@@ -35935,7 +35935,7 @@
               "target": "ic_types"
             },
             {
-              "id": "indexmap 2.8.0",
+              "id": "indexmap 2.9.0",
               "target": "indexmap"
             },
             {
@@ -35964,7 +35964,7 @@
         "deps_dev": {
           "common": [
             {
-              "id": "tokio 1.44.1",
+              "id": "tokio 1.44.2",
               "target": "tokio"
             }
           ],
@@ -36014,11 +36014,11 @@
         "deps": {
           "common": [
             {
-              "id": "anyhow 1.0.97",
+              "id": "anyhow 1.0.98",
               "target": "anyhow"
             },
             {
-              "id": "clap 4.5.32",
+              "id": "clap 4.5.36",
               "target": "clap"
             },
             {
@@ -36026,7 +36026,7 @@
               "target": "crossbeam"
             },
             {
-              "id": "crossbeam-channel 0.5.14",
+              "id": "crossbeam-channel 0.5.15",
               "target": "crossbeam_channel"
             },
             {
@@ -36062,7 +36062,7 @@
               "target": "slog_term"
             },
             {
-              "id": "tokio 1.44.1",
+              "id": "tokio 1.44.2",
               "target": "tokio"
             },
             {
@@ -37182,7 +37182,7 @@
               "target": "snafu"
             },
             {
-              "id": "tokio 1.44.1",
+              "id": "tokio 1.44.2",
               "target": "tokio"
             },
             {
@@ -37714,7 +37714,7 @@
         "deps": {
           "common": [
             {
-              "id": "crossbeam-channel 0.5.14",
+              "id": "crossbeam-channel 0.5.15",
               "target": "crossbeam_channel"
             },
             {
@@ -37758,7 +37758,7 @@
               "target": "thiserror"
             },
             {
-              "id": "tokio 1.44.1",
+              "id": "tokio 1.44.2",
               "target": "tokio"
             },
             {
@@ -38813,7 +38813,7 @@
               "target": "fixedbitset"
             },
             {
-              "id": "indexmap 2.8.0",
+              "id": "indexmap 2.9.0",
               "target": "indexmap"
             }
           ],
@@ -39724,7 +39724,7 @@
               "target": "env_logger"
             },
             {
-              "id": "log 0.4.26",
+              "id": "log 0.4.27",
               "target": "log"
             }
           ],
@@ -40496,7 +40496,7 @@
               "target": "byteorder"
             },
             {
-              "id": "flate2 1.1.0",
+              "id": "flate2 1.1.1",
               "target": "flate2"
             },
             {
@@ -40842,7 +40842,7 @@
         "deps": {
           "common": [
             {
-              "id": "anyhow 1.0.97",
+              "id": "anyhow 1.0.98",
               "target": "anyhow"
             },
             {
@@ -40850,7 +40850,7 @@
               "target": "base64"
             },
             {
-              "id": "clap 4.5.32",
+              "id": "clap 4.5.36",
               "target": "clap"
             },
             {
@@ -40910,7 +40910,7 @@
               "target": "slog_term"
             },
             {
-              "id": "tokio 1.44.1",
+              "id": "tokio 1.44.2",
               "target": "tokio"
             },
             {
@@ -41326,7 +41326,7 @@
               "target": "itertools"
             },
             {
-              "id": "log 0.4.26",
+              "id": "log 0.4.27",
               "target": "log"
             },
             {
@@ -41409,7 +41409,7 @@
         "deps": {
           "common": [
             {
-              "id": "anyhow 1.0.97",
+              "id": "anyhow 1.0.98",
               "target": "anyhow"
             },
             {
@@ -41894,7 +41894,7 @@
               "target": "thiserror"
             },
             {
-              "id": "tokio 1.44.1",
+              "id": "tokio 1.44.2",
               "target": "tokio"
             },
             {
@@ -44207,7 +44207,7 @@
                 "target": "ipnet"
               },
               {
-                "id": "log 0.4.26",
+                "id": "log 0.4.27",
                 "target": "log"
               },
               {
@@ -44227,7 +44227,7 @@
                 "target": "pin_project_lite"
               },
               {
-                "id": "tokio 1.44.1",
+                "id": "tokio 1.44.2",
                 "target": "tokio"
               },
               {
@@ -44963,14 +44963,14 @@
       ],
       "license_file": "LICENSE-APACHE"
     },
-    "retry 2.0.0": {
+    "retry 2.1.0": {
       "name": "retry",
-      "version": "2.0.0",
+      "version": "2.1.0",
       "package_url": "https://github.com/jimmycuadra/retry",
       "repository": {
         "Http": {
-          "url": "https://static.crates.io/crates/retry/2.0.0/download",
-          "sha256": "9166d72162de3575f950507683fac47e30f6f2c3836b71b7fbc61aa517c9c5f4"
+          "url": "https://static.crates.io/crates/retry/2.1.0/download",
+          "sha256": "a1e211f878258887b3e65dd3c8ff9f530fe109f441a117ee0cdc27f341355032"
         }
       },
       "targets": [
@@ -45003,14 +45003,14 @@
         "deps": {
           "common": [
             {
-              "id": "rand 0.8.5",
+              "id": "rand 0.9.0",
               "target": "rand"
             }
           ],
           "selects": {}
         },
         "edition": "2018",
-        "version": "2.0.0"
+        "version": "2.1.0"
       },
       "license": "MIT",
       "license_ids": [
@@ -45065,7 +45065,7 @@
               "target": "ic_types"
             },
             {
-              "id": "indexmap 2.8.0",
+              "id": "indexmap 2.9.0",
               "target": "indexmap"
             },
             {
@@ -45492,7 +45492,7 @@
         "deps": {
           "common": [
             {
-              "id": "anyhow 1.0.97",
+              "id": "anyhow 1.0.98",
               "target": "anyhow"
             },
             {
@@ -45548,7 +45548,7 @@
               "target": "serde_with"
             },
             {
-              "id": "tokio 1.44.1",
+              "id": "tokio 1.44.2",
               "target": "tokio"
             },
             {
@@ -46842,7 +46842,7 @@
               "target": "brotli_decompressor"
             },
             {
-              "id": "log 0.4.26",
+              "id": "log 0.4.27",
               "target": "log"
             },
             {
@@ -47994,7 +47994,7 @@
               "target": "indicatif"
             },
             {
-              "id": "log 0.4.26",
+              "id": "log 0.4.27",
               "target": "log"
             },
             {
@@ -48620,7 +48620,7 @@
         "deps": {
           "common": [
             {
-              "id": "indexmap 2.8.0",
+              "id": "indexmap 2.9.0",
               "target": "indexmap"
             },
             {
@@ -49048,7 +49048,7 @@
         "deps": {
           "common": [
             {
-              "id": "indexmap 2.8.0",
+              "id": "indexmap 2.9.0",
               "target": "indexmap"
             },
             {
@@ -49107,7 +49107,7 @@
         "deps": {
           "common": [
             {
-              "id": "anyhow 1.0.97",
+              "id": "anyhow 1.0.98",
               "target": "anyhow"
             },
             {
@@ -49115,7 +49115,7 @@
               "target": "crossbeam"
             },
             {
-              "id": "crossbeam-channel 0.5.14",
+              "id": "crossbeam-channel 0.5.15",
               "target": "crossbeam_channel"
             },
             {
@@ -49207,7 +49207,7 @@
               "target": "thiserror"
             },
             {
-              "id": "tokio 1.44.1",
+              "id": "tokio 1.44.2",
               "target": "tokio"
             },
             {
@@ -49830,7 +49830,7 @@
         "deps": {
           "common": [
             {
-              "id": "anyhow 1.0.97",
+              "id": "anyhow 1.0.98",
               "target": "anyhow"
             },
             {
@@ -49838,7 +49838,7 @@
               "target": "candid"
             },
             {
-              "id": "clap 4.5.32",
+              "id": "clap 4.5.36",
               "target": "clap"
             },
             {
@@ -49846,7 +49846,7 @@
               "target": "dotenv"
             },
             {
-              "id": "env_logger 0.11.7",
+              "id": "env_logger 0.11.8",
               "target": "env_logger"
             },
             {
@@ -49886,7 +49886,7 @@
               "target": "lazy_static"
             },
             {
-              "id": "log 0.4.26",
+              "id": "log 0.4.27",
               "target": "log"
             },
             {
@@ -49902,7 +49902,7 @@
               "target": "reqwest"
             },
             {
-              "id": "retry 2.0.0",
+              "id": "retry 2.1.0",
               "target": "retry"
             },
             {
@@ -49918,7 +49918,7 @@
               "target": "serde_yaml"
             },
             {
-              "id": "tokio 1.44.1",
+              "id": "tokio 1.44.2",
               "target": "tokio"
             }
           ],
@@ -50069,7 +50069,7 @@
         "deps": {
           "common": [
             {
-              "id": "crossbeam-channel 0.5.14",
+              "id": "crossbeam-channel 0.5.15",
               "target": "crossbeam_channel"
             },
             {
@@ -50614,7 +50614,7 @@
         "deps": {
           "common": [
             {
-              "id": "clap 4.5.32",
+              "id": "clap 4.5.36",
               "target": "clap"
             },
             {
@@ -50622,7 +50622,7 @@
               "target": "crossbeam"
             },
             {
-              "id": "crossbeam-channel 0.5.14",
+              "id": "crossbeam-channel 0.5.15",
               "target": "crossbeam_channel"
             },
             {
@@ -50658,7 +50658,7 @@
               "target": "slog_term"
             },
             {
-              "id": "tokio 1.44.1",
+              "id": "tokio 1.44.2",
               "target": "tokio"
             },
             {
@@ -53444,14 +53444,14 @@
       ],
       "license_file": "LICENSE-APACHE.md"
     },
-    "tokio 1.44.1": {
+    "tokio 1.44.2": {
       "name": "tokio",
-      "version": "1.44.1",
+      "version": "1.44.2",
       "package_url": "https://github.com/tokio-rs/tokio",
       "repository": {
         "Http": {
-          "url": "https://static.crates.io/crates/tokio/1.44.1/download",
-          "sha256": "f382da615b842244d4b8738c82ed1275e6c5dd90c459a30941cd07080b06c91a"
+          "url": "https://static.crates.io/crates/tokio/1.44.2/download",
+          "sha256": "e6b88822cbe49de4185e3a4cbf8321dd487cf5fe0c5c65695fef6346371e9c48"
         }
       },
       "targets": [
@@ -53942,7 +53942,7 @@
           ],
           "selects": {}
         },
-        "version": "1.44.1"
+        "version": "1.44.2"
       },
       "license": "MIT",
       "license_ids": [
@@ -53986,7 +53986,7 @@
               "target": "pin_project_lite"
             },
             {
-              "id": "tokio 1.44.1",
+              "id": "tokio 1.44.2",
               "target": "tokio"
             }
           ],
@@ -54105,7 +54105,7 @@
               "target": "pin_project_lite"
             },
             {
-              "id": "tokio 1.44.1",
+              "id": "tokio 1.44.2",
               "target": "tokio"
             },
             {
@@ -54264,7 +54264,7 @@
               "target": "rustls"
             },
             {
-              "id": "tokio 1.44.1",
+              "id": "tokio 1.44.2",
               "target": "tokio"
             }
           ],
@@ -54328,7 +54328,7 @@
               "target": "pin_project_lite"
             },
             {
-              "id": "tokio 1.44.1",
+              "id": "tokio 1.44.2",
               "target": "tokio"
             }
           ],
@@ -54399,7 +54399,7 @@
               "target": "pin_project_lite"
             },
             {
-              "id": "tokio 1.44.1",
+              "id": "tokio 1.44.2",
               "target": "tokio"
             }
           ],
@@ -54493,7 +54493,7 @@
         "deps": {
           "common": [
             {
-              "id": "indexmap 2.8.0",
+              "id": "indexmap 2.9.0",
               "target": "indexmap"
             },
             {
@@ -54621,7 +54621,7 @@
               "target": "socket2"
             },
             {
-              "id": "tokio 1.44.1",
+              "id": "tokio 1.44.2",
               "target": "tokio"
             },
             {
@@ -54827,7 +54827,7 @@
               "target": "slab"
             },
             {
-              "id": "tokio 1.44.1",
+              "id": "tokio 1.44.2",
               "target": "tokio"
             },
             {
@@ -54936,7 +54936,7 @@
               "target": "hdrhistogram"
             },
             {
-              "id": "indexmap 2.8.0",
+              "id": "indexmap 2.9.0",
               "target": "indexmap"
             },
             {
@@ -54952,7 +54952,7 @@
               "target": "sync_wrapper"
             },
             {
-              "id": "tokio 1.44.1",
+              "id": "tokio 1.44.2",
               "target": "tokio"
             },
             {
@@ -55201,7 +55201,7 @@
         "deps": {
           "common": [
             {
-              "id": "log 0.4.26",
+              "id": "log 0.4.27",
               "target": "log"
             },
             {
@@ -56512,7 +56512,7 @@
         "deps": {
           "common": [
             {
-              "id": "anyhow 1.0.97",
+              "id": "anyhow 1.0.98",
               "target": "anyhow"
             },
             {
@@ -56528,7 +56528,7 @@
               "target": "leb128"
             },
             {
-              "id": "log 0.4.26",
+              "id": "log 0.4.27",
               "target": "log"
             },
             {
@@ -56896,7 +56896,7 @@
               "target": "bumpalo"
             },
             {
-              "id": "log 0.4.26",
+              "id": "log 0.4.27",
               "target": "log"
             },
             {
@@ -57355,7 +57355,7 @@
               "target": "hashbrown"
             },
             {
-              "id": "indexmap 2.8.0",
+              "id": "indexmap 2.9.0",
               "target": "indexmap"
             },
             {
@@ -60351,7 +60351,7 @@
               "target": "hyper_util"
             },
             {
-              "id": "log 0.4.26",
+              "id": "log 0.4.27",
               "target": "log"
             },
             {
@@ -60371,7 +60371,7 @@
               "target": "serde_json"
             },
             {
-              "id": "tokio 1.44.1",
+              "id": "tokio 1.44.2",
               "target": "tokio"
             },
             {
@@ -62615,24 +62615,24 @@
   "direct_deps": [
     "actix-web 4.10.2",
     "ahash 0.8.11",
-    "anyhow 1.0.97",
+    "anyhow 1.0.98",
     "async-recursion 1.1.1",
     "async-trait 0.1.88",
-    "axum 0.7.9",
+    "axum 0.8.1",
     "axum-otel-metrics 0.8.1",
     "backoff 0.4.0",
-    "backon 1.4.1",
+    "backon 1.5.0",
     "base64 0.22.1",
     "byteorder 1.5.0",
     "candid 0.10.13",
     "chrono 0.4.40",
-    "clap 4.5.32",
+    "clap 4.5.36",
     "clap-num 1.2.0",
     "clap_complete 4.5.47",
     "colored 2.2.0",
     "comfy-table 7.1.4",
     "crossbeam 0.8.4",
-    "crossbeam-channel 0.5.14",
+    "crossbeam-channel 0.5.15",
     "cryptoki 0.7.0",
     "custom_error 1.9.2",
     "cycles-minting-canister 0.9.0",
@@ -62641,9 +62641,9 @@
     "dirs 5.0.1",
     "dotenv 0.15.0",
     "edit 0.1.5",
-    "env_logger 0.11.7",
+    "env_logger 0.11.8",
     "erased-serde 0.4.6",
-    "flate2 1.1.0",
+    "flate2 1.1.1",
     "fs-err 3.1.0",
     "fs2 0.4.3",
     "futures 0.3.31",
@@ -62696,11 +62696,11 @@
     "ic-utils 0.39.3",
     "icp-ledger 0.9.0",
     "icrc-ledger-types 0.1.8",
-    "indexmap 2.8.0",
+    "indexmap 2.9.0",
     "itertools 0.13.0",
     "keyring 3.6.2",
     "lazy_static 1.5.0",
-    "log 0.4.26",
+    "log 0.4.27",
     "mockall 0.13.1",
     "num-traits 0.2.19",
     "octocrab 0.41.2",
@@ -62714,7 +62714,7 @@
     "regex 1.11.1",
     "registry-canister 0.9.0",
     "reqwest 0.12.15",
-    "retry 2.0.0",
+    "retry 2.1.0",
     "rosetta-core 0.9.0",
     "rust_decimal 1.37.1",
     "rust_decimal_macros 1.37.1",
@@ -62735,7 +62735,7 @@
     "tabular 0.2.0",
     "tempfile 3.19.1",
     "thiserror 2.0.12",
-    "tokio 1.44.1",
+    "tokio 1.44.2",
     "tokio-util 0.7.14",
     "url 2.5.4"
   ],
