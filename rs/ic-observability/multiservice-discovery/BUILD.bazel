@@ -50,6 +50,7 @@ rust_test(
     deps = all_crate_deps(
         normal_dev = True,
     ) + DEPS,
+    tags = ["requires-network"]
 )
 # Test disabled until we cannot determine 
 # public dashboard registry hight.

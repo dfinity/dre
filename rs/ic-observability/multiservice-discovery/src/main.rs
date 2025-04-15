@@ -8,6 +8,7 @@ use clap::Parser;
 use crossbeam_channel::{bounded, unbounded};
 use humantime::parse_duration;
 use ic_management_types::Network;
+use opentelemetry::global;
 use service_discovery::shutdown_signal;
 use slog::{error, info, o, Drain, Logger};
 use tokio::runtime::Runtime;
@@ -102,6 +103,14 @@ fn main() {
 
         // Initialize the metrics layer because in the build method the `global::provider`
         // is set. We can use global::meter only after that call.
+        let exporter = opentelemetry_prometheus::exporter()
+            .with_registry(prometheus::default_registry().clone())
+            .build()
+            .unwrap();
+
+        let provider = opentelemetry_sdk::metrics::SdkMeterProvider::builder().with_reader(exporter).build();
+
+        global::set_meter_provider(provider.clone());
         let metrics_layer = HttpMetricsLayerBuilder::new().build();
         let metrics = MSDMetrics::new();
 
@@ -170,6 +179,9 @@ fn main() {
 
         // Wait for server to stop.  Should have stopped by now.
         rt.block_on(server_handle).unwrap();
+
+        // Shutdown provider
+        provider.shutdown().unwrap();
     }
 }
 
