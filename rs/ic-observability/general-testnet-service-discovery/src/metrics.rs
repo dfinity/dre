@@ -3,7 +3,7 @@ use std::{
     sync::{Arc, RwLock},
 };
 
-use opentelemetry::{global, metrics::Observer, KeyValue};
+use opentelemetry::{global, metrics::AsyncInstrument, KeyValue};
 
 #[derive(Clone, Default)]
 pub struct Values {
@@ -15,38 +15,39 @@ pub struct Metrics {
     latest_values: Arc<RwLock<Values>>,
 }
 
+fn create_callback_total_targets(latest_values: Arc<RwLock<Values>>) -> impl Fn(&dyn AsyncInstrument<u64>) {
+    move |observer: &dyn AsyncInstrument<u64>| {
+        let latest_values = latest_values.read().unwrap();
+        observer.observe(latest_values.target_status.len() as u64, &[]);
+    }
+}
+fn create_callback_target_status(latest_values: Arc<RwLock<Values>>) -> impl Fn(&dyn AsyncInstrument<u64>) {
+    move |observer: &dyn AsyncInstrument<u64>| {
+        let latest_values = latest_values.read().unwrap();
+
+        for (target, up) in &latest_values.target_status {
+            let attrs = [KeyValue::new("name", target.clone())];
+            observer.observe(*up, &attrs);
+        }
+    }
+}
+
 impl Metrics {
     pub fn new() -> Self {
         let latest_values = Arc::new(RwLock::new(Values::default()));
         let meter = global::meter("axum-app");
 
-        let total_targets = meter
-            .clone()
+        let _total_targets = meter
             .u64_observable_gauge("gsd.total_targets")
             .with_description("Total number of targets present on the general service discovery")
-            .init();
-        let target_status = meter
-            .clone()
+            .with_callback(create_callback_total_targets(latest_values.clone()))
+            .build();
+        let _target_status = meter
             .u64_observable_gauge("gsd.target_up")
             .with_description("Resembles the UP metric from prometheus for known targets")
-            .init();
+            .with_callback(create_callback_target_status(latest_values.clone()))
+            .build();
 
-        let instruments = [total_targets.as_any(), target_status.as_any()];
-        let values_clone = latest_values.clone();
-        let update_instruments = move |observer: &dyn Observer| {
-            let values = values_clone.read().unwrap();
-            {
-                let (instrument, measurement) = (&total_targets, values.target_status.len());
-                observer.observe_u64(instrument, measurement as u64, &[]);
-            }
-
-            for (target, up) in &values.target_status {
-                let attrs = [KeyValue::new("name", target.clone())];
-                observer.observe_u64(&target_status, *up, &attrs);
-            }
-        };
-
-        meter.register_callback(&instruments, update_instruments).unwrap();
         Self { latest_values }
     }
 
