@@ -687,7 +687,8 @@ class Reconciler:
                     proposal_id_retriever=self.state.version_proposal,
                 )
 
-        logger.info("Iteration completed. %s releases processed.", len(releases))
+        if versions:
+            logger.info("Iteration completed. %s releases processed.", len(versions))
 
 
 dre_repo = "dfinity/dre"
