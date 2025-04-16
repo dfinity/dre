@@ -762,6 +762,7 @@ def main() -> None:
         load_dotenv()
 
     conventional_logging(opts.one_line_logs, opts.verbose)
+    logging.getLogger("pydiscourse.client").setLevel(logging.INFO)
 
     # Prep the program for longer timeouts.
     socket.setdefaulttimeout(60)
