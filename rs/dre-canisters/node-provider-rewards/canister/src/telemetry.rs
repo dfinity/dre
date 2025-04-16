@@ -10,11 +10,14 @@ pub struct PrometheusMetrics {
     /// If last_sync_start > last_sync_end, sync is in progress, else sync is not taking place.
     /// If last_sync_success == last_sync_end, last sync was successful.
     last_sync_end: f64,
+    /// Publishes the instruction count that the last sync incurred.
+    last_sync_instructions: f64,
 }
 
 static LAST_SYNC_START_HELP: &str = "Last time the sync of metrics started.  If this metric is present but zero, the first sync during this canister's current execution has not yet begun or taken place.";
 static LAST_SYNC_END_HELP: &str = "Last time the sync of metrics ended (successfully or with failure).  If this metric is present but zero, the first sync during this canister's current execution has not started or finished yet, either successfully or with errors.   Else, subtracting this from the last sync start should yield a positive value if the sync ended (successfully or with errors), and a negative value if the sync is still ongoing but has not finished.";
 static LAST_SYNC_SUCCESS_HELP: &str = "Last time the sync of metrics succeeded.  If this metric is present but zero, no sync has yet succeeded during this canister's current execution.  Else, subtracting this number from last_sync_start_timestamp_seconds gives a positive time delta when the last sync succeeded, or a negative value if either the last sync failed or a sync is currently being performed.  By definition, this and last_sync_end_timestamp_seconds will be identical when the last sync succeeded.";
+static LAST_SYNC_INSTRUCTIONS_HELP: &str = "Count of instructions that the last sync incurred.";
 
 impl PrometheusMetrics {
     fn new() -> Self {
@@ -32,6 +35,10 @@ impl PrometheusMetrics {
 
     pub fn mark_last_sync_end(&mut self) {
         self.last_sync_end = (ic_cdk::api::time() / 1_000_000_000) as f64
+    }
+
+    pub fn record_instructions(&mut self, count: u64) {
+        self.last_sync_instructions = count as f64
     }
 }
 
@@ -69,6 +76,7 @@ pub fn encode_metrics(metrics: &PrometheusMetrics, w: &mut ic_metrics_encoder::M
     // * last_sync_end_timestamp_seconds == last_sync_success_timestamp_seconds -> last calculation finished successfully
     // * last_sync_end_timestamp_seconds != last_sync_success_timestamp_seconds -> last calculation failed
     w.encode_gauge("last_sync_success_timestamp_seconds", metrics.last_sync_success, LAST_SYNC_SUCCESS_HELP)?;
+    w.encode_gauge("last_sync_instructions", metrics.last_sync_instructions, LAST_SYNC_INSTRUCTIONS_HELP)?;
 
     Ok(())
 }
