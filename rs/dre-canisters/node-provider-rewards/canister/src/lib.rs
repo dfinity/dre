@@ -92,7 +92,7 @@ pub fn encode_metrics(metrics: &telemetry::PrometheusMetrics, w: &mut ic_metrics
     // * Any other positive number -> at least one calculation has started.
     w.encode_gauge(
         "last_calculation_start_timestamp_seconds",
-        metrics.last_calculation_start,
+        metrics.last_sync_start,
         "Last time the calculation of metrics started.  If this metric is present but zero, the first calculation during this canister's current execution has not yet begun or taken place.",
     )?;
     // Calculation finish timestamp seconds.
@@ -101,7 +101,7 @@ pub fn encode_metrics(metrics: &telemetry::PrometheusMetrics, w: &mut ic_metrics
     // * last_calculation_end_timestamp_seconds - last_calculation_start_timestamp_seconds < 0 -> calculation ongoing, not finished yet
     w.encode_gauge(
         "last_calculation_end_timestamp_seconds",
-        metrics.last_calculation_end,
+        metrics.last_sync_end,
         "Last time the calculation of metrics ended (successfully or with failure).  If this metric is present but zero, the first calculation during this canister's current execution has not started or finished yet, either successfully or with errors.   Else, subtracting this from the last calculation start should yield a positive value if the calculation ended (successfully or with errors), and a negative value if the calculation is still ongoing but has not finished.",
     )?;
     // Calculation success timestamp seconds.
@@ -110,7 +110,7 @@ pub fn encode_metrics(metrics: &telemetry::PrometheusMetrics, w: &mut ic_metrics
     // * last_calculation_end_timestamp_seconds != last_calculation_success_timestamp_seconds -> last calculation failed
     w.encode_gauge(
         "last_calculation_success_timestamp_seconds",
-        metrics.last_calculation_success,
+        metrics.last_sync_success,
         "Last time the calculation of metrics succeeded.  If this metric is present but zero, no calculation has yet succeeded during this canister's current execution.  Else, subtracting this number from last_calculation_start_timestamp_seconds gives a positive time delta when the last calculation succeeded, or a negative value if either the last calculation failed or a calculation is currently being performed.  By definition, this and last_calculation_end_timestamp_seconds will be identical when the last calculation succeeded.",
     )?;
 
