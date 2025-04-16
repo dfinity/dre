@@ -1,5 +1,11 @@
 releases:
   # NOTE: Make sure to mark security hotfixes with the `security_fix: true` flag.
+  - rc_name: rc--2025-04-16_11-12
+    versions:
+      # Qualification pipeline:
+      # https://github.com/dfinity/ic/actions/runs/14491317106
+      - name: base
+        version: c9210f4d299546658760465d7fde93913989f70b
   - rc_name: rc--2025-04-11_13-20
     versions:
       # Qualification pipeline:
