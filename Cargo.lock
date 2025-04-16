@@ -1143,9 +1143,9 @@ dependencies = [
 
 [[package]]
 name = "clap"
-version = "4.5.36"
+version = "4.5.32"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2df961d8c8a0d08aa9945718ccf584145eee3f3aa06cddbeac12933781102e04"
+checksum = "6088f3ae8c3608d19260cd7445411865a485688711b78b5be70d78cd96136f83"
 dependencies = [
  "clap_builder",
  "clap_derive",
@@ -1162,9 +1162,9 @@ dependencies = [
 
 [[package]]
 name = "clap_builder"
-version = "4.5.36"
+version = "4.5.32"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "132dbda40fb6753878316a489d5a1242a8ef2f0d9e47ba01c951ea8aa7d013a5"
+checksum = "22a7ef7f676155edfb82daa97f99441f3ebf4a58d5e32f295a56259f1b6facc8"
 dependencies = [
  "anstream",
  "anstyle",
@@ -6149,6 +6149,12 @@ name = "node-provider-rewards-api"
 version = "0.6.2"
 dependencies = [
  "candid",
+ "chrono",
+ "ic-base-types",
+ "itertools 0.13.0",
+ "rewards-calculation",
+ "rust_decimal",
+ "rust_decimal_macros",
  "serde",
 ]
 
@@ -6175,12 +6181,11 @@ dependencies = [
  "ic-stable-structures",
  "ic-types",
  "indexmap 2.9.0",
- "itertools 0.13.0",
  "mockall",
  "node-provider-rewards-api",
  "rewards-calculation",
- "rust_decimal",
  "serde",
+ "serde_cbor",
  "tokio",
 ]
 
@@ -7462,12 +7467,10 @@ dependencies = [
  "ic-cdk 0.17.1 (git+https://github.com/dfinity/cdk-rs.git?rev=929fd0b31e9ec69aad7cf6285df0394f25fe1815)",
  "ic-protobuf",
  "ic-types",
- "indexmap 2.9.0",
  "itertools 0.13.0",
- "num-traits",
+ "maplit",
  "rust_decimal",
  "rust_decimal_macros",
- "tabled",
 ]
 
 [[package]]

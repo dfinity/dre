@@ -1,154 +1,149 @@
 use super::*;
-use crate::reward_period::{DayEndNanos, NANOS_PER_DAY};
-use ic_base_types::SubnetId;
-use ic_protobuf::registry::node_rewards::v2::{NodeRewardRate, NodeRewardRates};
+use crate::rewards_calculator::RewardsCalculator;
+use crate::rewards_calculator_results::RewardsCalculatorResults;
+use crate::types::{DayEndNanos, NodeMetricsDaily, RewardPeriod, RewardableNode, TimestampNanos, NANOS_PER_DAY};
+use ic_base_types::{NodeId, PrincipalId, SubnetId};
+use ic_protobuf::registry::node_rewards::v2::{NodeRewardRate, NodeRewardRates, NodeRewardsTable};
 use itertools::Itertools;
-use rust_decimal::Decimal;
+use maplit::hashmap;
 use rust_decimal_macros::dec;
+use std::collections::BTreeMap;
 
-fn node_id(id: u64) -> NodeId {
+pub fn node_id(id: u64) -> NodeId {
     PrincipalId::new_node_test_id(id).into()
 }
 
-fn subnet_id(id: u64) -> SubnetId {
+pub fn subnet_id(id: u64) -> SubnetId {
     PrincipalId::new_subnet_test_id(id).into()
 }
 
-fn provider_id(id: u64) -> PrincipalId {
-    PrincipalId::new_user_test_id(id)
+pub fn test_reward_period() -> RewardPeriod {
+    RewardPeriod::new(0, 30 * NANOS_PER_DAY).unwrap()
 }
 
-fn create_metrics_by_node() -> BTreeMap<NodeId, Vec<NodeMetricsDaily>> {
-    let mut metrics_by_node = BTreeMap::new();
-    metrics_by_node.insert(node_id(1), vec![NodeMetricsDaily::new(NANOS_PER_DAY, subnet_id(1), 0, 0)]);
-    metrics_by_node
+impl Default for NodeMetricsDaily {
+    fn default() -> Self {
+        Self {
+            node_id: node_id(0),
+            num_blocks_proposed: 0,
+            num_blocks_failed: 0,
+        }
+    }
+}
+
+impl Default for RewardableNode {
+    fn default() -> Self {
+        Self {
+            node_id: NodeId::from(PrincipalId::default()),
+            region: Default::default(),
+            node_type: Default::default(),
+            dc_id: Default::default(),
+        }
+    }
 }
 
 #[test]
-fn test_empty_rewardable_nodes() {
-    let reward_period = RewardPeriod::new(NANOS_PER_DAY, 30 * NANOS_PER_DAY).unwrap();
-    let result = validate_input(&reward_period, &BTreeMap::new(), &[]);
-
-    assert_eq!(result, Err(RewardCalculationError::EmptyNodes));
-}
-
-#[test]
-fn test_node_not_in_rewardables() {
-    let reward_period = RewardPeriod::new(NANOS_PER_DAY, 30 * NANOS_PER_DAY).unwrap();
-    let metrics_by_node = create_metrics_by_node();
-
-    let result = validate_input(&reward_period, &metrics_by_node, &[node_id(2)]);
-    assert_eq!(result, Err(RewardCalculationError::NodeNotInRewardables(node_id(1))));
-}
-
-#[test]
-fn test_metrics_out_of_range() {
-    let reward_period = RewardPeriod::new(NANOS_PER_DAY, 30 * NANOS_PER_DAY).unwrap();
-    let mut metrics_by_node = create_metrics_by_node();
-
-    let metrics_out_of_range = NodeMetricsDaily::new(0, subnet_id(1), 0, 0);
-    metrics_by_node.get_mut(&node_id(1)).unwrap().push(metrics_out_of_range.clone());
-
-    let result = validate_input(&reward_period, &metrics_by_node, &[node_id(1)]);
+fn test_error_metrics_out_of_range() {
+    let reward_period = test_reward_period();
+    let out_of_range = hashmap! {
+        SubnetMetricsDailyKey {
+            subnet_id: subnet_id(1),
+            ts: DayEndNanos::from(31 * NANOS_PER_DAY),
+        } => vec![],
+    };
 
     assert_eq!(
-        result,
-        Err(RewardCalculationError::NodeMetricsOutOfRange {
-            node_id: node_id(1),
-            timestamp: metrics_out_of_range.ts.get(),
+        validate_input(&reward_period, &out_of_range),
+        Err(RewardCalculatorError::SubnetMetricsOutOfRange {
+            subnet_id: subnet_id(1),
+            timestamp: DayEndNanos::from(31 * NANOS_PER_DAY).get(),
             reward_period,
         })
     );
 }
 
 #[test]
-fn test_same_day_metrics_same_sub() {
-    let reward_period = RewardPeriod::new(NANOS_PER_DAY, 30 * NANOS_PER_DAY).unwrap();
-    let mut metrics_by_node = create_metrics_by_node();
+fn test_error_metrics_same_day_same_sub() {
+    let reward_period = test_reward_period();
+    let same_day_same_sub = hashmap! {
+        SubnetMetricsDailyKey {
+            subnet_id: subnet_id(1),
+            ts: 0.into(),
+        } => vec![NodeMetricsDaily{
+            node_id: node_id(0),
+            ..Default::default()
+        }, NodeMetricsDaily{
+            node_id: node_id(0),
+            ..Default::default()
+        }],
+    };
 
-    metrics_by_node
-        .get_mut(&node_id(1))
-        .unwrap()
-        .push(NodeMetricsDaily::new(NANOS_PER_DAY, subnet_id(1), 0, 0));
-    let result = validate_input(&reward_period, &metrics_by_node, &[node_id(1)]);
-
-    assert_eq!(result, Err(RewardCalculationError::DuplicateMetrics(node_id(1))));
+    assert_eq!(
+        validate_input(&reward_period, &same_day_same_sub),
+        Err(RewardCalculatorError::DuplicateMetrics(subnet_id(1), 0.into()))
+    );
 }
 
 #[test]
-fn test_same_day_metrics_different_subs() {
-    let reward_period = RewardPeriod::new(NANOS_PER_DAY, 30 * NANOS_PER_DAY).unwrap();
-    let mut metrics_by_node = create_metrics_by_node();
+fn test_ok_metrics_same_day_diff_sub() {
+    let reward_period = test_reward_period();
+    let same_day_diff_sub = hashmap! {
+        SubnetMetricsDailyKey {
+            subnet_id: subnet_id(1),
+            ts: 0.into(),
+        } => vec![NodeMetricsDaily{
+            node_id: node_id(0),
+            ..Default::default()
+        }],
+        SubnetMetricsDailyKey {
+            subnet_id: subnet_id(2),
+            ts: 0.into(),
+        } => vec![NodeMetricsDaily{
+            node_id: node_id(0),
+            ..Default::default()
+        }],
+    };
 
-    metrics_by_node
-        .get_mut(&node_id(1))
-        .unwrap()
-        .push(NodeMetricsDaily::new(NANOS_PER_DAY, subnet_id(2), 0, 0));
-    let result = validate_input(&reward_period, &metrics_by_node, &[node_id(1)]);
-
-    assert_eq!(result, Ok(()));
+    assert_eq!(validate_input(&reward_period, &same_day_diff_sub), Ok(()));
 }
 
 #[test]
 fn test_node_provider_below_min_limit() {
-    let node_provider_id = PrincipalId::new_anonymous();
-    let reward_period = RewardPeriod::new(NANOS_PER_DAY, 30 * NANOS_PER_DAY).unwrap();
-    let rewards_table = NodeRewardsTable::default();
-    let rewardables = vec![
+    let rewardable_nodes = vec![
         RewardableNode {
-            node_id: PrincipalId::new_user_test_id(1).into(),
-            node_provider_id,
-            region: "region1".to_string(),
-            node_type: "type1".to_string(),
+            node_id: node_id(1),
+            ..Default::default()
         },
         RewardableNode {
-            node_id: PrincipalId::new_user_test_id(2).into(),
-            node_provider_id,
-            region: "region1".to_string(),
-            node_type: "type3.1".to_string(),
+            node_id: node_id(2),
+            ..Default::default()
         },
     ];
 
-    let rewards = calculate_rewards(&reward_period, &rewards_table, &BTreeMap::new(), &rewardables).unwrap();
-    assert_eq!(*rewards.rewards_per_provider.get(&node_provider_id).unwrap(), dec!(2));
+    let result = RewardsCalculator::from_subnets_metrics(test_reward_period(), NodeRewardsTable::default(), HashMap::new())
+        .unwrap()
+        .calculate_provider_rewards(rewardable_nodes);
+
+    assert_eq!(result.rewards_total.get(), dec!(2));
 }
 
-struct NPRInput {
-    reward_period: RewardPeriod,
-    rewards_table: NodeRewardsTable,
-    metrics_by_node: BTreeMap<NodeId, Vec<NodeMetricsDaily>>,
-    rewardables: Vec<RewardableNode>,
-}
-
-impl NPRInput {
-    pub fn calculate_rewards(&self) -> RewardsPerNodeProvider {
-        calculate_rewards(&self.reward_period, &self.rewards_table, &self.metrics_by_node, &self.rewardables).unwrap()
-    }
-}
-
-struct NPRInputBuilder {
+#[derive(Default)]
+pub struct RewardCalculatorTestBuilder {
     reward_period: Option<RewardPeriod>,
-    rewards_table: Option<NodeRewardsTable>,
-    metrics_by_node: BTreeMap<NodeId, Vec<NodeMetricsDaily>>,
-    rewardables: Vec<RewardableNode>,
+    node_rewards_table: Option<NodeRewardsTable>,
+    rewardable_nodes: Option<HashSet<RewardableNode>>,
+    daily_data: HashMap<TimestampNanos, Vec<(SubnetId, NodeId, u64, u64)>>,
 }
 
-impl NPRInputBuilder {
-    pub fn new() -> NPRInputBuilder {
-        NPRInputBuilder {
-            reward_period: None,
-            rewards_table: None,
-            metrics_by_node: BTreeMap::new(),
-            rewardables: vec![],
-        }
-    }
-
-    pub fn with_reward_period(&mut self, start: u64, end: u64) -> &mut NPRInputBuilder {
-        self.reward_period = Some(RewardPeriod::new(start, end).unwrap());
+impl RewardCalculatorTestBuilder {
+    pub fn with_reward_period(mut self, start_ts: TimestampNanos, end_ts: TimestampNanos) -> Self {
+        self.reward_period = Some(RewardPeriod::new(start_ts, end_ts).unwrap());
         self
     }
+}
 
-    pub fn with_rewards_rates(&mut self, region: &str, node_types: Vec<&str>, rate: u64, coeff: u64) -> &mut NPRInputBuilder {
+impl RewardCalculatorTestBuilder {
+    pub fn with_rewards_rates(mut self, region: &str, node_types: Vec<&str>, rate: u64, coeff: u64) -> Self {
         let mut rates: BTreeMap<String, NodeRewardRate> = BTreeMap::new();
         for node_type in node_types {
             rates.insert(
@@ -159,96 +154,268 @@ impl NPRInputBuilder {
                 },
             );
         }
-        self.rewards_table
-            .get_or_insert_with(NodeRewardsTable::default)
-            .table
-            .insert(region.to_string(), NodeRewardRates { rates });
+        let mut node_rewards_table = NodeRewardsTable::default();
+        node_rewards_table.table.insert(region.to_string(), NodeRewardRates { rates });
+
+        self.node_rewards_table = Some(node_rewards_table);
+        self
+    }
+    pub fn with_data_next_day(mut self, data: Vec<(SubnetId, NodeId, u64, u64)>) -> Self {
+        if self.daily_data.is_empty() {
+            self.daily_data.insert(0, data);
+        } else {
+            let next_day = self.daily_data.keys().max().unwrap() + NANOS_PER_DAY;
+            self.daily_data.insert(next_day, data);
+        }
+
         self
     }
 
-    pub fn with_node(&mut self, node_id: NodeId, node_provider_id: PrincipalId, region: &str, node_type: &str) -> &mut NPRInputBuilder {
-        self.rewardables.push(RewardableNode {
+    pub fn with_all_days_data(self, data: Vec<Vec<(u64, u64, u64, u64)>>) -> Self {
+        data.into_iter().fold(self, |builder, day_data| {
+            let day_data_processed = day_data
+                .into_iter()
+                .map(|(subnet_id_u64, node_id_u64, proposed, failed)| (subnet_id(subnet_id_u64), node_id(node_id_u64), proposed, failed))
+                .collect();
+            builder.with_data_next_day(day_data_processed)
+        })
+    }
+
+    pub fn with_node_metrics(mut self, node_id: NodeId, metrics: Vec<(TimestampNanos, SubnetId, u64, u64)>) -> Self {
+        for (utc_day, subnet_id, proposed, failed) in metrics {
+            let entry = self.daily_data.entry(utc_day).or_default();
+            entry.push((subnet_id, node_id, proposed, failed));
+        }
+
+        self
+    }
+
+    pub fn with_rewardable_nodes(mut self, nodes: Vec<NodeId>, region: &str, node_type: &str) -> Self {
+        let rewardables = nodes.into_iter().map(|node_id| RewardableNode {
             node_id,
-            node_provider_id,
             region: region.to_string(),
             node_type: node_type.to_string(),
+            dc_id: Default::default(),
         });
-        self
-    }
-
-    pub fn with_nodes(&mut self, node_ids: Vec<NodeId>, node_provider_id: PrincipalId, region: &str, node_type: &str) -> &mut NPRInputBuilder {
-        for node_id in node_ids {
-            self.with_node(node_id, node_provider_id, region, node_type);
+        if let Some(rewardable_nodes) = self.rewardable_nodes.as_mut() {
+            rewardable_nodes.extend(rewardables);
+        } else {
+            self.rewardable_nodes = Some(rewardables.collect());
         }
         self
     }
 
-    pub fn with_node_metrics(&mut self, node_id: NodeId, ts_start: u64, failure_rates: Vec<Decimal>, subnet_id: SubnetId) -> &mut NPRInputBuilder {
-        let daily_metrics: Vec<NodeMetricsDaily> = failure_rates
-            .iter()
-            .enumerate()
-            .map(|(i, rate)| NodeMetricsDaily {
-                ts: DayEndNanos::from(ts_start + i as u64 * NANOS_PER_DAY),
-                subnet_assigned: subnet_id,
-                num_blocks_proposed: 0,
-                num_blocks_failed: 0,
-                failure_rate: *rate,
+    pub fn build_and_run(self) -> RewardsCalculatorResults {
+        let reward_period = self.reward_period.unwrap_or({
+            let start_ts = self.daily_data.keys().min().unwrap();
+            let end_ts = self.daily_data.keys().max().unwrap();
+            RewardPeriod::new(*start_ts, *end_ts).unwrap()
+        });
+
+        let rewardables: HashSet<_> = self.rewardable_nodes.unwrap_or(
+            self.daily_data
+                .values()
+                .flat_map(|nodes| {
+                    nodes.iter().map(|node| RewardableNode {
+                        node_id: node.1,
+                        ..Default::default()
+                    })
+                })
+                .collect(),
+        );
+
+        let subnets_metrics: HashMap<SubnetMetricsDailyKey, Vec<NodeMetricsDaily>> = self
+            .daily_data
+            .into_iter()
+            .flat_map(|(ts, metrics)| {
+                metrics.into_iter().map(move |(subnet_id, node_id, proposed, failed)| {
+                    (
+                        SubnetMetricsDailyKey { subnet_id, ts: ts.into() },
+                        NodeMetricsDaily {
+                            node_id,
+                            num_blocks_proposed: proposed,
+                            num_blocks_failed: failed,
+                        },
+                    )
+                })
             })
-            .collect();
+            .into_group_map();
 
-        self.metrics_by_node
-            .entry(node_id)
-            .and_modify(|metrics| metrics.extend(daily_metrics.iter().cloned().collect_vec()))
-            .or_insert(daily_metrics);
-        self
+        RewardsCalculator::from_subnets_metrics(reward_period, self.node_rewards_table.unwrap_or_default(), subnets_metrics)
+            .unwrap()
+            .calculate_provider_rewards(rewardables.into_iter().collect())
     }
 
-    pub fn with_nodes_metrics(
-        &mut self,
-        node_ids: Vec<NodeId>,
-        ts_start: u64,
-        failure_rates: Vec<Decimal>,
-        subnet_id: SubnetId,
-    ) -> &mut NPRInputBuilder {
-        for node_id in node_ids {
-            self.with_node_metrics(node_id, ts_start, failure_rates.clone(), subnet_id);
-        }
-        self
-    }
+    pub fn for_scenario_1() -> Self {
+        // Each inner vector represents one day (days 0 through 3)
+        // Tuple: (subnet_id, node_id, num_blocks_proposed, num_blocks_failed)
+        // Using a total of 100 blocks for each node for easy interpretation
+        let input = vec![
+            // day 0
+            vec![
+                (1, 1, 70, 30), // FR = 0.3 = 30/100
+                (1, 2, 60, 40), // FR = 0.4 = 40/100
+                (1, 3, 50, 50), // FR = 0.5 = 50/100
+                (2, 5, 66, 34), // FR = 0.34 = 34/100
+                (2, 6, 80, 20), // FR = 0.2 = 20/100
+                (2, 7, 80, 20), // FR = 0.2 = 20/100
+            ],
+            // day 1
+            vec![
+                (1, 1, 80, 20), // FR = 0.2 = 20/100
+                (1, 2, 90, 10), // FR = 0.1 = 10/100
+                (1, 3, 100, 0), // FR = 0.0 = 0/100
+                (2, 4, 50, 50), // FR = 0.5 = 50/100
+                (2, 5, 0, 100), // FR = 1.0 = 100/100
+                (2, 6, 30, 70), // FR = 0.7 = 70/100
+                (2, 7, 30, 70), // FR = 0.7 = 70/100
+            ],
+            // day 2
+            vec![
+                (1, 1, 90, 10), // FR = 0.1 = 10/100
+                (1, 2, 80, 20), // FR = 0.2 = 20/100
+                (1, 3, 70, 30), // FR = 0.3 = 30/100
+                (2, 4, 60, 40), // FR = 0.4 = 40/100
+                (2, 5, 0, 100), // FR = 1.0 = 100/100
+                (2, 6, 80, 20), // FR = 0.2 = 20/100
+                (2, 7, 90, 10), // FR = 0.1 = 10/100
+            ],
+            // day 3
+            vec![
+                (1, 2, 80, 20), // FR = 0.2 = 20/100
+                (2, 3, 70, 30), // FR = 0.3 = 30/100
+                (2, 4, 60, 40), // FR = 0.4 = 40/100
+                (2, 6, 30, 70), // FR = 0.7 = 70/100
+                (2, 7, 50, 50), // FR = 0.5 = 50/100
+            ],
+        ];
 
-    pub fn build(&self) -> NPRInput {
-        NPRInput {
-            reward_period: self.reward_period.clone().unwrap(),
-            rewards_table: self.rewards_table.clone().unwrap(),
-            metrics_by_node: self.metrics_by_node.clone(),
-            rewardables: self.rewardables.clone(),
-        }
+        RewardCalculatorTestBuilder::default().with_all_days_data(input)
     }
 }
 
 #[test]
+fn test_calculates_node_failure_rates_correctly() {
+    let results = RewardCalculatorTestBuilder::default()
+        .with_node_metrics(node_id(0), vec![(0, subnet_id(2), 90, 10), (0, subnet_id(1), 1, 0)])
+        .with_node_metrics(node_id(1), vec![(NANOS_PER_DAY, subnet_id(1), 60, 40)])
+        .build_and_run();
+
+    let nodes_results = results.results_by_node;
+
+    let node_0_fr = &nodes_results.get(&node_id(0)).unwrap().daily_metrics;
+
+    // Expected subnet 2 to be selected as the primary subnet because it has the highest number of proposed blocks
+    assert_eq!(node_0_fr[0].subnet_assigned, subnet_id(2));
+    assert_eq!(node_0_fr[0].original_fr.get(), dec!(0.1));
+    assert_eq!(node_0_fr[0].relative_fr.get(), dec!(0));
+
+    let node_1_fr = &nodes_results.get(&node_id(1)).unwrap().daily_metrics;
+
+    assert_eq!(node_1_fr[0].subnet_assigned, subnet_id(1));
+    assert_eq!(node_1_fr[0].original_fr.get(), dec!(0.4));
+    assert_eq!(node_1_fr[0].relative_fr.get(), dec!(0));
+}
+
+#[test]
+fn test_scenario_1() {
+    let results = RewardCalculatorTestBuilder::for_scenario_1().build_and_run();
+    let mut subnet_rates = BTreeMap::new();
+    for (_, metrics) in results.results_by_node.iter() {
+        for metric in metrics.daily_metrics.clone().into_iter() {
+            subnet_rates.insert((metric.subnet_assigned, metric.day), metric.subnet_assigned_fr);
+        }
+    }
+    let nodes_results = results.results_by_node;
+
+    let subnet_1_rates = subnet_rates
+        .iter()
+        .filter(|(subnet, _)| subnet.0 == subnet_id(1))
+        .map(|(_, fr)| fr)
+        .cloned()
+        .collect_vec();
+
+    assert_eq!(subnet_1_rates[0].get(), dec!(0.5));
+    assert_eq!(subnet_1_rates[1].get(), dec!(0.2));
+    assert_eq!(subnet_1_rates[2].get(), dec!(0.3));
+    assert_eq!(subnet_1_rates[3].get(), dec!(0.2));
+
+    let subnet_2_rates = subnet_rates
+        .iter()
+        .filter(|(subnet, _)| subnet.0 == subnet_id(2))
+        .map(|(_, fr)| fr)
+        .cloned()
+        .collect_vec();
+
+    assert_eq!(subnet_2_rates[0].get(), dec!(0.34));
+    assert_eq!(subnet_2_rates[1].get(), dec!(0.7));
+    assert_eq!(subnet_2_rates[2].get(), dec!(0.4));
+    assert_eq!(subnet_2_rates[3].get(), dec!(0.5));
+
+    // Extrapolated failure rate
+
+    assert_eq!(results.extrapolated_fr.get(), dec!(0.05));
+
+    // Node 5
+    let node_5_results = &nodes_results.get(&node_id(5)).unwrap();
+    let node_5_metrics = &node_5_results.daily_metrics;
+
+    assert_eq!(node_5_metrics.len(), 3);
+
+    assert_eq!(node_5_metrics[0].subnet_assigned, subnet_id(2));
+    assert_eq!(node_5_metrics[0].original_fr.get(), dec!(0.34));
+    assert_eq!(node_5_metrics[0].relative_fr.get(), dec!(0));
+
+    assert_eq!(node_5_metrics[1].subnet_assigned, subnet_id(2));
+    assert_eq!(node_5_metrics[1].original_fr.get(), dec!(1));
+    assert_eq!(node_5_metrics[1].relative_fr.get(), dec!(0.3));
+
+    assert_eq!(node_5_metrics[2].subnet_assigned, subnet_id(2));
+    assert_eq!(node_5_metrics[2].original_fr.get(), dec!(1));
+    assert_eq!(node_5_metrics[2].relative_fr.get(), dec!(0.6));
+
+    // node_5_fr = [0, 0.3, 0.6, 0.05 (Extrapolated)] -> avg = 0.2375
+    // rewards_reduction: ((0.2375 - 0.1) / (0.6 - 0.1)) * 0.8 = 0.22
+    assert_eq!(node_5_results.rewards_reduction.get(), dec!(0.22));
+
+    // rewards_multiplier: 1 - 0.22 = 0.78
+    assert_eq!(node_5_results.performance_multiplier.get(), dec!(0.78));
+}
+
+#[test]
 fn test_node_provider_rewards_one_assigned() {
-    let subnet_1 = subnet_id(1);
-
-    let np_1 = provider_id(1);
-    let node_1 = node_id(1);
-    let nodes_np_1 = vec![node_1, node_id(2), node_id(3), node_id(4), node_id(5)];
-
-    let np_2 = provider_id(2);
+    let nodes_np_1 = vec![node_id(1), node_id(2), node_id(3), node_id(4), node_id(5)];
     let nodes_np_2 = vec![node_id(6), node_id(7), node_id(8)];
 
-    let input = NPRInputBuilder::new()
+    let mut builder = RewardCalculatorTestBuilder::default()
         .with_reward_period(0, 30 * NANOS_PER_DAY)
         .with_rewards_rates("A,B", vec!["type0", "type1", "type3"], 1000, 97)
         // Node Provider 1: node_1 assigned, rest unassigned
-        .with_nodes(nodes_np_1, np_1, "A,B", "type1")
-        .with_node_metrics(node_1, 0, vec![dec!(0.4), dec!(0.2), dec!(0.3), dec!(0.4)], subnet_1)
-        // Node Provider 2: all assigned with 0 failure rate this for bringing the subnet failure rate to 0
-        .with_nodes(nodes_np_2.clone(), np_2, "A,B", "type1")
-        .with_nodes_metrics(nodes_np_2, 0, vec![dec!(0); 4], subnet_1)
-        .build();
+        .with_rewardable_nodes(nodes_np_1, "A,B", "type1")
+        .with_node_metrics(
+            node_id(1),
+            vec![
+                (0, subnet_id(1), 60, 40),
+                (NANOS_PER_DAY, subnet_id(1), 80, 20),
+                (2 * NANOS_PER_DAY, subnet_id(1), 70, 30),
+                (3 * NANOS_PER_DAY, subnet_id(1), 60, 40),
+            ],
+        );
 
-    let rewards = input.calculate_rewards();
+    // Node Provider 2: all assigned with 0 failure rate this for bringing the subnet failure rate to 0
+    for node in nodes_np_2.into_iter() {
+        builder = builder.with_node_metrics(
+            node,
+            vec![
+                (0, subnet_id(1), 100, 0),
+                (NANOS_PER_DAY, subnet_id(1), 100, 0),
+                (2 * NANOS_PER_DAY, subnet_id(1), 100, 0),
+                (3 * NANOS_PER_DAY, subnet_id(1), 100, 0),
+            ],
+        );
+    }
+
+    let results = builder.build_and_run();
 
     //     ┌─Node: 3jo2y-lqbaa-aaaaa-aaaap-2ai ─────────────────────┬─────────────────────────────┬───────────────────────────┬─────────────────────────────┬─────────────────────────────────┐
     //     │        Day (UTC)         │ Original Failure Rate [OFR] │       Subnet Assigned       │ Subnet Failure Rate [SFR] │ Relative Failure Rate [RFR] │ Extrapolated Failure Rate [EFR] │
@@ -317,5 +484,5 @@ fn test_node_provider_rewards_one_assigned() {
     //     ├─────────────────────────────┼───────────┼─────────────┼──────────────┼────────┼        ┼────────┼────────┼────────┼────────────┼             ┤
     //     │ 2o3ay-vafaa-aaaaa-aaaap-2ai │   type1   │     A,B     │ 1000 myrXDR  │   -    │        │ 0.325  │ 0.360  │ 0.640  │ 640 myrXDR │             │
     //     └─────────────────────────────┴───────────┴─────────────┴──────────────┴────────┴────────┴────────┴────────┴────────┴────────────┴─────────────┘
-    assert_eq!(*rewards.rewards_per_provider.get(&np_1).unwrap(), dec!(3200));
+    assert_eq!(results.rewards_total.get(), dec!(3200));
 }
