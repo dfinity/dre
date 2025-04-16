@@ -12,6 +12,7 @@ clap = { workspace = true }
 crossbeam = { workspace = true }
 crossbeam-channel = { workspace = true }
 fs-err = { workspace = true }
+prometheus.workspace = true
 futures-util = { workspace = true }
 humantime = { workspace = true }
 ic-crypto-utils-threshold-sig-der = { workspace = true }
@@ -31,6 +32,8 @@ futures.workspace = true
 axum = { workspace = true }
 axum-otel-metrics.workspace = true
 opentelemetry.workspace = true
+opentelemetry_sdk.workspace = true
+opentelemetry-prometheus.workspace = true
 retry = { workspace = true }
 
 [dev-dependencies]

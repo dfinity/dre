@@ -1,6 +1,6 @@
 # Release controller
 
-Automates parts of the process of proposing new releases for
+Automates parts of the process of proposing new releases for IC HostOS and GuestOS.
 
 ## Usage
 
@@ -59,6 +59,11 @@ Reconciler is responsible for generating release notes (1), publishing them as g
   It's important to note that forum logic depends on finding alredy created blog posts by querying posts from authenticated user (@DRETeam). For those reasons, it won't be able to find manually created posts by other users.
 
 ## Resolving issues
+
+### Diagnostics
+
+The release controller [has its own dashboard](https://grafana.ch1-rel1.dfinity.network/d/release-controller/release-controller).
+Use the dashboard to supervise the progress of the components that comprise the release controller.
 
 ### Google Docs generation was wrong for particular commit
 
@@ -199,7 +204,7 @@ The optional argument `--skip-preloading-state` makes it so that the reconciler
 will not preload its list of known proposals by version from the governance
 canister.  It is useful (in conjunction with an empty reconciler state folder)
 to make the reconciler do all the work of submitting proposals again.  It should
-not be used without `--dry-run`, to avoid submitting proposals twice.
+only be used alongside `--dry-run`, to avoid submitting proposals twice.
 
 ### Running the reconciler in the container it ships
 
@@ -238,20 +243,24 @@ Please consult `--help` for additional options.
 #### Unit tests
 
 ```sh
-bazel test //release-controller:pytest
+bazel test //release-controller/...
 ```
 
-With the .venv setup, you can also run (with varying levels of success):
+The above runs all tests and typechecks tested files.
+
+With a `.venv` setup by `rye`, you can also run (with varying levels of success):
 
 ```sh
 .venv/bin/python3 -m pytest release-controller/
 ```
 
-The above runs all tests.  If you want to run a specific test file,
-specify it as a path instead of the folder specified above.
+If you want to run a specific test file, specify it as a path instead of the
+folder specified above.
 
 #### Typing correctness
 
+Building it all tests MyPy types:
+
 ```sh
-bazel build //release-controller:release-controller
+bazel build //release-controller/...
 ```

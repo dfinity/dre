@@ -19,7 +19,7 @@ concurrency:
 
 jobs:
   build:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v4
       - name: "🚀 Building"
@@ -34,7 +34,7 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: "📦 Push images to GitHub Container Registry"
-        if: ${{ startsWith(github.ref, 'refs/tags/v') || startsWith(github.head_ref, 'container') || startsWith(github.ref, 'refs/heads/container') || (github.ref == 'refs/heads/main') }}
+        if: ${{ startsWith(github.ref, 'refs/tags/v') || github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch' }}
         run: |
           docker push ghcr.io/dfinity/dre/ic-management-frontend:$GITHUB_SHA
 
@@ -42,7 +42,7 @@ jobs:
       # Update k8s deployments
       ########################################
       - name: "🤖 Update k8s deployments"
-        if: ${{ startsWith(github.ref, 'refs/tags/v') || startsWith(github.head_ref, 'container') || startsWith(github.ref, 'refs/heads/container') || (github.ref == 'refs/heads/main') }}
+        if: ${{ startsWith(github.ref, 'refs/tags/v') || github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch' }}
         uses: ./.github/workflows/update-k8s-deployments
         with:
           files-to-update: bases/apps/mainnet-dashboard/frontend/deployment.yaml

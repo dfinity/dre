@@ -30,7 +30,7 @@ impl Server {
 
     pub async fn run(self, metrics_layer: HttpMetricsLayer, supervisor: TargetSupervisor) {
         let app = Router::new()
-            .merge(metrics_layer.routes())
+            .without_v07_checks()
             .route("/", get(get_targets::get_targets))
             .route("/", post(add_targets::add_targets))
             .layer(metrics_layer)

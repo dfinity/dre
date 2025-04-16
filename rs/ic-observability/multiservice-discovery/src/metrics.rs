@@ -4,10 +4,10 @@ use std::{
     time::{SystemTime, UNIX_EPOCH},
 };
 
-use opentelemetry::{global, metrics::Observer, KeyValue};
+use opentelemetry::{global, metrics::AsyncInstrument, KeyValue};
 
 const NETWORK: &str = "network";
-const AXUM_APP: &str = "axum-app";
+const AXUM_APP: &str = "axum_otel_metrics";
 
 #[derive(Clone)]
 pub struct MSDMetrics {
@@ -50,6 +50,19 @@ impl LatestValues {
 
 type LatestValuesByNetwork = HashMap<String, LatestValues>;
 
+fn create_callback(
+    latest_values: Arc<RwLock<HashMap<String, LatestValues>>>,
+    value_fetcher: impl Fn(&LatestValues) -> u64,
+) -> impl Fn(&dyn AsyncInstrument<u64>) {
+    move |observer: &dyn AsyncInstrument<u64>| {
+        let latest_values_by_network = latest_values.read().unwrap();
+        for (network, latest_values) in latest_values_by_network.iter() {
+            let attrs = [KeyValue::new(NETWORK, network.clone())];
+            observer.observe(value_fetcher(latest_values), &attrs);
+        }
+    }
+}
+
 #[derive(Clone)]
 pub struct RunningDefinitionsMetrics {
     latest_values_by_network: Arc<RwLock<LatestValuesByNetwork>>,
@@ -59,60 +72,36 @@ impl RunningDefinitionsMetrics {
     pub fn new() -> Self {
         let latest_values_by_network = Arc::new(RwLock::new(LatestValuesByNetwork::new()));
         let meter = global::meter(AXUM_APP);
-        let load_new_targets_error = meter
-            .clone()
+
+        let _load_new_targets_error = meter
             .u64_observable_gauge("msd.definitions.load.errors")
+            .with_callback(create_callback(latest_values_by_network.clone(), |values| values.load_new_targets_error))
             .with_description("Total number of errors while loading new targets per definition")
-            .init();
-        let sync_registry_error = meter
-            .clone()
+            .build();
+        let _sync_registry_error = meter
             .u64_observable_gauge("msd.definitions.sync.errors")
+            .with_callback(create_callback(latest_values_by_network.clone(), |values| values.sync_registry_error))
             .with_description("Total number of errors while syncing the registry per definition")
-            .init();
-        let definitions_load_successful = meter
-            .clone()
+            .build();
+        let _definitions_load_successful = meter
             .u64_observable_gauge("msd.definitions.load.successful")
+            .with_callback(create_callback(latest_values_by_network.clone(), |values| {
+                values.definitions_load_successful
+            }))
             .with_description("Status of last load of the registry per definition")
-            .init();
-        let definitions_sync_successful = meter
-            .clone()
+            .build();
+        let _definitions_sync_successful = meter
             .u64_observable_gauge("msd.definitions.sync.successful")
+            .with_callback(create_callback(latest_values_by_network.clone(), |values| {
+                values.definitions_sync_successful
+            }))
             .with_description("Status of last sync of the registry with NNS of definition")
-            .init();
-        let successful_sync_ts = meter
-            .clone()
+            .build();
+        let _successful_sync_ts = meter
             .u64_observable_gauge("msd.definitions.sync.ts")
+            .with_callback(create_callback(latest_values_by_network.clone(), |values| values.successful_sync_ts))
             .with_description("Timestamp of last successful sync")
-            .init();
-        let instruments = [
-            load_new_targets_error.as_any(),
-            sync_registry_error.as_any(),
-            definitions_load_successful.as_any(),
-            definitions_sync_successful.as_any(),
-            successful_sync_ts.as_any(),
-        ];
-        let s = latest_values_by_network.clone();
-        let update_instruments = move |observer: &dyn Observer| {
-            // We blocking-lock because this is not async code, and this code
-            // does not need to be async, since it just needs to read local data.
-            // C.f. https://docs.rs/tokio/1.24.2/tokio/sync/struct.Mutex.html#method.blocking_lock
-            let latest_values_by_network = s.read().unwrap();
-            for (network, latest_values) in latest_values_by_network.iter() {
-                let attrs = [KeyValue::new(NETWORK, network.clone())];
-                for (instrument, measurement) in [
-                    (&load_new_targets_error, latest_values.load_new_targets_error),
-                    (&sync_registry_error, latest_values.sync_registry_error),
-                    (&definitions_load_successful, latest_values.definitions_load_successful),
-                    (&definitions_sync_successful, latest_values.definitions_sync_successful),
-                    (&successful_sync_ts, latest_values.successful_sync_ts),
-                ]
-                .into_iter()
-                {
-                    observer.observe_u64(instrument, measurement, &attrs)
-                }
-            }
-        };
-        meter.register_callback(&instruments, update_instruments).unwrap();
+            .build();
 
         Self { latest_values_by_network }
     }
