@@ -7,53 +7,23 @@ use node_provider_rewards_api::endpoints::{NodeProviderRewardsCalculationArgs, N
 use rewards_calculation::rewards_calculator::RewardsCalculator;
 use rewards_calculation::rewards_calculator_results::RewardCalculatorError;
 use rewards_calculation::types::RewardPeriod;
-use std::cell::RefCell;
 use std::collections::BTreeMap;
 
 mod metrics;
 mod metrics_types;
 mod registry;
 mod storage;
+mod telemetry;
 
 const HOUR_IN_SECONDS: u64 = 60 * 60;
 const DAY_IN_SECONDS: u64 = HOUR_IN_SECONDS * 24;
-
-#[derive(Default)]
-pub struct PrometheusMetrics {
-    last_calculation_start: f64,
-    last_calculation_success: f64,
-    last_calculation_end: f64,
-}
-
-impl PrometheusMetrics {
-    fn new() -> Self {
-        Default::default()
-    }
-
-    fn mark_last_calculation_start(&mut self) {
-        self.last_calculation_start = (ic_cdk::api::time() / 1_000_000_000) as f64
-    }
-
-    fn mark_last_calculation_success(&mut self) {
-        self.last_calculation_end = (ic_cdk::api::time() / 1_000_000_000) as f64;
-        self.last_calculation_success = self.last_calculation_end
-    }
-
-    fn mark_last_calculation_end(&mut self) {
-        self.last_calculation_end = (ic_cdk::api::time() / 1_000_000_000) as f64
-    }
-}
-
-thread_local! {
-    pub(crate) static PROMETHEUS_METRICS: RefCell<PrometheusMetrics> = RefCell::new(PrometheusMetrics::new());
-}
 
 /// Sync the local registry and subnets metrics with remote
 ///
 /// - Sync local registry stored from the remote registry canister
 /// - Sync subnets metrics from the management canister of the different subnets
 async fn sync_all() {
-    PROMETHEUS_METRICS.with_borrow_mut(|m| m.mark_last_calculation_start());
+    telemetry::PROMETHEUS_METRICS.with_borrow_mut(|m| m.mark_last_calculation_start());
     let registry_store = REGISTRY_STORE.with(|m| m.clone());
 
     match registry_store.schedule_registry_sync().await {
@@ -62,11 +32,11 @@ async fn sync_all() {
             let subnets_list = registry_store.subnets_list();
 
             metrics_manager.update_subnets_metrics(subnets_list).await;
-            PROMETHEUS_METRICS.with_borrow_mut(|m| m.mark_last_calculation_success());
+            telemetry::PROMETHEUS_METRICS.with_borrow_mut(|m| m.mark_last_calculation_success());
             ic_cdk::println!("Successfully synced subnets metrics and local registry");
         }
         Err(e) => {
-            PROMETHEUS_METRICS.with_borrow_mut(|m| m.mark_last_calculation_end());
+            telemetry::PROMETHEUS_METRICS.with_borrow_mut(|m| m.mark_last_calculation_end());
             ic_cdk::println!("Failed to sync local registry: {:?}", e)
         }
     }
