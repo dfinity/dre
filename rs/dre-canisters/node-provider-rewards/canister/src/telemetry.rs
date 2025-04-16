@@ -10,11 +10,13 @@ pub struct PrometheusMetrics {
     /// If last_sync_start > last_sync_end, sync is in progress, else sync is not taking place.
     /// If last_sync_success == last_sync_end, last sync was successful.
     last_sync_end: f64,
+    /// Publishes the instruction count that the last sync incurred.
+    last_sync_instructions: f64,
 }
 
-static LAST_SYNC_START_HELP: &str = "Last time the calculation of metrics started.  If this metric is present but zero, the first calculation during this canister's current execution has not yet begun or taken place.";
-static LAST_SYNC_END_HELP: &str = "Last time the calculation of metrics ended (successfully or with failure).  If this metric is present but zero, the first calculation during this canister's current execution has not started or finished yet, either successfully or with errors.   Else, subtracting this from the last calculation start should yield a positive value if the calculation ended (successfully or with errors), and a negative value if the calculation is still ongoing but has not finished.";
-static LAST_SYNC_SUCCESS_HELP: &str = "Last time the calculation of metrics succeeded.  If this metric is present but zero, no calculation has yet succeeded during this canister's current execution.  Else, subtracting this number from last_sync_start_timestamp_seconds gives a positive time delta when the last calculation succeeded, or a negative value if either the last calculation failed or a calculation is currently being performed.  By definition, this and last_sync_end_timestamp_seconds will be identical when the last calculation succeeded.";
+static LAST_SYNC_START_HELP: &str = "Last time the sync of metrics started.  If this metric is present but zero, the first sync during this canister's current execution has not yet begun or taken place.";
+static LAST_SYNC_END_HELP: &str = "Last time the sync of metrics ended (successfully or with failure).  If this metric is present but zero, the first sync during this canister's current execution has not started or finished yet, either successfully or with errors.   Else, subtracting this from the last sync start should yield a positive value if the sync ended (successfully or with errors), and a negative value if the sync is still ongoing but has not finished.";
+static LAST_SYNC_SUCCESS_HELP: &str = "Last time the sync of metrics succeeded.  If this metric is present but zero, no sync has yet succeeded during this canister's current execution.  Else, subtracting this number from last_sync_start_timestamp_seconds gives a positive time delta when the last sync succeeded, or a negative value if either the last sync failed or a sync is currently being performed.  By definition, this and last_sync_end_timestamp_seconds will be identical when the last sync succeeded.";
 
 impl PrometheusMetrics {
     fn new() -> Self {
