@@ -2,9 +2,9 @@ use std::cell::RefCell;
 
 #[derive(Default)]
 pub struct PrometheusMetrics {
-    last_calculation_start: f64,
-    last_calculation_success: f64,
-    last_calculation_end: f64,
+    pub last_calculation_start: f64,
+    pub last_calculation_success: f64,
+    pub last_calculation_end: f64,
 }
 
 impl PrometheusMetrics {

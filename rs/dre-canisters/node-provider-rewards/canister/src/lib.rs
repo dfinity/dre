@@ -71,7 +71,7 @@ fn post_upgrade() {
     setup_timers();
 }
 
-pub fn encode_metrics(metrics: &PrometheusMetrics, w: &mut ic_metrics_encoder::MetricsEncoder<Vec<u8>>) -> std::io::Result<()> {
+pub fn encode_metrics(metrics: &telemetry::PrometheusMetrics, w: &mut ic_metrics_encoder::MetricsEncoder<Vec<u8>>) -> std::io::Result<()> {
     // General resource consumption.
     w.encode_gauge(
         "canister_stable_memory_size_bytes",
@@ -120,7 +120,7 @@ pub fn encode_metrics(metrics: &PrometheusMetrics, w: &mut ic_metrics_encoder::M
 #[query(hidden = true, decoding_quota = 10000)]
 fn http_request(request: HttpRequest) -> HttpResponse {
     match request.path() {
-        "/metrics" => serve_metrics(|encoder| PROMETHEUS_METRICS.with(|m| encode_metrics(&m.borrow(), encoder))),
+        "/metrics" => serve_metrics(|encoder| telemetry::PROMETHEUS_METRICS.with(|m| encode_metrics(&m.borrow(), encoder))),
         _ => HttpResponseBuilder::not_found().build(),
     }
 }
