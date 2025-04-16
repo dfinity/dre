@@ -12,16 +12,16 @@ impl PrometheusMetrics {
         Default::default()
     }
 
-    fn mark_last_calculation_start(&mut self) {
+    pub fn mark_last_calculation_start(&mut self) {
         self.last_calculation_start = (ic_cdk::api::time() / 1_000_000_000) as f64
     }
 
-    fn mark_last_calculation_success(&mut self) {
+    pub fn mark_last_calculation_success(&mut self) {
         self.last_calculation_end = (ic_cdk::api::time() / 1_000_000_000) as f64;
         self.last_calculation_success = self.last_calculation_end
     }
 
-    fn mark_last_calculation_end(&mut self) {
+    pub fn mark_last_calculation_end(&mut self) {
         self.last_calculation_end = (ic_cdk::api::time() / 1_000_000_000) as f64
     }
 }
