@@ -10,8 +10,6 @@ pub struct PrometheusMetrics {
     /// If last_sync_start > last_sync_end, sync is in progress, else sync is not taking place.
     /// If last_sync_success == last_sync_end, last sync was successful.
     last_sync_end: f64,
-    /// Publishes the instruction count that the last sync incurred.
-    last_sync_instructions: f64,
 }
 
 static LAST_SYNC_START_HELP: &str = "Last time the sync of metrics started.  If this metric is present but zero, the first sync during this canister's current execution has not yet begun or taken place.";
