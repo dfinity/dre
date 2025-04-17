@@ -92,7 +92,7 @@ fn post_upgrade() {
 #[query(hidden = true, decoding_quota = 10000)]
 fn http_request(request: HttpRequest) -> HttpResponse {
     match request.path() {
-        "/metrics" => serve_metrics(|encoder| telemetry::PROMETHEUS_METRICS.with(|m| telemetry::encode_metrics(&m.borrow(), encoder))),
+        "/metrics" => serve_metrics(|encoder| telemetry::PROMETHEUS_METRICS.with(|m| m.borrow().encode_metrics(encoder))),
         _ => HttpResponseBuilder::not_found().build(),
     }
 }

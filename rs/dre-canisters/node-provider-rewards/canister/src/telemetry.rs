@@ -57,6 +57,54 @@ impl PrometheusMetrics {
         Default::default()
     }
 
+    pub fn encode_metrics(&self, w: &mut ic_metrics_encoder::MetricsEncoder<Vec<u8>>) -> std::io::Result<()> {
+        // General resource consumption.
+        w.encode_gauge(
+            "canister_stable_memory_size_bytes",
+            ic_nervous_system_common::stable_memory_size_bytes() as f64,
+            "Size of the stable memory allocated by this canister measured in bytes.",
+        )?;
+        w.encode_gauge(
+            "canister_total_memory_size_bytes",
+            ic_nervous_system_common::total_memory_size_bytes() as f64,
+            "Size of the total memory allocated by this canister measured in bytes.",
+        )?;
+
+        // Calculation start timestamp seconds.
+        //
+        // * 0.0 -> first calculation not yet begun since canister started.
+        // * Any other positive number -> at least one calculation has started.
+        w.encode_gauge("last_sync_start_timestamp_seconds", self.last_sync_start, LAST_SYNC_START_HELP)?;
+        // Calculation finish timestamp seconds.
+        // * 0.0 -> first calculation not yet finished since canister started.
+        // * last_sync_end_timestamp_seconds - last_sync_start_timestamp_seconds > 0 -> last calculation finished, next calculation not started yet
+        // * last_sync_end_timestamp_seconds - last_sync_start_timestamp_seconds < 0 -> calculation ongoing, not finished yet
+        w.encode_gauge("last_sync_end_timestamp_seconds", self.last_sync_end, LAST_SYNC_END_HELP)?;
+        // Calculation success timestamp seconds.
+        // * 0.0 -> no calculation has yet succeeded since canister started.
+        // * last_sync_end_timestamp_seconds == last_sync_success_timestamp_seconds -> last calculation finished successfully
+        // * last_sync_end_timestamp_seconds != last_sync_success_timestamp_seconds -> last calculation failed
+        w.encode_gauge("last_sync_success_timestamp_seconds", self.last_sync_success, LAST_SYNC_SUCCESS_HELP)?;
+        w.encode_gauge("last_sync_instructions", self.last_sync_instructions, LAST_SYNC_INSTRUCTIONS_HELP)?;
+        w.encode_gauge(
+            "last_registry_sync_instructions",
+            self.last_registry_sync_instructions,
+            LAST_REGISTRY_SYNC_INSTRUCTIONS_HELP,
+        )?;
+        w.encode_gauge(
+            "last_subnet_list_instructions",
+            self.last_subnet_list_instructions,
+            LAST_SUBNET_LIST_INSTRUCTIONS_HELP,
+        )?;
+        w.encode_gauge(
+            "last_update_subnet_metrics_instructions",
+            self.last_update_subnet_metrics_instructions,
+            LAST_UPDATE_SUBNET_METRICS_INSTRUCTIONS_HELP,
+        )?;
+
+        Ok(())
+    }
+
     pub fn mark_last_sync_start(&mut self) {
         self.last_sync_start = (ic_cdk::api::time() / 1_000_000_000) as f64
     }
@@ -89,52 +137,4 @@ impl PrometheusMetrics {
 
 thread_local! {
     pub(crate) static PROMETHEUS_METRICS: RefCell<PrometheusMetrics> = RefCell::new(PrometheusMetrics::new());
-}
-
-pub fn encode_metrics(metrics: &PrometheusMetrics, w: &mut ic_metrics_encoder::MetricsEncoder<Vec<u8>>) -> std::io::Result<()> {
-    // General resource consumption.
-    w.encode_gauge(
-        "canister_stable_memory_size_bytes",
-        ic_nervous_system_common::stable_memory_size_bytes() as f64,
-        "Size of the stable memory allocated by this canister measured in bytes.",
-    )?;
-    w.encode_gauge(
-        "canister_total_memory_size_bytes",
-        ic_nervous_system_common::total_memory_size_bytes() as f64,
-        "Size of the total memory allocated by this canister measured in bytes.",
-    )?;
-
-    // Calculation start timestamp seconds.
-    //
-    // * 0.0 -> first calculation not yet begun since canister started.
-    // * Any other positive number -> at least one calculation has started.
-    w.encode_gauge("last_sync_start_timestamp_seconds", metrics.last_sync_start, LAST_SYNC_START_HELP)?;
-    // Calculation finish timestamp seconds.
-    // * 0.0 -> first calculation not yet finished since canister started.
-    // * last_sync_end_timestamp_seconds - last_sync_start_timestamp_seconds > 0 -> last calculation finished, next calculation not started yet
-    // * last_sync_end_timestamp_seconds - last_sync_start_timestamp_seconds < 0 -> calculation ongoing, not finished yet
-    w.encode_gauge("last_sync_end_timestamp_seconds", metrics.last_sync_end, LAST_SYNC_END_HELP)?;
-    // Calculation success timestamp seconds.
-    // * 0.0 -> no calculation has yet succeeded since canister started.
-    // * last_sync_end_timestamp_seconds == last_sync_success_timestamp_seconds -> last calculation finished successfully
-    // * last_sync_end_timestamp_seconds != last_sync_success_timestamp_seconds -> last calculation failed
-    w.encode_gauge("last_sync_success_timestamp_seconds", metrics.last_sync_success, LAST_SYNC_SUCCESS_HELP)?;
-    w.encode_gauge("last_sync_instructions", metrics.last_sync_instructions, LAST_SYNC_INSTRUCTIONS_HELP)?;
-    w.encode_gauge(
-        "last_registry_sync_instructions",
-        metrics.last_registry_sync_instructions,
-        LAST_REGISTRY_SYNC_INSTRUCTIONS_HELP,
-    )?;
-    w.encode_gauge(
-        "last_subnet_list_instructions",
-        metrics.last_subnet_list_instructions,
-        LAST_SUBNET_LIST_INSTRUCTIONS_HELP,
-    )?;
-    w.encode_gauge(
-        "last_update_subnet_metrics_instructions",
-        metrics.last_update_subnet_metrics_instructions,
-        LAST_UPDATE_SUBNET_METRICS_INSTRUCTIONS_HELP,
-    )?;
-
-    Ok(())
 }
