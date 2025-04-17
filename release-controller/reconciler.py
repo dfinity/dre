@@ -498,41 +498,41 @@ class Reconciler:
                 rclogger.debug("Ensuring forum post for release candidate exists.")
                 rc_forum_topic = self.forum_client.get_or_create(v.rc)
 
-            if markdown_file := self.notes_client.markdown_file(
-                release_commit, v.os_kind
-            ):
-                revlogger.info("Has release notes in editor.  No need to create them.")
-            else:
-                revlogger.info("No release notes found in editor.  Creating.")
-                if is_security_fix:
-                    revlogger.info(
-                        "It's a security fix.  Skipping base release investigation."
-                    )
-                    # FIXME: how to push the release tags and artifacts
-                    # of security fixes 10 days after their rollout?
-                    request: (
-                        OrdinaryReleaseNotesRequest | SecurityReleaseNotesRequest
-                    ) = SecurityReleaseNotesRequest(
-                        release_tag, release_commit, v.os_kind
-                    )
+            with phase("release notes preparation"):
+                if markdown_file := self.notes_client.markdown_file(
+                    release_commit, v.os_kind
+                ):
+                    revlogger.info("Has release notes in editor.  Going to next phase.")
                 else:
-                    revlogger.info(
-                        "It's an ordinary release.  Generating full changelog."
-                    )
-                    self.ic_repo.push_release_tags(v.rc)
-                    self.ic_repo.fetch()
-                    base_release_commit, base_release_tag = find_base_release(
-                        self.ic_repo, config, release_commit
-                    )
-                    request = OrdinaryReleaseNotesRequest(
-                        release_tag,
-                        release_commit,
-                        base_release_tag,
-                        base_release_commit,
-                        v.os_kind,
-                    )
+                    revlogger.info("No release notes found in editor.  Creating.")
+                    if is_security_fix:
+                        revlogger.info(
+                            "It's a security fix.  Skipping base release investigation."
+                        )
+                        # FIXME: how to push the release tags and artifacts
+                        # of security fixes 10 days after their rollout?
+                        request: (
+                            OrdinaryReleaseNotesRequest | SecurityReleaseNotesRequest
+                        ) = SecurityReleaseNotesRequest(
+                            release_tag, release_commit, v.os_kind
+                        )
+                    else:
+                        revlogger.info(
+                            "It's an ordinary release.  Generating full changelog."
+                        )
+                        self.ic_repo.push_release_tags(v.rc)
+                        self.ic_repo.fetch()
+                        base_release_commit, base_release_tag = find_base_release(
+                            self.ic_repo, config, release_commit
+                        )
+                        request = OrdinaryReleaseNotesRequest(
+                            release_tag,
+                            release_commit,
+                            base_release_tag,
+                            base_release_commit,
+                            v.os_kind,
+                        )
 
-                with phase("release notes preparation"):
                     revlogger.info("Preparing release notes.")
                     # FIXME!  Make this pluggable from main().
                     # Big problem is that the change determinator needs
