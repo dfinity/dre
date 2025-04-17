@@ -62,15 +62,7 @@ async fn main() -> Result<(), anyhow::Error> {
             _ = sleep => {}
         }
 
-        let range = format!(
-            "entries={}:{}:{}",
-            cursor,
-            match cursor.is_empty() {
-                false => 1,
-                true => 0,
-            },
-            30
-        );
+        let range = format!("entries={}:0:{}", cursor, 1000);
 
         let response = client
             .get(args.url.clone())
