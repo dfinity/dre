@@ -1,5 +1,32 @@
 use std::cell::RefCell;
 
+/// Instruction counter helper that counts instructions in the call context.
+pub struct InstructionCounter {
+    start: u64,
+    lap_start: u64,
+}
+
+impl InstructionCounter {
+    pub fn new() -> Self {
+        let c = ic_cdk::api::call_context_instruction_counter();
+        Self { start: c, lap_start: c }
+    }
+
+    /// Tallies up the instructions executed since the last call to
+    /// lap() or (if not colled) the instantiation of the counter,
+    /// and returns them.
+    pub fn lap(&mut self) -> u64 {
+        let now = ic_cdk::api::call_context_instruction_counter();
+        let difference = now - self.lap_start;
+        self.lap_start = now;
+        difference
+    }
+
+    pub fn sum(self) -> u64 {
+        ic_cdk::api::call_context_instruction_counter() - self.start
+    }
+}
+
 #[derive(Default)]
 pub struct PrometheusMetrics {
     /// Records the time the last sync began.
@@ -12,12 +39,18 @@ pub struct PrometheusMetrics {
     last_sync_end: f64,
     /// Publishes the instruction count that the last sync incurred.
     last_sync_instructions: f64,
+    last_registry_sync_instructions: f64,
+    last_subnet_list_instructions: f64,
+    last_update_subnet_metrics_instructions: f64,
 }
 
 static LAST_SYNC_START_HELP: &str = "Last time the sync of metrics started.  If this metric is present but zero, the first sync during this canister's current execution has not yet begun or taken place.";
 static LAST_SYNC_END_HELP: &str = "Last time the sync of metrics ended (successfully or with failure).  If this metric is present but zero, the first sync during this canister's current execution has not started or finished yet, either successfully or with errors.   Else, subtracting this from the last sync start should yield a positive value if the sync ended (successfully or with errors), and a negative value if the sync is still ongoing but has not finished.";
 static LAST_SYNC_SUCCESS_HELP: &str = "Last time the sync of metrics succeeded.  If this metric is present but zero, no sync has yet succeeded during this canister's current execution.  Else, subtracting this number from last_sync_start_timestamp_seconds gives a positive time delta when the last sync succeeded, or a negative value if either the last sync failed or a sync is currently being performed.  By definition, this and last_sync_end_timestamp_seconds will be identical when the last sync succeeded.";
 static LAST_SYNC_INSTRUCTIONS_HELP: &str = "Count of instructions that the last sync incurred.";
+static LAST_REGISTRY_SYNC_INSTRUCTIONS_HELP: &str = "Count of instructions that the registry sync took during the last sync.";
+static LAST_SUBNET_LIST_INSTRUCTIONS_HELP: &str = "Count of instructions that the subnet listing took during the last sync.";
+static LAST_UPDATE_SUBNET_METRICS_INSTRUCTIONS_HELP: &str = "Count of instructions that the update of subnet metrics took during the last sync.";
 
 impl PrometheusMetrics {
     fn new() -> Self {
@@ -37,8 +70,20 @@ impl PrometheusMetrics {
         self.last_sync_end = (ic_cdk::api::time() / 1_000_000_000) as f64
     }
 
-    pub fn record_instructions(&mut self, count: u64) {
+    pub fn record_sync_instructions(&mut self, count: u64) {
         self.last_sync_instructions = count as f64
+    }
+
+    pub fn record_registry_sync_instructions(&mut self, count: u64) {
+        self.last_registry_sync_instructions = count as f64
+    }
+
+    pub fn record_subnet_list_instructions(&mut self, count: u64) {
+        self.last_subnet_list_instructions = count as f64
+    }
+
+    pub fn record_update_subnet_metrics_instructions(&mut self, count: u64) {
+        self.last_update_subnet_metrics_instructions = count as f64
     }
 }
 
@@ -59,8 +104,6 @@ pub fn encode_metrics(metrics: &PrometheusMetrics, w: &mut ic_metrics_encoder::M
         "Size of the total memory allocated by this canister measured in bytes.",
     )?;
 
-    // Calculation signals.
-
     // Calculation start timestamp seconds.
     //
     // * 0.0 -> first calculation not yet begun since canister started.
@@ -77,6 +120,21 @@ pub fn encode_metrics(metrics: &PrometheusMetrics, w: &mut ic_metrics_encoder::M
     // * last_sync_end_timestamp_seconds != last_sync_success_timestamp_seconds -> last calculation failed
     w.encode_gauge("last_sync_success_timestamp_seconds", metrics.last_sync_success, LAST_SYNC_SUCCESS_HELP)?;
     w.encode_gauge("last_sync_instructions", metrics.last_sync_instructions, LAST_SYNC_INSTRUCTIONS_HELP)?;
+    w.encode_gauge(
+        "last_registry_sync_instructions",
+        metrics.last_registry_sync_instructions,
+        LAST_REGISTRY_SYNC_INSTRUCTIONS_HELP,
+    )?;
+    w.encode_gauge(
+        "last_subnet_list_instructions",
+        metrics.last_subnet_list_instructions,
+        LAST_SUBNET_LIST_INSTRUCTIONS_HELP,
+    )?;
+    w.encode_gauge(
+        "last_update_subnet_metrics_instructions",
+        metrics.last_update_subnet_metrics_instructions,
+        LAST_UPDATE_SUBNET_METRICS_INSTRUCTIONS_HELP,
+    )?;
 
     Ok(())
 }

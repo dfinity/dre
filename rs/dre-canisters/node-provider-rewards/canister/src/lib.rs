@@ -18,43 +18,30 @@ mod telemetry;
 const HOUR_IN_SECONDS: u64 = 60 * 60;
 const DAY_IN_SECONDS: u64 = HOUR_IN_SECONDS * 24;
 
-struct InstructionCounter {
-    start: u64,
-    total: u64,
-}
-
-impl InstructionCounter {
-    fn new() -> Self {
-        Self {
-            start: ic_cdk::api::instruction_counter(),
-            total: 0,
-        }
-    }
-    fn add_up(&mut self) -> u64 {
-        let now = ic_cdk::api::instruction_counter();
-        self.start = now;
-        self.total += now;
-        self.total
-    }
-}
-
 /// Sync the local registry and subnets metrics with remote
 ///
 /// - Sync local registry stored from the remote registry canister
 /// - Sync subnets metrics from the management canister of the different subnets
 async fn sync_all() {
-    let mut counter = InstructionCounter::new();
+    let mut counter = telemetry::InstructionCounter::new();
     telemetry::PROMETHEUS_METRICS.with_borrow_mut(|m| m.mark_last_sync_start());
     let registry_store = REGISTRY_STORE.with(|m| m.clone());
 
-    counter.add_up();
-    match registry_store.schedule_registry_sync().await {
+    counter.lap();
+    let result = registry_store.schedule_registry_sync().await;
+    let registry_sync_instructions = counter.lap();
+
+    let mut subnet_list_instructions: u64 = 0;
+    let mut update_subnet_metrics_instructions: u64 = 0;
+
+    match result {
         Ok(_) => {
             let metrics_manager = METRICS_MANAGER.with(|m| m.clone());
+            counter.lap();
             let subnets_list = registry_store.subnets_list();
-
-            counter.add_up();
+            subnet_list_instructions = counter.lap();
             metrics_manager.update_subnets_metrics(subnets_list).await;
+            update_subnet_metrics_instructions = counter.lap();
 
             telemetry::PROMETHEUS_METRICS.with_borrow_mut(|m| m.mark_last_sync_success());
             ic_cdk::println!("Successfully synced subnets metrics and local registry");
@@ -65,7 +52,12 @@ async fn sync_all() {
         }
     }
 
-    telemetry::PROMETHEUS_METRICS.with_borrow_mut(|m| m.record_instructions(counter.add_up()));
+    telemetry::PROMETHEUS_METRICS.with_borrow_mut(|m| {
+        m.record_sync_instructions(counter.sum());
+        m.record_registry_sync_instructions(registry_sync_instructions);
+        m.record_subnet_list_instructions(subnet_list_instructions);
+        m.record_update_subnet_metrics_instructions(update_subnet_metrics_instructions)
+    });
 }
 
 fn setup_timers() {
