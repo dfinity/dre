@@ -62,11 +62,13 @@ py_binary(
 py_binary(
     name = "release-notes",
     main = "release_notes.py",
-    srcs = ["release_notes.py", "git_repo.py", "const.py", "release_index.py", "util.py"],
+    srcs = ["release_notes.py", "git_repo.py", "const.py", "release_index.py", "util.py", "commit_annotator.py", "watchdog.py"],
     tags = ["typecheck"],
-    data = [],
+    data = [":bazelisk", ":target_determinator"],
     env = env,
-    deps = deps
+    deps = deps + [
+        requirement("prometheus-client"),
+    ]
 )
 
 native_binary(

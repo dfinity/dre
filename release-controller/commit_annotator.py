@@ -27,12 +27,28 @@ from const import (
     COMMIT_BELONGS,
     COMMIT_DOES_NOT_BELONG,
     COMMIT_COULD_NOT_BE_ANNOTATED,
+    CommitInclusionState,
 )
 
 TARGETS_NOTES_NAMESPACES = {GUESTOS: "guestos-targets", HOSTOS: "hostos-targets"}
 BAZEL_TARGETS = {
-    GUESTOS: "//ic-os/guestos/envs/prod:update-img.tar.zst",
-    HOSTOS: "//ic-os/hostos/envs/prod:disk-img.tar.zst union //ic-os/setupos/envs/prod:disk-img.tar.zst",
+    # All targets that produce the update image for GuestOS.
+    GUESTOS: "deps(//ic-os/guestos/envs/prod:update-img.tar.zst)",
+    # All targets that produce the HostOS disk image united with the targets
+    # of the SetupOS disk image minus HostOS and GuestOS disk images.
+    HOSTOS: """
+    deps(
+        //ic-os/hostos/envs/prod:disk-img.tar.zst
+    ) union (
+        deps(
+            //ic-os/setupos/envs/prod:disk-img.tar.zst
+        ) except deps(
+            //ic-os/hostos/envs/prod:disk-img.tar.zst
+        ) except deps(
+            //ic-os/guestos/envs/prod:disk-img.tar.zst
+        ) except //ic-os/setupos/envs/prod/... except //ic-os/setupos/envs/prod:guest-os.img.tar.zst
+    )
+    """,
 }
 # One commit before last manual HostOS release performed by Manuel Amador.
 CUTOFF_COMMIT = "6f3739270268208945648cc70d8010bda753e827"
@@ -82,7 +98,7 @@ def release_branch_date(branch: str) -> typing.Optional[datetime]:
 )
 def target_determinator(
     cwd: pathlib.Path, parent_object: str, bazel_targets: str
-) -> bool:
+) -> str:
     logger = _LOGGER.getChild("target_determinator").getChild(parent_object)
     p = subprocess.run(
         [
@@ -104,10 +120,12 @@ def target_determinator(
         f"stdout of target determinator for {parent_object}: %s",
         output,
     )
-    return output != ""
+    return output
 
 
-def annotate_object(annotator: GitRepoAnnotator, object: str, os_kind: OsKind) -> None:
+def compute_annotations_for_object(
+    annotator: GitRepoAnnotator, object: str, os_kind: OsKind
+) -> tuple[str, str, CommitInclusionState]:
     logger = _LOGGER.getChild("annotate_object").getChild(object).getChild(os_kind)
     logger.debug("Attempting to annotate")
     start = time.time()
@@ -118,42 +136,55 @@ def annotate_object(annotator: GitRepoAnnotator, object: str, os_kind: OsKind) -
     # the working directory, making the other one much slower.  Thus,
     # we run them serially now, and -- in between them -- we clean the
     # repository's working directory.
+    annotator.checkout(object)
+    bazel_query_output = subprocess.check_output(
+        [resolve_binary("bazel"), "query", f"deps({targets})"],
+        text=True,
+        cwd=annotator.dir,
+    )
+    lap = time.time() - start
+    logger.debug("bazel query finished in %.2f seconds", lap)
+
+    target_determinator_output = target_determinator(
+        annotator.dir, annotator.parent(object), targets
+    )
+    lap = time.time() - start
+    logger.debug("target-determinator finished in %.2f seconds", lap)
+
+    lap = time.time() - start
+    logger.debug("Annotation finished in %.2f seconds", lap)
+    return (
+        "\n".join(
+            [
+                line
+                for line in bazel_query_output.splitlines()
+                if line.strip() and not line.startswith("@")
+            ]
+        ),
+        target_determinator_output,
+        (COMMIT_BELONGS if target_determinator_output else COMMIT_DOES_NOT_BELONG),
+    )
+
+
+def annotate_object(annotator: GitRepoAnnotator, object: str, os_kind: OsKind) -> None:
+    logger = _LOGGER.getChild("annotate_object").getChild(object).getChild(os_kind)
     try:
-        annotator.checkout(object)
-        bazel_query_output = subprocess.check_output(
-            [resolve_binary("bazel"), "query", f"deps({targets})"],
-            text=True,
-            cwd=annotator.dir,
+        targets_notes, affected_targets, belongs = compute_annotations_for_object(
+            annotator, object, os_kind
         )
-        lap = time.time() - start
-        logger.debug("bazel query finished in %.2f seconds", lap)
-
-        target_determinator_output = target_determinator(
-            annotator.dir, annotator.parent(object), targets
-        )
-        lap = time.time() - start
-        logger.debug("target-determinator finished in %.2f seconds", lap)
-
         annotator.add(
             object=object,
             namespace=TARGETS_NOTES_NAMESPACES[os_kind],
-            content="\n".join(
-                [
-                    line
-                    for line in bazel_query_output.splitlines()
-                    if line.strip() and not line.startswith("@")
-                ]
-            ),
+            content="# bazel targets acccording to bazel query\n\n"
+            + targets_notes
+            + "\n\n# affected targets according to target-determinator\n\n"
+            + affected_targets,
         )
         annotator.add(
             object=object,
             namespace=CHANGED_NOTES_NAMESPACES[os_kind],
-            content=COMMIT_BELONGS
-            if target_determinator_output
-            else COMMIT_DOES_NOT_BELONG,
+            content=belongs,
         )
-        lap = time.time() - start
-        logger.debug("Annotation finished in %.2f seconds", lap)
     except Exception:
         logger.exception("Annotation failed.  Saving a record of the failure.")
         annotator.add(
