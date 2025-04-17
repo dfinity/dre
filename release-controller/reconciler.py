@@ -502,9 +502,7 @@ class Reconciler:
                 if markdown_file := self.notes_client.markdown_file(
                     release_commit, v.os_kind
                 ):
-                    revlogger.info(
-                        "Has release notes in editor.  No need to create them."
-                    )
+                    revlogger.info("Has release notes in editor.  Going to next phase.")
                 else:
                     revlogger.info("No release notes found in editor.  Creating.")
                     if is_security_fix:
