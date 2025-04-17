@@ -38,19 +38,17 @@ pub struct PrometheusMetrics {
     /// If last_sync_success == last_sync_end, last sync was successful.
     last_sync_end: f64,
     /// Publishes the instruction count that the last sync incurred.
+    /// during various phases.
     last_sync_instructions: f64,
-    last_registry_sync_instructions: f64,
-    last_subnet_list_instructions: f64,
-    last_update_subnet_metrics_instructions: f64,
+    last_sync_registry_sync_instructions: f64,
+    last_sync_subnet_list_instructions: f64,
+    last_sync_update_subnet_metrics_instructions: f64,
 }
 
 static LAST_SYNC_START_HELP: &str = "Last time the sync of metrics started.  If this metric is present but zero, the first sync during this canister's current execution has not yet begun or taken place.";
 static LAST_SYNC_END_HELP: &str = "Last time the sync of metrics ended (successfully or with failure).  If this metric is present but zero, the first sync during this canister's current execution has not started or finished yet, either successfully or with errors.   Else, subtracting this from the last sync start should yield a positive value if the sync ended (successfully or with errors), and a negative value if the sync is still ongoing but has not finished.";
 static LAST_SYNC_SUCCESS_HELP: &str = "Last time the sync of metrics succeeded.  If this metric is present but zero, no sync has yet succeeded during this canister's current execution.  Else, subtracting this number from last_sync_start_timestamp_seconds gives a positive time delta when the last sync succeeded, or a negative value if either the last sync failed or a sync is currently being performed.  By definition, this and last_sync_end_timestamp_seconds will be identical when the last sync succeeded.";
-static LAST_SYNC_INSTRUCTIONS_HELP: &str = "Count of instructions that the last sync incurred.";
-static LAST_REGISTRY_SYNC_INSTRUCTIONS_HELP: &str = "Count of instructions that the registry sync took during the last sync.";
-static LAST_SUBNET_LIST_INSTRUCTIONS_HELP: &str = "Count of instructions that the subnet listing took during the last sync.";
-static LAST_UPDATE_SUBNET_METRICS_INSTRUCTIONS_HELP: &str = "Count of instructions that the update of subnet metrics took during the last sync.";
+static LAST_SYNC_INSTRUCTIONS_HELP: &str = "Count of instructions that the last sync incurred.  Label total is the sum total of instructions, and the other labels represent different phases";
 
 impl PrometheusMetrics {
     fn new() -> Self {
@@ -85,22 +83,17 @@ impl PrometheusMetrics {
         // * last_sync_end_timestamp_seconds == last_sync_success_timestamp_seconds -> last calculation finished successfully
         // * last_sync_end_timestamp_seconds != last_sync_success_timestamp_seconds -> last calculation failed
         w.encode_gauge("last_sync_success_timestamp_seconds", self.last_sync_success, LAST_SYNC_SUCCESS_HELP)?;
-        w.encode_gauge("last_sync_instructions", self.last_sync_instructions, LAST_SYNC_INSTRUCTIONS_HELP)?;
-        w.encode_gauge(
-            "last_registry_sync_instructions",
-            self.last_registry_sync_instructions,
-            LAST_REGISTRY_SYNC_INSTRUCTIONS_HELP,
-        )?;
-        w.encode_gauge(
-            "last_subnet_list_instructions",
-            self.last_subnet_list_instructions,
-            LAST_SUBNET_LIST_INSTRUCTIONS_HELP,
-        )?;
-        w.encode_gauge(
-            "last_update_subnet_metrics_instructions",
-            self.last_update_subnet_metrics_instructions,
-            LAST_UPDATE_SUBNET_METRICS_INSTRUCTIONS_HELP,
-        )?;
+
+        w.gauge_vec("last_registry_sync_instructions", LAST_SYNC_INSTRUCTIONS_HELP)
+            .expect("Name must be valid")
+            .value(&[("phase", "total")], self.last_sync_instructions)
+            .unwrap()
+            .value(&[("phase", "registry_sync")], self.last_sync_registry_sync_instructions)
+            .unwrap()
+            .value(&[("phase", "subnet_list")], self.last_sync_subnet_list_instructions)
+            .unwrap()
+            .value(&[("phase", "update_subnet_metrics")], self.last_sync_update_subnet_metrics_instructions)
+            .unwrap();
 
         Ok(())
     }
@@ -118,20 +111,11 @@ impl PrometheusMetrics {
         self.last_sync_end = (ic_cdk::api::time() / 1_000_000_000) as f64
     }
 
-    pub fn record_sync_instructions(&mut self, count: u64) {
-        self.last_sync_instructions = count as f64
-    }
-
-    pub fn record_registry_sync_instructions(&mut self, count: u64) {
-        self.last_registry_sync_instructions = count as f64
-    }
-
-    pub fn record_subnet_list_instructions(&mut self, count: u64) {
-        self.last_subnet_list_instructions = count as f64
-    }
-
-    pub fn record_update_subnet_metrics_instructions(&mut self, count: u64) {
-        self.last_update_subnet_metrics_instructions = count as f64
+    pub fn record_last_sync_instructions(&mut self, total: u64, registry_sync: u64, subnet_list: u64, update_subnet_metrics: u64) {
+        self.last_sync_instructions = total as f64;
+        self.last_sync_registry_sync_instructions = registry_sync as f64;
+        self.last_sync_subnet_list_instructions = subnet_list as f64;
+        self.last_sync_update_subnet_metrics_instructions = update_subnet_metrics as f64;
     }
 }
 

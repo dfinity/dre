@@ -53,10 +53,12 @@ async fn sync_all() {
     }
 
     telemetry::PROMETHEUS_METRICS.with_borrow_mut(|m| {
-        m.record_sync_instructions(counter.sum());
-        m.record_registry_sync_instructions(registry_sync_instructions);
-        m.record_subnet_list_instructions(subnet_list_instructions);
-        m.record_update_subnet_metrics_instructions(update_subnet_metrics_instructions)
+        m.record_last_sync_instructions(
+            counter.sum(),
+            registry_sync_instructions,
+            subnet_list_instructions,
+            update_subnet_metrics_instructions,
+        )
     });
 }
 
