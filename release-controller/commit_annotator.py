@@ -142,15 +142,9 @@ def compute_annotations_for_object(
         text=True,
         cwd=annotator.dir,
     )
-    lap = time.time() - start
-    logger.debug("bazel query finished in %.2f seconds", lap)
-
     target_determinator_output = target_determinator(
         annotator.dir, annotator.parent(object), targets
     )
-    lap = time.time() - start
-    logger.debug("target-determinator finished in %.2f seconds", lap)
-
     lap = time.time() - start
     logger.debug("Annotation finished in %.2f seconds", lap)
     return (
@@ -161,7 +155,13 @@ def compute_annotations_for_object(
                 if line.strip() and not line.startswith("@")
             ]
         ),
-        target_determinator_output,
+        "\n".join(
+            [
+                line
+                for line in target_determinator_output.splitlines()
+                if line.strip() and not line.startswith("@")
+            ]
+        ),
         (COMMIT_BELONGS if target_determinator_output else COMMIT_DOES_NOT_BELONG),
     )
 
