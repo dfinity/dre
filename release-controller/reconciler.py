@@ -885,6 +885,7 @@ def main() -> None:
             if opts.loop_every <= 0:
                 raise
             else:
+                watchdog.report_healthy()
                 and_now = time.time()
                 LAST_CYCLE_END_TIMESTAMP_SECONDS.set(int(and_now))
                 LOGGER.exception(
