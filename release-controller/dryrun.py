@@ -30,7 +30,7 @@ class StubDiscourseClient(object):
     def __init__(self) -> None:
         self.topics: list[forum.Topic] = []
         self.api_username = "doesntmatter"
-        self.host = "fakediscourse.com.internal"
+        self.host = "https://forum.dfinity.org"
         self._logger = LOGGER.getChild(self.__class__.__name__)
 
         if f := os.environ.get("RECONCILER_DRY_RUN_FORUM_STORAGE"):
@@ -224,7 +224,7 @@ class PublishNotesClient(object):
         os_kind: OsKind,
     ) -> None:
         self._logger.warning(
-            "Simulating that notes for release %s are not ready to be published",
+            "Simulating that notes for release %s are ready to be published",
             version,
         )
 
