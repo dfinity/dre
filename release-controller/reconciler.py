@@ -1,5 +1,4 @@
 import argparse
-import functools
 import logging
 import os
 import pathlib
@@ -316,28 +315,25 @@ class VersionState(object):
         exc_val: BaseException | None,
         exc_tb: typing.Any,
     ) -> None:
-        p = functools.partial(
-            LAST_CYCLE_SUCCESSFUL.labels, self.os_kind, self.rc_name, self.version_name
-        )
         val = FAILED if exc_type else not (self.phase_not_done)
         if self.current_phase == "forum post creation":
             self.has_forum_post = val
-            obj = p("forum post creation")
         elif self.current_phase == "release notes preparation":
             self.has_prepared_release_notes = val
-            obj = p("release notes preparation")
         elif self.current_phase == "release notes pull request":
             self.has_release_notes_submitted_as_pr = val
-            obj = p("release notes pull request")
         elif self.current_phase == "proposal submission":
             self.has_proposal = val
-            obj = p("proposal submission")
         elif self.current_phase == "forum post update":
             self.forum_post_updated = val
-            obj = p("forum post update")
         else:
             assert 0, "phase not reached %s" % self.current_phase
-        obj.set(0 if exc_type else 1)
+        LAST_CYCLE_SUCCESSFUL.labels(
+            self.os_kind,
+            self.rc_name,
+            self.version_name,
+            self.current_phase,
+        ).set(0 if exc_type else 1)
         self.current_phase = None
         self.phase_not_done = False
 
