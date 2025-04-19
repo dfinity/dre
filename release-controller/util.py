@@ -109,11 +109,12 @@ def auto_progressbar_with_item_descriptions(
         progress_width = int(round(progress * size))
         done_width = size - progress_width
         print(
-            f"{pre}[{'█'*progress_width}{('.'*done_width)}]{post}",
-            end="\r",
+            f"\r{pre}[{'█'*progress_width}{('.'*done_width)}]{post}",
+            end="",
             file=out,
             flush=True,
         )
+        time.sleep(10)
 
     for i, itemmaybetuple in enumerate(it):
         if isinstance(itemmaybetuple, tuple):
@@ -125,7 +126,7 @@ def auto_progressbar_with_item_descriptions(
         if sys.stderr.isatty():
             show(i + 1, desc, item)
     if sys.stderr.isatty():
-        print(f"\r{' '*(termsize())}", end="\r", flush=True, file=out)
+        print(f"\r{' '*(termsize())}", end="\n", flush=True, file=out)
 
 
 def auto_progressbar(

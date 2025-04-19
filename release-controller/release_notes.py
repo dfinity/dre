@@ -691,6 +691,43 @@ class LocalCommitChangeDeterminator(object):
         return typing.cast(CommitInclusionState, changed)
 
 
+class InternalCommitChangeDeterminator(object):
+    """Computes annotations on the fly from a local Git repository, ignoring existing annotations."""
+
+    def __init__(self, ic_repo: GitRepo):
+        """
+        Creates a new commit change determinator.
+
+        Upon creation, the freshest notes are fetched.
+        """
+        self.annotator = GitRepoAnnotator(
+            ic_repo,
+            list(CHANGED_NOTES_NAMESPACES.values()),
+            save_annotations=False,
+        )
+        self.annotator.fetch()
+
+    def commit_changes_artifact(
+        self, commit: str, os_kind: OsKind
+    ) -> CommitInclusionState:
+        """
+        Check if the os_kind (artifact) changed in the specifed commit
+        by querying the local repo for git notes populated and pushed
+        by commit annotator.
+        """
+        import commit_annotator
+
+        _, changed = commit_annotator.compute_annotations_for_object(
+            self.annotator, commit, os_kind
+        )
+        assert changed in [
+            COMMIT_BELONGS,
+            COMMIT_DOES_NOT_BELONG,
+            COMMIT_COULD_NOT_BE_ANNOTATED,
+        ], "Expected a specific CommitInclusionState, not %r" % changed
+        return changed
+
+
 class CommitAnnotatorClientCommitChangeDeterminator(object):
     """Retrieves annotations from a commit annotator API server."""
 
@@ -743,7 +780,9 @@ def main() -> None:
         type=str,
         default=None,
         help="Base URL of a commit annotator to use in order to determine commit"
-        " relevance for a target when composing release notes; if none specified, by default it uses local annotations",
+        " relevance for a target when composing release notes; if none specified or 'local'"
+        " specified, it uses local annotations; if 'internal' specified, it uses an"
+        " annotator that runs locally in-process and ignores existing annotations",
     )
     parser.add_argument(
         "--os-kind",
@@ -762,11 +801,14 @@ def main() -> None:
 
     ic_repo = GitRepo("https://github.com/dfinity/ic.git", main_branch="master")
 
-    if args.commit_annotator_url is None:
+    if args.commit_annotator_url is None or args.commit_annotator_url == "local":
         annotator: (
             LocalCommitChangeDeterminator
             | CommitAnnotatorClientCommitChangeDeterminator
+            | InternalCommitChangeDeterminator
         ) = LocalCommitChangeDeterminator(ic_repo)
+    elif args.commit_annotator_url == "internal":
+        annotator = InternalCommitChangeDeterminator(ic_repo)
     else:
         annotator = CommitAnnotatorClientCommitChangeDeterminator(
             args.commit_annotator_url
