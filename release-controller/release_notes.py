@@ -691,8 +691,12 @@ class LocalCommitChangeDeterminator(object):
         return typing.cast(CommitInclusionState, changed)
 
 
-class InternalCommitChangeDeterminator(object):
-    """Computes annotations on the fly from a local Git repository, ignoring existing annotations."""
+class RecreatingCommitChangeDeterminator(object):
+    """
+    Computes annotations on the fly from a local Git repository, ignoring existing annotations.
+
+    Annotations made this way are never saved or published to the Git repository.
+    """
 
     def __init__(self, ic_repo: GitRepo):
         """
@@ -781,7 +785,7 @@ def main() -> None:
         default=None,
         help="Base URL of a commit annotator to use in order to determine commit"
         " relevance for a target when composing release notes; if none specified or 'local'"
-        " specified, it uses local annotations; if 'internal' specified, it uses an"
+        " specified, it uses local annotations; if 'recreate' specified, it uses an"
         " annotator that runs locally in-process and ignores existing annotations,"
         " re-annotating every commit involved in the release notes-making process",
     )
@@ -806,10 +810,10 @@ def main() -> None:
         annotator: (
             LocalCommitChangeDeterminator
             | CommitAnnotatorClientCommitChangeDeterminator
-            | InternalCommitChangeDeterminator
+            | RecreatingCommitChangeDeterminator
         ) = LocalCommitChangeDeterminator(ic_repo)
-    elif args.commit_annotator_url == "internal":
-        annotator = InternalCommitChangeDeterminator(ic_repo)
+    elif args.commit_annotator_url == "recreate":
+        annotator = RecreatingCommitChangeDeterminator(ic_repo)
     else:
         annotator = CommitAnnotatorClientCommitChangeDeterminator(
             args.commit_annotator_url
