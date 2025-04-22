@@ -151,7 +151,6 @@ def find_base_release(
     """
     Find the parent release commit for the given commit. Optionally return merge base if it's not a direct parent.
     """
-    ic_repo.fetch()
     rc, rc_idx = next(
         (rc, i)
         for i, rc in enumerate(config.root.releases)

@@ -1,5 +1,6 @@
 import logging
 import pathlib
+import shlex
 import subprocess
 import time
 import typing
@@ -15,7 +16,7 @@ from tenacity import retry, stop_after_delay, retry_if_exception_type, after_log
 from util import resolve_binary
 
 
-_LOGGER = logging.getLogger()
+_LOGGER = logging.getLogger(__name__)
 
 
 BAZEL_TARGETS = {
@@ -37,6 +38,12 @@ BAZEL_TARGETS = {
     )
     """,
 }
+BAZEL_OPTS: list[str] = [
+    "--experimental_build_event_upload_strategy=local",
+    "--noremote_upload_local_results",
+    "--bes_backend=",
+    "--nobes_lifecycle_events",
+]
 CHANGED_NOTES_NAMESPACES: dict[OsKind, str] = {
     GUESTOS: "guestos-changed",
     HOSTOS: "hostos-changed",
@@ -72,6 +79,7 @@ def target_determinator(
             resolve_binary("target-determinator"),
             "-before-query-error-behavior=fatal",
             "-delete-cached-worktree",
+            "-bazel-opts=" + " ".join(shlex.quote(x) for x in BAZEL_OPTS),
             f"-bazel={resolve_binary("bazel")}",
             "--targets",
             bazel_targets,
@@ -83,10 +91,14 @@ def target_determinator(
         text=True,
     )
     output = p.stdout.strip()
-    logger.debug(
-        f"stdout of target determinator for {parent_object}: %s",
-        output,
-    )
+    if output:
+        logger.debug(
+            "stdout of target determinator for %s has %s lines",
+            parent_object,
+            len(output.splitlines()),
+        )
+    else:
+        logger.debug("stdout of target determinator for %s is empty", parent_object)
     return output
 
 
@@ -105,7 +117,14 @@ def compute_annotations_for_object(
     # repository's working directory.
     annotator.checkout(object)
     bazel_query_output = subprocess.check_output(
-        [resolve_binary("bazel"), "query", f"deps({targets})"],
+        [
+            resolve_binary("bazel"),
+            "query",
+        ]
+        + BAZEL_OPTS
+        + [
+            f"{targets}",
+        ],
         text=True,
         cwd=annotator.dir,
     )
@@ -199,14 +218,13 @@ class RecreatingCommitChangeDeterminator(object):
     def __init__(self, ic_repo: GitRepo):
         """
         Creates a new commit change determinator.
-
-        Upon creation, the freshest notes are fetched.
         """
         self.annotator = GitRepoAnnotator(
             ic_repo,
             list(CHANGED_NOTES_NAMESPACES.values()),
             save_annotations=False,
         )
+        self.annotator.fetch()
 
     def commit_changes_artifact(
         self, commit: str, os_kind: OsKind

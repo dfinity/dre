@@ -1,76 +1,94 @@
 import logging
-import os
-import pathlib
 import pytest
-import tarfile
-import tempfile
-import typing
 
-from commit_annotator import target_determinator
-from git_repo import GitRepo, GitRepoAnnotator
+from commit_annotation import (
+    compute_annotations_for_object,
+    COMMIT_BELONGS,
+    COMMIT_DOES_NOT_BELONG,
+)
+from const import GUESTOS
+from git_repo import GitRepoAnnotator
+from tests.fixtures import (
+    ic_repo as ic_repo,
+    annotator as annotator,
+)
 
 
 _LOGGER = logging.getLogger()
 
 
-# It would be fantastic if this clone could be a plain @pytest.fixture
-# but, due to our use of the xdist pytest plugin, that provides
-# no savings (each process clones its own IC repo, rather than reusing
-# the fixtures throughout the session).  It would still not be useful
-# to parallelize the different tests on the table above, since the
-# GitRepo class is not thread-safe anyway.
-# So what do we do here?  We look for a variable (present in Bazel
-# tests) that signals a promise that the tarball named in the variable
-# contains an up-to-date clone of the IC repo.  If we find it, we
-# extract it prior to instantiating the IC repo clone.
-@pytest.fixture(scope="session")
-def annotator() -> typing.Generator[GitRepoAnnotator, None, None]:
-    with tempfile.TemporaryDirectory() as d:
-        cache_dir = pathlib.Path(d)
-        if "IC_REPO_SEED_TAR" in os.environ:
-            unpacked_dir = cache_dir / "github.com" / "dfinity" / "ic.git"
-            _LOGGER.info("Unpacking seed tarball of IC repo to %s...", unpacked_dir)
-            os.makedirs(unpacked_dir, exist_ok=True)
-            with tarfile.open(os.environ["IC_REPO_SEED_TAR"]) as seed_repo:
-                seed_repo.extractall(unpacked_dir, filter="tar")
-        else:
-            _LOGGER.info("Cloning IC repo under cache directory %s...", cache_dir)
-        ic_repo = GitRepo(
-            "https://github.com/dfinity/ic.git",
-            main_branch="master",
-            repo_cache_dir=cache_dir,
-            behavior={
-                "push_annotations": False,
-                "save_annotations": True,
-                "fetch_annotations": False,
-            },
-        )
-        _LOGGER.info("Clone of IC repo finished.  Going into annotator context.")
-        with ic_repo.annotator([]) as annotator:
-            yield annotator
-
-
 def _test_guestos_changed(
-    ann: GitRepoAnnotator, object: str, expect_changed: bool
+    annotator: GitRepoAnnotator, object: str, expect_changed: bool
 ) -> None:
-    assert target_determinator(parent_object=object, cwd=ann.dir) == expect_changed
+    targets, determinator_output, belongs = compute_annotations_for_object(
+        object=object,
+        os_kind=GUESTOS,
+        annotator=annotator,
+    )
+    expected = COMMIT_BELONGS if expect_changed else COMMIT_DOES_NOT_BELONG
+    assert belongs == expected, "%r != %r, targets affected by commit %s:\n%s" % (
+        belongs,
+        expected,
+        object,
+        determinator_output,
+    )
 
 
-def test_guestos_changed__not_guestos_change(annotator: GitRepoAnnotator) -> None:
-    _test_guestos_changed(annotator, object="00dc67f8d", expect_changed=False)
+# Marks on tests attempt to limit parallelism on multiple target-determinators
+# running simultaneously.
+@pytest.mark.xdist_group(name="sameworker_commit_annotator1")
+def test_guestos_changed__registry_changed(annotator: GitRepoAnnotator) -> None:
+    _test_guestos_changed(
+        annotator,
+        # feat(registry): Added `maybe_chunkify`... (#4751)
+        object="ca2d5e7dfc8a70f6998d9edd35c0d020922fe829",
+        expect_changed=True,
+    )
 
 
+@pytest.mark.xdist_group(name="sameworker_commit_annotator2")
+def test_guestos_changed__docs_changed(annotator: GitRepoAnnotator) -> None:
+    """Simple documentation changes do not impact GuestOS."""
+    _test_guestos_changed(
+        annotator,
+        # chore: Add contributing guide for management canister APIs (#4852)
+        object="a8774ac3b1172678554857bdf23c33cf913dde1d",
+        expect_changed=False,
+    )
+
+
+@pytest.mark.xdist_group(name="sameworker_commit_annotator3")
 def test_guestos_changed__bumped_dependencies(annotator: GitRepoAnnotator) -> None:
-    _test_guestos_changed(annotator, object="2d0835bba", expect_changed=True)
+    """Dependency bump known to be dependency of GuestOS affects GuestOS."""
+    _test_guestos_changed(
+        annotator,
+        # chore(EXC-2013): upgrade wasmtime to v.31 (#4673)
+        object="8c1f8b0d3060f5f905d42bf68eb36ac6130c4b10",
+        expect_changed=True,
+    )
 
 
-def test_guestos_changed__github_dir_changed(annotator: GitRepoAnnotator) -> None:
-    _test_guestos_changed(annotator, object="94fd38099", expect_changed=False)
+@pytest.mark.xdist_group(name="sameworker_commit_annotator1")
+def test_guestos_changed__canister_not_in_replica_changed(
+    annotator: GitRepoAnnotator,
+) -> None:
+    """Changes in a canister not shipped with replica should not affect GuestOS."""
+    _test_guestos_changed(
+        annotator,
+        # feat(ckbtc): Add get_utxos_cache to reduce latency of update_balance calls (#4788)
+        object="9204403648ccb03c3c65f86e55864f5cbbbf5059",
+        expect_changed=False,
+    )
 
 
-def test_guestos_changed__replica_changed(annotator: GitRepoAnnotator) -> None:
-    _test_guestos_changed(annotator, object="951e895c7", expect_changed=True)
-
-
-def test_guestos_changed__cargo_lock_paths_only(annotator: GitRepoAnnotator) -> None:
-    _test_guestos_changed(annotator, object="5a250cb34", expect_changed=False)
+@pytest.mark.xdist_group(name="sameworker_commit_annotator2")
+def test_guestos_changed__cargo_lock_paths_only(
+    annotator: GitRepoAnnotator,
+) -> None:
+    "Minor changes only to Cargo.lock that don't affect the replica should not affect GuestOS."
+    _test_guestos_changed(
+        annotator,
+        # fix: match cloudflare's crate rev in Cargo.toml with external_crates.bzl (#4874)
+        object="a6528fc55695b6ae4d330f50088d9b4e1f0714f1",
+        expect_changed=False,
+    )

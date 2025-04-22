@@ -276,6 +276,7 @@ The above runs all tests and typechecks tested files.
 With a `.venv` setup by `rye`, you can also run (with varying levels of success):
 
 ```sh
+export PYTHONPATH=$PWD/release-controller/
 .venv/bin/python3 -m pytest release-controller/
 ```
 

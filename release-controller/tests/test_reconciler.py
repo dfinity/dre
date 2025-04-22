@@ -1,5 +1,3 @@
-import pathlib
-import tempfile
 from unittest.mock import Mock
 import pytest_mock.plugin
 
@@ -20,6 +18,8 @@ from reconciler_state import ReconcilerState
 from reconciler import version_package_checksum
 from reconciler import versions_to_unelect
 from release_index_loader import StaticReleaseLoader
+
+from tests.fixtures import ic_repo as ic_repo
 
 
 class AmnesiacReconcilerState(ReconcilerState):
@@ -368,16 +368,10 @@ dff2072e34071110234b0cb169705efc13284e4a99b7795ef1951af1fe7b41ac *update-img.tar
         assert "do not match contents" in str(e.value)
 
 
-def test_find_base_release() -> None:
-    with tempfile.TemporaryDirectory() as repo_cache_dir:
-        ic_repo = git_repo.GitRepo(
-            "https://github.com/dfinity/ic.git",
-            main_branch="master",
-            repo_cache_dir=pathlib.Path(repo_cache_dir),
-        )
-        index = parse_yaml_raw_as(
-            release_index.Model,
-            """
+def test_find_base_release(ic_repo: git_repo.GitRepo) -> None:
+    index = parse_yaml_raw_as(
+        release_index.Model,
+        """
 releases:
   - rc_name: rc--2024-07-10_23-01
     versions:
@@ -486,41 +480,41 @@ releases:
       - name: hotfix-bitcoin-query-stats
         version: 4e9b02fc3c0fa377b2fba44b15841d6ef73593a3
 """,
-        )
+    )
 
-        assert find_base_release(
-            ic_repo, index, "48c500d1501e4165fc183e508872a2ef13fd0bef"
-        ) == (
-            "246d0ce0784d9990c06904809722ce5c2c816269",
-            "release-2024-06-12_23-01-base",
-        )
-        assert find_base_release(
-            ic_repo, index, "246d0ce0784d9990c06904809722ce5c2c816269"
-        ) == (
-            "d19fa446ab35780b2c6d8b82ea32d808cca558d5",
-            "release-2024-06-05_23-01-base",
-        )
-        assert find_base_release(
-            ic_repo, index, "9866a6f5cb43c54e3d87fa02a4eb80d0f159dddb"
-        ) == (
-            "2c4566b7b7af453167785504ba3c563e09f38504",
-            "release-2024-05-09_23-02-base",
-        )
-        assert find_base_release(
-            ic_repo, index, "63acf4f88b20ec0c6384f4e18f0f6f69fc5d9b9f"
-        ) == (
-            "0a51fd74f08b2e6f23d6e1d60f1f52eb73b40ccc",
-            "release-2024-04-17_23-01-query-stats",
-        )
-        assert find_base_release(
-            ic_repo, index, "0d2b3965c813cd3a39ceedacd97fa2eee8760074"
-        ) == (
-            "a3831c87440df4821b435050c8a8fcb3745d86f6",
-            "release-2024-07-10_23-01-base",
-        )
-        assert find_base_release(
-            ic_repo, index, "ec35ebd252d4ffb151d2cfceba3a86c4fb87c6d6"
-        ) == (
-            "5ba1412f9175d987661ae3c0d8dbd1ac3e092b7d",
-            "release-2024-05-15_23-02-base",
-        )
+    assert find_base_release(
+        ic_repo, index, "48c500d1501e4165fc183e508872a2ef13fd0bef"
+    ) == (
+        "246d0ce0784d9990c06904809722ce5c2c816269",
+        "release-2024-06-12_23-01-base",
+    )
+    assert find_base_release(
+        ic_repo, index, "246d0ce0784d9990c06904809722ce5c2c816269"
+    ) == (
+        "d19fa446ab35780b2c6d8b82ea32d808cca558d5",
+        "release-2024-06-05_23-01-base",
+    )
+    assert find_base_release(
+        ic_repo, index, "9866a6f5cb43c54e3d87fa02a4eb80d0f159dddb"
+    ) == (
+        "2c4566b7b7af453167785504ba3c563e09f38504",
+        "release-2024-05-09_23-02-base",
+    )
+    assert find_base_release(
+        ic_repo, index, "63acf4f88b20ec0c6384f4e18f0f6f69fc5d9b9f"
+    ) == (
+        "0a51fd74f08b2e6f23d6e1d60f1f52eb73b40ccc",
+        "release-2024-04-17_23-01-query-stats",
+    )
+    assert find_base_release(
+        ic_repo, index, "0d2b3965c813cd3a39ceedacd97fa2eee8760074"
+    ) == (
+        "a3831c87440df4821b435050c8a8fcb3745d86f6",
+        "release-2024-07-10_23-01-base",
+    )
+    assert find_base_release(
+        ic_repo, index, "ec35ebd252d4ffb151d2cfceba3a86c4fb87c6d6"
+    ) == (
+        "5ba1412f9175d987661ae3c0d8dbd1ac3e092b7d",
+        "release-2024-05-15_23-02-base",
+    )

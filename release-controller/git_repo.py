@@ -178,12 +178,16 @@ class GitRepo:
         repo: str,
         repo_cache_dir: pathlib.Path = pathlib.Path.home() / ".cache/git",
         main_branch: str = "main",
+        fetch: bool = True,
     ) -> None:
         """
         Create a new GitRepo object.
 
         The repository will be cloned into the cache directory if it does
         not exist, and then fetched to the latest content present on the remote.
+
+        If `fetch` is false, the repo will not be fetched after instantiation.
+        This is useful during hermetic tests.
         """
         if not repo.startswith("https://"):
             raise ValueError("invalid repo")
@@ -202,7 +206,8 @@ class GitRepo:
             else repo.removeprefix("https://")
         )
         self.cache: dict[str, Commit] = {}
-        self.fetch()
+        if fetch:
+            self.fetch()
 
     def __del__(self) -> None:
         """Clean up the temporary directory."""
@@ -444,6 +449,7 @@ class GitRepo:
 
     def checkout(self, ref: str) -> None:
         """Checkout the given ref.  The workspace will be clean after this."""
+        _LOGGER.debug("Checking out ref %r", ref)
         check_call(
             ["git", "reset", "--hard", "--quiet"],
             cwd=self.dir,

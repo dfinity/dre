@@ -4,72 +4,9 @@ load("@//tools/python:py_oci_image.bzl", "py_oci_image")
 load("@bazel_skylib//rules:native_binary.bzl", "native_binary")
 load("@aspect_bazel_lib//lib:tar.bzl", "tar")
 
-deps = [
-    requirement("requests"),
-    requirement("pydrive2"),
-    requirement("markdown"),
-    requirement("markdownify"),
-    requirement("pymdown-extensions"),
-    requirement("pytest"),
-    requirement("pygithub"),
-    requirement("pytest-mock"),
-    requirement("mammoth"),
-    requirement("slack-sdk"),
-    requirement("python-dotenv"),
-    requirement("pydiscourse"),
-    requirement("pydantic-yaml"),
-    requirement("ic-py"),
-    requirement("tenacity"),
-]
-
-dev_deps = [
-    requirement("httpretty"),
-    requirement("pytest-xdist"),
-    requirement("types-requests"),
-    requirement("mypy"),
-]
-
 env = {
     "BAZEL": "true",
 }
-
-py_binary(
-    name = "release-controller",
-    main = "reconciler.py",
-    srcs = glob(["*.py"], exclude=["commit_annotator.py"]),
-    tags = ["typecheck"],
-    env = {
-        "DRE_PATH": "$(rootpath //rs/cli:dre-embedded)",
-    },
-    deps = deps + [
-        requirement("prometheus-client"),
-    ],
-    data = ["//rs/cli:dre-embedded"] + [":bazelisk", ":target_determinator"],
-)
-
-py_binary(
-    name = "commit-annotator",
-    main = "commit_annotator.py",
-    srcs = ["commit_annotator.py", "commit_annotation.py", "git_repo.py", "const.py", "release_index.py", "util.py", "watchdog.py"],
-    tags = ["typecheck"],
-    data = [":bazelisk", ":target_determinator"],
-    env = env,
-    deps = deps + [
-        requirement("prometheus-client"),
-    ],
-)
-
-py_binary(
-    name = "release-notes",
-    main = "release_notes.py",
-    srcs = ["release_notes.py", "git_repo.py", "const.py", "release_index.py", "util.py", "commit_annotation.py", "watchdog.py"],
-    tags = ["typecheck"],
-    data = [":bazelisk", ":target_determinator"],
-    env = env,
-    deps = deps + [
-        requirement("prometheus-client"),
-    ]
-)
 
 native_binary(
     name = "bazelisk",
@@ -87,56 +24,264 @@ native_binary(
     out = "target-determinator",
 )
 
+
+py_library (
+    name = "const",
+    srcs = ["const.py"],
+    tags = ["typecheck"],
+)
+
+py_library (
+    name = "util",
+    srcs = ["util.py"],
+    tags = ["typecheck"],
+    deps = [
+        requirement("requests"),
+        requirement("types-requests"),
+    ],
+)
+
+py_library (
+    name = "release_index",
+    srcs = ["release_index.py"],
+    tags = ["typecheck"],
+    deps = [requirement("pydantic")],
+)
+
+py_library (
+    name = "git_repo",
+    srcs = ["git_repo.py"],
+    tags = ["typecheck"],
+    deps = ["release_index", "util"] + [
+        requirement("python-dotenv"),
+    ],
+)
+
+py_library (
+    name = "commit_annotation",
+    data = [":bazelisk", ":target_determinator"],
+    srcs = ["commit_annotation.py"],
+    deps = ["git_repo", "const"] + [
+        requirement("pydantic"),
+        requirement("tenacity"),
+        requirement("requests"),
+        requirement("types-requests"),
+    ],
+    tags = ["typecheck"],
+)
+
+py_library (
+    name = "release_notes",
+    data = [],
+    srcs = ["release_notes.py"],
+    deps = [
+        requirement("markdown"),
+    ] + ["commit_annotation"],
+    tags = ["typecheck"],
+)
+
+py_library (
+    name = "google_docs",
+    data = [],
+    srcs = ["google_docs.py"],
+    deps = [
+        requirement("markdown"),
+        requirement("markdownify"),
+        requirement("pymdown-extensions"),
+        requirement("pydrive2"),
+        requirement("mammoth"),
+        requirement("pydantic"),
+    ] + ["commit_annotation", "release_notes"],
+    tags = ["typecheck"],
+)
+
+py_library (
+    name = "publish_notes",
+    srcs = ["publish_notes.py"],
+    deps = ["google_docs", "release_notes"] + [
+        requirement("python-dotenv"),
+        requirement("pygithub"),
+    ],
+    tags = ["typecheck"],
+)
+
+py_library (
+    name = "release_index_loader",
+    srcs = ["release_index_loader.py"],
+    tags = ["typecheck"],
+    deps = ["publish_notes", "release_index", "const", "git_repo"] + [
+        requirement("pydantic-yaml"),
+        requirement("python-dotenv"),
+    ],
+)
+
+
+py_library (
+    name = "dre_cli",
+    data = ["//rs/cli:dre-embedded"],
+    srcs = ["dre_cli.py"],
+    deps = ["const", "util"],
+    tags = ["typecheck"],
+)
+
+py_library (
+    name = "watchdog",
+    srcs = ["watchdog.py"],
+    tags = ["typecheck"],
+)
+
+py_library (
+    name = "reconciler_state",
+    srcs = ["reconciler_state.py"],
+    tags = ["typecheck"],
+    deps = ["dre_cli"],
+)
+
+py_library (
+    name = "forum",
+    data = [],
+    srcs = ["forum.py"],
+    deps = ["release_index", "reconciler_state", "util"] + [
+        requirement("pydiscourse"),
+        requirement("python-dotenv"),
+        requirement("pydantic"),
+    ],
+    tags = ["typecheck"],
+)
+
+py_library (
+    name = "prometheus",
+    data = [],
+    srcs = ["prometheus.py"],
+    deps = [
+        requirement("requests"),
+        requirement("types-requests"),
+    ],
+    tags = ["typecheck"],
+)
+
+py_library (
+    name = "dryrun",
+    data = [],
+    srcs = ["dryrun.py"],
+    deps = ["forum", "dre_cli", "google_docs", "release_index", "release_notes", "const"] + [
+        requirement("pydiscourse"),
+    ],
+    tags = ["typecheck"],
+)
+
+py_binary(
+    name = "release-controller",
+    main = "reconciler.py",
+    srcs = ["reconciler.py", "slack_announce.py"],
+    tags = ["typecheck"],
+    env = {
+        "DRE_PATH": "$(rootpath //rs/cli:dre-embedded)",
+    },
+    deps = ["dre_cli", "publish_notes", "forum", "watchdog", "prometheus", "release_index_loader", "dryrun"] + [
+        requirement("pydiscourse"),
+        requirement("requests"),
+        requirement("types-requests"),
+        requirement("prometheus-client"),
+        requirement("python-dotenv"),
+        requirement("pygithub"),
+        requirement("slack-sdk"),
+    ],
+    data = ["//rs/cli:dre-embedded"],
+)
+
+py_binary(
+    name = "commit-annotator",
+    main = "commit_annotator.py",
+    srcs = ["commit_annotator.py", "watchdog.py"],
+    tags = ["typecheck"],
+    env = env,
+    deps = [requirement("prometheus-client")] + ["commit_annotation"],
+)
+
+py_binary(
+    name = "release-notes",
+    main = "release_notes.py",
+    srcs = ["release_notes.py"],
+    tags = ["typecheck"],
+    env = env,
+    deps = [requirement("markdown")] + ["commit_annotation"],
+)
+
 genrule(
-    name = "ic_repo_clone_for_long_tests",
+    name = "ic_repo_clone",
     outs = ["ic.git.tar"],
-    cmd = "git clone https://github.com/dfinity/ic.git ic.git && cd `dirname $@`/ic.git && tar cf ../ic.git.tar .",
+    cmd = "rm -rf `dirname $@`/ic.git && git clone https://github.com/dfinity/ic.git `dirname $@`/ic.git && cd `dirname $@`/ic.git && tar cf ../ic.git.tar .",
+    tags = ["no-sandbox"] + ["manual"],
+)
+
+genrule(
+    name = "dre_repo_clone",
+    outs = ["dre.git.tar"],
+    cmd = "rm -rf `dirname $@`/dre.git && git clone https://github.com/dfinity/dre.git `dirname $@`/dre.git && cd `dirname $@`/dre.git && tar cf ../dre.git.tar .",
     tags = ["no-sandbox"] + ["manual"],
 )
 
 medium_tests = ["tests/test_release_notes.py", "tests/test_reconciler.py"]
+medium_tests_deps = ["release-controller", "commit_annotation"] + [
+    requirement("pygithub"),
+    requirement("pydantic-yaml"),
+]
 
 # Add file here if you do not want to run the test automatically.
-long_tests = ["tests/test_commit_annotator.py"]
+large_tests = ["tests/test_commit_annotator.py"]
+large_tests_deps = ["commit_annotation"]
 
+small_tests = glob(["tests/test_*.py"], exclude=large_tests + medium_tests)
+small_tests_deps = ["forum", "publish_notes", "release_index_loader", "dryrun"] + [
+    requirement("httpretty"),
+]
+
+# We group tests into large, medium and small to take advantage of the
+# parallelism that such an arrangement provides -- PyTest + XDist can
+# aggregate all tests in a suite and run them all in parallel, while
+# the size division ensures that large tests don't cause small tests
+# to fail due to the large tests timing out.
 [
     [
         py_test(
-            name = target[6:-3],
-            srcs = ["tests/runner.py"] + [target] + glob(["tests/mock_*.py"]),
-            data = glob(["tests/test_data/*"]) + ["//:pyproject.toml"] + group["data"],
+            name = group["test_size"] + "_tests",
+            srcs = ["tests/runner.py"] + group["targets"] + glob(["tests/mock_*.py"]) + ["tests/fixtures.py"],
+            data = group["data"] + ["//:pyproject.toml"] + ["ic_repo_clone", 'dre_repo_clone'],
             main = "tests/runner.py",
-            env = env | group["env"],
-            tags = ["no-sandbox"] + group["tags"] + ["typecheck"],
-            deps = deps + dev_deps + ["release-controller"] + ["commit-annotator"],
+            env = env | {
+                "IC_REPO_SEED_TAR": "$(location ic_repo_clone)",
+                "DRE_REPO_SEED_TAR": "$(location dre_repo_clone)",
+            },
+            tags = ["typecheck", "no-sandbox"],
+            deps = [
+                requirement("pytest"),
+                requirement('pytest-mock'),
+                requirement("pytest-xdist"),
+                requirement("filelock"),
+            ] + group["deps"],
             env_inherit = ["HOME"],
             size = group["test_size"],
         )
-        for target in group["targets"]
     ]
     for group in [
         {
-            "targets": glob(["tests/test_*.py"], exclude=long_tests + medium_tests),
-            "tags": [],
+            "targets": small_tests,
+            "data": glob(["tests/test_data/*"]),
+            "deps": small_tests_deps,
             "test_size": "small",
-            "data": [],
-            "env": {},
         },
         {
             "targets": medium_tests,
-            "tags": [],
-            "test_size": "medium",
             "data": [],
-            "env": {},
+            "deps": medium_tests_deps,
+            "test_size": "medium",
         },
         {
-            "targets": long_tests,
-            "tags": ["manual"],
+            "targets": large_tests,
+            "data": [],
+            "deps": large_tests_deps,
             "test_size": "large",
-            "data": ["ic_repo_clone_for_long_tests"],
-            "env": {
-                "IC_REPO_SEED_TAR": "$(location ic_repo_clone_for_long_tests)",
-            },
         },
     ]
 ]

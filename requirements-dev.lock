@@ -135,7 +135,7 @@ executing==2.1.0
     # via stack-data
 fastjsonschema==2.20.0
     # via nbformat
-filelock==3.15.4
+filelock==3.18.0
     # via virtualenv
 flask==3.0.3
     # via quart
@@ -460,11 +460,11 @@ pyparsing==3.1.4
     # via matplotlib
 pyreadline3==3.4.1 ; sys_platform == 'win32'
     # via humanfriendly
-pytest==8.3.4
+pytest==8.3.5
     # via pytest-asyncio
     # via pytest-mock
     # via pytest-xdist
-pytest-asyncio==0.24.0
+pytest-asyncio==0.26.0
 pytest-mock==3.14.0
 pytest-xdist==3.6.1
 python-dateutil==2.9.0.post0
