@@ -782,7 +782,8 @@ def main() -> None:
         help="Base URL of a commit annotator to use in order to determine commit"
         " relevance for a target when composing release notes; if none specified or 'local'"
         " specified, it uses local annotations; if 'internal' specified, it uses an"
-        " annotator that runs locally in-process and ignores existing annotations",
+        " annotator that runs locally in-process and ignores existing annotations,"
+        " re-annotating every commit involved in the release notes-making process",
     )
     parser.add_argument(
         "--os-kind",
