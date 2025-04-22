@@ -9,10 +9,6 @@ from const import (
     OsKind,
     GUESTOS,
     HOSTOS,
-    COMMIT_BELONGS,
-    COMMIT_DOES_NOT_BELONG,
-    COMMIT_COULD_NOT_BE_ANNOTATED,
-    CommitInclusionState,
 )
 from git_repo import GitRepoAnnotator, GitRepo
 from tenacity import retry, stop_after_delay, retry_if_exception_type, after_log
@@ -45,6 +41,13 @@ CHANGED_NOTES_NAMESPACES: dict[OsKind, str] = {
     GUESTOS: "guestos-changed",
     HOSTOS: "hostos-changed",
 }
+COMMIT_BELONGS: typing.Literal["True"] = "True"
+COMMIT_DOES_NOT_BELONG: typing.Literal["False"] = "False"
+COMMIT_COULD_NOT_BE_ANNOTATED: typing.Literal["Failed"] = "Failed"
+
+CommitInclusionState = (
+    typing.Literal["True"] | typing.Literal["False"] | typing.Literal["Failed"]
+)
 
 
 class NotReady(Exception):
@@ -128,6 +131,19 @@ def compute_annotations_for_object(
         ),
         (COMMIT_BELONGS if target_determinator_output else COMMIT_DOES_NOT_BELONG),
     )
+
+
+# Signature for a protocol (object) that carries a callable
+# commit_changes_artifact that, given a commit and an OS kind,
+# can determine whether the commit has changed that OS.
+# Such callable should return NotReady when a commit is not yet
+# annotated.
+class ChangeDeterminatorProtocol(typing.Protocol):
+    def commit_changes_artifact(
+        self,
+        commit: str,
+        os_kind: OsKind,
+    ) -> CommitInclusionState: ...
 
 
 class LocalCommitChangeDeterminator(object):

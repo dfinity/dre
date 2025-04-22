@@ -12,7 +12,11 @@ from prometheus_client import start_http_server, Gauge
 
 sys.path.append(os.path.join(os.path.dirname(__file__)))
 
-from commit_annotation import compute_annotations_for_object, CHANGED_NOTES_NAMESPACES
+from commit_annotation import (
+    compute_annotations_for_object,
+    CHANGED_NOTES_NAMESPACES,
+    COMMIT_COULD_NOT_BE_ANNOTATED,
+)
 from git_repo import GitRepo, GitRepoAnnotator
 from datetime import datetime
 from util import conventional_logging
@@ -23,7 +27,6 @@ from const import (
     GUESTOS,
     HOSTOS,
     OS_KINDS,
-    COMMIT_COULD_NOT_BE_ANNOTATED,
 )
 
 TARGETS_NOTES_NAMESPACES = {GUESTOS: "guestos-targets", HOSTOS: "hostos-targets"}

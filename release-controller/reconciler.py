@@ -33,11 +33,11 @@ from release_notes import (
     prepare_release_notes,
     SecurityReleaseNotesRequest,
     OrdinaryReleaseNotesRequest,
-    OSChangeDeterminator,
 )
 from commit_annotation import (
     LocalCommitChangeDeterminator,
     CommitAnnotatorClientCommitChangeDeterminator,
+    ChangeDeterminatorProtocol,
     NotReady,
 )
 from util import version_name, conventional_logging, sha256sum_http_response
@@ -352,7 +352,7 @@ class Reconciler:
         nns_url: str,
         state: reconciler_state.ReconcilerState,
         ic_repo: GitRepo,
-        change_determinator_factory: typing.Callable[[], OSChangeDeterminator],
+        change_determinator_factory: typing.Callable[[], ChangeDeterminatorProtocol],
         active_version_provider: ActiveVersionProvider,
         dre: dre_cli.DRECli,
         slack_announcer: slack_announce.SlackAnnouncerProtocol,
@@ -840,16 +840,14 @@ def main() -> None:
         slack_announce.SlackAnnouncer() if not dry_run else dryrun.MockSlackAnnouncer()
     )
 
-    def change_determinator_factory() -> OSChangeDeterminator:
+    def change_determinator_factory() -> ChangeDeterminatorProtocol:
         if opts.commit_annotator_url == "local":
             LOGGER.debug("Using local commit annotator to determine OS changes")
-            return LocalCommitChangeDeterminator(ic_repo).commit_changes_artifact
+            return LocalCommitChangeDeterminator(ic_repo)
         LOGGER.debug(
             "Using API at %s to determine OS changes", opts.commit_annotator_url
         )
-        return CommitAnnotatorClientCommitChangeDeterminator(
-            opts.commit_annotator_url
-        ).commit_changes_artifact
+        return CommitAnnotatorClientCommitChangeDeterminator(opts.commit_annotator_url)
 
     reconciler = Reconciler(
         forum_client=forum_client,

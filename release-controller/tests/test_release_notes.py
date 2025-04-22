@@ -7,9 +7,9 @@ from release_notes import (
     SecurityReleaseNotesRequest,
     Change,
 )
-from commit_annotation import LocalCommitChangeDeterminator
+from commit_annotation import LocalCommitChangeDeterminator, COMMIT_BELONGS
 from git_repo import GitRepo
-from const import GUESTOS, COMMIT_BELONGS
+from const import GUESTOS
 
 
 def test_get_change_description_for_commit() -> None:
@@ -204,7 +204,7 @@ def test_release_notes() -> None:
             main_branch="master",
             repo_cache_dir=pathlib.Path(repo_cache_dir),
         )
-        belongs = LocalCommitChangeDeterminator(ic_repo).commit_changes_artifact
+        belongs = LocalCommitChangeDeterminator(ic_repo)
         assert (
             prepare_release_notes(
                 OrdinaryReleaseNotesRequest(

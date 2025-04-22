@@ -146,7 +146,7 @@ def main() -> None:
     )
     ic_repo = GitRepo("https://github.com/dfinity/ic.git", main_branch="master")
     content = prepare_release_notes(
-        request, ic_repo, LocalCommitChangeDeterminator(ic_repo).commit_changes_artifact
+        request, ic_repo, LocalCommitChangeDeterminator(ic_repo)
     )
     gdoc = client.ensure(
         release_tag="release-2024-08-02_01-30-base",

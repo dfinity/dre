@@ -9,7 +9,6 @@ import git_repo
 import publish_notes
 import pytest
 import release_index
-import release_notes
 import typing
 import dryrun
 from github import Github
@@ -71,10 +70,10 @@ releases:
     publish_client = publish_notes.PublishNotesClient(repo)
     mocker.patch.object(publish_client, "ensure_published")
 
-    def cdf() -> release_notes.OSChangeDeterminator:
+    def cdf() -> commit_annotation.ChangeDeterminatorProtocol:
         return commit_annotation.LocalCommitChangeDeterminator(
             repo  # type: ignore
-        ).commit_changes_artifact
+        )
 
     reconciler = Reconciler(
         forum_client=forum_client,

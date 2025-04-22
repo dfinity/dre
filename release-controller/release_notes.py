@@ -21,14 +21,14 @@ from const import (  # noqa: E402
     OsKind,
     OS_KINDS,
     GUESTOS,
-    COMMIT_BELONGS,
-    COMMIT_COULD_NOT_BE_ANNOTATED,
-    CommitInclusionState,
 )
 from commit_annotation import (  # noqa: E402
     RecreatingCommitChangeDeterminator,
     LocalCommitChangeDeterminator,
     CommitAnnotatorClientCommitChangeDeterminator,
+    ChangeDeterminatorProtocol,
+    COMMIT_BELONGS,
+    COMMIT_COULD_NOT_BE_ANNOTATED,
 )
 from git_repo import GitRepo, FileChange  # noqa: E402
 from util import auto_progressbar_with_item_descriptions, conventional_logging  # noqa: E402
@@ -36,13 +36,6 @@ from util import auto_progressbar_with_item_descriptions, conventional_logging  
 import markdown  # noqa: E402
 
 _LOGGER = logging.getLogger(__name__)
-
-# Signature for a callable that, given a commit and an OS kind,
-# can determine whether the commit has changed that OS.
-# Such functions should return NotReady when a commit is not yet
-# annotated.
-OSChangeDeterminator = typing.Callable[[str, OsKind], CommitInclusionState]
-
 
 COMMIT_HASH_LENGTH = 9
 
@@ -278,7 +271,7 @@ def release_changes(
     ic_repo: GitRepo,
     base_release_commit: str,
     release_commit: str,
-    belongs_determinator: OSChangeDeterminator,
+    belongs_determinator: ChangeDeterminatorProtocol,
     os_kind: OsKind,
     max_commits: int = 1000,
 ) -> dict[str, list[Change]]:
@@ -299,7 +292,7 @@ def release_changes(
         change = get_change_description_for_commit(
             commit_hash=commits[i],
             ic_repo=ic_repo,
-            belongs=belongs_determinator(commits[i], os_kind)
+            belongs=belongs_determinator.commit_changes_artifact(commits[i], os_kind)
             in [COMMIT_BELONGS, COMMIT_COULD_NOT_BE_ANNOTATED],
         )
         if change is None:
@@ -345,7 +338,7 @@ class PreparedReleaseNotes(str):
 def prepare_release_notes(
     request: SecurityReleaseNotesRequest | OrdinaryReleaseNotesRequest,
     ic_repo: GitRepo,
-    os_change_determinator: OSChangeDeterminator,
+    os_change_determinator: ChangeDeterminatorProtocol,
     max_commits: int = 1000,
 ) -> PreparedReleaseNotes:
     if isinstance(request, SecurityReleaseNotesRequest):
@@ -697,11 +690,7 @@ def main() -> None:
     ic_repo = GitRepo("https://github.com/dfinity/ic.git", main_branch="master")
 
     if args.commit_annotator_url is None or args.commit_annotator_url == "local":
-        annotator: (
-            LocalCommitChangeDeterminator
-            | CommitAnnotatorClientCommitChangeDeterminator
-            | RecreatingCommitChangeDeterminator
-        ) = LocalCommitChangeDeterminator(ic_repo)
+        annotator: ChangeDeterminatorProtocol = LocalCommitChangeDeterminator(ic_repo)
     elif args.commit_annotator_url == "recreate":
         annotator = RecreatingCommitChangeDeterminator(ic_repo)
     else:
@@ -717,7 +706,7 @@ def main() -> None:
             args.base_release_commit,
             args.os_kind,
         ),
-        os_change_determinator=annotator.commit_changes_artifact,
+        os_change_determinator=annotator,
         ic_repo=ic_repo,
         max_commits=args.max_commits,
     )
