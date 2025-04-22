@@ -35,7 +35,7 @@ from release_notes import (
     OrdinaryReleaseNotesRequest,
     OSChangeDeterminator,
 )
-from commit_annotator import (
+from commit_annotation import (
     LocalCommitChangeDeterminator,
     CommitAnnotatorClientCommitChangeDeterminator,
     NotReady,

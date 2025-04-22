@@ -36,7 +36,7 @@ env = {
 py_binary(
     name = "release-controller",
     main = "reconciler.py",
-    srcs = glob(["*.py"]),
+    srcs = glob(["*.py"], exclude=["commit_annotator.py"]),
     tags = ["typecheck"],
     env = {
         "DRE_PATH": "$(rootpath //rs/cli:dre-embedded)",
@@ -50,7 +50,7 @@ py_binary(
 py_binary(
     name = "commit-annotator",
     main = "commit_annotator.py",
-    srcs = ["commit_annotator.py", "git_repo.py", "const.py", "release_index.py", "util.py", "watchdog.py"],
+    srcs = ["commit_annotator.py", "commit_annotation.py", "git_repo.py", "const.py", "release_index.py", "util.py", "watchdog.py"],
     tags = ["typecheck"],
     data = [":bazelisk", ":target_determinator"],
     env = env,
@@ -62,7 +62,7 @@ py_binary(
 py_binary(
     name = "release-notes",
     main = "release_notes.py",
-    srcs = ["release_notes.py", "git_repo.py", "const.py", "release_index.py", "util.py", "commit_annotator.py", "watchdog.py"],
+    srcs = ["release_notes.py", "git_repo.py", "const.py", "release_index.py", "util.py", "commit_annotation.py", "watchdog.py"],
     tags = ["typecheck"],
     data = [":bazelisk", ":target_determinator"],
     env = env,

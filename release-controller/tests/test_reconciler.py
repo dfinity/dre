@@ -4,7 +4,9 @@ from unittest.mock import Mock
 import pytest_mock.plugin
 
 import const
+import commit_annotation
 import git_repo
+import publish_notes
 import pytest
 import release_index
 import release_notes
@@ -12,7 +14,6 @@ import typing
 import dryrun
 from github import Github
 from dryrun import ReleaseNotesClient as ReleaseNotesClientMock
-from publish_notes import PublishNotesClient
 from pydantic_yaml import parse_yaml_raw_as
 from reconciler import find_base_release, oldest_active_release
 from reconciler import Reconciler
@@ -67,11 +68,13 @@ releases:
       - version: 8d4b6898d878fa3db4028b316b78b469ed29f293
         name: default
 """
-    publish_client = PublishNotesClient(repo)
+    publish_client = publish_notes.PublishNotesClient(repo)
     mocker.patch.object(publish_client, "ensure_published")
 
     def cdf() -> release_notes.OSChangeDeterminator:
-        return release_notes.LocalCommitChangeDeterminator(repo).commit_changes_artifact  # type: ignore
+        return commit_annotation.LocalCommitChangeDeterminator(
+            repo  # type: ignore
+        ).commit_changes_artifact
 
     reconciler = Reconciler(
         forum_client=forum_client,

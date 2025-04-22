@@ -25,7 +25,7 @@ from const import (  # noqa: E402
     COMMIT_COULD_NOT_BE_ANNOTATED,
     CommitInclusionState,
 )
-from commit_annotator import (  # noqa: E402
+from commit_annotation import (  # noqa: E402
     RecreatingCommitChangeDeterminator,
     LocalCommitChangeDeterminator,
     CommitAnnotatorClientCommitChangeDeterminator,

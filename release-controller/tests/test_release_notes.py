@@ -7,7 +7,7 @@ from release_notes import (
     SecurityReleaseNotesRequest,
     Change,
 )
-from commit_annotator import LocalCommitChangeDeterminator
+from commit_annotation import LocalCommitChangeDeterminator
 from git_repo import GitRepo
 from const import GUESTOS, COMMIT_BELONGS
 

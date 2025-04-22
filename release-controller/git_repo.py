@@ -12,16 +12,9 @@ from dotenv import load_dotenv
 from release_index import Release
 from release_index import Version
 from util import version_name
-from const import GUESTOS, HOSTOS, OsKind
 
 
 _LOGGER = logging.getLogger(__name__)
-
-
-CHANGED_NOTES_NAMESPACES: dict[OsKind, str] = {
-    GUESTOS: "guestos-changed",
-    HOSTOS: "hostos-changed",
-}
 
 
 class FileChange(typing.TypedDict):
