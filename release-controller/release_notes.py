@@ -717,15 +717,15 @@ class InternalCommitChangeDeterminator(object):
         """
         import commit_annotator
 
-        _, changed = commit_annotator.compute_annotations_for_object(
+        _, _, belongs = commit_annotator.compute_annotations_for_object(
             self.annotator, commit, os_kind
         )
-        assert changed in [
+        assert belongs in [
             COMMIT_BELONGS,
             COMMIT_DOES_NOT_BELONG,
             COMMIT_COULD_NOT_BE_ANNOTATED,
-        ], "Expected a specific CommitInclusionState, not %r" % changed
-        return changed
+        ], "Expected a specific CommitInclusionState, not %r" % belongs
+        return belongs
 
 
 class CommitAnnotatorClientCommitChangeDeterminator(object):
