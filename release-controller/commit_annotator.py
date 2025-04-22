@@ -328,7 +328,7 @@ def main() -> None:
         "--no-save-annotations",
         action="store_false",
         dest="save_annotations",
-        help="The default is to save annotations locally.  This option turns it off.  The upside is that, on every loop, the annotator attempts to re-annotate the same commits it had annotated before",
+        help="The default is to save annotations locally.  This option turns it off.  The upside is that, on every loop, the annotator attempts to re-annotate the same commits it had annotated before.",
     )
     parser.add_argument(
         "--no-fetch-annotations",
@@ -336,12 +336,18 @@ def main() -> None:
         dest="fetch_annotations",
         help="The default is to fetch annotations from the repository on every loop, overwriting local annotations. This option turns off that behavior.",
     )
-    parser.add_argument("--verbose", "--debug", action="store_true", dest="verbose")
+    parser.add_argument(
+        "--verbose",
+        "--debug",
+        action="store_true",
+        dest="verbose",
+        help="Bump log level.",
+    )
     parser.add_argument(
         "--one-line-logs",
         action="store_true",
         dest="one_line_logs",
-        help="Make log lines one-line without timestamps (useful in production container for better filtering)",
+        help="Make log lines one-line without timestamps (useful in production container for better filtering).",
     )
     parser.add_argument(
         "--loop-every",
@@ -364,7 +370,7 @@ def main() -> None:
         default="master,rc--*",
         type=str,
         dest="branch_globs",
-        help="Use this branch glob (or comma-separated list of globs) to determine which branches to annotate",
+        help="Use this branch glob (or comma-separated list of globs) to determine which branches to annotate.",
     )
     parser.add_argument(
         "--skip-branch-older-than",

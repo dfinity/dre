@@ -707,17 +707,23 @@ def main() -> None:
         default="http://localhost:9469/",
         help="Base URL of a commit annotator to use in order to determine commit"
         " relevance for a target when composing release notes.  If the string"
-        ""
-        " 'local' is specified, it uses local annotations from the Git repository;"
-        " this mode allows for execution without a commit annotator running"
-        " in parallel on your computer.",
+        " 'local' is specified, it retrieves annotations using an embedded client"
+        " that consults a local Git repository clone of the IC; local mode allows"
+        " running the release controller without a commit annotator running"
+        " simultaneously on this computer.",
     )
-    parser.add_argument("--verbose", "--debug", action="store_true", dest="verbose")
+    parser.add_argument(
+        "--verbose",
+        "--debug",
+        action="store_true",
+        dest="verbose",
+        help="Bump log level.",
+    )
     parser.add_argument(
         "--one-line-logs",
         action="store_true",
         dest="one_line_logs",
-        help="Make log lines one-line without timestamps (useful in production container for better filtering)",
+        help="Make log lines one-line without timestamps (useful in production container for better filtering).",
     )
     parser.add_argument(
         "--loop-every",

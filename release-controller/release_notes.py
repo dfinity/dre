@@ -28,7 +28,7 @@ from const import (  # noqa: E402
     CommitInclusionState,
 )
 from git_repo import GitRepo, GitRepoAnnotator, FileChange, CHANGED_NOTES_NAMESPACES  # noqa: E402
-from util import auto_progressbar_with_item_descriptions  # noqa: E402
+from util import auto_progressbar_with_item_descriptions, conventional_logging  # noqa: E402
 
 import markdown  # noqa: E402
 
@@ -777,32 +777,44 @@ def main() -> None:
         "--max-commits",
         type=int,
         default=os.environ.get("MAX_COMMITS", 1000),
-        help="Maximum number of commits to include in the release notes",
+        help="Maximum number of commits to include in the release notes.",
     )
     parser.add_argument(
         "--commit-annotator-url",
         type=str,
-        default=None,
+        dest="commit_annotator_url",
+        default="http://localhost:9469/",
         help="Base URL of a commit annotator to use in order to determine commit"
-        " relevance for a target when composing release notes; if none specified or 'local'"
-        " specified, it uses local annotations; if 'recreate' specified, it uses an"
-        " annotator that runs locally in-process and ignores existing annotations,"
-        " re-annotating every commit involved in the release notes-making process",
+        " relevance for a target when composing release notes; if the value 'local'"
+        " is specified, it retrieves annotations using an embedded client that"
+        " consults a local Git repository clone of the IC; if 'recreate' is specified"
+        " as a value, it ignores any existing annotations and runs a process that"
+        " re-annotates every commit involved in the release notes-making process"
+        " (this is very slow -- roughly a minute per commit to annotate).",
+    )
+    parser.add_argument(
+        "--verbose",
+        "--debug",
+        action="store_true",
+        dest="verbose",
+        help="Bump log level.",
     )
     parser.add_argument(
         "--os-kind",
         default=GUESTOS,
         choices=OS_KINDS,
-        help="Release artifact for which the notes should be prepared",
+        help="Release artifact for which the notes should be prepared.",
     )
     parser.add_argument(
         "--output",
         type=pathlib.Path,
         help="Generate an HTML file with the output besides printing"
         " it to standard output, and launch your operating system's HTML viewer;"
-        " when running via Bazel, please ensure this is an absolute path",
+        " when running via Bazel, please ensure this is an absolute path.",
     )
     args = parser.parse_args()
+
+    conventional_logging(False, args.verbose)
 
     ic_repo = GitRepo("https://github.com/dfinity/ic.git", main_branch="master")
 

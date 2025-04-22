@@ -252,14 +252,14 @@ bazel run //release-controller:release-notes -- \
   --verbose
 ```
 
-The form of the command above uses an internal commit annotator that
-uses the annotatiosn already saved in the IC repository by the production
-commit annotator.  If you want to use a local commit annotator, running
-on your machine, add option `--commit-annotator-url http://localhost:9469/`.
-If you want to recalculate the commit annotations instead of using cached
-ones, you can use option `--commit-annotator-url recreate`.  This last
-option is useful when testing the effects of changes made to the commit
-annotator code or Bazel query formulas the annotator uses.
+The form of the command above requires you to run a commit annotator in
+parallel.  If you want to use the internal commit annotator that does not
+need a commit annotator running in parallel, add option
+`--commit-annotator-url local` instead.  If you want to *recalculate* the
+commit annotations instead of using cached ones, you can use option
+`--commit-annotator-url recreate`.  This last option is useful when
+testing the effects of changes made to the commit annotator code or Bazel
+query formulas the annotator uses.
 
 Please consult `--help` for additional options.
 

@@ -36,7 +36,7 @@ env = {
 py_binary(
     name = "release-controller",
     main = "reconciler.py",
-    srcs = glob(["*.py"], exclude = ["commit_annotator.py"]),
+    srcs = glob(["*.py"]),
     tags = ["typecheck"],
     env = {
         "DRE_PATH": "$(rootpath //rs/cli:dre-embedded)",
@@ -44,7 +44,7 @@ py_binary(
     deps = deps + [
         requirement("prometheus-client"),
     ],
-    data = ["//rs/cli:dre-embedded"],
+    data = ["//rs/cli:dre-embedded"] + [":bazelisk", ":target_determinator"],
 )
 
 py_binary(
