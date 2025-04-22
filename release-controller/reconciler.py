@@ -33,9 +33,11 @@ from release_notes import (
     prepare_release_notes,
     SecurityReleaseNotesRequest,
     OrdinaryReleaseNotesRequest,
+    OSChangeDeterminator,
+)
+from commit_annotator import (
     LocalCommitChangeDeterminator,
     CommitAnnotatorClientCommitChangeDeterminator,
-    OSChangeDeterminator,
     NotReady,
 )
 from util import version_name, conventional_logging, sha256sum_http_response

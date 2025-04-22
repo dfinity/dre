@@ -10,7 +10,8 @@ from pydrive2.drive import GoogleDrive
 
 from const import OsKind, GUESTOS
 from git_repo import GitRepo
-from release_notes import PreparedReleaseNotes, LocalCommitChangeDeterminator
+from release_notes import PreparedReleaseNotes
+from commit_annotator import LocalCommitChangeDeterminator
 
 md = markdown.Markdown(
     extensions=["pymdownx.tilde", "pymdownx.details"],
