@@ -114,7 +114,6 @@ def auto_progressbar_with_item_descriptions(
             file=out,
             flush=True,
         )
-        time.sleep(10)
 
     for i, itemmaybetuple in enumerate(it):
         if isinstance(itemmaybetuple, tuple):
