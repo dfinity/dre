@@ -42,6 +42,7 @@ target_determinator_cycle = itertools.cycle("abcde")
 # running simultaneously.
 @pytest.mark.xdist_group(name=f"target_determinator_{next(target_determinator_cycle)}")
 def test_guestos_changed__registry_changed(annotator: GitRepoAnnotator) -> None:
+    """Registry changes impact GuestOS and therefore should be included."""
     _test_guestos_changed(
         annotator,
         # feat(registry): Added `maybe_chunkify`... (#4751)
