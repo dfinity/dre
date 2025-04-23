@@ -1,9 +1,9 @@
+use crate::rewards_calculator_results::DayUTC;
 use ic_base_types::{NodeId, SubnetId};
 use ic_types::Time;
 use std::error::Error;
 use std::fmt;
 use std::fmt::Display;
-use crate::rewards_calculator_results::DayUTC;
 
 pub type TimestampNanos = u64;
 pub const NANOS_PER_DAY: TimestampNanos = 24 * 60 * 60 * 1_000_000_000;
@@ -131,9 +131,9 @@ pub struct SubnetMetricsDailyKey {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::rewards_calculator_results::days_between;
     use crate::types::TimestampNanos;
     use chrono::{TimeZone, Utc};
-    use crate::rewards_calculator_results::days_between;
 
     fn ymdh_to_ts(year: i32, month: u32, day: u32, hour: u32) -> TimestampNanos {
         Utc.with_ymd_and_hms(year, month, day, hour, 0, 0).unwrap().timestamp_nanos_opt().unwrap() as TimestampNanos

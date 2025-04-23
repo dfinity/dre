@@ -59,7 +59,8 @@ impl RewardsCalculatorBuilder {
     pub fn build(self) -> Result<RewardsCalculator, RewardCalculatorError> {
         self.validate_input()?;
 
-        let metrics_by_node = self.daily_metrics_by_subnet
+        let metrics_by_node = self
+            .daily_metrics_by_subnet
             .into_iter()
             .flat_map(|(key, subnet_nodes_metrics)| {
                 let nodes_fr = subnet_nodes_metrics
@@ -94,8 +95,7 @@ impl RewardsCalculatorBuilder {
             reward_period: self.reward_period,
             rewards_table: self.rewards_table,
             rewardable_nodes_per_provider: self.rewardable_nodes_per_provider,
-            metrics_by_node
+            metrics_by_node,
         })
     }
 }
-

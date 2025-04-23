@@ -187,11 +187,18 @@ impl fmt::Display for RewardCalculatorError {
                 write!(
                     f,
                     "Node {} has metrics outside the reward period: timestamp: {} not in {}",
-                    subnet_id, day.0.get(), reward_period
+                    subnet_id,
+                    day.0.get(),
+                    reward_period
                 )
             }
             RewardCalculatorError::DuplicateMetrics(subnet_id, day) => {
-                write!(f, "Subnet {} has multiple metrics for the same node at ts {}", subnet_id, day.ts_at_day_end())
+                write!(
+                    f,
+                    "Subnet {} has multiple metrics for the same node at ts {}",
+                    subnet_id,
+                    day.ts_at_day_end()
+                )
             }
             RewardCalculatorError::RewardPeriodError(err) => {
                 write!(f, "Reward period error: {}", err)

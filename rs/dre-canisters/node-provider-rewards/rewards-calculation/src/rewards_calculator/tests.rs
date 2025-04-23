@@ -131,19 +131,23 @@ impl RewardCalculatorRunnerTest {
             RewardPeriod::new(*start_ts, *end_ts).unwrap()
         });
 
-        let rewardables: Vec<_> = self.rewardable_nodes.unwrap_or(
-            self.daily_data
-                .values()
-                .flat_map(|nodes| {
-                    nodes.iter().map(|node| RewardableNode {
-                        node_id: node.1,
-                        rewardable_from: reward_period.from,
-                        rewardable_to: reward_period.to,
-                        ..Default::default()
+        let rewardables: Vec<_> = self
+            .rewardable_nodes
+            .unwrap_or(
+                self.daily_data
+                    .values()
+                    .flat_map(|nodes| {
+                        nodes.iter().map(|node| RewardableNode {
+                            node_id: node.1,
+                            rewardable_from: reward_period.from,
+                            rewardable_to: reward_period.to,
+                            ..Default::default()
+                        })
                     })
-                })
-                .collect::<HashSet<_>>(),
-        ).into_iter().collect();
+                    .collect::<HashSet<_>>(),
+            )
+            .into_iter()
+            .collect();
 
         let rewardable_nodes_per_provider = btreemap! {
             PrincipalId::new_anonymous() => rewardables.clone()
@@ -166,12 +170,18 @@ impl RewardCalculatorRunnerTest {
             })
             .into_group_map();
 
-        RewardsCalculatorBuilder{
+        RewardsCalculatorBuilder {
             reward_period,
             rewardable_nodes_per_provider,
             daily_metrics_by_subnet: subnets_metrics,
             rewards_table: self.node_rewards_table.unwrap_or_default(),
-        }.build().unwrap().calculate_rewards_per_provider().pop_first().unwrap().1
+        }
+        .build()
+        .unwrap()
+        .calculate_rewards_per_provider()
+        .pop_first()
+        .unwrap()
+        .1
     }
 
     pub fn for_scenario_1() -> Self {

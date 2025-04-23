@@ -4,10 +4,10 @@ use ic_canisters_http_types::{HttpRequest, HttpResponse, HttpResponseBuilder};
 use ic_cdk_macros::*;
 use ic_nervous_system_common::serve_metrics;
 use node_provider_rewards_api::endpoints::{NodeProviderRewardsCalculationArgs, NodeProvidersRewards, RewardPeriodArgs, RewardsCalculatorResults};
+use rewards_calculation::rewards_calculator::builder::RewardsCalculatorBuilder;
 use rewards_calculation::rewards_calculator::RewardsCalculator;
 use rewards_calculation::types::RewardPeriod;
 use std::collections::BTreeMap;
-use rewards_calculation::rewards_calculator::builder::RewardsCalculatorBuilder;
 
 mod metrics;
 mod metrics_types;
@@ -109,14 +109,19 @@ fn rewards_calculator(reward_period: RewardPeriodArgs) -> Result<RewardsCalculat
 
     let rewards_table = registry_store.get_rewards_table();
     let daily_metrics_by_subnet = metrics_manager.daily_metrics_by_subnet(start_ts, end_ts);
-    let rewardable_nodes_per_provider = registry_store.get_rewardable_nodes_per_provider(start_ts, end_ts).map_err(|err| err.to_string())?;
+
+    let rewardable_nodes_per_provider = registry_store
+        .get_rewardable_nodes_per_provider(start_ts, end_ts)
+        .map_err(|err| err.to_string())?;
 
     let rewards_calculator = RewardsCalculatorBuilder {
         reward_period,
         rewards_table,
         daily_metrics_by_subnet,
         rewardable_nodes_per_provider,
-    }.build().map_err(|err| err.to_string())?;
+    }
+    .build()
+    .map_err(|err| err.to_string())?;
 
     Ok(rewards_calculator)
 }
@@ -124,8 +129,10 @@ fn rewards_calculator(reward_period: RewardPeriodArgs) -> Result<RewardsCalculat
 #[query]
 #[candid_method(query)]
 fn get_node_providers_rewards(args: RewardPeriodArgs) -> Result<NodeProvidersRewards, String> {
-    let calculator= rewards_calculator(args)?;
-    let rewards_per_provider = calculator.calculate_rewards_per_provider().into_iter()
+    let calculator = rewards_calculator(args)?;
+    let rewards_per_provider = calculator
+        .calculate_rewards_per_provider()
+        .into_iter()
         .map(|(provider_id, rewards_calculation)| (provider_id, rewards_calculation.rewards_total))
         .collect::<BTreeMap<_, _>>();
 
@@ -135,8 +142,10 @@ fn get_node_providers_rewards(args: RewardPeriodArgs) -> Result<NodeProvidersRew
 #[query]
 #[candid_method(query)]
 fn get_node_provider_rewards_calculation(args: NodeProviderRewardsCalculationArgs) -> Result<RewardsCalculatorResults, String> {
-    let calculator= rewards_calculator(args.reward_period)?;
-    let provider_rewards_calculation = calculator.calculate_rewards_single_provider(args.provider_id).map_err(|err| err.to_string())?;
+    let calculator = rewards_calculator(args.reward_period)?;
+    let provider_rewards_calculation = calculator
+        .calculate_rewards_single_provider(args.provider_id)
+        .map_err(|err| err.to_string())?;
 
     provider_rewards_calculation.try_into()
 }

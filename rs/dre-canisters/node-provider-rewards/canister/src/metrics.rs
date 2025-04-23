@@ -199,7 +199,11 @@ where
             }
         }
     }
-    pub fn daily_metrics_by_subnet(&self, start_ts: TimestampNanos, end_ts: TimestampNanos) -> HashMap<SubnetMetricsDailyKey, Vec<NodeMetricsDailyRaw>> {
+    pub fn daily_metrics_by_subnet(
+        &self,
+        start_ts: TimestampNanos,
+        end_ts: TimestampNanos,
+    ) -> HashMap<SubnetMetricsDailyKey, Vec<NodeMetricsDailyRaw>> {
         let first_key = SubnetMetricsDailyKeyStored {
             ts: start_ts,
             ..SubnetMetricsDailyKeyStored::min_key()

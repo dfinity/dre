@@ -341,7 +341,8 @@ impl<'a> RewardsCalculatorPipeline<'a, AdjustNodesRewards> {
         let nodes_count = self.calculator_results.results_by_node.len() as u32;
 
         for node_results in self.calculator_results.results_by_node.values_mut() {
-            let base_node_rewards: Decimal = node_results.base_rewards_per_month.clone().get() / REWARDS_TABLE_DAYS * Decimal::from(node_results.rewardable_days);
+            let base_node_rewards: Decimal =
+                node_results.base_rewards_per_month.clone().get() / REWARDS_TABLE_DAYS * Decimal::from(node_results.rewardable_days);
             node_results.base_rewards = base_node_rewards.into();
 
             if nodes_count <= FULL_REWARDS_MACHINES_LIMIT {
