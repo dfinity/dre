@@ -277,11 +277,11 @@ With a `.venv` setup by `rye`, you can also run (with varying levels of success)
 
 ```sh
 export PYTHONPATH=$PWD/release-controller/
-.venv/bin/python3 -m pytest release-controller/
+.venv/bin/python3 release-controller/tests/runner.py
 ```
 
-If you want to run a specific test file, specify it as a path instead of the
-folder specified above.
+If you want to run a specific test file, specify its path as an argument
+to the above command line.
 
 #### Typing correctness
 
