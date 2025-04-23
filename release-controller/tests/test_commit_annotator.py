@@ -1,3 +1,4 @@
+import itertools
 import logging
 import pytest
 
@@ -34,9 +35,12 @@ def _test_guestos_changed(
     )
 
 
+target_determinator_cycle = itertools.cycle("abcde")
+
+
 # Marks on tests attempt to limit parallelism on multiple target-determinators
 # running simultaneously.
-@pytest.mark.xdist_group(name="sameworker_commit_annotator1")
+@pytest.mark.xdist_group(name=f"target_determinator_{next(target_determinator_cycle)}")
 def test_guestos_changed__registry_changed(annotator: GitRepoAnnotator) -> None:
     _test_guestos_changed(
         annotator,
@@ -46,7 +50,7 @@ def test_guestos_changed__registry_changed(annotator: GitRepoAnnotator) -> None:
     )
 
 
-@pytest.mark.xdist_group(name="sameworker_commit_annotator2")
+@pytest.mark.xdist_group(name=f"target_determinator_{next(target_determinator_cycle)}")
 def test_guestos_changed__docs_changed(annotator: GitRepoAnnotator) -> None:
     """Simple documentation changes do not impact GuestOS."""
     _test_guestos_changed(
@@ -57,7 +61,7 @@ def test_guestos_changed__docs_changed(annotator: GitRepoAnnotator) -> None:
     )
 
 
-@pytest.mark.xdist_group(name="sameworker_commit_annotator3")
+@pytest.mark.xdist_group(name=f"target_determinator_{next(target_determinator_cycle)}")
 def test_guestos_changed__bumped_dependencies(annotator: GitRepoAnnotator) -> None:
     """Dependency bump known to be dependency of GuestOS affects GuestOS."""
     _test_guestos_changed(
@@ -68,7 +72,7 @@ def test_guestos_changed__bumped_dependencies(annotator: GitRepoAnnotator) -> No
     )
 
 
-@pytest.mark.xdist_group(name="sameworker_commit_annotator1")
+@pytest.mark.xdist_group(name=f"target_determinator_{next(target_determinator_cycle)}")
 def test_guestos_changed__canister_not_in_replica_changed(
     annotator: GitRepoAnnotator,
 ) -> None:
@@ -81,7 +85,7 @@ def test_guestos_changed__canister_not_in_replica_changed(
     )
 
 
-@pytest.mark.xdist_group(name="sameworker_commit_annotator2")
+@pytest.mark.xdist_group(name=f"target_determinator_{next(target_determinator_cycle)}")
 def test_guestos_changed__cargo_lock_paths_only(
     annotator: GitRepoAnnotator,
 ) -> None:
