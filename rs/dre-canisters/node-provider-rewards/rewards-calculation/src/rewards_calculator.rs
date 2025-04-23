@@ -50,8 +50,8 @@ impl RewardsCalculator {
     pub fn calculate_rewards_per_provider(&self) -> BTreeMap<PrincipalId, RewardsCalculatorResults> {
         let mut res = BTreeMap::new();
         for (provider_id, rewardables) in self.rewardable_nodes_per_provider.iter() {
-            let rewards_result = self.calculate_rewards(&rewardables);
-            res.insert(provider_id.clone(), rewards_result);
+            let rewards_result = self.calculate_rewards(rewardables);
+            res.insert(*provider_id, rewards_result);
         }
         res
     }
