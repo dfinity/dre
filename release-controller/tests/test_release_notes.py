@@ -1,6 +1,6 @@
 from tests.fixtures import ic_repo as ic_repo
 
-from release_notes import (
+from release_notes_composer import (
     prepare_release_notes,
     get_change_description_for_commit,
     OrdinaryReleaseNotesRequest,

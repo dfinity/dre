@@ -29,7 +29,7 @@ from pydiscourse import DiscourseClient
 from release_index_loader import DevReleaseLoader
 from release_index_loader import GitReleaseLoader
 from release_index_loader import ReleaseLoader
-from release_notes import (
+from release_notes_composer import (
     prepare_release_notes,
     SecurityReleaseNotesRequest,
     OrdinaryReleaseNotesRequest,

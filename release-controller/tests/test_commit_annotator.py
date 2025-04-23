@@ -3,12 +3,12 @@ import logging
 import pytest
 
 from commit_annotation import (
-    compute_annotations_for_object,
     COMMIT_BELONGS,
     COMMIT_DOES_NOT_BELONG,
+    GitRepoAnnotator,
 )
+from commit_annotator import compute_annotations_for_object
 from const import GUESTOS
-from git_repo import GitRepoAnnotator
 from tests.fixtures import (
     ic_repo as ic_repo,
     annotator as annotator,

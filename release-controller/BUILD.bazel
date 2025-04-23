@@ -59,11 +59,8 @@ py_library (
 
 py_library (
     name = "commit_annotation",
-    data = [":bazelisk", ":target_determinator"],
     srcs = ["commit_annotation.py"],
     deps = ["git_repo", "const"] + [
-        requirement("pydantic"),
-        requirement("tenacity"),
         requirement("requests"),
         requirement("types-requests"),
     ],
@@ -71,11 +68,12 @@ py_library (
 )
 
 py_library (
-    name = "release_notes",
+    name = "release_notes_composer",
     data = [],
-    srcs = ["release_notes.py"],
+    srcs = ["release_notes_composer.py"],
     deps = [
         requirement("markdown"),
+        requirement("pymdown-extensions"),
     ] + ["commit_annotation"],
     tags = ["typecheck"],
 )
@@ -86,19 +84,19 @@ py_library (
     srcs = ["google_docs.py"],
     deps = [
         requirement("markdown"),
-        requirement("markdownify"),
         requirement("pymdown-extensions"),
+        requirement("markdownify"),
         requirement("pydrive2"),
         requirement("mammoth"),
         requirement("pydantic"),
-    ] + ["commit_annotation", "release_notes"],
+    ] + ["release_notes_composer"],
     tags = ["typecheck"],
 )
 
 py_library (
     name = "publish_notes",
     srcs = ["publish_notes.py"],
-    deps = ["google_docs", "release_notes"] + [
+    deps = ["google_docs", "release_notes_composer"] + [
         requirement("python-dotenv"),
         requirement("pygithub"),
     ],
@@ -164,7 +162,7 @@ py_library (
     name = "dryrun",
     data = [],
     srcs = ["dryrun.py"],
-    deps = ["forum", "dre_cli", "google_docs", "release_index", "release_notes", "const"] + [
+    deps = ["forum", "dre_cli", "google_docs", "release_index", "release_notes_composer", "const"] + [
         requirement("pydiscourse"),
     ],
     tags = ["typecheck"],
@@ -178,7 +176,7 @@ py_binary(
     env = {
         "DRE_PATH": "$(rootpath //rs/cli:dre-embedded)",
     },
-    deps = ["dre_cli", "publish_notes", "forum", "watchdog", "prometheus", "release_index_loader", "dryrun"] + [
+    deps = ["dre_cli", "publish_notes", "forum", "watchdog", "prometheus", "release_notes_composer", "release_index_loader", "dryrun"] + [
         requirement("pydiscourse"),
         requirement("requests"),
         requirement("types-requests"),
@@ -196,7 +194,19 @@ py_binary(
     srcs = ["commit_annotator.py", "watchdog.py"],
     tags = ["typecheck"],
     env = env,
-    deps = [requirement("prometheus-client")] + ["commit_annotation"],
+    data = [":bazelisk", ":target_determinator"],
+    deps = [
+        requirement("prometheus-client"),
+        requirement("tenacity"),
+    ] + ["commit_annotation"],
+)
+
+py_library (
+    name = "commit_annotation_recreator",
+    data = [],
+    srcs = ["commit_annotation_recreator.py"],
+    deps = ["commit-annotator", "git_repo", "const", "commit_annotation"],
+    tags = ["typecheck"],
 )
 
 py_binary(
@@ -205,7 +215,7 @@ py_binary(
     srcs = ["release_notes.py"],
     tags = ["typecheck"],
     env = env,
-    deps = [requirement("markdown")] + ["commit_annotation"],
+    deps = ["release_notes_composer", "commit_annotation_recreator"],
 )
 
 genrule(
@@ -223,14 +233,14 @@ genrule(
 )
 
 medium_tests = ["tests/test_release_notes.py", "tests/test_reconciler.py"]
-medium_tests_deps = ["release-controller", "commit_annotation"] + [
+medium_tests_deps = ["release-controller", "commit_annotation", "release_notes_composer"] + [
     requirement("pygithub"),
     requirement("pydantic-yaml"),
 ]
 
 # Add file here if you do not want to run the test automatically.
 large_tests = ["tests/test_commit_annotator.py"]
-large_tests_deps = ["commit_annotation"]
+large_tests_deps = ["commit-annotator"]
 
 small_tests = glob(["tests/test_*.py"], exclude=large_tests + medium_tests)
 small_tests_deps = ["forum", "publish_notes", "release_index_loader", "dryrun"] + [
@@ -266,15 +276,9 @@ small_tests_deps = ["forum", "publish_notes", "release_index_loader", "dryrun"] 
     ]
     for group in [
         {
-            "targets": small_tests,
+            "targets": small_tests + medium_tests,
             "data": glob(["tests/test_data/*"]),
-            "deps": small_tests_deps,
-            "test_size": "small",
-        },
-        {
-            "targets": medium_tests,
-            "data": [],
-            "deps": medium_tests_deps,
+            "deps": small_tests_deps + medium_tests_deps,
             "test_size": "medium",
         },
         {

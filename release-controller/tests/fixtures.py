@@ -8,7 +8,8 @@ import tarfile
 import typing
 
 from filelock import FileLock
-from git_repo import GitRepo, GitRepoAnnotator
+from git_repo import GitRepo
+from commit_annotation import GitRepoAnnotator
 
 
 _LOGGER = logging.getLogger(__name__)

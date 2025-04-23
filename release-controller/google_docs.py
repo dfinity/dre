@@ -10,8 +10,10 @@ from pydrive2.drive import GoogleDrive
 
 from const import OsKind, GUESTOS
 from git_repo import GitRepo
-from release_notes import PreparedReleaseNotes
+from release_notes_composer import PreparedReleaseNotes
 from commit_annotation import LocalCommitChangeDeterminator
+from release_notes_composer import prepare_release_notes, OrdinaryReleaseNotesRequest
+
 
 md = markdown.Markdown(
     extensions=["pymdownx.tilde", "pymdownx.details"],
@@ -129,8 +131,6 @@ def google_doc_to_markdown(release_docx: pathlib.Path) -> PreparedReleaseNotes:
 
 
 def main() -> None:
-    from release_notes import prepare_release_notes, OrdinaryReleaseNotesRequest
-
     client = ReleaseNotesClient(
         credentials_file=pathlib.Path(__file__).parent.resolve() / "credentials.json",
         release_notes_folder="1zOPwbYdOREhhLv-spRIRRMaFaAQlOVvF",

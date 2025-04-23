@@ -3,23 +3,29 @@ import http.server
 import logging
 import os
 import pathlib
+import shlex
+import subprocess
 import sys
 import re
 import threading
 import time
 import typing
 from prometheus_client import start_http_server, Gauge
+from tenacity import retry, stop_after_delay, retry_if_exception_type, after_log
 
 sys.path.append(os.path.join(os.path.dirname(__file__)))
 
 from commit_annotation import (
-    compute_annotations_for_object,
     CHANGED_NOTES_NAMESPACES,
     COMMIT_COULD_NOT_BE_ANNOTATED,
+    COMMIT_BELONGS,
+    COMMIT_DOES_NOT_BELONG,
+    CommitInclusionState,
+    GitRepoAnnotator,
 )
-from git_repo import GitRepo, GitRepoAnnotator
+from git_repo import GitRepo
 from datetime import datetime
-from util import conventional_logging
+from util import conventional_logging, resolve_binary
 from watchdog import Watchdog
 
 from const import (
@@ -29,6 +35,31 @@ from const import (
     OS_KINDS,
 )
 
+BAZEL_TARGETS = {
+    # All targets that produce the update image for GuestOS.
+    GUESTOS: "deps(//ic-os/guestos/envs/prod:update-img.tar.zst)",
+    # All targets that produce the HostOS disk image united with the targets
+    # of the SetupOS disk image minus HostOS and GuestOS disk images.
+    HOSTOS: """
+    deps(
+        //ic-os/hostos/envs/prod:disk-img.tar.zst
+    ) union (
+        deps(
+            //ic-os/setupos/envs/prod:disk-img.tar.zst
+        ) except deps(
+            //ic-os/hostos/envs/prod:disk-img.tar.zst
+        ) except deps(
+            //ic-os/guestos/envs/prod:disk-img.tar.zst
+        ) except //ic-os/setupos/envs/prod/... except //ic-os/setupos/envs/prod:guest-os.img.tar.zst
+    )
+    """,
+}
+BAZEL_OPTS: list[str] = [
+    "--experimental_build_event_upload_strategy=local",
+    "--noremote_upload_local_results",
+    "--bes_backend=",
+    "--nobes_lifecycle_events",
+]
 TARGETS_NOTES_NAMESPACES = {GUESTOS: "guestos-targets", HOSTOS: "hostos-targets"}
 # One commit before last manual HostOS release performed by Manuel Amador.
 CUTOFF_COMMIT = "6f3739270268208945648cc70d8010bda753e827"
@@ -67,6 +98,95 @@ def release_branch_date(branch: str) -> typing.Optional[datetime]:
     else:
         return None
     return datetime.strptime(branch_date, "%Y-%m-%d")
+
+
+# target-determinator sometimes fails on first few tries
+# we will therefore blow up after 180 seconds
+@retry(
+    stop=stop_after_delay(180),
+    retry=retry_if_exception_type(subprocess.CalledProcessError),
+    after=after_log(_LOGGER, logging.ERROR),
+)
+def target_determinator(
+    cwd: pathlib.Path, parent_object: str, bazel_targets: str
+) -> str:
+    logger = _LOGGER.getChild("target_determinator").getChild(parent_object)
+    p = subprocess.run(
+        [
+            resolve_binary("target-determinator"),
+            "-before-query-error-behavior=fatal",
+            "-delete-cached-worktree",
+            "-bazel-opts=" + " ".join(shlex.quote(x) for x in BAZEL_OPTS),
+            f"-bazel={resolve_binary("bazel")}",
+            "--targets",
+            bazel_targets,
+            parent_object,
+        ],
+        cwd=cwd,
+        check=True,
+        stdout=subprocess.PIPE,
+        text=True,
+    )
+    output = p.stdout.strip()
+    if output:
+        logger.debug(
+            "stdout of target determinator for %s has %s lines",
+            parent_object,
+            len(output.splitlines()),
+        )
+    else:
+        logger.debug("stdout of target determinator for %s is empty", parent_object)
+    return output
+
+
+def compute_annotations_for_object(
+    annotator: GitRepoAnnotator, object: str, os_kind: OsKind
+) -> tuple[str, str, CommitInclusionState]:
+    logger = _LOGGER.getChild("annotate_object").getChild(object).getChild(os_kind)
+    logger.debug("Attempting to annotate")
+    start = time.time()
+    targets = BAZEL_TARGETS[os_kind]
+
+    # The following two external operations were being run in parallel
+    # to speed things up, but it turns out one of them often modifies
+    # the working directory, making the other one much slower.  Thus,
+    # we run them serially now, and -- in between them -- we clean the
+    # repository's working directory.
+    annotator.checkout(object)
+    bazel_query_output = subprocess.check_output(
+        [
+            resolve_binary("bazel"),
+            "query",
+        ]
+        + BAZEL_OPTS
+        + [
+            f"{targets}",
+        ],
+        text=True,
+        cwd=annotator.dir,
+    )
+    target_determinator_output = target_determinator(
+        annotator.dir, annotator.parent(object), targets
+    )
+    lap = time.time() - start
+    logger.debug("Annotation finished in %.2f seconds", lap)
+    return (
+        "\n".join(
+            [
+                line
+                for line in bazel_query_output.splitlines()
+                if line.strip() and not line.startswith("@")
+            ]
+        ),
+        "\n".join(
+            [
+                line
+                for line in target_determinator_output.splitlines()
+                if line.strip() and not line.startswith("@")
+            ]
+        ),
+        (COMMIT_BELONGS if target_determinator_output else COMMIT_DOES_NOT_BELONG),
+    )
 
 
 def annotate_object(annotator: GitRepoAnnotator, object: str, os_kind: OsKind) -> None:

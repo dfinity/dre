@@ -17,7 +17,7 @@ import git_repo  # noqa: E402
 import dre_cli  # noqa: E402
 from const import OsKind, GUESTOS  # noqa: E402
 from google_docs import DocInfo  # noqa: E402
-from release_notes import PreparedReleaseNotes  # noqa: E402
+from release_notes_composer import PreparedReleaseNotes  # noqa: E402
 from release_index import Release  # noqa: E402
 
 import forum  # noqa: E402

@@ -1,6 +1,5 @@
 import logging
 import os
-import collections.abc
 import pathlib
 import subprocess
 import sys
@@ -11,7 +10,7 @@ import typing
 from dotenv import load_dotenv
 from release_index import Release
 from release_index import Version
-from util import version_name
+from util import version_name, check_output, check_call
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -20,34 +19,6 @@ _LOGGER = logging.getLogger(__name__)
 class FileChange(typing.TypedDict):
     file_path: str
     num_changes: int
-
-
-def check_output(cmd: list[str], **kwargs: typing.Any) -> str:
-    # _LOGGER.warning("CMD: %s", cmd)
-    kwargs = kwargs or {}
-    if "text" not in kwargs:
-        kwargs["text"] = True
-    return typing.cast(str, subprocess.check_output(cmd, **kwargs))
-
-
-def check_output_binary(cmd: list[str], **kwargs: typing.Any) -> bytes:
-    # _LOGGER.warning("CMD: %s", cmd)
-    kwargs = kwargs or {}
-    kwargs["text"] = False
-    return typing.cast(bytes, check_output(cmd, **kwargs))
-
-
-def check_call(cmd: list[str], **kwargs: typing.Any) -> int:
-    # _LOGGER.warning("CMD: %s", cmd)
-    return subprocess.check_call(cmd, **kwargs)
-
-
-def repr_ellipsized(s: str, max_length: int = 80) -> str:
-    if len(s) < max_length:
-        return repr(s)
-    return (
-        repr(s[: int(max_length / 2) - 2]) + "..." + repr(s[-int(max_length / 2) - 2 :])
-    )
 
 
 class Commit:
@@ -62,112 +33,6 @@ class Commit:
         self.author = author
         self.date = date
         self.branches = branches
-
-
-class GitRepoAnnotator(object):
-    def __init__(
-        self,
-        repo: "GitRepo",
-        namespaces: collections.abc.Iterable[str],
-        save_annotations: bool,
-    ):
-        """
-        Returns a new GitRepoAnnotator based on the provided GitRepo.
-
-        Annotations are not fetched by default!  Caller must call .fetch().
-        If annotations are changed, caller must also call .push().
-        """
-        self.repo = repo
-        self.namespaces = namespaces
-        self.changed = False
-        self.save_annotations = save_annotations
-
-    def add(self, object: str, namespace: str, content: str) -> None:
-        if namespace not in self.namespaces:
-            raise ValueError(
-                "cannot add note for %r with annotator limited to namespaces %s"
-                % (namespace, self.namespaces)
-            )
-        _LOGGER.debug(
-            "Adding note for commit %s in namespace %s: %s",
-            object,
-            namespace,
-            repr_ellipsized(content),
-        )
-        if self.save_annotations:
-            subprocess.run(
-                args=[
-                    "git",
-                    "notes",
-                    f"--ref={namespace}",
-                    "add",
-                    "--file=/dev/stdin",
-                    "-f",
-                    object,
-                ],
-                text=True,
-                check=True,
-                input=content,
-                cwd=self.dir,
-                stderr=subprocess.DEVNULL,
-            )
-        self.changed = True
-
-    def has(self, object: str, namespace: str) -> bool:
-        try:
-            self.get(object, namespace)
-            return True
-        except KeyError:
-            return False
-
-    def get(self, object: str, namespace: str) -> bytes:
-        if namespace not in self.namespaces:
-            raise ValueError(
-                "cannot get note for %r with annotator limited to namespaces %s"
-                % (namespace, self.namespaces)
-            )
-        try:
-            cmd = ["git", "notes", f"--ref={namespace}", "show", object]
-            return check_output_binary(
-                cmd,
-                cwd=self.dir,
-                stderr=subprocess.DEVNULL,
-            )
-        except subprocess.CalledProcessError:
-            # It's not there!
-            raise KeyError((namespace, object))
-
-    def checkout(self, object: str) -> None:
-        return self.repo.checkout(object)
-
-    def parent(self, object: str) -> str:
-        return self.repo.parent(object)
-
-    @property
-    def dir(self) -> pathlib.Path:
-        return self.repo.dir
-
-    def fetch(self) -> None:
-        ref = "refs/notes/*"
-        check_call(
-            ["git", "fetch", "origin", f"{ref}:{ref}", "-f", "--quiet"],
-            cwd=self.dir,
-        )
-
-    def push(self) -> None:
-        if self.changed:
-            for namespace in self.namespaces:
-                check_call(
-                    [
-                        "git",
-                        "push",
-                        "origin",
-                        f"refs/notes/{namespace}",
-                        "-f",
-                        "--quiet",
-                    ],
-                    cwd=self.dir,
-                )
 
 
 class GitRepo:

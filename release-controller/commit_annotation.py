@@ -1,8 +1,7 @@
+import collections
 import logging
 import pathlib
-import shlex
 import subprocess
-import time
 import typing
 import urllib
 
@@ -11,39 +10,13 @@ from const import (
     GUESTOS,
     HOSTOS,
 )
-from git_repo import GitRepoAnnotator, GitRepo
-from tenacity import retry, stop_after_delay, retry_if_exception_type, after_log
-from util import resolve_binary
+from git_repo import GitRepo
+from util import check_call, check_output_binary, repr_ellipsized
 
 
 _LOGGER = logging.getLogger(__name__)
 
 
-BAZEL_TARGETS = {
-    # All targets that produce the update image for GuestOS.
-    GUESTOS: "deps(//ic-os/guestos/envs/prod:update-img.tar.zst)",
-    # All targets that produce the HostOS disk image united with the targets
-    # of the SetupOS disk image minus HostOS and GuestOS disk images.
-    HOSTOS: """
-    deps(
-        //ic-os/hostos/envs/prod:disk-img.tar.zst
-    ) union (
-        deps(
-            //ic-os/setupos/envs/prod:disk-img.tar.zst
-        ) except deps(
-            //ic-os/hostos/envs/prod:disk-img.tar.zst
-        ) except deps(
-            //ic-os/guestos/envs/prod:disk-img.tar.zst
-        ) except //ic-os/setupos/envs/prod/... except //ic-os/setupos/envs/prod:guest-os.img.tar.zst
-    )
-    """,
-}
-BAZEL_OPTS: list[str] = [
-    "--experimental_build_event_upload_strategy=local",
-    "--noremote_upload_local_results",
-    "--bes_backend=",
-    "--nobes_lifecycle_events",
-]
 CHANGED_NOTES_NAMESPACES: dict[OsKind, str] = {
     GUESTOS: "guestos-changed",
     HOSTOS: "hostos-changed",
@@ -63,93 +36,110 @@ class NotReady(Exception):
     pass
 
 
-# target-determinator sometimes fails on first few tries
-# we will therefore blow up after 180 seconds
-@retry(
-    stop=stop_after_delay(180),
-    retry=retry_if_exception_type(subprocess.CalledProcessError),
-    after=after_log(_LOGGER, logging.ERROR),
-)
-def target_determinator(
-    cwd: pathlib.Path, parent_object: str, bazel_targets: str
-) -> str:
-    logger = _LOGGER.getChild("target_determinator").getChild(parent_object)
-    p = subprocess.run(
-        [
-            resolve_binary("target-determinator"),
-            "-before-query-error-behavior=fatal",
-            "-delete-cached-worktree",
-            "-bazel-opts=" + " ".join(shlex.quote(x) for x in BAZEL_OPTS),
-            f"-bazel={resolve_binary("bazel")}",
-            "--targets",
-            bazel_targets,
-            parent_object,
-        ],
-        cwd=cwd,
-        check=True,
-        stdout=subprocess.PIPE,
-        text=True,
-    )
-    output = p.stdout.strip()
-    if output:
-        logger.debug(
-            "stdout of target determinator for %s has %s lines",
-            parent_object,
-            len(output.splitlines()),
+class GitRepoAnnotator(object):
+    def __init__(
+        self,
+        repo: "GitRepo",
+        namespaces: collections.abc.Iterable[str],
+        save_annotations: bool,
+    ):
+        """
+        Returns a new GitRepoAnnotator based on the provided GitRepo.
+
+        Annotations are not fetched by default!  Caller must call .fetch().
+        If annotations are changed, caller must also call .push().
+        """
+        self.repo = repo
+        self.namespaces = namespaces
+        self.changed = False
+        self.save_annotations = save_annotations
+
+    def add(self, object: str, namespace: str, content: str) -> None:
+        if namespace not in self.namespaces:
+            raise ValueError(
+                "cannot add note for %r with annotator limited to namespaces %s"
+                % (namespace, self.namespaces)
+            )
+        _LOGGER.debug(
+            "Adding note for commit %s in namespace %s: %s",
+            object,
+            namespace,
+            repr_ellipsized(content),
         )
-    else:
-        logger.debug("stdout of target determinator for %s is empty", parent_object)
-    return output
+        if self.save_annotations:
+            subprocess.run(
+                args=[
+                    "git",
+                    "notes",
+                    f"--ref={namespace}",
+                    "add",
+                    "--file=/dev/stdin",
+                    "-f",
+                    object,
+                ],
+                text=True,
+                check=True,
+                input=content,
+                cwd=self.dir,
+                stderr=subprocess.DEVNULL,
+            )
+        self.changed = True
 
+    def has(self, object: str, namespace: str) -> bool:
+        try:
+            self.get(object, namespace)
+            return True
+        except KeyError:
+            return False
 
-def compute_annotations_for_object(
-    annotator: GitRepoAnnotator, object: str, os_kind: OsKind
-) -> tuple[str, str, CommitInclusionState]:
-    logger = _LOGGER.getChild("annotate_object").getChild(object).getChild(os_kind)
-    logger.debug("Attempting to annotate")
-    start = time.time()
-    targets = BAZEL_TARGETS[os_kind]
+    def get(self, object: str, namespace: str) -> bytes:
+        if namespace not in self.namespaces:
+            raise ValueError(
+                "cannot get note for %r with annotator limited to namespaces %s"
+                % (namespace, self.namespaces)
+            )
+        try:
+            cmd = ["git", "notes", f"--ref={namespace}", "show", object]
+            return check_output_binary(
+                cmd,
+                cwd=self.dir,
+                stderr=subprocess.DEVNULL,
+            )
+        except subprocess.CalledProcessError:
+            # It's not there!
+            raise KeyError((namespace, object))
 
-    # The following two external operations were being run in parallel
-    # to speed things up, but it turns out one of them often modifies
-    # the working directory, making the other one much slower.  Thus,
-    # we run them serially now, and -- in between them -- we clean the
-    # repository's working directory.
-    annotator.checkout(object)
-    bazel_query_output = subprocess.check_output(
-        [
-            resolve_binary("bazel"),
-            "query",
-        ]
-        + BAZEL_OPTS
-        + [
-            f"{targets}",
-        ],
-        text=True,
-        cwd=annotator.dir,
-    )
-    target_determinator_output = target_determinator(
-        annotator.dir, annotator.parent(object), targets
-    )
-    lap = time.time() - start
-    logger.debug("Annotation finished in %.2f seconds", lap)
-    return (
-        "\n".join(
-            [
-                line
-                for line in bazel_query_output.splitlines()
-                if line.strip() and not line.startswith("@")
-            ]
-        ),
-        "\n".join(
-            [
-                line
-                for line in target_determinator_output.splitlines()
-                if line.strip() and not line.startswith("@")
-            ]
-        ),
-        (COMMIT_BELONGS if target_determinator_output else COMMIT_DOES_NOT_BELONG),
-    )
+    def checkout(self, object: str) -> None:
+        return self.repo.checkout(object)
+
+    def parent(self, object: str) -> str:
+        return self.repo.parent(object)
+
+    @property
+    def dir(self) -> pathlib.Path:
+        return self.repo.dir
+
+    def fetch(self) -> None:
+        ref = "refs/notes/*"
+        check_call(
+            ["git", "fetch", "origin", f"{ref}:{ref}", "-f", "--quiet"],
+            cwd=self.dir,
+        )
+
+    def push(self) -> None:
+        if self.changed:
+            for namespace in self.namespaces:
+                check_call(
+                    [
+                        "git",
+                        "push",
+                        "origin",
+                        f"refs/notes/{namespace}",
+                        "-f",
+                        "--quiet",
+                    ],
+                    cwd=self.dir,
+                )
 
 
 # Signature for a protocol (object) that carries a callable
@@ -206,42 +196,6 @@ class LocalCommitChangeDeterminator(object):
             COMMIT_COULD_NOT_BE_ANNOTATED,
         ], "Expected a specific CommitInclusionState, not %r" % changed
         return typing.cast(CommitInclusionState, changed)
-
-
-class RecreatingCommitChangeDeterminator(object):
-    """
-    Computes annotations on the fly from a local Git repository, ignoring existing annotations.
-
-    Annotations made this way are never saved or published to the Git repository.
-    """
-
-    def __init__(self, ic_repo: GitRepo):
-        """
-        Creates a new commit change determinator.
-        """
-        self.annotator = GitRepoAnnotator(
-            ic_repo,
-            list(CHANGED_NOTES_NAMESPACES.values()),
-            save_annotations=False,
-        )
-        self.annotator.fetch()
-
-    def commit_changes_artifact(
-        self, commit: str, os_kind: OsKind
-    ) -> CommitInclusionState:
-        """
-        Check if the os_kind (artifact) changed in the specifed commit
-        by querying the local repo for git notes populated and pushed
-        by commit annotator.
-        """
-
-        _, _, belongs = compute_annotations_for_object(self.annotator, commit, os_kind)
-        assert belongs in [
-            COMMIT_BELONGS,
-            COMMIT_DOES_NOT_BELONG,
-            COMMIT_COULD_NOT_BE_ANNOTATED,
-        ], "Expected a specific CommitInclusionState, not %r" % belongs
-        return belongs
 
 
 class CommitAnnotatorClientCommitChangeDeterminator(object):
