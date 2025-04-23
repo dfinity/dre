@@ -3,6 +3,7 @@ use ic_types::Time;
 use std::error::Error;
 use std::fmt;
 use std::fmt::Display;
+use crate::rewards_calculator_results::DayUTC;
 
 pub type TimestampNanos = u64;
 pub const NANOS_PER_DAY: TimestampNanos = 24 * 60 * 60 * 1_000_000_000;
@@ -19,27 +20,13 @@ fn current_time() -> Time {
 }
 
 // Wrapper types for TimestampNanos.
-// Used to ensure that the wrapped timestamp is aligned to the start/end of the day.
-#[derive(Debug, Copy, Clone, PartialEq, Eq)]
-pub struct DayStartNanos(TimestampNanos);
-#[derive(Debug, Copy, Clone, PartialEq, Eq, Ord, PartialOrd, Hash)]
+// Used to ensure that the wrapped timestamp is aligned to the end of the day.
+#[derive(Debug, Copy, Clone, PartialEq, Eq, Ord, PartialOrd, Hash, Default)]
 pub struct DayEndNanos(TimestampNanos);
-
-impl From<TimestampNanos> for DayStartNanos {
-    fn from(ts: TimestampNanos) -> Self {
-        Self((ts / NANOS_PER_DAY) * NANOS_PER_DAY)
-    }
-}
 
 impl From<TimestampNanos> for DayEndNanos {
     fn from(ts: TimestampNanos) -> Self {
         Self(((ts / NANOS_PER_DAY) + 1) * NANOS_PER_DAY - 1)
-    }
-}
-
-impl DayStartNanos {
-    pub fn get(&self) -> TimestampNanos {
-        self.0
     }
 }
 
@@ -51,21 +38,17 @@ impl DayEndNanos {
 
 /// Reward period in which we want to reward the node providers
 ///
-/// Reward period spans over two timestamp boundaries:
-///  - `start_ts`: The first timestamp (in nanoseconds) of the first day.
-///  - `end_ts`: The last timestamp (in nanoseconds) of the last day.
-///
 /// This period ensures that all `BlockmakerMetrics` collected during the reward period are included consistently
 /// with the invariant defined in [`ic_replicated_state::metadata_state::BlockmakerMetricsTimeSeries`].
 #[derive(Debug, Clone, PartialEq)]
 pub struct RewardPeriod {
-    pub start_ts: DayStartNanos,
-    pub end_ts: DayEndNanos,
+    pub from: DayUTC,
+    pub to: DayUTC,
 }
 
 impl Display for RewardPeriod {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "RewardPeriod: {} - {}", self.start_ts.get(), self.end_ts.get())
+        write!(f, "RewardPeriod: {} - {}", self.from.ts_at_day_start(), self.to.ts_at_day_end())
     }
 }
 
@@ -75,34 +58,29 @@ impl RewardPeriod {
     /// # Arguments
     /// * `unaligned_start_ts` - A generic timestamp (in nanoseconds) in the first (UTC) day.
     /// * `unaligned_end_ts` - A generic timestamp (in nanoseconds) in the last (UTC) day.
-    ///
-    /// # Errors
-    /// * `RewardPeriodError::StartTimestampAfterEndTimestamp` - If `unaligned_start_ts` is greater than `unaligned_end_ts`.
-    /// * `RewardPeriodError::EndTimestampLaterThanToday` - If `unaligned_end_ts` is later than the first timestamp of today.
     pub fn new(unaligned_start_ts: TimestampNanos, unaligned_end_ts: TimestampNanos) -> Result<Self, RewardPeriodError> {
         if unaligned_start_ts > unaligned_end_ts {
             return Err(RewardPeriodError::StartTimestampAfterEndTimestamp);
         }
+        let start_ts: DayEndNanos = unaligned_start_ts.into();
+        let end_ts: DayEndNanos = unaligned_end_ts.into();
 
         // Metrics are collected at the end of the day, so we need to ensure that
         // the end timestamp is not later than the first ts of today.
-        let today_first_ts: DayStartNanos = current_time().as_nanos_since_unix_epoch().into();
-        if unaligned_end_ts >= today_first_ts.get() {
+        let today: DayEndNanos = current_time().as_nanos_since_unix_epoch().into();
+
+        if end_ts.0 >= today.0 {
             return Err(RewardPeriodError::EndTimestampLaterThanToday);
         }
 
         Ok(Self {
-            start_ts: unaligned_start_ts.into(),
-            end_ts: unaligned_end_ts.into(),
+            from: start_ts.into(),
+            to: end_ts.into(),
         })
     }
 
-    pub fn contains(&self, ts: TimestampNanos) -> bool {
-        ts >= self.start_ts.get() && ts <= self.end_ts.get()
-    }
-
-    pub fn days_between(&self) -> u64 {
-        ((self.end_ts.get() - self.start_ts.get()) / NANOS_PER_DAY) + 1
+    pub fn contains(&self, day: DayUTC) -> bool {
+        day >= self.from && day <= self.to
     }
 }
 
@@ -127,16 +105,18 @@ impl fmt::Display for RewardPeriodError {
 
 impl Error for RewardPeriodError {}
 
-#[derive(Eq, Hash, PartialEq, Clone, Ord, PartialOrd)]
+#[derive(Eq, Hash, PartialEq, Clone, Ord, PartialOrd, Debug)]
 pub struct RewardableNode {
     pub node_id: NodeId,
+    pub rewardable_from: DayUTC,
+    pub rewardable_to: DayUTC,
     pub region: String,
     pub node_type: String,
     pub dc_id: String,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
-pub struct NodeMetricsDaily {
+pub struct NodeMetricsDailyRaw {
     pub node_id: NodeId,
     pub num_blocks_proposed: u64,
     pub num_blocks_failed: u64,
@@ -145,7 +125,7 @@ pub struct NodeMetricsDaily {
 #[derive(Clone, Debug, Eq, PartialEq, PartialOrd, Ord, Hash)]
 pub struct SubnetMetricsDailyKey {
     pub subnet_id: SubnetId,
-    pub ts: DayEndNanos,
+    pub day: DayUTC,
 }
 
 #[cfg(test)]
@@ -153,6 +133,7 @@ mod tests {
     use super::*;
     use crate::types::TimestampNanos;
     use chrono::{TimeZone, Utc};
+    use crate::rewards_calculator_results::days_between;
 
     fn ymdh_to_ts(year: i32, month: u32, day: u32, hour: u32) -> TimestampNanos {
         Utc.with_ymd_and_hms(year, month, day, hour, 0, 0).unwrap().timestamp_nanos_opt().unwrap() as TimestampNanos
@@ -166,16 +147,18 @@ mod tests {
         let rp = RewardPeriod::new(unaligned_start_ts, unaligned_end_ts).unwrap();
         let expected_start_ts = ymdh_to_ts(2020, 1, 12, 0);
         let expected_end_ts = ymdh_to_ts(2020, 1, 16, 0) - 1;
+        let days = days_between(rp.from, rp.to);
 
-        assert_eq!(rp.start_ts.get(), expected_start_ts);
-        assert_eq!(rp.end_ts.get(), expected_end_ts);
-        assert_eq!(rp.days_between(), 4);
+        assert_eq!(rp.from.ts_at_day_start(), expected_start_ts);
+        assert_eq!(rp.to.ts_at_day_end(), expected_end_ts);
+        assert_eq!(days, 4);
 
         let unaligned_end_ts = ymdh_to_ts(2020, 1, 12, 13);
 
         let rp = RewardPeriod::new(unaligned_start_ts, unaligned_end_ts).unwrap();
+        let days = days_between(rp.from, rp.to);
 
-        assert_eq!(rp.days_between(), 1);
+        assert_eq!(days, 1);
     }
 
     #[test]
