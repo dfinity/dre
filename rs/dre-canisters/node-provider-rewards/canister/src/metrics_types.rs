@@ -2,7 +2,7 @@ use candid::{CandidType, Decode, Encode, Principal};
 use ic_base_types::{NodeId, PrincipalId, SubnetId};
 use ic_stable_structures::storable::Bound;
 use ic_stable_structures::Storable;
-use rewards_calculation::types::{NodeMetricsDaily, SubnetMetricsDailyKey, TimestampNanos};
+use rewards_calculation::types::{NodeMetricsDailyRaw, SubnetMetricsDailyKey, TimestampNanos};
 use serde::{Deserialize, Serialize};
 use std::borrow::Cow;
 
@@ -64,7 +64,7 @@ pub struct SubnetMetricsDailyKeyStored {
 impl From<SubnetMetricsDailyKeyStored> for SubnetMetricsDailyKey {
     fn from(key: SubnetMetricsDailyKeyStored) -> Self {
         Self {
-            ts: key.ts.into(),
+            day: key.ts.into(),
             subnet_id: key.subnet_id,
         }
     }
@@ -108,7 +108,7 @@ pub struct NodeMetricsDailyStored {
     pub num_blocks_failed: u64,
 }
 
-impl From<NodeMetricsDailyStored> for NodeMetricsDaily {
+impl From<NodeMetricsDailyStored> for NodeMetricsDailyRaw {
     fn from(node_metrics: NodeMetricsDailyStored) -> Self {
         Self {
             node_id: node_metrics.node_id,
@@ -123,9 +123,9 @@ pub struct SubnetMetricsDailyValueStored {
     pub nodes_metrics: Vec<NodeMetricsDailyStored>,
 }
 
-impl From<SubnetMetricsDailyValueStored> for Vec<NodeMetricsDaily> {
+impl From<SubnetMetricsDailyValueStored> for Vec<NodeMetricsDailyRaw> {
     fn from(subnet_metrics: SubnetMetricsDailyValueStored) -> Self {
-        subnet_metrics.nodes_metrics.into_iter().map(NodeMetricsDaily::from).collect()
+        subnet_metrics.nodes_metrics.into_iter().map(NodeMetricsDailyRaw::from).collect()
     }
 }
 
