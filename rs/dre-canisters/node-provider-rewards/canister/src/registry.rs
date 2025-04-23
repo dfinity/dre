@@ -1,5 +1,5 @@
 use ic_base_types::{NodeId, PrincipalId, RegistryVersion, SubnetId};
-use ic_interfaces_registry::{RegistryValue, RegistryVersionedRecord};
+use ic_interfaces_registry::RegistryValue;
 use ic_protobuf::registry::dc::v1::DataCenterRecord;
 use ic_protobuf::registry::node::v1::NodeRecord;
 use ic_protobuf::registry::node_operator::v1::NodeOperatorRecord;
@@ -11,12 +11,11 @@ use ic_registry_keys::{
     NODE_RECORD_KEY_PREFIX, NODE_REWARDS_TABLE_KEY, SUBNET_RECORD_KEY_PREFIX,
 };
 use ic_types::registry::RegistryClientError;
-use indexmap::IndexMap;
-use rewards_calculation::types::{DayEndNanos, RewardableNode, TimestampNanos};
+use rewards_calculation::types::{RewardableNode, TimestampNanos};
 use std::collections::btree_map::Entry;
 use std::collections::{BTreeMap, HashMap};
-use std::ops::Sub;
 use std::str::FromStr;
+use rewards_calculation::rewards_calculator_results::DayUTC;
 
 pub trait RegistryEntry: RegistryValue {
     const KEY_PREFIX: &'static str;
@@ -121,6 +120,7 @@ impl<S: RegistryDataStableMemory> RegistryClient<S> {
         let version_start = registry_version_range.start_bound.get();
 
         let key_prefix = NodeRecord::KEY_PREFIX;
+        let prefix_length = key_prefix.len();
         let start_range = StorableRegistryKey::new(key_prefix.to_string(), Default::default());
 
         let mut registered_between_versions = HashMap::new();
@@ -161,7 +161,8 @@ impl<S: RegistryDataStableMemory> RegistryClient<S> {
         Ok(
             registered_between_versions
                 .into_iter()
-                .map(|(node_id, (valid_from, valid_to, node_record))| {
+                .map(|(node_id_key, (valid_from, valid_to, node_record))| {
+                    let node_id = node_id_key[prefix_length..].to_string();
                     let node_id = NodeId::from(PrincipalId::from_str(&node_id).expect("Failed to parse node id"));
                     let version_bounds = RegistryVersionBounds {
                         start_bound: RegistryVersion::from(valid_from),
@@ -179,11 +180,12 @@ impl<S: RegistryDataStableMemory> RegistryClient<S> {
         // TODO: Replace to cover all the versions in the reward period once the registry supports it.
         // https://github.com/dfinity/ic/pull/4450
         let mut rewardable_nodes_per_provider: BTreeMap<_, Vec<_>> = BTreeMap::new();
-
+        let end_bound = self.store.get_latest_version();
+        let start_bound = RegistryVersion::from(end_bound.get() - 100);
         let nodes_in_range = self.nodes_in_range(
             RegistryVersionBounds {
-                start_bound: RegistryVersion::from(start_ts),
-                end_bound: RegistryVersion::from(end_ts),
+                start_bound,
+                end_bound,
             },
         )?;
 
@@ -208,8 +210,8 @@ impl<S: RegistryDataStableMemory> RegistryClient<S> {
                 dc_id,
                 region,
                 // TODO: map registry version to timestamp when registry mapping available
-                rewardable_from: DayEndNanos::from(start_ts),
-                rewardable_to: DayEndNanos::from(end_ts),
+                rewardable_from: DayUTC::from(start_ts),
+                rewardable_to: DayUTC::from(end_ts),
             })
         }
         

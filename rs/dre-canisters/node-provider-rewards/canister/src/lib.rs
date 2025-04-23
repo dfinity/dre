@@ -7,7 +7,6 @@ use node_provider_rewards_api::endpoints::{NodeProviderRewardsCalculationArgs, N
 use rewards_calculation::rewards_calculator::RewardsCalculator;
 use rewards_calculation::types::RewardPeriod;
 use std::collections::BTreeMap;
-use rewards_calculation::rewards_calculator;
 use rewards_calculation::rewards_calculator::builder::RewardsCalculatorBuilder;
 
 mod metrics;
@@ -24,15 +23,26 @@ const DAY_IN_SECONDS: u64 = HOUR_IN_SECONDS * 24;
 /// - Sync local registry stored from the remote registry canister
 /// - Sync subnets metrics from the management canister of the different subnets
 async fn sync_all() {
+    let mut instruction_counter = telemetry::InstructionCounter::new();
     telemetry::PROMETHEUS_METRICS.with_borrow_mut(|m| m.mark_last_sync_start());
     let registry_store = REGISTRY_STORE.with(|m| m.clone());
 
-    match registry_store.schedule_registry_sync().await {
+    instruction_counter.lap();
+    let result = registry_store.schedule_registry_sync().await;
+    let registry_sync_instructions = instruction_counter.lap();
+
+    let mut subnet_list_instructions: u64 = 0;
+    let mut update_subnet_metrics_instructions: u64 = 0;
+
+    match result {
         Ok(_) => {
             let metrics_manager = METRICS_MANAGER.with(|m| m.clone());
+            instruction_counter.lap(); // Reset the lap time.
             let subnets_list = registry_store.subnets_list();
-
+            subnet_list_instructions = instruction_counter.lap();
             metrics_manager.update_subnets_metrics(subnets_list).await;
+            update_subnet_metrics_instructions = instruction_counter.lap();
+
             telemetry::PROMETHEUS_METRICS.with_borrow_mut(|m| m.mark_last_sync_success());
             ic_cdk::println!("Successfully synced subnets metrics and local registry");
         }
@@ -41,17 +51,18 @@ async fn sync_all() {
             ic_cdk::println!("Failed to sync local registry: {:?}", e)
         }
     }
-}
 
-
-fn sum(x: i32, y: i32) -> i32 {
-    x + y
+    telemetry::PROMETHEUS_METRICS.with_borrow_mut(|m| {
+        m.record_last_sync_instructions(
+            instruction_counter.sum(),
+            registry_sync_instructions,
+            subnet_list_instructions,
+            update_subnet_metrics_instructions,
+        )
+    });
 }
-// Explicit coercion to `fn` type is required...
 
 fn setup_timers() {
-    let op: fn(i32, i32) -> i32 = sum;
-
     // Next 1 AM UTC timestamp
     let next_utc_1am_sec = DAY_IN_SECONDS + HOUR_IN_SECONDS - (ic_cdk::api::time() / 1_000_000_000) % DAY_IN_SECONDS;
     ic_cdk_timers::set_timer(std::time::Duration::from_secs(next_utc_1am_sec), || {
@@ -83,15 +94,15 @@ fn post_upgrade() {
 #[query(hidden = true, decoding_quota = 10000)]
 fn http_request(request: HttpRequest) -> HttpResponse {
     match request.path() {
-        "/metrics" => serve_metrics(|encoder| telemetry::PROMETHEUS_METRICS.with(|m| telemetry::encode_metrics(&m.borrow(), encoder))),
+        "/metrics" => serve_metrics(|encoder| telemetry::PROMETHEUS_METRICS.with(|m| m.borrow().encode_metrics(encoder))),
         _ => HttpResponseBuilder::not_found().build(),
     }
 }
 
 fn rewards_calculator(reward_period: RewardPeriodArgs) -> Result<RewardsCalculator, String> {
     let reward_period = RewardPeriod::new(reward_period.start_ts, reward_period.end_ts).map_err(|err| err.to_string())?;
-    let start_ts = reward_period.from.get();
-    let end_ts = reward_period.to.get();
+    let start_ts = reward_period.from.ts_at_day_end();
+    let end_ts = reward_period.to.ts_at_day_end();
 
     let metrics_manager = METRICS_MANAGER.with(|m| m.clone());
     let registry_store = REGISTRY_STORE.with(|m| m.clone());
