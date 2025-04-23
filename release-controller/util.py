@@ -3,10 +3,11 @@ import hashlib
 import logging
 import math
 import os
+import requests
+import subprocess
 import sys
 import time
 import typing
-import requests
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -109,8 +110,8 @@ def auto_progressbar_with_item_descriptions(
         progress_width = int(round(progress * size))
         done_width = size - progress_width
         print(
-            f"{pre}[{'█'*progress_width}{('.'*done_width)}]{post}",
-            end="\r",
+            f"\r{pre}[{'█'*progress_width}{('.'*done_width)}]{post}",
+            end="",
             file=out,
             flush=True,
         )
@@ -125,7 +126,7 @@ def auto_progressbar_with_item_descriptions(
         if sys.stderr.isatty():
             show(i + 1, desc, item)
     if sys.stderr.isatty():
-        print(f"\r{' '*(termsize())}", end="\r", flush=True, file=out)
+        print(f"\r{' '*(termsize())}", end="\n", flush=True, file=out)
 
 
 def auto_progressbar(
@@ -252,3 +253,31 @@ def conventional_logging(one_line_logs: bool, verbose: bool) -> None:
     ch.setLevel(logging.DEBUG if verbose else logging.INFO)
     ch.setFormatter(CustomFormatter(one_line_logs))
     root.addHandler(ch)
+
+
+def check_output(cmd: list[str], **kwargs: typing.Any) -> str:
+    # _LOGGER.warning("CMD: %s", cmd)
+    kwargs = kwargs or {}
+    if "text" not in kwargs:
+        kwargs["text"] = True
+    return typing.cast(str, subprocess.check_output(cmd, **kwargs))
+
+
+def check_output_binary(cmd: list[str], **kwargs: typing.Any) -> bytes:
+    # _LOGGER.warning("CMD: %s", cmd)
+    kwargs = kwargs or {}
+    kwargs["text"] = False
+    return typing.cast(bytes, check_output(cmd, **kwargs))
+
+
+def check_call(cmd: list[str], **kwargs: typing.Any) -> int:
+    # _LOGGER.warning("CMD: %s", cmd)
+    return subprocess.check_call(cmd, **kwargs)
+
+
+def repr_ellipsized(s: str, max_length: int = 80) -> str:
+    if len(s) < max_length:
+        return repr(s)
+    return (
+        repr(s[: int(max_length / 2) - 2]) + "..." + repr(s[-int(max_length / 2) - 2 :])
+    )

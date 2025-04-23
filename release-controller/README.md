@@ -238,6 +238,31 @@ bazel run //release-controller:commit-annotator \
 
 Please consult `--help` for additional options.
 
+### Generate release notes locally
+
+Release notes can be generated locally, using the following command:
+
+```sh
+PREV_RC=rc--2025-03-27_03-14-base
+PREV_COMMIT=3ae3649a2366aaca83404b692fc58e4c6e604a25
+CURR_RC=rc--2025-04-03_03-15
+CURR_COMMIT=68fc31a141b25f842f078c600168d8211339f422
+bazel run //release-controller:release-notes -- \
+   $PREV_RC $PREV_COMMIT $CURR_RC $CURR_COMMIT \
+  --verbose
+```
+
+The form of the command above requires you to run a commit annotator in
+parallel.  If you want to use the internal commit annotator that does not
+need a commit annotator running in parallel, add option
+`--commit-annotator-url local` instead.  If you want to *recalculate* the
+commit annotations instead of using cached ones, you can use option
+`--commit-annotator-url recreate`.  This last option is useful when
+testing the effects of changes made to the commit annotator code or Bazel
+query formulas the annotator uses.
+
+Please consult `--help` for additional options.
+
 ### Tests
 
 #### Unit tests
@@ -251,11 +276,12 @@ The above runs all tests and typechecks tested files.
 With a `.venv` setup by `rye`, you can also run (with varying levels of success):
 
 ```sh
-.venv/bin/python3 -m pytest release-controller/
+export PYTHONPATH=$PWD/release-controller/
+.venv/bin/python3 release-controller/tests/runner.py
 ```
 
-If you want to run a specific test file, specify it as a path instead of the
-folder specified above.
+If you want to run a specific test file, specify its path as an argument
+to the above command line.
 
 #### Typing correctness
 

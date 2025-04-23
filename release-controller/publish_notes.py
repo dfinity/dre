@@ -9,7 +9,7 @@ from github import Github
 from github.Repository import Repository
 from itertools import groupby
 from google_docs import ReleaseNotesClient
-from release_notes import PreparedReleaseNotes
+from release_notes_composer import PreparedReleaseNotes
 import pathlib
 
 from const import OsKind, GUESTOS

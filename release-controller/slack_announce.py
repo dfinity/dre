@@ -6,7 +6,7 @@ from slack_sdk.webhook import WebhookClient
 import typing
 
 from const import OsKind, GUESTOS
-from release_notes import RELEASE_NOTES_REVIEWERS
+from release_notes_composer import RELEASE_NOTES_REVIEWERS
 
 
 class SlackAnnouncerProtocol(typing.Protocol):

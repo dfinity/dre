@@ -98,7 +98,7 @@ jobs:
       ########################################
 
       - name: "🤖 Update k8s deployments for release controller"
-        if: ${{ github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch' }}
+        if: ${{ github.ref == 'refs/heads/main' }}
         uses: ./.github/workflows/update-k8s-deployments
         with:
           files-to-update: bases/apps/ic-release-controller/controller/controller.yaml

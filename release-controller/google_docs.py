@@ -10,7 +10,10 @@ from pydrive2.drive import GoogleDrive
 
 from const import OsKind, GUESTOS
 from git_repo import GitRepo
-from release_notes import PreparedReleaseNotes, LocalCommitChangeDeterminator
+from release_notes_composer import PreparedReleaseNotes
+from commit_annotation import LocalCommitChangeDeterminator
+from release_notes_composer import prepare_release_notes, OrdinaryReleaseNotesRequest
+
 
 md = markdown.Markdown(
     extensions=["pymdownx.tilde", "pymdownx.details"],
@@ -128,8 +131,6 @@ def google_doc_to_markdown(release_docx: pathlib.Path) -> PreparedReleaseNotes:
 
 
 def main() -> None:
-    from release_notes import prepare_release_notes, OrdinaryReleaseNotesRequest
-
     client = ReleaseNotesClient(
         credentials_file=pathlib.Path(__file__).parent.resolve() / "credentials.json",
         release_notes_folder="1zOPwbYdOREhhLv-spRIRRMaFaAQlOVvF",
@@ -145,7 +146,7 @@ def main() -> None:
     )
     ic_repo = GitRepo("https://github.com/dfinity/ic.git", main_branch="master")
     content = prepare_release_notes(
-        request, ic_repo, LocalCommitChangeDeterminator(ic_repo).commit_changes_artifact
+        request, ic_repo, LocalCommitChangeDeterminator(ic_repo)
     )
     gdoc = client.ensure(
         release_tag="release-2024-08-02_01-30-base",
