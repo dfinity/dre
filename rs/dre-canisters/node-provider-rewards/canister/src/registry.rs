@@ -1,20 +1,21 @@
 use ic_base_types::{NodeId, PrincipalId, RegistryVersion, SubnetId};
-use ic_interfaces_registry::RegistryValue;
+use ic_interfaces_registry::{RegistryValue, RegistryVersionedRecord};
 use ic_protobuf::registry::dc::v1::DataCenterRecord;
 use ic_protobuf::registry::node::v1::NodeRecord;
 use ic_protobuf::registry::node_operator::v1::NodeOperatorRecord;
 use ic_protobuf::registry::node_rewards::v2::NodeRewardsTable;
 use ic_protobuf::registry::subnet::v1::{SubnetListRecord, SubnetRecord};
-use ic_registry_canister_client::{CanisterRegistryClient, RegistryDataStableMemory, StableCanisterRegistryClient};
+use ic_registry_canister_client::{CanisterRegistryClient, RegistryDataStableMemory, StableCanisterRegistryClient, StorableRegistryKey, StorableRegistryValue};
 use ic_registry_keys::{
     make_data_center_record_key, make_node_operator_record_key, make_subnet_list_record_key, DATA_CENTER_KEY_PREFIX, NODE_OPERATOR_RECORD_KEY_PREFIX,
     NODE_RECORD_KEY_PREFIX, NODE_REWARDS_TABLE_KEY, SUBNET_RECORD_KEY_PREFIX,
 };
 use ic_types::registry::RegistryClientError;
 use indexmap::IndexMap;
-use rewards_calculation::types::RewardableNode;
+use rewards_calculation::types::{DayEndNanos, RewardableNode, TimestampNanos};
 use std::collections::btree_map::Entry;
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, HashMap};
+use std::ops::Sub;
 use std::str::FromStr;
 
 pub trait RegistryEntry: RegistryValue {
@@ -45,36 +46,14 @@ pub struct RegistryClient<S: RegistryDataStableMemory> {
     pub(crate) store: StableCanisterRegistryClient<S>,
 }
 
+struct RegistryVersionBounds {
+    start_bound: RegistryVersion,
+    end_bound: RegistryVersion,
+}
+
 impl<S: RegistryDataStableMemory> RegistryClient<S> {
     pub async fn schedule_registry_sync(&self) -> Result<RegistryVersion, String> {
         self.store.sync_registry_stored().await
-    }
-
-    fn get_family_entries_of_version<T: RegistryEntry + Default>(&self, version: RegistryVersion) -> IndexMap<String, (u64, T)> {
-        let prefix_length = T::KEY_PREFIX.len();
-
-        self.store
-            .get_key_family(T::KEY_PREFIX, version)
-            .expect("Failed to get key family")
-            .iter()
-            .filter_map(|key| {
-                let r = self
-                    .store
-                    .get_versioned_value(key, version)
-                    .unwrap_or_else(|_| panic!("Failed to get entry {} for type {}", key, std::any::type_name::<T>()));
-
-                r.as_ref().map(|v| {
-                    (
-                        key[prefix_length..].to_string(),
-                        (r.version.get(), T::decode(v.as_slice()).expect("Invalid registry value")),
-                    )
-                })
-            })
-            .collect()
-    }
-
-    fn get_family_entries<T: RegistryEntry + Default>(&self) -> IndexMap<String, (u64, T)> {
-        self.get_family_entries_of_version::<T>(self.store.get_latest_version())
     }
 
     pub fn get_versioned_value<T: RegistryValue + Default>(&self, key: &str, version: RegistryVersion) -> Result<T, RegistryClientError> {
@@ -134,41 +113,106 @@ impl<S: RegistryDataStableMemory> RegistryClient<S> {
         }
     }
 
-    pub fn get_rewardable_nodes_per_provider(&self) -> BTreeMap<PrincipalId, Vec<RewardableNode>> {
-        let mut rewardable_nodes_per_provider: BTreeMap<_, Vec<_>> = BTreeMap::new();
-        let mut node_operator_rewardable_count = BTreeMap::new();
+    fn nodes_in_range(
+        &self,
+        registry_version_range: RegistryVersionBounds,
+    ) -> Result<HashMap<NodeId, (NodeRecord, RegistryVersionBounds)>, RegistryClientError> {
+        let version_end = registry_version_range.end_bound.get();
+        let version_start = registry_version_range.start_bound.get();
 
-        // TODO: Extend to all the versions in the range once the registry supports it.
+        let key_prefix = NodeRecord::KEY_PREFIX;
+        let start_range = StorableRegistryKey::new(key_prefix.to_string(), Default::default());
+
+        let mut registered_between_versions = HashMap::new();
+        S::with_registry_map(|map| {
+            for (node_key, StorableRegistryValue(maybe_value)) in map
+                .range(start_range..)
+                .filter(|(k, _)| k.version <= version_end)
+                .take_while(|(k, _)| k.key.starts_with(key_prefix))
+            {
+                // Before rewarding period
+                if node_key.version <= version_start {
+                    if let Some(value) = maybe_value {
+                        // Add nodes entry assuming registered for the entire rewards period
+                        registered_between_versions.insert(node_key.key, (version_start, version_end, value));
+                    } else {
+                        // Remove nodes entry if it is not valid anymore
+                        registered_between_versions.remove(&node_key.key);
+                    }
+                    continue;
+                }
+
+                // Inside rewards period
+                if let Some(entry) = registered_between_versions.get_mut(&node_key.key) {
+                    let (_, valid_to, present_value) = entry;
+                    match maybe_value {
+                        Some(value) => *present_value = value,
+                        // If the node gets deleted the `node_key.version` represents the last version
+                        // where the node was registered.
+                        None => *valid_to = node_key.version,
+                    }
+                } else if let Some(value) = maybe_value {
+                    // Handle case where the node is registered in the reward period
+                    registered_between_versions.insert(node_key.key, (node_key.version, version_end, value));
+                }
+            }
+        });
+
+        Ok(
+            registered_between_versions
+                .into_iter()
+                .map(|(node_id, (valid_from, valid_to, node_record))| {
+                    let node_id = NodeId::from(PrincipalId::from_str(&node_id).expect("Failed to parse node id"));
+                    let version_bounds = RegistryVersionBounds {
+                        start_bound: RegistryVersion::from(valid_from),
+                        end_bound: RegistryVersion::from(valid_to),
+                    };
+                    let node_record = NodeRecord::decode(node_record.as_slice()).expect("Failed to decode node record");
+                    (node_id, (node_record, version_bounds))
+                })
+                .collect()
+        )
+    }
+    
+
+    pub fn get_rewardable_nodes_per_provider(&self, start_ts: TimestampNanos, end_ts: TimestampNanos) -> Result<BTreeMap<PrincipalId, Vec<RewardableNode>>, RegistryClientError> {
+        // TODO: Replace to cover all the versions in the reward period once the registry supports it.
         // https://github.com/dfinity/ic/pull/4450
-        //
-        // _start_ts: TimestampNanos,
-        // _end_ts: TimestampNanos,
-        let nodes_record = self.get_family_entries::<NodeRecord>();
+        let mut rewardable_nodes_per_provider: BTreeMap<_, Vec<_>> = BTreeMap::new();
 
-        for (principal_id, (_, node_record)) in nodes_record {
-            let node_id: NodeId = PrincipalId::from_str(principal_id.as_str()).unwrap().into();
+        let nodes_in_range = self.nodes_in_range(
+            RegistryVersionBounds {
+                start_bound: RegistryVersion::from(start_ts),
+                end_bound: RegistryVersion::from(end_ts),
+            },
+        )?;
+
+        let mut node_operator_rewardable_count = BTreeMap::new();
+        for (node_id, (node_record, versions_in_registry)) in nodes_in_range {
             let node_operator_id: PrincipalId = node_record.node_operator_id.try_into().unwrap();
             let node_operator_record = self
-                .get_value::<NodeOperatorRecord>(make_node_operator_record_key(node_operator_id).as_str())
-                .unwrap();
-            if let Entry::Vacant(e) = node_operator_rewardable_count.entry(node_operator_id) {
-                e.insert(node_operator_record.rewardable_nodes);
-            }
-
+                .get_versioned_value::<NodeOperatorRecord>(make_node_operator_record_key(node_operator_id).as_str(), versions_in_registry.end_bound)?;
             let node_provider_id: PrincipalId = node_operator_record.node_provider_principal_id.try_into().unwrap();
 
-            let dc_id = node_operator_record.dc_id;
+            if let Entry::Vacant(entry) = node_operator_rewardable_count.entry(node_operator_id) {
+                entry.insert(node_operator_record.rewardable_nodes);
+            }
             let node_type = self.estimate_node_type(node_operator_rewardable_count.get_mut(&node_operator_id));
-            let data_center_record = self.get_value::<DataCenterRecord>(&make_data_center_record_key(&dc_id)).unwrap();
+            let dc_id = node_operator_record.dc_id;
+            let data_center_record = self.get_versioned_value::<DataCenterRecord>(&make_data_center_record_key(&dc_id), versions_in_registry.end_bound)?;
             let region = data_center_record.region;
 
             rewardable_nodes_per_provider.entry(node_provider_id).or_default().push(RewardableNode {
                 node_id,
                 node_type,
-                region,
                 dc_id,
+                region,
+                // TODO: map registry version to timestamp when registry mapping available
+                rewardable_from: DayEndNanos::from(start_ts),
+                rewardable_to: DayEndNanos::from(end_ts),
             })
         }
-        rewardable_nodes_per_provider
+        
+        Ok(rewardable_nodes_per_provider)
     }
 }
