@@ -1,4 +1,5 @@
 load("@python_deps//:requirements.bzl", "requirement")
+load("@rules_oci//oci:defs.bzl", "oci_load")
 load("@rules_python//python:defs.bzl", "py_binary")
 load("@//tools/python:py_oci_image.bzl", "py_oci_image")
 load("@bazel_skylib//rules:native_binary.bzl", "native_binary")
@@ -290,28 +291,37 @@ small_tests_deps = ["forum", "publish_notes", "release_index_loader", "dryrun"] 
     ]
 ]
 
-tar(
-    name = "release_controller_deps",
-    srcs = ["//rs/cli:dre-embedded"],
-)
-
-tar(
-    name = "commit_annotator_deps",
-    srcs = [":bazelisk", ":target_determinator"],
-)
 
 py_oci_image(
     name = "oci_image",
     base = "@bazel_image_7_4_1",
     binary = ":release-controller",
-    tars = [":release_controller_deps"]
+    tars = [],
+)
+
+# Run me to load the reconciler container into Podman as an image,
+# then podman run -it --entrypoint=/bin/sh <sha256 printed>
+oci_load(
+    name = "oci_image_load_into_podman",
+    image = "oci_image",
+    repo_tags = [],
+    tags = ["manual"],
 )
 
 py_oci_image(
     name = "oci_image_commit_annotator",
     base = "@bazel_image_7_4_1",
     binary = ":commit-annotator",
-    tars = [":commit_annotator_deps"]
+    tars = []
+)
+
+# Run me to load the commit annotator container into Podman as an image,
+# then podman run -it --entrypoint=/bin/sh <sha256 printed>
+oci_load(
+    name = "oci_image_commit_annotator_load_into_podman",
+    image = "oci_image_commit_annotator",
+    repo_tags = [],
+    tags = ["manual"],
 )
 
 exports_files(["README.md"])
