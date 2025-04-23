@@ -211,14 +211,14 @@ py_binary(
 genrule(
     name = "ic_repo_clone",
     outs = ["ic.git.tar"],
-    cmd = "rm -rf `dirname $@`/ic.git && git clone https://github.com/dfinity/ic.git `dirname $@`/ic.git && cd `dirname $@`/ic.git && tar cf ../ic.git.tar .",
+    cmd = "echo cachebust >/dev/null ; rm -rf `dirname $@`/ic.git && git clone https://github.com/dfinity/ic.git `dirname $@`/ic.git && cd `dirname $@`/ic.git && tar cf ../ic.git.tar .",
     tags = ["no-sandbox"] + ["manual"],
 )
 
 genrule(
     name = "dre_repo_clone",
     outs = ["dre.git.tar"],
-    cmd = "rm -rf `dirname $@`/dre.git && git clone https://github.com/dfinity/dre.git `dirname $@`/dre.git && cd `dirname $@`/dre.git && tar cf ../dre.git.tar .",
+    cmd = "echo cachebust >/dev/null ; rm -rf `dirname $@`/dre.git && git clone https://github.com/dfinity/dre.git `dirname $@`/dre.git && cd `dirname $@`/dre.git && tar cf ../dre.git.tar .",
     tags = ["no-sandbox"] + ["manual"],
 )
 
