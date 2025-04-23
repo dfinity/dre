@@ -3,11 +3,11 @@ import tempfile
 from release_notes import (
     prepare_release_notes,
     get_change_description_for_commit,
-    LocalCommitChangeDeterminator,
     OrdinaryReleaseNotesRequest,
     SecurityReleaseNotesRequest,
     Change,
 )
+from commit_annotation import LocalCommitChangeDeterminator
 from git_repo import GitRepo
 from const import GUESTOS, COMMIT_BELONGS
 
