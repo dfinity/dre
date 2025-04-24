@@ -1,5 +1,5 @@
-use crate::types::{DayEndNanos, RewardPeriod, RewardPeriodError, TimestampNanos};
-use ic_base_types::{NodeId, SubnetId};
+use crate::types::{DayEndNanos, RewardPeriod, RewardPeriodError, TimestampNanos, NANOS_PER_DAY};
+use ic_base_types::{NodeId, PrincipalId, SubnetId};
 use rust_decimal::Decimal;
 use std::collections::BTreeMap;
 use std::error::Error;
@@ -35,18 +35,32 @@ impl From<Decimal> for Percent {
     }
 }
 
-#[derive(Clone, PartialEq, Debug, Hash, PartialOrd, Ord, Eq, Copy)]
-pub struct DayUTC(DayEndNanos);
+#[derive(Clone, Debug, PartialEq, Hash, PartialOrd, Ord, Eq, Copy, Default)]
+pub struct DayUTC(pub DayEndNanos);
 
 impl DayUTC {
-    pub fn get(&self) -> TimestampNanos {
+    pub fn ts_at_day_end(&self) -> TimestampNanos {
         self.0.get()
+    }
+
+    pub fn ts_at_day_start(&self) -> TimestampNanos {
+        (self.0.get() / NANOS_PER_DAY) * NANOS_PER_DAY
     }
 }
 impl From<DayEndNanos> for DayUTC {
     fn from(value: DayEndNanos) -> Self {
         Self(value)
     }
+}
+
+impl From<TimestampNanos> for DayUTC {
+    fn from(value: TimestampNanos) -> Self {
+        Self(DayEndNanos::from(value))
+    }
+}
+
+pub fn days_between(first_day: DayUTC, last_day: DayUTC) -> usize {
+    (((last_day.ts_at_day_end() - first_day.ts_at_day_start()) / NANOS_PER_DAY) + 1) as usize
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
@@ -56,7 +70,7 @@ pub struct NodeCategory {
 }
 
 #[derive(Clone, PartialEq, Debug)]
-pub struct NodeMetricsDailyProcessed {
+pub struct NodeMetricsDaily {
     pub day: DayUTC,
     pub subnet_assigned: SubnetId,
     /// Subnet Assigned Failure Rate.
@@ -83,7 +97,10 @@ pub struct NodeResults {
     pub region: String,
     pub node_type: String,
     pub dc_id: String,
-    pub daily_metrics: Vec<NodeMetricsDailyProcessed>,
+    pub rewardable_from: DayUTC,
+    pub rewardable_to: DayUTC,
+    pub rewardable_days: usize,
+    pub daily_metrics: Vec<NodeMetricsDaily>,
 
     /// Average Relative Failure Rate (`ARFR`).
     ///
@@ -109,6 +126,11 @@ pub struct NodeResults {
     ///
     /// Calculated as 1 - 'RR'
     pub performance_multiplier: Percent,
+    pub base_rewards_per_month: XDRPermyriad,
+
+    /// Base Rewards for the rewards period.
+    ///
+    /// Calculated as `base_rewards_per_month` / 30.4375 * `rewardable_days`
     pub base_rewards: XDRPermyriad,
 
     /// Adjusted rewards (`AR`).
@@ -134,10 +156,13 @@ pub enum RewardCalculatorError {
     EmptyMetrics,
     SubnetMetricsOutOfRange {
         subnet_id: SubnetId,
-        timestamp: TimestampNanos,
+        day: DayUTC,
         reward_period: RewardPeriod,
     },
-    DuplicateMetrics(SubnetId, DayEndNanos),
+    DuplicateMetrics(SubnetId, DayUTC),
+    ProviderNotFound(PrincipalId),
+    NodeNotInRewardables(NodeId),
+    RewardableNodeOutOfRange(NodeId),
 }
 
 impl From<RewardPeriodError> for RewardCalculatorError {
@@ -156,20 +181,36 @@ impl fmt::Display for RewardCalculatorError {
             }
             RewardCalculatorError::SubnetMetricsOutOfRange {
                 subnet_id,
-                timestamp,
+                day,
                 reward_period,
             } => {
                 write!(
                     f,
                     "Node {} has metrics outside the reward period: timestamp: {} not in {}",
-                    subnet_id, timestamp, reward_period
+                    subnet_id,
+                    day.0.get(),
+                    reward_period
                 )
             }
-            RewardCalculatorError::DuplicateMetrics(subnet_id, ts) => {
-                write!(f, "Subnet {} has multiple metrics for the same node at ts {}", subnet_id, ts.get())
+            RewardCalculatorError::DuplicateMetrics(subnet_id, day) => {
+                write!(
+                    f,
+                    "Subnet {} has multiple metrics for the same node at ts {}",
+                    subnet_id,
+                    day.ts_at_day_end()
+                )
             }
             RewardCalculatorError::RewardPeriodError(err) => {
                 write!(f, "Reward period error: {}", err)
+            }
+            RewardCalculatorError::ProviderNotFound(provider_id) => {
+                write!(f, "Node Provider: {} not found", provider_id)
+            }
+            RewardCalculatorError::NodeNotInRewardables(node_id) => {
+                write!(f, "Node: {} has metrics but is not rewardable", node_id)
+            }
+            RewardCalculatorError::RewardableNodeOutOfRange(node_id) => {
+                write!(f, "Node: {} is not rewardable in the reward period", node_id)
             }
         }
     }

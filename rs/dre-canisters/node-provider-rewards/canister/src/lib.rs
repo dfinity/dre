@@ -4,8 +4,8 @@ use ic_canisters_http_types::{HttpRequest, HttpResponse, HttpResponseBuilder};
 use ic_cdk_macros::*;
 use ic_nervous_system_common::serve_metrics;
 use node_provider_rewards_api::endpoints::{NodeProviderRewardsCalculationArgs, NodeProvidersRewards, RewardPeriodArgs, RewardsCalculatorResults};
+use rewards_calculation::rewards_calculator::builder::RewardsCalculatorBuilder;
 use rewards_calculation::rewards_calculator::RewardsCalculator;
-use rewards_calculation::rewards_calculator_results::RewardCalculatorError;
 use rewards_calculation::types::RewardPeriod;
 use std::collections::BTreeMap;
 
@@ -99,29 +99,42 @@ fn http_request(request: HttpRequest) -> HttpResponse {
     }
 }
 
-fn rewards_calculator_builder(reward_period: RewardPeriodArgs) -> Result<RewardsCalculator, RewardCalculatorError> {
-    let reward_period = RewardPeriod::new(reward_period.start_ts, reward_period.end_ts)?;
+fn rewards_calculator(reward_period: RewardPeriodArgs) -> Result<RewardsCalculator, String> {
+    let reward_period = RewardPeriod::new(reward_period.start_ts, reward_period.end_ts).map_err(|err| err.to_string())?;
+    let start_ts = reward_period.from.ts_at_day_end();
+    let end_ts = reward_period.to.ts_at_day_end();
+
     let metrics_manager = METRICS_MANAGER.with(|m| m.clone());
     let registry_store = REGISTRY_STORE.with(|m| m.clone());
 
     let rewards_table = registry_store.get_rewards_table();
-    let daily_metrics_by_subnet = metrics_manager.daily_metrics_by_subnet(reward_period.start_ts.get(), reward_period.end_ts.get());
+    let daily_metrics_by_subnet = metrics_manager.daily_metrics_by_subnet(start_ts, end_ts);
 
-    RewardsCalculator::from_subnets_metrics(reward_period, rewards_table, daily_metrics_by_subnet)
+    let rewardable_nodes_per_provider = registry_store
+        .get_rewardable_nodes_per_provider(start_ts, end_ts)
+        .map_err(|err| err.to_string())?;
+
+    let rewards_calculator = RewardsCalculatorBuilder {
+        reward_period,
+        rewards_table,
+        daily_metrics_by_subnet,
+        rewardable_nodes_per_provider,
+    }
+    .build()
+    .map_err(|err| err.to_string())?;
+
+    Ok(rewards_calculator)
 }
 
 #[query]
 #[candid_method(query)]
 fn get_node_providers_rewards(args: RewardPeriodArgs) -> Result<NodeProvidersRewards, String> {
-    let calculator = rewards_calculator_builder(args).map_err(|err| err.to_string())?;
-    let registry_store = REGISTRY_STORE.with(|m| m.clone());
-    let rewardable_nodes_per_provider = registry_store.get_rewardable_nodes_per_provider();
-
-    let mut rewards_per_provider = BTreeMap::new();
-    for (provider_id, rewardable_nodes) in rewardable_nodes_per_provider {
-        let rewards_result = calculator.calculate_provider_rewards(rewardable_nodes);
-        rewards_per_provider.insert(provider_id, rewards_result.rewards_total);
-    }
+    let calculator = rewards_calculator(args)?;
+    let rewards_per_provider = calculator
+        .calculate_rewards_per_provider()
+        .into_iter()
+        .map(|(provider_id, rewards_calculation)| (provider_id, rewards_calculation.rewards_total))
+        .collect::<BTreeMap<_, _>>();
 
     rewards_per_provider.try_into()
 }
@@ -129,12 +142,10 @@ fn get_node_providers_rewards(args: RewardPeriodArgs) -> Result<NodeProvidersRew
 #[query]
 #[candid_method(query)]
 fn get_node_provider_rewards_calculation(args: NodeProviderRewardsCalculationArgs) -> Result<RewardsCalculatorResults, String> {
-    let calculator = rewards_calculator_builder(args.reward_period).map_err(|err| err.to_string())?;
-    let registry_store = REGISTRY_STORE.with(|m| m.clone());
-    let rewardable_nodes = registry_store
-        .get_rewardable_nodes_per_provider()
-        .remove(&args.provider_id)
-        .ok_or(format!("No rewardable nodes found for provider {}", args.provider_id))?;
+    let calculator = rewards_calculator(args.reward_period)?;
+    let provider_rewards_calculation = calculator
+        .calculate_rewards_single_provider(args.provider_id)
+        .map_err(|err| err.to_string())?;
 
-    calculator.calculate_provider_rewards(rewardable_nodes).try_into()
+    provider_rewards_calculation.try_into()
 }

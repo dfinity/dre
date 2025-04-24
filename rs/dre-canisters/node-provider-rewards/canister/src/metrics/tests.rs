@@ -5,7 +5,7 @@ use ic_cdk::api::call::{CallResult, RejectionCode};
 use ic_management_canister_types_private::{NodeMetrics, NodeMetricsHistoryArgs, NodeMetricsHistoryResponse};
 use ic_stable_structures::memory_manager::{MemoryId, VirtualMemory};
 use ic_stable_structures::DefaultMemoryImpl;
-use rewards_calculation::types::{DayEndNanos, NodeMetricsDaily};
+use rewards_calculation::types::{DayEndNanos, NodeMetricsDailyRaw};
 use std::cell::RefCell;
 use std::collections::{BTreeMap, HashMap};
 
@@ -270,7 +270,7 @@ async fn _daily_metrics_correct_different_update_size(size: usize) {
     for _ in 0..MAX_TIMES {
         mm.update_subnets_metrics(vec![subnet_id(1)]).await;
     }
-    let node_1_daily_metrics: Vec<NodeMetricsDaily> = mm
+    let node_1_daily_metrics: Vec<NodeMetricsDailyRaw> = mm
         .subnets_metrics
         .borrow()
         .iter()
@@ -408,13 +408,13 @@ async fn daily_metrics_correct_overlapping_days() {
             metrics
                 .into_iter()
                 .find(|daily_metrics| daily_metrics.node_id == node_1)
-                .map(move |metrics_node_1| (sub.subnet_id, sub.ts, metrics_node_1))
+                .map(move |metrics_node_1| (sub.subnet_id, sub.day, metrics_node_1))
         })
         .collect::<Vec<_>>();
 
     let overlapping_sub_1 = daily_metrics
         .iter()
-        .find(|(sub, ts, _)| sub == &subnet_1 && *ts == DayEndNanos::from(2 * ONE_DAY_NANOS))
+        .find(|(sub, day, _)| sub == &subnet_1 && day.ts_at_day_end() == DayEndNanos::from(2 * ONE_DAY_NANOS).get())
         .map(|(_, _, node_metrics)| node_metrics)
         .unwrap();
 
@@ -423,7 +423,7 @@ async fn daily_metrics_correct_overlapping_days() {
 
     let overlapping_sub_2 = daily_metrics
         .iter()
-        .find(|(sub, ts, _)| sub == &subnet_2 && *ts == DayEndNanos::from(2 * ONE_DAY_NANOS))
+        .find(|(sub, day, _)| sub == &subnet_2 && day.ts_at_day_end() == DayEndNanos::from(2 * ONE_DAY_NANOS).get())
         .map(|(_, _, node_metrics)| node_metrics)
         .unwrap();
 

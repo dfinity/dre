@@ -5,7 +5,7 @@ use ic_base_types::SubnetId;
 use ic_cdk::api::call::CallResult;
 use ic_management_canister_types_private::{NodeMetricsHistoryArgs, NodeMetricsHistoryResponse};
 use ic_stable_structures::StableBTreeMap;
-use rewards_calculation::types::{NodeMetricsDaily, SubnetMetricsDailyKey, TimestampNanos};
+use rewards_calculation::types::{NodeMetricsDailyRaw, SubnetMetricsDailyKey, TimestampNanos};
 use std::cell::RefCell;
 use std::collections::{BTreeMap, HashMap};
 
@@ -199,7 +199,11 @@ where
             }
         }
     }
-    pub fn daily_metrics_by_subnet(&self, start_ts: TimestampNanos, end_ts: TimestampNanos) -> HashMap<SubnetMetricsDailyKey, Vec<NodeMetricsDaily>> {
+    pub fn daily_metrics_by_subnet(
+        &self,
+        start_ts: TimestampNanos,
+        end_ts: TimestampNanos,
+    ) -> HashMap<SubnetMetricsDailyKey, Vec<NodeMetricsDailyRaw>> {
         let first_key = SubnetMetricsDailyKeyStored {
             ts: start_ts,
             ..SubnetMetricsDailyKeyStored::min_key()

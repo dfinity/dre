@@ -22,7 +22,7 @@ type NodeProviderRewardsCalculationArgs = record {
     reward_period: RewardPeriodArgs;
 };
 
-type NodeMetricsDailyProcessed = record {
+type NodeMetricsDaily = record {
     day: DayUTC;
     subnet_assigned: SubnetId;
     /// Subnet Assigned Failure Rate.
@@ -48,7 +48,10 @@ type NodeResults = record {
     node_type: text;
     region: text;
     dc_id: text;
-    daily_metrics: vec NodeMetricsDailyProcessed;
+    rewardable_from: DayUTC;
+    rewardable_to: DayUTC;
+    rewardable_days: nat64;
+    daily_metrics: vec NodeMetricsDaily;
     /// Average Relative Failure Rate (`ARFR`).
     ///
     /// Average of `RFR` for the entire reward period.
@@ -70,6 +73,10 @@ type NodeResults = record {
     ///
     /// Calculated as 1 - 'RR'
     performance_multiplier: Percent;
+    base_rewards_per_month: XDRPermyriad;
+    /// Base Rewards for the rewards period.
+    ///
+    /// Calculated as `base_rewards_per_month` / 30.4375 * `rewardable_days`
     base_rewards: XDRPermyriad;
     /// Adjusted rewards (`AR`).
     ///
