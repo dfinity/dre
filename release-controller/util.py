@@ -3,8 +3,10 @@ import hashlib
 import logging
 import math
 import os
+import pathlib
 import requests
 import subprocess
+import shutil
 import sys
 import time
 import typing
@@ -23,45 +25,31 @@ def resolve_binary(name: str) -> str:
     Resolve the binary path for the given binary name.
     Try to locate the binary in expected location if it was packaged in an OCI image.
     """
-    # First, look for the binary in the same folder as this file.
-    binary_local = os.path.join(os.path.dirname(__file__), name)
-    if os.access(binary_local, os.X_OK):
-        _LOGGER.debug("Using %s for executable %s", binary_local, name)
-        return binary_local
-    # Then, look for the binary in a runfiles folder within the program's
-    # runfiles directory.  This is where the binary would be included normally
-    # when specified as a data dependency of a container built via Bazel.
-    # Only do this when looking for the DRE binary.
-    if name == "dre":
-        if os.getenv("DRE_PATH") is not None:
-            # This branch is taken when running with bazel run, or when the user
-            # manually wants to use a specific DRE tool.
-            binary_local = str(os.getenv("DRE_PATH"))
-            _LOGGER.debug(
-                "Using %s for executable %s as per environment variable DRE_PATH",
-                binary_local,
-                name,
-            )
-            return binary_local
-        else:
-            binary_local = os.path.join("/", "rs", "cli", "dre-embedded")
-            _LOGGER.debug(
-                "Trying %s for executable %s within container",
-                binary_local,
-                name,
-            )
-            if not os.path.exists(binary_local):
-                _LOGGER.warning("Program %s does not exist", binary_local)
-                return name
-            if not os.access(binary_local, os.X_OK):
-                _LOGGER.warning("Program %s is not executable", binary_local)
-                return name
-            return binary_local
-    _LOGGER.debug(
-        "Falling back to path search for executable %s",
-        name,
-    )
-    return name
+    me = pathlib.Path(__file__)
+    things_to_try = [name + "-embedded", name] if name == "dre" else [name]
+    for thing in things_to_try:
+        search_path = os.path.pathsep.join(
+            # First, look for the binary in the same folder as this file.
+            [
+                # Special-casing DRE it's actually in ../rs/cli.
+                os.path.pathsep + str(me.parent.parent / "rs" / "cli"),
+            ]
+            if name == "dre"
+            else [
+                os.path.pathsep + str(me.parent),
+            ]
+            + [
+                # Also search in the regular executable search path.
+                os.getenv("PATH", "."),
+            ]
+        )
+        full_path = shutil.which(thing, path=search_path)
+        if full_path is not None:
+            break
+    if full_path is None:
+        raise FileNotFoundError(name)
+    _LOGGER.debug("Selected %s as binary to run for command %s", full_path, name)
+    return full_path
 
 
 T = typing.TypeVar("T")
