@@ -5,8 +5,6 @@ from commit_annotation import (
     GitRepoAnnotator,
     CHANGED_NOTES_NAMESPACES,
     CommitInclusionState,
-    COMMIT_BELONGS,
-    COMMIT_DOES_NOT_BELONG,
 )
 from const import OsKind
 from commit_annotator import compute_annotations_for_object
