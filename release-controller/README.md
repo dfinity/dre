@@ -246,6 +246,10 @@ bazel run //release-controller:commit-annotator \
   --verbose
 ```
 
+The annotator can also be run as a podman container, with a similar
+technique as above.  However, the annotator requires `--user $UID`
+because Bazel will not run as root (UID 0).
+
 Please consult `--help` for additional options.
 
 ### Generate release notes locally
