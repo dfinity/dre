@@ -271,6 +271,28 @@ commit annotations instead of using cached ones, you can use option
 testing the effects of changes made to the commit annotator code or Bazel
 query formulas the annotator uses.
 
+A great tip / trick to diagnose exactly what the release notes and
+commit annotation processes are doing is to pick a commit from the IC
+repo, figure out which its parent commit is, then run:
+
+```sh
+PREV_RC=prev
+PREV_COMMIT=1354f31c9cd4fb6b4a65ab64eb9ac4a0a4d16839 # parent commit
+CURR_RC=curr
+CURR_COMMIT=f8131bfbc2d339716a9cff06e04de49a68e5a80b # commit
+bazel run //release-controller:release-notes -- \
+   $PREV_RC $PREV_COMMIT $CURR_RC $CURR_COMMIT \
+  --os-kind=GuestOS \
+  --verbose
+bazel run //release-controller:release-notes -- \
+   $PREV_RC $PREV_COMMIT $CURR_RC $CURR_COMMIT \
+  --os-kind=HostOS \
+  --verbose
+```
+
+That run tells you what the annotation process would do for that single
+commit in question.
+
 Please consult `--help` for additional options.
 
 ### Tests
