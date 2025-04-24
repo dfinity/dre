@@ -3018,6 +3018,347 @@
 			"version": "4:13.2.0-7ubuntu1"
 		},
 		{
+			"arch": "amd64",
+			"dependencies": [
+				{
+					"key": "binutils_2.42-4ubuntu2.5_amd64",
+					"name": "binutils",
+					"version": "2.42-4ubuntu2.5"
+				},
+				{
+					"key": "binutils-x86-64-linux-gnu_2.42-4ubuntu2.5_amd64",
+					"name": "binutils-x86-64-linux-gnu",
+					"version": "2.42-4ubuntu2.5"
+				},
+				{
+					"key": "zlib1g_1-1.3.dfsg-3.1ubuntu2.1_amd64",
+					"name": "zlib1g",
+					"version": "1:1.3.dfsg-3.1ubuntu2.1"
+				},
+				{
+					"key": "libc6_2.39-0ubuntu8.4_amd64",
+					"name": "libc6",
+					"version": "2.39-0ubuntu8.4"
+				},
+				{
+					"key": "libgcc-s1_14.2.0-4ubuntu2_24.04_amd64",
+					"name": "libgcc-s1",
+					"version": "14.2.0-4ubuntu2~24.04"
+				},
+				{
+					"key": "gcc-14-base_14.2.0-4ubuntu2_24.04_amd64",
+					"name": "gcc-14-base",
+					"version": "14.2.0-4ubuntu2~24.04"
+				},
+				{
+					"key": "libzstd1_1.5.5-p-dfsg2-2build1.1_amd64",
+					"name": "libzstd1",
+					"version": "1.5.5+dfsg2-2build1.1"
+				},
+				{
+					"key": "libstdc-p--p-6_14.2.0-4ubuntu2_24.04_amd64",
+					"name": "libstdc++6",
+					"version": "14.2.0-4ubuntu2~24.04"
+				},
+				{
+					"key": "libsframe1_2.42-4ubuntu2.5_amd64",
+					"name": "libsframe1",
+					"version": "2.42-4ubuntu2.5"
+				},
+				{
+					"key": "libjansson4_2.14-2build2_amd64",
+					"name": "libjansson4",
+					"version": "2.14-2build2"
+				},
+				{
+					"key": "libgprofng0_2.42-4ubuntu2.5_amd64",
+					"name": "libgprofng0",
+					"version": "2.42-4ubuntu2.5"
+				},
+				{
+					"key": "libbinutils_2.42-4ubuntu2.5_amd64",
+					"name": "libbinutils",
+					"version": "2.42-4ubuntu2.5"
+				},
+				{
+					"key": "binutils-common_2.42-4ubuntu2.5_amd64",
+					"name": "binutils-common",
+					"version": "2.42-4ubuntu2.5"
+				},
+				{
+					"key": "libctf0_2.42-4ubuntu2.5_amd64",
+					"name": "libctf0",
+					"version": "2.42-4ubuntu2.5"
+				},
+				{
+					"key": "libctf-nobfd0_2.42-4ubuntu2.5_amd64",
+					"name": "libctf-nobfd0",
+					"version": "2.42-4ubuntu2.5"
+				},
+				{
+					"key": "libc6-dev_2.39-0ubuntu8.4_amd64",
+					"name": "libc6-dev",
+					"version": "2.39-0ubuntu8.4"
+				},
+				{
+					"key": "rpcsvc-proto_1.4.2-0ubuntu7_amd64",
+					"name": "rpcsvc-proto",
+					"version": "1.4.2-0ubuntu7"
+				},
+				{
+					"key": "libcrypt-dev_1-4.4.36-4build1_amd64",
+					"name": "libcrypt-dev",
+					"version": "1:4.4.36-4build1"
+				},
+				{
+					"key": "libcrypt1_1-4.4.36-4build1_amd64",
+					"name": "libcrypt1",
+					"version": "1:4.4.36-4build1"
+				},
+				{
+					"key": "linux-libc-dev_6.8.0-58.60_amd64",
+					"name": "linux-libc-dev",
+					"version": "6.8.0-58.60"
+				},
+				{
+					"key": "libc-dev-bin_2.39-0ubuntu8.4_amd64",
+					"name": "libc-dev-bin",
+					"version": "2.39-0ubuntu8.4"
+				},
+				{
+					"key": "libclang1-18_1-18.1.8_-p--p-20240731025043-p-3b5b5c1ec4a3-1_exp1_20240731145144.92_amd64",
+					"name": "libclang1-18",
+					"version": "1:18.1.8~++20240731025043+3b5b5c1ec4a3-1~exp1~20240731145144.92"
+				},
+				{
+					"key": "libllvm18_1-18.1.8_-p--p-20240731025043-p-3b5b5c1ec4a3-1_exp1_20240731145144.92_amd64",
+					"name": "libllvm18",
+					"version": "1:18.1.8~++20240731025043+3b5b5c1ec4a3-1~exp1~20240731145144.92"
+				},
+				{
+					"key": "libxml2_2.9.14-p-dfsg-1.3ubuntu3.2_amd64",
+					"name": "libxml2",
+					"version": "2.9.14+dfsg-1.3ubuntu3.2"
+				},
+				{
+					"key": "liblzma5_5.6.1-p-really5.4.5-1ubuntu0.2_amd64",
+					"name": "liblzma5",
+					"version": "5.6.1+really5.4.5-1ubuntu0.2"
+				},
+				{
+					"key": "libicu74_74.2-1ubuntu3.1_amd64",
+					"name": "libicu74",
+					"version": "74.2-1ubuntu3.1"
+				},
+				{
+					"key": "libtinfo6_6.4-p-20240113-1ubuntu2_amd64",
+					"name": "libtinfo6",
+					"version": "6.4+20240113-1ubuntu2"
+				},
+				{
+					"key": "libffi8_3.4.6-1build1_amd64",
+					"name": "libffi8",
+					"version": "3.4.6-1build1"
+				},
+				{
+					"key": "libedit2_3.1-20230828-1build1_amd64",
+					"name": "libedit2",
+					"version": "3.1-20230828-1build1"
+				},
+				{
+					"key": "libbsd0_0.12.1-1build1.1_amd64",
+					"name": "libbsd0",
+					"version": "0.12.1-1build1.1"
+				},
+				{
+					"key": "libmd0_1.1.0-2build1.1_amd64",
+					"name": "libmd0",
+					"version": "1.1.0-2build1.1"
+				},
+				{
+					"key": "llvm-18-linker-tools_1-18.1.8_-p--p-20240731025043-p-3b5b5c1ec4a3-1_exp1_20240731145144.92_amd64",
+					"name": "llvm-18-linker-tools",
+					"version": "1:18.1.8~++20240731025043+3b5b5c1ec4a3-1~exp1~20240731145144.92"
+				},
+				{
+					"key": "libclang-common-18-dev_1-18.1.8_-p--p-20240731025043-p-3b5b5c1ec4a3-1_exp1_20240731145144.92_amd64",
+					"name": "libclang-common-18-dev",
+					"version": "1:18.1.8~++20240731025043+3b5b5c1ec4a3-1~exp1~20240731145144.92"
+				},
+				{
+					"key": "libgcc-13-dev_13.3.0-6ubuntu2_24.04_amd64",
+					"name": "libgcc-13-dev",
+					"version": "13.3.0-6ubuntu2~24.04"
+				},
+				{
+					"key": "libquadmath0_14.2.0-4ubuntu2_24.04_amd64",
+					"name": "libquadmath0",
+					"version": "14.2.0-4ubuntu2~24.04"
+				},
+				{
+					"key": "libhwasan0_14.2.0-4ubuntu2_24.04_amd64",
+					"name": "libhwasan0",
+					"version": "14.2.0-4ubuntu2~24.04"
+				},
+				{
+					"key": "libubsan1_14.2.0-4ubuntu2_24.04_amd64",
+					"name": "libubsan1",
+					"version": "14.2.0-4ubuntu2~24.04"
+				},
+				{
+					"key": "libtsan2_14.2.0-4ubuntu2_24.04_amd64",
+					"name": "libtsan2",
+					"version": "14.2.0-4ubuntu2~24.04"
+				},
+				{
+					"key": "liblsan0_14.2.0-4ubuntu2_24.04_amd64",
+					"name": "liblsan0",
+					"version": "14.2.0-4ubuntu2~24.04"
+				},
+				{
+					"key": "libasan8_14.2.0-4ubuntu2_24.04_amd64",
+					"name": "libasan8",
+					"version": "14.2.0-4ubuntu2~24.04"
+				},
+				{
+					"key": "libatomic1_14.2.0-4ubuntu2_24.04_amd64",
+					"name": "libatomic1",
+					"version": "14.2.0-4ubuntu2~24.04"
+				},
+				{
+					"key": "libitm1_14.2.0-4ubuntu2_24.04_amd64",
+					"name": "libitm1",
+					"version": "14.2.0-4ubuntu2~24.04"
+				},
+				{
+					"key": "libgomp1_14.2.0-4ubuntu2_24.04_amd64",
+					"name": "libgomp1",
+					"version": "14.2.0-4ubuntu2~24.04"
+				},
+				{
+					"key": "gcc-13-base_13.3.0-6ubuntu2_24.04_amd64",
+					"name": "gcc-13-base",
+					"version": "13.3.0-6ubuntu2~24.04"
+				},
+				{
+					"key": "libstdc-p--p--13-dev_13.3.0-6ubuntu2_24.04_amd64",
+					"name": "libstdc++-13-dev",
+					"version": "13.3.0-6ubuntu2~24.04"
+				},
+				{
+					"key": "libclang-cpp18_1-18.1.8_-p--p-20240731025043-p-3b5b5c1ec4a3-1_exp1_20240731145144.92_amd64",
+					"name": "libclang-cpp18",
+					"version": "1:18.1.8~++20240731025043+3b5b5c1ec4a3-1~exp1~20240731145144.92"
+				}
+			],
+			"key": "clang-18_1-18.1.8_-p--p-20240731025043-p-3b5b5c1ec4a3-1_exp1_20240731145144.92_amd64",
+			"name": "clang-18",
+			"sha256": "6b23c30bd68a86e9485cafd0806d3aa46a812089fba74d8283befa611825b42b",
+			"urls": [
+				"https://apt.llvm.org/noble/pool/main/l/llvm-toolchain-18/clang-18_18.1.8~++20240731025043+3b5b5c1ec4a3-1~exp1~20240731145144.92_amd64.deb"
+			],
+			"version": "1:18.1.8~++20240731025043+3b5b5c1ec4a3-1~exp1~20240731145144.92"
+		},
+		{
+			"arch": "amd64",
+			"dependencies": [],
+			"key": "libclang1-18_1-18.1.8_-p--p-20240731025043-p-3b5b5c1ec4a3-1_exp1_20240731145144.92_amd64",
+			"name": "libclang1-18",
+			"sha256": "208abb2defadc4bf204ffc4cd74da0419aa66ae00763ba6e4a7aae48a5bbfb46",
+			"urls": [
+				"https://apt.llvm.org/noble/pool/main/l/llvm-toolchain-18/libclang1-18_18.1.8~++20240731025043+3b5b5c1ec4a3-1~exp1~20240731145144.92_amd64.deb"
+			],
+			"version": "1:18.1.8~++20240731025043+3b5b5c1ec4a3-1~exp1~20240731145144.92"
+		},
+		{
+			"arch": "amd64",
+			"dependencies": [],
+			"key": "libllvm18_1-18.1.8_-p--p-20240731025043-p-3b5b5c1ec4a3-1_exp1_20240731145144.92_amd64",
+			"name": "libllvm18",
+			"sha256": "4c2ccb3bdca15e5741f57bb025a05d79cdd57becfd5e23633ce82f120007cece",
+			"urls": [
+				"https://apt.llvm.org/noble/pool/main/l/llvm-toolchain-18/libllvm18_18.1.8~++20240731025043+3b5b5c1ec4a3-1~exp1~20240731145144.92_amd64.deb"
+			],
+			"version": "1:18.1.8~++20240731025043+3b5b5c1ec4a3-1~exp1~20240731145144.92"
+		},
+		{
+			"arch": "amd64",
+			"dependencies": [],
+			"key": "libxml2_2.9.14-p-dfsg-1.3ubuntu3.2_amd64",
+			"name": "libxml2",
+			"sha256": "8ab0a98cf88c847e2314bdd7dd1673db4d27d3c48787fc652c143207843e325c",
+			"urls": [
+				"https://snapshot.ubuntu.com/ubuntu/20250424T000000Z/pool/main/libx/libxml2/libxml2_2.9.14+dfsg-1.3ubuntu3.2_amd64.deb"
+			],
+			"version": "2.9.14+dfsg-1.3ubuntu3.2"
+		},
+		{
+			"arch": "amd64",
+			"dependencies": [],
+			"key": "libicu74_74.2-1ubuntu3.1_amd64",
+			"name": "libicu74",
+			"sha256": "c9a70989678660eed9a1e904c74fa043da8bec8e2036856fc16e31ced79b04f8",
+			"urls": [
+				"https://snapshot.ubuntu.com/ubuntu/20250424T000000Z/pool/main/i/icu/libicu74_74.2-1ubuntu3.1_amd64.deb"
+			],
+			"version": "74.2-1ubuntu3.1"
+		},
+		{
+			"arch": "amd64",
+			"dependencies": [],
+			"key": "libedit2_3.1-20230828-1build1_amd64",
+			"name": "libedit2",
+			"sha256": "3afbc8ddf835049dd4d88275b9d13680e4c4cdd59e191cbd63424152cc08e00e",
+			"urls": [
+				"https://snapshot.ubuntu.com/ubuntu/20250424T000000Z/pool/main/libe/libedit/libedit2_3.1-20230828-1build1_amd64.deb"
+			],
+			"version": "3.1-20230828-1build1"
+		},
+		{
+			"arch": "amd64",
+			"dependencies": [],
+			"key": "libbsd0_0.12.1-1build1.1_amd64",
+			"name": "libbsd0",
+			"sha256": "f3857b0863ac5cfd4263e9bf6cfb1d4be88d5321e4070d5bc2b62b0949e6c86f",
+			"urls": [
+				"https://snapshot.ubuntu.com/ubuntu/20250424T000000Z/pool/main/libb/libbsd/libbsd0_0.12.1-1build1.1_amd64.deb"
+			],
+			"version": "0.12.1-1build1.1"
+		},
+		{
+			"arch": "amd64",
+			"dependencies": [],
+			"key": "llvm-18-linker-tools_1-18.1.8_-p--p-20240731025043-p-3b5b5c1ec4a3-1_exp1_20240731145144.92_amd64",
+			"name": "llvm-18-linker-tools",
+			"sha256": "cdef719cb8d8c37c1e85b8e230e022016c9b5a5df2e62b45b8a5f5a6f7c6c92b",
+			"urls": [
+				"https://apt.llvm.org/noble/pool/main/l/llvm-toolchain-18/llvm-18-linker-tools_18.1.8~++20240731025043+3b5b5c1ec4a3-1~exp1~20240731145144.92_amd64.deb"
+			],
+			"version": "1:18.1.8~++20240731025043+3b5b5c1ec4a3-1~exp1~20240731145144.92"
+		},
+		{
+			"arch": "amd64",
+			"dependencies": [],
+			"key": "libclang-common-18-dev_1-18.1.8_-p--p-20240731025043-p-3b5b5c1ec4a3-1_exp1_20240731145144.92_amd64",
+			"name": "libclang-common-18-dev",
+			"sha256": "c8775e56339bcbf050994ed97ab4cc442350d3583a86cb29de4a06aec7576dde",
+			"urls": [
+				"https://apt.llvm.org/noble/pool/main/l/llvm-toolchain-18/libclang-common-18-dev_18.1.8~++20240731025043+3b5b5c1ec4a3-1~exp1~20240731145144.92_amd64.deb"
+			],
+			"version": "1:18.1.8~++20240731025043+3b5b5c1ec4a3-1~exp1~20240731145144.92"
+		},
+		{
+			"arch": "amd64",
+			"dependencies": [],
+			"key": "libclang-cpp18_1-18.1.8_-p--p-20240731025043-p-3b5b5c1ec4a3-1_exp1_20240731145144.92_amd64",
+			"name": "libclang-cpp18",
+			"sha256": "6abcc0f657b09434acfa561afb73791323f326782a0ea513f9747ef49440941d",
+			"urls": [
+				"https://apt.llvm.org/noble/pool/main/l/llvm-toolchain-18/libclang-cpp18_18.1.8~++20240731025043+3b5b5c1ec4a3-1~exp1~20240731145144.92_amd64.deb"
+			],
+			"version": "1:18.1.8~++20240731025043+3b5b5c1ec4a3-1~exp1~20240731145144.92"
+		},
+		{
 			"arch": "arm64",
 			"dependencies": [],
 			"key": "ncurses-base_6.4-p-20240113-1ubuntu2_arm64",
@@ -6017,6 +6358,342 @@
 				"https://snapshot.ubuntu.com/ubuntu/20250424T000000Z/pool/main/g/gcc-defaults/cpp_13.2.0-7ubuntu1_arm64.deb"
 			],
 			"version": "4:13.2.0-7ubuntu1"
+		},
+		{
+			"arch": "arm64",
+			"dependencies": [
+				{
+					"key": "binutils_2.42-4ubuntu2.5_arm64",
+					"name": "binutils",
+					"version": "2.42-4ubuntu2.5"
+				},
+				{
+					"key": "binutils-aarch64-linux-gnu_2.42-4ubuntu2.5_arm64",
+					"name": "binutils-aarch64-linux-gnu",
+					"version": "2.42-4ubuntu2.5"
+				},
+				{
+					"key": "zlib1g_1-1.3.dfsg-3.1ubuntu2.1_arm64",
+					"name": "zlib1g",
+					"version": "1:1.3.dfsg-3.1ubuntu2.1"
+				},
+				{
+					"key": "libc6_2.39-0ubuntu8.4_arm64",
+					"name": "libc6",
+					"version": "2.39-0ubuntu8.4"
+				},
+				{
+					"key": "libgcc-s1_14.2.0-4ubuntu2_24.04_arm64",
+					"name": "libgcc-s1",
+					"version": "14.2.0-4ubuntu2~24.04"
+				},
+				{
+					"key": "gcc-14-base_14.2.0-4ubuntu2_24.04_arm64",
+					"name": "gcc-14-base",
+					"version": "14.2.0-4ubuntu2~24.04"
+				},
+				{
+					"key": "libzstd1_1.5.5-p-dfsg2-2build1.1_arm64",
+					"name": "libzstd1",
+					"version": "1.5.5+dfsg2-2build1.1"
+				},
+				{
+					"key": "libstdc-p--p-6_14.2.0-4ubuntu2_24.04_arm64",
+					"name": "libstdc++6",
+					"version": "14.2.0-4ubuntu2~24.04"
+				},
+				{
+					"key": "libsframe1_2.42-4ubuntu2.5_arm64",
+					"name": "libsframe1",
+					"version": "2.42-4ubuntu2.5"
+				},
+				{
+					"key": "libjansson4_2.14-2build2_arm64",
+					"name": "libjansson4",
+					"version": "2.14-2build2"
+				},
+				{
+					"key": "libgprofng0_2.42-4ubuntu2.5_arm64",
+					"name": "libgprofng0",
+					"version": "2.42-4ubuntu2.5"
+				},
+				{
+					"key": "libbinutils_2.42-4ubuntu2.5_arm64",
+					"name": "libbinutils",
+					"version": "2.42-4ubuntu2.5"
+				},
+				{
+					"key": "binutils-common_2.42-4ubuntu2.5_arm64",
+					"name": "binutils-common",
+					"version": "2.42-4ubuntu2.5"
+				},
+				{
+					"key": "libctf0_2.42-4ubuntu2.5_arm64",
+					"name": "libctf0",
+					"version": "2.42-4ubuntu2.5"
+				},
+				{
+					"key": "libctf-nobfd0_2.42-4ubuntu2.5_arm64",
+					"name": "libctf-nobfd0",
+					"version": "2.42-4ubuntu2.5"
+				},
+				{
+					"key": "libc6-dev_2.39-0ubuntu8.4_arm64",
+					"name": "libc6-dev",
+					"version": "2.39-0ubuntu8.4"
+				},
+				{
+					"key": "rpcsvc-proto_1.4.2-0ubuntu7_arm64",
+					"name": "rpcsvc-proto",
+					"version": "1.4.2-0ubuntu7"
+				},
+				{
+					"key": "libcrypt-dev_1-4.4.36-4build1_arm64",
+					"name": "libcrypt-dev",
+					"version": "1:4.4.36-4build1"
+				},
+				{
+					"key": "libcrypt1_1-4.4.36-4build1_arm64",
+					"name": "libcrypt1",
+					"version": "1:4.4.36-4build1"
+				},
+				{
+					"key": "linux-libc-dev_6.8.0-58.60_arm64",
+					"name": "linux-libc-dev",
+					"version": "6.8.0-58.60"
+				},
+				{
+					"key": "libc-dev-bin_2.39-0ubuntu8.4_arm64",
+					"name": "libc-dev-bin",
+					"version": "2.39-0ubuntu8.4"
+				},
+				{
+					"key": "libclang1-18_1-18.1.8_-p--p-20240731025043-p-3b5b5c1ec4a3-1_exp1_20240731145144.92_arm64",
+					"name": "libclang1-18",
+					"version": "1:18.1.8~++20240731025043+3b5b5c1ec4a3-1~exp1~20240731145144.92"
+				},
+				{
+					"key": "libllvm18_1-18.1.8_-p--p-20240731025043-p-3b5b5c1ec4a3-1_exp1_20240731145144.92_arm64",
+					"name": "libllvm18",
+					"version": "1:18.1.8~++20240731025043+3b5b5c1ec4a3-1~exp1~20240731145144.92"
+				},
+				{
+					"key": "libxml2_2.9.14-p-dfsg-1.3ubuntu3.2_arm64",
+					"name": "libxml2",
+					"version": "2.9.14+dfsg-1.3ubuntu3.2"
+				},
+				{
+					"key": "liblzma5_5.6.1-p-really5.4.5-1ubuntu0.2_arm64",
+					"name": "liblzma5",
+					"version": "5.6.1+really5.4.5-1ubuntu0.2"
+				},
+				{
+					"key": "libicu74_74.2-1ubuntu3.1_arm64",
+					"name": "libicu74",
+					"version": "74.2-1ubuntu3.1"
+				},
+				{
+					"key": "libtinfo6_6.4-p-20240113-1ubuntu2_arm64",
+					"name": "libtinfo6",
+					"version": "6.4+20240113-1ubuntu2"
+				},
+				{
+					"key": "libffi8_3.4.6-1build1_arm64",
+					"name": "libffi8",
+					"version": "3.4.6-1build1"
+				},
+				{
+					"key": "libedit2_3.1-20230828-1build1_arm64",
+					"name": "libedit2",
+					"version": "3.1-20230828-1build1"
+				},
+				{
+					"key": "libbsd0_0.12.1-1build1.1_arm64",
+					"name": "libbsd0",
+					"version": "0.12.1-1build1.1"
+				},
+				{
+					"key": "libmd0_1.1.0-2build1.1_arm64",
+					"name": "libmd0",
+					"version": "1.1.0-2build1.1"
+				},
+				{
+					"key": "llvm-18-linker-tools_1-18.1.8_-p--p-20240731025043-p-3b5b5c1ec4a3-1_exp1_20240731145144.92_arm64",
+					"name": "llvm-18-linker-tools",
+					"version": "1:18.1.8~++20240731025043+3b5b5c1ec4a3-1~exp1~20240731145144.92"
+				},
+				{
+					"key": "libclang-common-18-dev_1-18.1.8_-p--p-20240731025043-p-3b5b5c1ec4a3-1_exp1_20240731145144.92_arm64",
+					"name": "libclang-common-18-dev",
+					"version": "1:18.1.8~++20240731025043+3b5b5c1ec4a3-1~exp1~20240731145144.92"
+				},
+				{
+					"key": "libgcc-13-dev_13.3.0-6ubuntu2_24.04_arm64",
+					"name": "libgcc-13-dev",
+					"version": "13.3.0-6ubuntu2~24.04"
+				},
+				{
+					"key": "libhwasan0_14.2.0-4ubuntu2_24.04_arm64",
+					"name": "libhwasan0",
+					"version": "14.2.0-4ubuntu2~24.04"
+				},
+				{
+					"key": "libubsan1_14.2.0-4ubuntu2_24.04_arm64",
+					"name": "libubsan1",
+					"version": "14.2.0-4ubuntu2~24.04"
+				},
+				{
+					"key": "libtsan2_14.2.0-4ubuntu2_24.04_arm64",
+					"name": "libtsan2",
+					"version": "14.2.0-4ubuntu2~24.04"
+				},
+				{
+					"key": "liblsan0_14.2.0-4ubuntu2_24.04_arm64",
+					"name": "liblsan0",
+					"version": "14.2.0-4ubuntu2~24.04"
+				},
+				{
+					"key": "libasan8_14.2.0-4ubuntu2_24.04_arm64",
+					"name": "libasan8",
+					"version": "14.2.0-4ubuntu2~24.04"
+				},
+				{
+					"key": "libatomic1_14.2.0-4ubuntu2_24.04_arm64",
+					"name": "libatomic1",
+					"version": "14.2.0-4ubuntu2~24.04"
+				},
+				{
+					"key": "libitm1_14.2.0-4ubuntu2_24.04_arm64",
+					"name": "libitm1",
+					"version": "14.2.0-4ubuntu2~24.04"
+				},
+				{
+					"key": "libgomp1_14.2.0-4ubuntu2_24.04_arm64",
+					"name": "libgomp1",
+					"version": "14.2.0-4ubuntu2~24.04"
+				},
+				{
+					"key": "gcc-13-base_13.3.0-6ubuntu2_24.04_arm64",
+					"name": "gcc-13-base",
+					"version": "13.3.0-6ubuntu2~24.04"
+				},
+				{
+					"key": "libstdc-p--p--13-dev_13.3.0-6ubuntu2_24.04_arm64",
+					"name": "libstdc++-13-dev",
+					"version": "13.3.0-6ubuntu2~24.04"
+				},
+				{
+					"key": "libclang-cpp18_1-18.1.8_-p--p-20240731025043-p-3b5b5c1ec4a3-1_exp1_20240731145144.92_arm64",
+					"name": "libclang-cpp18",
+					"version": "1:18.1.8~++20240731025043+3b5b5c1ec4a3-1~exp1~20240731145144.92"
+				}
+			],
+			"key": "clang-18_1-18.1.8_-p--p-20240731025043-p-3b5b5c1ec4a3-1_exp1_20240731145144.92_arm64",
+			"name": "clang-18",
+			"sha256": "3e1f265aecb03881ebb61357fdd98ada5ef6089aceab3190c74636d717db00e2",
+			"urls": [
+				"https://apt.llvm.org/noble/pool/main/l/llvm-toolchain-18/clang-18_18.1.8~++20240731025043+3b5b5c1ec4a3-1~exp1~20240731145144.92_arm64.deb"
+			],
+			"version": "1:18.1.8~++20240731025043+3b5b5c1ec4a3-1~exp1~20240731145144.92"
+		},
+		{
+			"arch": "arm64",
+			"dependencies": [],
+			"key": "libclang1-18_1-18.1.8_-p--p-20240731025043-p-3b5b5c1ec4a3-1_exp1_20240731145144.92_arm64",
+			"name": "libclang1-18",
+			"sha256": "c040a1aab55e41bb6bd36ce328c5b43ff869144d69ec28aaf25432962681f0c0",
+			"urls": [
+				"https://apt.llvm.org/noble/pool/main/l/llvm-toolchain-18/libclang1-18_18.1.8~++20240731025043+3b5b5c1ec4a3-1~exp1~20240731145144.92_arm64.deb"
+			],
+			"version": "1:18.1.8~++20240731025043+3b5b5c1ec4a3-1~exp1~20240731145144.92"
+		},
+		{
+			"arch": "arm64",
+			"dependencies": [],
+			"key": "libllvm18_1-18.1.8_-p--p-20240731025043-p-3b5b5c1ec4a3-1_exp1_20240731145144.92_arm64",
+			"name": "libllvm18",
+			"sha256": "9f8f783f5591cb4e7e1b85cc20506c4cc30149a1a3031354f48d79a2dd7b2e08",
+			"urls": [
+				"https://apt.llvm.org/noble/pool/main/l/llvm-toolchain-18/libllvm18_18.1.8~++20240731025043+3b5b5c1ec4a3-1~exp1~20240731145144.92_arm64.deb"
+			],
+			"version": "1:18.1.8~++20240731025043+3b5b5c1ec4a3-1~exp1~20240731145144.92"
+		},
+		{
+			"arch": "arm64",
+			"dependencies": [],
+			"key": "libxml2_2.9.14-p-dfsg-1.3ubuntu3.2_arm64",
+			"name": "libxml2",
+			"sha256": "2c6a75b968f3ede9b403fc4adfe74100dace20c030abed7d78a8dbb50a8b39d4",
+			"urls": [
+				"https://snapshot.ubuntu.com/ubuntu/20250424T000000Z/pool/main/libx/libxml2/libxml2_2.9.14+dfsg-1.3ubuntu3.2_arm64.deb"
+			],
+			"version": "2.9.14+dfsg-1.3ubuntu3.2"
+		},
+		{
+			"arch": "arm64",
+			"dependencies": [],
+			"key": "libicu74_74.2-1ubuntu3.1_arm64",
+			"name": "libicu74",
+			"sha256": "48f93acf50dcf237a8d58ce366730a28438ce52d3f06d7a2a88b51261dd791f7",
+			"urls": [
+				"https://snapshot.ubuntu.com/ubuntu/20250424T000000Z/pool/main/i/icu/libicu74_74.2-1ubuntu3.1_arm64.deb"
+			],
+			"version": "74.2-1ubuntu3.1"
+		},
+		{
+			"arch": "arm64",
+			"dependencies": [],
+			"key": "libedit2_3.1-20230828-1build1_arm64",
+			"name": "libedit2",
+			"sha256": "cf642fec16d86517e0e715520c3a7cdaee650e7ae8a4993f82d0e1e7a5883efb",
+			"urls": [
+				"https://snapshot.ubuntu.com/ubuntu/20250424T000000Z/pool/main/libe/libedit/libedit2_3.1-20230828-1build1_arm64.deb"
+			],
+			"version": "3.1-20230828-1build1"
+		},
+		{
+			"arch": "arm64",
+			"dependencies": [],
+			"key": "libbsd0_0.12.1-1build1.1_arm64",
+			"name": "libbsd0",
+			"sha256": "cdf9ff601244e64482584d9d9b98aa54a573c081ab5956227c737307196c1ce3",
+			"urls": [
+				"https://snapshot.ubuntu.com/ubuntu/20250424T000000Z/pool/main/libb/libbsd/libbsd0_0.12.1-1build1.1_arm64.deb"
+			],
+			"version": "0.12.1-1build1.1"
+		},
+		{
+			"arch": "arm64",
+			"dependencies": [],
+			"key": "llvm-18-linker-tools_1-18.1.8_-p--p-20240731025043-p-3b5b5c1ec4a3-1_exp1_20240731145144.92_arm64",
+			"name": "llvm-18-linker-tools",
+			"sha256": "b15846d3b12b0daccd3db11abf3b85d8b8f810cb9a6e374a464f985d379ef270",
+			"urls": [
+				"https://apt.llvm.org/noble/pool/main/l/llvm-toolchain-18/llvm-18-linker-tools_18.1.8~++20240731025043+3b5b5c1ec4a3-1~exp1~20240731145144.92_arm64.deb"
+			],
+			"version": "1:18.1.8~++20240731025043+3b5b5c1ec4a3-1~exp1~20240731145144.92"
+		},
+		{
+			"arch": "arm64",
+			"dependencies": [],
+			"key": "libclang-common-18-dev_1-18.1.8_-p--p-20240731025043-p-3b5b5c1ec4a3-1_exp1_20240731145144.92_arm64",
+			"name": "libclang-common-18-dev",
+			"sha256": "303b8e2be66a41df391b377a2fa27ad959dd1a3b6992bc2874a194f5bcfa1b1b",
+			"urls": [
+				"https://apt.llvm.org/noble/pool/main/l/llvm-toolchain-18/libclang-common-18-dev_18.1.8~++20240731025043+3b5b5c1ec4a3-1~exp1~20240731145144.92_arm64.deb"
+			],
+			"version": "1:18.1.8~++20240731025043+3b5b5c1ec4a3-1~exp1~20240731145144.92"
+		},
+		{
+			"arch": "arm64",
+			"dependencies": [],
+			"key": "libclang-cpp18_1-18.1.8_-p--p-20240731025043-p-3b5b5c1ec4a3-1_exp1_20240731145144.92_arm64",
+			"name": "libclang-cpp18",
+			"sha256": "f815b62ad52c06d7e965ad5c12b7aa56c7614731404d22926cab29af16afe848",
+			"urls": [
+				"https://apt.llvm.org/noble/pool/main/l/llvm-toolchain-18/libclang-cpp18_18.1.8~++20240731025043+3b5b5c1ec4a3-1~exp1~20240731145144.92_arm64.deb"
+			],
+			"version": "1:18.1.8~++20240731025043+3b5b5c1ec4a3-1~exp1~20240731145144.92"
 		}
 	],
 	"version": 1
