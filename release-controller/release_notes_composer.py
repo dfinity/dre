@@ -22,7 +22,6 @@ from const import (  # noqa: E402
 from commit_annotation import (  # noqa: E402
     ChangeDeterminatorProtocol,
     COMMIT_BELONGS,
-    COMMIT_COULD_NOT_BE_ANNOTATED,
 )
 from git_repo import GitRepo, FileChange  # noqa: E402
 from util import auto_progressbar_with_item_descriptions  # noqa: E402
@@ -287,7 +286,7 @@ def release_changes(
             commit_hash=commits[i],
             ic_repo=ic_repo,
             belongs=belongs_determinator.commit_changes_artifact(commits[i], os_kind)
-            in [COMMIT_BELONGS, COMMIT_COULD_NOT_BE_ANNOTATED],
+            in [COMMIT_BELONGS],
         )
         if change is None:
             continue

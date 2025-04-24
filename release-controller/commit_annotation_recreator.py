@@ -5,7 +5,6 @@ from commit_annotation import (
     CommitInclusionState,
     COMMIT_BELONGS,
     COMMIT_DOES_NOT_BELONG,
-    COMMIT_COULD_NOT_BE_ANNOTATED,
 )
 from const import OsKind
 from commit_annotator import compute_annotations_for_object
@@ -42,6 +41,5 @@ class RecreatingCommitChangeDeterminator(object):
         assert belongs in [
             COMMIT_BELONGS,
             COMMIT_DOES_NOT_BELONG,
-            COMMIT_COULD_NOT_BE_ANNOTATED,
         ], "Expected a specific CommitInclusionState, not %r" % belongs
         return belongs

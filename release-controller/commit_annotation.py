@@ -23,11 +23,8 @@ CHANGED_NOTES_NAMESPACES: dict[OsKind, str] = {
 }
 COMMIT_BELONGS: typing.Literal["True"] = "True"
 COMMIT_DOES_NOT_BELONG: typing.Literal["False"] = "False"
-COMMIT_COULD_NOT_BE_ANNOTATED: typing.Literal["Failed"] = "Failed"
 
-CommitInclusionState = (
-    typing.Literal["True"] | typing.Literal["False"] | typing.Literal["Failed"]
-)
+CommitInclusionState = typing.Literal["True"] | typing.Literal["False"]
 
 
 class NotReady(Exception):
@@ -193,7 +190,6 @@ class LocalCommitChangeDeterminator(object):
         assert changed in [
             COMMIT_BELONGS,
             COMMIT_DOES_NOT_BELONG,
-            COMMIT_COULD_NOT_BE_ANNOTATED,
         ], "Expected a specific CommitInclusionState, not %r" % changed
         return typing.cast(CommitInclusionState, changed)
 
@@ -228,6 +224,5 @@ class CommitAnnotatorClientCommitChangeDeterminator(object):
         assert changed in [
             COMMIT_BELONGS,
             COMMIT_DOES_NOT_BELONG,
-            COMMIT_COULD_NOT_BE_ANNOTATED,
         ], "Expected a specific CommitInclusionState, not %r" % changed
         return typing.cast(CommitInclusionState, changed)
