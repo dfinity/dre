@@ -1,14 +1,16 @@
+import logging
+
 from git_repo import GitRepo
 from commit_annotation import (
     GitRepoAnnotator,
     CHANGED_NOTES_NAMESPACES,
     CommitInclusionState,
-    COMMIT_BELONGS,
-    COMMIT_DOES_NOT_BELONG,
-    COMMIT_COULD_NOT_BE_ANNOTATED,
 )
 from const import OsKind
 from commit_annotator import compute_annotations_for_object
+
+
+_LOGGER = logging.getLogger(__name__)
 
 
 class RecreatingCommitChangeDeterminator(object):
@@ -39,9 +41,4 @@ class RecreatingCommitChangeDeterminator(object):
         """
 
         _, _, belongs = compute_annotations_for_object(self.annotator, commit, os_kind)
-        assert belongs in [
-            COMMIT_BELONGS,
-            COMMIT_DOES_NOT_BELONG,
-            COMMIT_COULD_NOT_BE_ANNOTATED,
-        ], "Expected a specific CommitInclusionState, not %r" % belongs
         return belongs

@@ -17,7 +17,6 @@ sys.path.append(os.path.join(os.path.dirname(__file__)))
 
 from commit_annotation import (
     CHANGED_NOTES_NAMESPACES,
-    COMMIT_COULD_NOT_BE_ANNOTATED,
     COMMIT_BELONGS,
     COMMIT_DOES_NOT_BELONG,
     CommitInclusionState,
@@ -209,12 +208,8 @@ def annotate_object(annotator: GitRepoAnnotator, object: str, os_kind: OsKind) -
             content=belongs,
         )
     except Exception:
-        logger.exception("Annotation failed.  Saving a record of the failure.")
-        annotator.add(
-            object=object,
-            namespace=CHANGED_NOTES_NAMESPACES[os_kind],
-            content=COMMIT_COULD_NOT_BE_ANNOTATED,
-        )
+        logger.exception("Annotation failed.  Aborting.")
+        raise
 
 
 def plan_to_annotate_branch(

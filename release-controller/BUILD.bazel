@@ -174,9 +174,6 @@ py_binary(
     main = "reconciler.py",
     srcs = ["reconciler.py", "slack_announce.py"],
     tags = ["typecheck"],
-    env = {
-        "DRE_PATH": "$(rootpath //rs/cli:dre-embedded)",
-    },
     deps = ["dre_cli", "publish_notes", "forum", "watchdog", "prometheus", "release_notes_composer", "release_index_loader", "dryrun"] + [
         requirement("pydiscourse"),
         requirement("requests"),
@@ -291,37 +288,46 @@ small_tests_deps = ["forum", "publish_notes", "release_index_loader", "dryrun"] 
     ]
 ]
 
-
+# bazel run ...:oci_image_load to load the reconciler container
+# into Podman as an image, then
+# podman run -it --entrypoint=/bin/sh <sha256 printed>
 py_oci_image(
     name = "oci_image",
-    base = "@bazel_image_7_4_1",
+    base = "//images:ubuntu_24_04",
     binary = ":release-controller",
     tars = [],
 )
 
-# Run me to load the reconciler container into Podman as an image,
-# then podman run -it --entrypoint=/bin/sh <sha256 printed>
-oci_load(
-    name = "oci_image_load_into_podman",
-    image = "oci_image",
-    repo_tags = [],
-    tags = ["manual"],
-)
-
+# bazel run ...:oci_image_commit_annotator_load to load the
+# commit annotator container into Podman as an image, then
+# podman run -it --entrypoint=/bin/sh <sha256 printed>
+# Note that `podman run`
+# will require `--user $UID` or else Bazel will fail.
 py_oci_image(
     name = "oci_image_commit_annotator",
-    base = "@bazel_image_7_4_1",
+    base = "//images:ubuntu_24_04",
     binary = ":commit-annotator",
     tars = []
 )
 
-# Run me to load the commit annotator container into Podman as an image,
-# then podman run -it --entrypoint=/bin/sh <sha256 printed>
-oci_load(
-    name = "oci_image_commit_annotator_load_into_podman",
-    image = "oci_image_commit_annotator",
-    repo_tags = [],
-    tags = ["manual"],
+# bazel run ...:oci_image_release_notes_load loads a container
+# image with just the release notes code.  Like the targets above,
+# it is runnable via podman after loading.  This target does
+# not get published to the OCI repository.
+#
+# This target is useful to run the release notes process
+# from the container, to diagnose issues with specific commits
+# not being annotated properly (in conjunction with flag
+# `--commit-annotator-url=recreate`).  Note that `podman run`
+# will require `--user $UID` or else Bazel will fail.
+# See heading Generate release notes locally in file README.txt
+# on this folder for more details on local release notes generation.
+py_oci_image(
+    name = "oci_image_release_notes",
+    base = "//images:ubuntu_24_04",
+    binary = ":release-notes",
+    tars = [],
+    publish = False,
 )
 
 exports_files(["README.md"])

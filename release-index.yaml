@@ -1,5 +1,9 @@
 releases:
   # NOTE: Make sure to mark security hotfixes with the `security_fix: true` flag.
+  - rc_name: rc--2025-04-24_03-18
+    versions:
+      - name: base
+        version: f8131bfbc2d339716a9cff06e04de49a68e5a80b
   - rc_name: rc--2025-04-16_11-12
     versions:
       # Qualification pipeline:
