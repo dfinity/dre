@@ -288,7 +288,9 @@ small_tests_deps = ["forum", "publish_notes", "release_index_loader", "dryrun"] 
     ]
 ]
 
-
+# bazel run ...:oci_image_load to load the reconciler container
+# into Podman as an image, then
+# podman run -it --entrypoint=/bin/sh <sha256 printed>
 py_oci_image(
     name = "oci_image",
     base = "@bazel_image_7_4_1",
@@ -296,29 +298,14 @@ py_oci_image(
     tars = [],
 )
 
-# Run me to load the reconciler container into Podman as an image,
-# then podman run -it --entrypoint=/bin/sh <sha256 printed>
-oci_load(
-    name = "oci_image_load_into_podman",
-    image = "oci_image",
-    repo_tags = [],
-    tags = ["manual"],
-)
-
+# bazel run ...:oci_image_commit_annotator_load to load the
+# commit annotator container into Podman as an image, then
+# podman run -it --entrypoint=/bin/sh <sha256 printed>
 py_oci_image(
     name = "oci_image_commit_annotator",
     base = "@bazel_image_7_4_1",
     binary = ":commit-annotator",
     tars = []
-)
-
-# Run me to load the commit annotator container into Podman as an image,
-# then podman run -it --entrypoint=/bin/sh <sha256 printed>
-oci_load(
-    name = "oci_image_commit_annotator_load_into_podman",
-    image = "oci_image_commit_annotator",
-    repo_tags = [],
-    tags = ["manual"],
 )
 
 exports_files(["README.md"])
