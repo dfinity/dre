@@ -105,6 +105,28 @@ oci.pull(
 )
 use_repo(oci, "bitnami_git_docker_img_linux_arm64", "distroless_cc_debian12", "distroless_cc_debian12_linux_amd64", "distroless_cc_debian12_linux_arm64")
 
+# Ubuntu 24.04 container image for use in Bazel.
+# See images/BUILD.bazel for information on maintenance.
+bazel_dep(name = "rules_distroless", version = "0.5.1")
+oci.pull(
+    name = "ubuntu_24_04_minimal",
+    image = "ubuntu", # Comes from Docker Hub.
+    # Hash of latest Noble 24.04.
+    digest = "sha256:f8b860e4f9036f2694571770da292642eebcc4c2ea0c70a1a9244c2a1d436cd9",
+    platforms = [
+        "linux/amd64",
+    ],
+)
+use_repo(oci, "ubuntu_24_04_minimal", "ubuntu_24_04_minimal_linux_amd64")
+apt = use_extension("@rules_distroless//apt:extensions.bzl", "apt")
+apt.install(
+    name = "ubuntu_24_04_packages",
+    lock = "//images:ubuntu_24_04_packages.lock.json",
+    manifest = "//images:ubuntu_24_04_packages.yaml",
+)
+use_repo(apt, "ubuntu_24_04_packages")
+# End Ubuntu 24.04 container image.
+
 http_file = use_repo_rule("@bazel_tools//tools/build_defs/repo:http.bzl", "http_file")
 
 http_file(

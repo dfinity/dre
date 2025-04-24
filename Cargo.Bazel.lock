@@ -1,5 +1,5 @@
 {
-  "checksum": "ddaf297cdcb693eb22ea9f8a6715a04903850f6257848f0bb76f1f09abdeac4c",
+  "checksum": "d4c18e77271938e77f2fa083396236804a282d10ffe5a1b83ddc298d3a54d820",
   "crates": {
     "actix-codec 0.5.2": {
       "name": "actix-codec",
@@ -12170,6 +12170,13 @@
         "compile_data_glob": [
           "**"
         ],
+        "crate_features": {
+          "common": [
+            "default",
+            "keyring"
+          ],
+          "selects": {}
+        },
         "deps": {
           "common": [
             {

@@ -10,6 +10,7 @@ mod forum;
 mod governance;
 mod ic_admin;
 mod operations;
+mod pin;
 mod proposal_executors;
 mod qualification;
 mod runner;

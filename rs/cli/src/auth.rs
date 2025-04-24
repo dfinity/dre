@@ -1,14 +1,17 @@
+#[cfg(not(feature = "keyring"))]
+use crate::pin::ask::AskEveryTimePinHandler;
+#[cfg(feature = "keyring")]
+use crate::pin::keyring::PlatformKeyringPinHandler;
 use clap::Args as ClapArgs;
 use clap_num::maybe_hex;
-use dialoguer::{console::Term, theme::ColorfulTheme, Password, Select};
+use dialoguer::{console::Term, theme::ColorfulTheme, Select};
 use ic_canisters::governance::GovernanceCanisterWrapper;
-use ic_canisters::parallel_hardware_identity::{hsm_key_id_to_int, HsmPinHandler, KeyIdVec, ParallelHardwareIdentity, PinHandlerError};
+use ic_canisters::parallel_hardware_identity::{hsm_key_id_to_int, KeyIdVec, ParallelHardwareIdentity};
 use ic_canisters::IcAgentCanisterClient;
 use ic_icrc1_test_utils::KeyPairGenerator;
 use ic_management_types::Network;
 use itertools::Itertools;
-use keyring::{Entry, Error};
-use log::{debug, error, info, warn};
+use log::{debug, info, warn};
 use std::path::PathBuf;
 
 /// HSM authentication parameters
@@ -114,65 +117,6 @@ pub enum AuthRequirement {
 
 pub const STAGING_NEURON_ID: u64 = 49;
 pub const STAGING_KEY_PATH_FROM_HOME: &str = ".config/dfx/identity/bootstrap-super-leader/identity.pem";
-
-/// `keyring`-based memory for PIN that uses console prompting for the PIN
-/// when a PIN is necessary and has not been supplied by the user.
-/// This implementation lives in this crate to avoid having to add a
-/// `keyring` dependency to the parallel_hardware_identity module.
-#[derive(Default)]
-struct PlatformKeyringPinHandler {}
-
-impl HsmPinHandler for PlatformKeyringPinHandler {
-    fn retrieve(&self, key: &str, from_memory: bool) -> Result<String, PinHandlerError> {
-        if !from_memory {
-            match Password::new().with_prompt("Please enter the hardware security module PIN: ").interact() {
-                Ok(pin) => Ok(pin),
-                Err(e) => Err(PinHandlerError(format!("Prompt for PIN failed: {}", e))),
-            }
-        } else {
-            let entry = match Entry::new("dre-tool-hsm-pin", key) {
-                Ok(entry) => Ok(entry),
-                Err(e) => Err(PinHandlerError(format!("Keyring initialization failed: {}", e))),
-            }?;
-            match entry.get_password() {
-                Ok(pin) => Ok(pin),
-                Err(e) => {
-                    if let Error::NoEntry = e {
-                    } else {
-                        error!("Cannot retrieve password from keyring; switching to unconditional prompt.  Error: {}", e);
-                    };
-                    match Password::new().with_prompt("Please enter the hardware security module PIN: ").interact() {
-                        Ok(pin) => Ok(pin),
-                        Err(e) => Err(PinHandlerError(format!("Prompt for PIN failed: {}", e))),
-                    }
-                }
-            }
-        }
-    }
-
-    fn store(&self, key: &str, pin: &str) -> Result<(), PinHandlerError> {
-        let entry = match Entry::new("dre-tool-hsm-pin", key) {
-            Ok(entry) => Ok(entry),
-            Err(e) => Err(PinHandlerError(format!("Keyring initialization failed: {}", e))),
-        }?;
-        match entry.set_password(pin) {
-            Ok(()) => Ok(()),
-            Err(e) => Err(PinHandlerError(format!("{}", e))),
-        }
-    }
-
-    fn forget(&self, key: &str) -> Result<(), PinHandlerError> {
-        let entry = match Entry::new("dre-tool-hsm-pin", key) {
-            Ok(entry) => Ok(entry),
-            Err(e) => Err(PinHandlerError(format!("Keyring initialization failed: {}", e))),
-        }?;
-        match entry.delete_credential() {
-            Ok(()) => Ok(()),
-            Err(keyring::Error::NoEntry) => Ok(()),
-            Err(e) => Err(PinHandlerError(format!("{}", e))),
-        }
-    }
-}
 
 impl Neuron {
     pub(crate) async fn from_opts_and_req(
@@ -400,7 +344,10 @@ impl Auth {
     /// FIXME: this should not return anyhow::Error, but rather a structured error,
     /// since anyhow swallows panics, and transforms them to errors.
     fn detect_hsm_auth(maybe_pin: Option<String>, maybe_slot: Option<u64>, maybe_key_id: Option<KeyIdVec>) -> anyhow::Result<Self> {
+        #[cfg(feature = "keyring")]
         let memory = PlatformKeyringPinHandler::default();
+        #[cfg(not(feature = "keyring"))]
+        let memory = AskEveryTimePinHandler::default();
         Ok(Auth::Hsm {
             identity: ParallelHardwareIdentity::scan(maybe_pin, maybe_slot, maybe_key_id, &memory)?,
         })

@@ -219,7 +219,17 @@ built and imported into your containerization system.  Run it as follows:
 
 ```sh
 SHASUM=...
-podman run -it --entrypoint=/release-controller/release-controller $SHASUM
+podman run --rm -it --entrypoint=/release-controller/release-controller $SHASUM
+```
+
+Or, in short:
+
+```sh
+mkdir -p -m 0777 /tmp/git
+podman run --rm -it \
+  -v /tmp/git:/root/.cache \
+  --entrypoint /release-controller/release-controller \
+  $(bazel run --verbose_failures //release-controller:oci_image_load | tail -1 | cut -d : -f 3)
 ```
 
 ### Running the annotator locally in "dry-run mode"
@@ -235,6 +245,10 @@ bazel run //release-controller:commit-annotator \
   --no-fetch-annotations \ # don't clobber locally created annotations 
   --verbose
 ```
+
+The annotator can also be run as a podman container, with a similar
+technique as above.  However, the annotator requires `--user $UID`
+because Bazel will not run as root (UID 0).
 
 Please consult `--help` for additional options.
 
@@ -260,6 +274,30 @@ commit annotations instead of using cached ones, you can use option
 `--commit-annotator-url recreate`.  This last option is useful when
 testing the effects of changes made to the commit annotator code or Bazel
 query formulas the annotator uses.
+
+A great tip / trick to diagnose exactly what the release notes and
+commit annotation processes would do is to pick a commit from the IC
+repo, figure out which its parent commit is, then run:
+
+```sh
+PREV_RC=prev
+PREV_COMMIT=1354f31c9cd4fb6b4a65ab64eb9ac4a0a4d16839 # parent commit
+CURR_RC=curr
+CURR_COMMIT=f8131bfbc2d339716a9cff06e04de49a68e5a80b # commit
+bazel run //release-controller:release-notes -- \
+   $PREV_RC $PREV_COMMIT $CURR_RC $CURR_COMMIT \
+   --commit-annotator-url recreate \
+  --os-kind=GuestOS \
+  --verbose
+bazel run //release-controller:release-notes -- \
+   $PREV_RC $PREV_COMMIT $CURR_RC $CURR_COMMIT \
+   --commit-annotator-url recreate \
+  --os-kind=HostOS \
+  --verbose
+```
+
+That run tells you what the annotation process would do for that single
+commit in question.
 
 Please consult `--help` for additional options.
 
@@ -290,3 +328,10 @@ Building it all tests MyPy types:
 ```sh
 bazel build //release-controller/...
 ```
+
+### Maintenance
+
+The container image currently used by release controller components
+is an Ubuntu 24.04 image built by Bazel.  Refer to [BUILD.bazel](./BUILD.bazel)
+and [../images/BUILD.bazel](../images/BUILD.bazel) for instructions
+on how to maintain and update the images.

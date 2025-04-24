@@ -1,0 +1,46 @@
+# Packages for ubuntu_24_04_minimal.
+#
+#  Anytime this file is changed, the lockfile needs to be regenerated.
+#
+#  To generate the ubuntu_24_04_packages.lock.json run the following command
+#
+#     bazel run @ubuntu_24_04_packages//:lock
+#
+# See the section about ubuntu_24_04_minimal in /MODULE.bazel for info.
+version: 1
+
+sources:
+  - channel: noble main
+    url: https://snapshot.ubuntu.com/ubuntu/20250424T000000Z
+  - channel: noble-security main
+    url: https://snapshot.ubuntu.com/ubuntu/20250424T000000Z
+  - channel: noble-updates main
+    url: https://snapshot.ubuntu.com/ubuntu/20250424T000000Z
+  - channel: llvm-toolchain-noble-18 main
+    url: https://apt.llvm.org/noble/
+
+archs:
+  - "amd64"
+  - "arm64"
+
+packages:
+  - "ncurses-base"
+  - "libncurses6"
+  - "tzdata"
+  - "dash"
+  - "bash"
+  - "coreutils" # for commands like `ls`
+  - "grep"
+  - "sed"
+  - "findutils"
+  # for apt list --installed
+  - "dpkg"
+  - "apt"
+  - "perl"
+  # Things needed for the container to work correctly.
+  - "ca-certificates"
+  # Things needed by our containers.
+  - "git" # release controller and commit annotator
+  - "python3" # release controller and commit annotator
+  - "build-essential" # commit annotator (Bazel / Bazelisk)
+  - "clang-18" # partial IC build process run by target-determinator in commit annotator
