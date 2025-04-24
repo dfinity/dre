@@ -187,6 +187,14 @@ class LocalCommitChangeDeterminator(object):
             raise NotReady(
                 f"Could not find {os_kind} label for commit {commit}. Check out commit annotator logs and runbook: https://dfinity.github.io/dre/release.html#missing-guestos-label."
             )
+        if changed == "Failed":
+            # An artifact of prior commit annotators that recorded failure.
+            _LOGGER.warning(
+                "Change determinator received %s which is an invalid value."
+                "  Proceeding by assuming this commit changes the artifact.",
+                changed,
+            )
+            return COMMIT_BELONGS
         assert changed in [
             COMMIT_BELONGS,
             COMMIT_DOES_NOT_BELONG,
@@ -221,6 +229,14 @@ class CommitAnnotatorClientCommitChangeDeterminator(object):
                     f"Could not find {os_kind} label for commit {commit}. Check out commit annotator logs and runbook: https://dfinity.github.io/dre/release.html#missing-guestos-label."
                 ) from he
             raise
+        if changed == "Failed":
+            # An artifact of prior commit annotators that recorded failure.
+            _LOGGER.warning(
+                "Change determinator received %s which is an invalid value."
+                "  Proceeding by assuming this commit changes the artifact.",
+                changed,
+            )
+            return COMMIT_BELONGS
         assert changed in [
             COMMIT_BELONGS,
             COMMIT_DOES_NOT_BELONG,

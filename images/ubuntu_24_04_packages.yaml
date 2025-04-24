@@ -41,3 +41,4 @@ packages:
   - "git" # release controller and commit annotator
   - "python3" # release controller and commit annotator
   - "build-essential" # commit annotator (Bazel / Bazelisk)
+  - "clang" # partial IC build process run by target-determinator in commit annotator
