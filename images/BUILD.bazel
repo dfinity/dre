@@ -18,7 +18,7 @@
 
 load("@rules_oci//oci:defs.bzl", "oci_image")
 load("@aspect_bazel_lib//lib:tar.bzl", "tar")
-load("@rules_distroless//distroless:defs.bzl", "group", "passwd", "cacerts")
+load("@rules_distroless//distroless:defs.bzl", "group", "passwd", "cacerts", "home")
 
 package(default_visibility = ["//visibility:public"])
 
@@ -46,6 +46,13 @@ passwd(
             "shell": "/usr/sbin/nologin",
             "username": "_apt",
         },
+        {
+            "uid": 1000,
+            "gid": 1000,
+            "home": "/home/user",
+            "shell": "/bin/bash",
+            "username": "user",
+        },
     ],
 )
 
@@ -59,6 +66,22 @@ group(
         {
             "name": "_apt",
             "gid": 65534,
+        },
+    ],
+)
+
+home(
+    name = "home",
+    dirs = [
+        {
+            "home": "/root",
+            "uid": 0,
+            "gid": 0,
+        },
+        {
+            "home": "/home/user",
+            "uid": 1000,
+            "gid": 1000,
         },
     ],
 )
@@ -85,6 +108,7 @@ oci_image(
     tars = [
         ":passwd",
         ":group",
+        ":home",
         ":cacerts",
         # Packages listed in this manifest (see YAML files in this folder)
         # get installed in the container by this rule.
