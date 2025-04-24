@@ -293,7 +293,7 @@ small_tests_deps = ["forum", "publish_notes", "release_index_loader", "dryrun"] 
 # podman run -it --entrypoint=/bin/sh <sha256 printed>
 py_oci_image(
     name = "oci_image",
-    base = "@bazel_image_7_4_1",
+    base = "//images:ubuntu_24_04",
     binary = ":release-controller",
     tars = [],
 )
@@ -303,7 +303,7 @@ py_oci_image(
 # podman run -it --entrypoint=/bin/sh <sha256 printed>
 py_oci_image(
     name = "oci_image_commit_annotator",
-    base = "@bazel_image_7_4_1",
+    base = "//images:ubuntu_24_04",
     binary = ":commit-annotator",
     tars = []
 )

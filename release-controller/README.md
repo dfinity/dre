@@ -219,7 +219,17 @@ built and imported into your containerization system.  Run it as follows:
 
 ```sh
 SHASUM=...
-podman run -it --entrypoint=/release-controller/release-controller $SHASUM
+podman run --rm -it --entrypoint=/release-controller/release-controller $SHASUM
+```
+
+Or, in short:
+
+```sh
+mkdir -p -m 0777 /tmp/git
+podman run --rm -it \
+  -v /tmp/git:/root/.cache \
+  --entrypoint /release-controller/release-controller \
+  $(bazel run --verbose_failures //release-controller:oci_image_load | tail -1 | cut -d : -f 3)
 ```
 
 ### Running the annotator locally in "dry-run mode"
@@ -290,3 +300,10 @@ Building it all tests MyPy types:
 ```sh
 bazel build //release-controller/...
 ```
+
+### Maintenance
+
+The container image currently used by release controller components
+is an Ubuntu 24.04 image built by Bazel.  Refer to [BUILD.bazel](./BUILD.bazel)
+and [../images/BUILD.bazel](../images/BUILD.bazel) for instructions
+on how to maintain and update the images.
