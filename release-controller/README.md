@@ -272,7 +272,7 @@ testing the effects of changes made to the commit annotator code or Bazel
 query formulas the annotator uses.
 
 A great tip / trick to diagnose exactly what the release notes and
-commit annotation processes are doing is to pick a commit from the IC
+commit annotation processes would do is to pick a commit from the IC
 repo, figure out which its parent commit is, then run:
 
 ```sh
@@ -282,10 +282,12 @@ CURR_RC=curr
 CURR_COMMIT=f8131bfbc2d339716a9cff06e04de49a68e5a80b # commit
 bazel run //release-controller:release-notes -- \
    $PREV_RC $PREV_COMMIT $CURR_RC $CURR_COMMIT \
+   --commit-annotator-url recreate \
   --os-kind=GuestOS \
   --verbose
 bazel run //release-controller:release-notes -- \
    $PREV_RC $PREV_COMMIT $CURR_RC $CURR_COMMIT \
+   --commit-annotator-url recreate \
   --os-kind=HostOS \
   --verbose
 ```
