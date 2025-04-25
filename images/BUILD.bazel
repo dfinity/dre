@@ -86,6 +86,18 @@ home(
     ],
 )
 
+# clang symlinks
+tar(
+    name = "clang-symlinks",
+    mtree = [
+        # needed as dpkg assumes sh is installed in a typical debian installation.
+        "./usr/bin/clang type=link link=/usr/bin/clang-20",
+        "./usr/bin/asan_symbolize-20 type=link link=/usr/bin/asan_symbolize",
+        "./usr/bin/clang++ type=link link=/usr/bin/clang++-20",
+        "./usr/bin/clang-cpp type=link link=/usr/bin/clang-cpp-20",
+    ],
+)
+
 cacerts(
     name = "cacerts",
     package = select({
@@ -113,5 +125,6 @@ oci_image(
         # Packages listed in this manifest (see YAML files in this folder)
         # get installed in the container by this rule.
         "@ubuntu_24_04_packages//:ubuntu_24_04_packages",
+        "clang-symlinks",
     ],
 )
