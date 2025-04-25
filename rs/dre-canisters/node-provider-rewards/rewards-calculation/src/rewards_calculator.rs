@@ -10,6 +10,27 @@ use std::collections::{BTreeMap, HashMap, HashSet};
 use std::marker::PhantomData;
 pub mod builder;
 
+/// The minimum and maximum failure rates for a node.
+/// Nodes with a failure rate below `MIN_FAILURE_RATE` will not be penalized.
+/// Nodes with a failure rate above `MAX_FAILURE_RATE` will be penalized with `MAX_REWARDS_REDUCTION`.
+const MIN_FAILURE_RATE: Decimal = dec!(0.1);
+const MAX_FAILURE_RATE: Decimal = dec!(0.6);
+
+/// The minimum and maximum rewards reduction for a node.
+const MIN_REWARDS_REDUCTION: Decimal = dec!(0);
+const MAX_REWARDS_REDUCTION: Decimal = dec!(0.8);
+
+const FULL_REWARDS_MACHINES_LIMIT: u32 = 4;
+
+/// From constant [NODE_PROVIDER_REWARD_PERIOD_SECONDS]
+/// const NODE_PROVIDER_REWARD_PERIOD_SECONDS: u64 = 2629800;
+/// 30.4375 = 2629800 / 86400
+const REWARDS_TABLE_DAYS: Decimal = dec!(30.4375);
+
+fn avg(values: &[Decimal]) -> Decimal {
+    values.iter().sum::<Decimal>() / Decimal::from(values.len().max(1))
+}
+
 /// RewardsCalculator is responsible for calculating the rewards for nodes based on their performance metrics.
 pub struct RewardsCalculator {
     /// The period for which the rewards will be calculated.
@@ -55,27 +76,6 @@ impl RewardsCalculator {
         }
         res
     }
-}
-
-/// The minimum and maximum failure rates for a node.
-/// Nodes with a failure rate below `MIN_FAILURE_RATE` will not be penalized.
-/// Nodes with a failure rate above `MAX_FAILURE_RATE` will be penalized with `MAX_REWARDS_REDUCTION`.
-const MIN_FAILURE_RATE: Decimal = dec!(0.1);
-const MAX_FAILURE_RATE: Decimal = dec!(0.6);
-
-/// The minimum and maximum rewards reduction for a node.
-const MIN_REWARDS_REDUCTION: Decimal = dec!(0);
-const MAX_REWARDS_REDUCTION: Decimal = dec!(0.8);
-
-const FULL_REWARDS_MACHINES_LIMIT: u32 = 4;
-
-/// From constant [NODE_PROVIDER_REWARD_PERIOD_SECONDS]
-/// const NODE_PROVIDER_REWARD_PERIOD_SECONDS: u64 = 2629800;
-/// 30.4375 = 2629800 / 86400
-const REWARDS_TABLE_DAYS: Decimal = dec!(30.4375);
-
-fn avg(values: &[Decimal]) -> Decimal {
-    values.iter().sum::<Decimal>() / Decimal::from(values.len().max(1))
 }
 
 struct RewardsCalculatorPipeline<'a, T: ExecutionState> {

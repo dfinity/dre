@@ -1,6 +1,6 @@
 use super::*;
 use crate::rewards_calculator::builder::RewardsCalculatorBuilder;
-use crate::rewards_calculator_results::RewardsCalculatorResults;
+use crate::rewards_calculator_results::{days_between, RewardsCalculatorResults};
 use crate::types::{NodeMetricsDailyRaw, RewardPeriod, RewardableNode, TimestampNanos, NANOS_PER_DAY};
 use ic_base_types::{NodeId, PrincipalId, SubnetId};
 use ic_protobuf::registry::node_rewards::v2::{NodeRewardRate, NodeRewardRates, NodeRewardsTable};
