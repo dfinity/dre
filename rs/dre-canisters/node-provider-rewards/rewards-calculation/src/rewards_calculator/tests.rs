@@ -1,6 +1,6 @@
 use super::*;
 use crate::rewards_calculator::builder::RewardsCalculatorBuilder;
-use crate::rewards_calculator_results::{days_between, NodeType, Region, RewardsCalculatorResults};
+use crate::rewards_calculator_results::{NodeType, Region, RewardsCalculatorResults};
 use crate::types::{NodeMetricsDailyRaw, RewardPeriod, RewardableNode, TimestampNanos, NANOS_PER_DAY};
 use ic_base_types::{NodeId, PrincipalId, SubnetId};
 use ic_protobuf::registry::node_rewards::v2::{NodeRewardRate, NodeRewardRates, NodeRewardsTable};
@@ -31,7 +31,8 @@ impl Default for RewardableNode {
     fn default() -> Self {
         Self {
             node_id: NodeId::from(PrincipalId::default()),
-            rewardable_days: 0,
+            rewardable_from: 0.into(),
+            rewardable_to: 0.into(),
             region: Default::default(),
             node_type: Default::default(),
             dc_id: Default::default(),
@@ -104,13 +105,15 @@ impl RewardCalculatorRunnerTest {
 
     pub fn with_rewardable_nodes(mut self, nodes: Vec<NodeId>, region: &str, node_type: &str) -> Self {
         let period = self.reward_period.clone().unwrap();
-        let rewardable_days = days_between(period.from, period.to);
+        let start_ts = period.from;
+        let end_ts = period.to;
 
         let rewardables = nodes.into_iter().map(|node_id| RewardableNode {
             node_id,
             region: region.to_string(),
             node_type: node_type.to_string(),
-            rewardable_days,
+            rewardable_from: start_ts,
+            rewardable_to: end_ts,
             ..Default::default()
         });
         if let Some(rewardable_nodes) = self.rewardable_nodes.as_mut() {
@@ -128,8 +131,6 @@ impl RewardCalculatorRunnerTest {
             RewardPeriod::new(*start_ts, *end_ts).unwrap()
         });
 
-        let rewardable_days = days_between(reward_period.from, reward_period.to);
-
         let rewardables: Vec<_> = self
             .rewardable_nodes
             .unwrap_or(
@@ -138,7 +139,8 @@ impl RewardCalculatorRunnerTest {
                     .flat_map(|nodes| {
                         nodes.iter().map(|node| RewardableNode {
                             node_id: node.1,
-                            rewardable_days,
+                            rewardable_from: reward_period.from,
+                            rewardable_to: reward_period.to,
                             ..Default::default()
                         })
                     })
@@ -147,7 +149,7 @@ impl RewardCalculatorRunnerTest {
             .into_iter()
             .collect();
 
-        let rewardable_count_by_region_nodetype = rewardables.iter().fold(HashMap::new(), |mut acc, node| {
+        let rewardable_nodes_count = rewardables.iter().fold(HashMap::new(), |mut acc, node| {
             *acc.entry((Region(node.region.clone()), NodeType(node.node_type.clone()))).or_insert(0) += 1;
             acc
         });
@@ -155,7 +157,7 @@ impl RewardCalculatorRunnerTest {
         let rewardable_nodes_per_provider = btreemap! {
             PrincipalId::new_anonymous() => ProviderRewardableNodes {
                 provider_id: PrincipalId::new_anonymous(),
-                rewardable_count_by_region_nodetype,
+                rewardable_nodes_count,
                 rewardable_nodes: rewardables,
             }
         };

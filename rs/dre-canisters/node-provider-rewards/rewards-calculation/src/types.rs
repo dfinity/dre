@@ -109,14 +109,15 @@ impl Error for RewardPeriodError {}
 #[derive(Default)]
 pub struct ProviderRewardableNodes {
     pub provider_id: PrincipalId,
-    pub rewardable_count_by_region_nodetype: HashMap<(Region, NodeType), usize>,
+    pub rewardable_nodes_count: HashMap<(Region, NodeType), usize>,
     pub rewardable_nodes: Vec<RewardableNode>,
 }
 
 #[derive(Eq, Hash, PartialEq, Clone, Ord, PartialOrd, Debug)]
 pub struct RewardableNode {
     pub node_id: NodeId,
-    pub rewardable_days: usize,
+    pub rewardable_from: DayUTC,
+    pub rewardable_to: DayUTC,
     pub region: String,
     pub node_type: String,
     pub dc_id: String,

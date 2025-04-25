@@ -1,4 +1,4 @@
-use crate::rewards_calculator_results::{NodeMetricsDaily, NodeType, Region, RewardCalculatorError, RewardsCalculatorResults};
+use crate::rewards_calculator_results::{days_between, NodeMetricsDaily, NodeType, Region, RewardCalculatorError, RewardsCalculatorResults};
 use crate::types::{NodeMetricsDailyRaw, ProviderRewardableNodes, RewardPeriod, SubnetMetricsDailyKey};
 use ic_base_types::{NodeId, PrincipalId};
 use ic_protobuf::registry::node_rewards::v2::NodeRewardsTable;
@@ -115,7 +115,9 @@ impl<'a> RewardsCalculatorPipeline<'a, ComputeRewardableNodesMetrics> {
             node_results.region = node.region.clone();
             node_results.node_type = node.node_type.clone();
             node_results.dc_id = node.dc_id.clone();
-            node_results.rewardable_days = node.rewardable_days;
+            node_results.rewardable_from = node.rewardable_from;
+            node_results.rewardable_to = node.rewardable_to;
+            node_results.rewardable_days = days_between(node.rewardable_from, node.rewardable_to);
 
             if let Some(rewardable_node_metrics) = self.metrics_by_node.get(&node.node_id) {
                 rewardable_node_metrics
@@ -246,7 +248,7 @@ impl<'a> RewardsCalculatorPipeline<'a, ComputeBaseRewardsByCategory> {
         let mut rewards_by_category: HashMap<(Region, NodeType), Decimal> = HashMap::default();
         let mut type3_category_rewards: HashMap<String, Type3Rewards> = HashMap::default();
 
-        for ((region, node_type), nodes_count) in self.provider_rewardable_nodes.rewardable_count_by_region_nodetype.iter() {
+        for ((region, node_type), nodes_count) in self.provider_rewardable_nodes.rewardable_nodes_count.iter() {
             let (base_rewards_per_month, coefficient) = self
                 .rewards_table
                 .get_rate(&region.0, &node_type.0)
