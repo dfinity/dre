@@ -13,7 +13,7 @@ use ic_registry_keys::{
     NODE_RECORD_KEY_PREFIX, NODE_REWARDS_TABLE_KEY, SUBNET_RECORD_KEY_PREFIX,
 };
 use ic_types::registry::RegistryClientError;
-use rewards_calculation::rewards_calculator_results::{days_between, DayUTC, NodeCategory};
+use rewards_calculation::rewards_calculator_results::{days_between, DayUTC, NodeType, Region};
 use rewards_calculation::types::{ProviderRewardableNodes, RewardableNode, TimestampNanos};
 use std::collections::btree_map::Entry;
 use std::collections::{BTreeMap, HashMap};
@@ -180,7 +180,7 @@ impl<S: RegistryDataStableMemory> RegistryClient<S> {
 
             let provider_rewardables = rewardable_nodes_per_provider.entry(node_provider_id).or_insert(ProviderRewardableNodes {
                 provider_id: node_provider_id,
-                rewardable_count_by_node_category: HashMap::new(),
+                rewardable_count_by_region_nodetype: HashMap::new(),
                 rewardable_nodes: Vec::new(),
             });
 
@@ -191,13 +191,11 @@ impl<S: RegistryDataStableMemory> RegistryClient<S> {
                 entry.insert(node_operator_record.rewardable_nodes.clone());
 
                 for (node_type, count) in node_operator_record.rewardable_nodes.into_iter() {
-                    let rewardables_categories = NodeCategory {
-                        region: data_center_record.region.clone(),
-                        node_type,
-                    };
+                    let region = Region(data_center_record.region.clone());
+                    let node_type = NodeType(node_type);
                     provider_rewardables
-                        .rewardable_count_by_node_category
-                        .insert(rewardables_categories, count as usize);
+                        .rewardable_count_by_region_nodetype
+                        .insert((region, node_type), count as usize);
                 }
             }
             let node_type = self.estimate_node_type(node_operator_rewardable_count.get_mut(&node_operator_id));

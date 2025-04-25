@@ -1,4 +1,4 @@
-use crate::rewards_calculator_results::{DayUTC, NodeCategory};
+use crate::rewards_calculator_results::{DayUTC, NodeType, Region};
 use ic_base_types::{NodeId, PrincipalId, SubnetId};
 use ic_types::Time;
 use std::collections::HashMap;
@@ -109,7 +109,7 @@ impl Error for RewardPeriodError {}
 #[derive(Default)]
 pub struct ProviderRewardableNodes {
     pub provider_id: PrincipalId,
-    pub rewardable_count_by_node_category: HashMap<NodeCategory, usize>,
+    pub rewardable_count_by_region_nodetype: HashMap<(Region, NodeType), usize>,
     pub rewardable_nodes: Vec<RewardableNode>,
 }
 

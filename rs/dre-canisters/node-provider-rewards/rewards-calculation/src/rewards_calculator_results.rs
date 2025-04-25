@@ -63,11 +63,11 @@ pub fn days_between(first_day: DayUTC, last_day: DayUTC) -> usize {
     (((last_day.ts_at_day_end() - first_day.ts_at_day_start()) / NANOS_PER_DAY) + 1) as usize
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
-pub struct NodeCategory {
-    pub region: String,
-    pub node_type: String,
-}
+#[derive(Clone, Debug, PartialEq, Hash, PartialOrd, Ord, Eq, Default)]
+pub struct Region(pub String);
+
+#[derive(Clone, Debug, PartialEq, Hash, PartialOrd, Ord, Eq, Default)]
+pub struct NodeType(pub String);
 
 #[derive(Clone, PartialEq, Debug)]
 pub struct NodeMetricsDaily {

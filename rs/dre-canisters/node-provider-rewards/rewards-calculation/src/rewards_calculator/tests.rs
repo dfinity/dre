@@ -1,6 +1,6 @@
 use super::*;
 use crate::rewards_calculator::builder::RewardsCalculatorBuilder;
-use crate::rewards_calculator_results::{days_between, RewardsCalculatorResults};
+use crate::rewards_calculator_results::{days_between, NodeType, Region, RewardsCalculatorResults};
 use crate::types::{NodeMetricsDailyRaw, RewardPeriod, RewardableNode, TimestampNanos, NANOS_PER_DAY};
 use ic_base_types::{NodeId, PrincipalId, SubnetId};
 use ic_protobuf::registry::node_rewards::v2::{NodeRewardRate, NodeRewardRates, NodeRewardsTable};
@@ -147,19 +147,15 @@ impl RewardCalculatorRunnerTest {
             .into_iter()
             .collect();
 
-        let rewardable_count_by_node_category = rewardables.iter().fold(HashMap::new(), |mut acc, node| {
-            let category = NodeCategory {
-                region: node.region.clone(),
-                node_type: node.node_type.clone(),
-            };
-            *acc.entry(category).or_insert(0) += 1;
+        let rewardable_count_by_region_nodetype = rewardables.iter().fold(HashMap::new(), |mut acc, node| {
+            *acc.entry((Region(node.region.clone()), NodeType(node.node_type.clone()))).or_insert(0) += 1;
             acc
         });
 
         let rewardable_nodes_per_provider = btreemap! {
             PrincipalId::new_anonymous() => ProviderRewardableNodes {
                 provider_id: PrincipalId::new_anonymous(),
-                rewardable_count_by_node_category,
+                rewardable_count_by_region_nodetype,
                 rewardable_nodes: rewardables,
             }
         };
