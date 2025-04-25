@@ -1,5 +1,5 @@
-use crate::rewards_calculator_results::{days_between, NodeCategory, NodeMetricsDaily, RewardCalculatorError, RewardsCalculatorResults};
-use crate::types::{NodeMetricsDailyRaw, ProviderRewardableNodes, RewardPeriod, RewardableNode, SubnetMetricsDailyKey};
+use crate::rewards_calculator_results::{NodeCategory, NodeMetricsDaily, RewardCalculatorError, RewardsCalculatorResults};
+use crate::types::{NodeMetricsDailyRaw, ProviderRewardableNodes, RewardPeriod, SubnetMetricsDailyKey};
 use ic_base_types::{NodeId, PrincipalId};
 use ic_protobuf::registry::node_rewards::v2::NodeRewardsTable;
 use itertools::Itertools;
