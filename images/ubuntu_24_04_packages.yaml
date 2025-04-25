@@ -16,7 +16,7 @@ sources:
     url: https://snapshot.ubuntu.com/ubuntu/20250424T000000Z
   - channel: noble-updates main
     url: https://snapshot.ubuntu.com/ubuntu/20250424T000000Z
-  - channel: llvm-toolchain-noble-18 main
+  - channel: llvm-toolchain-noble-20 main
     url: https://apt.llvm.org/noble/
 
 archs:
@@ -43,4 +43,4 @@ packages:
   - "git" # release controller and commit annotator
   - "python3" # release controller and commit annotator
   - "build-essential" # commit annotator (Bazel / Bazelisk)
-  - "clang-18" # partial IC build process run by target-determinator in commit annotator
+  - "clang-20" # partial IC build process run by target-determinator in commit annotator
