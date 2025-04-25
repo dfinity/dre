@@ -97,8 +97,6 @@ pub struct NodeResults {
     pub region: String,
     pub node_type: String,
     pub dc_id: String,
-    pub rewardable_from: DayUTC,
-    pub rewardable_to: DayUTC,
     pub rewardable_days: usize,
     pub daily_metrics: Vec<NodeMetricsDaily>,
 

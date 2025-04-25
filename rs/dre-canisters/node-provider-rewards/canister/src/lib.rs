@@ -107,7 +107,7 @@ fn rewards_calculator(reward_period: RewardPeriodArgs) -> Result<RewardsCalculat
     let metrics_manager = METRICS_MANAGER.with(|m| m.clone());
     let registry_store = REGISTRY_STORE.with(|m| m.clone());
 
-    let rewards_table = registry_store.get_rewards_table();
+    let rewards_table = registry_store.get_rewards_table(end_ts);
     let daily_metrics_by_subnet = metrics_manager.daily_metrics_by_subnet(start_ts, end_ts);
 
     let rewardable_nodes_per_provider = registry_store

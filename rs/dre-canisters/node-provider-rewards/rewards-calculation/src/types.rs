@@ -1,6 +1,7 @@
-use crate::rewards_calculator_results::DayUTC;
-use ic_base_types::{NodeId, SubnetId};
+use crate::rewards_calculator_results::{DayUTC, NodeCategory};
+use ic_base_types::{NodeId, PrincipalId, SubnetId};
 use ic_types::Time;
+use std::collections::HashMap;
 use std::error::Error;
 use std::fmt;
 use std::fmt::Display;
@@ -105,11 +106,17 @@ impl fmt::Display for RewardPeriodError {
 
 impl Error for RewardPeriodError {}
 
+#[derive(Default)]
+pub struct ProviderRewardableNodes {
+    pub provider_id: PrincipalId,
+    pub rewardable_count_by_node_category: HashMap<NodeCategory, usize>,
+    pub rewardable_nodes: Vec<RewardableNode>,
+}
+
 #[derive(Eq, Hash, PartialEq, Clone, Ord, PartialOrd, Debug)]
 pub struct RewardableNode {
     pub node_id: NodeId,
-    pub rewardable_from: DayUTC,
-    pub rewardable_to: DayUTC,
+    pub rewardable_days: usize,
     pub region: String,
     pub node_type: String,
     pub dc_id: String,
