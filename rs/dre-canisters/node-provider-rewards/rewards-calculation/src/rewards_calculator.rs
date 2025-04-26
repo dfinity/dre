@@ -238,7 +238,37 @@ impl<'a> RewardsCalculatorPipeline<'a, ComputeBaseRewardsByCategory> {
     fn fill_nodes_base_rewards(&mut self, rewards_by_category: HashMap<(Region, NodeType), Decimal>) {
         for node_results in self.calculator_results.results_by_node.values_mut() {
             let node_category = (node_results.region.clone(), node_results.node_type.clone());
-            let base_rewards_per_month = *rewards_by_category.get(&node_category).expect("Node category exist");
+            // Fix once rewardable nodes are correct
+            //
+            // "node_operator_principal_id": "z6cfb-dbya3-nh4pm-nyteq-76n7d-xzi27-tf3cg-t7sz7-244qt-6rnjy-3ae",
+            // "node_provider_principal_id": "g2ax6-jrkmb-3zuh3-jibtb-q5xoq-njrgo-5utbc-j2o7g-zfq2w-yyhky-dqe",
+            // "dc_id": "hk1",
+            // "rewardable_nodes": {
+            //     "type3.1": 6
+            // },
+            // "node_allowance": 0,
+            // "ipv6": "",
+            // "computed": {
+            //     "node_provider_name": "Wancloud limited",
+            //     "node_allowance_remaining": 0,
+            //     "node_allowance_total": 10,
+            //     "total_up_nodes": 10,
+            //     "nodes_health": {
+            //         "Healthy": [
+            //         "2a7fq-jivc5-upcob-l5e6k-v3l6a-xo4fc-5rfga-7t5ng-cnv72-t6z7d-wqe",
+            //         "2w5be-ukk5g-kmecu-jxtan-w2gsb-htdfz-z5czd-6yacq-cemqu-qhjpm-iqe",
+            //         "bqplp-iejs2-2awcz-oiy6u-62jzx-rzp66-z4eba-m6nan-dtljh-bb4pn-rae",
+            //         "daawl-5c7hb-iltb3-rkphn-d272x-kkpu4-vb5nr-4qxzp-azreg-47okd-gqe",
+            //         "fpjx3-tfebc-csio2-hxi4u-7jomj-p4c4q-b66xe-ngut6-yi63x-keuhl-6ae",
+            //         "gsvxv-tou7p-drlxw-rnldp-m7z3n-e42j4-nrsp4-dzsfc-7wuqr-2qwpf-pae",
+            //         "jemyk-uhint-w6ftv-s3xpy-ne4hr-xbcpu-aqskm-6a4cy-orm5q-aqqwd-gqe",
+            //         "ked4e-syml2-ao2ub-xgtxi-awdfd-2vkf6-lbol5-prycv-2vpb5-ws5jp-oae",
+            //         "oe52f-su776-yflut-ihohm-rm7gp-47fvy-alweq-ndg3i-g5uci-qzcvo-jqe",
+            //         "q6i2a-r2jyo-qvchx-fx2eg-5vz74-tb674-au7zd-cy24h-wvywl-zbyro-7ae"
+            //         ]
+            //     },
+            //     "rewards_correct": false,
+            let base_rewards_per_month = *rewards_by_category.get(&node_category).unwrap_or(&dec!(0));
 
             node_results.base_rewards_per_month = base_rewards_per_month.into();
         }
