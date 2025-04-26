@@ -110,8 +110,8 @@ impl RewardCalculatorRunnerTest {
 
         let rewardables = nodes.into_iter().map(|node_id| RewardableNode {
             node_id,
-            region: region.to_string(),
-            node_type: node_type.to_string(),
+            region: Region(region.to_string()),
+            node_type: NodeType(node_type.to_string()),
             rewardable_from: start_ts,
             rewardable_to: end_ts,
             ..Default::default()
@@ -149,8 +149,17 @@ impl RewardCalculatorRunnerTest {
             .into_iter()
             .collect();
 
+        let rewardable_nodes_count = rewardables.iter().fold(HashMap::new(), |mut acc, node| {
+            *acc.entry((node.region.clone(), node.node_type.clone())).or_insert(0) += 1;
+            acc
+        });
+
         let rewardable_nodes_per_provider = btreemap! {
-            PrincipalId::new_anonymous() => rewardables.clone()
+            PrincipalId::new_anonymous() => ProviderRewardableNodes {
+                provider_id: PrincipalId::new_anonymous(),
+                rewardable_nodes_count,
+                rewardable_nodes: rewardables,
+            }
         };
 
         let subnets_metrics: HashMap<SubnetMetricsDailyKey, Vec<NodeMetricsDailyRaw>> = self

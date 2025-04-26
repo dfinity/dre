@@ -1,5 +1,5 @@
-use crate::rewards_calculator_results::{days_between, NodeCategory, NodeMetricsDaily, RewardCalculatorError, RewardsCalculatorResults};
-use crate::types::{NodeMetricsDailyRaw, RewardPeriod, RewardableNode, SubnetMetricsDailyKey};
+use crate::rewards_calculator_results::{days_between, NodeMetricsDaily, RewardCalculatorError, RewardsCalculatorResults};
+use crate::types::{NodeMetricsDailyRaw, NodeType, ProviderRewardableNodes, Region, RewardPeriod, SubnetMetricsDailyKey};
 use ic_base_types::{NodeId, PrincipalId};
 use ic_protobuf::registry::node_rewards::v2::NodeRewardsTable;
 use itertools::Itertools;
@@ -19,16 +19,16 @@ pub struct RewardsCalculator {
     /// The metrics for each node assigned to a subnet in the reward_period.
     metrics_by_node: HashMap<NodeId, Vec<NodeMetricsDaily>>,
     /// Rewardable Nodes per node provider
-    rewardable_nodes_per_provider: BTreeMap<PrincipalId, Vec<RewardableNode>>,
+    rewardable_nodes_per_provider: BTreeMap<PrincipalId, ProviderRewardableNodes>,
 }
 
 impl RewardsCalculator {
-    fn calculate_rewards(&self, rewardable_nodes: &Vec<RewardableNode>) -> RewardsCalculatorResults {
+    fn calculate_rewards(&self, provider_rewardable_nodes: &ProviderRewardableNodes) -> RewardsCalculatorResults {
         let ctx: RewardsCalculatorPipeline<Initialized> = RewardsCalculatorPipeline {
             reward_period: &self.reward_period,
             rewards_table: &self.rewards_table,
             metrics_by_node: &self.metrics_by_node,
-            rewardable_nodes,
+            provider_rewardable_nodes,
             calculator_results: RewardsCalculatorResults::default(),
 
             _marker: PhantomData,
@@ -82,7 +82,7 @@ struct RewardsCalculatorPipeline<'a, T: ExecutionState> {
     reward_period: &'a RewardPeriod,
     rewards_table: &'a NodeRewardsTable,
     metrics_by_node: &'a HashMap<NodeId, Vec<NodeMetricsDaily>>,
-    rewardable_nodes: &'a Vec<RewardableNode>,
+    provider_rewardable_nodes: &'a ProviderRewardableNodes,
 
     calculator_results: RewardsCalculatorResults,
     _marker: PhantomData<T>,
@@ -91,7 +91,7 @@ struct RewardsCalculatorPipeline<'a, T: ExecutionState> {
 impl<'a, T: ExecutionState> RewardsCalculatorPipeline<'a, T> {
     fn transition<S: ExecutionState>(self) -> RewardsCalculatorPipeline<'a, S> {
         RewardsCalculatorPipeline {
-            rewardable_nodes: self.rewardable_nodes,
+            provider_rewardable_nodes: self.provider_rewardable_nodes,
             metrics_by_node: self.metrics_by_node,
             calculator_results: self.calculator_results,
             reward_period: self.reward_period,
@@ -110,7 +110,7 @@ impl<'a> RewardsCalculatorPipeline<'a, Initialized> {
 /// Extracts the rewardable nodes metrics from all the `metrics_by_node`.
 impl<'a> RewardsCalculatorPipeline<'a, ComputeRewardableNodesMetrics> {
     pub(crate) fn next(mut self) -> RewardsCalculatorPipeline<'a, ComputeExtrapolatedFR> {
-        for node in self.rewardable_nodes.iter() {
+        for node in self.provider_rewardable_nodes.rewardable_nodes.iter() {
             let node_results = self.calculator_results.results_by_node.entry(node.node_id).or_default();
             node_results.region = node.region.clone();
             node_results.node_type = node.node_type.clone();
@@ -223,7 +223,7 @@ impl<'a> RewardsCalculatorPipeline<'a, ComputePerformanceMultipliers> {
 struct Type3Rewards {
     coefficients: Vec<Decimal>,
     base_rewards_per_month: Vec<Decimal>,
-    nodes_categories: Vec<NodeCategory>,
+    region_nodetype_cat: Vec<(Region, NodeType)>,
 }
 
 fn is_type3(node_type: &str) -> bool {
@@ -235,12 +235,9 @@ fn is_type3(node_type: &str) -> bool {
 /// The base rewards are calculated based on the rewards table entries for the specific region and node type.
 /// For type3* nodes the base rewards are computed as the average of base rewards on DC Country level.
 impl<'a> RewardsCalculatorPipeline<'a, ComputeBaseRewardsByCategory> {
-    fn fill_nodes_base_rewards(&mut self, rewards_by_category: HashMap<NodeCategory, Decimal>) {
+    fn fill_nodes_base_rewards(&mut self, rewards_by_category: HashMap<(Region, NodeType), Decimal>) {
         for node_results in self.calculator_results.results_by_node.values_mut() {
-            let node_category = NodeCategory {
-                region: node_results.region.clone(),
-                node_type: node_results.node_type.clone(),
-            };
+            let node_category = (node_results.region.clone(), node_results.node_type.clone());
             let base_rewards_per_month = *rewards_by_category.get(&node_category).expect("Node category exist");
 
             node_results.base_rewards_per_month = base_rewards_per_month.into();
@@ -248,24 +245,13 @@ impl<'a> RewardsCalculatorPipeline<'a, ComputeBaseRewardsByCategory> {
     }
 
     pub fn next(mut self) -> RewardsCalculatorPipeline<'a, AdjustNodesRewards> {
-        let mut rewards_by_category: HashMap<NodeCategory, Decimal> = HashMap::default();
+        let mut rewards_by_category: HashMap<(Region, NodeType), Decimal> = HashMap::default();
         let mut type3_category_rewards: HashMap<String, Type3Rewards> = HashMap::default();
 
-        let nodes_count_by_category = self
-            .rewardable_nodes
-            .iter()
-            .into_group_map_by(|node| NodeCategory {
-                region: node.region.clone(),
-                node_type: node.node_type.clone(),
-            })
-            .into_iter()
-            .map(|(category, nodes)| (category, nodes.len()))
-            .collect::<HashMap<_, _>>();
-
-        for (category, nodes_count) in nodes_count_by_category {
+        for ((region, node_type), nodes_count) in self.provider_rewardable_nodes.rewardable_nodes_count.iter() {
             let (base_rewards_per_month, coefficient) = self
                 .rewards_table
-                .get_rate(&category.region, &category.node_type)
+                .get_rate(&region.0, &node_type.0)
                 .map(|rate| {
                     let base_rewards_per_month = Decimal::from(rate.xdr_permyriad_per_node_per_month);
                     // Default reward_coefficient_percent is set to 80%, which is used as a fallback only in the
@@ -282,31 +268,31 @@ impl<'a> RewardsCalculatorPipeline<'a, ComputeBaseRewardsByCategory> {
             // on DC Country level. Moreover, to de-stimulate the same NP having too many nodes in the same country,
             // the node rewards is reduced for each node the NP has in the given country. The reduction coefficient is
             // computed as the average of reduction coefficients on DC Country level.
-            if is_type3(&category.node_type) && nodes_count > 0 {
-                let coefficients = vec![coefficient; nodes_count];
-                let base_rewards_per_month = vec![base_rewards_per_month; nodes_count];
+            if is_type3(&node_type.0) && *nodes_count > 0 {
+                let coefficients = vec![coefficient; *nodes_count as usize];
+                let base_rewards_per_month = vec![base_rewards_per_month; *nodes_count as usize];
 
                 // The rewards table contains entries of this form DC Continent + DC Country + DC State/City.
                 // The grouping for type3* nodes will be on DC Continent + DC Country level. This group is used for computing
                 // the reduction coefficient and base reward for the group.
-                let region_key = category.region.splitn(3, ',').take(2).collect::<Vec<&str>>().join(":");
+                let region_key = region.0.splitn(3, ',').take(2).collect::<Vec<&str>>().join(":");
 
                 type3_category_rewards
                     .entry(region_key)
                     .and_modify(|type3_rewards| {
                         type3_rewards.coefficients.extend(&coefficients);
                         type3_rewards.base_rewards_per_month.extend(&base_rewards_per_month);
-                        type3_rewards.nodes_categories.push(category.clone());
+                        type3_rewards.region_nodetype_cat.push((region.clone(), node_type.clone()));
                     })
                     .or_insert(Type3Rewards {
                         coefficients,
                         base_rewards_per_month,
-                        nodes_categories: vec![category.clone()],
+                        region_nodetype_cat: vec![(region.clone(), node_type.clone())],
                     });
             } else {
                 // For `rewardable_nodes` which are not type3* the base rewards for the sigle node is the entry
                 // in the rewards table for the specific region (DC Continent + DC Country + DC State/City) and node type.
-                rewards_by_category.insert(category.clone(), base_rewards_per_month);
+                rewards_by_category.insert((region.clone(), node_type.clone()), base_rewards_per_month);
             }
         }
 
@@ -325,7 +311,7 @@ impl<'a> RewardsCalculatorPipeline<'a, ComputeBaseRewardsByCategory> {
             }
             let region_rewards_avg = avg(&region_rewards);
 
-            for node_category in type3_rewards.nodes_categories {
+            for node_category in type3_rewards.region_nodetype_cat {
                 rewards_by_category.insert(node_category, region_rewards_avg);
             }
         }
