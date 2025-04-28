@@ -121,8 +121,8 @@ impl TryFrom<rewards_calculator_results::RewardsCalculatorResults> for RewardsCa
             .results_by_node
             .into_iter()
             .map(|(node_id, node_results)| {
-                let region = node_results.region.to_string();
-                let node_type = node_results.node_type.to_string();
+                let region = node_results.region.0;
+                let node_type = node_results.node_type.0;
                 let dc_id = node_results.dc_id.to_string();
                 let avg_relative_fr = node_results.avg_relative_fr.map(|fr| fr.try_into()).transpose()?;
 

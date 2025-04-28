@@ -1,4 +1,4 @@
-use crate::types::{DayEndNanos, RewardPeriod, RewardPeriodError, TimestampNanos, NANOS_PER_DAY};
+use crate::types::{DayEndNanos, NodeType, Region, RewardPeriod, RewardPeriodError, TimestampNanos, NANOS_PER_DAY};
 use ic_base_types::{NodeId, PrincipalId, SubnetId};
 use rust_decimal::Decimal;
 use std::collections::BTreeMap;
@@ -94,8 +94,8 @@ pub struct NodeMetricsDaily {
 
 #[derive(Debug, Default)]
 pub struct NodeResults {
-    pub region: String,
-    pub node_type: String,
+    pub region: Region,
+    pub node_type: NodeType,
     pub dc_id: String,
     pub rewardable_from: DayUTC,
     pub rewardable_to: DayUTC,

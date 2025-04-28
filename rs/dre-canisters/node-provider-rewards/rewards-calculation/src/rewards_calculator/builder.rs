@@ -1,10 +1,11 @@
 use super::*;
+use crate::types::ProviderRewardableNodes;
 
 pub struct RewardsCalculatorBuilder {
     pub reward_period: RewardPeriod,
     pub rewards_table: NodeRewardsTable,
     pub daily_metrics_by_subnet: HashMap<SubnetMetricsDailyKey, Vec<NodeMetricsDailyRaw>>,
-    pub rewardable_nodes_per_provider: BTreeMap<PrincipalId, Vec<RewardableNode>>,
+    pub rewardable_nodes_per_provider: BTreeMap<PrincipalId, ProviderRewardableNodes>,
 }
 
 /// The percentile used to calculate the failure rate for a subnet.
@@ -30,13 +31,6 @@ impl RewardsCalculatorBuilder {
             }
         }
 
-        for rewardable_nodes in self.rewardable_nodes_per_provider.values() {
-            for rewardable_node in rewardable_nodes {
-                if !self.reward_period.contains(rewardable_node.rewardable_from) || !self.reward_period.contains(rewardable_node.rewardable_to) {
-                    return Err(RewardCalculatorError::RewardableNodeOutOfRange(rewardable_node.node_id));
-                }
-            }
-        }
         Ok(())
     }
 
