@@ -24,16 +24,14 @@ The rotation schedules can be found on our [Jira Team Operations page](https://d
 
 As Dr. DRE, your role for the week involves taking on several responsibilities. These include, but are not limited to:
 
-### 1. **Follow through the release process**
+### 1. **Follow through the IC OS release process**
 
-The release process [is documented here](https://www.notion.so/dfinityorg/IC-OS-release-technical-aspects-1e3c3274ba4d406ebe222aa6eb569e3a).  In short:
+The release process [is documented in detail here](https://www.notion.so/dfinityorg/IC-OS-release-technical-aspects-1e3c3274ba4d406ebe222aa6eb569e3a).  In short:
 
-* Follow the schedule presented on the [rollout dashboard](https://rollout-dashboard.ch1-rel1.dfinity.network/).
-* Follow the statuses visible in [airflow](https://airflow.ch1-rel1.dfinity.network/dags/rollout_ic_os_to_mainnet_subnets/grid).
-* Cut a new GuestOS & HostOS release on Thursday and create any additional feature builds.
-* Team engineers review the release notes through Friday.
-* Submit GuestOS & HostOS version elect proposals on Friday (not earlier) to allow sufficient time for community and DFINITY voters to review and vote without rush.
-* If needed, create feature builds or [security hotfixes](https://docs.google.com/document/d/19iYuAxwvWFbxfM3AdhydA5GzfaCITNhueSDhkxKevYQ/edit?tab=t.0#heading=h.i2ciz6mp3ue0) for that week.
+* Follow the schedule presented on the [rollout dashboard](https://rollout-dashboard.ch1-rel1.dfinity.network/).  If problems arise, diagnose using the low-level statuses from [Airflow](https://airflow.ch1-rel1.dfinity.network/dags/rollout_ic_os_to_mainnet_subnets/grid) (the dashboard also links directly to the problem task in Airflow).
+* Cut a new GuestOS & HostOS release on Thursday, and create any additional feature builds [as per the spreadsheet](https://docs.google.com/spreadsheets/d/1ZcYB0gWjbgg7tFgy2Fhd3llzYlefJIb0Mik75UUrSXM/edit) as well as [security hotfixes](https://docs.google.com/document/d/19iYuAxwvWFbxfM3AdhydA5GzfaCITNhueSDhkxKevYQ/edit?tab=t.0#heading=h.i2ciz6mp3ue0).
+* Ensure team engineers review the release notes through Friday.
+* Ensure the release controller submits GuestOS & HostOS version elect proposals on Friday -- *not earlier*, to allow sufficient time for community and DFINITY voters to review and vote without rush.
 * In-depth explanation of the release process can be found on [Notion](https://www.notion.so/dfinityorg/IC-OS-release-technical-aspects-1e3c3274ba4d406ebe222aa6eb569e3a#9621e1dc378c4b3ba28c9d2d1ac5b3a7).
 
 ??? tip "Regular week"
@@ -71,7 +69,8 @@ The release process [is documented here](https://www.notion.so/dfinityorg/IC-OS-
 ### 4. **Submit requested proposals**
 
 All requested proposals must:
-1. Be registered as a ticket in the [DRE Ops Rotation queue](https://dfinity.atlassian.net/browse/DRE-350)
+
+1. Be registered as a ticket under the [DRE Ops Rotation queue](https://dfinity.atlassian.net/browse/DRE-350)
 2. Include clear requirements and expected outcomes
 3. Be followed through in a timely manner based on priority
 
@@ -108,16 +107,16 @@ Please [register proposals as tickets under the DRE Ops Rotation queue](https://
 
 ### 7. **Drive progress on the DRE Ops Rotation task queue**
 
-Our [DRE Ops Rotation queue](https://dfinity.atlassian.net/browse/DRE-350) exists to keep track of work falling under the Dr. DRE umbrella that may span multiple days or weeks.  It contains a list of child tickets that you need to work on.
+Our [DRE Ops rotation dashboard](https://dfinity.atlassian.net/jira/dashboards/10331) lets you view the queue.  The queue exists to keep track of work falling under the Dr. DRE umbrella that may span multiple days or weeks.  It contains a list of child tickets that you need to work on.
 
-Tend to the queue at least once a day.  Read and heed the guidelines in the umbrella epic.  Here is a brief summary (which is not a substitute for reading the guidelines):
+Tend to the queue at least once a day.  Read and heed the guidelines in the umbrella epic.  Here is a brief summary (which is not a substitute for [reading the guidelines](https://dfinity.atlassian.net/browse/DRE-350)):
 
 * Record (as tickets of type task) multi-day work under the umbrella of the DRE Ops Rotation, with the task queue ticket as the new ticket's epic.
 * Drive progress on tasks that are not blocked.
 * Mark blocked tasks as blocked.
 * Record completion of tasks.
 * Provide enough context there for your teammates to pick up ongoing work the week after.
-* Move work tickets that change scope, out of the queue, and into its own epic or project.
+* Move tickets that change scope *out* of the queue and *into* its own epic or project.
 
 ### 8. **Handoff operations**
 
@@ -125,4 +124,4 @@ Tend to the queue at least once a day.  Read and heed the guidelines in the umbr
 - Provide clear details on what needs to be addressed and any context that might help them pick up where you left off.
 - Pass on information about node rewards adjustments requested to the next on-call team member.
 
-The [DRE Ops Rotation queue](https://dfinity.atlassian.net/browse/DRE-350) is an invaluable aid in getting yourself in context as well as providing context to your teammates.
+The [DRE Ops Rotation dashboard](https://dfinity.atlassian.net/jira/dashboards/10331) is an invaluable aid in getting yourself in context as well as providing context to your teammates.

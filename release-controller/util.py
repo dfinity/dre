@@ -3,10 +3,13 @@ import hashlib
 import logging
 import math
 import os
+import pathlib
+import requests
+import subprocess
+import shutil
 import sys
 import time
 import typing
-import requests
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -22,45 +25,31 @@ def resolve_binary(name: str) -> str:
     Resolve the binary path for the given binary name.
     Try to locate the binary in expected location if it was packaged in an OCI image.
     """
-    # First, look for the binary in the same folder as this file.
-    binary_local = os.path.join(os.path.dirname(__file__), name)
-    if os.access(binary_local, os.X_OK):
-        _LOGGER.debug("Using %s for executable %s", binary_local, name)
-        return binary_local
-    # Then, look for the binary in a runfiles folder within the program's
-    # runfiles directory.  This is where the binary would be included normally
-    # when specified as a data dependency of a container built via Bazel.
-    # Only do this when looking for the DRE binary.
-    if name == "dre":
-        if os.getenv("DRE_PATH") is not None:
-            # This branch is taken when running with bazel run, or when the user
-            # manually wants to use a specific DRE tool.
-            binary_local = str(os.getenv("DRE_PATH"))
-            _LOGGER.debug(
-                "Using %s for executable %s as per environment variable DRE_PATH",
-                binary_local,
-                name,
-            )
-            return binary_local
-        else:
-            binary_local = os.path.join("/", "rs", "cli", "dre-embedded")
-            _LOGGER.debug(
-                "Trying %s for executable %s within container",
-                binary_local,
-                name,
-            )
-            if not os.path.exists(binary_local):
-                _LOGGER.warning("Program %s does not exist", binary_local)
-                return name
-            if not os.access(binary_local, os.X_OK):
-                _LOGGER.warning("Program %s is not executable", binary_local)
-                return name
-            return binary_local
-    _LOGGER.debug(
-        "Falling back to path search for executable %s",
-        name,
-    )
-    return name
+    me = pathlib.Path(__file__)
+    things_to_try = [name + "-embedded", name] if name == "dre" else [name]
+    for thing in things_to_try:
+        search_path = os.path.pathsep.join(
+            # First, look for the binary in the same folder as this file.
+            [
+                # Special-casing DRE it's actually in ../rs/cli.
+                os.path.pathsep + str(me.parent.parent / "rs" / "cli"),
+            ]
+            if name == "dre"
+            else [
+                os.path.pathsep + str(me.parent),
+            ]
+            + [
+                # Also search in the regular executable search path.
+                os.getenv("PATH", "."),
+            ]
+        )
+        full_path = shutil.which(thing, path=search_path)
+        if full_path is not None:
+            break
+    if full_path is None:
+        raise FileNotFoundError(name)
+    _LOGGER.debug("Selected %s as binary to run for command %s", full_path, name)
+    return full_path
 
 
 T = typing.TypeVar("T")
@@ -109,8 +98,8 @@ def auto_progressbar_with_item_descriptions(
         progress_width = int(round(progress * size))
         done_width = size - progress_width
         print(
-            f"{pre}[{'█'*progress_width}{('.'*done_width)}]{post}",
-            end="\r",
+            f"\r{pre}[{'█'*progress_width}{('.'*done_width)}]{post}",
+            end="",
             file=out,
             flush=True,
         )
@@ -125,7 +114,7 @@ def auto_progressbar_with_item_descriptions(
         if sys.stderr.isatty():
             show(i + 1, desc, item)
     if sys.stderr.isatty():
-        print(f"\r{' '*(termsize())}", end="\r", flush=True, file=out)
+        print(f"\r{' '*(termsize())}", end="\n", flush=True, file=out)
 
 
 def auto_progressbar(
@@ -252,3 +241,31 @@ def conventional_logging(one_line_logs: bool, verbose: bool) -> None:
     ch.setLevel(logging.DEBUG if verbose else logging.INFO)
     ch.setFormatter(CustomFormatter(one_line_logs))
     root.addHandler(ch)
+
+
+def check_output(cmd: list[str], **kwargs: typing.Any) -> str:
+    # _LOGGER.warning("CMD: %s", cmd)
+    kwargs = kwargs or {}
+    if "text" not in kwargs:
+        kwargs["text"] = True
+    return typing.cast(str, subprocess.check_output(cmd, **kwargs))
+
+
+def check_output_binary(cmd: list[str], **kwargs: typing.Any) -> bytes:
+    # _LOGGER.warning("CMD: %s", cmd)
+    kwargs = kwargs or {}
+    kwargs["text"] = False
+    return typing.cast(bytes, check_output(cmd, **kwargs))
+
+
+def check_call(cmd: list[str], **kwargs: typing.Any) -> int:
+    # _LOGGER.warning("CMD: %s", cmd)
+    return subprocess.check_call(cmd, **kwargs)
+
+
+def repr_ellipsized(s: str, max_length: int = 80) -> str:
+    if len(s) < max_length:
+        return repr(s)
+    return (
+        repr(s[: int(max_length / 2) - 2]) + "..." + repr(s[-int(max_length / 2) - 2 :])
+    )

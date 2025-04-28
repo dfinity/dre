@@ -8,8 +8,19 @@ edition.workspace = true
 license.workspace = true
 
 [dependencies]
+ic-base-types = { workspace = true }
+rust_decimal = { workspace = true }
+rust_decimal_macros = { workspace = true }
+rewards-calculation = { workspace = true }
 candid = { workspace = true }
 serde = { workspace = true }
+
+itertools = { workspace = true }
+chrono = { version = "0.4.38", default-features = false, features = [
+    "alloc",
+    "clock",
+    "serde",
+] }
 
 [lib]
 name = "node_provider_rewards_api"

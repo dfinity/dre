@@ -1,223 +1,210 @@
-import pathlib
-import tempfile
-from release_notes import (
+from tests.fixtures import ic_repo as ic_repo
+
+from release_notes_composer import (
     prepare_release_notes,
     get_change_description_for_commit,
-    LocalCommitChangeDeterminator,
     OrdinaryReleaseNotesRequest,
     SecurityReleaseNotesRequest,
     Change,
 )
+from commit_annotation import LocalCommitChangeDeterminator, COMMIT_BELONGS
 from git_repo import GitRepo
-from const import GUESTOS, COMMIT_BELONGS
+from const import GUESTOS
 
 
-def test_get_change_description_for_commit() -> None:
-    with tempfile.TemporaryDirectory() as repo_cache_dir:
-        ic_repo = GitRepo(
-            "https://github.com/dfinity/ic.git",
-            main_branch="master",
-            repo_cache_dir=pathlib.Path(repo_cache_dir),
-        )
-        # Not modifying GuestOS
-        determinator = LocalCommitChangeDeterminator(ic_repo)
+def test_get_change_description_for_commit(ic_repo: GitRepo) -> None:
+    determinator = LocalCommitChangeDeterminator(ic_repo)
 
-        def testme(commit_hash: str) -> Change:
-            belongs = determinator.commit_changes_artifact(commit_hash, GUESTOS)
-            return get_change_description_for_commit(
-                commit_hash=commit_hash,
-                ic_repo=ic_repo,
-                belongs=belongs in [COMMIT_BELONGS],
-            )
-
-        assert testme(commit_hash="00dc67f8d") == Change(
-            commit="00dc67f8d",
-            teams=[
-                "crypto-team",
-                "ic-interface-owners",
-            ],
-            type="refactor",
-            scope="",
-            message="Use ic_cdk::api::time for ingress message validator crate ([#802](https://github.com/dfinity/ic/pull/802))",
-            commiter="Dimi Sarl",
-            exclusion_reason=None,
-            belongs_to_this_release=False,
-        )
-        # bumping dependencies
-        assert testme(commit_hash="2d0835bba") == Change(
-            commit="2d0835bba",
-            teams=[
-                "ic-owners-owners",
-            ],
-            type="chore",
-            scope="crypto",
-            message="bump ic_bls12_381 to 0.10.0 ([#770](https://github.com/dfinity/ic/pull/770))",
-            commiter="Olek Tkac",
-            exclusion_reason=None,
-            belongs_to_this_release=True,
-        )
-        # .github change
-        assert testme(commit_hash="94fd38099") == Change(
-            commit="94fd38099",
-            teams=[
-                "ic-owners-owners",
-            ],
-            type="chore",
-            scope="IDX",
-            message="fix workflow syntax ([#824](https://github.com/dfinity/ic/pull/824))",
-            commiter="Carl Gund",
-            exclusion_reason=None,
-            belongs_to_this_release=False,
-        )
-        # replica change
-        assert testme(commit_hash="951e895c7") == Change(
-            commit="951e895c7",
-            teams=[
-                "execution",
-                "ic-interface-owners",
-            ],
-            type="feat",
-            scope="",
-            message="Handle stable_read/write with Wasm64 heaps and testing infrastructure ([#781](https://github.com/dfinity/ic/pull/781))",
-            commiter="Alex Uta ",
-            exclusion_reason=None,
-            belongs_to_this_release=True,
-        )
-        # modifies Cargo.lock but not in a meaningful way
-        assert testme(commit_hash="5a250cb34") == Change(
-            commit="5a250cb34",
-            teams=[
-                "ic-interface-owners",
-            ],
-            type="feat",
-            scope="ic-admin",
-            message="Support sending update_canister_settings proposals through ic-admin ([#789](https://github.com/dfinity/ic/pull/789))",
-            commiter="jaso     ",
-            exclusion_reason=None,
-            belongs_to_this_release=False,
-        )
-        # modifies ic-admin
-        assert testme(commit_hash="d436a526d") == Change(
-            commit="d436a526d",
-            teams=[
-                "ic-interface-owners",
-            ],
-            type="feat",
-            scope="ic-admin",
-            message="Print hashes rather than entire blobs when submitting InstallCode proposals ([#1093](https://github.com/dfinity/ic/pull/1093))",
-            commiter="jaso     ",
-            exclusion_reason="Changed files are excluded by file path filter",
-            belongs_to_this_release=True,
-        )
-        assert testme(commit_hash="92e0f4a55") == Change(
-            commit="92e0f4a55",
-            teams=[
-                "ic-interface-owners",
-            ],
-            type="feat",
-            scope="nns",
-            message="Store `wasm_metadata` in SNS-W's stable memory (attempt #2) ([#977](https://github.com/dfinity/ic/pull/977))",
-            commiter="Arsh Ter-",
-            exclusion_reason="Scope of the change (nns) is not related to the artifact",
-            belongs_to_this_release=True,
-        )
-        assert testme(commit_hash="0aa15a5be") == Change(
-            commit="0aa15a5be",
-            teams=[
-                "ic-interface-owners",
-            ],
-            type="feat",
-            scope="nns",
-            message="Automatically set SNS Governance, Ledger, Index, Archive canisters memory limits once ([#1004](https://github.com/dfinity/ic/pull/1004))",
-            commiter="Andr Popo",
-            exclusion_reason="Changed files are excluded by file path filter",
-            belongs_to_this_release=True,
-        )
-        assert testme(commit_hash="974f22dc1") == Change(
-            commit="974f22dc1",
-            teams=[
-                "ic-interface-owners",
-            ],
-            type="feat",
-            scope="sns",
-            message="Expose the wasm_memory_limit in sns_canisters_summary's settings ([#1054](https://github.com/dfinity/ic/pull/1054))",
-            commiter="Andr Popo",
-            exclusion_reason="Changed files are excluded by file path filter",
-            belongs_to_this_release=True,
-        )
-        assert testme(commit_hash="05b02520f") == Change(
-            commit="05b02520f",
-            teams=[
-                "ic-interface-owners",
-            ],
-            type="feat",
-            scope="sns",
-            message="Reject new participants if the maximum number of required SNS neurons has been reached ([#924](https://github.com/dfinity/ic/pull/924))",
-            commiter="Arsh Ter-",
-            exclusion_reason="Scope of the change (sns) is not related to the artifact",
-            belongs_to_this_release=True,
-        )
-        assert testme(commit_hash="57293157d") == Change(
-            commit="57293157d",
-            teams=[
-                "ic-interface-owners",
-            ],
-            type="chore",
-            scope="sns",
-            message="Remove migration code for setting SNS memory limits ([#1159](https://github.com/dfinity/ic/pull/1159))",
-            commiter="Andr Popo",
-            exclusion_reason="Changed files are excluded by file path filter",
-            belongs_to_this_release=True,
-        )
-        assert testme(commit_hash="f4242cbcf") == Change(
-            commit="f4242cbcf",
-            teams=[
-                "ic-interface-owners",
-            ],
-            type="chore",
-            scope="",
-            message="add decoding quota to http_request in NNS root canister ([#1031](https://github.com/dfinity/ic/pull/1031))",
-            commiter="mras     ",
-            exclusion_reason="Changed files are excluded by file path filter",
-            belongs_to_this_release=True,
-        )
-        assert testme(commit_hash="a63138ab5") == Change(
-            commit="a63138ab5",
-            teams=[
-                "execution",
-                "ic-interface-owners",
-                "ic-message-routing-owners",
-            ],
-            type="feat",
-            scope="",
-            message="Check `SystemState` invariants on checkpoint loading ([#1165](https://github.com/dfinity/ic/pull/1165))",
-            commiter="Alin Sinp",
-            exclusion_reason=None,
-            belongs_to_this_release=True,
+    def testme(commit_hash: str) -> Change:
+        belongs = determinator.commit_changes_artifact(commit_hash, GUESTOS)
+        return get_change_description_for_commit(
+            commit_hash=commit_hash,
+            ic_repo=ic_repo,
+            belongs=belongs in [COMMIT_BELONGS],
         )
 
+    assert testme(commit_hash="00dc67f8d") == Change(
+        commit="00dc67f8d",
+        teams=[
+            "crypto-team",
+            "ic-interface-owners",
+        ],
+        type="refactor",
+        scope="",
+        message="Use ic_cdk::api::time for ingress message validator crate ([#802](https://github.com/dfinity/ic/pull/802))",
+        commiter="Dimi Sarl",
+        exclusion_reason=None,
+        belongs_to_this_release=False,
+    )
+    # bumping dependencies
+    assert testme(commit_hash="2d0835bba") == Change(
+        commit="2d0835bba",
+        teams=[
+            "ic-owners-owners",
+        ],
+        type="chore",
+        scope="crypto",
+        message="bump ic_bls12_381 to 0.10.0 ([#770](https://github.com/dfinity/ic/pull/770))",
+        commiter="Olek Tkac",
+        exclusion_reason=None,
+        belongs_to_this_release=True,
+    )
+    # .github change
+    assert testme(commit_hash="94fd38099") == Change(
+        commit="94fd38099",
+        teams=[
+            "ic-owners-owners",
+        ],
+        type="chore",
+        scope="IDX",
+        message="fix workflow syntax ([#824](https://github.com/dfinity/ic/pull/824))",
+        commiter="Carl Gund",
+        exclusion_reason=None,
+        belongs_to_this_release=False,
+    )
+    # replica change
+    assert testme(commit_hash="951e895c7") == Change(
+        commit="951e895c7",
+        teams=[
+            "execution",
+            "ic-interface-owners",
+        ],
+        type="feat",
+        scope="",
+        message="Handle stable_read/write with Wasm64 heaps and testing infrastructure ([#781](https://github.com/dfinity/ic/pull/781))",
+        commiter="Alex Uta ",
+        exclusion_reason=None,
+        belongs_to_this_release=True,
+    )
+    # modifies Cargo.lock but not in a meaningful way
+    assert testme(commit_hash="5a250cb34") == Change(
+        commit="5a250cb34",
+        teams=[
+            "ic-interface-owners",
+        ],
+        type="feat",
+        scope="ic-admin",
+        message="Support sending update_canister_settings proposals through ic-admin ([#789](https://github.com/dfinity/ic/pull/789))",
+        commiter="jaso     ",
+        exclusion_reason=None,
+        belongs_to_this_release=False,
+    )
+    # modifies ic-admin
+    assert testme(commit_hash="d436a526d") == Change(
+        commit="d436a526d",
+        teams=[
+            "ic-interface-owners",
+        ],
+        type="feat",
+        scope="ic-admin",
+        message="Print hashes rather than entire blobs when submitting InstallCode proposals ([#1093](https://github.com/dfinity/ic/pull/1093))",
+        commiter="jaso     ",
+        exclusion_reason="Changed files are excluded by file path filter",
+        belongs_to_this_release=True,
+    )
+    assert testme(commit_hash="92e0f4a55") == Change(
+        commit="92e0f4a55",
+        teams=[
+            "ic-interface-owners",
+        ],
+        type="feat",
+        scope="nns",
+        message="Store `wasm_metadata` in SNS-W's stable memory (attempt #2) ([#977](https://github.com/dfinity/ic/pull/977))",
+        commiter="Arsh Ter-",
+        exclusion_reason="Scope of the change (nns) is not related to the artifact",
+        belongs_to_this_release=True,
+    )
+    assert testme(commit_hash="0aa15a5be") == Change(
+        commit="0aa15a5be",
+        teams=[
+            "ic-interface-owners",
+        ],
+        type="feat",
+        scope="nns",
+        message="Automatically set SNS Governance, Ledger, Index, Archive canisters memory limits once ([#1004](https://github.com/dfinity/ic/pull/1004))",
+        commiter="Andr Popo",
+        exclusion_reason="Changed files are excluded by file path filter",
+        belongs_to_this_release=True,
+    )
+    assert testme(commit_hash="974f22dc1") == Change(
+        commit="974f22dc1",
+        teams=[
+            "ic-interface-owners",
+        ],
+        type="feat",
+        scope="sns",
+        message="Expose the wasm_memory_limit in sns_canisters_summary's settings ([#1054](https://github.com/dfinity/ic/pull/1054))",
+        commiter="Andr Popo",
+        exclusion_reason="Changed files are excluded by file path filter",
+        belongs_to_this_release=True,
+    )
+    assert testme(commit_hash="05b02520f") == Change(
+        commit="05b02520f",
+        teams=[
+            "ic-interface-owners",
+        ],
+        type="feat",
+        scope="sns",
+        message="Reject new participants if the maximum number of required SNS neurons has been reached ([#924](https://github.com/dfinity/ic/pull/924))",
+        commiter="Arsh Ter-",
+        exclusion_reason="Scope of the change (sns) is not related to the artifact",
+        belongs_to_this_release=True,
+    )
+    assert testme(commit_hash="57293157d") == Change(
+        commit="57293157d",
+        teams=[
+            "ic-interface-owners",
+        ],
+        type="chore",
+        scope="sns",
+        message="Remove migration code for setting SNS memory limits ([#1159](https://github.com/dfinity/ic/pull/1159))",
+        commiter="Andr Popo",
+        exclusion_reason="Changed files are excluded by file path filter",
+        belongs_to_this_release=True,
+    )
+    assert testme(commit_hash="f4242cbcf") == Change(
+        commit="f4242cbcf",
+        teams=[
+            "ic-interface-owners",
+        ],
+        type="chore",
+        scope="",
+        message="add decoding quota to http_request in NNS root canister ([#1031](https://github.com/dfinity/ic/pull/1031))",
+        commiter="mras     ",
+        exclusion_reason="Changed files are excluded by file path filter",
+        belongs_to_this_release=True,
+    )
+    assert testme(commit_hash="a63138ab5") == Change(
+        commit="a63138ab5",
+        teams=[
+            "execution",
+            "ic-interface-owners",
+            "ic-message-routing-owners",
+        ],
+        type="feat",
+        scope="",
+        message="Check `SystemState` invariants on checkpoint loading ([#1165](https://github.com/dfinity/ic/pull/1165))",
+        commiter="Alin Sinp",
+        exclusion_reason=None,
+        belongs_to_this_release=True,
+    )
 
-def test_release_notes() -> None:
-    with tempfile.TemporaryDirectory() as repo_cache_dir:
-        ic_repo = GitRepo(
-            "https://github.com/dfinity/ic.git",
-            main_branch="master",
-            repo_cache_dir=pathlib.Path(repo_cache_dir),
+
+def test_release_notes(ic_repo: GitRepo) -> None:
+    belongs = LocalCommitChangeDeterminator(ic_repo)
+    assert (
+        prepare_release_notes(
+            OrdinaryReleaseNotesRequest(
+                "release-2024-08-02_01-30-base",
+                "3d0b3f10417fc6708e8b5d844a0bac5e86f3e17d",
+                "release-2024-07-25_21-03-base",
+                "2c0b76cfc7e596d5c4304cff5222a2619294c8c1",
+                GUESTOS,
+            ),
+            ic_repo,
+            belongs,
         )
-        belongs = LocalCommitChangeDeterminator(ic_repo).commit_changes_artifact
-        assert (
-            prepare_release_notes(
-                OrdinaryReleaseNotesRequest(
-                    "release-2024-08-02_01-30-base",
-                    "3d0b3f10417fc6708e8b5d844a0bac5e86f3e17d",
-                    "release-2024-07-25_21-03-base",
-                    "2c0b76cfc7e596d5c4304cff5222a2619294c8c1",
-                    GUESTOS,
-                ),
-                ic_repo,
-                belongs,
-            )
-            == """\
+        == """\
 # Review checklist
 
 <span style="color: red">Please cross-out your team once you finished the review</span>
@@ -305,16 +292,16 @@ To see a full list of commits added since last release, compare the revisions on
 * ~~author: Dani Shar | [`c6cde0abe`](https://github.com/dfinity/ic/commit/c6cde0abe) Interface(call-v3): Make agent to use the v3 call endpoint for system tests ([#635](https://github.com/dfinity/ic/pull/635)) [AUTO-EXCLUDED:Not modifying GuestOS]~~
 * ~~author: oggy      | [`32bc2c260`](https://github.com/dfinity/ic/commit/32bc2c260) Interface,Message Routing: Use mainnet binaries for the queues compatibility test ([#419](https://github.com/dfinity/ic/pull/419)) [AUTO-EXCLUDED:Not modifying GuestOS]~~
 """
-        )
+    )
 
-        res = prepare_release_notes(
-            SecurityReleaseNotesRequest(
-                "release-2024-08-02_01-30-base",
-                "3d0b3f10417fc6708e8b5d844a0bac5e86f3e17d",
-                GUESTOS,
-            ),
-            ic_repo,
-            belongs,
-        )
-        assert "accordance" in res, f"No security caveat present in {res}"
-        assert "Release Notes for" in res, f"No Release Notes headline present in {res}"
+    res = prepare_release_notes(
+        SecurityReleaseNotesRequest(
+            "release-2024-08-02_01-30-base",
+            "3d0b3f10417fc6708e8b5d844a0bac5e86f3e17d",
+            GUESTOS,
+        ),
+        ic_repo,
+        belongs,
+    )
+    assert "accordance" in res, f"No security caveat present in {res}"
+    assert "Release Notes for" in res, f"No Release Notes headline present in {res}"

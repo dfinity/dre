@@ -3,6 +3,7 @@ import http.server
 import logging
 import os
 import pathlib
+import shlex
 import subprocess
 import sys
 import re
@@ -10,13 +11,20 @@ import threading
 import time
 import typing
 from prometheus_client import start_http_server, Gauge
+from tenacity import retry, stop_after_delay, retry_if_exception_type, after_log
 
 sys.path.append(os.path.join(os.path.dirname(__file__)))
 
-from git_repo import GitRepo, GitRepoAnnotator, CHANGED_NOTES_NAMESPACES
+from commit_annotation import (
+    CHANGED_NOTES_NAMESPACES,
+    COMMIT_BELONGS,
+    COMMIT_DOES_NOT_BELONG,
+    CommitInclusionState,
+    GitRepoAnnotator,
+)
+from git_repo import GitRepo
 from datetime import datetime
-from tenacity import retry, stop_after_delay, retry_if_exception_type, after_log
-from util import resolve_binary, conventional_logging
+from util import conventional_logging, resolve_binary
 from watchdog import Watchdog
 
 from const import (
@@ -24,16 +32,34 @@ from const import (
     GUESTOS,
     HOSTOS,
     OS_KINDS,
-    COMMIT_BELONGS,
-    COMMIT_DOES_NOT_BELONG,
-    COMMIT_COULD_NOT_BE_ANNOTATED,
 )
 
-TARGETS_NOTES_NAMESPACES = {GUESTOS: "guestos-targets", HOSTOS: "hostos-targets"}
 BAZEL_TARGETS = {
-    GUESTOS: "//ic-os/guestos/envs/prod:update-img.tar.zst",
-    HOSTOS: "//ic-os/hostos/envs/prod:disk-img.tar.zst union //ic-os/setupos/envs/prod:disk-img.tar.zst",
+    # All targets that produce the update image for GuestOS.
+    GUESTOS: "deps(//ic-os/guestos/envs/prod:update-img.tar.zst)",
+    # All targets that produce the HostOS disk image united with the targets
+    # of the SetupOS disk image minus HostOS and GuestOS disk images.
+    HOSTOS: """
+    deps(
+        //ic-os/hostos/envs/prod:disk-img.tar.zst
+    ) union (
+        deps(
+            //ic-os/setupos/envs/prod:disk-img.tar.zst
+        ) except deps(
+            //ic-os/hostos/envs/prod:disk-img.tar.zst
+        ) except deps(
+            //ic-os/guestos/envs/prod:disk-img.tar.zst
+        ) except //ic-os/setupos/envs/prod/... except //ic-os/setupos/envs/prod:guest-os.img.tar.zst
+    )
+    """,
 }
+BAZEL_OPTS: list[str] = [
+    "--experimental_build_event_upload_strategy=local",
+    "--noremote_upload_local_results",
+    "--bes_backend=",
+    "--nobes_lifecycle_events",
+]
+TARGETS_NOTES_NAMESPACES = {GUESTOS: "guestos-targets", HOSTOS: "hostos-targets"}
 # One commit before last manual HostOS release performed by Manuel Amador.
 CUTOFF_COMMIT = "6f3739270268208945648cc70d8010bda753e827"
 # List of branches to ignore from annotation (before the cutoff commit).
@@ -82,13 +108,14 @@ def release_branch_date(branch: str) -> typing.Optional[datetime]:
 )
 def target_determinator(
     cwd: pathlib.Path, parent_object: str, bazel_targets: str
-) -> bool:
+) -> str:
     logger = _LOGGER.getChild("target_determinator").getChild(parent_object)
     p = subprocess.run(
         [
             resolve_binary("target-determinator"),
             "-before-query-error-behavior=fatal",
             "-delete-cached-worktree",
+            "-bazel-opts=" + " ".join(shlex.quote(x) for x in BAZEL_OPTS),
             f"-bazel={resolve_binary("bazel")}",
             "--targets",
             bazel_targets,
@@ -100,14 +127,20 @@ def target_determinator(
         text=True,
     )
     output = p.stdout.strip()
-    logger.debug(
-        f"stdout of target determinator for {parent_object}: %s",
-        output,
-    )
-    return output != ""
+    if output:
+        logger.debug(
+            "stdout of target determinator for %s has %s lines",
+            parent_object,
+            len(output.splitlines()),
+        )
+    else:
+        logger.debug("stdout of target determinator for %s is empty", parent_object)
+    return output
 
 
-def annotate_object(annotator: GitRepoAnnotator, object: str, os_kind: OsKind) -> None:
+def compute_annotations_for_object(
+    annotator: GitRepoAnnotator, object: str, os_kind: OsKind
+) -> tuple[str, str, CommitInclusionState]:
     logger = _LOGGER.getChild("annotate_object").getChild(object).getChild(os_kind)
     logger.debug("Attempting to annotate")
     start = time.time()
@@ -118,49 +151,65 @@ def annotate_object(annotator: GitRepoAnnotator, object: str, os_kind: OsKind) -
     # the working directory, making the other one much slower.  Thus,
     # we run them serially now, and -- in between them -- we clean the
     # repository's working directory.
+    annotator.checkout(object)
+    bazel_query_output = subprocess.check_output(
+        [
+            resolve_binary("bazel"),
+            "query",
+        ]
+        + BAZEL_OPTS
+        + [
+            f"{targets}",
+        ],
+        text=True,
+        cwd=annotator.dir,
+    )
+    target_determinator_output = target_determinator(
+        annotator.dir, annotator.parent(object), targets
+    )
+    lap = time.time() - start
+    logger.debug("Annotation finished in %.2f seconds", lap)
+    return (
+        "\n".join(
+            [
+                line
+                for line in bazel_query_output.splitlines()
+                if line.strip() and not line.startswith("@")
+            ]
+        ),
+        "\n".join(
+            [
+                line
+                for line in target_determinator_output.splitlines()
+                if line.strip() and not line.startswith("@")
+            ]
+        ),
+        (COMMIT_BELONGS if target_determinator_output else COMMIT_DOES_NOT_BELONG),
+    )
+
+
+def annotate_object(annotator: GitRepoAnnotator, object: str, os_kind: OsKind) -> None:
+    logger = _LOGGER.getChild("annotate_object").getChild(object).getChild(os_kind)
     try:
-        annotator.checkout(object)
-        bazel_query_output = subprocess.check_output(
-            [resolve_binary("bazel"), "query", f"deps({targets})"],
-            text=True,
-            cwd=annotator.dir,
+        targets_notes, affected_targets, belongs = compute_annotations_for_object(
+            annotator, object, os_kind
         )
-        lap = time.time() - start
-        logger.debug("bazel query finished in %.2f seconds", lap)
-
-        target_determinator_output = target_determinator(
-            annotator.dir, annotator.parent(object), targets
-        )
-        lap = time.time() - start
-        logger.debug("target-determinator finished in %.2f seconds", lap)
-
         annotator.add(
             object=object,
             namespace=TARGETS_NOTES_NAMESPACES[os_kind],
-            content="\n".join(
-                [
-                    line
-                    for line in bazel_query_output.splitlines()
-                    if line.strip() and not line.startswith("@")
-                ]
-            ),
+            content="# bazel targets acccording to bazel query\n\n"
+            + targets_notes
+            + "\n\n# affected targets according to target-determinator\n\n"
+            + affected_targets,
         )
         annotator.add(
             object=object,
             namespace=CHANGED_NOTES_NAMESPACES[os_kind],
-            content=COMMIT_BELONGS
-            if target_determinator_output
-            else COMMIT_DOES_NOT_BELONG,
+            content=belongs,
         )
-        lap = time.time() - start
-        logger.debug("Annotation finished in %.2f seconds", lap)
     except Exception:
-        logger.exception("Annotation failed.  Saving a record of the failure.")
-        annotator.add(
-            object=object,
-            namespace=CHANGED_NOTES_NAMESPACES[os_kind],
-            content=COMMIT_COULD_NOT_BE_ANNOTATED,
-        )
+        logger.exception("Annotation failed.  Aborting.")
+        raise
 
 
 def plan_to_annotate_branch(
@@ -297,7 +346,7 @@ def main() -> None:
         "--no-save-annotations",
         action="store_false",
         dest="save_annotations",
-        help="The default is to save annotations locally.  This option turns it off.  The upside is that, on every loop, the annotator attempts to re-annotate the same commits it had annotated before",
+        help="The default is to save annotations locally.  This option turns it off.  The upside is that, on every loop, the annotator attempts to re-annotate the same commits it had annotated before.",
     )
     parser.add_argument(
         "--no-fetch-annotations",
@@ -305,12 +354,18 @@ def main() -> None:
         dest="fetch_annotations",
         help="The default is to fetch annotations from the repository on every loop, overwriting local annotations. This option turns off that behavior.",
     )
-    parser.add_argument("--verbose", "--debug", action="store_true", dest="verbose")
+    parser.add_argument(
+        "--verbose",
+        "--debug",
+        action="store_true",
+        dest="verbose",
+        help="Bump log level.",
+    )
     parser.add_argument(
         "--one-line-logs",
         action="store_true",
         dest="one_line_logs",
-        help="Make log lines one-line without timestamps (useful in production container for better filtering)",
+        help="Make log lines one-line without timestamps (useful in production container for better filtering).",
     )
     parser.add_argument(
         "--loop-every",
@@ -333,7 +388,7 @@ def main() -> None:
         default="master,rc--*",
         type=str,
         dest="branch_globs",
-        help="Use this branch glob (or comma-separated list of globs) to determine which branches to annotate",
+        help="Use this branch glob (or comma-separated list of globs) to determine which branches to annotate.",
     )
     parser.add_argument(
         "--skip-branch-older-than",
@@ -475,6 +530,7 @@ def main() -> None:
             if opts.loop_every <= 0:
                 raise
             else:
+                watchdog.report_healthy()
                 and_now = time.time()
                 LAST_CYCLE_END_TIMESTAMP_SECONDS.set(int(and_now))
                 LAST_CYCLE_SUCCESSFUL.set(0)

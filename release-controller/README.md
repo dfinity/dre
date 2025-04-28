@@ -219,7 +219,17 @@ built and imported into your containerization system.  Run it as follows:
 
 ```sh
 SHASUM=...
-podman run -it --entrypoint=/release-controller/release-controller $SHASUM
+podman run --rm -it --entrypoint=/release-controller/release-controller $SHASUM
+```
+
+Or, in short:
+
+```sh
+mkdir -p -m 0777 /tmp/git
+podman run --rm -it \
+  -v /tmp/git:/root/.cache \
+  --entrypoint /release-controller/release-controller \
+  $(bazel run --verbose_failures //release-controller:oci_image_load | tail -1 | cut -d : -f 3)
 ```
 
 ### Running the annotator locally in "dry-run mode"
@@ -236,6 +246,59 @@ bazel run //release-controller:commit-annotator \
   --verbose
 ```
 
+The annotator can also be run as a podman container, with a similar
+technique as above.  However, the annotator requires `--user $UID`
+because Bazel will not run as root (UID 0).
+
+Please consult `--help` for additional options.
+
+### Generate release notes locally
+
+Release notes can be generated locally, using the following command:
+
+```sh
+PREV_RC=rc--2025-03-27_03-14-base
+PREV_COMMIT=3ae3649a2366aaca83404b692fc58e4c6e604a25
+CURR_RC=rc--2025-04-03_03-15
+CURR_COMMIT=68fc31a141b25f842f078c600168d8211339f422
+bazel run //release-controller:release-notes -- \
+   $PREV_RC $PREV_COMMIT $CURR_RC $CURR_COMMIT \
+  --verbose
+```
+
+The form of the command above requires you to run a commit annotator in
+parallel.  If you want to use the internal commit annotator that does not
+need a commit annotator running in parallel, add option
+`--commit-annotator-url local` instead.  If you want to *recalculate* the
+commit annotations instead of using cached ones, you can use option
+`--commit-annotator-url recreate`.  This last option is useful when
+testing the effects of changes made to the commit annotator code or Bazel
+query formulas the annotator uses.
+
+A great tip / trick to diagnose exactly what the release notes and
+commit annotation processes would do is to pick a commit from the IC
+repo, figure out which its parent commit is, then run:
+
+```sh
+PREV_RC=prev
+PREV_COMMIT=1354f31c9cd4fb6b4a65ab64eb9ac4a0a4d16839 # parent commit
+CURR_RC=curr
+CURR_COMMIT=f8131bfbc2d339716a9cff06e04de49a68e5a80b # commit
+bazel run //release-controller:release-notes -- \
+   $PREV_RC $PREV_COMMIT $CURR_RC $CURR_COMMIT \
+   --commit-annotator-url recreate \
+  --os-kind=GuestOS \
+  --verbose
+bazel run //release-controller:release-notes -- \
+   $PREV_RC $PREV_COMMIT $CURR_RC $CURR_COMMIT \
+   --commit-annotator-url recreate \
+  --os-kind=HostOS \
+  --verbose
+```
+
+That run tells you what the annotation process would do for that single
+commit in question.
+
 Please consult `--help` for additional options.
 
 ### Tests
@@ -251,11 +314,12 @@ The above runs all tests and typechecks tested files.
 With a `.venv` setup by `rye`, you can also run (with varying levels of success):
 
 ```sh
-.venv/bin/python3 -m pytest release-controller/
+export PYTHONPATH=$PWD/release-controller/
+.venv/bin/python3 release-controller/tests/runner.py
 ```
 
-If you want to run a specific test file, specify it as a path instead of the
-folder specified above.
+If you want to run a specific test file, specify its path as an argument
+to the above command line.
 
 #### Typing correctness
 
@@ -264,3 +328,10 @@ Building it all tests MyPy types:
 ```sh
 bazel build //release-controller/...
 ```
+
+### Maintenance
+
+The container image currently used by release controller components
+is an Ubuntu 24.04 image built by Bazel.  Refer to [BUILD.bazel](./BUILD.bazel)
+and [../images/BUILD.bazel](../images/BUILD.bazel) for instructions
+on how to maintain and update the images.

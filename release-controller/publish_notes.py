@@ -9,7 +9,7 @@ from github import Github
 from github.Repository import Repository
 from itertools import groupby
 from google_docs import ReleaseNotesClient
-from release_notes import PreparedReleaseNotes
+from release_notes_composer import PreparedReleaseNotes
 import pathlib
 
 from const import OsKind, GUESTOS
@@ -109,7 +109,9 @@ class PublishNotesClient:
         if any(version in f.path for f in published_releases):
             return
 
-        branch_name = f"replica-release-notes-{version}"
+        branch_name = (
+            f"{'replica' if os_kind == 'GuestOS' else os_kind}-release-notes-{version}"
+        )
         pull_head = f"dfinity:{branch_name}"
         if self.repo.get_pulls(head=pull_head, state="open").totalCount > 0:
             logger.info(
@@ -125,11 +127,12 @@ class PublishNotesClient:
                 sha=self.repo.get_branch("main").commit.sha,
             )
 
+        msg = f"chore(release): Elect version {version} as {os_kind} candidate for rollout"
         try:
             logger.info("Creating file on branch %s", branch_name)
             self.repo.create_file(
                 path=version_path,
-                message=f"chore(release): Elect version {version}",
+                message=msg,
                 content=changelog,
                 branch=branch_name,
             )
@@ -141,7 +144,7 @@ class PublishNotesClient:
             branch_name,
         )
         self.repo.create_pull(
-            title=f"chore(release): Elect version {version}",
+            title=msg,
             base="main",
             head=pull_head,
         )

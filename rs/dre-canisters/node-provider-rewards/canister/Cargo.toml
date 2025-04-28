@@ -21,7 +21,6 @@ candid = { workspace = true }
 serde = { workspace = true }
 ic-interfaces-registry = { workspace = true }
 ic-registry-keys = { workspace = true }
-itertools = { workspace = true }
 futures = { workspace = true }
 indexmap = { workspace = true }
 ic-base-types = { workspace = true }
@@ -35,7 +34,7 @@ ic-types = { workspace = true }
 mockall = { workspace = true }
 rewards-calculation = { workspace = true }
 node-provider-rewards-api = { workspace = true }
-rust_decimal = { workspace = true }
+serde_cbor = "0.11.2"
 
 [dev-dependencies]
 tokio = { workspace = true }

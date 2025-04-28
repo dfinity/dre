@@ -10,6 +10,9 @@ license.workspace = true
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
+[features]
+default = ["keyring"]
+
 [dependencies]
 ahash = { workspace = true }
 anyhow = { workspace = true }
@@ -57,7 +60,7 @@ ic-types = { workspace = true }
 icp-ledger = { workspace = true }
 indexmap = { workspace = true }
 itertools = { workspace = true }
-keyring = { workspace = true }
+keyring = { workspace = true, optional = true }
 log = { workspace = true }
 mockall.workspace = true
 pretty_env_logger = { workspace = true }

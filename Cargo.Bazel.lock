@@ -1,5 +1,5 @@
 {
-  "checksum": "9a7c7f8a9161ff48a1bfb6c008cc4a4563b7578fc3542d69f10688d808d9c10e",
+  "checksum": "d4c18e77271938e77f2fa083396236804a282d10ffe5a1b83ddc298d3a54d820",
   "crates": {
     "actix-codec 0.5.2": {
       "name": "actix-codec",
@@ -6432,7 +6432,7 @@
               "target": "anyhow"
             },
             {
-              "id": "clap 4.5.36",
+              "id": "clap 4.5.32",
               "target": "clap"
             },
             {
@@ -7139,14 +7139,14 @@
       ],
       "license_file": "LICENSE"
     },
-    "clap 4.5.36": {
+    "clap 4.5.32": {
       "name": "clap",
-      "version": "4.5.36",
+      "version": "4.5.32",
       "package_url": "https://github.com/clap-rs/clap",
       "repository": {
         "Http": {
-          "url": "https://static.crates.io/crates/clap/4.5.36/download",
-          "sha256": "2df961d8c8a0d08aa9945718ccf584145eee3f3aa06cddbeac12933781102e04"
+          "url": "https://static.crates.io/crates/clap/4.5.32/download",
+          "sha256": "6088f3ae8c3608d19260cd7445411865a485688711b78b5be70d78cd96136f83"
         }
       },
       "targets": [
@@ -7188,7 +7188,7 @@
         "deps": {
           "common": [
             {
-              "id": "clap_builder 4.5.36",
+              "id": "clap_builder 4.5.32",
               "target": "clap_builder"
             }
           ],
@@ -7204,7 +7204,7 @@
           ],
           "selects": {}
         },
-        "version": "4.5.36"
+        "version": "4.5.32"
       },
       "license": "MIT OR Apache-2.0",
       "license_ids": [
@@ -7260,14 +7260,14 @@
       ],
       "license_file": "LICENSE"
     },
-    "clap_builder 4.5.36": {
+    "clap_builder 4.5.32": {
       "name": "clap_builder",
-      "version": "4.5.36",
+      "version": "4.5.32",
       "package_url": "https://github.com/clap-rs/clap",
       "repository": {
         "Http": {
-          "url": "https://static.crates.io/crates/clap_builder/4.5.36/download",
-          "sha256": "132dbda40fb6753878316a489d5a1242a8ef2f0d9e47ba01c951ea8aa7d013a5"
+          "url": "https://static.crates.io/crates/clap_builder/4.5.32/download",
+          "sha256": "22a7ef7f676155edfb82daa97f99441f3ebf4a58d5e32f295a56259f1b6facc8"
         }
       },
       "targets": [
@@ -7330,7 +7330,7 @@
           "selects": {}
         },
         "edition": "2021",
-        "version": "4.5.36"
+        "version": "4.5.32"
       },
       "license": "MIT OR Apache-2.0",
       "license_ids": [
@@ -7377,7 +7377,7 @@
         "deps": {
           "common": [
             {
-              "id": "clap 4.5.36",
+              "id": "clap 4.5.32",
               "target": "clap"
             }
           ],
@@ -12170,6 +12170,13 @@
         "compile_data_glob": [
           "**"
         ],
+        "crate_features": {
+          "common": [
+            "default",
+            "keyring"
+          ],
+          "selects": {}
+        },
         "deps": {
           "common": [
             {
@@ -12193,7 +12200,7 @@
               "target": "chrono"
             },
             {
-              "id": "clap 4.5.36",
+              "id": "clap 4.5.32",
               "target": "clap"
             },
             {
@@ -12462,7 +12469,7 @@
         "deps": {
           "common": [
             {
-              "id": "clap 4.5.36",
+              "id": "clap 4.5.32",
               "target": "clap"
             },
             {
@@ -15386,7 +15393,7 @@
               "target": "chrono"
             },
             {
-              "id": "clap 4.5.36",
+              "id": "clap 4.5.32",
               "target": "clap"
             },
             {
@@ -23199,7 +23206,7 @@
               "target": "chrono"
             },
             {
-              "id": "clap 4.5.36",
+              "id": "clap 4.5.32",
               "target": "clap"
             },
             {
@@ -27804,7 +27811,7 @@
               "target": "candid"
             },
             {
-              "id": "clap 4.5.36",
+              "id": "clap 4.5.32",
               "target": "clap"
             },
             {
@@ -28106,7 +28113,7 @@
               "target": "candid"
             },
             {
-              "id": "clap 4.5.36",
+              "id": "clap 4.5.32",
               "target": "clap"
             },
             {
@@ -30001,7 +30008,7 @@
               "target": "candid"
             },
             {
-              "id": "clap 4.5.36",
+              "id": "clap 4.5.32",
               "target": "clap"
             },
             {
@@ -34207,7 +34214,7 @@
               "target": "anyhow"
             },
             {
-              "id": "clap 4.5.36",
+              "id": "clap 4.5.32",
               "target": "clap"
             },
             {
@@ -34281,7 +34288,7 @@
               "target": "axum"
             },
             {
-              "id": "clap 4.5.36",
+              "id": "clap 4.5.32",
               "target": "clap"
             },
             {
@@ -34342,7 +34349,7 @@
               "target": "anyhow"
             },
             {
-              "id": "clap 4.5.36",
+              "id": "clap 4.5.32",
               "target": "clap"
             },
             {
@@ -35384,7 +35391,7 @@
               "target": "base64"
             },
             {
-              "id": "clap 4.5.36",
+              "id": "clap 4.5.32",
               "target": "clap"
             },
             {
@@ -35522,7 +35529,7 @@
         "deps": {
           "common": [
             {
-              "id": "clap 4.5.36",
+              "id": "clap 4.5.32",
               "target": "clap"
             },
             {
@@ -35780,6 +35787,22 @@
               "target": "candid"
             },
             {
+              "id": "chrono 0.4.40",
+              "target": "chrono"
+            },
+            {
+              "id": "ic-base-types 0.9.0",
+              "target": "ic_base_types"
+            },
+            {
+              "id": "itertools 0.13.0",
+              "target": "itertools"
+            },
+            {
+              "id": "rust_decimal 1.37.1",
+              "target": "rust_decimal"
+            },
+            {
               "id": "serde 1.0.219",
               "target": "serde"
             }
@@ -35787,6 +35810,15 @@
           "selects": {}
         },
         "edition": "2021",
+        "proc_macro_deps": {
+          "common": [
+            {
+              "id": "rust_decimal_macros 1.37.1",
+              "target": "rust_decimal_macros"
+            }
+          ],
+          "selects": {}
+        },
         "version": "0.6.2"
       },
       "license": "Apache-2.0",
@@ -35890,10 +35922,6 @@
               "target": "indexmap"
             },
             {
-              "id": "itertools 0.13.0",
-              "target": "itertools"
-            },
-            {
               "id": "mockall 0.13.1",
               "target": "mockall"
             },
@@ -35902,12 +35930,12 @@
               "target": "build_script_build"
             },
             {
-              "id": "rust_decimal 1.37.1",
-              "target": "rust_decimal"
-            },
-            {
               "id": "serde 1.0.219",
               "target": "serde"
+            },
+            {
+              "id": "serde_cbor 0.11.2",
+              "target": "serde_cbor"
             }
           ],
           "selects": {}
@@ -35969,7 +35997,7 @@
               "target": "anyhow"
             },
             {
-              "id": "clap 4.5.36",
+              "id": "clap 4.5.32",
               "target": "clap"
             },
             {
@@ -40750,7 +40778,7 @@
               "target": "base64"
             },
             {
-              "id": "clap 4.5.36",
+              "id": "clap 4.5.32",
               "target": "clap"
             },
             {
@@ -44945,10 +44973,6 @@
         "deps": {
           "common": [
             {
-              "id": "chrono 0.4.40",
-              "target": "chrono"
-            },
-            {
               "id": "ic-base-types 0.9.0",
               "target": "ic_base_types"
             },
@@ -44965,24 +44989,25 @@
               "target": "ic_types"
             },
             {
-              "id": "indexmap 2.9.0",
-              "target": "indexmap"
-            },
-            {
               "id": "itertools 0.13.0",
               "target": "itertools"
             },
             {
-              "id": "num-traits 0.2.19",
-              "target": "num_traits"
-            },
-            {
               "id": "rust_decimal 1.37.1",
               "target": "rust_decimal"
+            }
+          ],
+          "selects": {}
+        },
+        "deps_dev": {
+          "common": [
+            {
+              "id": "chrono 0.4.40",
+              "target": "chrono"
             },
             {
-              "id": "tabled 0.18.0",
-              "target": "tabled"
+              "id": "maplit 1.0.2",
+              "target": "maplit"
             }
           ],
           "selects": {}
@@ -49738,7 +49763,7 @@
               "target": "candid"
             },
             {
-              "id": "clap 4.5.36",
+              "id": "clap 4.5.32",
               "target": "clap"
             },
             {
@@ -50514,7 +50539,7 @@
         "deps": {
           "common": [
             {
-              "id": "clap 4.5.36",
+              "id": "clap 4.5.32",
               "target": "clap"
             },
             {
@@ -62524,7 +62549,7 @@
     "byteorder 1.5.0",
     "candid 0.10.13",
     "chrono 0.4.40",
-    "clap 4.5.36",
+    "clap 4.5.32",
     "clap-num 1.2.0",
     "clap_complete 4.5.47",
     "colored 2.2.0",
@@ -62600,7 +62625,6 @@
     "lazy_static 1.5.0",
     "log 0.4.27",
     "mockall 0.13.1",
-    "num-traits 0.2.19",
     "octocrab 0.41.2",
     "opentelemetry 0.28.0",
     "opentelemetry-prometheus 0.28.0",
@@ -62620,6 +62644,7 @@
     "rust_decimal_macros 1.37.1",
     "self_update 0.41.0",
     "serde 1.0.219",
+    "serde_cbor 0.11.2",
     "serde_json 1.0.140",
     "serde_yaml 0.9.34+deprecated",
     "sha2 0.10.8",
@@ -62642,6 +62667,7 @@
   "direct_dev_deps": [
     "actix-rt 2.10.0",
     "assert_cmd 2.0.16",
+    "maplit 1.0.2",
     "wiremock 0.6.3"
   ],
   "unused_patches": []

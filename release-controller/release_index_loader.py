@@ -166,3 +166,14 @@ class StaticReleaseLoader(ReleaseLoader):
     def __del__(self) -> None:
         """Clean up the temporary directory."""
         self.tempdir.cleanup()
+
+
+if __name__ == "__main__":
+    ic_repo = GitRepo("https://github.com/DFINITY/ic.git", main_branch="master")
+    loader = GitReleaseLoader(ic_repo)
+    res = loader.proposal_summary(
+        "35bfcadd0f2a474057e42393917b8b3ac269627a",
+        security_fix=False,
+        os_kind=GUESTOS,
+    )
+    print(res)

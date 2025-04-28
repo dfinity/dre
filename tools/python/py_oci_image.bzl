@@ -68,7 +68,7 @@ def py_layers(name, binary):
 
     return result
 
-def py_oci_image(name, binary, tars = [], **kwargs):
+def py_oci_image(name, binary, tars = [], publish = True, **kwargs):
     "Wrapper around oci_image that splits the py_binary into layers."
     oci_image(
         name = name,
@@ -83,9 +83,10 @@ def py_oci_image(name, binary, tars = [], **kwargs):
         tags = ["manual"],
     )
 
-    binary_label = native.package_relative_label(binary)
-    oci_push(
-        name = "{}_push".format(name),
-        image = name,
-        repository = "ghcr.io/dfinity/dre/{}".format(binary_label.name),
-    )
+    if publish:
+        binary_label = native.package_relative_label(binary)
+        oci_push(
+            name = "{}_push".format(name),
+            image = name,
+            repository = "ghcr.io/dfinity/dre/{}".format(binary_label.name),
+        )

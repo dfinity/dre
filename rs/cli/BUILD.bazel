@@ -57,6 +57,7 @@ rust_binary(
         "//:cordoned_features.yaml",
     ],
     compile_data = [ "src/assets/subnet_topic_map.json" ],
+    crate_features = ["no-default-features"],
 )
 
 rust_library(

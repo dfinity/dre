@@ -42,8 +42,8 @@ dependencies = [
     "pydrive2>=1.20.0",
     "types-Markdown",
     "markdownify>=0.13.1",
-    "pytest>=8.3.4",
-    "pytest-asyncio>=0.24.0",
+    "pytest>=8.3.5",
+    "pytest-asyncio>=0.26.0",
     "pytest-xdist>=3.6.1",
     "git-changelog>=2.5.2",
     "slack-sdk>=3.31.0",
@@ -57,6 +57,7 @@ dependencies = [
     "uv>=0.5.20",
     "mypy==1.15.0",
     "prometheus-client>=0.21.1",
+    "filelock==3.18.0",
 ]
 
 [tool.rye]
@@ -78,9 +79,14 @@ extend-exclude = '''
 
 [tool.pytest.ini_options]
 log_cli = true
-log_cli_level = "debug"
+log_cli_level = "DEBUG"
+addopts = "-s -vv -n auto --dist=loadgroup"
 # the following option appears in a pytest version that is later than the one currently used in Bazel.
 # asyncio_default_fixture_loop_scope = "function"
 filterwarnings = [
     "ignore::_pytest.warning_types.PytestAssertRewriteWarning"
 ]
+asyncio_default_fixture_loop_scope = "session"
+
+[tool.ruff.lint.extend-per-file-ignores]
+"release-controller/tests/test_*.py" = ["F811"]

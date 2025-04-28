@@ -1,0 +1,130 @@
+# Rules to build container images for application shipped by this
+# repository.
+#
+# Note that some applications still aren't using images built this way.
+#
+# To update the image to a later snapshot:
+#
+# 1. Update the image snapshot digest in /MODULE.bazel with the latest
+#    digest available on https://hub.docker.com/_/ubuntu/ for the
+#    respective tag (Ubuntu 24.04 is so-called `noble`).
+# 2. Update the date in the snapshot directory in the YAML file
+#    corresponding to the image being updated in /MODULE.bazel.
+# 3. Re-lock the lock file for the respective YAML file, e.g.
+#    `bazel run @ubuntu_24_04_packages//:lock` at the root of the repo
+#
+# With these steps, an up-to-date container image will be used by
+# downstream consumers.
+
+load("@rules_oci//oci:defs.bzl", "oci_image")
+load("@aspect_bazel_lib//lib:tar.bzl", "tar")
+load("@rules_distroless//distroless:defs.bzl", "group", "passwd", "cacerts", "home")
+
+package(default_visibility = ["//visibility:public"])
+
+COMPATIBLE_WITH = select({
+    "@platforms//cpu:x86_64": ["@platforms//cpu:x86_64"],
+    "@platforms//cpu:arm64": ["@platforms//cpu:arm64"],
+}) + [
+    "@platforms//os:linux",
+]
+
+passwd(
+    name = "passwd",
+    entries = [
+        {
+            "uid": 0,
+            "gid": 0,
+            "home": "/root",
+            "shell": "/bin/bash",
+            "username": "r00t",
+        },
+        {
+            "uid": 100,
+            "gid": 65534,
+            "home": "/home/_apt",
+            "shell": "/usr/sbin/nologin",
+            "username": "_apt",
+        },
+        {
+            "uid": 1000,
+            "gid": 1000,
+            "home": "/home/user",
+            "shell": "/bin/bash",
+            "username": "user",
+        },
+    ],
+)
+
+group(
+    name = "group",
+    entries = [
+        {
+            "name": "root",
+            "gid": 0,
+        },
+        {
+            "name": "_apt",
+            "gid": 65534,
+        },
+    ],
+)
+
+home(
+    name = "home",
+    dirs = [
+        {
+            "home": "/root",
+            "uid": 0,
+            "gid": 0,
+        },
+        {
+            "home": "/home/user",
+            "uid": 1000,
+            "gid": 1000,
+        },
+    ],
+)
+
+# clang symlinks
+tar(
+    name = "clang-symlinks",
+    mtree = [
+        # needed as dpkg assumes sh is installed in a typical debian installation.
+        "./usr/bin/clang type=link link=/usr/bin/clang-20",
+        "./usr/bin/asan_symbolize-20 type=link link=/usr/bin/asan_symbolize",
+        "./usr/bin/clang++ type=link link=/usr/bin/clang++-20",
+        "./usr/bin/clang-cpp type=link link=/usr/bin/clang-cpp-20",
+    ],
+)
+
+cacerts(
+    name = "cacerts",
+    package = select({
+        "@platforms//cpu:arm64": "@ubuntu_24_04_packages//ca-certificates/arm64:data",
+        "@platforms//cpu:x86_64": "@ubuntu_24_04_packages//ca-certificates/amd64:data",
+    }),
+)
+
+oci_image(
+    name = "ubuntu_24_04",
+    architecture = select({
+        "@platforms//cpu:arm64": "arm64",
+        "@platforms//cpu:x86_64": "amd64",
+    }),
+    os = "linux",
+    # NOTE: this is needed because, otherwise, bazel test //... fails, even
+    # when container_structure_test already has target_compatible_with.
+    # See 136
+    target_compatible_with = COMPATIBLE_WITH,
+    tars = [
+        ":passwd",
+        ":group",
+        ":home",
+        ":cacerts",
+        # Packages listed in this manifest (see YAML files in this folder)
+        # get installed in the container by this rule.
+        "@ubuntu_24_04_packages//:ubuntu_24_04_packages",
+        "clang-symlinks",
+    ],
+)

@@ -1,5 +1,4 @@
 import argparse
-import functools
 import logging
 import os
 import pathlib
@@ -30,13 +29,15 @@ from pydiscourse import DiscourseClient
 from release_index_loader import DevReleaseLoader
 from release_index_loader import GitReleaseLoader
 from release_index_loader import ReleaseLoader
-from release_notes import (
+from release_notes_composer import (
     prepare_release_notes,
     SecurityReleaseNotesRequest,
     OrdinaryReleaseNotesRequest,
+)
+from commit_annotation import (
     LocalCommitChangeDeterminator,
     CommitAnnotatorClientCommitChangeDeterminator,
-    OSChangeDeterminator,
+    ChangeDeterminatorProtocol,
     NotReady,
 )
 from util import version_name, conventional_logging, sha256sum_http_response
@@ -150,7 +151,6 @@ def find_base_release(
     """
     Find the parent release commit for the given commit. Optionally return merge base if it's not a direct parent.
     """
-    ic_repo.fetch()
     rc, rc_idx = next(
         (rc, i)
         for i, rc in enumerate(config.root.releases)
@@ -316,28 +316,25 @@ class VersionState(object):
         exc_val: BaseException | None,
         exc_tb: typing.Any,
     ) -> None:
-        p = functools.partial(
-            LAST_CYCLE_SUCCESSFUL.labels, self.os_kind, self.rc_name, self.version_name
-        )
         val = FAILED if exc_type else not (self.phase_not_done)
         if self.current_phase == "forum post creation":
             self.has_forum_post = val
-            obj = p("forum post creation")
         elif self.current_phase == "release notes preparation":
             self.has_prepared_release_notes = val
-            obj = p("release notes preparation")
         elif self.current_phase == "release notes pull request":
             self.has_release_notes_submitted_as_pr = val
-            obj = p("release notes pull request")
         elif self.current_phase == "proposal submission":
             self.has_proposal = val
-            obj = p("proposal submission")
         elif self.current_phase == "forum post update":
             self.forum_post_updated = val
-            obj = p("forum post update")
         else:
             assert 0, "phase not reached %s" % self.current_phase
-        obj.set(0 if exc_type else 1)
+        LAST_CYCLE_SUCCESSFUL.labels(
+            self.os_kind,
+            self.rc_name,
+            self.version_name,
+            self.current_phase,
+        ).set(0 if exc_type else 1)
         self.current_phase = None
         self.phase_not_done = False
 
@@ -354,7 +351,7 @@ class Reconciler:
         nns_url: str,
         state: reconciler_state.ReconcilerState,
         ic_repo: GitRepo,
-        change_determinator_factory: typing.Callable[[], OSChangeDeterminator],
+        change_determinator_factory: typing.Callable[[], ChangeDeterminatorProtocol],
         active_version_provider: ActiveVersionProvider,
         dre: dre_cli.DRECli,
         slack_announcer: slack_announce.SlackAnnouncerProtocol,
@@ -502,41 +499,41 @@ class Reconciler:
                 rclogger.debug("Ensuring forum post for release candidate exists.")
                 rc_forum_topic = self.forum_client.get_or_create(v.rc)
 
-            if markdown_file := self.notes_client.markdown_file(
-                release_commit, v.os_kind
-            ):
-                revlogger.info("Has release notes in editor.  No need to create them.")
-            else:
-                revlogger.info("No release notes found in editor.  Creating.")
-                if is_security_fix:
-                    revlogger.info(
-                        "It's a security fix.  Skipping base release investigation."
-                    )
-                    # FIXME: how to push the release tags and artifacts
-                    # of security fixes 10 days after their rollout?
-                    request: (
-                        OrdinaryReleaseNotesRequest | SecurityReleaseNotesRequest
-                    ) = SecurityReleaseNotesRequest(
-                        release_tag, release_commit, v.os_kind
-                    )
+            with phase("release notes preparation"):
+                if markdown_file := self.notes_client.markdown_file(
+                    release_commit, v.os_kind
+                ):
+                    revlogger.info("Has release notes in editor.  Going to next phase.")
                 else:
-                    revlogger.info(
-                        "It's an ordinary release.  Generating full changelog."
-                    )
-                    self.ic_repo.push_release_tags(v.rc)
-                    self.ic_repo.fetch()
-                    base_release_commit, base_release_tag = find_base_release(
-                        self.ic_repo, config, release_commit
-                    )
-                    request = OrdinaryReleaseNotesRequest(
-                        release_tag,
-                        release_commit,
-                        base_release_tag,
-                        base_release_commit,
-                        v.os_kind,
-                    )
+                    revlogger.info("No release notes found in editor.  Creating.")
+                    if is_security_fix:
+                        revlogger.info(
+                            "It's a security fix.  Skipping base release investigation."
+                        )
+                        # FIXME: how to push the release tags and artifacts
+                        # of security fixes 10 days after their rollout?
+                        request: (
+                            OrdinaryReleaseNotesRequest | SecurityReleaseNotesRequest
+                        ) = SecurityReleaseNotesRequest(
+                            release_tag, release_commit, v.os_kind
+                        )
+                    else:
+                        revlogger.info(
+                            "It's an ordinary release.  Generating full changelog."
+                        )
+                        self.ic_repo.push_release_tags(v.rc)
+                        self.ic_repo.fetch()
+                        base_release_commit, base_release_tag = find_base_release(
+                            self.ic_repo, config, release_commit
+                        )
+                        request = OrdinaryReleaseNotesRequest(
+                            release_tag,
+                            release_commit,
+                            base_release_tag,
+                            base_release_commit,
+                            v.os_kind,
+                        )
 
-                with phase("release notes preparation"):
                     revlogger.info("Preparing release notes.")
                     # FIXME!  Make this pluggable from main().
                     # Big problem is that the change determinator needs
@@ -711,17 +708,23 @@ def main() -> None:
         default="http://localhost:9469/",
         help="Base URL of a commit annotator to use in order to determine commit"
         " relevance for a target when composing release notes.  If the string"
-        ""
-        " 'local' is specified, it uses local annotations from the Git repository;"
-        " this mode allows for execution without a commit annotator running"
-        " in parallel on your computer.",
+        " 'local' is specified, it retrieves annotations using an embedded client"
+        " that consults a local Git repository clone of the IC; local mode allows"
+        " running the release controller without a commit annotator running"
+        " simultaneously on this computer.",
     )
-    parser.add_argument("--verbose", "--debug", action="store_true", dest="verbose")
+    parser.add_argument(
+        "--verbose",
+        "--debug",
+        action="store_true",
+        dest="verbose",
+        help="Bump log level.",
+    )
     parser.add_argument(
         "--one-line-logs",
         action="store_true",
         dest="one_line_logs",
-        help="Make log lines one-line without timestamps (useful in production container for better filtering)",
+        help="Make log lines one-line without timestamps (useful in production container for better filtering).",
     )
     parser.add_argument(
         "--loop-every",
@@ -762,6 +765,7 @@ def main() -> None:
         load_dotenv()
 
     conventional_logging(opts.one_line_logs, opts.verbose)
+    logging.getLogger("pydiscourse.client").setLevel(logging.INFO)
 
     # Prep the program for longer timeouts.
     socket.setdefaulttimeout(60)
@@ -835,16 +839,14 @@ def main() -> None:
         slack_announce.SlackAnnouncer() if not dry_run else dryrun.MockSlackAnnouncer()
     )
 
-    def change_determinator_factory() -> OSChangeDeterminator:
+    def change_determinator_factory() -> ChangeDeterminatorProtocol:
         if opts.commit_annotator_url == "local":
             LOGGER.debug("Using local commit annotator to determine OS changes")
-            return LocalCommitChangeDeterminator(ic_repo).commit_changes_artifact
+            return LocalCommitChangeDeterminator(ic_repo)
         LOGGER.debug(
             "Using API at %s to determine OS changes", opts.commit_annotator_url
         )
-        return CommitAnnotatorClientCommitChangeDeterminator(
-            opts.commit_annotator_url
-        ).commit_changes_artifact
+        return CommitAnnotatorClientCommitChangeDeterminator(opts.commit_annotator_url)
 
     reconciler = Reconciler(
         forum_client=forum_client,
@@ -888,6 +890,7 @@ def main() -> None:
             if opts.loop_every <= 0:
                 raise
             else:
+                watchdog.report_healthy()
                 and_now = time.time()
                 LAST_CYCLE_END_TIMESTAMP_SECONDS.set(int(and_now))
                 LOGGER.exception(
