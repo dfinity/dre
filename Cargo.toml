@@ -47,7 +47,7 @@ anyhow = "1.0.98"
 async-recursion = "1.1.1"
 async-trait = "0.1.88"
 axum-otel-metrics = "0.10.0"
-axum = "0.8.1"
+axum = "0.8.3"
 backoff = { version = "0.4.0", features = ["tokio"] }
 backon = "1.5.0"
 candid = "0.10.13"
@@ -68,7 +68,7 @@ clap = { version = "4.5", features = [
 clap_complete = "4.5.47"
 colored = "2.2.0"
 comfy-table = "7.1.4"
-assert_cmd = "2.0.16"
+assert_cmd = "2.0.17"
 crossbeam = "0.8.4"
 crossbeam-channel = "0.5.15"
 cryptoki = "0.7.0"
@@ -162,7 +162,7 @@ prometheus-http-query = { version = "0.8.3", default-features = false, features 
 ] }
 prometheus = { version = "0.13.4", features = ["process"] }
 prost = "0.13"
-rand = { version = "0.9.0", features = ["std_rng"] }
+rand = { version = "0.9.1", features = ["std_rng"] }
 rand_seeder = "0.3.0"
 regex = "1.11.1"
 registry-canister = { git = "https://github.com/dfinity/ic.git", rev = "2fe8aefafcb2fbee6fdb2785374d5de715560269" }
@@ -198,7 +198,7 @@ tabular = "0.2"
 tempfile = "3.19.1"
 thiserror = "2.0.12"
 tokio = { version = "1.44.2", features = ["full"] }
-tokio-util = "0.7.14"
+tokio-util = "0.7.15"
 url = "2.5.4"
 wiremock = "0.6.3"
 human_bytes = "0.4"
