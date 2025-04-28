@@ -53,6 +53,13 @@ struct RegistryVersionBounds {
     end_bound: RegistryVersion,
 }
 
+struct NodeOperatorData {
+    node_provider_id: PrincipalId,
+    dc_id: String,
+    region: Region,
+    rewardable_nodes_count: BTreeMap<NodeType, u32>,
+}
+
 impl<S: RegistryDataStableMemory> RegistryClient<S> {
     pub async fn schedule_registry_sync(&self) -> Result<RegistryVersion, String> {
         self.store.sync_registry_stored().await
@@ -178,7 +185,7 @@ impl<S: RegistryDataStableMemory> RegistryClient<S> {
             .collect())
     }
 
-    fn node_operators_metadata(&self, end_bound: RegistryVersion) -> HashMap<PrincipalId, (PrincipalId, String, Region, BTreeMap<NodeType, u32>)> {
+    fn node_operators_data(&self, end_bound: RegistryVersion) -> HashMap<PrincipalId, NodeOperatorData> {
         let node_operators = self
             .get_family_entries_of_version::<NodeOperatorRecord>(end_bound)
             .into_iter()
@@ -207,7 +214,13 @@ impl<S: RegistryDataStableMemory> RegistryClient<S> {
                     let node_type = NodeType(node_type.clone());
                     rewardable_nodes_count.insert(node_type, count);
                 }
-                (node_operator_id, (node_provider_id, dc_id, region, rewardable_nodes_count))
+                let node_operator_data = NodeOperatorData {
+                    node_provider_id,
+                    dc_id,
+                    region,
+                    rewardable_nodes_count,
+                };
+                (node_operator_id, node_operator_data)
             })
             .collect()
     }
@@ -224,19 +237,24 @@ impl<S: RegistryDataStableMemory> RegistryClient<S> {
 
         let registry_version_range = RegistryVersionBounds { start_bound, end_bound };
         let nodes_in_range = self.nodes_in_range(registry_version_range)?;
-        let node_operators_metadata = self.node_operators_metadata(end_bound);
+        let node_operators_data = self.node_operators_data(end_bound);
 
         let mut rewardable_nodes_per_provider: BTreeMap<_, _> = BTreeMap::new();
         let mut node_operator_rewardable_count: HashMap<_, _> = HashMap::new();
         for (node_id, (node_record, _versions_in_registry)) in nodes_in_range {
             let node_operator_id: PrincipalId = node_record.node_operator_id.try_into().unwrap();
-            let (provider_id, dc_id, region, rewardable_nodes_count) = if let Some(metadata) = node_operators_metadata.get(&node_operator_id) {
-                metadata
+            let NodeOperatorData {
+                node_provider_id,
+                dc_id,
+                region,
+                rewardable_nodes_count,
+            } = if let Some(node_operator_data) = node_operators_data.get(&node_operator_id) {
+                node_operator_data
             } else {
                 continue;
             };
-            let provider_entry = rewardable_nodes_per_provider.entry(*provider_id).or_insert(ProviderRewardableNodes {
-                provider_id: *provider_id,
+            let provider_entry = rewardable_nodes_per_provider.entry(*node_provider_id).or_insert(ProviderRewardableNodes {
+                provider_id: *node_provider_id,
                 ..Default::default()
             });
 
