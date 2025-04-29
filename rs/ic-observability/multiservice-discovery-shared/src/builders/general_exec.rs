@@ -28,7 +28,7 @@ impl ExecGeneralConfigBuilderImpl {
                 command: vec![
                     self.script_path.as_str(),
                     "--url",
-                    format!("http://{}/entries?follow", target.target).as_str(),
+                    format!("http://{}/entries", target.target).as_str(),
                     "--name",
                     key.as_str(),
                     "--cursor-path",
