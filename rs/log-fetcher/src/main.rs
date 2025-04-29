@@ -8,7 +8,7 @@ use std::{
 
 use anyhow::anyhow;
 use clap::Parser;
-use log::{error, info, warn};
+use log::{error, info};
 use pretty_env_logger::formatted_builder;
 use reqwest::ClientBuilder;
 use tokio::select;
@@ -103,10 +103,6 @@ async fn main() -> Result<(), anyhow::Error> {
                 to_parse
             } else {
                 leftover_buffer = combined;
-                warn!(
-                    "Didn't find any entries in combined buffer. Skipping. Current leftover buffer: {:?}",
-                    leftover_buffer
-                );
                 continue;
             };
 
