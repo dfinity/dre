@@ -8,7 +8,7 @@ use std::{
 
 use anyhow::anyhow;
 use clap::Parser;
-use log::{error, info, warn};
+use log::{error, info};
 use pretty_env_logger::formatted_builder;
 use reqwest::ClientBuilder;
 use tokio::select;
@@ -26,11 +26,7 @@ async fn main() -> Result<(), anyhow::Error> {
 
     info!("Running with args: {:?}", args);
 
-    let client = match ClientBuilder::new()
-        .danger_accept_invalid_certs(true)
-        .timeout(Duration::from_secs(10))
-        .build()
-    {
+    let client = match ClientBuilder::new().danger_accept_invalid_certs(true).build() {
         Ok(c) => c,
         Err(e) => return Err(anyhow!("Error while constructing the client: {:?}", e)),
     };
@@ -45,24 +41,21 @@ async fn main() -> Result<(), anyhow::Error> {
     });
 
     let mut cursor = fetch_cursor(&args.cursor_path)?;
-    let mut should_sleep = false;
-    loop {
-        let sleep = tokio::time::sleep(Duration::from_secs(match should_sleep {
-            true => {
-                should_sleep = false;
-                15
-            }
-            false => 0,
-        }));
+    let mut interval = tokio::time::interval(Duration::from_secs(15));
+    let mut should_run = true;
+    while should_run {
+        let mut leftover_buffer = String::new();
         select! {
             _ = ctrl_c_receiver.recv() => {
                 info!("Received Ctrl-C, exiting...");
                 break;
             }
-            _ = sleep => {}
+            tick = interval.tick() => {
+                info!("Received tick: {:?}", tick);
+            }
         }
 
-        let range = format!("entries={}:0:{}", cursor, 1000);
+        let range = format!("entries={}:0:", cursor);
 
         let response = client
             .get(args.url.clone())
@@ -71,52 +64,74 @@ async fn main() -> Result<(), anyhow::Error> {
             .send()
             .await;
 
-        let body = match response {
-            Ok(res) => match res.bytes().await {
-                Ok(bytes) => bytes,
-                Err(e) => {
-                    error!("Couldn't parse body bytes due to error: {:?}", e);
-                    should_sleep = true;
-                    continue;
-                }
-            },
-            Err(e) => {
-                error!("Couldn't parse body bytes due to error: {:?}", e);
-                should_sleep = true;
-                continue;
-            }
+        if let Err(e) = response {
+            error!("Couldn't parse body bytes due to error: {:?}", e);
+            continue;
         };
 
-        let entries = parse_journal_entries_new(&body);
+        let mut response = response.unwrap();
 
-        for entry in &entries {
-            let map: BTreeMap<String, String> = entry
-                .fields
-                .iter()
-                .map(|(name, val)| match val {
-                    JournalField::Binary(value) | JournalField::Utf8(value) => (name.clone(), value.clone()),
-                })
-                .collect();
-
-            if map["__CURSOR"] == cursor {
-                continue;
-            }
-
-            let serialized = match serde_json::to_string(&map) {
-                Ok(ser) => ser,
-                Err(e) => {
-                    warn!("Failed to serialize entry: {:?}, Error was: {:?}", entry, e);
-                    should_sleep = true;
-                    continue;
+        loop {
+            let maybe_response = select! {
+                maybe_response = response.chunk() => maybe_response,
+                _ = ctrl_c_receiver.recv() => {
+                    info!("Received Ctrl-C, exiting...");
+                    should_run = false;
+                    break;
                 }
             };
-            println!("{}", serialized)
-        }
 
-        if let Some(entry) = entries.last() {
-            let curr = entry.fields.iter().find(|(name, _)| name.as_str() == "__CURSOR");
-            if let Some((_, JournalField::Utf8(val))) = curr {
-                cursor = val.to_string()
+            let chunk = match maybe_response {
+                Ok(Some(chunk)) => chunk,
+                Ok(None) => {
+                    info!("Exhausted the response");
+                    break;
+                }
+                Err(e) => {
+                    error!("Failed to fetch next chunk: {:?}", e);
+                    break;
+                }
+            };
+            let chunk_str = String::from_utf8_lossy(&chunk);
+            let combined = leftover_buffer.clone() + &chunk_str;
+
+            let to_parse = if let Some(pos) = combined.rfind("\n\n") {
+                // Splitting at the pos + two new lines to finish the entry
+                let (to_parse, rest) = combined.split_at(pos + 2);
+
+                leftover_buffer = rest.to_string();
+                to_parse
+            } else {
+                leftover_buffer = combined;
+                continue;
+            };
+
+            let entries = parse_journal_entries_new(to_parse.as_bytes());
+
+            for entry in &entries {
+                let map: BTreeMap<String, String> = entry
+                    .fields
+                    .iter()
+                    .map(|(name, val)| match val {
+                        JournalField::Binary(value) | JournalField::Utf8(value) => (name.clone(), value.clone()),
+                    })
+                    .collect();
+
+                if map["__CURSOR"] == cursor {
+                    continue;
+                }
+
+                // If the struct is created ok, serialization should not
+                // fail.
+                let serialized = serde_json::to_string(&map).unwrap();
+                println!("{}", serialized)
+            }
+
+            if let Some(entry) = entries.last() {
+                let curr = entry.fields.iter().find(|(name, _)| name.as_str() == "__CURSOR");
+                if let Some((_, JournalField::Utf8(val))) = curr {
+                    cursor = val.to_string()
+                }
             }
         }
     }
