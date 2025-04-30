@@ -12,7 +12,7 @@ crate-type = ["cdylib"]
 
 [dependencies]
 async-trait = { workspace = true }
-chrono = { workspace = true }
+chrono = { version = "0.4.41", default-features = false, features = [] }
 ic-canisters-http-types = { workspace = true }
 ic-cdk = { workspace = true }
 ic-cdk-timers = { workspace = true }
