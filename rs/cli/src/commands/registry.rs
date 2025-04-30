@@ -349,6 +349,7 @@ async fn _get_nodes(
                 },
                 status: nodes_health.get(k).unwrap_or(&ic_management_types::HealthStatus::Unknown).clone(),
                 node_type,
+                recorded_node_type: record.node_type.clone(),
             }
         })
         .collect::<Vec<_>>();
@@ -535,6 +536,7 @@ struct NodeDetails {
     node_provider_id: PrincipalId,
     status: HealthStatus,
     node_type: String,
+    recorded_node_type: String,
 }
 
 /// User-friendly representation of a SubnetRecord. For instance,

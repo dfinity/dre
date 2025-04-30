@@ -12,6 +12,7 @@ use ic_management_types::{
     Datacenter, DatacenterOwner, Guest, Network, NetworkError, Node, NodeProvidersResponse, Operator, Provider, Subnet, SubnetMetadata,
 };
 use ic_protobuf::registry::firewall::v1::FirewallRuleSet;
+use ic_protobuf::registry::node::v1::NodeRewardType;
 use ic_protobuf::registry::node_rewards::v2::NodeRewardsTable;
 use ic_protobuf::registry::replica_version::v1::BlessedReplicaVersions;
 use ic_protobuf::registry::{
@@ -561,6 +562,10 @@ impl LazyRegistry for LazyRegistryImpl {
                             is_api_boundary_node: api_boundary_nodes.contains_key(p),
                             chip_id: nr.chip_id.clone(),
                             public_ipv4_config: nr.public_ipv4_config.clone(),
+                            node_type: nr
+                                .node_reward_type
+                                .map(|t: i32| NodeRewardType::try_from(t).expect("Invalid node_reward_type value").to_string())
+                                .unwrap_or("unknown".to_string()),
                         },
                     )
                 })
