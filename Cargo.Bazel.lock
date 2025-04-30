@@ -1,5 +1,5 @@
 {
-  "checksum": "d4c18e77271938e77f2fa083396236804a282d10ffe5a1b83ddc298d3a54d820",
+  "checksum": "76a4da2b094a047087a50c20e9adbba41ea01b976e629561f61afd0c7e0a2d04",
   "crates": {
     "actix-codec 0.5.2": {
       "name": "actix-codec",
@@ -35856,6 +35856,10 @@
             {
               "id": "candid 0.10.13",
               "target": "candid"
+            },
+            {
+              "id": "chrono 0.4.40",
+              "target": "chrono"
             },
             {
               "id": "futures 0.3.31",

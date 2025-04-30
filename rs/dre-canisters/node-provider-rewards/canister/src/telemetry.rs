@@ -7,13 +7,15 @@ pub struct InstructionCounter {
 }
 
 impl InstructionCounter {
-    pub fn new() -> Self {
-        let c = ic_cdk::api::call_context_instruction_counter();
+    /// Creates a new instruction counter.  If the argument is None,
+    /// the current context instruction counter is used.
+    pub fn new(start_counter: Option<u64>) -> Self {
+        let c = start_counter.unwrap_or(ic_cdk::api::call_context_instruction_counter());
         Self { start: c, lap_start: c }
     }
 
     /// Tallies up the instructions executed since the last call to
-    /// lap() or (if not colled) the instantiation of the counter,
+    /// lap() or (if never called) the instantiation of this counter,
     /// and returns them.
     pub fn lap(&mut self) -> u64 {
         let now = ic_cdk::api::call_context_instruction_counter();
@@ -22,8 +24,16 @@ impl InstructionCounter {
         difference
     }
 
+    /// Returns the instructions executed since the instantiation of
+    /// this counter.
     pub fn sum(self) -> u64 {
         ic_cdk::api::call_context_instruction_counter() - self.start
+    }
+}
+
+impl Default for InstructionCounter {
+    fn default() -> Self {
+        Self::new(None)
     }
 }
 
@@ -43,12 +53,20 @@ pub struct PrometheusMetrics {
     last_sync_registry_sync_instructions: f64,
     last_sync_subnet_list_instructions: f64,
     last_sync_update_subnet_metrics_instructions: f64,
+    node_provider_rewards_method_instructions: u64,
+    node_provider_rewards_method_success: bool,
+    node_provider_rewards_calculation_method_instructions: u64,
+    node_provider_rewards_calculation_method_success: bool,
 }
 
 static LAST_SYNC_START_HELP: &str = "Last time the sync of metrics started.  If this metric is present but zero, the first sync during this canister's current execution has not yet begun or taken place.";
 static LAST_SYNC_END_HELP: &str = "Last time the sync of metrics ended (successfully or with failure).  If this metric is present but zero, the first sync during this canister's current execution has not started or finished yet, either successfully or with errors.   Else, subtracting this from the last sync start should yield a positive value if the sync ended (successfully or with errors), and a negative value if the sync is still ongoing but has not finished.";
 static LAST_SYNC_SUCCESS_HELP: &str = "Last time the sync of metrics succeeded.  If this metric is present but zero, no sync has yet succeeded during this canister's current execution.  Else, subtracting this number from last_sync_start_timestamp_seconds gives a positive time delta when the last sync succeeded, or a negative value if either the last sync failed or a sync is currently being performed.  By definition, this and last_sync_end_timestamp_seconds will be identical when the last sync succeeded.";
-static LAST_SYNC_INSTRUCTIONS_HELP: &str = "Count of instructions that the last sync incurred.  Label total is the sum total of instructions, and the other labels represent different phases";
+static LAST_SYNC_INSTRUCTIONS_HELP: &str = "Count of instructions that the last sync incurred.  Label total is the sum total of instructions, and the other labels represent different phases.";
+static QUERY_CALL_INSTRUCTIONS_HELP: &str =
+    "Count of instructions for the query call as labeled by the method being invoked.  Query calls are exercised hourly unless stated otherwise.";
+static QUERY_CALL_SUCCESS_HELP: &str =
+    "Whether the the query call as labeled by the method being invoked was successful.  Query calls are exercised hourly unless stated otherwise.";
 
 impl PrometheusMetrics {
     fn new() -> Self {
@@ -95,6 +113,47 @@ impl PrometheusMetrics {
             .value(&[("phase", "update_subnet_metrics")], self.last_sync_update_subnet_metrics_instructions)
             .unwrap();
 
+        // Query call metrics.  Accumulate them in a vector so that we may
+        // emit the gauges only when the metrics are available.  We need to
+        // do it this convoluted way because the metrics encoder does not
+        // let us serialize a gauge interspersed with another.
+        let method_gauges: Vec<(&str, u64, bool)> = vec![
+            (
+                "node_provider_rewards",
+                self.node_provider_rewards_method_instructions,
+                self.node_provider_rewards_method_success,
+            ),
+            (
+                "node_provider_rewards_calculation",
+                self.node_provider_rewards_calculation_method_instructions,
+                self.node_provider_rewards_calculation_method_success,
+            ),
+        ]
+        .into_iter()
+        .filter(|elm| elm.1 > 0)
+        .collect();
+
+        if !method_gauges.is_empty() {
+            let mut instructions_gauge = w
+                .gauge_vec("query_call_instructions", QUERY_CALL_INSTRUCTIONS_HELP)
+                .expect("Name must be valid");
+            for (method, instructions, _) in method_gauges.iter() {
+                instructions_gauge = instructions_gauge.value(&[("method", *method)], *instructions as f64).unwrap()
+            }
+            let mut success_gauge = w.gauge_vec("query_call_success", QUERY_CALL_SUCCESS_HELP).expect("Name must be valid");
+            for (method, _, success) in method_gauges.iter() {
+                success_gauge = success_gauge
+                    .value(
+                        &[("method", *method)],
+                        match *success {
+                            true => 1.0,
+                            false => 0.0,
+                        },
+                    )
+                    .unwrap()
+            }
+        }
+
         Ok(())
     }
 
@@ -107,7 +166,7 @@ impl PrometheusMetrics {
         self.last_sync_success = self.last_sync_end
     }
 
-    pub fn mark_last_sync_end(&mut self) {
+    pub fn mark_last_sync_failure(&mut self) {
         self.last_sync_end = (ic_cdk::api::time() / 1_000_000_000) as f64
     }
 
@@ -116,6 +175,16 @@ impl PrometheusMetrics {
         self.last_sync_registry_sync_instructions = registry_sync as f64;
         self.last_sync_subnet_list_instructions = subnet_list as f64;
         self.last_sync_update_subnet_metrics_instructions = update_subnet_metrics as f64;
+    }
+
+    pub fn record_node_provider_rewards_method(&mut self, instructions: u64, success: bool) {
+        self.node_provider_rewards_method_instructions = instructions;
+        self.node_provider_rewards_method_success = success;
+    }
+
+    pub fn record_node_provider_rewards_calculation_method(&mut self, instructions: u64, success: bool) {
+        self.node_provider_rewards_calculation_method_instructions = instructions;
+        self.node_provider_rewards_calculation_method_success = success;
     }
 }
 

@@ -5,7 +5,8 @@ use rust_decimal::prelude::ToPrimitive;
 use rust_decimal::Decimal;
 use std::collections::BTreeMap;
 
-#[derive(candid::CandidType, candid::Deserialize)]
+// FIXME: these fields need to be documented!  Are they inclusive or exclusive ranges?  How does this work?
+#[derive(candid::CandidType, candid::Deserialize, Clone)]
 pub struct RewardPeriodArgs {
     pub start_ts: u64,
     pub end_ts: u64,
