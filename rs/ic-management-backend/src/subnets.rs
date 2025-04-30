@@ -165,6 +165,7 @@ mod tests {
                 is_api_boundary_node: false,
                 chip_id: None,
                 public_ipv4_config: None,
+                node_type: "".to_string(),
             };
             nodes.insert(node.principal, node);
         }
