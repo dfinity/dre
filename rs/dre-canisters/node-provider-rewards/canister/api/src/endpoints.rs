@@ -45,8 +45,7 @@ impl TryFrom<rewards_calculator_results::Percent> for Percent {
 pub struct DayUTC(String);
 impl From<rewards_calculator_results::DayUTC> for DayUTC {
     fn from(value: rewards_calculator_results::DayUTC) -> Self {
-        let dd_mm_yyyy = DateTime::from_timestamp(value.ts_at_day_end() as i64 / 1_000_000_000, 0)
-            .unwrap()
+        let dd_mm_yyyy = DateTime::from_timestamp_nanos(value.ts_at_day_end() as i64)
             .naive_utc()
             .format("%d-%m-%Y")
             .to_string();

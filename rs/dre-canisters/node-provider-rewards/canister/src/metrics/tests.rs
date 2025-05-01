@@ -1,11 +1,11 @@
-use crate::metrics::{MetricsManager, TimestampNanos};
+use crate::metrics::{MetricsManager, UnixTsNanos};
 use crate::metrics_types::SubnetMetricsDailyKeyStored;
 use ic_base_types::{NodeId, PrincipalId, SubnetId};
 use ic_cdk::api::call::{CallResult, RejectionCode};
 use ic_management_canister_types_private::{NodeMetrics, NodeMetricsHistoryArgs, NodeMetricsHistoryResponse};
 use ic_stable_structures::memory_manager::{MemoryId, VirtualMemory};
 use ic_stable_structures::DefaultMemoryImpl;
-use rewards_calculation::types::{DayEndNanos, NodeMetricsDailyRaw};
+use rewards_calculation::types::{DayEnd, NodeMetricsDailyRaw};
 use std::cell::RefCell;
 use std::collections::{BTreeMap, HashMap};
 
@@ -200,7 +200,7 @@ type Failed = u64;
 #[derive(Clone)]
 struct NodeMetricsHistoryResponseTracker {
     current_subnet: SubnetId,
-    subnets_responses: BTreeMap<TimestampNanos, HashMap<SubnetId, Vec<NodeMetrics>>>,
+    subnets_responses: BTreeMap<UnixTsNanos, HashMap<SubnetId, Vec<NodeMetrics>>>,
 }
 
 impl NodeMetricsHistoryResponseTracker {
@@ -414,7 +414,7 @@ async fn daily_metrics_correct_overlapping_days() {
 
     let overlapping_sub_1 = daily_metrics
         .iter()
-        .find(|(sub, day, _)| sub == &subnet_1 && day.ts_at_day_end() == DayEndNanos::from(2 * ONE_DAY_NANOS).get())
+        .find(|(sub, day, _)| sub == &subnet_1 && day.ts_at_day_end() == DayEnd::from(2 * ONE_DAY_NANOS).get())
         .map(|(_, _, node_metrics)| node_metrics)
         .unwrap();
 
@@ -423,7 +423,7 @@ async fn daily_metrics_correct_overlapping_days() {
 
     let overlapping_sub_2 = daily_metrics
         .iter()
-        .find(|(sub, day, _)| sub == &subnet_2 && day.ts_at_day_end() == DayEndNanos::from(2 * ONE_DAY_NANOS).get())
+        .find(|(sub, day, _)| sub == &subnet_2 && day.ts_at_day_end() == DayEnd::from(2 * ONE_DAY_NANOS).get())
         .map(|(_, _, node_metrics)| node_metrics)
         .unwrap();
 
