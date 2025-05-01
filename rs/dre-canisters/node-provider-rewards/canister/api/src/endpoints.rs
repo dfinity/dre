@@ -7,7 +7,12 @@ use std::collections::BTreeMap;
 
 #[derive(candid::CandidType, candid::Deserialize)]
 pub struct RewardPeriodArgs {
+    /// Start of the reward distribution period, as a Unix timestamp in nanoseconds.
+    /// This timestamp is covers the entire correspondent UTC day and is inclusive.
     pub start_ts: u64,
+
+    /// End of the reward distribution period, as a Unix timestamp in nanoseconds.
+    /// This timestamp is covers the entire correspondent UTC day and is inclusive.
     pub end_ts: u64,
 }
 
@@ -45,7 +50,7 @@ impl TryFrom<rewards_calculator_results::Percent> for Percent {
 pub struct DayUTC(String);
 impl From<rewards_calculator_results::DayUTC> for DayUTC {
     fn from(value: rewards_calculator_results::DayUTC) -> Self {
-        let dd_mm_yyyy = DateTime::from_timestamp_nanos(value.ts_at_day_end() as i64)
+        let dd_mm_yyyy = DateTime::from_timestamp_nanos(value.unix_ts_at_day_end() as i64)
             .naive_utc()
             .format("%d-%m-%Y")
             .to_string();

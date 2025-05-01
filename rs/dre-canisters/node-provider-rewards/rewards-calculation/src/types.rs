@@ -49,7 +49,7 @@ pub struct RewardPeriod {
 
 impl Display for RewardPeriod {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "RewardPeriod: {} - {}", self.from.unix_ts_at_day_start(), self.to.ts_at_day_end())
+        write!(f, "RewardPeriod: {} - {}", self.from.unix_ts_at_day_start(), self.to.unix_ts_at_day_end())
     }
 }
 
@@ -162,7 +162,7 @@ mod tests {
         let days = days_between(rp.from, rp.to);
 
         assert_eq!(rp.from.unix_ts_at_day_start(), expected_start_ts);
-        assert_eq!(rp.to.ts_at_day_end(), expected_end_ts);
+        assert_eq!(rp.to.unix_ts_at_day_end(), expected_end_ts);
         assert_eq!(days, 4);
 
         let unaligned_end_ts = ymdh_to_ts(2020, 1, 12, 13);
