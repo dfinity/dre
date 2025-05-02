@@ -101,8 +101,8 @@ fn http_request(request: HttpRequest) -> HttpResponse {
 
 fn rewards_calculator(reward_period: RewardPeriodArgs) -> Result<RewardsCalculator, String> {
     let reward_period = RewardPeriod::new(reward_period.start_ts, reward_period.end_ts).map_err(|err| err.to_string())?;
-    let start_ts = reward_period.from.ts_at_day_end();
-    let end_ts = reward_period.to.ts_at_day_end();
+    let start_ts = reward_period.from.unix_ts_at_day_start();
+    let end_ts = reward_period.to.unix_ts_at_day_end();
 
     let metrics_manager = METRICS_MANAGER.with(|m| m.clone());
     let registry_store = REGISTRY_STORE.with(|m| m.clone());
