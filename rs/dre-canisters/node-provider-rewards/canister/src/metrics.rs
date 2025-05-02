@@ -5,7 +5,7 @@ use ic_base_types::SubnetId;
 use ic_cdk::api::call::CallResult;
 use ic_management_canister_types_private::{NodeMetricsHistoryArgs, NodeMetricsHistoryResponse};
 use ic_stable_structures::StableBTreeMap;
-use rewards_calculation::types::{NodeMetricsDailyRaw, SubnetMetricsDailyKey, TimestampNanos};
+use rewards_calculation::types::{NodeMetricsDailyRaw, SubnetMetricsDailyKey, UnixTsNanos};
 use std::cell::RefCell;
 use std::collections::{BTreeMap, HashMap};
 
@@ -41,7 +41,7 @@ where
     pub(crate) client: Box<dyn ManagementCanisterClient>,
     pub(crate) subnets_metrics: RefCell<StableBTreeMap<SubnetMetricsDailyKeyStored, SubnetMetricsDailyValueStored, Memory>>,
     pub(crate) subnets_to_retry: RefCell<StableBTreeMap<SubnetIdKey, RetryCount, Memory>>,
-    pub(crate) last_timestamp_per_subnet: RefCell<StableBTreeMap<SubnetIdKey, TimestampNanos, Memory>>,
+    pub(crate) last_timestamp_per_subnet: RefCell<StableBTreeMap<SubnetIdKey, UnixTsNanos, Memory>>,
 }
 
 impl<Memory> MetricsManager<Memory>
@@ -61,7 +61,7 @@ where
     fn update_nodes_metrics_daily(
         &self,
         subnet_id: SubnetId,
-        last_stored_ts: Option<TimestampNanos>,
+        last_stored_ts: Option<UnixTsNanos>,
         mut subnet_update: Vec<NodeMetricsHistoryResponse>,
     ) {
         // Extract initial total metrics for each node in the subnet.
@@ -132,8 +132,8 @@ where
     /// Fetches subnets metrics for the specified subnets from their last timestamp.
     async fn fetch_subnets_metrics(
         &self,
-        last_timestamp_per_subnet: &BTreeMap<SubnetId, Option<TimestampNanos>>,
-    ) -> BTreeMap<(SubnetId, Option<TimestampNanos>), CallResult<(Vec<NodeMetricsHistoryResponse>,)>> {
+        last_timestamp_per_subnet: &BTreeMap<SubnetId, Option<UnixTsNanos>>,
+    ) -> BTreeMap<(SubnetId, Option<UnixTsNanos>), CallResult<(Vec<NodeMetricsHistoryResponse>,)>> {
         let mut subnets_history = Vec::new();
 
         for (subnet_id, last_stored_ts) in last_timestamp_per_subnet {
@@ -199,11 +199,7 @@ where
             }
         }
     }
-    pub fn daily_metrics_by_subnet(
-        &self,
-        start_ts: TimestampNanos,
-        end_ts: TimestampNanos,
-    ) -> HashMap<SubnetMetricsDailyKey, Vec<NodeMetricsDailyRaw>> {
+    pub fn daily_metrics_by_subnet(&self, start_ts: UnixTsNanos, end_ts: UnixTsNanos) -> HashMap<SubnetMetricsDailyKey, Vec<NodeMetricsDailyRaw>> {
         let first_key = SubnetMetricsDailyKeyStored {
             ts: start_ts,
             ..SubnetMetricsDailyKeyStored::min_key()

@@ -2,7 +2,7 @@ use candid::{CandidType, Decode, Encode, Principal};
 use ic_base_types::{NodeId, PrincipalId, SubnetId};
 use ic_stable_structures::storable::Bound;
 use ic_stable_structures::Storable;
-use rewards_calculation::types::{NodeMetricsDailyRaw, SubnetMetricsDailyKey, TimestampNanos};
+use rewards_calculation::types::{NodeMetricsDailyRaw, SubnetMetricsDailyKey, UnixTsNanos};
 use serde::{Deserialize, Serialize};
 use std::borrow::Cow;
 
@@ -57,7 +57,7 @@ pub trait KeyRange {
 
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq, PartialOrd, Ord)]
 pub struct SubnetMetricsDailyKeyStored {
-    pub ts: TimestampNanos,
+    pub ts: UnixTsNanos,
     pub subnet_id: SubnetId,
 }
 

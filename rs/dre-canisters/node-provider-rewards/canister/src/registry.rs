@@ -15,7 +15,7 @@ use ic_registry_keys::{
 use ic_types::registry::RegistryClientError;
 use indexmap::IndexMap;
 use rewards_calculation::rewards_calculator_results::DayUTC;
-use rewards_calculation::types::{NodeType, ProviderRewardableNodes, Region, RewardableNode, TimestampNanos};
+use rewards_calculation::types::{NodeType, ProviderRewardableNodes, Region, RewardableNode, UnixTsNanos};
 use std::collections::{BTreeMap, HashMap};
 use std::str::FromStr;
 
@@ -227,8 +227,8 @@ impl<S: RegistryDataStableMemory> RegistryClient<S> {
 
     pub fn get_rewardable_nodes_per_provider(
         &self,
-        start_ts: TimestampNanos,
-        end_ts: TimestampNanos,
+        start_ts: UnixTsNanos,
+        end_ts: UnixTsNanos,
     ) -> Result<BTreeMap<PrincipalId, ProviderRewardableNodes>, RegistryClientError> {
         let mut rewardable_nodes_per_provider: BTreeMap<_, ProviderRewardableNodes> = BTreeMap::new();
         let mut node_operator_rewardable_count: HashMap<_, (BTreeMap<_, _>, HashMap<_, (NodeType, RegistryVersion)>)> = HashMap::new();
@@ -277,7 +277,7 @@ impl<S: RegistryDataStableMemory> RegistryClient<S> {
                 *version_from = versions_in_registry.start_bound;
                 Ok(node_type.clone())
             } else if !node_type_count.is_empty() {
-                self.assign_node_type(ip_addr.clone(), &versions_in_registry, node_type_count, type_assigned)
+                self.assign_node_type(ip_addr, &versions_in_registry, node_type_count, type_assigned)
             } else {
                 // No rewardable nodes found for this node operator
                 Err("No rewardable nodes left for this node operator".to_string())
@@ -311,18 +311,18 @@ impl<S: RegistryDataStableMemory> RegistryClient<S> {
             let (k, count) = match node_type_count.pop_first() {
                 Some(kv) => kv,
                 None => {
-                    // In this case the node could have changed its IP address
+                    // In this case the IP of the node could have been changed later
                     // Checking if exists a node registered later and take its type
-                    if let Some(node_type) = type_assigned
+                    return if let Some(node_type) = type_assigned
                         .values()
                         .find(|(_, version_from)| version_from > &versions_in_registry.end_bound)
                         .map(|(node_type, _)| node_type.clone())
                     {
                         type_assigned.insert(ip_addr.clone(), (node_type.clone(), versions_in_registry.start_bound));
-                        return Ok(node_type);
+                        Ok(node_type)
                     } else {
-                        return Err("No rewardable nodes left for this node operator".to_string())?;
-                    }
+                        Err("No rewardable nodes left for this node operator".to_string())?
+                    };
                 }
             };
 
