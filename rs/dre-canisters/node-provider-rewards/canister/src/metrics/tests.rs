@@ -414,7 +414,7 @@ async fn daily_metrics_correct_overlapping_days() {
 
     let overlapping_sub_1 = daily_metrics
         .iter()
-        .find(|(sub, day, _)| sub == &subnet_1 && day.ts_at_day_end() == DayEnd::from(2 * ONE_DAY_NANOS).get())
+        .find(|(sub, day, _)| sub == &subnet_1 && day.unix_ts_at_day_end() == DayEnd::from(2 * ONE_DAY_NANOS).get())
         .map(|(_, _, node_metrics)| node_metrics)
         .unwrap();
 
@@ -423,7 +423,7 @@ async fn daily_metrics_correct_overlapping_days() {
 
     let overlapping_sub_2 = daily_metrics
         .iter()
-        .find(|(sub, day, _)| sub == &subnet_2 && day.ts_at_day_end() == DayEnd::from(2 * ONE_DAY_NANOS).get())
+        .find(|(sub, day, _)| sub == &subnet_2 && day.unix_ts_at_day_end() == DayEnd::from(2 * ONE_DAY_NANOS).get())
         .map(|(_, _, node_metrics)| node_metrics)
         .unwrap();
 
