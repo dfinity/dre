@@ -12,6 +12,7 @@ use std::collections::BTreeMap;
 mod metrics;
 mod metrics_types;
 mod registry;
+mod registry_querier;
 mod storage;
 mod telemetry;
 
@@ -28,7 +29,9 @@ async fn sync_all() {
     let registry_store = REGISTRY_STORE.with(|m| m.clone());
 
     instruction_counter.lap();
+    ic_cdk::println!("sync registry");
     let result = registry_store.schedule_registry_sync().await;
+    ic_cdk::println!("sync metrics");
     let registry_sync_instructions = instruction_counter.lap();
 
     let mut subnet_list_instructions: u64 = 0;
@@ -63,18 +66,19 @@ async fn sync_all() {
 }
 
 fn setup_timers() {
+    ic_cdk::println!("Setting up timers");
     // Next 1 AM UTC timestamp
     let next_utc_1am_sec = DAY_IN_SECONDS + HOUR_IN_SECONDS - (ic_cdk::api::time() / 1_000_000_000) % DAY_IN_SECONDS;
-    ic_cdk_timers::set_timer(std::time::Duration::from_secs(next_utc_1am_sec), || {
-        ic_cdk::spawn(sync_all());
+    ic_cdk_timers::set_timer(std::time::Duration::from_secs(0), || {
+        ic_cdk::futures::spawn(sync_all());
 
         // Reschedule for the next day
-        ic_cdk_timers::set_timer_interval(std::time::Duration::from_secs(DAY_IN_SECONDS), || ic_cdk::spawn(sync_all()));
+        ic_cdk_timers::set_timer_interval(std::time::Duration::from_secs(DAY_IN_SECONDS), || ic_cdk::futures::spawn(sync_all()));
     });
 
     // Retry subnets fetching every hour
     ic_cdk_timers::set_timer_interval(std::time::Duration::from_secs(HOUR_IN_SECONDS), || {
-        ic_cdk::spawn(async {
+        ic_cdk::futures::spawn(async {
             let metrics_manager = METRICS_MANAGER.with(|m| m.clone());
             metrics_manager.retry_failed_subnets().await;
         });
@@ -91,7 +95,7 @@ fn post_upgrade() {
     setup_timers();
 }
 
-#[query(hidden = true, decoding_quota = 10000)]
+#[query]
 fn http_request(request: HttpRequest) -> HttpResponse {
     match request.path() {
         "/metrics" => serve_metrics(|encoder| telemetry::PROMETHEUS_METRICS.with(|m| m.borrow().encode_metrics(encoder))),
