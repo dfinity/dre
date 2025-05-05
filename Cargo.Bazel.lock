@@ -1,5 +1,5 @@
 {
-  "checksum": "d4c18e77271938e77f2fa083396236804a282d10ffe5a1b83ddc298d3a54d820",
+  "checksum": "78f5db8af58c5ac2d860abd076f98743da2d63296557aff5cc48dd5cad422458",
   "crates": {
     "actix-codec 0.5.2": {
       "name": "actix-codec",
@@ -61,7 +61,7 @@
               "target": "tokio"
             },
             {
-              "id": "tokio-util 0.7.14",
+              "id": "tokio-util 0.7.15",
               "target": "tokio_util"
             },
             {
@@ -210,7 +210,7 @@
               "target": "pin_project_lite"
             },
             {
-              "id": "rand 0.9.0",
+              "id": "rand 0.9.1",
               "target": "rand"
             },
             {
@@ -226,7 +226,7 @@
               "target": "tokio"
             },
             {
-              "id": "tokio-util 0.7.14",
+              "id": "tokio-util 0.7.15",
               "target": "tokio_util"
             },
             {
@@ -2250,14 +2250,14 @@
       ],
       "license_file": "LICENSE"
     },
-    "assert_cmd 2.0.16": {
+    "assert_cmd 2.0.17": {
       "name": "assert_cmd",
-      "version": "2.0.16",
+      "version": "2.0.17",
       "package_url": "https://github.com/assert-rs/assert_cmd.git",
       "repository": {
         "Http": {
-          "url": "https://static.crates.io/crates/assert_cmd/2.0.16/download",
-          "sha256": "dc1835b7f27878de8525dc71410b5a31cdcc5f230aed5ba5df968e09c201b23d"
+          "url": "https://static.crates.io/crates/assert_cmd/2.0.17/download",
+          "sha256": "2bd389a4b2970a01282ee455294913c0a43724daedcd1a24c3eb0ec1c1320b66"
         }
       },
       "targets": [
@@ -2298,7 +2298,7 @@
               "target": "anstyle"
             },
             {
-              "id": "assert_cmd 2.0.16",
+              "id": "assert_cmd 2.0.17",
               "target": "build_script_build"
             },
             {
@@ -2336,7 +2336,7 @@
           }
         },
         "edition": "2021",
-        "version": "2.0.16"
+        "version": "2.0.17"
       },
       "build_script_attrs": {
         "compile_data_glob": [
@@ -2949,14 +2949,14 @@
       ],
       "license_file": "LICENSE"
     },
-    "axum 0.8.1": {
+    "axum 0.8.4": {
       "name": "axum",
-      "version": "0.8.1",
+      "version": "0.8.4",
       "package_url": "https://github.com/tokio-rs/axum",
       "repository": {
         "Http": {
-          "url": "https://static.crates.io/crates/axum/0.8.1/download",
-          "sha256": "6d6fd624c75e18b3b4c6b9caf42b1afe24437daaee904069137d8bab077be8b8"
+          "url": "https://static.crates.io/crates/axum/0.8.4/download",
+          "sha256": "021e862c184ae977658b36c4500f7feac3221ca5da43e3f25bd04ab6c79a29b5"
         }
       },
       "targets": [
@@ -2996,7 +2996,7 @@
         "deps": {
           "common": [
             {
-              "id": "axum-core 0.5.0",
+              "id": "axum-core 0.5.2",
               "target": "axum_core"
             },
             {
@@ -3108,7 +3108,7 @@
           ],
           "selects": {}
         },
-        "version": "0.8.1"
+        "version": "0.8.4"
       },
       "license": "MIT",
       "license_ids": [
@@ -3212,14 +3212,14 @@
       ],
       "license_file": "LICENSE"
     },
-    "axum-core 0.5.0": {
+    "axum-core 0.5.2": {
       "name": "axum-core",
-      "version": "0.5.0",
+      "version": "0.5.2",
       "package_url": "https://github.com/tokio-rs/axum",
       "repository": {
         "Http": {
-          "url": "https://static.crates.io/crates/axum-core/0.5.0/download",
-          "sha256": "df1362f362fd16024ae199c1970ce98f9661bf5ef94b9808fee734bc3698b733"
+          "url": "https://static.crates.io/crates/axum-core/0.5.2/download",
+          "sha256": "68464cd0412f486726fb3373129ef5d2993f90c34bc2bc1c1e9943b2f4fc7ca6"
         }
       },
       "targets": [
@@ -3254,8 +3254,8 @@
               "target": "bytes"
             },
             {
-              "id": "futures-util 0.3.31",
-              "target": "futures_util"
+              "id": "futures-core 0.3.31",
+              "target": "futures_core"
             },
             {
               "id": "http 1.2.0",
@@ -3306,7 +3306,7 @@
           ],
           "selects": {}
         },
-        "version": "0.5.0"
+        "version": "0.5.2"
       },
       "license": "MIT",
       "license_ids": [
@@ -3346,7 +3346,7 @@
         "deps": {
           "common": [
             {
-              "id": "axum 0.8.1",
+              "id": "axum 0.8.4",
               "target": "axum"
             },
             {
@@ -6721,14 +6721,14 @@
       ],
       "license_file": "LICENSE"
     },
-    "chrono 0.4.40": {
+    "chrono 0.4.41": {
       "name": "chrono",
-      "version": "0.4.40",
+      "version": "0.4.41",
       "package_url": "https://github.com/chronotope/chrono",
       "repository": {
         "Http": {
-          "url": "https://static.crates.io/crates/chrono/0.4.40/download",
-          "sha256": "1a7964611d71df112cb1730f2ee67324fcf4d0fc6606acbbe9bfe06df124637c"
+          "url": "https://static.crates.io/crates/chrono/0.4.41/download",
+          "sha256": "c469d952047f47f91b68d1cba3f10d63c11d73e4636f24f08daf0278abf01c4d"
         }
       },
       "targets": [
@@ -6972,7 +6972,7 @@
           }
         },
         "edition": "2021",
-        "version": "0.4.40"
+        "version": "0.4.41"
       },
       "license": "MIT OR Apache-2.0",
       "license_ids": [
@@ -7339,14 +7339,14 @@
       ],
       "license_file": "LICENSE-APACHE"
     },
-    "clap_complete 4.5.47": {
+    "clap_complete 4.5.48": {
       "name": "clap_complete",
-      "version": "4.5.47",
+      "version": "4.5.48",
       "package_url": "https://github.com/clap-rs/clap",
       "repository": {
         "Http": {
-          "url": "https://static.crates.io/crates/clap_complete/4.5.47/download",
-          "sha256": "c06f5378ea264ad4f82bbc826628b5aad714a75abf6ece087e923010eb937fb6"
+          "url": "https://static.crates.io/crates/clap_complete/4.5.48/download",
+          "sha256": "be8c97f3a6f02b9e24cadc12aaba75201d18754b53ea0a9d99642f806ccdb4c9"
         }
       },
       "targets": [
@@ -7384,7 +7384,7 @@
           "selects": {}
         },
         "edition": "2021",
-        "version": "4.5.47"
+        "version": "4.5.48"
       },
       "license": "MIT OR Apache-2.0",
       "license_ids": [
@@ -7576,7 +7576,7 @@
           "selects": {
             "cfg(windows)": [
               {
-                "id": "windows-sys 0.59.0",
+                "id": "windows-sys 0.48.0",
                 "target": "windows_sys"
               }
             ]
@@ -10016,7 +10016,7 @@
               "target": "serde_cbor"
             },
             {
-              "id": "sha2 0.10.8",
+              "id": "sha2 0.10.9",
               "target": "sha2"
             },
             {
@@ -10126,6 +10126,69 @@
       ],
       "license_file": "LICENSE"
     },
+    "darling 0.20.11": {
+      "name": "darling",
+      "version": "0.20.11",
+      "package_url": "https://github.com/TedDriggs/darling",
+      "repository": {
+        "Http": {
+          "url": "https://static.crates.io/crates/darling/0.20.11/download",
+          "sha256": "fc7f46116c46ff9ab3eb1597a45688b6715c6e628b5c133e288e709a29bcb4ee"
+        }
+      },
+      "targets": [
+        {
+          "Library": {
+            "crate_name": "darling",
+            "crate_root": "src/lib.rs",
+            "srcs": {
+              "allow_empty": true,
+              "include": [
+                "**/*.rs"
+              ]
+            }
+          }
+        }
+      ],
+      "library_target_name": "darling",
+      "common_attrs": {
+        "compile_data_glob": [
+          "**"
+        ],
+        "crate_features": {
+          "common": [
+            "default",
+            "suggestions"
+          ],
+          "selects": {}
+        },
+        "deps": {
+          "common": [
+            {
+              "id": "darling_core 0.20.11",
+              "target": "darling_core"
+            }
+          ],
+          "selects": {}
+        },
+        "edition": "2021",
+        "proc_macro_deps": {
+          "common": [
+            {
+              "id": "darling_macro 0.20.11",
+              "target": "darling_macro"
+            }
+          ],
+          "selects": {}
+        },
+        "version": "0.20.11"
+      },
+      "license": "MIT",
+      "license_ids": [
+        "MIT"
+      ],
+      "license_file": "LICENSE"
+    },
     "darling_core 0.13.4": {
       "name": "darling_core",
       "version": "0.13.4",
@@ -10200,6 +10263,80 @@
       ],
       "license_file": "LICENSE"
     },
+    "darling_core 0.20.11": {
+      "name": "darling_core",
+      "version": "0.20.11",
+      "package_url": "https://github.com/TedDriggs/darling",
+      "repository": {
+        "Http": {
+          "url": "https://static.crates.io/crates/darling_core/0.20.11/download",
+          "sha256": "0d00b9596d185e565c2207a0b01f8bd1a135483d02d9b7b0a54b11da8d53412e"
+        }
+      },
+      "targets": [
+        {
+          "Library": {
+            "crate_name": "darling_core",
+            "crate_root": "src/lib.rs",
+            "srcs": {
+              "allow_empty": true,
+              "include": [
+                "**/*.rs"
+              ]
+            }
+          }
+        }
+      ],
+      "library_target_name": "darling_core",
+      "common_attrs": {
+        "compile_data_glob": [
+          "**"
+        ],
+        "crate_features": {
+          "common": [
+            "strsim",
+            "suggestions"
+          ],
+          "selects": {}
+        },
+        "deps": {
+          "common": [
+            {
+              "id": "fnv 1.0.7",
+              "target": "fnv"
+            },
+            {
+              "id": "ident_case 1.0.1",
+              "target": "ident_case"
+            },
+            {
+              "id": "proc-macro2 1.0.94",
+              "target": "proc_macro2"
+            },
+            {
+              "id": "quote 1.0.39",
+              "target": "quote"
+            },
+            {
+              "id": "strsim 0.11.1",
+              "target": "strsim"
+            },
+            {
+              "id": "syn 2.0.100",
+              "target": "syn"
+            }
+          ],
+          "selects": {}
+        },
+        "edition": "2021",
+        "version": "0.20.11"
+      },
+      "license": "MIT",
+      "license_ids": [
+        "MIT"
+      ],
+      "license_file": "LICENSE"
+    },
     "darling_macro 0.13.4": {
       "name": "darling_macro",
       "version": "0.13.4",
@@ -10248,6 +10385,61 @@
         },
         "edition": "2018",
         "version": "0.13.4"
+      },
+      "license": "MIT",
+      "license_ids": [
+        "MIT"
+      ],
+      "license_file": "LICENSE"
+    },
+    "darling_macro 0.20.11": {
+      "name": "darling_macro",
+      "version": "0.20.11",
+      "package_url": "https://github.com/TedDriggs/darling",
+      "repository": {
+        "Http": {
+          "url": "https://static.crates.io/crates/darling_macro/0.20.11/download",
+          "sha256": "fc34b93ccb385b40dc71c6fceac4b2ad23662c7eeb248cf10d529b7e055b6ead"
+        }
+      },
+      "targets": [
+        {
+          "ProcMacro": {
+            "crate_name": "darling_macro",
+            "crate_root": "src/lib.rs",
+            "srcs": {
+              "allow_empty": true,
+              "include": [
+                "**/*.rs"
+              ]
+            }
+          }
+        }
+      ],
+      "library_target_name": "darling_macro",
+      "common_attrs": {
+        "compile_data_glob": [
+          "**"
+        ],
+        "deps": {
+          "common": [
+            {
+              "id": "darling_core 0.20.11",
+              "target": "darling_core"
+            },
+            {
+              "id": "quote 1.0.39",
+              "target": "quote"
+            },
+            {
+              "id": "syn 2.0.100",
+              "target": "syn"
+            }
+          ],
+          "selects": {}
+        },
+        "edition": "2021",
+        "version": "0.20.11"
       },
       "license": "MIT",
       "license_ids": [
@@ -10639,7 +10831,7 @@
               "target": "log"
             },
             {
-              "id": "rand 0.9.0",
+              "id": "rand 0.9.1",
               "target": "rand"
             },
             {
@@ -12196,7 +12388,7 @@
               "target": "candid"
             },
             {
-              "id": "chrono 0.4.40",
+              "id": "chrono 0.4.41",
               "target": "chrono"
             },
             {
@@ -12208,7 +12400,7 @@
               "target": "clap_num"
             },
             {
-              "id": "clap_complete 4.5.47",
+              "id": "clap_complete 4.5.48",
               "target": "clap_complete"
             },
             {
@@ -12400,7 +12592,7 @@
               "target": "serde_yaml"
             },
             {
-              "id": "sha2 0.10.8",
+              "id": "sha2 0.10.9",
               "target": "sha2"
             },
             {
@@ -12840,7 +13032,7 @@
               "target": "rand_core"
             },
             {
-              "id": "sha2 0.10.8",
+              "id": "sha2 0.10.9",
               "target": "sha2"
             },
             {
@@ -15381,7 +15573,7 @@
               "target": "anyhow"
             },
             {
-              "id": "axum 0.8.1",
+              "id": "axum 0.8.4",
               "target": "axum"
             },
             {
@@ -15389,7 +15581,7 @@
               "target": "axum_otel_metrics"
             },
             {
-              "id": "chrono 0.4.40",
+              "id": "chrono 0.4.41",
               "target": "chrono"
             },
             {
@@ -15441,7 +15633,7 @@
               "target": "tokio"
             },
             {
-              "id": "tokio-util 0.7.14",
+              "id": "tokio-util 0.7.15",
               "target": "tokio_util"
             }
           ],
@@ -16133,7 +16325,7 @@
               "target": "tokio"
             },
             {
-              "id": "tokio-util 0.7.14",
+              "id": "tokio-util 0.7.15",
               "target": "tokio_util"
             },
             {
@@ -18530,7 +18722,7 @@
               "target": "serde_cbor"
             },
             {
-              "id": "sha2 0.10.8",
+              "id": "sha2 0.10.9",
               "target": "sha2"
             },
             {
@@ -19254,7 +19446,7 @@
               "target": "serde"
             },
             {
-              "id": "sha2 0.10.8",
+              "id": "sha2 0.10.9",
               "target": "sha2"
             },
             {
@@ -19590,6 +19782,93 @@
       ],
       "license_file": "LICENSE"
     },
+    "ic-cdk 0.18.0": {
+      "name": "ic-cdk",
+      "version": "0.18.0",
+      "package_url": "https://github.com/dfinity/cdk-rs",
+      "repository": {
+        "Git": {
+          "remote": "https://github.com/dfinity/cdk-rs.git",
+          "commitish": {
+            "Rev": "9fc47f3bd6aa70a3dcb3ff67498128298a8f1ebe"
+          },
+          "strip_prefix": "ic-cdk"
+        }
+      },
+      "targets": [
+        {
+          "Library": {
+            "crate_name": "ic_cdk",
+            "crate_root": "src/lib.rs",
+            "srcs": {
+              "allow_empty": true,
+              "include": [
+                "**/*.rs"
+              ]
+            }
+          }
+        }
+      ],
+      "library_target_name": "ic_cdk",
+      "common_attrs": {
+        "compile_data_glob": [
+          "**"
+        ],
+        "deps": {
+          "common": [
+            {
+              "id": "candid 0.10.13",
+              "target": "candid"
+            },
+            {
+              "id": "ic-error-types 0.1.0",
+              "target": "ic_error_types"
+            },
+            {
+              "id": "ic-management-canister-types 0.3.0",
+              "target": "ic_management_canister_types"
+            },
+            {
+              "id": "ic0 0.24.0",
+              "target": "ic0"
+            },
+            {
+              "id": "serde 1.0.219",
+              "target": "serde"
+            },
+            {
+              "id": "serde_bytes 0.11.15",
+              "target": "serde_bytes"
+            },
+            {
+              "id": "slotmap 1.0.7",
+              "target": "slotmap"
+            },
+            {
+              "id": "thiserror 2.0.12",
+              "target": "thiserror"
+            }
+          ],
+          "selects": {}
+        },
+        "edition": "2021",
+        "proc_macro_deps": {
+          "common": [
+            {
+              "id": "ic-cdk-macros 0.18.0",
+              "target": "ic_cdk_macros"
+            }
+          ],
+          "selects": {}
+        },
+        "version": "0.18.0"
+      },
+      "license": "Apache-2.0",
+      "license_ids": [
+        "Apache-2.0"
+      ],
+      "license_file": "LICENSE"
+    },
     "ic-cdk-macros 0.17.1": {
       "name": "ic-cdk-macros",
       "version": "0.17.1",
@@ -19657,6 +19936,72 @@
       ],
       "license_file": "LICENSE"
     },
+    "ic-cdk-macros 0.18.0": {
+      "name": "ic-cdk-macros",
+      "version": "0.18.0",
+      "package_url": "https://github.com/dfinity/cdk-rs",
+      "repository": {
+        "Git": {
+          "remote": "https://github.com/dfinity/cdk-rs.git",
+          "commitish": {
+            "Rev": "9fc47f3bd6aa70a3dcb3ff67498128298a8f1ebe"
+          },
+          "strip_prefix": "ic-cdk-macros"
+        }
+      },
+      "targets": [
+        {
+          "ProcMacro": {
+            "crate_name": "ic_cdk_macros",
+            "crate_root": "src/lib.rs",
+            "srcs": {
+              "allow_empty": true,
+              "include": [
+                "**/*.rs"
+              ]
+            }
+          }
+        }
+      ],
+      "library_target_name": "ic_cdk_macros",
+      "common_attrs": {
+        "compile_data_glob": [
+          "**"
+        ],
+        "deps": {
+          "common": [
+            {
+              "id": "candid 0.10.13",
+              "target": "candid"
+            },
+            {
+              "id": "darling 0.20.11",
+              "target": "darling"
+            },
+            {
+              "id": "proc-macro2 1.0.94",
+              "target": "proc_macro2"
+            },
+            {
+              "id": "quote 1.0.39",
+              "target": "quote"
+            },
+            {
+              "id": "syn 2.0.100",
+              "target": "syn"
+            }
+          ],
+          "selects": {}
+        },
+        "edition": "2021",
+        "version": "0.18.0"
+      },
+      "license": "Apache-2.0",
+      "license_ids": [
+        "Apache-2.0"
+      ],
+      "license_file": "LICENSE"
+    },
     "ic-cdk-timers 0.11.0": {
       "name": "ic-cdk-timers",
       "version": "0.11.0",
@@ -19717,6 +20062,80 @@
         },
         "edition": "2021",
         "version": "0.11.0"
+      },
+      "license": "Apache-2.0",
+      "license_ids": [
+        "Apache-2.0"
+      ],
+      "license_file": "LICENSE"
+    },
+    "ic-cdk-timers 0.12.0": {
+      "name": "ic-cdk-timers",
+      "version": "0.12.0",
+      "package_url": "https://github.com/dfinity/cdk-rs",
+      "repository": {
+        "Git": {
+          "remote": "https://github.com/dfinity/cdk-rs.git",
+          "commitish": {
+            "Rev": "9fc47f3bd6aa70a3dcb3ff67498128298a8f1ebe"
+          },
+          "strip_prefix": "ic-cdk-timers"
+        }
+      },
+      "targets": [
+        {
+          "Library": {
+            "crate_name": "ic_cdk_timers",
+            "crate_root": "src/lib.rs",
+            "srcs": {
+              "allow_empty": true,
+              "include": [
+                "**/*.rs"
+              ]
+            }
+          }
+        }
+      ],
+      "library_target_name": "ic_cdk_timers",
+      "common_attrs": {
+        "compile_data_glob": [
+          "**"
+        ],
+        "deps": {
+          "common": [
+            {
+              "id": "candid 0.10.13",
+              "target": "candid"
+            },
+            {
+              "id": "futures 0.3.31",
+              "target": "futures"
+            },
+            {
+              "id": "ic-cdk 0.18.0",
+              "target": "ic_cdk"
+            },
+            {
+              "id": "ic0 0.24.0",
+              "target": "ic0"
+            },
+            {
+              "id": "serde 1.0.219",
+              "target": "serde"
+            },
+            {
+              "id": "serde_bytes 0.11.15",
+              "target": "serde_bytes"
+            },
+            {
+              "id": "slotmap 1.0.7",
+              "target": "slotmap"
+            }
+          ],
+          "selects": {}
+        },
+        "edition": "2021",
+        "version": "0.12.0"
       },
       "license": "Apache-2.0",
       "license_ids": [
@@ -19851,7 +20270,7 @@
               "target": "serde_bytes"
             },
             {
-              "id": "sha2 0.10.8",
+              "id": "sha2 0.10.9",
               "target": "sha2"
             }
           ],
@@ -19963,7 +20382,7 @@
               "target": "serde_bytes"
             },
             {
-              "id": "sha2 0.10.8",
+              "id": "sha2 0.10.9",
               "target": "sha2"
             }
           ],
@@ -20325,7 +20744,7 @@
               "target": "rand_chacha"
             },
             {
-              "id": "sha2 0.10.8",
+              "id": "sha2 0.10.9",
               "target": "sha2"
             },
             {
@@ -20598,7 +21017,7 @@
         "deps": {
           "common": [
             {
-              "id": "sha2 0.10.8",
+              "id": "sha2 0.10.9",
               "target": "sha2"
             }
           ],
@@ -21718,12 +22137,9 @@
       "version": "0.1.0",
       "package_url": "https://github.com/dfinity/ic",
       "repository": {
-        "Git": {
-          "remote": "https://github.com/dfinity/ic.git",
-          "commitish": {
-            "Rev": "2fe8aefafcb2fbee6fdb2785374d5de715560269"
-          },
-          "strip_prefix": "packages/ic-error-types"
+        "Http": {
+          "url": "https://static.crates.io/crates/ic-error-types/0.1.0/download",
+          "sha256": "be844216781d6f4a0853b5a8d63dee8d1b6ee0b9aef310d8c0cb82a6796d7072"
         }
       },
       "targets": [
@@ -21895,7 +22311,7 @@
         "deps": {
           "common": [
             {
-              "id": "axum 0.8.1",
+              "id": "axum 0.8.4",
               "target": "axum"
             },
             {
@@ -23110,7 +23526,7 @@
         "deps": {
           "common": [
             {
-              "id": "chrono 0.4.40",
+              "id": "chrono 0.4.41",
               "target": "chrono"
             },
             {
@@ -23202,7 +23618,7 @@
               "target": "candid"
             },
             {
-              "id": "chrono 0.4.40",
+              "id": "chrono 0.4.41",
               "target": "chrono"
             },
             {
@@ -23403,6 +23819,64 @@
       ],
       "license_file": null
     },
+    "ic-management-canister-types 0.3.0": {
+      "name": "ic-management-canister-types",
+      "version": "0.3.0",
+      "package_url": "https://github.com/dfinity/cdk-rs",
+      "repository": {
+        "Git": {
+          "remote": "https://github.com/dfinity/cdk-rs.git",
+          "commitish": {
+            "Rev": "9fc47f3bd6aa70a3dcb3ff67498128298a8f1ebe"
+          },
+          "strip_prefix": "ic-management-canister-types"
+        }
+      },
+      "targets": [
+        {
+          "Library": {
+            "crate_name": "ic_management_canister_types",
+            "crate_root": "src/lib.rs",
+            "srcs": {
+              "allow_empty": true,
+              "include": [
+                "**/*.rs"
+              ]
+            }
+          }
+        }
+      ],
+      "library_target_name": "ic_management_canister_types",
+      "common_attrs": {
+        "compile_data_glob": [
+          "**"
+        ],
+        "deps": {
+          "common": [
+            {
+              "id": "candid 0.10.13",
+              "target": "candid"
+            },
+            {
+              "id": "serde 1.0.219",
+              "target": "serde"
+            },
+            {
+              "id": "serde_bytes 0.11.15",
+              "target": "serde_bytes"
+            }
+          ],
+          "selects": {}
+        },
+        "edition": "2021",
+        "version": "0.3.0"
+      },
+      "license": "Apache-2.0",
+      "license_ids": [
+        "Apache-2.0"
+      ],
+      "license_file": "LICENSE"
+    },
     "ic-management-canister-types-private 0.9.0": {
       "name": "ic-management-canister-types-private",
       "version": "0.9.0",
@@ -23547,7 +24021,7 @@
               "target": "candid"
             },
             {
-              "id": "chrono 0.4.40",
+              "id": "chrono 0.4.41",
               "target": "chrono"
             },
             {
@@ -25389,7 +25863,7 @@
               "target": "serde_bytes"
             },
             {
-              "id": "sha2 0.10.8",
+              "id": "sha2 0.10.9",
               "target": "sha2"
             }
           ],
@@ -27027,7 +27501,7 @@
         "deps": {
           "common": [
             {
-              "id": "chrono 0.4.40",
+              "id": "chrono 0.4.41",
               "target": "chrono"
             },
             {
@@ -27729,7 +28203,7 @@
               "target": "rand_chacha"
             },
             {
-              "id": "sha2 0.10.8",
+              "id": "sha2 0.10.9",
               "target": "sha2"
             },
             {
@@ -29366,7 +29840,7 @@
               "target": "serde_cbor"
             },
             {
-              "id": "sha2 0.10.8",
+              "id": "sha2 0.10.9",
               "target": "sha2"
             },
             {
@@ -29540,7 +30014,7 @@
           "selects": {
             "cfg(not(all(target_arch = \"wasm32\", target_os = \"unknown\")))": [
               {
-                "id": "chrono 0.4.40",
+                "id": "chrono 0.4.41",
                 "target": "chrono"
               }
             ]
@@ -29686,7 +30160,7 @@
               "target": "serde_bytes"
             },
             {
-              "id": "sha2 0.10.8",
+              "id": "sha2 0.10.9",
               "target": "sha2"
             },
             {
@@ -29944,7 +30418,7 @@
               "target": "rand"
             },
             {
-              "id": "sha2 0.10.8",
+              "id": "sha2 0.10.9",
               "target": "sha2"
             }
           ],
@@ -30251,6 +30725,47 @@
       ],
       "license_file": "LICENSE"
     },
+    "ic0 0.24.0": {
+      "name": "ic0",
+      "version": "0.24.0",
+      "package_url": "https://github.com/dfinity/cdk-rs",
+      "repository": {
+        "Git": {
+          "remote": "https://github.com/dfinity/cdk-rs.git",
+          "commitish": {
+            "Rev": "9fc47f3bd6aa70a3dcb3ff67498128298a8f1ebe"
+          },
+          "strip_prefix": "ic0"
+        }
+      },
+      "targets": [
+        {
+          "Library": {
+            "crate_name": "ic0",
+            "crate_root": "src/lib.rs",
+            "srcs": {
+              "allow_empty": true,
+              "include": [
+                "**/*.rs"
+              ]
+            }
+          }
+        }
+      ],
+      "library_target_name": "ic0",
+      "common_attrs": {
+        "compile_data_glob": [
+          "**"
+        ],
+        "edition": "2021",
+        "version": "0.24.0"
+      },
+      "license": "Apache-2.0",
+      "license_ids": [
+        "Apache-2.0"
+      ],
+      "license_file": "LICENSE"
+    },
     "ic_bls12_381 0.10.0": {
       "name": "ic_bls12_381",
       "version": "0.10.0",
@@ -30389,7 +30904,7 @@
               "target": "serde"
             },
             {
-              "id": "sha2 0.10.8",
+              "id": "sha2 0.10.9",
               "target": "sha2"
             },
             {
@@ -30767,7 +31282,7 @@
               "target": "serde_bytes"
             },
             {
-              "id": "sha2 0.10.8",
+              "id": "sha2 0.10.9",
               "target": "sha2"
             },
             {
@@ -32770,7 +33285,7 @@
               "target": "once_cell"
             },
             {
-              "id": "sha2 0.10.8",
+              "id": "sha2 0.10.9",
               "target": "sha2"
             },
             {
@@ -34284,7 +34799,7 @@
         "deps": {
           "common": [
             {
-              "id": "axum 0.8.1",
+              "id": "axum 0.8.4",
               "target": "axum"
             },
             {
@@ -35379,7 +35894,7 @@
         "deps": {
           "common": [
             {
-              "id": "axum 0.8.1",
+              "id": "axum 0.8.4",
               "target": "axum"
             },
             {
@@ -35488,7 +36003,7 @@
               "target": "anyhow"
             },
             {
-              "id": "assert_cmd 2.0.16",
+              "id": "assert_cmd 2.0.17",
               "target": "assert_cmd"
             },
             {
@@ -35787,7 +36302,7 @@
               "target": "candid"
             },
             {
-              "id": "chrono 0.4.40",
+              "id": "chrono 0.4.41",
               "target": "chrono"
             },
             {
@@ -35870,11 +36385,11 @@
               "target": "ic_canisters_http_types"
             },
             {
-              "id": "ic-cdk 0.17.1",
+              "id": "ic-cdk 0.18.0",
               "target": "ic_cdk"
             },
             {
-              "id": "ic-cdk-timers 0.11.0",
+              "id": "ic-cdk-timers 0.12.0",
               "target": "ic_cdk_timers"
             },
             {
@@ -35957,7 +36472,7 @@
               "target": "async_trait"
             },
             {
-              "id": "ic-cdk-macros 0.17.1",
+              "id": "ic-cdk-macros 0.18.0",
               "target": "ic_cdk_macros"
             }
           ],
@@ -36985,7 +37500,7 @@
               "target": "ic_agent"
             },
             {
-              "id": "rand 0.9.0",
+              "id": "rand 0.9.1",
               "target": "rand"
             },
             {
@@ -37077,7 +37592,7 @@
               "target": "cfg_if"
             },
             {
-              "id": "chrono 0.4.40",
+              "id": "chrono 0.4.41",
               "target": "chrono"
             },
             {
@@ -37867,7 +38382,7 @@
               "target": "primeorder"
             },
             {
-              "id": "sha2 0.10.8",
+              "id": "sha2 0.10.9",
               "target": "sha2"
             }
           ],
@@ -40967,7 +41482,7 @@
         "deps": {
           "common": [
             {
-              "id": "chrono 0.4.40",
+              "id": "chrono 0.4.41",
               "target": "chrono"
             },
             {
@@ -41246,7 +41761,7 @@
         "deps": {
           "common": [
             {
-              "id": "heck 0.5.0",
+              "id": "heck 0.4.1",
               "target": "heck"
             },
             {
@@ -42361,14 +42876,14 @@
       ],
       "license_file": "LICENSE-APACHE"
     },
-    "rand 0.9.0": {
+    "rand 0.9.1": {
       "name": "rand",
-      "version": "0.9.0",
+      "version": "0.9.1",
       "package_url": "https://github.com/rust-random/rand",
       "repository": {
         "Http": {
-          "url": "https://static.crates.io/crates/rand/0.9.0/download",
-          "sha256": "3779b94aeb87e8bd4e834cee3650289ee9e0d5677f976ecdb6d219e5f4f6cd94"
+          "url": "https://static.crates.io/crates/rand/0.9.1/download",
+          "sha256": "9fbfd9d094a40bf3ae768db9361049ace4c0e04a4fd6b359518bd7b73a73dd97"
         }
       },
       "targets": [
@@ -42411,16 +42926,12 @@
             {
               "id": "rand_core 0.9.3",
               "target": "rand_core"
-            },
-            {
-              "id": "zerocopy 0.8.23",
-              "target": "zerocopy"
             }
           ],
           "selects": {}
         },
         "edition": "2021",
-        "version": "0.9.0"
+        "version": "0.9.1"
       },
       "license": "MIT OR Apache-2.0",
       "license_ids": [
@@ -43731,7 +44242,7 @@
                 "target": "tokio_rustls"
               },
               {
-                "id": "tokio-util 0.7.14",
+                "id": "tokio-util 0.7.15",
                 "target": "tokio_util"
               },
               {
@@ -43765,7 +44276,7 @@
                 "target": "tokio_rustls"
               },
               {
-                "id": "tokio-util 0.7.14",
+                "id": "tokio-util 0.7.15",
                 "target": "tokio_util"
               },
               {
@@ -43799,7 +44310,7 @@
                 "target": "tokio_rustls"
               },
               {
-                "id": "tokio-util 0.7.14",
+                "id": "tokio-util 0.7.15",
                 "target": "tokio_util"
               },
               {
@@ -43833,7 +44344,7 @@
                 "target": "tokio_rustls"
               },
               {
-                "id": "tokio-util 0.7.14",
+                "id": "tokio-util 0.7.15",
                 "target": "tokio_util"
               },
               {
@@ -43867,7 +44378,7 @@
                 "target": "tokio_rustls"
               },
               {
-                "id": "tokio-util 0.7.14",
+                "id": "tokio-util 0.7.15",
                 "target": "tokio_util"
               },
               {
@@ -43901,7 +44412,7 @@
                 "target": "tokio_rustls"
               },
               {
-                "id": "tokio-util 0.7.14",
+                "id": "tokio-util 0.7.15",
                 "target": "tokio_util"
               },
               {
@@ -43935,7 +44446,7 @@
                 "target": "tokio_rustls"
               },
               {
-                "id": "tokio-util 0.7.14",
+                "id": "tokio-util 0.7.15",
                 "target": "tokio_util"
               },
               {
@@ -43969,7 +44480,7 @@
                 "target": "tokio_rustls"
               },
               {
-                "id": "tokio-util 0.7.14",
+                "id": "tokio-util 0.7.15",
                 "target": "tokio_util"
               },
               {
@@ -44003,7 +44514,7 @@
                 "target": "tokio_rustls"
               },
               {
-                "id": "tokio-util 0.7.14",
+                "id": "tokio-util 0.7.15",
                 "target": "tokio_util"
               },
               {
@@ -44037,7 +44548,7 @@
                 "target": "tokio_rustls"
               },
               {
-                "id": "tokio-util 0.7.14",
+                "id": "tokio-util 0.7.15",
                 "target": "tokio_util"
               },
               {
@@ -44071,7 +44582,7 @@
                 "target": "tokio_rustls"
               },
               {
-                "id": "tokio-util 0.7.14",
+                "id": "tokio-util 0.7.15",
                 "target": "tokio_util"
               },
               {
@@ -44105,7 +44616,7 @@
                 "target": "tokio_rustls"
               },
               {
-                "id": "tokio-util 0.7.14",
+                "id": "tokio-util 0.7.15",
                 "target": "tokio_util"
               },
               {
@@ -44213,7 +44724,7 @@
                 "target": "tokio_rustls"
               },
               {
-                "id": "tokio-util 0.7.14",
+                "id": "tokio-util 0.7.15",
                 "target": "tokio_util"
               },
               {
@@ -44247,7 +44758,7 @@
                 "target": "tokio_rustls"
               },
               {
-                "id": "tokio-util 0.7.14",
+                "id": "tokio-util 0.7.15",
                 "target": "tokio_util"
               },
               {
@@ -44281,7 +44792,7 @@
                 "target": "tokio_rustls"
               },
               {
-                "id": "tokio-util 0.7.14",
+                "id": "tokio-util 0.7.15",
                 "target": "tokio_util"
               },
               {
@@ -44315,7 +44826,7 @@
                 "target": "tokio_rustls"
               },
               {
-                "id": "tokio-util 0.7.14",
+                "id": "tokio-util 0.7.15",
                 "target": "tokio_util"
               },
               {
@@ -44349,7 +44860,7 @@
                 "target": "tokio_rustls"
               },
               {
-                "id": "tokio-util 0.7.14",
+                "id": "tokio-util 0.7.15",
                 "target": "tokio_util"
               },
               {
@@ -44383,7 +44894,7 @@
                 "target": "tokio_rustls"
               },
               {
-                "id": "tokio-util 0.7.14",
+                "id": "tokio-util 0.7.15",
                 "target": "tokio_util"
               },
               {
@@ -44417,7 +44928,7 @@
                 "target": "tokio_rustls"
               },
               {
-                "id": "tokio-util 0.7.14",
+                "id": "tokio-util 0.7.15",
                 "target": "tokio_util"
               },
               {
@@ -44451,7 +44962,7 @@
                 "target": "tokio_rustls"
               },
               {
-                "id": "tokio-util 0.7.14",
+                "id": "tokio-util 0.7.15",
                 "target": "tokio_util"
               },
               {
@@ -44485,7 +44996,7 @@
                 "target": "tokio_rustls"
               },
               {
-                "id": "tokio-util 0.7.14",
+                "id": "tokio-util 0.7.15",
                 "target": "tokio_util"
               },
               {
@@ -44519,7 +45030,7 @@
                 "target": "tokio_rustls"
               },
               {
-                "id": "tokio-util 0.7.14",
+                "id": "tokio-util 0.7.15",
                 "target": "tokio_util"
               },
               {
@@ -44553,7 +45064,7 @@
                 "target": "tokio_rustls"
               },
               {
-                "id": "tokio-util 0.7.14",
+                "id": "tokio-util 0.7.15",
                 "target": "tokio_util"
               },
               {
@@ -44599,7 +45110,7 @@
                 "target": "tokio_rustls"
               },
               {
-                "id": "tokio-util 0.7.14",
+                "id": "tokio-util 0.7.15",
                 "target": "tokio_util"
               },
               {
@@ -44633,7 +45144,7 @@
                 "target": "tokio_rustls"
               },
               {
-                "id": "tokio-util 0.7.14",
+                "id": "tokio-util 0.7.15",
                 "target": "tokio_util"
               },
               {
@@ -44667,7 +45178,7 @@
                 "target": "tokio_rustls"
               },
               {
-                "id": "tokio-util 0.7.14",
+                "id": "tokio-util 0.7.15",
                 "target": "tokio_util"
               },
               {
@@ -44701,7 +45212,7 @@
                 "target": "tokio_rustls"
               },
               {
-                "id": "tokio-util 0.7.14",
+                "id": "tokio-util 0.7.15",
                 "target": "tokio_util"
               },
               {
@@ -44735,7 +45246,7 @@
                 "target": "tokio_rustls"
               },
               {
-                "id": "tokio-util 0.7.14",
+                "id": "tokio-util 0.7.15",
                 "target": "tokio_util"
               },
               {
@@ -44769,7 +45280,7 @@
                 "target": "tokio_rustls"
               },
               {
-                "id": "tokio-util 0.7.14",
+                "id": "tokio-util 0.7.15",
                 "target": "tokio_util"
               },
               {
@@ -44803,7 +45314,7 @@
                 "target": "tokio_rustls"
               },
               {
-                "id": "tokio-util 0.7.14",
+                "id": "tokio-util 0.7.15",
                 "target": "tokio_util"
               },
               {
@@ -44837,7 +45348,7 @@
                 "target": "tokio_rustls"
               },
               {
-                "id": "tokio-util 0.7.14",
+                "id": "tokio-util 0.7.15",
                 "target": "tokio_util"
               },
               {
@@ -44871,7 +45382,7 @@
                 "target": "tokio_rustls"
               },
               {
-                "id": "tokio-util 0.7.14",
+                "id": "tokio-util 0.7.15",
                 "target": "tokio_util"
               },
               {
@@ -44931,7 +45442,7 @@
         "deps": {
           "common": [
             {
-              "id": "rand 0.9.0",
+              "id": "rand 0.9.1",
               "target": "rand"
             }
           ],
@@ -44977,7 +45488,7 @@
               "target": "ic_base_types"
             },
             {
-              "id": "ic-cdk 0.17.1",
+              "id": "ic-cdk 0.18.0",
               "target": "ic_cdk"
             },
             {
@@ -45002,7 +45513,7 @@
         "deps_dev": {
           "common": [
             {
-              "id": "chrono 0.4.40",
+              "id": "chrono 0.4.41",
               "target": "chrono"
             },
             {
@@ -49293,14 +49804,14 @@
       ],
       "license_file": "LICENSE-APACHE"
     },
-    "sha2 0.10.8": {
+    "sha2 0.10.9": {
       "name": "sha2",
-      "version": "0.10.8",
+      "version": "0.10.9",
       "package_url": "https://github.com/RustCrypto/hashes",
       "repository": {
         "Http": {
-          "url": "https://static.crates.io/crates/sha2/0.10.8/download",
-          "sha256": "793db75ad2bcafc3ffa7c68b215fee268f537982cd901d132f89c6343f3a3dc8"
+          "url": "https://static.crates.io/crates/sha2/0.10.9/download",
+          "sha256": "a7507d819769d01a365ab707794a4084392c824f54a7a6a7862f8c3d0892b283"
         }
       },
       "targets": [
@@ -49350,7 +49861,7 @@
           }
         },
         "edition": "2018",
-        "version": "0.10.8"
+        "version": "0.10.9"
       },
       "license": "MIT OR Apache-2.0",
       "license_ids": [
@@ -50497,7 +51008,7 @@
         "deps": {
           "common": [
             {
-              "id": "heck 0.5.0",
+              "id": "heck 0.4.1",
               "target": "heck"
             },
             {
@@ -54268,14 +54779,14 @@
       ],
       "license_file": "LICENSE"
     },
-    "tokio-util 0.7.14": {
+    "tokio-util 0.7.15": {
       "name": "tokio-util",
-      "version": "0.7.14",
+      "version": "0.7.15",
       "package_url": "https://github.com/tokio-rs/tokio",
       "repository": {
         "Http": {
-          "url": "https://static.crates.io/crates/tokio-util/0.7.14/download",
-          "sha256": "6b9590b93e6fcc1739458317cccd391ad3955e2bde8913edf6f95f9e65a8f034"
+          "url": "https://static.crates.io/crates/tokio-util/0.7.15/download",
+          "sha256": "66a539a9ad6d5d281510d5bd368c973d636c02dbf8a67300bfb6b950696ad7df"
         }
       },
       "targets": [
@@ -54331,7 +54842,7 @@
           "selects": {}
         },
         "edition": "2021",
-        "version": "0.7.14"
+        "version": "0.7.15"
       },
       "license": "MIT",
       "license_ids": [
@@ -54754,7 +55265,7 @@
               "target": "tokio"
             },
             {
-              "id": "tokio-util 0.7.14",
+              "id": "tokio-util 0.7.15",
               "target": "tokio_util"
             },
             {
@@ -54879,7 +55390,7 @@
               "target": "tokio"
             },
             {
-              "id": "tokio-util 0.7.14",
+              "id": "tokio-util 0.7.15",
               "target": "tokio_util"
             },
             {
@@ -57768,7 +58279,7 @@
           "selects": {
             "cfg(windows)": [
               {
-                "id": "windows-sys 0.59.0",
+                "id": "windows-sys 0.48.0",
                 "target": "windows_sys"
               }
             ]
@@ -58144,8 +58655,12 @@
             "Win32",
             "Win32_Foundation",
             "Win32_Globalization",
+            "Win32_Storage",
+            "Win32_Storage_FileSystem",
             "Win32_System",
             "Win32_System_Com",
+            "Win32_System_Console",
+            "Win32_System_SystemInformation",
             "Win32_UI",
             "Win32_UI_Shell",
             "default"
@@ -61043,92 +61558,6 @@
       ],
       "license_file": "LICENSE-APACHE"
     },
-    "zerocopy 0.8.23": {
-      "name": "zerocopy",
-      "version": "0.8.23",
-      "package_url": "https://github.com/google/zerocopy",
-      "repository": {
-        "Http": {
-          "url": "https://static.crates.io/crates/zerocopy/0.8.23/download",
-          "sha256": "fd97444d05a4328b90e75e503a34bad781f14e28a823ad3557f0750df1ebcbc6"
-        }
-      },
-      "targets": [
-        {
-          "Library": {
-            "crate_name": "zerocopy",
-            "crate_root": "src/lib.rs",
-            "srcs": {
-              "allow_empty": true,
-              "include": [
-                "**/*.rs"
-              ]
-            }
-          }
-        },
-        {
-          "BuildScript": {
-            "crate_name": "build_script_build",
-            "crate_root": "build.rs",
-            "srcs": {
-              "allow_empty": true,
-              "include": [
-                "**/*.rs"
-              ]
-            }
-          }
-        }
-      ],
-      "library_target_name": "zerocopy",
-      "common_attrs": {
-        "compile_data_glob": [
-          "**"
-        ],
-        "crate_features": {
-          "common": [
-            "simd"
-          ],
-          "selects": {}
-        },
-        "deps": {
-          "common": [
-            {
-              "id": "zerocopy 0.8.23",
-              "target": "build_script_build"
-            }
-          ],
-          "selects": {}
-        },
-        "edition": "2021",
-        "proc_macro_deps": {
-          "common": [],
-          "selects": {
-            "cfg(any())": [
-              {
-                "id": "zerocopy-derive 0.8.23",
-                "target": "zerocopy_derive"
-              }
-            ]
-          }
-        },
-        "version": "0.8.23"
-      },
-      "build_script_attrs": {
-        "compile_data_glob": [
-          "**"
-        ],
-        "data_glob": [
-          "**"
-        ]
-      },
-      "license": "BSD-2-Clause OR Apache-2.0 OR MIT",
-      "license_ids": [
-        "Apache-2.0",
-        "BSD-2-Clause",
-        "MIT"
-      ],
-      "license_file": "LICENSE-APACHE"
-    },
     "zerocopy-derive 0.7.35": {
       "name": "zerocopy-derive",
       "version": "0.7.35",
@@ -61177,63 +61606,6 @@
         },
         "edition": "2018",
         "version": "0.7.35"
-      },
-      "license": "BSD-2-Clause OR Apache-2.0 OR MIT",
-      "license_ids": [
-        "Apache-2.0",
-        "BSD-2-Clause",
-        "MIT"
-      ],
-      "license_file": "LICENSE-APACHE"
-    },
-    "zerocopy-derive 0.8.23": {
-      "name": "zerocopy-derive",
-      "version": "0.8.23",
-      "package_url": "https://github.com/google/zerocopy",
-      "repository": {
-        "Http": {
-          "url": "https://static.crates.io/crates/zerocopy-derive/0.8.23/download",
-          "sha256": "6352c01d0edd5db859a63e2605f4ea3183ddbd15e2c4a9e7d32184df75e4f154"
-        }
-      },
-      "targets": [
-        {
-          "ProcMacro": {
-            "crate_name": "zerocopy_derive",
-            "crate_root": "src/lib.rs",
-            "srcs": {
-              "allow_empty": true,
-              "include": [
-                "**/*.rs"
-              ]
-            }
-          }
-        }
-      ],
-      "library_target_name": "zerocopy_derive",
-      "common_attrs": {
-        "compile_data_glob": [
-          "**"
-        ],
-        "deps": {
-          "common": [
-            {
-              "id": "proc-macro2 1.0.94",
-              "target": "proc_macro2"
-            },
-            {
-              "id": "quote 1.0.39",
-              "target": "quote"
-            },
-            {
-              "id": "syn 2.0.100",
-              "target": "syn"
-            }
-          ],
-          "selects": {}
-        },
-        "edition": "2021",
-        "version": "0.8.23"
       },
       "license": "BSD-2-Clause OR Apache-2.0 OR MIT",
       "license_ids": [
@@ -62541,17 +62913,17 @@
     "anyhow 1.0.98",
     "async-recursion 1.1.1",
     "async-trait 0.1.88",
-    "axum 0.8.1",
+    "axum 0.8.4",
     "axum-otel-metrics 0.10.0",
     "backoff 0.4.0",
     "backon 1.5.0",
     "base64 0.22.1",
     "byteorder 1.5.0",
     "candid 0.10.13",
-    "chrono 0.4.40",
+    "chrono 0.4.41",
     "clap 4.5.32",
     "clap-num 1.2.0",
-    "clap_complete 4.5.47",
+    "clap_complete 4.5.48",
     "colored 2.2.0",
     "comfy-table 7.1.4",
     "crossbeam 0.8.4",
@@ -62579,9 +62951,9 @@
     "ic-canister-client 0.9.0",
     "ic-canister-client-sender 0.9.0",
     "ic-canisters-http-types 0.9.0",
-    "ic-cdk 0.17.1",
-    "ic-cdk-macros 0.17.1",
-    "ic-cdk-timers 0.11.0",
+    "ic-cdk 0.18.0",
+    "ic-cdk-macros 0.18.0",
+    "ic-cdk-timers 0.12.0",
     "ic-config 0.9.0",
     "ic-crypto-utils-threshold-sig-der 0.9.0",
     "ic-http-endpoints-metrics 0.9.0",
@@ -62633,7 +63005,7 @@
     "prometheus 0.13.4",
     "prometheus-http-query 0.8.3",
     "prost 0.13.5",
-    "rand 0.9.0",
+    "rand 0.9.1",
     "rand_seeder 0.3.0",
     "regex 1.11.1",
     "registry-canister 0.9.0",
@@ -62647,7 +63019,7 @@
     "serde_cbor 0.11.2",
     "serde_json 1.0.140",
     "serde_yaml 0.9.34+deprecated",
-    "sha2 0.10.8",
+    "sha2 0.10.9",
     "shlex 1.3.0",
     "simple_asn1 0.6.3",
     "slog 2.7.0",
@@ -62661,12 +63033,12 @@
     "tempfile 3.19.1",
     "thiserror 2.0.12",
     "tokio 1.44.2",
-    "tokio-util 0.7.14",
+    "tokio-util 0.7.15",
     "url 2.5.4"
   ],
   "direct_dev_deps": [
     "actix-rt 2.10.0",
-    "assert_cmd 2.0.16",
+    "assert_cmd 2.0.17",
     "maplit 1.0.2",
     "wiremock 0.6.3"
   ],
