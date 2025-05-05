@@ -28,6 +28,8 @@ ic-management-canister-types-private = { workspace = true }
 ic-metrics-encoder = { workspace = true }
 ic-nervous-system-canisters = { workspace = true }
 ic-nervous-system-common = { workspace = true }
+ic-nns-constants = { workspace = true }
+ic-registry-transport = { workspace = true }
 ic-protobuf = { workspace = true }
 ic-registry-canister-client = { workspace = true }
 ic-types = { workspace = true }

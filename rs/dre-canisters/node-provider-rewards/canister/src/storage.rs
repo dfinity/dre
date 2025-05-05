@@ -1,5 +1,6 @@
 use crate::metrics::{ICCanisterClient, MetricsManager};
 use crate::registry::RegistryClient;
+use crate::registry_querier::RegistryQuerier;
 use ic_nervous_system_canisters::registry::RegistryCanister;
 use ic_registry_canister_client::{RegistryDataStableMemory, StableCanisterRegistryClient, StorableRegistryKey, StorableRegistryValue};
 use ic_stable_structures::memory_manager::{MemoryId, MemoryManager, VirtualMemory};
@@ -42,7 +43,7 @@ thread_local! {
     pub static REGISTRY_STORE: Rc<RegistryClient<RegistryStoreStableMemoryBorrower>> = {
         let registry_client = RegistryClient {
             store: StableCanisterRegistryClient::<RegistryStoreStableMemoryBorrower>::new(
-            Box::new(RegistryCanister::new()))
+            Box::new(RegistryQuerier::new()))
         };
         Rc::new(registry_client)
     };
