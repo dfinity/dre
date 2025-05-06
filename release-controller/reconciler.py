@@ -570,18 +570,17 @@ class Reconciler:
                         os_kind=v.os_kind,
                     )
 
-            if needs_announce:
+            if "SLACK_WEBHOOK_URL" in os.environ and needs_announce:
                 with phase("release notes announcement"):
-                    if "SLACK_WEBHOOK_URL" in os.environ:
-                        # This should have never been in the Google Docs code.
-                        revlogger.info("Announcing release notes")
-                        self.slack_announcer.announce_release(
-                            webhook=os.environ["SLACK_WEBHOOK_URL"],
-                            version_name=release_tag,
-                            google_doc_url=gdoc["alternateLink"],
-                            tag_all_teams=v.is_base,
-                            os_kind=v.os_kind,
-                        )
+                    # This should have never been in the Google Docs code.
+                    revlogger.info("Announcing release notes")
+                    self.slack_announcer.announce_release(
+                        webhook=os.environ["SLACK_WEBHOOK_URL"],
+                        version_name=release_tag,
+                        google_doc_url=gdoc["alternateLink"],
+                        tag_all_teams=v.is_base,
+                        os_kind=v.os_kind,
+                    )
 
             with phase("release notes pull request") as p:
                 self.publish_client.publish_if_ready(
