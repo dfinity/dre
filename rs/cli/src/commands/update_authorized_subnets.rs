@@ -78,10 +78,14 @@ impl ExecutableCommand for UpdateAuthorizedSubnets {
         let public_subnets: BTreeSet<PrincipalId> = public_subnets.into_iter().collect();
 
         let mut verified_subnets_to_open = self.open_verified_subnets;
+        let mut changes = 0;
 
         for subnet in subnets.values().sorted_by_cached_key(|s| s.principal) {
             if subnet.subnet_type.eq(&SubnetType::System) {
                 excluded_subnets.insert(subnet.principal, "System subnets should not have public access".to_string());
+                if public_subnets.contains(&subnet.principal) {
+                    changes += 1;
+                }
                 continue;
             }
 
@@ -92,6 +96,10 @@ impl ExecutableCommand for UpdateAuthorizedSubnets {
                 .find(|(short_id, _)| subnet_principal_string.starts_with(short_id))
             {
                 excluded_subnets.insert(subnet.principal, format!("Explicitly marked as non-public ({})", description));
+                if public_subnets.contains(&subnet.principal) {
+                    changes += 1;
+                }
+
                 continue;
             }
 
@@ -100,11 +108,18 @@ impl ExecutableCommand for UpdateAuthorizedSubnets {
 
             if subnet_metrics.num_canisters >= self.canister_limit {
                 excluded_subnets.insert(subnet.principal, format!("Subnet has more than {} canisters", self.canister_limit));
+                if public_subnets.contains(&subnet.principal) {
+                    changes += 1;
+                }
+
                 continue;
             }
 
             if subnet_metrics.canister_state_bytes >= self.state_size_limit {
                 excluded_subnets.insert(subnet.principal, format!("Subnet has more than {} state size", human_bytes));
+                if public_subnets.contains(&subnet.principal) {
+                    changes += 1;
+                }
             }
 
             // There was a request to open up 1 verified subnet per week
@@ -122,25 +137,20 @@ impl ExecutableCommand for UpdateAuthorizedSubnets {
                         .map(|(_, desc)| desc.to_string())
                         .unwrap_or("Other verified subnets opened up in this run".to_string());
                     excluded_subnets.insert(subnet.principal, description);
+                    if public_subnets.contains(&subnet.principal) {
+                        changes += 1;
+                    }
+
                     continue;
                 }
-            }
 
-            // Looks like we're good to go!
-            // Now only adjust the counter of how many VerifiedApplication subnets have been opened
-            // up in this run.
-            if subnet.subnet_type.eq(&SubnetType::VerifiedApplication) && !public_subnets.contains(&subnet.principal) {
-                if verified_subnets_to_open > 0 {
-                    verified_subnets_to_open -= 1;
-                } else {
-                    unreachable!(
-                        "Error in logic! Subnet of type VerifiedApplication cannot be let through the filter if `open_verified_subnets` is 0"
-                    )
-                }
+                // Don't exclude this subnet (or in other words make it public)
+                verified_subnets_to_open -= 1;
+                changes += 1;
             }
         }
 
-        if !check_diffs(&subnets, &excluded_subnets, &public_subnets) {
+        if changes == 0 {
             println!("There are no diffs. Skipping proposal creation.");
             return Ok(());
         }
@@ -195,28 +205,6 @@ impl UpdateAuthorizedSubnets {
     }
 }
 
-// Checks if there are subnets that are open right now but are going to be
-fn check_diffs(
-    subnets: &Arc<IndexMap<PrincipalId, Subnet>>,
-    excluded_subnets: &IndexMap<PrincipalId, String>,
-    current_public_subnets: &BTreeSet<PrincipalId>,
-) -> bool {
-    for subnet in subnets.keys() {
-        // If it is present in the `excluded_subnets` its next public status will become `false`
-        // or if it's absent, its next public status will become `true`
-        let will_become = excluded_subnets.get(subnet).is_none();
-
-        let current_status = current_public_subnets.get(subnet).is_some();
-
-        // If there is any differences the proposal should be created
-        if will_become != current_status {
-            return true;
-        }
-    }
-
-    false
-}
-
 /// FIXME probably should be moved to the Discourse post creation code.
 /// also it would be wise to divorce the Discourse machinery from the kind of post
 /// we want to compose, so that composing the post and posting the post are separate activities,
@@ -237,7 +225,7 @@ fn construct_summary(
             .values()
             .map(|s| {
                 let excluded_desc = excluded_subnets.get(&s.principal);
-                let was_public = current_public_subnets.get(&s.principal).is_some();
+                let was_public = current_public_subnets.contains(&s.principal);
                 format!(
                     "| {} | {} | {} | {} |",
                     s.principal,
