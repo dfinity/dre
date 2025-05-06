@@ -161,6 +161,20 @@ fn setup_timers() {
 
         // Spawn a sync_all() right now.
         ic_cdk::spawn(sync_all());
+
+        // Hourly timers after first sync.
+        ic_cdk_timers::set_timer_interval(std::time::Duration::from_secs(HOUR_IN_SECONDS), || {
+            ic_cdk::spawn(async {
+                // Measure measure_get_node_providers_rewards_query calls every hour.
+                ic_cdk::spawn(async { measure_get_node_providers_rewards_query() });
+            });
+        });
+        ic_cdk_timers::set_timer_interval(std::time::Duration::from_secs(HOUR_IN_SECONDS), || {
+            ic_cdk::spawn(async {
+                // Measure measure_get_node_provider_rewards_calculation_query calls every hour.
+                ic_cdk::spawn(async { measure_get_node_provider_rewards_calculation_query() });
+            });
+        });
     });
 
     // Hourly timers.
@@ -169,11 +183,6 @@ fn setup_timers() {
         ic_cdk::spawn(async {
             let metrics_manager = METRICS_MANAGER.with(|m| m.clone());
             metrics_manager.retry_failed_subnets().await;
-            // Measure query calls every hour.  Do so strictly after retrying failing subnets.
-            // REVIEWERS: does it make sense to run any of this before the timer doing
-            // `sync_all()` (see above) has fired even once?
-            ic_cdk::spawn(async { measure_get_node_providers_rewards_query() });
-            ic_cdk::spawn(async { measure_get_node_provider_rewards_calculation_query() });
         });
     });
 }
