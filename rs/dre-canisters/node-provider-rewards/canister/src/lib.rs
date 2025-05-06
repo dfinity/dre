@@ -1,5 +1,6 @@
 use crate::storage::{METRICS_MANAGER, REGISTRY_STORE};
 use candid::candid_method;
+use chrono::Months;
 use chrono::{DateTime, Days, Duration, Timelike, Utc};
 use ic_canisters_http_types::{HttpRequest, HttpResponse, HttpResponseBuilder};
 use ic_cdk_macros::*;
@@ -87,20 +88,29 @@ fn today_at_midnight(now: Option<DateTime<Utc>>) -> DateTime<Utc> {
     start_of_this_hour(now).with_hour(0).expect("Midnight always exists in UTC time.")
 }
 
-/// Get an interval that ends at the beginning of the hour and starts one day before that.
-/// The first value in the tuple is the start of the interval.  The second is the end.
+/// Get an interval that ends at the beginning of the day and starts two months before that.
+/// The first value in the return tuple is the start of the interval.  The second is the end.
 /// The supplied value is used the reference date/time (if None, uses current date/time).
-fn get_one_day_interval(now: Option<DateTime<Utc>>) -> (DateTime<Utc>, DateTime<Utc>) {
-    let this_hour = start_of_this_hour(now);
-    (this_hour.sub(Duration::days(1)), this_hour)
+///
+/// If the supplied or current date/time falls in an end of the month day, and the target
+/// month (two months ago) has fewer days than the supplied date/time, this code does the
+/// right thing and computes the end of that month.  The wrong thing would be to blindly
+/// subtract 62 days or something equally arbitrary.  Example of the right thing:
+///
+/// * supplied date/time: 2025-04-30T03:01:00
+/// * returned interval: (2025-02-28T00:00:00 -- 2025-04-30T00:00:00)
+fn get_two_months_interval(now: Option<DateTime<Utc>>) -> (DateTime<Utc>, DateTime<Utc>) {
+    let midnite = today_at_midnight(now);
+    let twomoago = midnite.checked_sub_months(Months::new(2)).expect("UTC dates cannot have a nonexistent or unambiguous date after we subtract months, because UTC dates do not have daylight savings time, and there is no way this could be out of range.  See checked_sub_months() documentation.");
+    (twomoago, midnite)
 }
 
-/// Use `get_one_day_interval(...)`` to generate a rewards period.
-fn get_one_day_rewards_period(now: Option<DateTime<Utc>>) -> RewardPeriodArgs {
-    let (this_hour_yesterday, this_hour) = get_one_day_interval(now);
+/// Use `get_two_months_interval(...)`` to generate a rewards period.
+fn get_two_months_rewards_period(now: Option<DateTime<Utc>>) -> RewardPeriodArgs {
+    let (beginning, end) = get_two_months_interval(now);
     RewardPeriodArgs {
-        start_ts: this_hour_yesterday.timestamp().try_into().unwrap(),
-        end_ts: this_hour.timestamp().try_into().unwrap(),
+        start_ts: beginning.timestamp().try_into().unwrap(),
+        end_ts: end.timestamp().try_into().unwrap(),
     }
 }
 
@@ -118,7 +128,7 @@ fn time_left_for_next_1am(now: Option<DateTime<Utc>>) -> std::time::Duration {
 }
 
 fn measure_get_node_providers_rewards_query() {
-    let reward_period = get_one_day_rewards_period(None);
+    let reward_period = get_two_months_rewards_period(None);
     let instruction_counter = telemetry::InstructionCounter::default();
     let success = get_node_providers_rewards(reward_period).is_ok();
     let instructions = instruction_counter.sum();
@@ -128,7 +138,7 @@ fn measure_get_node_providers_rewards_query() {
 }
 
 fn measure_get_node_provider_rewards_calculation_query() {
-    let reward_period = get_one_day_rewards_period(None);
+    let reward_period = get_two_months_rewards_period(None);
     let instruction_counter = telemetry::InstructionCounter::default();
     let failures: Vec<()> = NODE_PROVIDERS_USED_DURING_CALCULATION_MEASUREMENT
         .iter()
