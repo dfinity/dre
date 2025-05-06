@@ -1,5 +1,5 @@
 {
-  "checksum": "d4c18e77271938e77f2fa083396236804a282d10ffe5a1b83ddc298d3a54d820",
+  "checksum": "77a9de4fb87d78318100584f1e14bcb2dc9a3d147fac3c1d51c9b1315e1c4a1e",
   "crates": {
     "actix-codec 0.5.2": {
       "name": "actix-codec",
@@ -6721,14 +6721,14 @@
       ],
       "license_file": "LICENSE"
     },
-    "chrono 0.4.40": {
+    "chrono 0.4.41": {
       "name": "chrono",
-      "version": "0.4.40",
+      "version": "0.4.41",
       "package_url": "https://github.com/chronotope/chrono",
       "repository": {
         "Http": {
-          "url": "https://static.crates.io/crates/chrono/0.4.40/download",
-          "sha256": "1a7964611d71df112cb1730f2ee67324fcf4d0fc6606acbbe9bfe06df124637c"
+          "url": "https://static.crates.io/crates/chrono/0.4.41/download",
+          "sha256": "c469d952047f47f91b68d1cba3f10d63c11d73e4636f24f08daf0278abf01c4d"
         }
       },
       "targets": [
@@ -6972,7 +6972,7 @@
           }
         },
         "edition": "2021",
-        "version": "0.4.40"
+        "version": "0.4.41"
       },
       "license": "MIT OR Apache-2.0",
       "license_ids": [
@@ -12196,7 +12196,7 @@
               "target": "candid"
             },
             {
-              "id": "chrono 0.4.40",
+              "id": "chrono 0.4.41",
               "target": "chrono"
             },
             {
@@ -15389,7 +15389,7 @@
               "target": "axum_otel_metrics"
             },
             {
-              "id": "chrono 0.4.40",
+              "id": "chrono 0.4.41",
               "target": "chrono"
             },
             {
@@ -23110,7 +23110,7 @@
         "deps": {
           "common": [
             {
-              "id": "chrono 0.4.40",
+              "id": "chrono 0.4.41",
               "target": "chrono"
             },
             {
@@ -23202,7 +23202,7 @@
               "target": "candid"
             },
             {
-              "id": "chrono 0.4.40",
+              "id": "chrono 0.4.41",
               "target": "chrono"
             },
             {
@@ -23547,7 +23547,7 @@
               "target": "candid"
             },
             {
-              "id": "chrono 0.4.40",
+              "id": "chrono 0.4.41",
               "target": "chrono"
             },
             {
@@ -27027,7 +27027,7 @@
         "deps": {
           "common": [
             {
-              "id": "chrono 0.4.40",
+              "id": "chrono 0.4.41",
               "target": "chrono"
             },
             {
@@ -29540,7 +29540,7 @@
           "selects": {
             "cfg(not(all(target_arch = \"wasm32\", target_os = \"unknown\")))": [
               {
-                "id": "chrono 0.4.40",
+                "id": "chrono 0.4.41",
                 "target": "chrono"
               }
             ]
@@ -35787,7 +35787,7 @@
               "target": "candid"
             },
             {
-              "id": "chrono 0.4.40",
+              "id": "chrono 0.4.41",
               "target": "chrono"
             },
             {
@@ -35856,6 +35856,10 @@
             {
               "id": "candid 0.10.13",
               "target": "candid"
+            },
+            {
+              "id": "chrono 0.4.41",
+              "target": "chrono"
             },
             {
               "id": "futures 0.3.31",
@@ -37077,7 +37081,7 @@
               "target": "cfg_if"
             },
             {
-              "id": "chrono 0.4.40",
+              "id": "chrono 0.4.41",
               "target": "chrono"
             },
             {
@@ -40967,7 +40971,7 @@
         "deps": {
           "common": [
             {
-              "id": "chrono 0.4.40",
+              "id": "chrono 0.4.41",
               "target": "chrono"
             },
             {
@@ -45002,7 +45006,7 @@
         "deps_dev": {
           "common": [
             {
-              "id": "chrono 0.4.40",
+              "id": "chrono 0.4.41",
               "target": "chrono"
             },
             {
@@ -62548,7 +62552,7 @@
     "base64 0.22.1",
     "byteorder 1.5.0",
     "candid 0.10.13",
-    "chrono 0.4.40",
+    "chrono 0.4.41",
     "clap 4.5.32",
     "clap-num 1.2.0",
     "clap_complete 4.5.47",

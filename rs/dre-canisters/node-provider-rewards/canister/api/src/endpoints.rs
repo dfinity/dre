@@ -5,7 +5,8 @@ use rust_decimal::prelude::ToPrimitive;
 use rust_decimal::Decimal;
 use std::collections::BTreeMap;
 
-#[derive(candid::CandidType, candid::Deserialize)]
+// FIXME: these fields need to be documented!  Are they inclusive or exclusive ranges?  How does this work?
+#[derive(candid::CandidType, candid::Deserialize, Clone)]
 pub struct RewardPeriodArgs {
     /// Start of the reward distribution period, as a Unix timestamp in nanoseconds.
     /// This timestamp is covers the entire correspondent UTC day and is inclusive.
