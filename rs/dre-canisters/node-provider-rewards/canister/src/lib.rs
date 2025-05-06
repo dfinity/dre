@@ -12,7 +12,6 @@ use rewards_calculation::rewards_calculator::RewardsCalculator;
 use rewards_calculation::types::RewardPeriod;
 use std::collections::BTreeMap;
 use std::ops::Add;
-use std::ops::Sub;
 use std::str::FromStr;
 
 mod metrics;
