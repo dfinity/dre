@@ -34,7 +34,7 @@ class ReleaseNotesClientProtocol(typing.Protocol):
         release_commit: str,
         os_kind: OsKind,
         content: PreparedReleaseNotes,
-    ) -> DocInfo: ...
+    ) -> tuple[DocInfo, bool]: ...
 
     def markdown_file(
         self, version: str, os_kind: OsKind
@@ -68,16 +68,20 @@ class ReleaseNotesClient:
         release_commit: str,
         os_kind: OsKind,
         content: PreparedReleaseNotes,
-    ) -> DocInfo:
+    ) -> tuple[DocInfo, bool]:
         """
         Ensure that a release notes document exists for the given version.
 
         No changes are effected if the document mapped to this release commit
         already exists.
+
+        When the document is created, the second value of the tuple returned
+        will be True.  If the document already existed, the second value
+        will be False.
         """
         existing_file = self._file(release_commit, os_kind)
         if existing_file:
-            return typing.cast(DocInfo, existing_file)
+            return typing.cast(DocInfo, existing_file), False
         htmldoc = md.convert(content)
         gdoc = self.drive.CreateFile(  # type: ignore[no-untyped-call]
             {
@@ -90,7 +94,7 @@ class ReleaseNotesClient:
         )
         gdoc.SetContentString(htmldoc)
         gdoc.Upload()
-        return typing.cast(DocInfo, gdoc)
+        return typing.cast(DocInfo, gdoc), True
 
     def _file(self, version: str, os_kind: OsKind) -> DocInfo | None:
         """Get the file for the given version."""
@@ -148,13 +152,14 @@ def main() -> None:
     content = prepare_release_notes(
         request, ic_repo, LocalCommitChangeDeterminator(ic_repo)
     )
-    gdoc = client.ensure(
+    gdoc, changed = client.ensure(
         release_tag="release-2024-08-02_01-30-base",
         release_commit=version,
         content=content,
         os_kind=GUESTOS,
     )
     print(client.markdown_file(version, GUESTOS))
+    print("Document uploaded" if changed else "Document already existed")
     print(gdoc["alternateLink"])
 
 

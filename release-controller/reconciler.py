@@ -230,6 +230,7 @@ class ReplicaVersionProposalProvider(typing.Protocol):
 Phase = (
     typing.Literal["forum post creation"]
     | typing.Literal["release notes preparation"]
+    | typing.Literal["release notes announcement"]
     | typing.Literal["release notes pull request"]
     | typing.Literal["proposal submission"]
     | typing.Literal["forum post update"]
@@ -262,6 +263,7 @@ class VersionState(object):
     current_phase: Phase | None = None
     has_forum_post: bool | Failed = False
     has_prepared_release_notes: bool | Failed = False
+    has_release_notes_announced: bool | Failed = False
     has_release_notes_submitted_as_pr: bool | Failed = False
     has_proposal: bool | Failed = False
     forum_post_updated: bool | Failed = False
@@ -321,6 +323,8 @@ class VersionState(object):
             self.has_forum_post = val
         elif self.current_phase == "release notes preparation":
             self.has_prepared_release_notes = val
+        elif self.current_phase == "release notes announcement":
+            self.has_release_notes_announced = val
         elif self.current_phase == "release notes pull request":
             self.has_release_notes_submitted_as_pr = val
         elif self.current_phase == "proposal submission":
@@ -499,6 +503,8 @@ class Reconciler:
                 rclogger.debug("Ensuring forum post for release candidate exists.")
                 rc_forum_topic = self.forum_client.get_or_create(v.rc)
 
+            needs_announce = False
+
             with phase("release notes preparation"):
                 if markdown_file := self.notes_client.markdown_file(
                     release_commit, v.os_kind
@@ -557,12 +563,15 @@ class Reconciler:
                         continue
 
                     revlogger.info("Uploading release notes.")
-                    gdoc = self.notes_client.ensure(
+                    gdoc, needs_announce = self.notes_client.ensure(
                         release_tag=release_tag,
                         release_commit=release_commit,
                         content=content,
                         os_kind=v.os_kind,
                     )
+
+            if needs_announce:
+                with phase("release notes announcement"):
                     if "SLACK_WEBHOOK_URL" in os.environ:
                         # This should have never been in the Google Docs code.
                         revlogger.info("Announcing release notes")

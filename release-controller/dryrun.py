@@ -179,14 +179,19 @@ class ReleaseNotesClient(object):
         release_commit: str,
         os_kind: OsKind,
         content: PreparedReleaseNotes,
-    ) -> DocInfo:
+    ) -> tuple[DocInfo, bool]:
+        """
+        Ensures the relase notes are stored in Google Docs (fake).
+
+        Returns a DocInfo object, along with whether the doc changed.
+        """
         t = self.release_notes_folder / (release_commit + os_kind)
         if t.exists():
-            return {"alternateLink": str(t)}
+            return {"alternateLink": str(t)}, False
         with open(t, "w") as f:
             f.write(f"{content}")
         self._logger.warning("Stored release notes in %s", t)
-        return {"alternateLink": str(t)}
+        return {"alternateLink": str(t)}, True
 
     def markdown_file(
         self, version: str, os_kind: OsKind

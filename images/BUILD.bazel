@@ -106,6 +106,18 @@ cacerts(
     }),
 )
 
+# The following thing is necessary because Bazel-wrapped Python programs
+# insist on ignoring the default /usr/lib/ssl/cert.pem and /etc/ssl/certificates/...
+# root and intermediate certificate store, making `urllib.request.urlopen()` fail
+# for any Bazel-wrapped py_binary in the container.  This does not happen when
+# regular Python is invoked inside of the container.
+tar(
+    name = "cacerts-symlink",
+    mtree = [
+        "./etc/ssl/cert.pem type=link link=/etc/ssl/certs/ca-certificates.crt",
+    ],
+)
+
 oci_image(
     name = "ubuntu_24_04",
     architecture = select({
@@ -122,6 +134,7 @@ oci_image(
         ":group",
         ":home",
         ":cacerts",
+        ":cacerts-symlink",
         # Packages listed in this manifest (see YAML files in this folder)
         # get installed in the container by this rule.
         "@ubuntu_24_04_packages//:ubuntu_24_04_packages",
