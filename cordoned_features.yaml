@@ -143,6 +143,6 @@ features:
   - feature: data_center
     value: im2
     explanation: "did not finish onboarding"
-  - feature: data_center
-    value: hk4
-    explanation: "freeing up nodes from HK4 in order to update ipv6"
+  - feature: node_operator
+    value: dg7of-7gsgk-b7ptj-mcrrc-bxcae-6yg2o-oa57j-64cyo-vbc4d-t3ax5-oqe
+    explanation: "freeing up nodes from Web3game in order to update ipv6"
