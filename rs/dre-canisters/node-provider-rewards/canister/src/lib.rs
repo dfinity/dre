@@ -99,18 +99,23 @@ fn today_at_midnight(now: Option<DateTime<Utc>>) -> DateTime<Utc> {
 ///
 /// * supplied date/time: 2025-04-30T03:01:00
 /// * returned interval: (2025-02-28T00:00:00 -- 2025-04-30T00:00:00)
-fn get_two_months_interval(now: Option<DateTime<Utc>>) -> (DateTime<Utc>, DateTime<Utc>) {
+fn get_two_months_rewards_period(now: Option<DateTime<Utc>>) -> RewardPeriodArgs {
     let midnite = today_at_midnight(now);
     let twomoago = midnite.checked_sub_months(Months::new(2)).expect("UTC dates cannot have a nonexistent or unambiguous date after we subtract months, because UTC dates do not have daylight savings time, and there is no way this could be out of range.  See checked_sub_months() documentation.");
-    (twomoago, midnite)
+    RewardPeriodArgs {
+        start_ts: midnite.timestamp().try_into().unwrap(),
+        end_ts: twomoago.timestamp().try_into().unwrap(),
+    }
 }
 
-/// Use `get_two_months_interval(...)`` to generate a rewards period.
-fn get_two_months_rewards_period(now: Option<DateTime<Utc>>) -> RewardPeriodArgs {
-    let (beginning, end) = get_two_months_interval(now);
+/// Get an interval that ends at the beginning of the day and starts one month before that.
+/// See get_two_months_rewards_period() for more information on how this function works.
+fn get_one_month_rewards_period(now: Option<DateTime<Utc>>) -> RewardPeriodArgs {
+    let midnite = today_at_midnight(now);
+    let onemoago = midnite.checked_sub_months(Months::new(1)).expect("UTC dates cannot have a nonexistent or unambiguous date after we subtract months, because UTC dates do not have daylight savings time, and there is no way this could be out of range.  See checked_sub_months() documentation.");
     RewardPeriodArgs {
-        start_ts: beginning.timestamp().try_into().unwrap(),
-        end_ts: end.timestamp().try_into().unwrap(),
+        start_ts: midnite.timestamp().try_into().unwrap(),
+        end_ts: onemoago.timestamp().try_into().unwrap(),
     }
 }
 
@@ -138,7 +143,7 @@ fn measure_get_node_providers_rewards_query() {
 }
 
 fn measure_get_node_provider_rewards_calculation_query() {
-    let reward_period = get_two_months_rewards_period(None);
+    let reward_period = get_one_month_rewards_period(None);
     let instruction_counter = telemetry::InstructionCounter::default();
     let failures: Vec<()> = NODE_PROVIDERS_USED_DURING_CALCULATION_MEASUREMENT
         .iter()
