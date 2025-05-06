@@ -1,5 +1,5 @@
 {
-  "checksum": "77a9de4fb87d78318100584f1e14bcb2dc9a3d147fac3c1d51c9b1315e1c4a1e",
+  "checksum": "d261444e8b4f5afb859fa01196302b8dbf3598a8f257220c597ec3ae29f7de92",
   "crates": {
     "actix-codec 0.5.2": {
       "name": "actix-codec",
@@ -34240,6 +34240,10 @@
             {
               "id": "tokio 1.44.2",
               "target": "tokio"
+            },
+            {
+              "id": "tokio-util 0.7.14",
+              "target": "tokio_util"
             },
             {
               "id": "url 2.5.4",

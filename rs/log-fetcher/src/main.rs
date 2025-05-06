@@ -12,7 +12,7 @@ use log::{error, info};
 use pretty_env_logger::formatted_builder;
 use reqwest::ClientBuilder;
 use tokio::select;
-use tokio::sync::mpsc;
+use tokio_util::sync::CancellationToken;
 use url::Url;
 
 use crate::journald_parser::{parse_journal_entries_new, JournalField};
@@ -26,18 +26,24 @@ async fn main() -> Result<(), anyhow::Error> {
 
     info!("Running with args: {:?}", args);
 
-    let client = match ClientBuilder::new().danger_accept_invalid_certs(true).build() {
+    let client = match ClientBuilder::new()
+        .danger_accept_invalid_certs(true)
+        // If target cannot be reached within this timeout error.
+        .connect_timeout(Duration::from_secs(10))
+        .build()
+    {
         Ok(c) => c,
         Err(e) => return Err(anyhow!("Error while constructing the client: {:?}", e)),
     };
 
-    let (ctrl_c_sender, mut ctrl_c_receiver) = mpsc::channel::<()>(1);
+    let token = CancellationToken::new();
+    let token_clone = token.clone();
 
     tokio::spawn(async move {
         tokio::signal::ctrl_c().await.expect("Failed to listen for Ctrl-C");
-        info!("Received Ctrl-C, exiting...");
+        info!("Sending Ctrl-C, exiting...");
         // Send a message through the channel to notify the main loop
-        let _ = ctrl_c_sender.send(()).await;
+        token_clone.cancel();
     });
 
     let mut cursor = fetch_cursor(&args.cursor_path)?;
@@ -46,7 +52,8 @@ async fn main() -> Result<(), anyhow::Error> {
     while should_run {
         let mut leftover_buffer = String::new();
         select! {
-            _ = ctrl_c_receiver.recv() => {
+            biased;
+            _ = token.cancelled() => {
                 info!("Received Ctrl-C, exiting...");
                 break;
             }
@@ -57,15 +64,22 @@ async fn main() -> Result<(), anyhow::Error> {
 
         let range = format!("entries={}:0:", cursor);
 
-        let response = client
+        let future = client
             .get(args.url.clone())
             .header("Accept", "application/vnd.fdo.journal")
             .header("Range", range)
-            .send()
-            .await;
+            .send();
+
+        let response = select! {
+            _ = token.cancelled() => {
+                info!("Received Ctrl-C while establishing the connection. Exiting...");
+                break;
+            },
+            response = future => response,
+        };
 
         if let Err(e) = response {
-            error!("Couldn't parse body bytes due to error: {:?}", e);
+            error!("Couldn't establish the connection due to: {:?}", e);
             continue;
         };
 
@@ -73,22 +87,30 @@ async fn main() -> Result<(), anyhow::Error> {
 
         loop {
             let maybe_response = select! {
-                maybe_response = response.chunk() => maybe_response,
-                _ = ctrl_c_receiver.recv() => {
-                    info!("Received Ctrl-C, exiting...");
+                biased;
+                _ = token.cancelled() => {
+                    info!("Received Ctrl-C while reading chunks. Exiting...");
                     should_run = false;
                     break;
-                }
+                },
+                // If there were no new logs for 30 seconds, error
+                maybe_response = tokio::time::timeout(Duration::from_secs(30), response.chunk()) => maybe_response,
             };
 
             let chunk = match maybe_response {
-                Ok(Some(chunk)) => chunk,
-                Ok(None) => {
-                    info!("Exhausted the response");
-                    break;
-                }
+                Ok(maybe_chunk) => match maybe_chunk {
+                    Ok(Some(chunk)) => chunk,
+                    Ok(None) => {
+                        info!("Exhausted the response");
+                        break;
+                    }
+                    Err(e) => {
+                        error!("Failed to fetch next chunk: {:?}", e);
+                        break;
+                    }
+                },
                 Err(e) => {
-                    error!("Failed to fetch next chunk: {:?}", e);
+                    error!("Didn't receive a chunk within the expected timeframe. Error {:?}", e);
                     break;
                 }
             };
