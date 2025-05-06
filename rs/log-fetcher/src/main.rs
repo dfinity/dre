@@ -64,15 +64,22 @@ async fn main() -> Result<(), anyhow::Error> {
 
         let range = format!("entries={}:0:", cursor);
 
-        let response = client
+        let future = client
             .get(args.url.clone())
             .header("Accept", "application/vnd.fdo.journal")
             .header("Range", range)
-            .send()
-            .await;
+            .send();
+
+        let response = select! {
+            _ = token.cancelled() => {
+                info!("Received Ctrl-C while establishing the connection. Exiting...");
+                break;
+            },
+            response = future => response,
+        };
 
         if let Err(e) = response {
-            error!("Couldn't parse body bytes due to error: {:?}", e);
+            error!("Couldn't establish the connection due to: {:?}", e);
             continue;
         };
 
@@ -82,7 +89,7 @@ async fn main() -> Result<(), anyhow::Error> {
             let maybe_response = select! {
                 biased;
                 _ = token.cancelled() => {
-                    info!("Received Ctrl-C while reading chunks Exiting...");
+                    info!("Received Ctrl-C while reading chunks. Exiting...");
                     should_run = false;
                     break;
                 },
