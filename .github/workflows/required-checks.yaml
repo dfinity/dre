@@ -5,10 +5,10 @@ on:
       - Release controller
       - Build and test
     types:
-      - in_progress
+      - requested
 
 concurrency:
-  group: ${{ github.workflow }}-required-checks-${{ github.event.pull_request.number || github.event.push.after || github.ref }}
+  group: ${{ github.workflow }}-required-checks-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
