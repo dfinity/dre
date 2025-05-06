@@ -1,6 +1,6 @@
 use ic_canisters::cycles_minting::CyclesMintingCanisterWrapper;
 use indexmap::IndexMap;
-use std::{path::PathBuf, sync::Arc};
+use std::{collections::BTreeSet, path::PathBuf, sync::Arc};
 
 use crate::{auth::AuthRequirement, exe::args::GlobalArgs, exe::ExecutableCommand};
 use clap::{error::ErrorKind, Args};
@@ -75,6 +75,7 @@ impl ExecutableCommand for UpdateAuthorizedSubnets {
 
         let cmc = CyclesMintingCanisterWrapper::from(agent.clone());
         let public_subnets = cmc.get_authorized_subnets().await?;
+        let public_subnets: BTreeSet<PrincipalId> = public_subnets.into_iter().collect();
 
         let mut verified_subnets_to_open = self.open_verified_subnets;
 
@@ -123,32 +124,28 @@ impl ExecutableCommand for UpdateAuthorizedSubnets {
                     excluded_subnets.insert(subnet.principal, description);
                     continue;
                 }
-            }
 
-            // Looks like we're good to go!
-            // Now only adjust the counter of how many VerifiedApplication subnets have been opened
-            // up in this run.
-            if subnet.subnet_type.eq(&SubnetType::VerifiedApplication) && !public_subnets.contains(&subnet.principal) {
-                if verified_subnets_to_open > 0 {
-                    verified_subnets_to_open -= 1;
-                } else {
-                    unreachable!(
-                        "Error in logic! Subnet of type VerifiedApplication cannot be let through the filter if `open_verified_subnets` is 0"
-                    )
-                }
+                verified_subnets_to_open -= 1;
             }
         }
 
-        let summary = construct_summary(&subnets, &excluded_subnets, public_subnets)?;
-
-        let authorized = subnets
+        let new_authorized: BTreeSet<PrincipalId> = subnets
             .keys()
             .filter(|subnet_id| !excluded_subnets.contains_key(*subnet_id))
             .cloned()
             .collect();
 
+        if new_authorized == public_subnets {
+            println!("There are no diffs. Skipping proposal creation.");
+            return Ok(());
+        }
+
+        let summary = construct_summary(&subnets, &excluded_subnets, public_subnets)?;
+
         let prop = IcAdminProposal::new(
-            IcAdminProposalCommand::SetAuthorizedSubnetworks { subnets: authorized },
+            IcAdminProposalCommand::SetAuthorizedSubnetworks {
+                subnets: new_authorized.into_iter().collect(),
+            },
             IcAdminProposalOptions {
                 title: Some("Updating the list of public subnets".to_string()),
                 summary: Some(summary.clone()),
@@ -196,7 +193,7 @@ impl UpdateAuthorizedSubnets {
 fn construct_summary(
     subnets: &Arc<IndexMap<PrincipalId, Subnet>>,
     excluded_subnets: &IndexMap<PrincipalId, String>,
-    current_public_subnets: Vec<PrincipalId>,
+    current_public_subnets: BTreeSet<PrincipalId>,
 ) -> anyhow::Result<String> {
     Ok(format!(
         "Updating the list of authorized subnets to:
@@ -209,7 +206,7 @@ fn construct_summary(
             .values()
             .map(|s| {
                 let excluded_desc = excluded_subnets.get(&s.principal);
-                let was_public = current_public_subnets.iter().any(|principal| principal == &s.principal);
+                let was_public = current_public_subnets.contains(&s.principal);
                 format!(
                     "| {} | {} | {} | {} |",
                     s.principal,
