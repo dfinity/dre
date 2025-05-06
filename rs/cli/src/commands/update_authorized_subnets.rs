@@ -78,14 +78,10 @@ impl ExecutableCommand for UpdateAuthorizedSubnets {
         let public_subnets: BTreeSet<PrincipalId> = public_subnets.into_iter().collect();
 
         let mut verified_subnets_to_open = self.open_verified_subnets;
-        let mut changes = 0;
 
         for subnet in subnets.values().sorted_by_cached_key(|s| s.principal) {
             if subnet.subnet_type.eq(&SubnetType::System) {
                 excluded_subnets.insert(subnet.principal, "System subnets should not have public access".to_string());
-                if public_subnets.contains(&subnet.principal) {
-                    changes += 1;
-                }
                 continue;
             }
 
@@ -96,10 +92,6 @@ impl ExecutableCommand for UpdateAuthorizedSubnets {
                 .find(|(short_id, _)| subnet_principal_string.starts_with(short_id))
             {
                 excluded_subnets.insert(subnet.principal, format!("Explicitly marked as non-public ({})", description));
-                if public_subnets.contains(&subnet.principal) {
-                    changes += 1;
-                }
-
                 continue;
             }
 
@@ -108,18 +100,11 @@ impl ExecutableCommand for UpdateAuthorizedSubnets {
 
             if subnet_metrics.num_canisters >= self.canister_limit {
                 excluded_subnets.insert(subnet.principal, format!("Subnet has more than {} canisters", self.canister_limit));
-                if public_subnets.contains(&subnet.principal) {
-                    changes += 1;
-                }
-
                 continue;
             }
 
             if subnet_metrics.canister_state_bytes >= self.state_size_limit {
                 excluded_subnets.insert(subnet.principal, format!("Subnet has more than {} state size", human_bytes));
-                if public_subnets.contains(&subnet.principal) {
-                    changes += 1;
-                }
             }
 
             // There was a request to open up 1 verified subnet per week
@@ -137,34 +122,30 @@ impl ExecutableCommand for UpdateAuthorizedSubnets {
                         .map(|(_, desc)| desc.to_string())
                         .unwrap_or("Other verified subnets opened up in this run".to_string());
                     excluded_subnets.insert(subnet.principal, description);
-                    if public_subnets.contains(&subnet.principal) {
-                        changes += 1;
-                    }
-
                     continue;
                 }
 
-                // Don't exclude this subnet (or in other words make it public)
                 verified_subnets_to_open -= 1;
-                changes += 1;
             }
         }
 
-        if changes == 0 {
+        let new_authorized: BTreeSet<PrincipalId> = subnets
+            .keys()
+            .filter(|subnet_id| !excluded_subnets.contains_key(*subnet_id))
+            .cloned()
+            .collect();
+
+        if new_authorized == public_subnets {
             println!("There are no diffs. Skipping proposal creation.");
             return Ok(());
         }
 
         let summary = construct_summary(&subnets, &excluded_subnets, public_subnets)?;
 
-        let authorized = subnets
-            .keys()
-            .filter(|subnet_id| !excluded_subnets.contains_key(*subnet_id))
-            .cloned()
-            .collect();
-
         let prop = IcAdminProposal::new(
-            IcAdminProposalCommand::SetAuthorizedSubnetworks { subnets: authorized },
+            IcAdminProposalCommand::SetAuthorizedSubnetworks {
+                subnets: new_authorized.into_iter().collect(),
+            },
             IcAdminProposalOptions {
                 title: Some("Updating the list of public subnets".to_string()),
                 summary: Some(summary.clone()),
