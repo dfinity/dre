@@ -143,3 +143,6 @@ features:
   - feature: data_center
     value: im2
     explanation: "did not finish onboarding"
+  - feature: data_center
+    value: hk4
+    explanation: "freeing up nodes from HK4 in order to update ipv6"
