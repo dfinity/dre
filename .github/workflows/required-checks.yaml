@@ -1,15 +1,9 @@
 name: Required checks
 on:
   push: {}
-  workflow_run:
-    workflows:
-      - Release controller
-      - Build and test
-    types:
-      - in_progress
 
 concurrency:
-  group: ${{ github.workflow }}-required-checks-${{ github.event.pull_request.number || github.event.push.after || github.ref }}
+  group: ${{ github.workflow }}-required-checks-${{ github.event.push.after || github.ref }}
   cancel-in-progress: true
 
 jobs:
