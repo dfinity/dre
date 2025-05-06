@@ -1,6 +1,6 @@
 use ic_canisters::cycles_minting::CyclesMintingCanisterWrapper;
 use indexmap::IndexMap;
-use std::{path::PathBuf, sync::Arc};
+use std::{collections::BTreeSet, path::PathBuf, sync::Arc};
 
 use crate::{auth::AuthRequirement, exe::args::GlobalArgs, exe::ExecutableCommand};
 use clap::{error::ErrorKind, Args};
@@ -75,6 +75,7 @@ impl ExecutableCommand for UpdateAuthorizedSubnets {
 
         let cmc = CyclesMintingCanisterWrapper::from(agent.clone());
         let public_subnets = cmc.get_authorized_subnets().await?;
+        let public_subnets: BTreeSet<PrincipalId> = public_subnets.into_iter().collect();
 
         let mut verified_subnets_to_open = self.open_verified_subnets;
 
@@ -139,6 +140,11 @@ impl ExecutableCommand for UpdateAuthorizedSubnets {
             }
         }
 
+        if !check_diffs(&subnets, &excluded_subnets, &public_subnets) {
+            println!("There are no diffs. Skipping proposal creation.");
+            return Ok(());
+        }
+
         let summary = construct_summary(&subnets, &excluded_subnets, public_subnets)?;
 
         let authorized = subnets
@@ -189,6 +195,28 @@ impl UpdateAuthorizedSubnets {
     }
 }
 
+// Checks if there are subnets that are open right now but are going to be
+fn check_diffs(
+    subnets: &Arc<IndexMap<PrincipalId, Subnet>>,
+    excluded_subnets: &IndexMap<PrincipalId, String>,
+    current_public_subnets: &BTreeSet<PrincipalId>,
+) -> bool {
+    for subnet in subnets.keys() {
+        // If it is present in the `excluded_subnets` its next public status will become `false`
+        // or if it's absent, its next public status will become `true`
+        let will_become = excluded_subnets.get(subnet).is_none();
+
+        let current_status = current_public_subnets.get(subnet).is_some();
+
+        // If there is any differences the proposal should be created
+        if will_become != current_status {
+            return true;
+        }
+    }
+
+    false
+}
+
 /// FIXME probably should be moved to the Discourse post creation code.
 /// also it would be wise to divorce the Discourse machinery from the kind of post
 /// we want to compose, so that composing the post and posting the post are separate activities,
@@ -196,7 +224,7 @@ impl UpdateAuthorizedSubnets {
 fn construct_summary(
     subnets: &Arc<IndexMap<PrincipalId, Subnet>>,
     excluded_subnets: &IndexMap<PrincipalId, String>,
-    current_public_subnets: Vec<PrincipalId>,
+    current_public_subnets: BTreeSet<PrincipalId>,
 ) -> anyhow::Result<String> {
     Ok(format!(
         "Updating the list of authorized subnets to:
@@ -209,7 +237,7 @@ fn construct_summary(
             .values()
             .map(|s| {
                 let excluded_desc = excluded_subnets.get(&s.principal);
-                let was_public = current_public_subnets.iter().any(|principal| principal == &s.principal);
+                let was_public = current_public_subnets.get(&s.principal).is_some();
                 format!(
                     "| {} | {} | {} | {} |",
                     s.principal,
