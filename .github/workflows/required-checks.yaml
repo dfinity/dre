@@ -9,7 +9,7 @@ on:
       - in_progress
 
 concurrency:
-  group: ${{ github.workflow }}-required-checks-${{ github.event.pull_request.number || github.ref }}
+  group: ${{ github.workflow }}-required-checks-${{ github.event.pull_request.number || github.event.push.after || github.ref }}
   cancel-in-progress: true
 
 jobs:
