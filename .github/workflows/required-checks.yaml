@@ -1,6 +1,5 @@
 name: Required checks
 on:
-  push: {}
   workflow_run:
     workflows:
       - Release controller
