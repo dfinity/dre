@@ -178,18 +178,11 @@ fn setup_timers() {
         ic_cdk::spawn(sync_all());
 
         // Hourly timers after first sync.
-        ic_cdk_timers::set_timer_interval(std::time::Duration::from_secs(HOUR_IN_SECONDS), || {
-            ic_cdk::spawn(async {
-                // Measure measure_get_node_providers_rewards_query calls every hour.
-                ic_cdk::spawn(async { measure_get_node_providers_rewards_query() });
-            });
-        });
-        ic_cdk_timers::set_timer_interval(std::time::Duration::from_secs(HOUR_IN_SECONDS), || {
-            ic_cdk::spawn(async {
-                // Measure measure_get_node_provider_rewards_calculation_query calls every hour.
-                ic_cdk::spawn(async { measure_get_node_provider_rewards_calculation_query() });
-            });
-        });
+        ic_cdk_timers::set_timer_interval(std::time::Duration::from_secs(HOUR_IN_SECONDS), measure_get_node_providers_rewards_query);
+        ic_cdk_timers::set_timer_interval(
+            std::time::Duration::from_secs(HOUR_IN_SECONDS),
+            measure_get_node_provider_rewards_calculation_query,
+        );
     });
 
     // Hourly timers.
