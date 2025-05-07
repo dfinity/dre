@@ -1,4 +1,4 @@
-use std::cell::RefCell;
+use std::{cell::RefCell, collections::HashMap};
 
 /// Instruction counter helper that counts instructions in the call context.
 pub struct InstructionCounter {
@@ -55,8 +55,7 @@ pub struct PrometheusMetrics {
     last_sync_update_subnet_metrics_instructions: f64,
     node_provider_rewards_method_instructions: u64,
     node_provider_rewards_method_success: bool,
-    node_provider_rewards_calculation_method_instructions: u64,
-    node_provider_rewards_calculation_method_success: bool,
+    node_provider_rewards_calculation_method_measurements: HashMap<String, (u64, bool)>,
 }
 
 static LAST_SYNC_START_HELP: &str = "Last time the sync of metrics started.  If this metric is present but zero, the first sync during this canister's current execution has not yet begun or taken place.";
@@ -114,37 +113,44 @@ impl PrometheusMetrics {
             .unwrap();
 
         // Query call metrics.  Accumulate them in a vector so that we may
-        // emit the gauges only when the metrics are available.  We need to
-        // do it this convoluted way because the metrics encoder does not
+        // emit the gauges only when the metrics are available (this does not
+        // apply to the metrics stored as hashmaps, only as flat values).  We
+        // need to do it this convoluted way because the metrics encoder does not
         // let us serialize a gauge interspersed with another.
-        let method_gauges: Vec<(&str, u64, bool)> = vec![
-            (
-                "node_provider_rewards",
+        let method_gauges: Vec<(Vec<(&str, &str)>, u64, bool)> = [
+            vec![(
+                vec![("method", "node_provider_rewards")],
                 self.node_provider_rewards_method_instructions,
                 self.node_provider_rewards_method_success,
-            ),
-            (
-                "node_provider_rewards_calculation",
-                self.node_provider_rewards_calculation_method_instructions,
-                self.node_provider_rewards_calculation_method_success,
-            ),
+            )]
+            .into_iter()
+            .filter(|elm| elm.1 > 0)
+            .collect::<Vec<_>>(),
+            self.node_provider_rewards_calculation_method_measurements
+                .iter()
+                .map(|(k, v)| {
+                    (
+                        vec![("method", "node_provider_rewards_calculation"), ("operator", (k.as_str()))],
+                        v.0,
+                        v.1,
+                    )
+                })
+                .collect::<Vec<_>>(),
         ]
-        .into_iter()
-        .filter(|elm| elm.1 > 0)
-        .collect();
+        .concat();
 
         if !method_gauges.is_empty() {
             let mut instructions_gauge = w
                 .gauge_vec("query_call_instructions", QUERY_CALL_INSTRUCTIONS_HELP)
                 .expect("Name must be valid");
-            for (method, instructions, _) in method_gauges.iter() {
-                instructions_gauge = instructions_gauge.value(&[("method", *method)], *instructions as f64).unwrap()
+            for (labels, instructions, _) in method_gauges.iter() {
+                instructions_gauge = instructions_gauge.value(labels, *instructions as f64).unwrap()
             }
             let mut success_gauge = w.gauge_vec("query_call_success", QUERY_CALL_SUCCESS_HELP).expect("Name must be valid");
-            for (method, _, success) in method_gauges.iter() {
+            for (labels, _, success) in method_gauges.iter() {
                 success_gauge = success_gauge
                     .value(
-                        &[("method", *method)],
+                        labels,
                         match *success {
                             true => 1.0,
                             false => 0.0,
@@ -182,9 +188,9 @@ impl PrometheusMetrics {
         self.node_provider_rewards_method_success = success;
     }
 
-    pub fn record_node_provider_rewards_calculation_method(&mut self, instructions: u64, success: bool) {
-        self.node_provider_rewards_calculation_method_instructions = instructions;
-        self.node_provider_rewards_calculation_method_success = success;
+    pub fn record_node_provider_rewards_calculation_method(&mut self, subnet: &str, instructions: u64, success: bool) {
+        self.node_provider_rewards_calculation_method_measurements
+            .insert(subnet.to_string(), (instructions, success));
     }
 }
 
