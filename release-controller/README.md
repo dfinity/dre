@@ -37,6 +37,8 @@ If you want fix a bug, or add a feature, please consider writing a test.
 
 This simple service checks out each commit on `master` and `rc-*` branches of IC repo and runs [target-determinator](https://github.com/bazel-contrib/target-determinator) to identify whether GuestOS build changed as a result of changes in that commit. This information is then pushed to git notes and later used by reconciler.
 
+The annotator has a bonus mode to manually annotate failing commits.  See below for more info.
+
 ### reconciler
 
 Reconciler is responsible for generating release notes (1), publishing them as google docs and sending a notification to #eng-release Slack channel (2), creating a GitHub PR to publish notes (3), placing the proposal for electing a version (4) and creating and updating forum post (5).
@@ -71,66 +73,39 @@ This could happen if release-index.yaml was wrongly configured or if there's a m
 
 #### Resolution
 
-Simply move the document outside of the Google Drive folder. Renaming it to something meaningless (e.g. to-delete-12-09-24) should also do the trick.
+1. To cause the reconciler to regenerate release notes: move the document outside of the Google Drive folder. Renaming it to something meaningless (e.g. to-delete-12-09-24) should also do the trick.
+2. To fix the code in the commit annotator: manually generate the release notes (see below) on your computer and make changes to the queries or the code until the notes look as expected.
 
-### Missing GuestOS label
+### Release notes are not yet ready for a long time
 
-Release controller is stuck generating release notes because it's missing a GuestOS label for some commit.
+This is caused by one or more missing GuestOS / HostOS annotations.  Release controller is stuck generating release notes because it's missing a note for some commit.
 
-#### Evaluation
+#### Diagnostics
 
-Error message in release-controller should look something like this.
+Verify that the annotator has completed and is not stuck on any branch (use the dashboard listed above).
 
-```
-ValueError: Could not find targets for commit 99ab7f0370
-ERROR:root:failed to reconcile: Could not find targets for commit 99ab7f0370
-```
+If `target-determinator` is crashing as the annotator executes it, here is how you find the failing commit causing the crash:
 
-To resolve, you'll need to manually label all the commits that commit-annotator is struggling with.
-
-> [!CAUTION]
-> Do not annotate commits reported by release-controller!
-> This will break commit-annotator and then you'll end up having to annotate more commits manually.
-> Instead, see if commit-annotator is stuck on certain commit and annotate that one.
-
-Example error message in commit-annotator.
-
-```
-INFO:root:annotating git commit 7d81b536b2f66fd779198e2e4dbb405381545a55
-ERROR: ...
-```
+1. Click on the Custom query square on the title of the *Combined annotater and reconciler logs* pane on the dashboard.
+2. Search for `annotate_object` -- the most recent occurrence will have the failing commit ID.
 
 #### Resolution
 
-1. Fetch git notes
-  ```
-  git fetch origin 'refs/notes/*:refs/notes/*' -f --prune
-  ```
+If the problem is that the annotator keeps crashing because a commit is not buildable, you can manually annotate that commit and that will cause the annotator to skip it.  There is an example below on how to manually annotate a failing commit.
 
-2. Display notes for a commit. This should normally output `True` or `False`.
-  ```
-  git notes --ref guestos-changed show <commit>
-  ```
+You may have to annotate all commits not annotated prior to the failing commit as well (although that should not be necessary because the annotator generally annotates from oldest to newest commit, so all older commits should already be annotated).
 
-3. If you get an error, you can manually label the commit.
-  ```
-  git notes --ref guestos-changed add -m "<True|False>" <commit>
-  ```
-
-4. Finally, push the labels. If you get a conflict at this point, just start over instead of force pushing.
-  ```
-  git push origin refs/notes/guestos-changed
-  ```
 
 > [!TIP]
-> If someone messed up and labeled commits in between, commit annotator might report that it labeled everything.
-> Run the below commands on IC repo to find commits without labels.
+> If someone messed up and labeled commits in between, commit annotator might report that it labeled everything when it did not, and reconciler may never be ready with the release notes.
+> Run the below commands on IC repo to find gaps where there are commits without labels.
 
 ```shell
 git fetch origin 'refs/notes/*:refs/notes/*' -f --prune
-git log --format='%H' --no-merges [BASE_COMMIT]..[RELEASE_COMMIT] | xargs -L1 -I_commit bash -c "echo -n '_commit '; git notes --ref guestos-changed show _commit | cat"
+git log --format='%H' --no-merges $BASE_COMMIT..$RELEASE_COMMIT | xargs -L1 -I_commit bash -c "echo -n '_commit '; git notes --ref guestos-changed show _commit | cat"
+# substitute guestos-changed with hostos-changed to detect gaps in HostOS annotations.
+# substitute guestos-changed with guestos-targets to see targets and target-determinator output for that commit's annotation work..
 ```
-
 
 ### Missing proposal
 
@@ -145,7 +120,9 @@ release-controller should have a warning message something like this:
 "version 99ab7f03700ba6cf832eb18ffd55228f56ae927a: earlier proposal submission attempted but most likely failed"
 ```
 
-Make sure also that few minutes have passed and that public dashboard still doesn't list the proposal.
+Make sure also that few minutes have passed and that public dashboard still doesn't list the proposal.  Sometimes it takes a minute or two.
+
+If the proposal was indeed submitted, you don't have to do anything -- the reconciler will notice and continue normally.
 
 #### Resolution
 
@@ -251,6 +228,19 @@ technique as above.  However, the annotator requires `--user $UID`
 because Bazel will not run as root (UID 0).
 
 Please consult `--help` for additional options.
+
+### Manually annotate a troublesome commit
+
+```sh
+export GITHUB_TOKEN=<any Github token with push access to the IC repo>
+COMMIT_TO_ANNOTATE=9da8cc52d3d576410174bb28d629862f05a635e0
+AFFECTS_OS=yes
+WHICH_OS=HostOS # or GuestOS, or leave out --os-kind for all OSes
+bazel run //release-controller:commit-annotator \
+  -- \
+  manually-annotate \
+  $COMMIT_TO_ANNOTATE $AFFECTS_OS --os-kind $WHICH_OS
+```
 
 ### Generate release notes locally
 

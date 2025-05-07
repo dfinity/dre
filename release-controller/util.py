@@ -1,3 +1,6 @@
+# mypy: disable-error-code="unused-ignore"
+
+import argparse
 import collections.abc
 import hashlib
 import logging
@@ -269,3 +272,33 @@ def repr_ellipsized(s: str, max_length: int = 80) -> str:
     return (
         repr(s[: int(max_length / 2) - 2]) + "..." + repr(s[-int(max_length / 2) - 2 :])
     )
+
+
+class DefaultSubcommandArgParser(argparse.ArgumentParser):
+    __default_subparser: str | None = None
+
+    def set_default_subparser(self, name: str) -> None:
+        self.__default_subparser = name
+
+    def _parse_known_args(  # type: ignore
+        self,
+        arg_strings: list[str],
+        namespace: argparse.Namespace,
+    ) -> tuple[argparse.Namespace, list[str]]:
+        in_args = set(arg_strings)
+        d_sp = self.__default_subparser
+        if d_sp is not None and not {"-h", "--help"}.intersection(in_args):
+            assert self._subparsers is not None
+            for x in self._subparsers._actions:
+                subparser_found = isinstance(
+                    x, argparse._SubParsersAction
+                ) and in_args.intersection(x._name_parser_map.keys())
+                if subparser_found:
+                    break
+            else:
+                # insert default in first position, this implies no
+                # global options without a sub_parsers specified
+                arg_strings = [d_sp] + arg_strings
+        return super(DefaultSubcommandArgParser, self)._parse_known_args(  # type: ignore
+            arg_strings, namespace
+        )
