@@ -2,7 +2,8 @@ use crate::metrics_types::{KeyRange, NodeMetricsDailyStored, SubnetIdKey, Subnet
 use async_trait::async_trait;
 use candid::Principal;
 use ic_base_types::SubnetId;
-use ic_cdk::api::call::CallResult;
+use ic_cdk::call::Call;
+use ic_cdk::call::CallResult;
 use ic_management_canister_types_private::{NodeMetricsHistoryArgs, NodeMetricsHistoryResponse};
 use ic_stable_structures::StableBTreeMap;
 use rewards_calculation::types::{NodeMetricsDailyRaw, SubnetMetricsDailyKey, UnixTsNanos};
@@ -13,7 +14,7 @@ pub type RetryCount = u64;
 
 #[async_trait]
 pub trait ManagementCanisterClient {
-    async fn node_metrics_history(&self, args: NodeMetricsHistoryArgs) -> CallResult<(Vec<NodeMetricsHistoryResponse>,)>;
+    async fn node_metrics_history(&self, args: NodeMetricsHistoryArgs) -> CallResult<Vec<NodeMetricsHistoryResponse>>;
 }
 
 /// Used to interact with remote Management canisters.
@@ -23,14 +24,13 @@ pub struct ICCanisterClient;
 impl ManagementCanisterClient for ICCanisterClient {
     /// Queries the `node_metrics_history` endpoint of the management canisters of the subnet specified
     /// in the 'contract' to fetch daily node metrics.
-    async fn node_metrics_history(&self, contract: NodeMetricsHistoryArgs) -> CallResult<(Vec<NodeMetricsHistoryResponse>,)> {
-        ic_cdk::api::call::call_with_payment128::<_, (Vec<NodeMetricsHistoryResponse>,)>(
-            Principal::management_canister(),
-            "node_metrics_history",
-            (contract,),
-            0_u128,
-        )
-        .await
+    async fn node_metrics_history(&self, contract: NodeMetricsHistoryArgs) -> CallResult<Vec<NodeMetricsHistoryResponse>> {
+        let response = Call::bounded_wait(Principal::management_canister(), "node_metrics_history")
+            .with_args(&(contract,))
+            .await?
+            .candid::<Vec<NodeMetricsHistoryResponse>>()?;
+
+        Ok(response)
     }
 }
 
@@ -133,7 +133,7 @@ where
     async fn fetch_subnets_metrics(
         &self,
         last_timestamp_per_subnet: &BTreeMap<SubnetId, Option<UnixTsNanos>>,
-    ) -> BTreeMap<(SubnetId, Option<UnixTsNanos>), CallResult<(Vec<NodeMetricsHistoryResponse>,)>> {
+    ) -> BTreeMap<(SubnetId, Option<UnixTsNanos>), CallResult<Vec<NodeMetricsHistoryResponse>>> {
         let mut subnets_history = Vec::new();
 
         for (subnet_id, last_stored_ts) in last_timestamp_per_subnet {
@@ -174,7 +174,7 @@ where
         let subnets_metrics = self.fetch_subnets_metrics(&last_timestamp_per_subnet).await;
         for ((subnet_id, last_stored_ts), call_result) in subnets_metrics {
             match call_result {
-                Ok((subnet_update,)) => {
+                Ok(subnet_update) => {
                     if subnet_update.is_empty() {
                         ic_cdk::println!("No updates for subnet {}", subnet_id);
                     } else {
@@ -187,8 +187,8 @@ where
 
                     self.subnets_to_retry.borrow_mut().remove(&subnet_id.into());
                 }
-                Err((code, msg)) => {
-                    ic_cdk::println!("Error fetching metrics for subnet {}: CODE: {:?} MSG: {}", subnet_id, code, msg);
+                Err(e) => {
+                    ic_cdk::println!("Error fetching metrics for subnet {}: ERROR: {}", subnet_id, e);
 
                     // The call failed, will retry fetching metrics for this subnet.
                     let mut retry_count = self.subnets_to_retry.borrow().get(&subnet_id.into()).unwrap_or_default();

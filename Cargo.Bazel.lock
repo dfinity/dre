@@ -1,5 +1,5 @@
 {
-  "checksum": "d261444e8b4f5afb859fa01196302b8dbf3598a8f257220c597ec3ae29f7de92",
+  "checksum": "93eb173474b738829386a93aa1c4fe928fa11cc79c0e225995cf6a3c621f2f5c",
   "crates": {
     "actix-codec 0.5.2": {
       "name": "actix-codec",
@@ -19590,6 +19590,90 @@
       ],
       "license_file": "LICENSE"
     },
+    "ic-cdk 0.18.0": {
+      "name": "ic-cdk",
+      "version": "0.18.0",
+      "package_url": "https://github.com/dfinity/cdk-rs",
+      "repository": {
+        "Http": {
+          "url": "https://static.crates.io/crates/ic-cdk/0.18.0/download",
+          "sha256": "b11cc255410be6a7e47e1a756ea94c1f31a2397a79e696f6f7d207d5ebd3e144"
+        }
+      },
+      "targets": [
+        {
+          "Library": {
+            "crate_name": "ic_cdk",
+            "crate_root": "src/lib.rs",
+            "srcs": {
+              "allow_empty": true,
+              "include": [
+                "**/*.rs"
+              ]
+            }
+          }
+        }
+      ],
+      "library_target_name": "ic_cdk",
+      "common_attrs": {
+        "compile_data_glob": [
+          "**"
+        ],
+        "deps": {
+          "common": [
+            {
+              "id": "candid 0.10.13",
+              "target": "candid"
+            },
+            {
+              "id": "ic-error-types 0.1.0",
+              "target": "ic_error_types"
+            },
+            {
+              "id": "ic-management-canister-types 0.3.0",
+              "target": "ic_management_canister_types"
+            },
+            {
+              "id": "ic0 0.24.0",
+              "target": "ic0"
+            },
+            {
+              "id": "serde 1.0.219",
+              "target": "serde"
+            },
+            {
+              "id": "serde_bytes 0.11.15",
+              "target": "serde_bytes"
+            },
+            {
+              "id": "slotmap 1.0.7",
+              "target": "slotmap"
+            },
+            {
+              "id": "thiserror 2.0.12",
+              "target": "thiserror"
+            }
+          ],
+          "selects": {}
+        },
+        "edition": "2021",
+        "proc_macro_deps": {
+          "common": [
+            {
+              "id": "ic-cdk-macros 0.18.0",
+              "target": "ic_cdk_macros"
+            }
+          ],
+          "selects": {}
+        },
+        "version": "0.18.0"
+      },
+      "license": "Apache-2.0",
+      "license_ids": [
+        "Apache-2.0"
+      ],
+      "license_file": "LICENSE"
+    },
     "ic-cdk-macros 0.17.1": {
       "name": "ic-cdk-macros",
       "version": "0.17.1",
@@ -19657,6 +19741,73 @@
       ],
       "license_file": "LICENSE"
     },
+    "ic-cdk-macros 0.18.0": {
+      "name": "ic-cdk-macros",
+      "version": "0.18.0",
+      "package_url": "https://github.com/dfinity/cdk-rs",
+      "repository": {
+        "Http": {
+          "url": "https://static.crates.io/crates/ic-cdk-macros/0.18.0/download",
+          "sha256": "30bab0b748bc4059f19abbd2c2609761ca6d6c731979f01148b49afcc4fe7a9f"
+        }
+      },
+      "targets": [
+        {
+          "ProcMacro": {
+            "crate_name": "ic_cdk_macros",
+            "crate_root": "src/lib.rs",
+            "srcs": {
+              "allow_empty": true,
+              "include": [
+                "**/*.rs"
+              ]
+            }
+          }
+        }
+      ],
+      "library_target_name": "ic_cdk_macros",
+      "common_attrs": {
+        "compile_data_glob": [
+          "**"
+        ],
+        "deps": {
+          "common": [
+            {
+              "id": "candid 0.10.13",
+              "target": "candid"
+            },
+            {
+              "id": "proc-macro2 1.0.94",
+              "target": "proc_macro2"
+            },
+            {
+              "id": "quote 1.0.39",
+              "target": "quote"
+            },
+            {
+              "id": "serde 1.0.219",
+              "target": "serde"
+            },
+            {
+              "id": "serde_tokenstream 0.2.2",
+              "target": "serde_tokenstream"
+            },
+            {
+              "id": "syn 2.0.100",
+              "target": "syn"
+            }
+          ],
+          "selects": {}
+        },
+        "edition": "2021",
+        "version": "0.18.0"
+      },
+      "license": "Apache-2.0",
+      "license_ids": [
+        "Apache-2.0"
+      ],
+      "license_file": "LICENSE"
+    },
     "ic-cdk-timers 0.11.0": {
       "name": "ic-cdk-timers",
       "version": "0.11.0",
@@ -19717,6 +19868,77 @@
         },
         "edition": "2021",
         "version": "0.11.0"
+      },
+      "license": "Apache-2.0",
+      "license_ids": [
+        "Apache-2.0"
+      ],
+      "license_file": "LICENSE"
+    },
+    "ic-cdk-timers 0.12.0": {
+      "name": "ic-cdk-timers",
+      "version": "0.12.0",
+      "package_url": "https://github.com/dfinity/cdk-rs",
+      "repository": {
+        "Http": {
+          "url": "https://static.crates.io/crates/ic-cdk-timers/0.12.0/download",
+          "sha256": "647de2a321d15442c2a73597fd81f031af80624022f069844bf789a317889299"
+        }
+      },
+      "targets": [
+        {
+          "Library": {
+            "crate_name": "ic_cdk_timers",
+            "crate_root": "src/lib.rs",
+            "srcs": {
+              "allow_empty": true,
+              "include": [
+                "**/*.rs"
+              ]
+            }
+          }
+        }
+      ],
+      "library_target_name": "ic_cdk_timers",
+      "common_attrs": {
+        "compile_data_glob": [
+          "**"
+        ],
+        "deps": {
+          "common": [
+            {
+              "id": "candid 0.10.13",
+              "target": "candid"
+            },
+            {
+              "id": "futures 0.3.31",
+              "target": "futures"
+            },
+            {
+              "id": "ic-cdk 0.18.0",
+              "target": "ic_cdk"
+            },
+            {
+              "id": "ic0 0.24.0",
+              "target": "ic0"
+            },
+            {
+              "id": "serde 1.0.219",
+              "target": "serde"
+            },
+            {
+              "id": "serde_bytes 0.11.15",
+              "target": "serde_bytes"
+            },
+            {
+              "id": "slotmap 1.0.7",
+              "target": "slotmap"
+            }
+          ],
+          "selects": {}
+        },
+        "edition": "2021",
+        "version": "0.12.0"
       },
       "license": "Apache-2.0",
       "license_ids": [
@@ -21718,12 +21940,9 @@
       "version": "0.1.0",
       "package_url": "https://github.com/dfinity/ic",
       "repository": {
-        "Git": {
-          "remote": "https://github.com/dfinity/ic.git",
-          "commitish": {
-            "Rev": "2fe8aefafcb2fbee6fdb2785374d5de715560269"
-          },
-          "strip_prefix": "packages/ic-error-types"
+        "Http": {
+          "url": "https://static.crates.io/crates/ic-error-types/0.1.0/download",
+          "sha256": "be844216781d6f4a0853b5a8d63dee8d1b6ee0b9aef310d8c0cb82a6796d7072"
         }
       },
       "targets": [
@@ -23402,6 +23621,61 @@
         "Apache-2.0"
       ],
       "license_file": null
+    },
+    "ic-management-canister-types 0.3.0": {
+      "name": "ic-management-canister-types",
+      "version": "0.3.0",
+      "package_url": "https://github.com/dfinity/cdk-rs",
+      "repository": {
+        "Http": {
+          "url": "https://static.crates.io/crates/ic-management-canister-types/0.3.0/download",
+          "sha256": "90253c6ac92f9a0b548a53a02c2d29dfa0f04a6c1ae919b86a6f54d4767d78b9"
+        }
+      },
+      "targets": [
+        {
+          "Library": {
+            "crate_name": "ic_management_canister_types",
+            "crate_root": "src/lib.rs",
+            "srcs": {
+              "allow_empty": true,
+              "include": [
+                "**/*.rs"
+              ]
+            }
+          }
+        }
+      ],
+      "library_target_name": "ic_management_canister_types",
+      "common_attrs": {
+        "compile_data_glob": [
+          "**"
+        ],
+        "deps": {
+          "common": [
+            {
+              "id": "candid 0.10.13",
+              "target": "candid"
+            },
+            {
+              "id": "serde 1.0.219",
+              "target": "serde"
+            },
+            {
+              "id": "serde_bytes 0.11.15",
+              "target": "serde_bytes"
+            }
+          ],
+          "selects": {}
+        },
+        "edition": "2021",
+        "version": "0.3.0"
+      },
+      "license": "Apache-2.0",
+      "license_ids": [
+        "Apache-2.0"
+      ],
+      "license_file": "LICENSE"
     },
     "ic-management-canister-types-private 0.9.0": {
       "name": "ic-management-canister-types-private",
@@ -30251,6 +30525,44 @@
       ],
       "license_file": "LICENSE"
     },
+    "ic0 0.24.0": {
+      "name": "ic0",
+      "version": "0.24.0",
+      "package_url": "https://github.com/dfinity/cdk-rs",
+      "repository": {
+        "Http": {
+          "url": "https://static.crates.io/crates/ic0/0.24.0/download",
+          "sha256": "673a6b846467547f3fc61f95d246aadff03e368b53c931655300b9d1bd05a55a"
+        }
+      },
+      "targets": [
+        {
+          "Library": {
+            "crate_name": "ic0",
+            "crate_root": "src/lib.rs",
+            "srcs": {
+              "allow_empty": true,
+              "include": [
+                "**/*.rs"
+              ]
+            }
+          }
+        }
+      ],
+      "library_target_name": "ic0",
+      "common_attrs": {
+        "compile_data_glob": [
+          "**"
+        ],
+        "edition": "2021",
+        "version": "0.24.0"
+      },
+      "license": "Apache-2.0",
+      "license_ids": [
+        "Apache-2.0"
+      ],
+      "license_file": "LICENSE"
+    },
     "ic_bls12_381 0.10.0": {
       "name": "ic_bls12_381",
       "version": "0.10.0",
@@ -35878,11 +36190,11 @@
               "target": "ic_canisters_http_types"
             },
             {
-              "id": "ic-cdk 0.17.1",
+              "id": "ic-cdk 0.18.0",
               "target": "ic_cdk"
             },
             {
-              "id": "ic-cdk-timers 0.11.0",
+              "id": "ic-cdk-timers 0.12.0",
               "target": "ic_cdk_timers"
             },
             {
@@ -35906,6 +36218,10 @@
               "target": "ic_nervous_system_common"
             },
             {
+              "id": "ic-nns-constants 0.9.0",
+              "target": "ic_nns_constants"
+            },
+            {
               "id": "ic-protobuf 0.9.0",
               "target": "ic_protobuf"
             },
@@ -35916,6 +36232,10 @@
             {
               "id": "ic-registry-keys 0.9.0",
               "target": "ic_registry_keys"
+            },
+            {
+              "id": "ic-registry-transport 0.9.0",
+              "target": "ic_registry_transport"
             },
             {
               "id": "ic-stable-structures 0.6.8",
@@ -35965,7 +36285,7 @@
               "target": "async_trait"
             },
             {
-              "id": "ic-cdk-macros 0.17.1",
+              "id": "ic-cdk-macros 0.18.0",
               "target": "ic_cdk_macros"
             }
           ],
@@ -44985,7 +45305,7 @@
               "target": "ic_base_types"
             },
             {
-              "id": "ic-cdk 0.17.1",
+              "id": "ic-cdk 0.18.0",
               "target": "ic_cdk"
             },
             {
@@ -62587,9 +62907,9 @@
     "ic-canister-client 0.9.0",
     "ic-canister-client-sender 0.9.0",
     "ic-canisters-http-types 0.9.0",
-    "ic-cdk 0.17.1",
-    "ic-cdk-macros 0.17.1",
-    "ic-cdk-timers 0.11.0",
+    "ic-cdk 0.18.0",
+    "ic-cdk-macros 0.18.0",
+    "ic-cdk-timers 0.12.0",
     "ic-config 0.9.0",
     "ic-crypto-utils-threshold-sig-der 0.9.0",
     "ic-http-endpoints-metrics 0.9.0",

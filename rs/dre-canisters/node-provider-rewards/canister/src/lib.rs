@@ -17,6 +17,7 @@ use std::str::FromStr;
 mod metrics;
 mod metrics_types;
 mod registry;
+mod registry_canister;
 mod storage;
 mod telemetry;
 
@@ -160,10 +161,10 @@ fn setup_timers() {
         // It's 1AM since the canister was installed or upgraded.
         // Schedule a repeat timer to run sync_all() every 24 hours.
         // Sadly we ignore leap seconds here.
-        ic_cdk_timers::set_timer_interval(std::time::Duration::from_secs(DAY_IN_SECONDS), || ic_cdk::spawn(sync_all()));
+        ic_cdk_timers::set_timer_interval(std::time::Duration::from_secs(DAY_IN_SECONDS), || ic_cdk::futures::spawn(sync_all()));
 
         // Spawn a sync_all() right now.
-        ic_cdk::spawn(sync_all());
+        ic_cdk::futures::spawn(sync_all());
 
         // Hourly timers after first sync.
         ic_cdk_timers::set_timer_interval(std::time::Duration::from_secs(HOUR_IN_SECONDS), measure_get_node_providers_rewards_query);
@@ -176,7 +177,7 @@ fn setup_timers() {
     // Hourly timers.
     ic_cdk_timers::set_timer_interval(std::time::Duration::from_secs(HOUR_IN_SECONDS), || {
         // Retry subnets fetching every hour.
-        ic_cdk::spawn(async {
+        ic_cdk::futures::spawn(async {
             let metrics_manager = METRICS_MANAGER.with(|m| m.clone());
             metrics_manager.retry_failed_subnets().await;
         });
@@ -193,7 +194,7 @@ fn post_upgrade() {
     setup_timers();
 }
 
-#[query(hidden = true, decoding_quota = 10000)]
+#[query(hidden = true)]
 fn http_request(request: HttpRequest) -> HttpResponse {
     match request.path() {
         "/metrics" => serve_metrics(|encoder| telemetry::PROMETHEUS_METRICS.with(|m| m.borrow().encode_metrics(encoder))),
