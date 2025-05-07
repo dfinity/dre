@@ -131,10 +131,10 @@ fn measure_get_node_providers_rewards_query() {
     });
 }
 
-fn measure_get_node_provider_rewards_calculation_query() {
+fn measure_get_node_provider_rewards_calculation_query(np: &str) {
     let reward_period = get_n_months_rewards_period(None, 1);
     let instruction_counter = telemetry::InstructionCounter::default();
-    let failures: Vec<()> = NODE_PROVIDERS_USED_DURING_CALCULATION_MEASUREMENT
+    let failures: Vec<()> = [np]
         .iter()
         .map(|pstr| PrincipalId::from_str(pstr).expect("The provider ID is a well-known ID.  This should never fail."))
         .filter_map(|provider_id| {
@@ -149,7 +149,7 @@ fn measure_get_node_provider_rewards_calculation_query() {
         .collect();
     let instructions = instruction_counter.sum();
     telemetry::PROMETHEUS_METRICS.with_borrow_mut(|m| {
-        m.record_node_provider_rewards_calculation_method(instructions, failures.is_empty());
+        m.record_node_provider_rewards_calculation_method(np, instructions, failures.is_empty());
     });
 }
 
@@ -166,12 +166,13 @@ fn setup_timers() {
         // Spawn a sync_all() right now.
         ic_cdk::futures::spawn(sync_all());
 
-        // Hourly timers after first sync.
+        // Hourly timers after first sync.  One for rewards query, and N for rewards calculation query.
         ic_cdk_timers::set_timer_interval(std::time::Duration::from_secs(HOUR_IN_SECONDS), measure_get_node_providers_rewards_query);
-        ic_cdk_timers::set_timer_interval(
-            std::time::Duration::from_secs(HOUR_IN_SECONDS),
-            measure_get_node_provider_rewards_calculation_query,
-        );
+        for np in NODE_PROVIDERS_USED_DURING_CALCULATION_MEASUREMENT {
+            ic_cdk_timers::set_timer_interval(std::time::Duration::from_secs(HOUR_IN_SECONDS), || {
+                measure_get_node_provider_rewards_calculation_query(np)
+            });
+        }
     });
 
     // Hourly timers.
