@@ -218,6 +218,14 @@ def plan_to_annotate_branch(
     skip_checking_commits: dict[OsKind, set[str]],
     max_commit_depth: int,
 ) -> dict[OsKind, list[str]]:
+    """
+    Come up with a plan to annotate all commits in a branch.
+
+    Returns a dictionary keyed by OsKind, where each value is a list of
+    commits that need to be annotated, ordered from most recent to oldest.
+    This ordering is important and it plays a role in the functionality
+    of the calling code.
+    """
     logger = _LOGGER.getChild(branch)
     logger.debug("Preparing annotation plan")
     commits: dict[OsKind, list[str]] = {}
@@ -256,21 +264,39 @@ def plan_to_annotate_branch(
 def annotate_commits_of_branch(
     annotator: GitRepoAnnotator,
     branch: str,
-    commits: list[str],
+    commits_from_newest_to_oldest: list[str],
     os_kind: OsKind,
     watchdog: Watchdog,
+    push_annotations: bool,
 ) -> None:
+    """
+    Annotates the commits of a branch.
+
+    The list of commits passed to this function needs to be in newest
+    to oldest order, and this function will operate on it in reverse
+    fashion, so that a restart of the annotator does not confuse the
+    `plan_to_annotate_branch()` function, which discovers commits to
+    annotate by walking the commit list backwards from newest to
+    oldest until it detects an annotated commit.
+    """
     logger = _LOGGER.getChild(branch).getChild(os_kind)
-    unannotated_commits = len(commits)
-    if commits:
+    unannotated_commits = len(commits_from_newest_to_oldest)
+    if commits_from_newest_to_oldest:
         # Reverse to annotate oldest objects first so that loop
         # can be easily restarted if it breaks.
-        for c in reversed(commits):
+        for c in reversed(commits_from_newest_to_oldest):
             annotate_object(annotator=annotator, object=c, os_kind=os_kind)
+            if push_annotations:
+                # Eagerly push each successful annotation to ensure that
+                # the commit annotator can continue where it left off upon restart,
+                # and also to ensure that manual interventions such as annotations
+                # by a person don't end up having to be "annotate a whole branch worth
+                # of commits" kinda work.
+                annotator.push()
             unannotated_commits = unannotated_commits - 1
             COMMITS_BEHIND.labels(branch).set(unannotated_commits)
             watchdog.report_healthy()
-        logger.info("Successfully annotated %s commits", len(commits))
+        logger.info("Successfully annotated %s commits", len(commits_from_newest_to_oldest))
     else:
         COMMITS_BEHIND.labels(branch).set(0)
 
@@ -505,12 +531,9 @@ def main() -> None:
                         for c in outstanding_commits_by_kind
                         if c not in annotated_commits[kind]
                     ]
-                    annotate_commits_of_branch(annotator, b, tbd, kind, watchdog)
+                    annotate_commits_of_branch(annotator, b, tbd, kind, watchdog, opts.push_annotations)
                     # Remember these were annotated, avoid wasting time next loop.
                     annotated_commits[kind].update(tbd)
-
-            if opts.push_annotations:
-                annotator.push()
 
             and_now = time.time()
             LAST_CYCLE_SUCCESS_TIMESTAMP_SECONDS.set(int(and_now))
