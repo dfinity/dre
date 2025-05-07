@@ -67,6 +67,8 @@ static QUERY_CALL_INSTRUCTIONS_HELP: &str =
 static QUERY_CALL_SUCCESS_HELP: &str =
     "Whether the the query call as labeled by the method being invoked was successful.  Query calls are exercised hourly unless stated otherwise.";
 
+type LabelPair<'a> = (&'a str, &'a str);
+
 impl PrometheusMetrics {
     fn new() -> Self {
         Default::default()
@@ -117,7 +119,7 @@ impl PrometheusMetrics {
         // apply to the metrics stored as hashmaps, only as flat values).  We
         // need to do it this convoluted way because the metrics encoder does not
         // let us serialize a gauge interspersed with another.
-        let method_gauges: Vec<(Vec<(&str, &str)>, u64, bool)> = [
+        let method_gauges: Vec<(Vec<LabelPair>, u64, bool)> = [
             vec![(
                 vec![("method", "node_provider_rewards")],
                 self.node_provider_rewards_method_instructions,
