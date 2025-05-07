@@ -25,7 +25,6 @@ impl ManagementCanisterClient for ICCanisterClient {
     /// Queries the `node_metrics_history` endpoint of the management canisters of the subnet specified
     /// in the 'contract' to fetch daily node metrics.
     async fn node_metrics_history(&self, contract: NodeMetricsHistoryArgs) -> CallResult<Vec<NodeMetricsHistoryResponse>> {
-        // Call::bounded_wait(Principal::management_canister(), "node_metrics_history")
         let response = Call::bounded_wait(Principal::management_canister(), "node_metrics_history")
             .with_args(&(contract,))
             .await?
