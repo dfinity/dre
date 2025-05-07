@@ -207,7 +207,6 @@ def annotate_object(annotator: GitRepoAnnotator, object: str, os_kind: OsKind) -
             namespace=CHANGED_NOTES_NAMESPACES[os_kind],
             content=belongs,
         )
-
     except Exception:
         logger.exception("Annotation failed.  Aborting.")
         raise
