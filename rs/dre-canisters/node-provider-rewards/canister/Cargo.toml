@@ -14,9 +14,9 @@ crate-type = ["cdylib"]
 async-trait = { workspace = true }
 chrono = { version = "0.4.41", default-features = false, features = [] }
 ic-canisters-http-types = { workspace = true }
-ic-cdk = { version = "0.18.0" }
-ic-cdk-timers = { version = "0.12.0" }
-ic-cdk-macros = { version = "0.18.0" }
+ic-cdk = { workspace = true }
+ic-cdk-timers = { workspace = true }
+ic-cdk-macros = { workspace = true }
 ic-stable-structures = { workspace = true }
 candid = { workspace = true }
 serde = { workspace = true }

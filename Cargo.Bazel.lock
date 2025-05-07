@@ -1,5 +1,5 @@
 {
-  "checksum": "39a8e598cb1896264eac70558b3e6a60bc5df73916e991af446ca2aae987e738",
+  "checksum": "93eb173474b738829386a93aa1c4fe928fa11cc79c0e225995cf6a3c621f2f5c",
   "crates": {
     "actix-codec 0.5.2": {
       "name": "actix-codec",
@@ -45305,7 +45305,7 @@
               "target": "ic_base_types"
             },
             {
-              "id": "ic-cdk 0.17.1",
+              "id": "ic-cdk 0.18.0",
               "target": "ic_cdk"
             },
             {
@@ -62907,7 +62907,6 @@
     "ic-canister-client 0.9.0",
     "ic-canister-client-sender 0.9.0",
     "ic-canisters-http-types 0.9.0",
-    "ic-cdk 0.17.1",
     "ic-cdk 0.18.0",
     "ic-cdk-macros 0.18.0",
     "ic-cdk-timers 0.12.0",
