@@ -1009,7 +1009,7 @@ mod tests {
         important.insert(subnet.principal, subnet);
 
         let network_heal_response = NetworkHealRequest::new(important.clone())
-            .heal_and_optimize(nodes_available.clone(), &health_of_nodes, vec![], &all_nodes, false, false)
+            .fix_and_optimize(nodes_available.clone(), &health_of_nodes, vec![], &all_nodes, false, false, true)
             .await
             .unwrap();
         let result = network_heal_response.first().unwrap().clone();

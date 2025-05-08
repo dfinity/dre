@@ -4,7 +4,7 @@ use crate::{
     SubnetChangeResponse,
 };
 use log::{info, warn};
-use std::cmp::Ordering;
+use std::{cmp::Ordering, collections::BTreeSet};
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct NetworkHealSubnet {
@@ -46,7 +46,7 @@ impl NetworkHealRequest {
         Self { subnets }
     }
 
-    pub async fn heal_and_optimize(
+    pub async fn fix_and_optimize(
         &self,
         mut available_nodes: Vec<Node>,
         health_of_nodes: &IndexMap<PrincipalId, HealthStatus>,
@@ -54,6 +54,7 @@ impl NetworkHealRequest {
         all_nodes: &[Node],
         optimize_for_business_rules_compliance: bool,
         remove_cordoned_nodes: bool,
+        heal: bool,
     ) -> Result<Vec<SubnetChangeResponse>, NetworkError> {
         let mut subnets_changed = Vec::new();
         let mut subnets_to_fix: IndexMap<PrincipalId, NetworkHealSubnet> = unhealthy_with_nodes(&self.subnets, health_of_nodes)
@@ -116,18 +117,26 @@ impl NetworkHealRequest {
             }
         }
 
+        let mut optimized_subnets = BTreeSet::new();
         if optimize_for_business_rules_compliance {
             for subnet in subnets_with_business_rules_violations(&self.subnets.values().cloned().collect::<Vec<_>>()) {
+                optimized_subnets.insert(subnet.principal);
                 let network_heal_subnet = NetworkHealSubnet {
                     name: subnet.metadata.name.clone(),
                     decentralized_subnet: DecentralizedSubnet::from(subnet),
                     unhealthy_nodes: vec![],
                     cordoned_nodes: vec![],
                 };
+
                 if !subnets_to_fix.contains_key(&network_heal_subnet.decentralized_subnet.id) {
                     subnets_to_fix.insert(network_heal_subnet.decentralized_subnet.id, network_heal_subnet);
                 }
             }
+        }
+
+        // If the healing is not requested, remove the subnets that are JUST healed.
+        if !heal {
+            subnets_to_fix.retain(|p, val| !val.cordoned_nodes.is_empty() || optimized_subnets.contains(p));
         }
 
         if subnets_to_fix.is_empty() {

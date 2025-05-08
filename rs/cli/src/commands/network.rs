@@ -110,7 +110,13 @@ impl ExecutableCommand for Network {
         if network_heal || self.optimize_decentralization || self.remove_cordoned_nodes {
             info!("Healing the network by replacing unhealthy nodes, removing cordoned nodes, and optimizing decentralization in subnets");
             let maybe_proposals = runner
-                .network_heal(&omit_subnets, &omit_nodes, self.optimize_decentralization, self.remove_cordoned_nodes)
+                .network_fix(
+                    &omit_subnets,
+                    &omit_nodes,
+                    self.optimize_decentralization,
+                    self.remove_cordoned_nodes,
+                    network_heal,
+                )
                 .await;
             match maybe_proposals {
                 Ok(heal_proposals) => {
