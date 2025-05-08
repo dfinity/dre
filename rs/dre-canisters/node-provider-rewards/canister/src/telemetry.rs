@@ -160,10 +160,10 @@ impl<'b> PrometheusMetrics<'b> {
             .query_call_method_measurements
             .iter()
             .flat_map(|(method, labelsets_and_meas)| {
-                (labelsets_and_meas.iter().map(move |(labelset, meas)| {
+                labelsets_and_meas.iter().map(move |(labelset, meas)| {
                     let labelset = labelset.clone();
                     ([vec![("method", *method)], labelset].concat(), *meas)
-                }))
+                })
             })
             .collect::<Vec<_>>();
 
