@@ -1,5 +1,5 @@
 use crate::storage::{METRICS_MANAGER, REGISTRY_STORE};
-use candid::candid_method;
+use candid::{candid_method, encode_one, CandidType};
 use chrono::Months;
 use chrono::{DateTime, Days, Duration, Timelike, Utc};
 use ic_canisters_http_types::{HttpRequest, HttpResponse, HttpResponseBuilder};
@@ -13,6 +13,7 @@ use rewards_calculation::types::RewardPeriod;
 use std::collections::BTreeMap;
 use std::ops::Add;
 use std::str::FromStr;
+use telemetry::QueryCallMeasurement;
 
 mod metrics;
 mod metrics_types;
@@ -121,35 +122,40 @@ fn time_left_for_next_1am(now: Option<DateTime<Utc>>) -> std::time::Duration {
         .expect("Tomorrow 1AM minus right now should never be out of range.")
 }
 
+fn measure_query_call<Q, O, E>(f: Q) -> QueryCallMeasurement
+where
+    Q: FnOnce() -> Result<O, E>,
+    O: CandidType,
+    E: CandidType,
+{
+    let instruction_counter = telemetry::InstructionCounter::default();
+    let response = f();
+    let success = response.is_ok();
+    let response_size_bytes: usize = encode_one(response).expect("Failed to encode").len();
+    let instructions = instruction_counter.sum();
+    // REVIEWER: here we count the instructions of the encoding too, reasoning that the VM
+    // will also count the instructions it takes to encode the response towards the budget
+    // of instructions that the canister gets to respond to the query call.
+    (success, instructions, response_size_bytes)
+}
+
 fn measure_get_node_providers_rewards_query() {
     let reward_period = get_n_months_rewards_period(None, 2);
-    let instruction_counter = telemetry::InstructionCounter::default();
-    let success = get_node_providers_rewards(reward_period).is_ok();
-    let instructions = instruction_counter.sum();
+    let measurement = measure_query_call(move || get_node_providers_rewards(reward_period));
     telemetry::PROMETHEUS_METRICS.with_borrow_mut(|m| {
-        m.record_node_provider_rewards_method(instructions, success);
+        m.record_node_provider_rewards_method(measurement);
     });
 }
 
-fn measure_get_node_provider_rewards_calculation_query(np: &str) {
-    let reward_period = get_n_months_rewards_period(None, 1);
-    let instruction_counter = telemetry::InstructionCounter::default();
-    let failures: Vec<()> = [np]
-        .iter()
-        .map(|pstr| PrincipalId::from_str(pstr).expect("The provider ID is a well-known ID.  This should never fail."))
-        .filter_map(|provider_id| {
-            match get_node_provider_rewards_calculation(NodeProviderRewardsCalculationArgs {
-                provider_id,
-                reward_period: reward_period.clone(),
-            }) {
-                Ok(_) => None,
-                Err(_) => Some(()),
-            }
-        })
-        .collect();
-    let instructions = instruction_counter.sum();
+fn measure_get_node_provider_rewards_calculation_query(provider_id_s: &'static str) {
+    // The argument is statically-lifetimed because all callers use static strings.
+    let args = NodeProviderRewardsCalculationArgs {
+        provider_id: PrincipalId::from_str(provider_id_s).expect("The provider ID is a well-known ID.  This should never fail."),
+        reward_period: get_n_months_rewards_period(None, 1),
+    };
+    let measurement = measure_query_call(move || get_node_provider_rewards_calculation(args));
     telemetry::PROMETHEUS_METRICS.with_borrow_mut(|m| {
-        m.record_node_provider_rewards_calculation_method(np, instructions, failures.is_empty());
+        m.record_node_provider_rewards_calculation_method(provider_id_s, measurement);
     });
 }
 
