@@ -131,12 +131,12 @@ where
     let instruction_counter = telemetry::InstructionCounter::default();
     let response = f();
     let success = response.is_ok();
-    let response_size: usize = encode_one(response).expect("Failed to encode").len();
+    let response_size_bytes: usize = encode_one(response).expect("Failed to encode").len();
     let instructions = instruction_counter.sum();
     // REVIEWER: here we count the instructions of the encoding too, reasoning that the VM
     // will also count the instructions it takes to encode the response towards the budget
     // of instructions that the canister gets to respond to the query call.
-    (instructions, success, response_size)
+    (success, instructions, response_size_bytes)
 }
 
 fn measure_get_node_providers_rewards_query() {

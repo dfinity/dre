@@ -39,8 +39,8 @@ impl Default for InstructionCounter {
 
 // Represents a pair of Prometheus metrics labels.
 pub type LabelPair<'a> = (&'a str, &'a str);
-// Tuple: instructions, success, response size
-pub type QueryCallMeasurement = (u64, bool, usize);
+// Tuple: success, instructions, response size
+pub type QueryCallMeasurement = (bool, u64, usize);
 // Represents the query call method.
 type QueryCallMethod<'a> = &'a str;
 type QueryCallMeasurements<'a> = HashMap<QueryCallMethod<'a>, HashMap<Vec<LabelPair<'a>>, QueryCallMeasurement>>;
@@ -170,14 +170,8 @@ impl<'b> PrometheusMetrics<'b> {
             .collect::<Vec<_>>();
 
         if !query_data.is_empty() {
-            let mut i_g = w
-                .gauge_vec("query_call_instructions", QUERY_CALL_INSTRUCTIONS_HELP)
-                .expect("Name must be valid");
-            for (labels, (instructions, _, _)) in query_data.iter() {
-                i_g = i_g.value(labels, *instructions as f64).unwrap()
-            }
             let mut s_g = w.gauge_vec("query_call_success", QUERY_CALL_SUCCESS_HELP).expect("Name must be valid");
-            for (labels, (_, success, _)) in query_data.iter() {
+            for (labels, (success, _, _)) in query_data.iter() {
                 s_g = s_g
                     .value(
                         labels,
@@ -187,6 +181,12 @@ impl<'b> PrometheusMetrics<'b> {
                         },
                     )
                     .unwrap()
+            }
+            let mut i_g = w
+                .gauge_vec("query_call_instructions", QUERY_CALL_INSTRUCTIONS_HELP)
+                .expect("Name must be valid");
+            for (labels, (_, instructions, _)) in query_data.iter() {
+                i_g = i_g.value(labels, *instructions as f64).unwrap()
             }
             let mut r_g = w
                 .gauge_vec("query_call_response_size_bytes", QUERY_CALL_RESPONSE_SIZE_BYTES_HELP)
