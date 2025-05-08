@@ -178,7 +178,7 @@ fn setup_timers() {
             #[cfg(feature = "instant-sync")]
             {
                 let in_1_second = std::time::Duration::from_secs(1);
-                ic_cdk_timers::set_timer(in_1_second, || measure_get_node_providers_rewards_query());
+                ic_cdk_timers::set_timer(in_1_second, measure_get_node_providers_rewards_query);
                 for np in NODE_PROVIDERS_USED_DURING_CALCULATION_MEASUREMENT {
                     ic_cdk_timers::set_timer(in_1_second, || measure_get_node_provider_rewards_calculation_query(np));
                 }
