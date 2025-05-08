@@ -55,6 +55,7 @@ use url::Url;
 extern crate env_logger;
 
 use anyhow::Result;
+use ic_protobuf::registry::node::v1::NodeRewardType;
 use ic_registry_client_helpers::subnet::SubnetListRegistry;
 
 pub const NNS_SUBNET_NAME: &str = "NNS";
@@ -514,6 +515,10 @@ impl RegistryState {
                         is_api_boundary_node: api_boundary_nodes.contains_key(p),
                         chip_id: nr.chip_id.clone(),
                         public_ipv4_config: nr.public_ipv4_config.clone(),
+                        node_type: nr
+                            .node_reward_type
+                            .map(|t: i32| NodeRewardType::try_from(t).expect("Invalid node_reward_type value").to_string())
+                            .unwrap_or("unknown".to_string()),
                     },
                 )
             })
