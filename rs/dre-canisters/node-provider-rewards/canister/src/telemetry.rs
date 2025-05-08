@@ -37,9 +37,13 @@ impl Default for InstructionCounter {
     }
 }
 
+// Represents a pair of Prometheus metrics labels.
 pub type LabelPair<'a> = (&'a str, &'a str);
 // Tuple: instructions, success, response size
 pub type QueryCallMeasurement = (u64, bool, usize);
+// Represents the query call method.
+type QueryCallMethod<'a> = &'a str;
+type QueryCallMeasurements<'a> = HashMap<QueryCallMethod<'a>, HashMap<Vec<LabelPair<'a>>, QueryCallMeasurement>>;
 
 #[derive(Default)]
 pub struct PrometheusMetrics<'b> {
@@ -57,7 +61,7 @@ pub struct PrometheusMetrics<'b> {
     last_sync_registry_sync_instructions: f64,
     last_sync_subnet_list_instructions: f64,
     last_sync_update_subnet_metrics_instructions: f64,
-    query_call_method_measurements: HashMap<&'b str, HashMap<Vec<LabelPair<'b>>, QueryCallMeasurement>>,
+    query_call_method_measurements: QueryCallMeasurements<'b>,
 }
 
 static LAST_SYNC_START_HELP: &str = "Last time the sync of metrics started.  If this metric is present but zero, the first sync during this canister's current execution has not yet begun or taken place.";
@@ -96,17 +100,17 @@ impl<'b> PrometheusMetrics<'b> {
         self.last_sync_update_subnet_metrics_instructions = update_subnet_metrics as f64;
     }
 
-    pub fn record_node_provider_rewards_method(&mut self, instructions: u64, success: bool, response_size: usize) {
+    pub fn record_node_provider_rewards_method(&mut self, measurement: QueryCallMeasurement) {
         let entry = self.query_call_method_measurements.entry("node_provider_rewards").or_default();
-        entry.insert(vec![], (instructions, success, response_size));
+        entry.insert(vec![], measurement);
     }
 
-    pub fn record_node_provider_rewards_calculation_method(&mut self, provider: &'b str, instructions: u64, success: bool, response_size: usize) {
+    pub fn record_node_provider_rewards_calculation_method(&mut self, provider: &'b str, measurement: QueryCallMeasurement) {
         let entry = self
             .query_call_method_measurements
             .entry("node_provider_rewards_calculation")
             .or_default();
-        entry.insert(vec![("provider", provider)], (instructions, success, response_size));
+        entry.insert(vec![("provider", provider)], measurement);
     }
 
     pub fn encode_metrics(&self, w: &mut ic_metrics_encoder::MetricsEncoder<Vec<u8>>) -> std::io::Result<()> {

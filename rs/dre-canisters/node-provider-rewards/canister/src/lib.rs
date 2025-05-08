@@ -143,7 +143,7 @@ fn measure_get_node_providers_rewards_query() {
     let reward_period = get_n_months_rewards_period(None, 2);
     let measurement = measure_query_call(move || get_node_providers_rewards(reward_period));
     telemetry::PROMETHEUS_METRICS.with_borrow_mut(|m| {
-        m.record_node_provider_rewards_method(measurement.0, measurement.1, measurement.2);
+        m.record_node_provider_rewards_method(measurement);
     });
 }
 
@@ -155,7 +155,7 @@ fn measure_get_node_provider_rewards_calculation_query(provider_id_s: &'static s
     };
     let measurement = measure_query_call(move || get_node_provider_rewards_calculation(args));
     telemetry::PROMETHEUS_METRICS.with_borrow_mut(|m| {
-        m.record_node_provider_rewards_calculation_method(provider_id_s, measurement.0, measurement.1, measurement.2);
+        m.record_node_provider_rewards_calculation_method(provider_id_s, measurement);
     });
 }
 
