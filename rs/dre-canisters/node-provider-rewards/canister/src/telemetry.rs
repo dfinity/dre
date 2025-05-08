@@ -159,13 +159,12 @@ impl<'b> PrometheusMetrics<'b> {
         let query_data: Vec<(Vec<LabelPair>, QueryCallMeasurement)> = self
             .query_call_method_measurements
             .iter()
-            .map(|(method, labelsets_and_meas)| {
+            .flat_map(|(method, labelsets_and_meas)| {
                 (labelsets_and_meas.iter().map(move |(labelset, meas)| {
                     let labelset = labelset.clone();
                     ([vec![("method", *method)], labelset].concat(), *meas)
                 }))
             })
-            .flatten()
             .collect::<Vec<_>>();
 
         if !query_data.is_empty() {
