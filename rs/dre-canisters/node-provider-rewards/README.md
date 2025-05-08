@@ -5,27 +5,35 @@
 *Add the job label to the metrics in order to distinguish them from other jobs with similar metrics.*
 
 ```yaml
-- alert: NodeProviderRewardsSyncFailure
-  expr: last_sync_end_timestamp_seconds != last_sync_success_timestamp_seconds
+- alert: NodeProviderRewardsSyncAWOL
+  expr: absent(last_sync_start_timestamp_seconds)
+  for: 25h
   annotations:
-    summary: Canister has failed to sync provider rewards since {{$value | humanizeTimestamp}}.
+    summary: Provider rewards have not even begun syncing for over a day.
+```
+
+```yaml
+- alert: NodeProviderRewardsSyncFailure
+  expr: last_sync_success_timestamp_seconds != last_sync_end_timestamp_seconds
+  annotations:
+    summary: Sync provider rewards has failed since {{$value | humanizeTimestamp}}.
 ```
 
 ```yaml
 - alert: NodeProviderRewardsSyncStalled
   expr: |
-     last_sync_start_timestamp_seconds > last_sync_end_timestamp_seconds
-     unless
-     last_sync_end_timestamp_seconds != last_sync_success_timestamp_seconds
+    last_sync_start_timestamp_seconds > last_sync_end_timestamp_seconds
+    unless
+    last_sync_success_timestamp_seconds != last_sync_end_timestamp_seconds
   for: 5m
   annotations:
-    summary: Sync of provider rewards has been stalled for 15 minutes.
+    summary: Sync of provider rewards has been stalled for 5 minutes.
 ```
 
 ```yaml
 - alert: NodeProviderRewardsQueryCallFailed
   expr: |
-     query_call_success == 0
+    query_call_success == 0
   annotations:
     summary: Query call {{$labels.method}} failed to be measured.
 ```
@@ -33,7 +41,7 @@
 ```yaml
 - alert: NodeProviderRewardsQueryCallDangerouslyIntensive
   expr: |
-     query_call_instructions / <insert 80% of current IC instruction limit limit for query calls> > 0.9 
+    query_call_instructions / <insert 80% of current IC instruction limit limit for query calls> > 0.9
   annotations:
     summary: Query call {{$labels.method}} is consuming more than {{ $value | humanizePercentage }} of the query call instruction limit.
 ```
@@ -41,7 +49,7 @@
 ```yaml
 - alert: NodeProviderRewardsQueryCallResponseDangerouslyLarge
   expr: |
-     query_call_instructions / <insert 80% of current IC limit for query call response in bytes> > 0.9 
+    query_call_instructions / <insert 80% of current IC limit for query call response in bytes> > 0.9
   annotations:
     summary: Query call response for method {{$labels.method}} is producing more than {{ $value | humanize1024 }} bytes, close to the response size limit.
 ```
