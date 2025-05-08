@@ -1,7 +1,5 @@
 use std::{cell::RefCell, collections::HashMap};
 
-use ic_types::messages::Query;
-
 /// Instruction counter helper that counts instructions in the call context.
 pub struct InstructionCounter {
     start: u64,
