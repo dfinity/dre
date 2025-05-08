@@ -1,7 +1,9 @@
 use crate::storage::{METRICS_MANAGER, REGISTRY_STORE};
 use candid::candid_method;
 use chrono::Months;
-use chrono::{DateTime, Days, Duration, Timelike, Utc};
+use chrono::{DateTime, Timelike, Utc};
+#[cfg(not(feature = "instant-sync"))]
+use chrono::{Days, Duration};
 use ic_canisters_http_types::{HttpRequest, HttpResponse, HttpResponseBuilder};
 use ic_cdk_macros::*;
 use ic_nervous_system_common::serve_metrics;
@@ -11,6 +13,7 @@ use rewards_calculation::rewards_calculator::builder::RewardsCalculatorBuilder;
 use rewards_calculation::rewards_calculator::RewardsCalculator;
 use rewards_calculation::types::RewardPeriod;
 use std::collections::BTreeMap;
+#[cfg(not(feature = "instant-sync"))]
 use std::ops::Add;
 use std::str::FromStr;
 
@@ -108,6 +111,7 @@ fn get_n_months_rewards_period(now: Option<DateTime<Utc>>, months: u32) -> Rewar
     }
 }
 
+#[cfg(not(feature = "instant-sync"))]
 /// Compute the duration left until either today or tomorrow at 1AM (whichever is earliest).
 fn time_left_for_next_1am(now: Option<DateTime<Utc>>) -> std::time::Duration {
     let really_now = now.unwrap_or(DateTime::from_timestamp_nanos(ic_cdk::api::time().try_into().unwrap()));
@@ -157,7 +161,12 @@ fn setup_timers() {
     // I had to rewrite this to compute the correct remaining time until next 1AM.
     // It is simply not true that one can get a midnight from the modulo of seconds since
     // the UNIX epoch (as it was being done before).  Leap seconds are a thing.
-    ic_cdk_timers::set_timer(time_left_for_next_1am(None), || {
+    #[cfg(not(feature = "instant-sync"))]
+    let next_1am = time_left_for_next_1am(None);
+    #[cfg(feature = "instant-sync")]
+    let next_1am = std::time::Duration::from_secs(2);
+
+    ic_cdk_timers::set_timer(next_1am, || {
         // It's 1AM since the canister was installed or upgraded.
         // Schedule a repeat timer to run sync_all() every 24 hours.
         // Sadly we ignore leap seconds here.
@@ -165,6 +174,15 @@ fn setup_timers() {
 
         // Spawn a sync_all() right now.
         ic_cdk::futures::spawn(sync_all());
+
+        #[cfg(feature = "instant-sync")]
+        {
+            let in_15_seconds = std::time::Duration::from_secs(15);
+            ic_cdk_timers::set_timer(in_15_seconds, || measure_get_node_providers_rewards_query());
+            for np in NODE_PROVIDERS_USED_DURING_CALCULATION_MEASUREMENT {
+                ic_cdk_timers::set_timer(in_15_seconds, || measure_get_node_provider_rewards_calculation_query(np));
+            }
+        }
 
         // Hourly timers after first sync.  One for rewards query, and N for rewards calculation query.
         ic_cdk_timers::set_timer_interval(std::time::Duration::from_secs(HOUR_IN_SECONDS), measure_get_node_providers_rewards_query);
