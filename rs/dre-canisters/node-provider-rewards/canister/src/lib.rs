@@ -101,10 +101,10 @@ fn today_at_midnight(now: Option<DateTime<Utc>>) -> DateTime<Utc> {
 /// * returned interval: (2025-02-28T00:00:00 -- 2025-04-30T00:00:00)
 fn get_n_months_rewards_period(now: Option<DateTime<Utc>>, months: u32) -> RewardPeriodArgs {
     let midnite = today_at_midnight(now);
-    let twomoago = midnite.checked_sub_months(Months::new(months)).expect("UTC dates cannot have a nonexistent or unambiguous date after we subtract months, because UTC dates do not have daylight savings time, and there is no way this could be out of range.  See checked_sub_months() documentation.");
+    let ago = midnite.checked_sub_months(Months::new(months)).expect("UTC dates cannot have a nonexistent or unambiguous date after we subtract months, because UTC dates do not have daylight savings time, and there is no way this could be out of range.  See checked_sub_months() documentation.");
     RewardPeriodArgs {
-        start_ts: midnite.timestamp().try_into().unwrap(),
-        end_ts: twomoago.timestamp().try_into().unwrap(),
+        start_ts: ago.timestamp().try_into().unwrap(),
+        end_ts: midnite.timestamp().try_into().unwrap(),
     }
 }
 
