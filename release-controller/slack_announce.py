@@ -59,7 +59,6 @@ def announce_release_on_slack(
         text=f"""\
 Hi {notify_line}!
 Here are the {os_kind} release notes for the rollout of <https://github.com/dfinity/ic/tree/{version_name}|`{version_name}`> <{google_doc_url}|Release Notes> :railway_car:
-Please adjust the release notes to make sure we appropriately covered all changes made by your team since the last release, and then confirm that you reviewed the release notes by crossing out your team in the Google Doc.
 """,
     )
 
