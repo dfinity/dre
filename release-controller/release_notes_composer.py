@@ -79,7 +79,7 @@ class Team:
     send_announcement: bool
 
 
-RELEASE_NOTES_REVIEWERS = [
+GUESTOS_RELEASE_NOTES_REVIEWERS = [
     Team("consensus", "@team-consensus", "SRJ3R849E", False),
     Team("crypto", "@team-crypto", "SU7BZQ78E", False),
     Team("execution", "@team-execution", "S01A577UL56", True),
@@ -87,6 +87,10 @@ RELEASE_NOTES_REVIEWERS = [
     Team("networking", "@team-networking", "SR6KC1DMZ", False),
     Team("node", "@node-team", "S027838EY30", False),
     Team("runtime", "@team-runtime", "S03BM6C0CJY", False),
+]
+
+HOSTOS_RELEASE_NOTES_REVIEWERS = [
+    Team("node", "@node-team", "S027838EY30", True)
 ]
 
 TYPE_PRETTY_MAP = {
@@ -545,7 +549,7 @@ def release_notes_markdown(
     reviewers_text = "\n".join(
         [
             f"- {t.google_docs_handle}"
-            for t in RELEASE_NOTES_REVIEWERS
+            for t in GUESTOS_RELEASE_NOTES_REVIEWERS
             if t.send_announcement
         ]
     )
