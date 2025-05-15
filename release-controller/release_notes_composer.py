@@ -79,7 +79,7 @@ class Team:
     send_announcement: bool
 
 
-RELEASE_NOTES_REVIEWERS = [
+GUESTOS_RELEASE_NOTES_REVIEWERS = [
     Team("consensus", "@team-consensus", "SRJ3R849E", False),
     Team("crypto", "@team-crypto", "SU7BZQ78E", False),
     Team("execution", "@team-execution", "S01A577UL56", True),
@@ -87,6 +87,10 @@ RELEASE_NOTES_REVIEWERS = [
     Team("networking", "@team-networking", "SR6KC1DMZ", False),
     Team("node", "@node-team", "S027838EY30", False),
     Team("runtime", "@team-runtime", "S03BM6C0CJY", False),
+]
+
+HOSTOS_RELEASE_NOTES_REVIEWERS = [
+    Team("node", "@node-team", "S027838EY30", True)
 ]
 
 TYPE_PRETTY_MAP = {
@@ -143,7 +147,6 @@ TEAM_PRETTY_MAP = {
     "utopia": "Utopia",
     "pocket-ic": "Pocket IC",
 }
-
 
 EXCLUDE_CHANGES_FILTERS = [
     r"sns",
@@ -239,7 +242,7 @@ class ConventionalCommit(typing.TypedDict):
 
 
 def parse_conventional_commit(
-    message: str, pattern: re.Pattern[str]
+        message: str, pattern: re.Pattern[str]
 ) -> ConventionalCommit:
     match = pattern.match(message)
 
@@ -261,12 +264,12 @@ def matched_patterns(file_path: str, patterns: typing.Iterator[str]) -> str | No
 
 
 def release_changes(
-    ic_repo: GitRepo,
-    base_release_commit: str,
-    release_commit: str,
-    belongs_determinator: ChangeDeterminatorProtocol,
-    os_kind: OsKind,
-    max_commits: int = 1000,
+        ic_repo: GitRepo,
+        base_release_commit: str,
+        release_commit: str,
+        belongs_determinator: ChangeDeterminatorProtocol,
+        os_kind: OsKind,
+        max_commits: int = 1000,
 ) -> dict[str, list[Change]]:
     changes: dict[str, list[Change]] = {}
 
@@ -278,15 +281,15 @@ def release_changes(
         exit(1)
 
     for i, _ in enumerate(
-        auto_progressbar_with_item_descriptions(
-            [(i[:8], i) for i in commits], "Commit "
-        )
+            auto_progressbar_with_item_descriptions(
+                [(i[:8], i) for i in commits], "Commit "
+            )
     ):
         change = get_change_description_for_commit(
             commit_hash=commits[i],
             ic_repo=ic_repo,
             belongs=belongs_determinator.commit_changes_artifact(commits[i], os_kind)
-            in [COMMIT_BELONGS],
+                    in [COMMIT_BELONGS],
         )
         if change is None:
             continue
@@ -312,12 +315,12 @@ class SecurityReleaseNotesRequest(ReleaseNotesRequest):
 
 class OrdinaryReleaseNotesRequest(ReleaseNotesRequest):
     def __init__(
-        self,
-        release_tag: str,
-        release_commit: str,
-        base_release_tag: str,
-        base_release_commit: str,
-        os_kind: OsKind,
+            self,
+            release_tag: str,
+            release_commit: str,
+            base_release_tag: str,
+            base_release_commit: str,
+            os_kind: OsKind,
     ):
         super().__init__(release_tag, release_commit, os_kind)
         self.base_release_tag = base_release_tag
@@ -329,10 +332,10 @@ class PreparedReleaseNotes(str):
 
 
 def prepare_release_notes(
-    request: SecurityReleaseNotesRequest | OrdinaryReleaseNotesRequest,
-    ic_repo: GitRepo,
-    os_change_determinator: ChangeDeterminatorProtocol,
-    max_commits: int = 1000,
+        request: SecurityReleaseNotesRequest | OrdinaryReleaseNotesRequest,
+        ic_repo: GitRepo,
+        os_change_determinator: ChangeDeterminatorProtocol,
+        max_commits: int = 1000,
 ) -> PreparedReleaseNotes:
     if isinstance(request, SecurityReleaseNotesRequest):
         # Special case to avoid generation of any release notes in the case of security fixes.
@@ -374,12 +377,12 @@ def prepare_release_notes(
 
 
 def compose_change_description(
-    commit_hash: str,
-    commit_message: str,
-    commiter: str,
-    file_changes: list[FileChange],
-    codeowners: dict[str, list[str]],
-    belongs: bool,
+        commit_hash: str,
+        commit_message: str,
+        commiter: str,
+        file_changes: list[FileChange],
+        codeowners: dict[str, list[str]],
+        belongs: bool,
 ) -> Change:
     # Conventional commit regex pattern
     conv_commit_pattern = re.compile(r"^(\w+)(\([^\)]*\))?: (.+)$")
@@ -390,17 +393,17 @@ def compose_change_description(
 
     exclusion_reason = None
     if (
-        belongs
-        and not exclusion_reason
-        and not any(
-            f
-            for f in file_changes
-            if not any(
-                f["file_path"] not in INCLUDE_CHANGES
-                and re.search(filter, f["file_path"])
-                for filter in EXCLUDE_CHANGES_FILTERS
-            )
+            belongs
+            and not exclusion_reason
+            and not any(
+        f
+        for f in file_changes
+        if not any(
+            f["file_path"] not in INCLUDE_CHANGES
+            and re.search(filter, f["file_path"])
+            for filter in EXCLUDE_CHANGES_FILTERS
         )
+    )
     ):
         exclusion_reason = "Changed files are excluded by file path filter"
 
@@ -438,8 +441,8 @@ def compose_change_description(
             ownership[team] += change["num_changes"]
 
     if (
-        "ic-owners-owners" in ownership
-        and len(set(ownership.keys()).intersection(REPLICA_TEAMS)) > 1
+            "ic-owners-owners" in ownership
+            and len(set(ownership.keys()).intersection(REPLICA_TEAMS)) > 1
     ):
         ownership.pop("ic-owners-owners")
 
@@ -492,9 +495,9 @@ def compose_change_description(
 
 
 def get_change_description_for_commit(
-    commit_hash: str,
-    ic_repo: GitRepo,
-    belongs: bool,
+        commit_hash: str,
+        ic_repo: GitRepo,
+        belongs: bool,
 ) -> Change:
     @functools.cache
     def parse_and_cache_codeowners(commit_id: str) -> dict[str, list[str]]:
@@ -531,13 +534,13 @@ def release_notes_html(notes_markdown: str, output_file: pathlib.Path) -> None:
 
 
 def release_notes_markdown(
-    ic_repo: GitRepo,
-    base_release_tag: str,
-    base_release_commit: str,
-    release_tag: str,
-    release_commit: str,
-    os_kind: OsKind,
-    change_infos: dict[str, list[Change]],
+        ic_repo: GitRepo,
+        base_release_tag: str,
+        base_release_commit: str,
+        release_tag: str,
+        release_commit: str,
+        os_kind: OsKind,
+        change_infos: dict[str, list[Change]],
 ) -> str:
     """Generate release notes in markdown format."""
     merge_base = ic_repo.merge_base(base_release_commit, release_commit)
@@ -545,7 +548,7 @@ def release_notes_markdown(
     reviewers_text = "\n".join(
         [
             f"- {t.google_docs_handle}"
-            for t in RELEASE_NOTES_REVIEWERS
+            for t in GUESTOS_RELEASE_NOTES_REVIEWERS
             if t.send_announcement
         ]
     )
@@ -617,7 +620,7 @@ Changes [were removed](https://github.com/dfinity/ic/compare/{release_tag}...{ba
         notes += "## {0}:\n".format(TYPE_PRETTY_MAP[current_type][0])
 
         for change in sorted(
-            change_infos[current_type], key=lambda x: ",".join(x["teams"])
+                change_infos[current_type], key=lambda x: ",".join(x["teams"])
         ):
             if not change["belongs_to_this_release"]:
                 non_belonging_change.append(change)

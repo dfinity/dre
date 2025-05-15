@@ -5,41 +5,38 @@ from slack_sdk.http_retry.handler import RetryHandler
 from slack_sdk.webhook import WebhookClient
 import typing
 
-from const import OsKind, GUESTOS
-from release_notes_composer import RELEASE_NOTES_REVIEWERS
+from const import OsKind, GUESTOS, HOSTOS
+from release_notes_composer import HOSTOS_RELEASE_NOTES_REVIEWERS
 
 
 class SlackAnnouncerProtocol(typing.Protocol):
     def announce_release(
-        self,
-        webhook: str,
-        version_name: str,
-        google_doc_url: str,
-        tag_all_teams: bool,
-        os_kind: OsKind,
+            self,
+            webhook: str,
+            version_name: str,
+            google_doc_url: str,
+            os_kind: OsKind,
     ) -> None: ...
 
 
 class SlackAnnouncer(SlackAnnouncerProtocol):
     def announce_release(
-        self,
-        webhook: str,
-        version_name: str,
-        google_doc_url: str,
-        tag_all_teams: bool,
-        os_kind: OsKind,
+            self,
+            webhook: str,
+            version_name: str,
+            google_doc_url: str,
+            os_kind: OsKind,
     ) -> None:
         announce_release_on_slack(
-            webhook, version_name, google_doc_url, tag_all_teams, os_kind
+            webhook, version_name, google_doc_url, os_kind
         )
 
 
 def announce_release_on_slack(
-    slack_url: str,
-    version_name: str,
-    google_doc_url: str,
-    tag_all_teams: bool,
-    os_kind: OsKind,
+        slack_url: str,
+        version_name: str,
+        google_doc_url: str,
+        os_kind: OsKind,
 ) -> None:
     slack = WebhookClient(
         url=slack_url, retry_handlers=[RetryHandler(max_retry_count=2)]
@@ -48,11 +45,11 @@ def announce_release_on_slack(
         " ".join(
             [
                 f"<!subteam^{t.slack_id}>"
-                for t in RELEASE_NOTES_REVIEWERS
+                for t in HOSTOS_RELEASE_NOTES_REVIEWERS
                 if t.send_announcement
             ]
         )
-        if tag_all_teams
+        if os_kind == HOSTOS
         else "everyone"
     )
     slack.send(
@@ -70,14 +67,12 @@ def main() -> None:
         os.environ["SLACK_WEBHOOK_URL"],
         "release-2024-03-06_23-01-base",
         "https://docs.google.com/document/d/1gCPmYxoq9_IccdChRzjoblAggTOdZ_IfTMukRbODO1I/edit#heading=h.7dcpz3fj7xrh",
-        True,
         GUESTOS,
     )
     announce_release_on_slack(
         os.environ["SLACK_WEBHOOK_URL"],
         "release-2024-03-06_23-01-p2p",
         "https://docs.google.com/document/d/1gCPmYxoq9_IccdChRzjoblAggTOdZ_IfTMukRbODO1I/edit#heading=h.7dcpz3fj7xrh",
-        False,
         GUESTOS,
     )
 

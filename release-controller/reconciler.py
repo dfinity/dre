@@ -43,7 +43,6 @@ from commit_annotation import (
 from util import version_name, conventional_logging, sha256sum_http_response
 from watchdog import Watchdog
 
-
 # It is safe to delete releases from this list once
 # they disappear from file
 # https://github.com/dfinity/dre/blob/main/release-index.yaml
@@ -113,12 +112,11 @@ LAST_CYCLE_SUCCESSFUL = Gauge(
     labelnames=["os_kind", "rc", "version", "phase"],
 )
 
-
 LOGGER = logging.getLogger()
 
 
 def oldest_active_release(
-    index: release_index.Model, active_versions: list[str]
+        index: release_index.Model, active_versions: list[str]
 ) -> release_index.Release:
     for rc in reversed(index.root.releases):
         for v in rc.versions:
@@ -129,12 +127,12 @@ def oldest_active_release(
 
 
 def versions_to_unelect(
-    index: release_index.Model, active_versions: list[str], elected_versions: list[str]
+        index: release_index.Model, active_versions: list[str], elected_versions: list[str]
 ) -> list[str]:
     active_releases_versions = []
     for rc in index.root.releases[
-        : index.root.releases.index(oldest_active_release(index, active_versions)) + 1
-    ]:
+              : index.root.releases.index(oldest_active_release(index, active_versions)) + 1
+              ]:
         for v in rc.versions:
             active_releases_versions.append(v.version)
 
@@ -146,7 +144,7 @@ def versions_to_unelect(
 
 
 def find_base_release(
-    ic_repo: GitRepo, config: release_index.Model, commit: str
+        ic_repo: GitRepo, config: release_index.Model, commit: str
 ) -> typing.Tuple[str, str]:
     """
     Find the parent release commit for the given commit. Optionally return merge base if it's not a direct parent.
@@ -219,21 +217,23 @@ def version_package_checksum(version: str, os_kind: OsKind) -> str:
 
 class ActiveVersionProvider(typing.Protocol):
     def active_guestos_versions(self) -> list[str]: ...
+
     def active_hostos_versions(self) -> list[str]: ...
 
 
 class ReplicaVersionProposalProvider(typing.Protocol):
     def replica_version_proposals(self) -> dict[str, int]: ...
+
     def hostos_version_proposals(self) -> dict[str, int]: ...
 
 
 Phase = (
-    typing.Literal["forum post creation"]
-    | typing.Literal["release notes preparation"]
-    | typing.Literal["release notes announcement"]
-    | typing.Literal["release notes pull request"]
-    | typing.Literal["proposal submission"]
-    | typing.Literal["forum post update"]
+        typing.Literal["forum post creation"]
+        | typing.Literal["release notes preparation"]
+        | typing.Literal["release notes announcement"]
+        | typing.Literal["release notes pull request"]
+        | typing.Literal["proposal submission"]
+        | typing.Literal["forum post update"]
 )
 
 
@@ -269,14 +269,14 @@ class VersionState(object):
     forum_post_updated: bool | Failed = False
 
     def __init__(
-        self,
-        rc_name: str,
-        version_name: str,
-        git_revision: str,
-        os_kind: OsKind,
-        security_fix: bool,
-        is_base: bool,
-        rc: release_index.Release,
+            self,
+            rc_name: str,
+            version_name: str,
+            git_revision: str,
+            os_kind: OsKind,
+            security_fix: bool,
+            is_base: bool,
+            rc: release_index.Release,
     ):
         self.rc_name = rc_name
         self.version_name = version_name
@@ -313,10 +313,10 @@ class VersionState(object):
         self.__exit__(None, None, None)
 
     def __exit__(
-        self,
-        exc_type: type[BaseException] | None,
-        exc_val: BaseException | None,
-        exc_tb: typing.Any,
+            self,
+            exc_type: type[BaseException] | None,
+            exc_val: BaseException | None,
+            exc_tb: typing.Any,
     ) -> None:
         val = FAILED if exc_type else not (self.phase_not_done)
         if self.current_phase == "forum post creation":
@@ -347,19 +347,19 @@ class Reconciler:
     """Reconcile the state of the network with the release index, and create a forum post if needed."""
 
     def __init__(
-        self,
-        forum_client: ForumClientProtocol,
-        loader: ReleaseLoader,
-        notes_client: ReleaseNotesClientProtocol,
-        publish_client: PublishNotesClientProtocol,
-        nns_url: str,
-        state: reconciler_state.ReconcilerState,
-        ic_repo: GitRepo,
-        change_determinator_factory: typing.Callable[[], ChangeDeterminatorProtocol],
-        active_version_provider: ActiveVersionProvider,
-        dre: dre_cli.DRECli,
-        slack_announcer: slack_announce.SlackAnnouncerProtocol,
-        ignore_releases: list[str] | None = None,
+            self,
+            forum_client: ForumClientProtocol,
+            loader: ReleaseLoader,
+            notes_client: ReleaseNotesClientProtocol,
+            publish_client: PublishNotesClientProtocol,
+            nns_url: str,
+            state: reconciler_state.ReconcilerState,
+            ic_repo: GitRepo,
+            change_determinator_factory: typing.Callable[[], ChangeDeterminatorProtocol],
+            active_version_provider: ActiveVersionProvider,
+            dre: dre_cli.DRECli,
+            slack_announcer: slack_announce.SlackAnnouncerProtocol,
+            ignore_releases: list[str] | None = None,
     ):
         """Create a new reconciler."""
         self.forum_client = forum_client
@@ -406,8 +406,8 @@ class Reconciler:
                 for os_kind in OS_KINDS:
                     if os_kind == GUESTOS or v_idx == 0:  # Do HostOS for base release.
                         if (
-                            os_kind
-                            not in self.local_release_state[relcand.rc_name][rcver.name]
+                                os_kind
+                                not in self.local_release_state[relcand.rc_name][rcver.name]
                         ):
                             self.local_release_state[relcand.rc_name][rcver.name][
                                 os_kind
@@ -429,8 +429,8 @@ class Reconciler:
                         version.is_base = v_idx == 0
                         version.rc = relcand
                         if isinstance(
-                            self.state.version_proposal(rcver.version, os_kind),
-                            reconciler_state.SubmittedProposal,
+                                self.state.version_proposal(rcver.version, os_kind),
+                                reconciler_state.SubmittedProposal,
                         ):
                             version.completed("proposal submission")
 
@@ -491,8 +491,8 @@ class Reconciler:
                 revlogger.debug("%s.  Proposal not needed.", prop)
                 phase.completed("proposal submission")
             elif (
-                isinstance(prop, reconciler_state.DREMalfunction)
-                and not prop.ready_to_retry()
+                    isinstance(prop, reconciler_state.DREMalfunction)
+                    and not prop.ready_to_retry()
             ):
                 phase.failed("proposal submission")
                 revlogger.debug("%s.  Not ready to retry yet.")
@@ -507,7 +507,7 @@ class Reconciler:
 
             with phase("release notes preparation"):
                 if markdown_file := self.notes_client.markdown_file(
-                    release_commit, v.os_kind
+                        release_commit, v.os_kind
                 ):
                     revlogger.info("Has release notes in editor.  Going to next phase.")
                 else:
@@ -519,7 +519,7 @@ class Reconciler:
                         # FIXME: how to push the release tags and artifacts
                         # of security fixes 10 days after their rollout?
                         request: (
-                            OrdinaryReleaseNotesRequest | SecurityReleaseNotesRequest
+                                OrdinaryReleaseNotesRequest | SecurityReleaseNotesRequest
                         ) = SecurityReleaseNotesRequest(
                             release_tag, release_commit, v.os_kind
                         )
@@ -578,7 +578,6 @@ class Reconciler:
                         webhook=os.environ["SLACK_WEBHOOK_URL"],
                         version_name=release_tag,
                         google_doc_url=gdoc["alternateLink"],
-                        tag_all_teams=False,
                         os_kind=v.os_kind,
                     )
 
@@ -608,9 +607,9 @@ class Reconciler:
                         prop,
                     )
                 elif discovered_proposal := (
-                    existing_hostos_proposals
-                    if v.os_kind == HOSTOS
-                    else existing_guestos_proposals
+                        existing_hostos_proposals
+                        if v.os_kind == HOSTOS
+                        else existing_guestos_proposals
                 ).get(release_commit):
                     if isinstance(prop, reconciler_state.NoProposal):
                         revlogger.warning(
@@ -715,11 +714,11 @@ def main() -> None:
         type=str,
         default="http://localhost:9469/",
         help="Base URL of a commit annotator to use in order to determine commit"
-        " relevance for a target when composing release notes.  If the string"
-        " 'local' is specified, it retrieves annotations using an embedded client"
-        " that consults a local Git repository clone of the IC; local mode allows"
-        " running the release controller without a commit annotator running"
-        " simultaneously on this computer.",
+             " relevance for a target when composing release notes.  If the string"
+             " 'local' is specified, it retrieves annotations using an embedded client"
+             " that consults a local Git repository clone of the IC; local mode allows"
+             " running the release controller without a commit annotator running"
+             " simultaneously on this computer.",
     )
     parser.add_argument(
         "--verbose",
