@@ -275,7 +275,6 @@ class MockSlackAnnouncer(object):
         webhook: str,
         version_name: str,
         google_doc_url: str,
-        tag_all_teams: bool,
         os_kind: OsKind,
     ) -> None:
         self._logger.warning(
