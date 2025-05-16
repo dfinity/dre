@@ -578,7 +578,6 @@ class Reconciler:
                         webhook=os.environ["SLACK_WEBHOOK_URL"],
                         version_name=release_tag,
                         google_doc_url=gdoc["alternateLink"],
-                        tag_all_teams=v.is_base,
                         os_kind=v.os_kind,
                     )
 

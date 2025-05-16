@@ -1,5 +1,9 @@
 releases:
   # NOTE: Make sure to mark security hotfixes with the `security_fix: true` flag.
+  - rc_name: rc--2025-05-15_03-20
+    versions:
+      - name: base
+        version: 59ad18a77fbeaf3ebbba863972ff20f7ab588d7a
   - rc_name: rc--2025-05-08_03-21
     versions:
       - name: base
