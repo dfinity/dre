@@ -18,9 +18,9 @@ fn main() {
     }
 
     let out_dir = std::env::var("OUT_DIR").unwrap();
-    let path_to_non_public_subnets =
-        std::fs::canonicalize(option_env!("NON_PUBLIC_SUBNETS").unwrap_or("../../facts-db/non_public_subnets.csv")).unwrap();
+    let path_to_non_default_subnets =
+        std::fs::canonicalize(option_env!("NON_DEFAULT_SUBNETS").unwrap_or("../../facts-db/non_default_subnets.csv")).unwrap();
 
-    std::fs::copy(&path_to_non_public_subnets, format!("{}/non_public_subnets.csv", out_dir))
-        .unwrap_or_else(|e| panic!("Error with file {}: {:?}", path_to_non_public_subnets.display(), e));
+    std::fs::copy(&path_to_non_default_subnets, format!("{}/non_default_subnets.csv", out_dir))
+        .unwrap_or_else(|e| panic!("Error with file {}: {:?}", path_to_non_default_subnets.display(), e));
 }
