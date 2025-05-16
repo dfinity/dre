@@ -137,12 +137,3 @@ features:
   - feature: data_center
     value: an1
     explanation: "freeing up nodes from AN1 data center for an HSM-less redeployment"
-  - feature: data_center
-    value: im1
-    explanation: "did not finish onboarding"
-  - feature: data_center
-    value: im2
-    explanation: "did not finish onboarding"
-  - feature: node_operator
-    value: dg7of-7gsgk-b7ptj-mcrrc-bxcae-6yg2o-oa57j-64cyo-vbc4d-t3ax5-oqe
-    explanation: "freeing up nodes from Web3game in order to update ipv6"
