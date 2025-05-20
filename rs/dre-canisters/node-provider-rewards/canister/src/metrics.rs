@@ -64,13 +64,13 @@ where
         last_stored_ts: Option<UnixTsNanos>,
         mut subnet_update: Vec<NodeMetricsHistoryResponse>,
     ) {
-        // Extract initial total metrics for each node in the subnet.
-        let mut initial_total_metrics_per_node: HashMap<_, _> = HashMap::new();
+        let mut last_total_metrics: HashMap<_, _> = HashMap::new();
 
         subnet_update.sort_by_key(|metrics| metrics.timestamp_nanos);
+        // Extract initial total metrics for each node in the subnet.
         if let Some(first_metrics) = subnet_update.first() {
             if Some(first_metrics.timestamp_nanos) == last_stored_ts {
-                initial_total_metrics_per_node = subnet_update
+                last_total_metrics = subnet_update
                     .remove(0)
                     .node_metrics
                     .iter()
@@ -84,12 +84,8 @@ where
             }
         };
 
-        let mut running_total_metrics_per_node = initial_total_metrics_per_node;
         for one_day_update in subnet_update {
-            let key = SubnetMetricsDailyKeyStored {
-                subnet_id,
-                ts: one_day_update.timestamp_nanos,
-            };
+            let mut current_total_metrics = HashMap::new();
 
             let daily_nodes_metrics: Vec<_> = one_day_update
                 .node_metrics
@@ -98,34 +94,32 @@ where
                     let current_proposed_total = node_metrics.num_blocks_proposed_total;
                     let current_failed_total = node_metrics.num_block_failures_total;
 
-                    let (mut running_proposed_total, mut running_failed_total) = running_total_metrics_per_node
+                    let (last_proposed_total, last_failed_total) = last_total_metrics
                         .remove(&node_metrics.node_id)
                         // Default is needed if the node joined the subnet after last_stored_ts.
                         .unwrap_or_default();
 
-                    // This can happen if the node was redeployed.
-                    if running_proposed_total > current_proposed_total || running_failed_total > current_failed_total {
-                        running_proposed_total = 0;
-                        running_failed_total = 0;
-                    };
-
                     // Update the total metrics for the next iteration.
-                    running_total_metrics_per_node.insert(node_metrics.node_id, (current_proposed_total, current_failed_total));
+                    current_total_metrics.insert(node_metrics.node_id, (current_proposed_total, current_failed_total));
 
                     NodeMetricsDailyStored {
                         node_id: node_metrics.node_id.into(),
-                        num_blocks_proposed: current_proposed_total - running_proposed_total,
-                        num_blocks_failed: current_failed_total - running_failed_total,
+                        num_blocks_proposed: current_proposed_total - last_proposed_total,
+                        num_blocks_failed: current_failed_total - last_failed_total,
                     }
                 })
                 .collect();
 
             self.subnets_metrics.borrow_mut().insert(
-                key,
+                SubnetMetricsDailyKeyStored {
+                    subnet_id,
+                    ts: one_day_update.timestamp_nanos,
+                },
                 SubnetMetricsDailyValueStored {
                     nodes_metrics: daily_nodes_metrics,
                 },
             );
+            last_total_metrics = current_total_metrics;
         }
     }
 
