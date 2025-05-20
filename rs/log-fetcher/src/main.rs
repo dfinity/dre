@@ -50,7 +50,7 @@ async fn main() -> Result<(), anyhow::Error> {
     let mut interval = tokio::time::interval(Duration::from_secs(15));
     let mut should_run = true;
     while should_run {
-        let mut leftover_buffer = String::new();
+        let mut leftover_buffer = vec![];
         select! {
             biased;
             _ = token.cancelled() => {
@@ -114,21 +114,20 @@ async fn main() -> Result<(), anyhow::Error> {
                     break;
                 }
             };
-            let chunk_str = String::from_utf8_lossy(&chunk);
-            let combined = leftover_buffer.clone() + &chunk_str;
+            leftover_buffer.extend_from_slice(&chunk);
 
-            let to_parse = if let Some(pos) = combined.rfind("\n\n") {
-                // Splitting at the pos + two new lines to finish the entry
-                let (to_parse, rest) = combined.split_at(pos + 2);
-
-                leftover_buffer = rest.to_string();
-                to_parse
+            let split_pos = leftover_buffer.windows(2).rposition(|window| window == b"\n\n");
+            let to_parse = if let Some(pos) = split_pos {
+                let (to_parse, rest) = leftover_buffer.split_at(pos + 2);
+                let parsed = to_parse.to_vec();
+                leftover_buffer = rest.to_vec();
+                parsed
             } else {
-                leftover_buffer = combined;
+                // Not a complete single entry, nothing to parse
                 continue;
             };
 
-            let entries = parse_journal_entries_new(to_parse.as_bytes());
+            let entries = parse_journal_entries_new(&to_parse);
 
             for entry in &entries {
                 let map: BTreeMap<String, String> = entry
@@ -139,7 +138,23 @@ async fn main() -> Result<(), anyhow::Error> {
                     })
                     .collect();
 
-                if map["__CURSOR"] == cursor {
+                let curr_cursor = match map.get("__CURSOR") {
+                    Some(v) => v,
+                    None => {
+                        error!(
+                            "Didn't find a cursor for the following entry: \n{:?}\n\n\\
+                        Leftover buffer: {}\n\n\\
+                        Current chunk: {}\n\n\\
+                        ",
+                            map,
+                            std::str::from_utf8(&leftover_buffer).unwrap(),
+                            std::str::from_utf8(&chunk).unwrap()
+                        );
+                        continue;
+                    }
+                };
+
+                if curr_cursor == &cursor {
                     continue;
                 }
 

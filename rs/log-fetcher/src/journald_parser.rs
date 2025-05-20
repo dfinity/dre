@@ -354,4 +354,23 @@ mod tests {
         let entries = parse_journal_entries_new(body);
         assert_eq!(entries.len(), 0);
     }
+
+    #[test]
+    fn test_cycles_canister() {
+        let mut body = vec![];
+        let mut serialized_data = vec![];
+        serialize_string_field("MESSAGE", "2025-05-19 07:24:19.132448340 UTC: [Canister rkp4c-7iaaa-aaaaa-aaaca-cai] [cycles] conversion rate update: IcpXdrConversionRate { timestamp_seconds: 1747639380, xdr_permyriad_per_icp: 37520 }", &mut serialized_data).unwrap();
+        body.extend(serialized_data);
+        let entries = parse_journal_entries_new(&body);
+
+        let first = entries.first().unwrap();
+        let (_, message) = first.fields.iter().find(|(k, _)| k == "MESSAGE").unwrap();
+
+        let message = match message {
+            JournalField::Utf8(_) => panic!("Expected a binary field"),
+            JournalField::Binary(s) => s,
+        };
+
+        assert!(message.starts_with("2025-05-19 07:24:19"));
+    }
 }
