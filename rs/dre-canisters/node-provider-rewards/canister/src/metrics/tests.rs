@@ -1,11 +1,11 @@
 use crate::metrics::{MetricsManager, UnixTsNanos};
-use crate::metrics_types::SubnetMetricsDailyKeyStored;
+use crate::metrics_types::{NodeMetricsDailyStored, SubnetMetricsDailyKeyStored};
 use ic_base_types::{NodeId, PrincipalId, SubnetId};
 use ic_cdk::call::{CallPerformFailed, CallResult};
 use ic_management_canister_types_private::{NodeMetrics, NodeMetricsHistoryArgs, NodeMetricsHistoryResponse};
 use ic_stable_structures::memory_manager::{MemoryId, VirtualMemory};
 use ic_stable_structures::DefaultMemoryImpl;
-use rewards_calculation::types::{DayEnd, NodeMetricsDailyRaw};
+use rewards_calculation::types::DayEnd;
 use std::cell::RefCell;
 use std::collections::{BTreeMap, HashMap};
 
@@ -258,7 +258,10 @@ impl NodeMetricsHistoryResponseTracker {
 async fn _daily_metrics_correct_different_update_size(size: usize) {
     let tracker = NodeMetricsHistoryResponseTracker::new()
         .with_subnet(subnet_id(1))
-        .add_node_metrics(node_id(1), vec![(0, vec![(7, 5), (10, 6), (15, 6), (25, 50), (10, 6)])]);
+        .add_node_metrics(node_id(1), vec![(0, vec![(7, 5), (10, 6), (15, 6), (25, 50)])])
+        .add_node_metrics(node_id(2), vec![(0, vec![(19, 21), (32, 22)])])
+        // Node 2 is redeployed to subnet 1 on day 2
+        .add_node_metrics(node_id(2), vec![(3 * ONE_DAY_NANOS, vec![(10, 10)])]);
 
     let mut mock = mock::MockCanisterClient::new();
     mock.expect_node_metrics_history()
@@ -268,35 +271,42 @@ async fn _daily_metrics_correct_different_update_size(size: usize) {
     for _ in 0..MAX_TIMES {
         mm.update_subnets_metrics(vec![subnet_id(1)]).await;
     }
-    let node_1_daily_metrics: Vec<NodeMetricsDailyRaw> = mm
+    let daily_metrics: Vec<Vec<NodeMetricsDailyStored>> = mm
         .subnets_metrics
         .borrow()
         .iter()
         .collect::<BTreeMap<_, _>>()
         .into_values()
-        .map(|node_metrics| node_metrics.nodes_metrics[0].clone().into())
+        .map(|node_metrics| node_metrics.nodes_metrics.clone())
         .collect();
 
     // (7, 5)
-    assert_eq!(node_1_daily_metrics[0].num_blocks_proposed, 7);
-    assert_eq!(node_1_daily_metrics[0].num_blocks_failed, 5);
+    assert_eq!(daily_metrics[0][0].num_blocks_proposed, 7);
+    assert_eq!(daily_metrics[0][0].num_blocks_failed, 5);
+
+    assert_eq!(daily_metrics[0][1].num_blocks_proposed, 19);
+    assert_eq!(daily_metrics[0][1].num_blocks_failed, 21);
 
     // (10 - 7, 6 - 5) = (3, 1)
-    assert_eq!(node_1_daily_metrics[1].num_blocks_proposed, 3);
-    assert_eq!(node_1_daily_metrics[1].num_blocks_failed, 1);
+    // (32 - 19, 22 - 21) = (13, 1)
+    assert_eq!(daily_metrics[1][0].num_blocks_proposed, 3);
+    assert_eq!(daily_metrics[1][0].num_blocks_failed, 1);
+
+    assert_eq!(daily_metrics[1][1].num_blocks_proposed, 13);
+    assert_eq!(daily_metrics[1][1].num_blocks_failed, 1);
 
     // (15 - 10, 6 - 6) = (5, 0)
-    assert_eq!(node_1_daily_metrics[2].num_blocks_proposed, 5);
-    assert_eq!(node_1_daily_metrics[2].num_blocks_failed, 0);
+    assert_eq!(daily_metrics[2][0].num_blocks_proposed, 5);
+    assert_eq!(daily_metrics[2][0].num_blocks_failed, 0);
+
+    assert_eq!(daily_metrics[2].len(), 1);
 
     // (25 - 15, 50 - 6) = (10, 44)
-    assert_eq!(node_1_daily_metrics[3].num_blocks_proposed, 10);
-    assert_eq!(node_1_daily_metrics[3].num_blocks_failed, 44);
+    assert_eq!(daily_metrics[3][0].num_blocks_proposed, 10);
+    assert_eq!(daily_metrics[3][0].num_blocks_failed, 44);
 
-    // Node is redeployed and added to the same subnet!
-    // (10, 6)
-    assert_eq!(node_1_daily_metrics[4].num_blocks_proposed, 10);
-    assert_eq!(node_1_daily_metrics[4].num_blocks_failed, 6);
+    assert_eq!(daily_metrics[3][1].num_blocks_proposed, 10);
+    assert_eq!(daily_metrics[3][1].num_blocks_failed, 10);
 }
 
 #[tokio::test]
