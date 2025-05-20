@@ -111,7 +111,7 @@ pub struct NodeResults {
     /// Average Extrapolated Failure Rate (`AEFR`).
     ///
     /// Failure rate average for the entire reward period
-    /// - On days when the node is unassigned `AEFR` is used
+    /// - On days when the node is unassigned `ARFR` is used
     /// - On days when the node is assigned `RFR` is used
     pub avg_extrapolated_fr: Percent,
 
