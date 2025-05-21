@@ -147,11 +147,6 @@ impl Registry {
                         && (n.status == HealthStatus::Healthy || n.status == HealthStatus::Degraded)
                 })
                 .count() as u32;
-            node_operator.computed.node_allowance_total = node_operator.node_allowance + node_operator.computed.total_up_nodes as u64;
-
-            if node_operator.computed.total_up_nodes == node_operator.rewardable_nodes.iter().map(|n| n.1).sum::<u32>() {
-                node_operator.computed.rewards_correct = true;
-            }
         }
         let node_rewards_table = get_node_rewards_table(&local_registry, ctx.network());
 
@@ -195,13 +190,17 @@ async fn get_node_operators(local_registry: &Arc<dyn LazyRegistry>, network: &Ne
                 }
                 v.to_string()
             });
-            // Find the number of nodes registered by this operator
-            let operator_registered_nodes_num = all_nodes.iter().filter(|(nk, _)| nk == &k).count() as u64;
             let nodes_in_subnets = all_nodes
                 .iter()
                 .filter(|(_, value)| value.operator.principal == record.principal && value.subnet_id.is_some())
                 .count() as u64;
             let nodes_in_registry = all_nodes.iter().filter(|(_, value)| value.operator.principal == record.principal).count() as u64;
+            let node_allowance_total = record.node_allowance + nodes_in_registry;
+            let nodes_rewards_types_count = record.rewardable_nodes.values().map(|count| *count as u64).sum::<u64>();
+            let all_types_present = nodes_rewards_types_count == node_allowance_total;
+            let rewards_correct = nodes_rewards_types_count == nodes_in_registry;
+            let more_than_one_type = record.rewardable_nodes.len() > 1;
+
             (
                 record.principal,
                 NodeOperator {
@@ -214,10 +213,12 @@ async fn get_node_operators(local_registry: &Arc<dyn LazyRegistry>, network: &Ne
                     computed: NodeOperatorComputed {
                         node_provider_name,
                         node_allowance_remaining: record.node_allowance,
-                        node_allowance_total: record.node_allowance + operator_registered_nodes_num,
+                        node_allowance_total,
                         total_up_nodes: 0,
                         nodes_health: Default::default(),
-                        rewards_correct: false,
+                        rewards_correct,
+                        all_types_present,
+                        more_than_one_type,
                         nodes_in_subnets,
                         nodes_in_registry,
                     },
@@ -582,6 +583,8 @@ struct NodeOperatorComputed {
     total_up_nodes: u32,
     nodes_health: IndexMap<String, Vec<PrincipalId>>,
     rewards_correct: bool,
+    all_types_present: bool,
+    more_than_one_type: bool,
     nodes_in_subnets: u64,
     nodes_in_registry: u64,
 }
