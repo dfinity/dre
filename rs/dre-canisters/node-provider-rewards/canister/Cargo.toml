@@ -12,6 +12,7 @@ crate-type = ["cdylib"]
 
 [dependencies]
 async-trait = { workspace = true }
+chrono = { version = "0.4.41", default-features = false, features = [] }
 ic-canisters-http-types = { workspace = true }
 ic-cdk = { workspace = true }
 ic-cdk-timers = { workspace = true }
@@ -28,6 +29,8 @@ ic-management-canister-types-private = { workspace = true }
 ic-metrics-encoder = { workspace = true }
 ic-nervous-system-canisters = { workspace = true }
 ic-nervous-system-common = { workspace = true }
+ic-nns-constants = { workspace = true }
+ic-registry-transport = { workspace = true }
 ic-protobuf = { workspace = true }
 ic-registry-canister-client = { workspace = true }
 ic-types = { workspace = true }

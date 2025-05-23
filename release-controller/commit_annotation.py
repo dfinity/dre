@@ -1,5 +1,6 @@
 import collections
 import logging
+import os
 import pathlib
 import subprocess
 import typing
@@ -125,6 +126,8 @@ class GitRepoAnnotator(object):
 
     def push(self) -> None:
         if self.changed:
+            env = os.environ.copy()
+            env["GIT_TERMINAL_PROMPT"] = "0"
             for namespace in self.namespaces:
                 check_call(
                     [
@@ -135,6 +138,7 @@ class GitRepoAnnotator(object):
                         "-f",
                         "--quiet",
                     ],
+                    env=env,
                     cwd=self.dir,
                 )
 

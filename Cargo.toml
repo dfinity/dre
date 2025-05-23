@@ -102,7 +102,6 @@ ic-canister-client = { git = "https://github.com/dfinity/ic.git", rev = "2fe8aef
 ic-canister-client-sender = { git = "https://github.com/dfinity/ic.git", rev = "2fe8aefafcb2fbee6fdb2785374d5de715560269" }
 ic-canisters = { path = "rs/ic-canisters" }
 ic-canisters-http-types = { git = "https://github.com/dfinity/ic.git", rev = "2fe8aefafcb2fbee6fdb2785374d5de715560269" }
-ic-cdk = { git = "https://github.com/dfinity/cdk-rs.git", rev = "929fd0b31e9ec69aad7cf6285df0394f25fe1815" }
 ic-config = { git = "https://github.com/dfinity/ic.git", rev = "2fe8aefafcb2fbee6fdb2785374d5de715560269" }
 ic-crypto-utils-threshold-sig-der = { git = "https://github.com/dfinity/ic.git", rev = "2fe8aefafcb2fbee6fdb2785374d5de715560269" }
 ic-http-endpoints-metrics = { git = "https://github.com/dfinity/ic.git", rev = "2fe8aefafcb2fbee6fdb2785374d5de715560269" }
@@ -205,8 +204,9 @@ human_bytes = "0.4"
 mockall = "0.13.1"
 
 # dre-canisters dependencies
-ic-cdk-timers = { git = "https://github.com/dfinity/cdk-rs.git", rev = "929fd0b31e9ec69aad7cf6285df0394f25fe1815" }
-ic-cdk-macros = { git = "https://github.com/dfinity/cdk-rs.git", rev = "929fd0b31e9ec69aad7cf6285df0394f25fe1815" }
+ic-cdk = { version = "0.18.0" }
+ic-cdk-timers = { version = "0.12.0" }
+ic-cdk-macros = { version = "0.18.0" }
 ic-stable-structures = "0.6.8"
 dfn_core = { git = "https://github.com/dfinity/ic.git", rev = "2fe8aefafcb2fbee6fdb2785374d5de715560269" }
 rewards-calculation = { path = "rs/dre-canisters/node-provider-rewards/rewards-calculation" }

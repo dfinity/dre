@@ -403,6 +403,8 @@ class GitRepo:
                 _LOGGER.info(
                     "RC %s: pushing tag %s to the origin", release.rc_name, tag
                 )
+                env = os.environ.copy()
+                env["GIT_TERMINAL_PROMPT"] = "0"
                 check_call(
                     [
                         "git",
@@ -413,6 +415,7 @@ class GitRepo:
                         "-f",
                     ],
                     cwd=self.dir,
+                    env=env,
                 )
 
 

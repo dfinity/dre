@@ -6,8 +6,8 @@ use std::error::Error;
 use std::fmt;
 use std::fmt::Display;
 
-pub type TimestampNanos = u64;
-pub const NANOS_PER_DAY: TimestampNanos = 24 * 60 * 60 * 1_000_000_000;
+pub type UnixTsNanos = u64;
+pub const NANOS_PER_DAY: UnixTsNanos = 24 * 60 * 60 * 1_000_000_000;
 
 #[cfg(target_arch = "wasm32")]
 fn current_time() -> Time {
@@ -23,16 +23,16 @@ fn current_time() -> Time {
 // Wrapper types for TimestampNanos.
 // Used to ensure that the wrapped timestamp is aligned to the end of the day.
 #[derive(Debug, Copy, Clone, PartialEq, Eq, Ord, PartialOrd, Hash, Default)]
-pub struct DayEndNanos(TimestampNanos);
+pub struct DayEnd(UnixTsNanos);
 
-impl From<TimestampNanos> for DayEndNanos {
-    fn from(ts: TimestampNanos) -> Self {
+impl From<UnixTsNanos> for DayEnd {
+    fn from(ts: UnixTsNanos) -> Self {
         Self(((ts / NANOS_PER_DAY) + 1) * NANOS_PER_DAY - 1)
     }
 }
 
-impl DayEndNanos {
-    pub fn get(&self) -> TimestampNanos {
+impl DayEnd {
+    pub fn get(&self) -> UnixTsNanos {
         self.0
     }
 }
@@ -49,7 +49,7 @@ pub struct RewardPeriod {
 
 impl Display for RewardPeriod {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "RewardPeriod: {} - {}", self.from.ts_at_day_start(), self.to.ts_at_day_end())
+        write!(f, "RewardPeriod: {} - {}", self.from.unix_ts_at_day_start(), self.to.unix_ts_at_day_end())
     }
 }
 
@@ -59,16 +59,16 @@ impl RewardPeriod {
     /// # Arguments
     /// * `unaligned_start_ts` - A generic timestamp (in nanoseconds) in the first (UTC) day.
     /// * `unaligned_end_ts` - A generic timestamp (in nanoseconds) in the last (UTC) day.
-    pub fn new(unaligned_start_ts: TimestampNanos, unaligned_end_ts: TimestampNanos) -> Result<Self, RewardPeriodError> {
+    pub fn new(unaligned_start_ts: UnixTsNanos, unaligned_end_ts: UnixTsNanos) -> Result<Self, RewardPeriodError> {
         if unaligned_start_ts > unaligned_end_ts {
             return Err(RewardPeriodError::StartTimestampAfterEndTimestamp);
         }
-        let start_ts: DayEndNanos = unaligned_start_ts.into();
-        let end_ts: DayEndNanos = unaligned_end_ts.into();
+        let start_ts: DayEnd = unaligned_start_ts.into();
+        let end_ts: DayEnd = unaligned_end_ts.into();
 
         // Metrics are collected at the end of the day, so we need to ensure that
         // the end timestamp is not later than the first ts of today.
-        let today: DayEndNanos = current_time().as_nanos_since_unix_epoch().into();
+        let today: DayEnd = current_time().as_nanos_since_unix_epoch().into();
 
         if end_ts.0 >= today.0 {
             return Err(RewardPeriodError::EndTimestampLaterThanToday);
@@ -144,11 +144,11 @@ pub struct SubnetMetricsDailyKey {
 mod tests {
     use super::*;
     use crate::rewards_calculator_results::days_between;
-    use crate::types::TimestampNanos;
+    use crate::types::UnixTsNanos;
     use chrono::{TimeZone, Utc};
 
-    fn ymdh_to_ts(year: i32, month: u32, day: u32, hour: u32) -> TimestampNanos {
-        Utc.with_ymd_and_hms(year, month, day, hour, 0, 0).unwrap().timestamp_nanos_opt().unwrap() as TimestampNanos
+    fn ymdh_to_ts(year: i32, month: u32, day: u32, hour: u32) -> UnixTsNanos {
+        Utc.with_ymd_and_hms(year, month, day, hour, 0, 0).unwrap().timestamp_nanos_opt().unwrap() as UnixTsNanos
     }
 
     #[test]
@@ -161,8 +161,8 @@ mod tests {
         let expected_end_ts = ymdh_to_ts(2020, 1, 16, 0) - 1;
         let days = days_between(rp.from, rp.to);
 
-        assert_eq!(rp.from.ts_at_day_start(), expected_start_ts);
-        assert_eq!(rp.to.ts_at_day_end(), expected_end_ts);
+        assert_eq!(rp.from.unix_ts_at_day_start(), expected_start_ts);
+        assert_eq!(rp.to.unix_ts_at_day_end(), expected_end_ts);
         assert_eq!(days, 4);
 
         let unaligned_end_ts = ymdh_to_ts(2020, 1, 12, 13);

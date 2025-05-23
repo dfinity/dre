@@ -1,6 +1,6 @@
 use ic_canisters::cycles_minting::CyclesMintingCanisterWrapper;
 use indexmap::IndexMap;
-use std::{path::PathBuf, sync::Arc};
+use std::{collections::BTreeSet, path::PathBuf, sync::Arc};
 
 use crate::{auth::AuthRequirement, exe::args::GlobalArgs, exe::ExecutableCommand};
 use clap::{error::ErrorKind, Args};
@@ -20,7 +20,7 @@ use crate::{
 const DEFAULT_CANISTER_LIMIT: u64 = 60_000;
 const DEFAULT_STATE_SIZE_BYTES_LIMIT: u64 = 400 * 1024 * 1024 * 1024; // 400GB
 
-const DEFAULT_AUTHORIZED_SUBNETS_CSV: &str = include_str!(concat!(env!("OUT_DIR"), "/non_public_subnets.csv"));
+const DEFAULT_AUTHORIZED_SUBNETS_CSV: &str = include_str!(concat!(env!("OUT_DIR"), "/non_default_subnets.csv"));
 
 #[derive(Args, Debug)]
 pub struct UpdateAuthorizedSubnets {
@@ -63,8 +63,8 @@ impl ExecutableCommand for UpdateAuthorizedSubnets {
     }
 
     async fn execute(&self, ctx: crate::ctx::DreContext) -> anyhow::Result<()> {
-        let non_public_subnets_csv = self.parse_csv()?;
-        info!("Found following elements: {:?}", non_public_subnets_csv);
+        let non_default_subnets_csv = self.parse_csv()?;
+        info!("Found following elements: {:?}", non_default_subnets_csv);
 
         let registry = ctx.registry().await;
         let subnets = registry.subnets().await?;
@@ -74,7 +74,8 @@ impl ExecutableCommand for UpdateAuthorizedSubnets {
         let (_, agent) = ctx.create_ic_agent_canister_client().await?;
 
         let cmc = CyclesMintingCanisterWrapper::from(agent.clone());
-        let public_subnets = cmc.get_authorized_subnets().await?;
+        let default_subnets = cmc.get_authorized_subnets().await?;
+        let default_subnets: BTreeSet<PrincipalId> = default_subnets.into_iter().collect();
 
         let mut verified_subnets_to_open = self.open_verified_subnets;
 
@@ -86,11 +87,11 @@ impl ExecutableCommand for UpdateAuthorizedSubnets {
 
             // Check if subnet is explicitly marked as non-public
             let subnet_principal_string = subnet.principal.to_string();
-            if let Some((_, description)) = non_public_subnets_csv
+            if let Some((_, description)) = non_default_subnets_csv
                 .iter()
                 .find(|(short_id, _)| subnet_principal_string.starts_with(short_id))
             {
-                excluded_subnets.insert(subnet.principal, format!("Explicitly marked as non-public ({})", description));
+                excluded_subnets.insert(subnet.principal, format!("Explicitly marked as non-default ({})", description));
                 continue;
             }
 
@@ -108,14 +109,14 @@ impl ExecutableCommand for UpdateAuthorizedSubnets {
 
             // There was a request to open up 1 verified subnet per week
             if subnet.subnet_type.eq(&SubnetType::VerifiedApplication) {
-                if public_subnets.contains(&subnet.principal) {
+                if default_subnets.contains(&subnet.principal) {
                     continue;
                 }
                 // A sufficient number of verified_subnets has already been opened up
                 if verified_subnets_to_open == 0 {
                     // Check if the subnet ID matches any entry in the CSV and use the description.
                     // If no match is found, default to a generic message.
-                    let description = non_public_subnets_csv
+                    let description = non_default_subnets_csv
                         .iter()
                         .find(|(short_id, _)| subnet.principal.to_string().starts_with(short_id))
                         .map(|(_, desc)| desc.to_string())
@@ -123,34 +124,30 @@ impl ExecutableCommand for UpdateAuthorizedSubnets {
                     excluded_subnets.insert(subnet.principal, description);
                     continue;
                 }
-            }
 
-            // Looks like we're good to go!
-            // Now only adjust the counter of how many VerifiedApplication subnets have been opened
-            // up in this run.
-            if subnet.subnet_type.eq(&SubnetType::VerifiedApplication) && !public_subnets.contains(&subnet.principal) {
-                if verified_subnets_to_open > 0 {
-                    verified_subnets_to_open -= 1;
-                } else {
-                    unreachable!(
-                        "Error in logic! Subnet of type VerifiedApplication cannot be let through the filter if `open_verified_subnets` is 0"
-                    )
-                }
+                verified_subnets_to_open -= 1;
             }
         }
 
-        let summary = construct_summary(&subnets, &excluded_subnets, public_subnets)?;
-
-        let authorized = subnets
+        let new_authorized: BTreeSet<PrincipalId> = subnets
             .keys()
             .filter(|subnet_id| !excluded_subnets.contains_key(*subnet_id))
             .cloned()
             .collect();
 
+        if new_authorized == default_subnets {
+            println!("There are no diffs. Skipping proposal creation.");
+            return Ok(());
+        }
+
+        let summary = construct_summary(&subnets, &excluded_subnets, default_subnets)?;
+
         let prop = IcAdminProposal::new(
-            IcAdminProposalCommand::SetAuthorizedSubnetworks { subnets: authorized },
+            IcAdminProposalCommand::SetAuthorizedSubnetworks {
+                subnets: new_authorized.into_iter().collect(),
+            },
             IcAdminProposalOptions {
-                title: Some("Updating the list of public subnets".to_string()),
+                title: Some("Updating the list of default subnets".to_string()),
                 summary: Some(summary.clone()),
                 motivation: None,
             },
@@ -196,7 +193,7 @@ impl UpdateAuthorizedSubnets {
 fn construct_summary(
     subnets: &Arc<IndexMap<PrincipalId, Subnet>>,
     excluded_subnets: &IndexMap<PrincipalId, String>,
-    current_public_subnets: Vec<PrincipalId>,
+    current_default_subnets: BTreeSet<PrincipalId>,
 ) -> anyhow::Result<String> {
     Ok(format!(
         "Updating the list of authorized subnets to:
@@ -209,7 +206,7 @@ fn construct_summary(
             .values()
             .map(|s| {
                 let excluded_desc = excluded_subnets.get(&s.principal);
-                let was_public = current_public_subnets.iter().any(|principal| principal == &s.principal);
+                let was_default = current_default_subnets.contains(&s.principal);
                 format!(
                     "| {} | {} | {} | {} |",
                     s.principal,
@@ -218,11 +215,11 @@ fn construct_summary(
                         SubnetType::System => "System",
                         SubnetType::VerifiedApplication => "Verified Application",
                     },
-                    match (was_public, excluded_desc.is_none()) {
+                    match (was_default, excluded_desc.is_none()) {
                         // The state doesn't change
-                        (was_public, is_excluded) if was_public == is_excluded => was_public.to_string(),
-                        // It changed from `was_public` to `is_excluded`
-                        (was_public, is_excluded) => format!("~~{}~~ ⇒ {}", was_public, is_excluded),
+                        (was_default, is_excluded) if was_default == is_excluded => was_default.to_string(),
+                        // It changed from `was_default` to `is_excluded`
+                        (was_default, is_excluded) => format!("~~{}~~ ⇒ {}", was_default, is_excluded),
                     },
                     excluded_desc.map(|s| s.to_string()).unwrap_or_default()
                 )

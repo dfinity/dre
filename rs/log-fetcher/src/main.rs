@@ -8,11 +8,11 @@ use std::{
 
 use anyhow::anyhow;
 use clap::Parser;
-use log::{error, info, warn};
+use log::{error, info};
 use pretty_env_logger::formatted_builder;
 use reqwest::ClientBuilder;
 use tokio::select;
-use tokio::sync::mpsc;
+use tokio_util::sync::CancellationToken;
 use url::Url;
 
 use crate::journald_parser::{parse_journal_entries_new, JournalField};
@@ -28,95 +28,147 @@ async fn main() -> Result<(), anyhow::Error> {
 
     let client = match ClientBuilder::new()
         .danger_accept_invalid_certs(true)
-        .timeout(Duration::from_secs(10))
+        // If target cannot be reached within this timeout error.
+        .connect_timeout(Duration::from_secs(10))
         .build()
     {
         Ok(c) => c,
         Err(e) => return Err(anyhow!("Error while constructing the client: {:?}", e)),
     };
 
-    let (ctrl_c_sender, mut ctrl_c_receiver) = mpsc::channel::<()>(1);
+    let token = CancellationToken::new();
+    let token_clone = token.clone();
 
     tokio::spawn(async move {
         tokio::signal::ctrl_c().await.expect("Failed to listen for Ctrl-C");
-        info!("Received Ctrl-C, exiting...");
+        info!("Sending Ctrl-C, exiting...");
         // Send a message through the channel to notify the main loop
-        let _ = ctrl_c_sender.send(()).await;
+        token_clone.cancel();
     });
 
     let mut cursor = fetch_cursor(&args.cursor_path)?;
-    let mut should_sleep = false;
-    loop {
-        let sleep = tokio::time::sleep(Duration::from_secs(match should_sleep {
-            true => {
-                should_sleep = false;
-                15
-            }
-            false => 0,
-        }));
+    let mut interval = tokio::time::interval(Duration::from_secs(15));
+    let mut should_run = true;
+    while should_run {
+        let mut leftover_buffer = vec![];
         select! {
-            _ = ctrl_c_receiver.recv() => {
+            biased;
+            _ = token.cancelled() => {
                 info!("Received Ctrl-C, exiting...");
                 break;
             }
-            _ = sleep => {}
+            tick = interval.tick() => {
+                info!("Received tick: {:?}", tick);
+            }
         }
 
-        let range = format!("entries={}:0:{}", cursor, 1000);
+        let range = format!("entries={}:0:", cursor);
 
-        let response = client
+        let future = client
             .get(args.url.clone())
             .header("Accept", "application/vnd.fdo.journal")
             .header("Range", range)
-            .send()
-            .await;
+            .send();
 
-        let body = match response {
-            Ok(res) => match res.bytes().await {
-                Ok(bytes) => bytes,
-                Err(e) => {
-                    error!("Couldn't parse body bytes due to error: {:?}", e);
-                    should_sleep = true;
-                    continue;
-                }
+        let response = select! {
+            _ = token.cancelled() => {
+                info!("Received Ctrl-C while establishing the connection. Exiting...");
+                break;
             },
-            Err(e) => {
-                error!("Couldn't parse body bytes due to error: {:?}", e);
-                should_sleep = true;
-                continue;
-            }
+            response = future => response,
         };
 
-        let entries = parse_journal_entries_new(&body);
+        if let Err(e) = response {
+            error!("Couldn't establish the connection due to: {:?}", e);
+            continue;
+        };
 
-        for entry in &entries {
-            let map: BTreeMap<String, String> = entry
-                .fields
-                .iter()
-                .map(|(name, val)| match val {
-                    JournalField::Binary(value) | JournalField::Utf8(value) => (name.clone(), value.clone()),
-                })
-                .collect();
+        let mut response = response.unwrap();
 
-            if map["__CURSOR"] == cursor {
-                continue;
-            }
+        loop {
+            let maybe_response = select! {
+                biased;
+                _ = token.cancelled() => {
+                    info!("Received Ctrl-C while reading chunks. Exiting...");
+                    should_run = false;
+                    break;
+                },
+                // If there were no new logs for 30 seconds, error
+                maybe_response = tokio::time::timeout(Duration::from_secs(30), response.chunk()) => maybe_response,
+            };
 
-            let serialized = match serde_json::to_string(&map) {
-                Ok(ser) => ser,
+            let chunk = match maybe_response {
+                Ok(maybe_chunk) => match maybe_chunk {
+                    Ok(Some(chunk)) => chunk,
+                    Ok(None) => {
+                        info!("Exhausted the response");
+                        break;
+                    }
+                    Err(e) => {
+                        error!("Failed to fetch next chunk: {:?}", e);
+                        break;
+                    }
+                },
                 Err(e) => {
-                    warn!("Failed to serialize entry: {:?}, Error was: {:?}", entry, e);
-                    should_sleep = true;
-                    continue;
+                    error!("Didn't receive a chunk within the expected timeframe. Error {:?}", e);
+                    break;
                 }
             };
-            println!("{}", serialized)
-        }
+            leftover_buffer.extend_from_slice(&chunk);
 
-        if let Some(entry) = entries.last() {
-            let curr = entry.fields.iter().find(|(name, _)| name.as_str() == "__CURSOR");
-            if let Some((_, JournalField::Utf8(val))) = curr {
-                cursor = val.to_string()
+            let split_pos = leftover_buffer.windows(2).rposition(|window| window == b"\n\n");
+            let to_parse = if let Some(pos) = split_pos {
+                let (to_parse, rest) = leftover_buffer.split_at(pos + 2);
+                let parsed = to_parse.to_vec();
+                leftover_buffer = rest.to_vec();
+                parsed
+            } else {
+                // Not a complete single entry, nothing to parse
+                continue;
+            };
+
+            let entries = parse_journal_entries_new(&to_parse);
+
+            for entry in &entries {
+                let map: BTreeMap<String, String> = entry
+                    .fields
+                    .iter()
+                    .map(|(name, val)| match val {
+                        JournalField::Binary(value) | JournalField::Utf8(value) => (name.clone(), value.clone()),
+                    })
+                    .collect();
+
+                let curr_cursor = match map.get("__CURSOR") {
+                    Some(v) => v,
+                    None => {
+                        error!(
+                            "Didn't find a cursor for the following entry: \n{:?}\n\n\\
+                        Leftover buffer: {}\n\n\\
+                        Current chunk: {}\n\n\\
+                        ",
+                            map,
+                            std::str::from_utf8(&leftover_buffer).unwrap(),
+                            std::str::from_utf8(&chunk).unwrap()
+                        );
+                        continue;
+                    }
+                };
+
+                if curr_cursor == &cursor {
+                    continue;
+                }
+
+                // If the struct is created ok, serialization should not
+                // fail.
+                let serialized = serde_json::to_string(&map).unwrap();
+                println!("{}", serialized)
+            }
+
+            if let Some(entry) = entries.last() {
+                let curr = entry.fields.iter().find(|(name, _)| name.as_str() == "__CURSOR");
+                if let Some((_, JournalField::Utf8(val))) = curr {
+                    cursor = val.to_string()
+                }
             }
         }
     }

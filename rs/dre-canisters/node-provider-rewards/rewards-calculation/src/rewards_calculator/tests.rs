@@ -1,7 +1,7 @@
 use super::*;
 use crate::rewards_calculator::builder::RewardsCalculatorBuilder;
 use crate::rewards_calculator_results::RewardsCalculatorResults;
-use crate::types::{NodeMetricsDailyRaw, RewardPeriod, RewardableNode, TimestampNanos, NANOS_PER_DAY};
+use crate::types::{NodeMetricsDailyRaw, RewardPeriod, RewardableNode, UnixTsNanos, NANOS_PER_DAY};
 use ic_base_types::{NodeId, PrincipalId, SubnetId};
 use ic_protobuf::registry::node_rewards::v2::{NodeRewardRate, NodeRewardRates, NodeRewardsTable};
 use itertools::Itertools;
@@ -45,11 +45,11 @@ pub struct RewardCalculatorRunnerTest {
     reward_period: Option<RewardPeriod>,
     node_rewards_table: Option<NodeRewardsTable>,
     rewardable_nodes: Option<HashSet<RewardableNode>>,
-    daily_data: HashMap<TimestampNanos, Vec<(SubnetId, NodeId, u64, u64)>>,
+    daily_data: HashMap<UnixTsNanos, Vec<(SubnetId, NodeId, u64, u64)>>,
 }
 
 impl RewardCalculatorRunnerTest {
-    pub fn with_reward_period(mut self, start_ts: TimestampNanos, end_ts: TimestampNanos) -> Self {
+    pub fn with_reward_period(mut self, start_ts: UnixTsNanos, end_ts: UnixTsNanos) -> Self {
         self.reward_period = Some(RewardPeriod::new(start_ts, end_ts).unwrap());
         self
     }
@@ -94,7 +94,7 @@ impl RewardCalculatorRunnerTest {
         })
     }
 
-    pub fn with_node_metrics(mut self, node_id: NodeId, metrics: Vec<(TimestampNanos, SubnetId, u64, u64)>) -> Self {
+    pub fn with_node_metrics(mut self, node_id: NodeId, metrics: Vec<(UnixTsNanos, SubnetId, u64, u64)>) -> Self {
         for (utc_day, subnet_id, proposed, failed) in metrics {
             let entry = self.daily_data.entry(utc_day).or_default();
             entry.push((subnet_id, node_id, proposed, failed));

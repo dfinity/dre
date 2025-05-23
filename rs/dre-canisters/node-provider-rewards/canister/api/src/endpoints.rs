@@ -5,9 +5,15 @@ use rust_decimal::prelude::ToPrimitive;
 use rust_decimal::Decimal;
 use std::collections::BTreeMap;
 
-#[derive(candid::CandidType, candid::Deserialize)]
+// FIXME: these fields need to be documented!  Are they inclusive or exclusive ranges?  How does this work?
+#[derive(candid::CandidType, candid::Deserialize, Clone)]
 pub struct RewardPeriodArgs {
+    /// Start of the reward distribution period, as a Unix timestamp in nanoseconds.
+    /// This timestamp is covers the entire correspondent UTC day and is inclusive.
     pub start_ts: u64,
+
+    /// End of the reward distribution period, as a Unix timestamp in nanoseconds.
+    /// This timestamp is covers the entire correspondent UTC day and is inclusive.
     pub end_ts: u64,
 }
 
@@ -45,8 +51,7 @@ impl TryFrom<rewards_calculator_results::Percent> for Percent {
 pub struct DayUTC(String);
 impl From<rewards_calculator_results::DayUTC> for DayUTC {
     fn from(value: rewards_calculator_results::DayUTC) -> Self {
-        let dd_mm_yyyy = DateTime::from_timestamp(value.ts_at_day_end() as i64 / 1_000_000_000, 0)
-            .unwrap()
+        let dd_mm_yyyy = DateTime::from_timestamp_nanos(value.unix_ts_at_day_end() as i64)
             .naive_utc()
             .format("%d-%m-%Y")
             .to_string();

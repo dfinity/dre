@@ -1,4 +1,4 @@
-use crate::types::{DayEndNanos, NodeType, Region, RewardPeriod, RewardPeriodError, TimestampNanos, NANOS_PER_DAY};
+use crate::types::{DayEnd, NodeType, Region, RewardPeriod, RewardPeriodError, UnixTsNanos, NANOS_PER_DAY};
 use ic_base_types::{NodeId, PrincipalId, SubnetId};
 use rust_decimal::Decimal;
 use std::collections::BTreeMap;
@@ -36,31 +36,31 @@ impl From<Decimal> for Percent {
 }
 
 #[derive(Clone, Debug, PartialEq, Hash, PartialOrd, Ord, Eq, Copy, Default)]
-pub struct DayUTC(pub DayEndNanos);
+pub struct DayUTC(pub DayEnd);
 
 impl DayUTC {
-    pub fn ts_at_day_end(&self) -> TimestampNanos {
+    pub fn unix_ts_at_day_end(&self) -> UnixTsNanos {
         self.0.get()
     }
 
-    pub fn ts_at_day_start(&self) -> TimestampNanos {
+    pub fn unix_ts_at_day_start(&self) -> UnixTsNanos {
         (self.0.get() / NANOS_PER_DAY) * NANOS_PER_DAY
     }
 }
-impl From<DayEndNanos> for DayUTC {
-    fn from(value: DayEndNanos) -> Self {
+impl From<DayEnd> for DayUTC {
+    fn from(value: DayEnd) -> Self {
         Self(value)
     }
 }
 
-impl From<TimestampNanos> for DayUTC {
-    fn from(value: TimestampNanos) -> Self {
-        Self(DayEndNanos::from(value))
+impl From<UnixTsNanos> for DayUTC {
+    fn from(value: UnixTsNanos) -> Self {
+        Self(DayEnd::from(value))
     }
 }
 
 pub fn days_between(first_day: DayUTC, last_day: DayUTC) -> usize {
-    (((last_day.ts_at_day_end() - first_day.ts_at_day_start()) / NANOS_PER_DAY) + 1) as usize
+    (((last_day.unix_ts_at_day_end() - first_day.unix_ts_at_day_start()) / NANOS_PER_DAY) + 1) as usize
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
@@ -111,7 +111,7 @@ pub struct NodeResults {
     /// Average Extrapolated Failure Rate (`AEFR`).
     ///
     /// Failure rate average for the entire reward period
-    /// - On days when the node is unassigned `AEFR` is used
+    /// - On days when the node is unassigned `ARFR` is used
     /// - On days when the node is assigned `RFR` is used
     pub avg_extrapolated_fr: Percent,
 
@@ -197,7 +197,7 @@ impl fmt::Display for RewardCalculatorError {
                     f,
                     "Subnet {} has multiple metrics for the same node at ts {}",
                     subnet_id,
-                    day.ts_at_day_end()
+                    day.unix_ts_at_day_end()
                 )
             }
             RewardCalculatorError::RewardPeriodError(err) => {

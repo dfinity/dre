@@ -1,11 +1,11 @@
-use crate::metrics::{MetricsManager, TimestampNanos};
-use crate::metrics_types::SubnetMetricsDailyKeyStored;
+use crate::metrics::{MetricsManager, UnixTsNanos};
+use crate::metrics_types::{NodeMetricsDailyStored, SubnetMetricsDailyKeyStored};
 use ic_base_types::{NodeId, PrincipalId, SubnetId};
-use ic_cdk::api::call::{CallResult, RejectionCode};
+use ic_cdk::call::{CallPerformFailed, CallResult};
 use ic_management_canister_types_private::{NodeMetrics, NodeMetricsHistoryArgs, NodeMetricsHistoryResponse};
 use ic_stable_structures::memory_manager::{MemoryId, VirtualMemory};
 use ic_stable_structures::DefaultMemoryImpl;
-use rewards_calculation::types::{DayEndNanos, NodeMetricsDailyRaw};
+use rewards_calculation::types::DayEnd;
 use std::cell::RefCell;
 use std::collections::{BTreeMap, HashMap};
 
@@ -21,7 +21,7 @@ mod mock {
 
         #[async_trait]
         impl ManagementCanisterClient for CanisterClient {
-            async fn node_metrics_history(&self, contract: NodeMetricsHistoryArgs) -> CallResult<(Vec<NodeMetricsHistoryResponse>,)>;
+            async fn node_metrics_history(&self, contract: NodeMetricsHistoryArgs) -> CallResult<Vec<NodeMetricsHistoryResponse>>;
         }
     }
 }
@@ -62,7 +62,7 @@ async fn subnet_metrics_added_correctly() {
     let days = 45;
     let mut mock = mock::MockCanisterClient::new();
     mock.expect_node_metrics_history()
-        .return_const(CallResult::Ok((node_metrics_history_gen(days),)));
+        .return_const(CallResult::Ok(node_metrics_history_gen(days)));
     let mm = MetricsManager::new(mock);
 
     let subnet_1 = subnet_id(1);
@@ -83,10 +83,10 @@ async fn subnets_to_retry_filled() {
     let mut mock = mock::MockCanisterClient::new();
     mock.expect_node_metrics_history()
         .times(1)
-        .return_const(CallResult::Err((RejectionCode::Unknown, "Error".to_string())));
+        .return_const(CallResult::Err(CallPerformFailed.into()));
     mock.expect_node_metrics_history()
         .times(1)
-        .return_const(CallResult::Ok((node_metrics_history_gen(2),)));
+        .return_const(CallResult::Ok(node_metrics_history_gen(2)));
 
     let mm = MetricsManager::new(mock);
     mm.update_subnets_metrics(vec![subnet_1]).await;
@@ -103,7 +103,7 @@ async fn multiple_subnets_metrics_added_correctly() {
     let mut mock = mock::MockCanisterClient::new();
 
     mock.expect_node_metrics_history()
-        .return_const(CallResult::Ok((node_metrics_history_gen(days),)));
+        .return_const(CallResult::Ok(node_metrics_history_gen(days)));
     let mm = MetricsManager::new(mock);
     let subnet_1 = subnet_id(1);
     let subnet_2 = subnet_id(2);
@@ -124,8 +124,7 @@ async fn multiple_subnets_metrics_added_correctly() {
 #[tokio::test]
 async fn retry_count_increments_on_failure() {
     let mut mock = mock::MockCanisterClient::new();
-    mock.expect_node_metrics_history()
-        .return_const(CallResult::Err((RejectionCode::Unknown, "Temporary error".to_string())));
+    mock.expect_node_metrics_history().return_const(CallResult::Err(CallPerformFailed.into()));
 
     let mm = MetricsManager::new(mock);
     let subnet_1 = subnet_id(1);
@@ -146,8 +145,7 @@ async fn no_metrics_added_when_call_fails() {
     let mut mock = mock::MockCanisterClient::new();
     let subnet_1 = subnet_id(1);
 
-    mock.expect_node_metrics_history()
-        .return_const(CallResult::Err((RejectionCode::Unknown, "Error".to_string())));
+    mock.expect_node_metrics_history().return_const(CallResult::Err(CallPerformFailed.into()));
     let mm = MetricsManager::new(mock);
 
     mm.update_subnets_metrics(vec![subnet_1]).await;
@@ -162,9 +160,9 @@ async fn partial_failures_are_handled_correctly() {
     let mut mock = mock::MockCanisterClient::new();
     mock.expect_node_metrics_history().returning(move |subnet| {
         if SubnetId::from(subnet.subnet_id) == subnet_1 {
-            CallResult::Err((RejectionCode::Unknown, "Error".to_string()))
+            CallResult::Err(CallPerformFailed.into())
         } else {
-            CallResult::Ok((node_metrics_history_gen(1),))
+            CallResult::Ok(node_metrics_history_gen(1))
         }
     });
 
@@ -200,7 +198,7 @@ type Failed = u64;
 #[derive(Clone)]
 struct NodeMetricsHistoryResponseTracker {
     current_subnet: SubnetId,
-    subnets_responses: BTreeMap<TimestampNanos, HashMap<SubnetId, Vec<NodeMetrics>>>,
+    subnets_responses: BTreeMap<UnixTsNanos, HashMap<SubnetId, Vec<NodeMetrics>>>,
 }
 
 impl NodeMetricsHistoryResponseTracker {
@@ -260,45 +258,55 @@ impl NodeMetricsHistoryResponseTracker {
 async fn _daily_metrics_correct_different_update_size(size: usize) {
     let tracker = NodeMetricsHistoryResponseTracker::new()
         .with_subnet(subnet_id(1))
-        .add_node_metrics(node_id(1), vec![(0, vec![(7, 5), (10, 6), (15, 6), (25, 50), (10, 6)])]);
+        .add_node_metrics(node_id(1), vec![(0, vec![(7, 5), (10, 6), (15, 6), (25, 50)])])
+        .add_node_metrics(node_id(2), vec![(0, vec![(19, 21), (32, 22)])])
+        // Node 2 is redeployed to subnet 1 on day 2
+        .add_node_metrics(node_id(2), vec![(3 * ONE_DAY_NANOS, vec![(10, 10)])]);
 
     let mut mock = mock::MockCanisterClient::new();
     mock.expect_node_metrics_history()
-        .returning(move |contract| CallResult::Ok((tracker.next(size, contract),)));
+        .returning(move |contract| CallResult::Ok(tracker.next(size, contract)));
     let mm = MetricsManager::new(mock);
 
     for _ in 0..MAX_TIMES {
         mm.update_subnets_metrics(vec![subnet_id(1)]).await;
     }
-    let node_1_daily_metrics: Vec<NodeMetricsDailyRaw> = mm
+    let daily_metrics: Vec<Vec<NodeMetricsDailyStored>> = mm
         .subnets_metrics
         .borrow()
         .iter()
         .collect::<BTreeMap<_, _>>()
         .into_values()
-        .map(|node_metrics| node_metrics.nodes_metrics[0].clone().into())
+        .map(|node_metrics| node_metrics.nodes_metrics.clone())
         .collect();
 
     // (7, 5)
-    assert_eq!(node_1_daily_metrics[0].num_blocks_proposed, 7);
-    assert_eq!(node_1_daily_metrics[0].num_blocks_failed, 5);
+    assert_eq!(daily_metrics[0][0].num_blocks_proposed, 7);
+    assert_eq!(daily_metrics[0][0].num_blocks_failed, 5);
+
+    assert_eq!(daily_metrics[0][1].num_blocks_proposed, 19);
+    assert_eq!(daily_metrics[0][1].num_blocks_failed, 21);
 
     // (10 - 7, 6 - 5) = (3, 1)
-    assert_eq!(node_1_daily_metrics[1].num_blocks_proposed, 3);
-    assert_eq!(node_1_daily_metrics[1].num_blocks_failed, 1);
+    // (32 - 19, 22 - 21) = (13, 1)
+    assert_eq!(daily_metrics[1][0].num_blocks_proposed, 3);
+    assert_eq!(daily_metrics[1][0].num_blocks_failed, 1);
+
+    assert_eq!(daily_metrics[1][1].num_blocks_proposed, 13);
+    assert_eq!(daily_metrics[1][1].num_blocks_failed, 1);
 
     // (15 - 10, 6 - 6) = (5, 0)
-    assert_eq!(node_1_daily_metrics[2].num_blocks_proposed, 5);
-    assert_eq!(node_1_daily_metrics[2].num_blocks_failed, 0);
+    assert_eq!(daily_metrics[2][0].num_blocks_proposed, 5);
+    assert_eq!(daily_metrics[2][0].num_blocks_failed, 0);
+
+    assert_eq!(daily_metrics[2].len(), 1);
 
     // (25 - 15, 50 - 6) = (10, 44)
-    assert_eq!(node_1_daily_metrics[3].num_blocks_proposed, 10);
-    assert_eq!(node_1_daily_metrics[3].num_blocks_failed, 44);
+    assert_eq!(daily_metrics[3][0].num_blocks_proposed, 10);
+    assert_eq!(daily_metrics[3][0].num_blocks_failed, 44);
 
-    // Node is redeployed and added to the same subnet!
-    // (10, 6)
-    assert_eq!(node_1_daily_metrics[4].num_blocks_proposed, 10);
-    assert_eq!(node_1_daily_metrics[4].num_blocks_failed, 6);
+    assert_eq!(daily_metrics[3][1].num_blocks_proposed, 10);
+    assert_eq!(daily_metrics[3][1].num_blocks_failed, 10);
 }
 
 #[tokio::test]
@@ -324,7 +332,7 @@ async fn daily_metrics_correct_2_subs() {
 
     let mut mock = mock::MockCanisterClient::new();
     mock.expect_node_metrics_history()
-        .returning(move |contract| CallResult::Ok((tracker.next_2_steps(contract),)));
+        .returning(move |contract| CallResult::Ok(tracker.next_2_steps(contract)));
     let mm = MetricsManager::new(mock);
 
     for _ in 0..MAX_TIMES {
@@ -392,7 +400,7 @@ async fn daily_metrics_correct_overlapping_days() {
 
     let mut mock = mock::MockCanisterClient::new();
     mock.expect_node_metrics_history()
-        .returning(move |contract| CallResult::Ok((tracker.next_2_steps(contract),)));
+        .returning(move |contract| CallResult::Ok(tracker.next_2_steps(contract)));
     let mm = MetricsManager::new(mock);
 
     for _ in 0..MAX_TIMES {
@@ -414,7 +422,7 @@ async fn daily_metrics_correct_overlapping_days() {
 
     let overlapping_sub_1 = daily_metrics
         .iter()
-        .find(|(sub, day, _)| sub == &subnet_1 && day.ts_at_day_end() == DayEndNanos::from(2 * ONE_DAY_NANOS).get())
+        .find(|(sub, day, _)| sub == &subnet_1 && day.unix_ts_at_day_end() == DayEnd::from(2 * ONE_DAY_NANOS).get())
         .map(|(_, _, node_metrics)| node_metrics)
         .unwrap();
 
@@ -423,7 +431,7 @@ async fn daily_metrics_correct_overlapping_days() {
 
     let overlapping_sub_2 = daily_metrics
         .iter()
-        .find(|(sub, day, _)| sub == &subnet_2 && day.ts_at_day_end() == DayEndNanos::from(2 * ONE_DAY_NANOS).get())
+        .find(|(sub, day, _)| sub == &subnet_2 && day.unix_ts_at_day_end() == DayEnd::from(2 * ONE_DAY_NANOS).get())
         .map(|(_, _, node_metrics)| node_metrics)
         .unwrap();
 

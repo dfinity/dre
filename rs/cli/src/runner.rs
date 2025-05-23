@@ -481,12 +481,13 @@ impl Runner {
         ))
     }
 
-    pub async fn network_heal(
+    pub async fn network_fix(
         &self,
         omit_subnets: &[String],
         omit_nodes: &[String],
         optimize_decentralization: bool,
         remove_cordoned_nodes: bool,
+        heal: bool,
     ) -> anyhow::Result<Vec<IcAdminProposal>> {
         let mut errors = vec![];
 
@@ -517,13 +518,14 @@ impl Runner {
         });
 
         let subnets_change_responses = NetworkHealRequest::new(subnets_without_proposals)
-            .heal_and_optimize(
+            .fix_and_optimize(
                 available_nodes,
                 &health_of_nodes,
                 cordoned_features,
                 &all_nodes,
                 optimize_decentralization,
                 remove_cordoned_nodes,
+                heal,
             )
             .await?;
 

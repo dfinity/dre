@@ -1,6 +1,6 @@
 use crate::metrics::{ICCanisterClient, MetricsManager};
 use crate::registry::RegistryClient;
-use ic_nervous_system_canisters::registry::RegistryCanister;
+use crate::registry_canister::RegistryCanister;
 use ic_registry_canister_client::{RegistryDataStableMemory, StableCanisterRegistryClient, StorableRegistryKey, StorableRegistryValue};
 use ic_stable_structures::memory_manager::{MemoryId, MemoryManager, VirtualMemory};
 use ic_stable_structures::{DefaultMemoryImpl, StableBTreeMap, Storable};

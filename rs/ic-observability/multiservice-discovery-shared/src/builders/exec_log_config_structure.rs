@@ -56,7 +56,7 @@ impl ConfigBuilder for ExecLogConfigBuilderImpl {
                         self.script_path.as_str(),
                         "--url",
                         format!(
-                            "http://[{}]:{}/entries",
+                            "http://[{}]:{}/entries?follow",
                             job.ip(*record.targets.first().unwrap(), is_bn),
                             match is_bn {
                                 true => self.bn_port,
