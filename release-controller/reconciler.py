@@ -378,26 +378,43 @@ class Reconciler:
 
     def reconcile(self) -> None:
         """Reconcile the state of the network with the release index."""
-        config = self.loader.index()
+        index = self.loader.index()
         active_guestos_versions = self.ic_prometheus.active_guestos_versions()
         active_hostos_versions = self.ic_prometheus.active_hostos_versions()
         logger = LOGGER.getChild("reconciler")
 
-        oldest_active_guestos = oldest_active_release(config, active_guestos_versions)
-        oldest_active_hostos = oldest_active_release(config, active_hostos_versions)
+        try:
+            oldest_active_guestos = oldest_active_release(
+                index, active_guestos_versions
+            )
+        except ValueError:
+            logger.warning(
+                "We could not find the oldest active GuestOS in the index."
+                "  We will pretend only the latest release needs processing."
+            )
+            oldest_active_guestos = index.root.releases[0]
+        try:
+            oldest_active_hostos = oldest_active_release(index, active_hostos_versions)
+        except ValueError:
+            logger.warning(
+                "We could not find the oldest active HostOS in the index."
+                "  We will pretend only the latest release needs processing."
+            )
+            oldest_active_guestos = index.root.releases[0]
         oldest_active_index = max(
             [
-                config.root.releases.index(oldest_active_guestos),
-                config.root.releases.index(oldest_active_hostos),
+                index.root.releases.index(oldest_active_guestos),
+                index.root.releases.index(oldest_active_hostos),
             ]
         )
-        releases = config.root.releases[: oldest_active_index + 1]
+        releases = index.root.releases[: oldest_active_index + 1]
         # Remove ignored releases from list to process.
         releases = [r for r in releases if r.rc_name not in self.ignore_releases]
 
         # Preload the cache of known successfully processed releases.
         # We will use this information as an operation plan.
-        for relcand in releases:
+        # Do them in oldest to newest lexical order.
+        for relcand in reversed(releases):
             if relcand.rc_name not in self.local_release_state:
                 self.local_release_state[relcand.rc_name] = {}
             for v_idx, rcver in enumerate(relcand.versions):
@@ -530,7 +547,7 @@ class Reconciler:
                         self.ic_repo.push_release_tags(v.rc)
                         self.ic_repo.fetch()
                         base_release_commit, base_release_tag = find_base_release(
-                            self.ic_repo, config, release_commit
+                            self.ic_repo, index, release_commit
                         )
                         request = OrdinaryReleaseNotesRequest(
                             release_tag,
@@ -650,7 +667,7 @@ class Reconciler:
                     if v.is_base == 0:
                         unelect_versions.extend(
                             versions_to_unelect(
-                                config,
+                                index,
                                 active_versions=(
                                     active_hostos_versions
                                     if v.os_kind == HOSTOS
