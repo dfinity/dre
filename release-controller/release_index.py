@@ -3,15 +3,30 @@
 
 from __future__ import annotations
 
-from typing import List
+from typing import List, Optional
 
 from pydantic import BaseModel, ConfigDict, RootModel
+
+
+class ChangelogBase(BaseModel):
+    "Refers to another RC / version in the index that this version is derived from."
+
+    rc_name: str
+    name: str
+
+
+class ChangelogBaseForVariants(BaseModel):
+    "Refers to possible overrides for the base used when generating the changelog of a specific OS."
+
+    HostOS: Optional[ChangelogBase] = None
+    GuestOS: Optional[ChangelogBase] = None
 
 
 class Version(BaseModel):
     model_config = ConfigDict(extra="allow")
     name: str
     version: str
+    changelog_base: Optional[ChangelogBaseForVariants] = None
     security_fix: bool = False
 
 
@@ -24,6 +39,16 @@ class Release(BaseModel):
 class ReleaseIndex(BaseModel):
     model_config = ConfigDict(extra="forbid")
     releases: List[Release]
+
+    def version(self, rc_name: str, name: str) -> str:
+        "Retrieve the commit for a specific RC and version name.  Raises KeyError if not found."
+        for v in self.releases:
+            if v.rc_name != rc_name:
+                continue
+            for vv in v.versions:
+                if vv.name == name:
+                    return vv.version
+        raise KeyError(f"{rc_name}-{name}")
 
 
 class Model(RootModel[ReleaseIndex]):

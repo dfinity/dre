@@ -13,7 +13,9 @@
           }
         }
       },
-      "required": ["releases"],
+      "required": [
+        "releases"
+      ],
       "title": "ReleaseIndex"
     },
     "Release": {
@@ -30,7 +32,10 @@
           }
         }
       },
-      "required": ["rc_name", "versions"],
+      "required": [
+        "rc_name",
+        "versions"
+      ],
       "title": "Release"
     },
     "Version": {
@@ -45,10 +50,49 @@
         },
         "security_fix": {
           "type": "boolean"
+        },
+        "changelog_base": {
+          "type": "object",
+          "$ref": "#/definitions/ChangelogBaseForVariants"
         }
       },
-      "required": ["name", "version"],
+      "required": [
+        "name",
+        "version"
+      ],
       "title": "Version"
+    },
+    "ChangelogBaseForVariants": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "HostOS": {
+          "type": "object",
+          "$ref": "#/definitions/ChangelogBase"
+        },
+        "GuestOS": {
+          "type": "object",
+          "$ref": "#/definitions/ChangelogBase"
+        }
+      },
+      "title": "ChangelogBaseForVariants"
+    },
+    "ChangelogBase": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "rc_name": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "rc_name",
+        "name"
+      ],
+      "title": "ChangelogBase"
     }
   }
 }
