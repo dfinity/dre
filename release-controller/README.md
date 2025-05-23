@@ -9,6 +9,9 @@ Automates the process of proposing new releases for IC HostOS and GuestOS.
   releases:
     - rc_name: rc--2024-02-21_23-01
       versions:
+        # It is customary but not mandatory to add a link to the
+        # Qualification pipeline:
+        # https://github.com/dfinity/ic/actions/runs/14491317106
         - name: base
           version: 2e921c9adfc71f3edc96a9eb5d85fc742e7d8a9f
   ```
@@ -59,6 +62,8 @@ releases:
         version: 16825c5cbff83a51983d849b60c9d26b3268bbb6
         security_fix: true
 ```
+
+You are allowed to periodically clean up old releases from the release index, so long as the commit IDs they list are not in the blessed versions for HostOS or GuestOS, and none of the remaining releases refer to them via the `changelog_base` field.  As a rule of thumb, it will not cause problems to delete releases six months or older.
 
 ## Recreating notes
 
