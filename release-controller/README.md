@@ -13,8 +13,8 @@ Automates the process of proposing new releases for IC HostOS and GuestOS.
           version: 2e921c9adfc71f3edc96a9eb5d85fc742e7d8a9f
   ```
 2. Relevant teams are notified with a link to a Google document for them to review the release notes.  In parallel, placeholder post is created in the forum to prepare for publication of the release notes.
-2. Once the Google document is reviewed (all teams crossed out), PR will be created with release notes.
-3. Once that PR is merged, the proposal will be placed and the placeholder forum post is updated with the final release notes.
+3. Once the Google document is reviewed (all teams crossed out), PR will be created with release notes.
+4. Once that PR is merged, the proposal will be placed and the placeholder forum post is updated with the final release notes.
 
 ### Release index reference
 
