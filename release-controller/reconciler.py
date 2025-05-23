@@ -289,7 +289,7 @@ class VersionState(object):
         self.phase_not_done = False
 
     @property
-    def complete(self) -> bool:
+    def fully_processed(self) -> bool:
         return self.has_proposal is True and self.forum_post_updated is True
 
     def __call__(self, phase: Phase) -> "VersionState":
@@ -411,6 +411,8 @@ class Reconciler:
         # Remove ignored releases from list to process.
         releases = [r for r in releases if r.rc_name not in self.ignore_releases]
 
+        self.state.update_state(self.dre.get_election_proposals_by_version)
+
         # Preload the cache of known successfully processed releases.
         # We will use this information as an operation plan.
         # Do them in oldest to newest lexical order.
@@ -457,7 +459,7 @@ class Reconciler:
             for rc in self.local_release_state.values()
             for version_batch in rc.values()
             for version in version_batch.values()
-            if not version.complete
+            if not version.fully_processed
         ]
 
         if [x for x in versions if x.os_kind == GUESTOS]:
@@ -476,13 +478,6 @@ class Reconciler:
             logger.info(
                 "Oldest active HostOS release: %s", oldest_active_hostos.rc_name
             )
-
-        if versions:
-            existing_guestos_proposals, existing_hostos_proposals = (
-                self.dre.get_election_proposals_by_version()
-            )
-        else:
-            existing_guestos_proposals, existing_hostos_proposals = ({}, {})
 
         if versions:
             logger.info("Processing the following release versions:")
@@ -506,13 +501,11 @@ class Reconciler:
             prop = self.state.version_proposal(release_commit, v.os_kind)
             if isinstance(prop, reconciler_state.SubmittedProposal):
                 revlogger.debug("%s.  Proposal not needed.", prop)
-                phase.completed("proposal submission")
             elif (
                 isinstance(prop, reconciler_state.DREMalfunction)
                 and not prop.ready_to_retry()
             ):
                 phase.failed("proposal submission")
-                revlogger.debug("%s.  Not ready to retry yet.")
                 continue
 
             # update to create posts for any releases
@@ -620,34 +613,11 @@ class Reconciler:
             with phase("proposal submission"):
                 if isinstance(prop, reconciler_state.SubmittedProposal):
                     revlogger.info(
-                        "%s.  We will check if forum post needs update.",
+                        "%s.  We do not need to submit a proposal, but"
+                        " we will check if forum post needs update.",
                         prop,
                     )
-                elif discovered_proposal := (
-                    existing_hostos_proposals
-                    if v.os_kind == HOSTOS
-                    else existing_guestos_proposals
-                ).get(release_commit):
-                    if isinstance(prop, reconciler_state.NoProposal):
-                        revlogger.warning(
-                            "We have no record of a proposal being submitted.  However, contrary"
-                            " to our record, proposal to elect %s was indeed successfully"
-                            " submitted by someone else as ID %s.",
-                            release_commit,
-                            discovered_proposal["id"],
-                        )
-                    elif isinstance(prop, reconciler_state.DREMalfunction):
-                        revlogger.warning(
-                            "%s.  However, contrary to recorded failure, proposal"
-                            " to elect %s was indeed successfully submitted by us as ID %s.",
-                            prop,
-                            release_commit,
-                            discovered_proposal["id"],
-                        )
-                    prop.record_submission(discovered_proposal["id"])
                 else:
-                    # No discovered proposal and either prior malfunction or no proposal.
-                    # Time to create a proposal proposal.
                     revlogger.info("Preparing proposal for %s", release_commit)
                     try:
                         checksum = version_package_checksum(release_commit, v.os_kind)
@@ -764,12 +734,6 @@ def main() -> None:
         help="Time to wait (in seconds) between loop executions.  If 0 or less, exit immediately after the first loop.",
     )
     parser.add_argument(
-        "--skip-preloading-state",
-        action="store_true",
-        dest="skip_preloading_state",
-        help="Do not fill the reconciler state upon startup with the known proposals from the governance canister.",
-    )
-    parser.add_argument(
         "--telemetry_port",
         type=int,
         dest="telemetry_port",
@@ -783,10 +747,6 @@ def main() -> None:
     opts = parser.parse_args()
 
     dry_run = opts.dry_run
-    skip_preloading_state = opts.skip_preloading_state
-
-    if skip_preloading_state and not dry_run:
-        assert 0, "To prevent double submission of proposals, preloading state must not be skipped when run without --dry-run"
 
     if opts.dotenv_file:
         load_dotenv(opts.dotenv_file)
@@ -861,9 +821,7 @@ def main() -> None:
         if not dry_run
         else dryrun.DRECli()
     )
-    state = reconciler_state.ReconcilerState(
-        None if skip_preloading_state else dre.get_election_proposals_by_version,
-    )
+    state = reconciler_state.ReconcilerState(None)
     slack_announcer: slack_announce.SlackAnnouncerProtocol = (
         slack_announce.SlackAnnouncer() if not dry_run else dryrun.MockSlackAnnouncer()
     )

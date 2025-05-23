@@ -284,6 +284,7 @@ impl ExecutableCommand for Filter {
                 include_all_manage_neuron_proposals: Some(true),
                 ..Default::default()
             };
+            info!("{:?}", payload);
 
             if current_batch.len() > remaining as usize {
                 let current_batch = current_batch.into_iter().take(remaining as usize).collect_vec();
