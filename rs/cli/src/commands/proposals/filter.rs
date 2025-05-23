@@ -3,7 +3,7 @@ use clap::Args;
 use ic_canisters::governance::GovernanceCanisterWrapper;
 use ic_nns_common::pb::v1::ProposalId;
 use itertools::Itertools;
-use log::{error, info, warn};
+use log::{debug, error};
 use strum::IntoEnumIterator;
 
 use std::fmt::Display;
@@ -250,7 +250,7 @@ impl ExecutableCommand for Filter {
             include_all_manage_neuron_proposals: Some(true),
             ..Default::default()
         };
-        info!(
+        debug!(
             "Querying {} proposals where status is {} and topic is {}",
             self.limit,
             match statuses.is_empty() {
@@ -294,14 +294,14 @@ impl ExecutableCommand for Filter {
                 proposals.extend(current_batch)
             }
 
-            info!("Remaining after iteration: {}", remaining);
+            debug!("Remaining after iteration: {}", remaining);
 
             if remaining == 0 {
                 break;
             }
 
             if payload.before_proposal.is_none() {
-                warn!("No more proposals available and there is {} remaining to find", remaining);
+                debug!("No more proposals available and there is {} remaining to find", remaining);
                 break;
             }
         }

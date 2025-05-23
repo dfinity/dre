@@ -5,6 +5,7 @@ on:
       - "main"
     paths:
       - release-controller/**
+      - rs/cli/**
       - requirements*.lock
       - pyproject.toml
       - "*.bazel"
@@ -15,6 +16,7 @@ on:
   pull_request:
     paths:
       - release-controller/**
+      - rs/cli/**
       - requirements*.lock
       - pyproject.toml
       - "*.bazel"
