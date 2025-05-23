@@ -1,4 +1,12 @@
-# Documentation at https://dfinity.github.io/dre/release.html#release-index-reference .
+# Documentation: https://dfinity.github.io/dre/release.html#release-index-reference
+# 
+# Flags and options:
+# - Use 'security_fix: true' to mark security hotfixes.
+# - To override changelog base selection, add a 'changelog_base' dictionary to a version:
+#     changelog_base:
+#       HostOS or GuestOS:
+#         rc_name: <reference RC name>
+#         name: <version name>
 releases:
   - rc_name: rc--2025-05-23_03-21
     versions:
