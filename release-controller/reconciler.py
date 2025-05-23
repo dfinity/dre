@@ -576,7 +576,7 @@ class Reconciler:
 
             needs_announce = False
 
-            with phase("release notes preparation") as p:
+            with phase("release notes preparation"):
                 if markdown_file := self.notes_client.markdown_file(
                     release_commit, v.os_kind
                 ):
