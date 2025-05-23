@@ -12,6 +12,7 @@ import urllib.parse
 sys.path.append(os.path.join(os.path.dirname(__file__)))
 import dre_cli
 import dryrun
+import public_dashboard
 import release_index
 import slack_announce
 import reconciler_state
@@ -382,6 +383,7 @@ class Reconciler:
         change_determinator_factory: typing.Callable[[], ChangeDeterminatorProtocol],
         active_version_provider: ActiveVersionProvider,
         dre: dre_cli.DRECli,
+        dashboard: public_dashboard.DashboardAPI,
         slack_announcer: slack_announce.SlackAnnouncerProtocol,
         ignore_releases: list[str] | None = None,
     ):
@@ -396,6 +398,7 @@ class Reconciler:
         self.ic_repo = ic_repo
         self.ignore_releases = ignore_releases or []
         self.dre = dre
+        self.dashboard = dashboard
         self.slack_announcer = slack_announcer
         self.change_determinator_factory = change_determinator_factory
         self.local_release_state: dict[str, dict[str, dict[OsKind, VersionState]]] = {}
@@ -437,6 +440,18 @@ class Reconciler:
         releases = [r for r in releases if r.rc_name not in self.ignore_releases]
 
         # Fetch latest election proposals and remember their state.
+        try:
+            self.state.update_state(self.dashboard.get_election_proposals_by_version)
+        except Exception as e:
+            logger.warning(
+                "Did not succeed in retrieving proposals from"
+                " the public dashboard API (%s), continuing anyway",
+                e,
+            )
+        # We always fetch and apply the state of the proposals
+        # from the DRE CLI (coming from governance canister)
+        # after the dashboard, since these are the authoritative proposals
+        # that have the freshest state (dashboard lags).
         self.state.update_state(self.dre.get_election_proposals_by_version)
 
         # Preload the cache of known successfully processed releases.
@@ -888,6 +903,7 @@ def main() -> None:
         if not dry_run
         else dryrun.DRECli()
     )
+    dashboard = public_dashboard.DashboardAPI()
     state = reconciler_state.ReconcilerState(None)
     slack_announcer: slack_announce.SlackAnnouncerProtocol = (
         slack_announce.SlackAnnouncer() if not dry_run else dryrun.MockSlackAnnouncer()
@@ -917,6 +933,7 @@ def main() -> None:
         ),
         slack_announcer=slack_announcer,
         dre=dre,
+        dashboard=dashboard,
     )
 
     if opts.loop_every > 0:
