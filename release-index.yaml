@@ -1,22 +1,5 @@
+# Documentation at https://dfinity.github.io/dre/release.html#release-index-reference .
 releases:
-  # NOTE: Make sure to mark security hotfixes with the `security_fix: true` flag.
-  #
-  # To override the automatic selection of a base release for the purposes of
-  # changelog, add a changelog_base dictionary to a version.  The changelog_base
-  # dictionary may contain keys HostOS and/or GuestOS.  The value for each one
-  # of those keys is always a dictionary with rc_name (refers to another RC name
-  # in this file) and name (refers to the name of a version within that RC).
-  #
-  # Example:
-  # - rc_name: rc--2025-05-23_03-21
-  #   versions:
-  #     - name: base
-  #       version: 16825c5cbff83a51983d849b60c9d26b3268bbb6
-  #       changelog_base:
-  #         GuestOS:
-  #           rc_name: rc--2025-05-01_03-23
-  #           name: base
-
   - rc_name: rc--2025-05-23_03-21
     versions:
       - name: base

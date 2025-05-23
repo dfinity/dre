@@ -1,19 +1,64 @@
 # Release controller
 
-Automates parts of the process of proposing new releases for IC HostOS and GuestOS.
+Automates the process of proposing new releases for IC HostOS and GuestOS.
 
 ## Usage
 
-1. Register new release / version
+1. Register new release / version in [release-index.yaml](https://github.com/dfinity/dre/blob/main/release-index.yaml)
   ```yaml
   releases:
     - rc_name: rc--2024-02-21_23-01
       versions:
-        - name: baseline
+        - name: base
           version: 2e921c9adfc71f3edc96a9eb5d85fc742e7d8a9f
   ```
+2. Relevant teams are notified with a link to a Google document for them to review the release notes.  In parallel, placeholder post is created in the forum to prepare for publication of the release notes.
+2. Once the Google document is reviewed (all teams crossed out), PR will be created with release notes.
+3. Once that PR is merged, the proposal will be placed and the placeholder forum post is updated with the final release notes.
 
-2. Once the Google Doc is finished (all teams crossed out), PR will be created with release notes. Once it's merged, the proposal will be placed and forum post updated.
+### Release index reference
+
+Releases are composed of a list of dictionaries, each having (1) an `rc_name` corresponding to the RC branch to be released, and (2) a list of versions each containing a `name` (at least one of which is typically named `base` and corresponds to the first listed version) and a `version` containing the commit ID desired to be tagged and released; two additional version fields `changelog_base` and `security_fix` are documented below.
+
+Out of each version within a release, a release branch named `{rc_name}-{version.name}` will be constructed to create a specific release for GuestOS and (in the case of the `base` or first version) HostOS.
+
+Only the two most recent releases will be paid attention to by the release controller.
+
+The release notes (changelog) for each release version is generated automatically, starting from a prior version which is typically determined automatically.  In the case of any base version of a release, the prior base release is considered the baseline for the release notes; in the case of a non-base / feature version, the base version the same release is considered the baseline.
+
+You can override this behavior; a version can have an additional `changelog_base` dictionary with (optional) keys `GuestOS` and/or `HostOS`, whose values must be the name of another release (`rc_name`) listed in the index, as well as the name of one of its versions (typically `base`).  This dictionary allows you to override which release/version combo is used as the baseline for (the start of) the release notes that will be generated for this version.  Here is an example:
+
+```yaml
+releases:
+  - rc_name: rc--2025-05-23_03-21
+    versions:
+      - name: base
+        version: 16825c5cbff83a51983d849b60c9d26b3268bbb6
+        changelog_base:
+          # Base the changelog for this version onto the May 1st base release.
+          GuestOS:
+            rc_name: rc--2025-05-01_03-23
+            name: base
+  - rc_name: rc--2025-05-15_03-20
+    versions:
+      - name: base
+        version: 59ad18a77fbeaf3ebbba863972ff20f7ab588d7a
+  - rc_name: rc--2025-05-01_03-23
+    versions:
+      - name: base
+        version: f195ba756bc3bf170a2888699e5e74101fdac6ba
+```
+
+Finally, changelog generation can be suppressed entirely by adding `security_fix: true` to a version.  This creates an abridged release notes containing no changes at all, and indicating to the users that the code plus the changes will be available at a later date.  Use this flag when a release must be performed from the private security-fixes-only repository, as otherwise the changelog code will not work.
+
+```yaml
+releases:
+  - rc_name: rc--2025-05-23_03-21
+    versions:
+      - name: base
+        version: 16825c5cbff83a51983d849b60c9d26b3268bbb6
+        security_fix: true
+```
 
 ## Recreating notes
 
