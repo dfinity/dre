@@ -434,8 +434,9 @@ class Reconciler:
             raise
 
         # As a matter of principle, we will only process the very top
-        # release (and all its versions).
-        releases = index.root.releases[:1]
+        # two releases (and all its versions).  All else will be
+        # assumed to have been prepared before.
+        releases = index.root.releases[:2]
         # Remove ignored releases from list to process.
         releases = [r for r in releases if r.rc_name not in self.ignore_releases]
 
