@@ -100,7 +100,12 @@ class DevReleaseLoader(ReleaseLoader):
     """Load release information from the current git repository."""
 
     def __init__(self, path: str) -> None:
-        """Create a new DevReleaseLoader."""
+        """
+        Create a new DevReleaseLoader.
+
+        Args:
+            path (str): The filesystem path to a local git repository.
+        """
         super().__init__(pathlib.Path(path))
 
 
