@@ -1,8 +1,6 @@
 import logging
 import pathlib
 import re
-import subprocess
-import sys
 import tempfile
 
 import release_index
@@ -101,18 +99,9 @@ class ReleaseLoader:
 class DevReleaseLoader(ReleaseLoader):
     """Load release information from the current git repository."""
 
-    def __init__(self) -> None:
+    def __init__(self, path: str) -> None:
         """Create a new DevReleaseLoader."""
-        dev_repo_root = (
-            subprocess.check_output(
-                ["git", "rev-parse", "--show-toplevel"], stderr=subprocess.DEVNULL
-            )
-            .decode(sys.stdout.encoding)
-            .strip()
-        )
-        if not dev_repo_root:
-            raise RuntimeError("Not running in a dev environment")
-        super().__init__(pathlib.Path(dev_repo_root))
+        super().__init__(pathlib.Path(path))
 
 
 class GitReleaseLoader(ReleaseLoader):

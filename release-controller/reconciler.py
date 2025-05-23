@@ -267,6 +267,7 @@ class VersionState(object):
     os_kind: OsKind
     is_base: bool
     rc: release_index.Release
+    changelog_base: release_index.ChangelogBaseForVariants | None
 
     current_phase: Phase | None = None
     has_forum_post: bool | Failed = False
@@ -285,6 +286,7 @@ class VersionState(object):
         security_fix: bool,
         is_base: bool,
         rc: release_index.Release,
+        changelog_base: release_index.ChangelogBaseForVariants | None,
     ):
         self.rc_name = rc_name
         self.version_name = version_name
@@ -293,6 +295,7 @@ class VersionState(object):
         self.security_fix = security_fix
         self.is_base = is_base
         self.rc = rc
+        self.changelog_base = changelog_base
 
         self.phase_not_done = False
 
@@ -470,6 +473,7 @@ class Reconciler:
                                     rcver.security_fix,
                                     is_base=v_idx == 0,
                                     rc=relcand,
+                                    changelog_base=rcver.changelog_base,
                                 ),
                             )
                         )
@@ -478,6 +482,7 @@ class Reconciler:
                         version.security_fix = rcver.security_fix
                         version.is_base = v_idx == 0
                         version.rc = relcand
+                        version.changelog_base = rcver.changelog_base
                         if isinstance(
                             self.state.version_proposal(rcver.version, os_kind),
                             reconciler_state.SubmittedProposal,
@@ -555,7 +560,7 @@ class Reconciler:
 
             needs_announce = False
 
-            with phase("release notes preparation"):
+            with phase("release notes preparation") as p:
                 if markdown_file := self.notes_client.markdown_file(
                     release_commit, v.os_kind
                 ):
@@ -579,9 +584,23 @@ class Reconciler:
                         )
                         self.ic_repo.push_release_tags(v.rc)
                         self.ic_repo.fetch()
-                        base_release_commit, base_release_tag = find_base_release(
-                            self.ic_repo, index, release_commit
-                        )
+                        if v.changelog_base and getattr(v.changelog_base, v.os_kind):
+                            cbase = getattr(v.changelog_base, v.os_kind)
+                            try:
+                                base_release_commit = index.root.version(
+                                    cbase.rc_name, cbase.name
+                                )
+                            except KeyError as e:
+                                logger.error(
+                                    "Cannot find within index the specified base release/version"
+                                    f" {e} to base the changelog on.",
+                                )
+                                raise
+                            base_release_tag = version_name(cbase.rc_name, cbase.name)
+                        else:
+                            base_release_commit, base_release_tag = find_base_release(
+                                self.ic_repo, index, release_commit
+                            )
                         request = OrdinaryReleaseNotesRequest(
                             release_tag,
                             release_commit,
@@ -753,6 +772,14 @@ def main() -> None:
         " simultaneously on this computer.",
     )
     parser.add_argument(
+        "--release-loader",
+        dest="release_loader",
+        type=str,
+        default="git",
+        help="Which release loader to use.  `git` works with the DRE repo."
+        "  Any other local path uses the specified path as git repository.",
+    )
+    parser.add_argument(
         "--verbose",
         "--debug",
         action="store_true",
@@ -805,8 +832,8 @@ def main() -> None:
 
     config_loader = (
         GitReleaseLoader(f"https://github.com/{dre_repo}.git")
-        if "dev" not in os.environ
-        else DevReleaseLoader()
+        if "git" == opts.release_loader
+        else DevReleaseLoader(opts.release_loader)
     )
     forum_client = (
         ReleaseCandidateForumClient(
