@@ -235,6 +235,14 @@ Phase = (
     | typing.Literal["proposal submission"]
     | typing.Literal["forum post update"]
 )
+PHASES: list[Phase] = [
+    "forum post creation",
+    "release notes preparation",
+    "release notes announcement",
+    "release notes pull request",
+    "proposal submission",
+    "forum post update",
+]
 
 
 class Failed(object):
@@ -342,6 +350,19 @@ class VersionState(object):
         self.current_phase = None
         self.phase_not_done = False
 
+    def __del__(self) -> None:
+        """Forget metrics data for forgotten (garbage-collected) versions."""
+        for phase in PHASES:
+            try:
+                LAST_CYCLE_SUCCESSFUL.remove(
+                    self.os_kind,
+                    self.rc_name,
+                    self.version_name,
+                    self.current_phase,
+                )
+            except KeyError:
+                pass
+
 
 class Reconciler:
     """Reconcile the state of the network with the release index, and create a forum post if needed."""
@@ -378,71 +399,81 @@ class Reconciler:
 
     def reconcile(self) -> None:
         """Reconcile the state of the network with the release index."""
-        index = self.loader.index()
-        active_guestos_versions = self.ic_prometheus.active_guestos_versions()
-        active_hostos_versions = self.ic_prometheus.active_hostos_versions()
         logger = LOGGER.getChild("reconciler")
+        index = self.loader.index()
 
+        active_guestos_versions = self.ic_prometheus.active_guestos_versions()
         try:
             oldest_active_guestos = oldest_active_release(
-                index, active_guestos_versions
+                index,
+                active_guestos_versions,
             )
         except ValueError:
-            logger.warning(
-                "We could not find the oldest active GuestOS in the index."
-                "  We will pretend only the latest release needs processing."
+            logger.error(
+                "Cannot find any of %s active GuestOS in the index.",
+                active_guestos_versions,
             )
-            oldest_active_guestos = index.root.releases[0]
+            raise
+        active_hostos_versions = self.ic_prometheus.active_hostos_versions()
         try:
-            oldest_active_hostos = oldest_active_release(index, active_hostos_versions)
-        except ValueError:
-            logger.warning(
-                "We could not find the oldest active HostOS in the index."
-                "  We will pretend only the latest release needs processing."
+            oldest_active_hostos = oldest_active_release(
+                index,
+                active_hostos_versions,
             )
-            oldest_active_guestos = index.root.releases[0]
-        oldest_active_index = max(
-            [
-                index.root.releases.index(oldest_active_guestos),
-                index.root.releases.index(oldest_active_hostos),
-            ]
-        )
-        releases = index.root.releases[: oldest_active_index + 1]
+        except ValueError:
+            logger.error(
+                "Cannot find any of %s active HostOS in the index.",
+                active_hostos_versions,
+            )
+            raise
+
+        # As a matter of principle, we will only process the very top
+        # release (and all its versions).
+        releases = index.root.releases[:1]
         # Remove ignored releases from list to process.
         releases = [r for r in releases if r.rc_name not in self.ignore_releases]
 
+        # Fetch latest election proposals and remember their state.
         self.state.update_state(self.dre.get_election_proposals_by_version)
 
         # Preload the cache of known successfully processed releases.
         # We will use this information as an operation plan.
         # Do them in oldest to newest lexical order.
+        new_local_release_state: dict[str, dict[str, dict[OsKind, VersionState]]] = {}
         for relcand in reversed(releases):
-            if relcand.rc_name not in self.local_release_state:
-                self.local_release_state[relcand.rc_name] = {}
+            new_local_release_state[relcand.rc_name] = {}
             for v_idx, rcver in enumerate(relcand.versions):
-                if rcver.name not in self.local_release_state[relcand.rc_name]:
-                    self.local_release_state[relcand.rc_name][rcver.name] = {}
+                new_local_release_state[relcand.rc_name][rcver.name] = {}
                 for os_kind in OS_KINDS:
                     if os_kind == GUESTOS or v_idx == 0:  # Do HostOS for base release.
-                        if (
-                            os_kind
-                            not in self.local_release_state[relcand.rc_name][rcver.name]
-                        ):
-                            self.local_release_state[relcand.rc_name][rcver.name][
-                                os_kind
-                            ] = VersionState(
+                        # Get the version state from the old release state if possible.
+                        # Else make a brand new one.
+                        # This whole loop preserves prior activity state while allowing
+                        # the actual list of versions and releases to process to be fresh
+                        # out of the latest index without keeping old state around.
+                        version = (
+                            self.local_release_state.get(
                                 relcand.rc_name,
-                                rcver.name,
-                                rcver.version,
-                                os_kind,
-                                rcver.security_fix,
-                                is_base=v_idx == 0,
-                                rc=relcand,
+                                {},
                             )
-                        version = self.local_release_state[relcand.rc_name][rcver.name][
-                            os_kind
-                        ]
-                        # Update this just in case the commit ID changed for this version name.
+                            .get(
+                                rcver.name,
+                                {},
+                            )
+                            .get(
+                                os_kind,
+                                VersionState(
+                                    relcand.rc_name,
+                                    rcver.name,
+                                    rcver.version,
+                                    os_kind,
+                                    rcver.security_fix,
+                                    is_base=v_idx == 0,
+                                    rc=relcand,
+                                ),
+                            )
+                        )
+                        # Update info just in case info changed since the last cycle.
                         version.git_revision = rcver.version
                         version.security_fix = rcver.security_fix
                         version.is_base = v_idx == 0
@@ -452,6 +483,15 @@ class Reconciler:
                             reconciler_state.SubmittedProposal,
                         ):
                             version.completed("proposal submission")
+                        new_local_release_state[relcand.rc_name][rcver.name][
+                            os_kind
+                        ] = version
+        # When the next line runs, all VersionState objects attached to the
+        # old release state (being replaced) but not referenced by the new
+        # release state will get garbage-collected, and therefore the telemetry
+        # for those VersionState objects will be forgotten thru their __del__()
+        # methods being called.
+        self.local_release_state = new_local_release_state
 
         # Filter the releases to process by removing those which are complete.
         versions = [
