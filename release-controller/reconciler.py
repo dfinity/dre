@@ -652,7 +652,11 @@ class Reconciler:
                     try:
                         checksum = version_package_checksum(release_commit, v.os_kind)
                     except requests.exceptions.HTTPError as e:
-                        if e.response.status_code == 404:
+                        if (
+                            hasattr(e, "response")
+                            and e.response is not None
+                            and e.response.status_code == 404
+                        ):
                             phase.incomplete()
                             revlogger.warning(
                                 "Proposal cannot be placed because one of the URLs"
@@ -661,6 +665,7 @@ class Reconciler:
                                 " all the URLs required for the proposal."
                             )
                             continue
+                        raise
 
                     urls = version_package_urls(release_commit, v.os_kind)
                     unelect_versions = []
