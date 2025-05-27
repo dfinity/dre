@@ -1,12 +1,3 @@
-use std::{
-    collections::{BTreeMap, HashMap, HashSet},
-    net::Ipv6Addr,
-    path::PathBuf,
-    str::FromStr,
-    sync::Arc,
-};
-use std::cmp::max;
-use std::iter::{IntoIterator, Iterator};
 use crate::{auth::AuthRequirement, exe::args::GlobalArgs, exe::ExecutableCommand};
 use clap::Args;
 use ic_canisters::governance::GovernanceCanisterWrapper;
@@ -30,6 +21,15 @@ use log::{info, warn};
 use regex::Regex;
 use serde::Serialize;
 use serde_json::Value;
+use std::cmp::max;
+use std::iter::{IntoIterator, Iterator};
+use std::{
+    collections::{BTreeMap, HashMap, HashSet},
+    net::Ipv6Addr,
+    path::PathBuf,
+    str::FromStr,
+    sync::Arc,
+};
 
 use crate::ctx::DreContext;
 
@@ -180,17 +180,18 @@ fn fetch_max_rewardable_count(record: &Operator, nodes_in_registry: u64) -> BTre
     let mut exceptions: HashMap<PrincipalId, BTreeMap<String, u32>> = [
         (
             "ukji3-ju5bx-ty5r7-qwk4p-eobil-isp26-fsomg-44kwf-j4ew7-ozkqy-wqe",
-            BTreeMap::from([("type3".to_string(), 16), ("type3.1".to_string(), 9)])
+            BTreeMap::from([("type3".to_string(), 16), ("type3.1".to_string(), 9)]),
         ),
         (
             "sm6rh-sldoa-opp4o-d7ckn-y4r2g-eoqhv-nymok-teuto-4e5ep-yt6ky-bqe",
-            BTreeMap::from([("type1.1".to_string(), 1)])
+            BTreeMap::from([("type1.1".to_string(), 1)]),
         ),
         (
             "xph6u-z3z2t-s7hh7-gtlxh-bbgbx-aatlm-eab4o-bsank-nqruh-3ub4q-sae",
-            BTreeMap::from([("type1.1".to_string(), 28)])
+            BTreeMap::from([("type1.1".to_string(), 28)]),
         ),
-    ].into_iter()
+    ]
+    .into_iter()
     .map(|(k, v)| (PrincipalId::from_str(k).unwrap(), v))
     .collect::<HashMap<_, _>>();
 
@@ -326,8 +327,10 @@ async fn _get_nodes(
     let nodes_health = health_client.nodes().await?;
 
     // Rewardable nodes for all node operators
-    let mut rewardable_nodes: IndexMap<PrincipalId, BTreeMap<String, u32>> =
-        node_operators.iter().map(|(k, v)| (*k, v.computed.max_rewardable_count.clone())).collect();
+    let mut rewardable_nodes: IndexMap<PrincipalId, BTreeMap<String, u32>> = node_operators
+        .iter()
+        .map(|(k, v)| (*k, v.computed.max_rewardable_count.clone()))
+        .collect();
 
     let nodes = local_registry
         .nodes()
