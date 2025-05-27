@@ -6,12 +6,9 @@ use std::{
     sync::Arc,
 };
 use std::cmp::max;
-use std::fmt::format;
 use std::iter::{IntoIterator, Iterator};
-use anyhow::anyhow;
 use crate::{auth::AuthRequirement, exe::args::GlobalArgs, exe::ExecutableCommand};
 use clap::Args;
-use clap::builder::Str;
 use ic_canisters::governance::GovernanceCanisterWrapper;
 use ic_canisters::IcAgentCanisterClient;
 use ic_management_backend::{health::HealthStatusQuerier, lazy_registry::LazyRegistry};
@@ -204,7 +201,7 @@ fn fetch_max_rewardable_count(record: &Operator, nodes_in_registry: u64) -> BTre
         .rewardable_nodes
         .clone()
         .into_iter()
-        .filter(|(k, v)| *v > 0)
+        .filter(|(_, v)| *v > 0)
         .collect::<BTreeMap<_, _>>();
     let nodes_rewards_types_count = non_zeros_rewardable_nodes.values().map(|count| *count as u64).sum::<u64>();
     let node_allowance_total = record.node_allowance + nodes_in_registry;
@@ -244,8 +241,6 @@ async fn get_node_operators(local_registry: &Arc<dyn LazyRegistry>, network: &Ne
                 .filter(|(_, value)| value.operator.principal == record.principal && value.subnet_id.is_some())
                 .count() as u64;
             let nodes_in_registry = all_nodes.iter().filter(|(_, value)| value.operator.principal == record.principal).count() as u64;
-            let mut max_rewardable_count_exists = true;
-            
             let max_rewardable_count = fetch_max_rewardable_count(record, nodes_in_registry);
             let node_allowance_total = record.node_allowance + nodes_in_registry;
 

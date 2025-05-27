@@ -3,3 +3,137 @@
 # The full list of features can be found here:
 # https://github.com/dfinity/dre/blob/main/rs/ic-management-types/src/lib.rs#L317-L324
 features:
+  # Background:
+  # https://forum.dfinity.org/t/proposal-update-interim-gen-1-node-provider-remuneration-after-48-months/35001/12
+  - feature: data_center
+    value: pl1
+    explanation: "NP is selling the PL1 DC after 48 months; https://forum.dfinity.org/t/subnet-management-general-discussion/34091/110"
+  - feature: data_center
+    value: fm1
+    explanation: "offboarding FM1 DC after 48 months; https://forum.dfinity.org/t/subnet-management-general-discussion/34091/110"
+  - feature: data_center
+    value: sj1
+    explanation: "offboarding SJ1 DC after 48 months; https://forum.dfinity.org/t/subnet-management-general-discussion/34091/110"
+  - feature: data_center
+    value: at1
+    explanation: "offboarding AT1 DC after 48 months; https://forum.dfinity.org/t/subnet-management-general-discussion/34091/110"
+  - feature: data_center
+    value: tp1
+    explanation: "offboarding TP1 DC after 48 months; https://forum.dfinity.org/t/subnet-management-general-discussion/34091/110"
+  - feature: data_center
+    value: ch3
+    explanation: "offboarding CH3 DC after 48 months; https://forum.dfinity.org/t/proposal-update-interim-gen-1-node-provider-remuneration-after-48-months/35001/16"
+  - feature: data_center
+    value: sg3
+    explanation: "offboarding SG3 DC after 48 months; https://forum.dfinity.org/t/new-node-provider-proposals/16643/581"
+  - feature: data_center
+    value: ty2
+    explanation: "offboarding TY2 DC after 48 months; https://forum.dfinity.org/t/proposal-update-interim-gen-1-node-provider-remuneration-after-48-months/35001/32 and https://forum.dfinity.org/t/proposal-update-interim-gen-1-node-provider-remuneration-after-48-months/35001/42"
+  - feature: data_center
+    value: ch2
+    explanation: "offboarding CH2 DC after 48 months; https://forum.dfinity.org/t/proposal-update-interim-gen-1-node-provider-remuneration-after-48-months/35001/40"
+  - feature: data_center
+    value: an1
+    explanation: "offboarding AN1 DC after 48 months; https://forum.dfinity.org/t/proposal-update-interim-gen-1-node-provider-remuneration-after-48-months/35001/44 and https://forum.dfinity.org/t/proposal-update-interim-gen-1-node-provider-remuneration-after-48-months/35001/46"
+  - feature: data_center
+    value: to1
+    explanation: "offboarding TO1 DC after 48 months; https://forum.dfinity.org/t/proposal-update-interim-gen-1-node-provider-remuneration-after-48-months/35001/56 and https://forum.dfinity.org/t/proposal-update-interim-gen-1-node-provider-remuneration-after-48-months/35001/57"
+  - feature: data_center
+    value: bo1
+    explanation: "offboarding BO1 DC after 48 months; https://forum.dfinity.org/t/dfinity-gen-1-servers-available-for-sale-through-silent-auction/36710"
+  - feature: data_center
+    value: mr1
+    explanation: "offboarding MR1 DC after 48 months; https://forum.dfinity.org/t/dfinity-gen-1-servers-available-for-sale-through-silent-auction/36710"
+  - feature: data_center
+    value: mm1
+    explanation: "offboarding MM1 DC after 48 months; https://forum.dfinity.org/t/proposal-update-interim-gen-1-node-provider-remuneration-after-48-months/35001/49 and https://forum.dfinity.org/t/proposal-update-interim-gen-1-node-provider-remuneration-after-48-months/35001/103 "
+  - feature: data_center
+    value: zh5
+    explanation: "offboarding ZH5 DC after 48 months; https://forum.dfinity.org/t/proposal-update-interim-gen-1-node-provider-remuneration-after-48-months/35001/117 and https://forum.dfinity.org/t/proposal-update-interim-gen-1-node-provider-remuneration-after-48-months/35001/118"
+  - feature: node_id
+    value: c2dnc-3ozfd-ew52a-yvmrc-mjyss-edoch-k7cki-f7vzk-zqapg-aw44i-mqe
+    explanation: "offboarding the second rack of nodes in the GE1 DC after 48 months; https://forum.dfinity.org/t/proposal-update-interim-gen-1-node-provider-remuneration-after-48-months/35001/148 and https://forum.dfinity.org/t/proposal-update-interim-gen-1-node-provider-remuneration-after-48-months/35001/150"
+  - feature: node_id
+    value: ag3bm-tdrfp-kki7m-yfwop-aoc4g-f4sjz-grd33-7zy3x-xq3tr-hpbuh-zqe
+    explanation: "offboarding the second rack of nodes in the GE1 DC after 48 months; https://forum.dfinity.org/t/proposal-update-interim-gen-1-node-provider-remuneration-after-48-months/35001/148 and https://forum.dfinity.org/t/proposal-update-interim-gen-1-node-provider-remuneration-after-48-months/35001/150"
+  - feature: node_id
+    value: h5hs5-veobj-ft6ms-fr24y-efxzg-fcidc-s2dbn-pcnke-siz2k-bejcm-uqe
+    explanation: "offboarding the second rack of nodes in the GE1 DC after 48 months; https://forum.dfinity.org/t/proposal-update-interim-gen-1-node-provider-remuneration-after-48-months/35001/148 and https://forum.dfinity.org/t/proposal-update-interim-gen-1-node-provider-remuneration-after-48-months/35001/150"
+  - feature: node_id
+    value: dndht-2fce7-aze7e-coa4j-yvyuw-ut4hw-gn5dj-xvxox-whdhg-txikb-yae
+    explanation: "offboarding the second rack of nodes in the GE1 DC after 48 months; https://forum.dfinity.org/t/proposal-update-interim-gen-1-node-provider-remuneration-after-48-months/35001/148 and https://forum.dfinity.org/t/proposal-update-interim-gen-1-node-provider-remuneration-after-48-months/35001/150"
+  - feature: node_id
+    value: 7mwzk-chbqh-ydgzb-j3bvh-3l7fh-xc7xm-aud2g-hxyx2-bqcop-st67c-dae
+    explanation: "offboarding the second rack of nodes in the GE1 DC after 48 months; https://forum.dfinity.org/t/proposal-update-interim-gen-1-node-provider-remuneration-after-48-months/35001/148 and https://forum.dfinity.org/t/proposal-update-interim-gen-1-node-provider-remuneration-after-48-months/35001/150"
+  - feature: node_id
+    value: p5h3q-2pght-vje5y-2jmsf-cmdfi-52txk-qkrux-mnvmj-zzira-nugjd-dae
+    explanation: "offboarding the second rack of nodes in the GE1 DC after 48 months; https://forum.dfinity.org/t/proposal-update-interim-gen-1-node-provider-remuneration-after-48-months/35001/148 and https://forum.dfinity.org/t/proposal-update-interim-gen-1-node-provider-remuneration-after-48-months/35001/150"
+  - feature: node_id
+    value: gtjga-mlpu7-5vz4f-knn5w-i2fea-cy3r4-vq245-ip62r-fosvm-7w3ck-2qe
+    explanation: "offboarding the second rack of nodes in the GE1 DC after 48 months; https://forum.dfinity.org/t/proposal-update-interim-gen-1-node-provider-remuneration-after-48-months/35001/148 and https://forum.dfinity.org/t/proposal-update-interim-gen-1-node-provider-remuneration-after-48-months/35001/150"
+  - feature: node_id
+    value: d52j3-6vwb2-ij2ul-sqxhg-wmck4-bh4ce-eabt4-3eqqx-djb6m-n4sd5-xae
+    explanation: "offboarding the second rack of nodes in the GE1 DC after 48 months; https://forum.dfinity.org/t/proposal-update-interim-gen-1-node-provider-remuneration-after-48-months/35001/148 and https://forum.dfinity.org/t/proposal-update-interim-gen-1-node-provider-remuneration-after-48-months/35001/150"
+  - feature: node_id
+    value: kte5g-iwzok-3epfk-lovgf-cylc5-57lmu-olhwg-w4jsn-dquju-5xun6-uae
+    explanation: "offboarding the second rack of nodes in the GE1 DC after 48 months; https://forum.dfinity.org/t/proposal-update-interim-gen-1-node-provider-remuneration-after-48-months/35001/148 and https://forum.dfinity.org/t/proposal-update-interim-gen-1-node-provider-remuneration-after-48-months/35001/150"
+  - feature: node_id
+    value: tybza-gyple-63wq2-qsgwo-w6fqw-6trwu-awukb-skekh-67bqu-qsoeo-aae
+    explanation: "offboarding the second rack of nodes in the GE1 DC after 48 months; https://forum.dfinity.org/t/proposal-update-interim-gen-1-node-provider-remuneration-after-48-months/35001/148 and https://forum.dfinity.org/t/proposal-update-interim-gen-1-node-provider-remuneration-after-48-months/35001/150"
+  - feature: node_id
+    value: t7u3k-tw44d-sewhz-oyy7d-jvial-tci2j-avcj3-3rayz-7jydr-33scr-yqe
+    explanation: "offboarding the second rack of nodes in the GE1 DC after 48 months; https://forum.dfinity.org/t/proposal-update-interim-gen-1-node-provider-remuneration-after-48-months/35001/148 and https://forum.dfinity.org/t/proposal-update-interim-gen-1-node-provider-remuneration-after-48-months/35001/150"
+  - feature: node_id
+    value: tm3pc-2bjsx-hhv3v-fsrt7-wotdj-nbu3t-ewloq-uporp-tacou-lupdn-oae
+    explanation: "offboarding the second rack of nodes in the mb1 DC after 48 months;  https://forum.dfinity.org/t/proposal-update-interim-gen-1-node-provider-remuneration-after-48-months/35001/152"
+  - feature: node_id
+    value: 5w5mf-4b2jl-l5vv7-igktn-en2ra-jkwdn-skhc3-6etg7-qmei3-ijb2c-5ae
+    explanation: "offboarding the second rack of nodes in the mb1 DC after 48 months;  https://forum.dfinity.org/t/proposal-update-interim-gen-1-node-provider-remuneration-after-48-months/35001/152"
+  - feature: node_id
+    value: 65a3w-nbftx-ikuvf-6kgta-fxrza-tye5d-qggwc-4orau-6mt2e-xsszw-4ae
+    explanation: "offboarding the second rack of nodes in the mb1 DC after 48 months;  https://forum.dfinity.org/t/proposal-update-interim-gen-1-node-provider-remuneration-after-48-months/35001/152"
+  - feature: node_id
+    value: bija4-ybnku-fbggc-n3bqj-hardz-4mr5r-prymh-fripb-msk7h-ilh2n-3ae
+    explanation: "offboarding the second rack of nodes in the mb1 DC after 48 months;  https://forum.dfinity.org/t/proposal-update-interim-gen-1-node-provider-remuneration-after-48-months/35001/152"
+  - feature: node_id
+    value: yttmc-lxazf-6ctyr-aqchl-g5est-gut4i-qltuy-gds2b-7vhfu-43xey-2qe
+    explanation: "offboarding the second rack of nodes in the mb1 DC after 48 months;  https://forum.dfinity.org/t/proposal-update-interim-gen-1-node-provider-remuneration-after-48-months/35001/152"
+  - feature: node_id
+    value: oxa4d-pajkk-n7fto-dyfxr-z34x3-7zebw-zdqbq-qxzxp-qg7vk-nhcnx-fae
+    explanation: "offboarding the second rack of nodes in the mb1 DC after 48 months;  https://forum.dfinity.org/t/proposal-update-interim-gen-1-node-provider-remuneration-after-48-months/35001/152"
+  - feature: node_id
+    value: njsmq-lvuj4-fo325-pt3od-f5zqr-j64dp-u5l6n-kdffj-3gvvr-3rbfa-wqe
+    explanation: "offboarding the second rack of nodes in the mb1 DC after 48 months;  https://forum.dfinity.org/t/proposal-update-interim-gen-1-node-provider-remuneration-after-48-months/35001/152"
+  - feature: node_id
+    value: n74se-c345d-2jd4b-leuu6-jyvim-vcllk-aahj2-vjpvn-pbpks-xtgy2-4qe
+    explanation: "offboarding the second rack of nodes in the mb1 DC after 48 months;  https://forum.dfinity.org/t/proposal-update-interim-gen-1-node-provider-remuneration-after-48-months/35001/152"
+  - feature: node_id
+    value: nlghu-pupyy-n5oci-hcqvn-5fvdt-h23ta-gueoi-bkpbn-atazo-sfdlp-nae
+    explanation: "offboarding the second rack of nodes in the mb1 DC after 48 months;  https://forum.dfinity.org/t/proposal-update-interim-gen-1-node-provider-remuneration-after-48-months/35001/152"
+  - feature: node_id
+    value: xzec6-ujfic-zvupf-3cgro-tqgtp-xi5ss-vtxfz-ycecq-n6jsb-t37nk-vqe
+    explanation: "offboarding the second rack of nodes in the mb1 DC after 48 months;  https://forum.dfinity.org/t/proposal-update-interim-gen-1-node-provider-remuneration-after-48-months/35001/152"
+  - feature: node_id
+    value: jfryc-owgdd-a7pp4-lao2c-anza2-nryvi-gqkmu-m2moj-4hzai-zfdiy-4qe
+    explanation: "offboarding the second rack of nodes in the mb1 DC after 48 months;  https://forum.dfinity.org/t/proposal-update-interim-gen-1-node-provider-remuneration-after-48-months/35001/152"
+  - feature: node_id
+    value: mp3w3-ut6qr-ef4ax-cwxtg-kkdly-q2xpl-4bisk-vjncp-qcyfy-5t4uz-vqe
+    explanation: "offboarding the second rack of nodes in the mb1 DC after 48 months;  https://forum.dfinity.org/t/proposal-update-interim-gen-1-node-provider-remuneration-after-48-months/35001/152"
+  - feature: node_id
+    value: djil5-54fkt-55svu-26a7h-ttflx-dqn6u-3w3j6-zyuwg-cfwuo-7oi46-uae
+    explanation: "offboarding the second rack of nodes in the mb1 DC after 48 months;  https://forum.dfinity.org/t/proposal-update-interim-gen-1-node-provider-remuneration-after-48-months/35001/152"
+  - feature: node_id
+    value: ou5js-fk2zz-pi2ra-jjavx-2ld2m-3l3rh-asgas-tof7u-gxveo-jf3bz-vqe
+    explanation: "offboarding the second rack of nodes in the mb1 DC after 48 months;  https://forum.dfinity.org/t/proposal-update-interim-gen-1-node-provider-remuneration-after-48-months/35001/152"
+  - feature: node_operator
+    value: wmrev-cdq34-iqwdm-oeaak-f6kch-s4axw-ojbhe-yuolf-bazh4-rjdty-oae
+    explanation: "freeing up nodes from JV1 node operator for an HSM-less redeployment"
+  - feature: node_operator
+    value: codio-e5e6p-ol6sn-o3mgw-r7v5p-4jmch-a7exl-7pifz-cw4gn-ah47y-6ae
+    explanation: "freeing up nodes from AW1 node operator for an HSM-less redeployment"
+  - feature: node_operator
+    value: redpf-rrb5x-sa2it-zhbh7-q2fsp-bqlwz-4mf4y-tgxmj-g5y7p-ezjtj-5qe
+    explanation: "freeing up nodes from OR1 node operator for an HSM-less redeployment"
+  - feature: data_center
+    value: an1
+    explanation: "freeing up nodes from AN1 data center for an HSM-less redeployment"
