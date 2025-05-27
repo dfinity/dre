@@ -1,17 +1,9 @@
-use std::{
-    collections::{BTreeMap, HashMap, HashSet},
-    net::Ipv6Addr,
-    path::PathBuf,
-    str::FromStr,
-    sync::Arc,
-};
-
 use crate::{auth::AuthRequirement, exe::args::GlobalArgs, exe::ExecutableCommand};
 use clap::Args;
 use ic_canisters::governance::GovernanceCanisterWrapper;
 use ic_canisters::IcAgentCanisterClient;
 use ic_management_backend::{health::HealthStatusQuerier, lazy_registry::LazyRegistry};
-use ic_management_types::{HealthStatus, Network};
+use ic_management_types::{HealthStatus, Network, Operator};
 use ic_protobuf::registry::{
     dc::v1::DataCenterRecord,
     hostos_version::v1::HostosVersionRecord,
@@ -29,6 +21,15 @@ use log::{info, warn};
 use regex::Regex;
 use serde::Serialize;
 use serde_json::Value;
+use std::cmp::max;
+use std::iter::{IntoIterator, Iterator};
+use std::{
+    collections::{BTreeMap, HashMap, HashSet},
+    net::Ipv6Addr,
+    path::PathBuf,
+    str::FromStr,
+    sync::Arc,
+};
 
 use crate::ctx::DreContext;
 
@@ -147,11 +148,6 @@ impl Registry {
                         && (n.status == HealthStatus::Healthy || n.status == HealthStatus::Degraded)
                 })
                 .count() as u32;
-            node_operator.computed.node_allowance_total = node_operator.node_allowance + node_operator.computed.total_up_nodes as u64;
-
-            if node_operator.computed.total_up_nodes == node_operator.rewardable_nodes.iter().map(|n| n.1).sum::<u32>() {
-                node_operator.computed.rewards_correct = true;
-            }
         }
         let node_rewards_table = get_node_rewards_table(&local_registry, ctx.network());
 
@@ -180,6 +176,52 @@ fn get_elected_host_os_versions(local_registry: &Arc<dyn LazyRegistry>) -> anyho
     local_registry.elected_hostos_records()
 }
 
+fn fetch_max_rewardable_count(record: &Operator, nodes_in_registry: u64) -> BTreeMap<String, u32> {
+    let mut exceptions: HashMap<PrincipalId, BTreeMap<String, u32>> = [
+        (
+            "ukji3-ju5bx-ty5r7-qwk4p-eobil-isp26-fsomg-44kwf-j4ew7-ozkqy-wqe",
+            BTreeMap::from([("type3".to_string(), 16), ("type3.1".to_string(), 9)]),
+        ),
+        (
+            "sm6rh-sldoa-opp4o-d7ckn-y4r2g-eoqhv-nymok-teuto-4e5ep-yt6ky-bqe",
+            BTreeMap::from([("type1.1".to_string(), 1)]),
+        ),
+        (
+            "xph6u-z3z2t-s7hh7-gtlxh-bbgbx-aatlm-eab4o-bsank-nqruh-3ub4q-sae",
+            BTreeMap::from([("type1.1".to_string(), 28)]),
+        ),
+    ]
+    .into_iter()
+    .map(|(k, v)| (PrincipalId::from_str(k).unwrap(), v))
+    .collect::<HashMap<_, _>>();
+
+    if let Some(exception_max_rewardables) = exceptions.remove(&record.principal) {
+        return exception_max_rewardables;
+    }
+    let mut non_zeros_rewardable_nodes = record
+        .rewardable_nodes
+        .clone()
+        .into_iter()
+        .filter(|(_, v)| *v > 0)
+        .collect::<BTreeMap<_, _>>();
+    let nodes_rewards_types_count = non_zeros_rewardable_nodes.values().map(|count| *count as u64).sum::<u64>();
+    let node_allowance_total = record.node_allowance + nodes_in_registry;
+
+    if node_allowance_total == nodes_rewards_types_count {
+        return non_zeros_rewardable_nodes;
+    }
+    if non_zeros_rewardable_nodes.len() == 1 {
+        let (node_rewards_type, node_rewards_type_count) = non_zeros_rewardable_nodes.pop_first().unwrap();
+        let max_rewardable_count = max(node_rewards_type_count, nodes_in_registry as u32);
+        return BTreeMap::from([(node_rewards_type, max_rewardable_count)]);
+    }
+
+    if nodes_in_registry == 0 {
+        return BTreeMap::new();
+    }
+    panic!("This should never happen");
+}
+
 async fn get_node_operators(local_registry: &Arc<dyn LazyRegistry>, network: &Network) -> anyhow::Result<IndexMap<PrincipalId, NodeOperator>> {
     let all_nodes = local_registry.nodes().await?;
     let operators = local_registry
@@ -195,13 +237,14 @@ async fn get_node_operators(local_registry: &Arc<dyn LazyRegistry>, network: &Ne
                 }
                 v.to_string()
             });
-            // Find the number of nodes registered by this operator
-            let operator_registered_nodes_num = all_nodes.iter().filter(|(nk, _)| nk == &k).count() as u64;
             let nodes_in_subnets = all_nodes
                 .iter()
                 .filter(|(_, value)| value.operator.principal == record.principal && value.subnet_id.is_some())
                 .count() as u64;
             let nodes_in_registry = all_nodes.iter().filter(|(_, value)| value.operator.principal == record.principal).count() as u64;
+            let max_rewardable_count = fetch_max_rewardable_count(record, nodes_in_registry);
+            let node_allowance_total = record.node_allowance + nodes_in_registry;
+
             (
                 record.principal,
                 NodeOperator {
@@ -214,10 +257,10 @@ async fn get_node_operators(local_registry: &Arc<dyn LazyRegistry>, network: &Ne
                     computed: NodeOperatorComputed {
                         node_provider_name,
                         node_allowance_remaining: record.node_allowance,
-                        node_allowance_total: record.node_allowance + operator_registered_nodes_num,
+                        node_allowance_total,
                         total_up_nodes: 0,
                         nodes_health: Default::default(),
-                        rewards_correct: false,
+                        max_rewardable_count,
                         nodes_in_subnets,
                         nodes_in_registry,
                     },
@@ -284,8 +327,10 @@ async fn _get_nodes(
     let nodes_health = health_client.nodes().await?;
 
     // Rewardable nodes for all node operators
-    let mut rewardable_nodes: IndexMap<PrincipalId, BTreeMap<String, u32>> =
-        node_operators.iter().map(|(k, v)| (*k, v.rewardable_nodes.clone())).collect();
+    let mut rewardable_nodes: IndexMap<PrincipalId, BTreeMap<String, u32>> = node_operators
+        .iter()
+        .map(|(k, v)| (*k, v.computed.max_rewardable_count.clone()))
+        .collect();
 
     let nodes = local_registry
         .nodes()
@@ -296,8 +341,10 @@ async fn _get_nodes(
             let node_operator_id = record.operator.principal;
             let node_type = match rewardable_nodes.get_mut(&node_operator_id) {
                 Some(rewardable_nodes) => {
-                    // Find first non-zero rewardable nodes entry
-                    if rewardable_nodes.is_empty() {
+                    if rewardable_nodes.len() > 1 {
+                        // NodeId -> NodeType mapping needed in this case
+                        "unknown:multiple_rewardable_nodes".to_string()
+                    } else if rewardable_nodes.is_empty() {
                         "unknown:no_rewardable_nodes_found".to_string()
                     } else {
                         // Find the first non-zero rewardable node type, or "unknown" if none are found
@@ -318,7 +365,6 @@ async fn _get_nodes(
                         k
                     }
                 }
-
                 None => "unknown".to_string(),
             };
             NodeDetails {
@@ -581,7 +627,7 @@ struct NodeOperatorComputed {
     node_allowance_total: u64,
     total_up_nodes: u32,
     nodes_health: IndexMap<String, Vec<PrincipalId>>,
-    rewards_correct: bool,
+    max_rewardable_count: BTreeMap<String, u32>,
     nodes_in_subnets: u64,
     nodes_in_registry: u64,
 }
