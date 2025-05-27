@@ -193,7 +193,7 @@ fn fetch_max_rewardable_count(record: &Operator, nodes_in_registry: u64) -> BTre
     ].into_iter()
     .map(|(k, v)| (PrincipalId::from_str(k).unwrap(), v))
     .collect::<HashMap<_, _>>();
-    
+
     if let Some(exception_max_rewardables) = exceptions.remove(&record.principal) {
         return exception_max_rewardables;
     }
@@ -205,7 +205,7 @@ fn fetch_max_rewardable_count(record: &Operator, nodes_in_registry: u64) -> BTre
         .collect::<BTreeMap<_, _>>();
     let nodes_rewards_types_count = non_zeros_rewardable_nodes.values().map(|count| *count as u64).sum::<u64>();
     let node_allowance_total = record.node_allowance + nodes_in_registry;
-    
+
     if node_allowance_total == nodes_rewards_types_count {
         return non_zeros_rewardable_nodes;
     }
@@ -214,7 +214,7 @@ fn fetch_max_rewardable_count(record: &Operator, nodes_in_registry: u64) -> BTre
         let max_rewardable_count = max(node_rewards_type_count, nodes_in_registry as u32);
         return BTreeMap::from([(node_rewards_type, max_rewardable_count)]);
     }
-    
+
     if nodes_in_registry == 0 {
         return BTreeMap::new();
     }
