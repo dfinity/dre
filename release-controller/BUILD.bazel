@@ -124,6 +124,13 @@ py_library (
 )
 
 py_library (
+    name = "public_dashboard",
+    srcs = ["public_dashboard.py"],
+    deps = ["const", "dre_cli", requirement("requests")],
+    tags = ["typecheck"],
+)
+
+py_library (
     name = "watchdog",
     srcs = ["watchdog.py"],
     tags = ["typecheck"],
@@ -174,7 +181,7 @@ py_binary(
     main = "reconciler.py",
     srcs = ["reconciler.py", "slack_announce.py"],
     tags = ["typecheck"],
-    deps = ["dre_cli", "publish_notes", "forum", "watchdog", "prometheus", "release_notes_composer", "release_index_loader", "dryrun"] + [
+    deps = ["dre_cli", "public_dashboard", "publish_notes", "forum", "watchdog", "prometheus", "release_notes_composer", "release_index_loader", "dryrun"] + [
         requirement("pydiscourse"),
         requirement("requests"),
         requirement("types-requests"),

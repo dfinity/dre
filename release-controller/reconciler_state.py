@@ -103,26 +103,35 @@ class ReconcilerState:
             tuple[typing.Literal["submitted"], float, int]
             | tuple[typing.Literal["malfunction"], float],
         ] = {}
-
         self._logger = logging.getLogger(self.__class__.__name__)
         if known_proposal_retriever:
-            replica_version_proposals, hostos_version_proposals = (
-                known_proposal_retriever()
-            )
-            for os_kind, version_to_proposal in [
-                (typing.cast(OsKind, GUESTOS), replica_version_proposals),
-                (typing.cast(OsKind, HOSTOS), hostos_version_proposals),
-            ]:
-                for version, proposal in version_to_proposal.items():
-                    p = self.version_proposal(version, os_kind)
-                    if not isinstance(p, SubmittedProposal):
-                        self._logger.debug(
-                            "Preemptively recording submission of %s proposal %s for version %s",
-                            os_kind,
-                            proposal["id"],
-                            version,
-                        )
-                        p.record_submission(proposal["id"])
+            self.update_state(known_proposal_retriever)
+
+    def update_state(
+        self,
+        known_proposal_retriever: typing.Callable[
+            [],
+            tuple[
+                dict[str, dre_cli.ElectionProposal],
+                dict[str, dre_cli.ElectionProposal],
+            ],
+        ],
+    ) -> None:
+        replica_version_proposals, hostos_version_proposals = known_proposal_retriever()
+        for os_kind, version_to_proposal in [
+            (typing.cast(OsKind, GUESTOS), replica_version_proposals),
+            (typing.cast(OsKind, HOSTOS), hostos_version_proposals),
+        ]:
+            for version, proposal in version_to_proposal.items():
+                p = self.version_proposal(version, os_kind)
+                if not isinstance(p, SubmittedProposal):
+                    self._logger.debug(
+                        "Preemptively recording submission of %s proposal %s for version %s",
+                        os_kind,
+                        proposal["id"],
+                        version,
+                    )
+                    p.record_submission(proposal["id"])
 
     def version_proposal(
         self,

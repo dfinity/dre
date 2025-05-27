@@ -17,6 +17,8 @@ from reconciler import Reconciler
 from reconciler_state import ReconcilerState
 from reconciler import version_package_checksum
 from reconciler import versions_to_unelect
+from public_dashboard import DashboardAPI
+from dre_cli import ElectionProposal
 from release_index_loader import StaticReleaseLoader
 
 from tests.fixtures import ic_repo as ic_repo
@@ -27,6 +29,41 @@ class AmnesiacReconcilerState(ReconcilerState):
 
     def __init__(self) -> None:
         super().__init__()
+
+
+class MockDashboard(DashboardAPI):
+    """Reconciler state that uses static proposal data."""
+
+    def __init__(self) -> None:
+        super().__init__()
+
+    def get_past_election_proposals(self) -> list[ElectionProposal]:
+        return [
+            {
+                "id": 136070,
+                "payload": {
+                    "hostos_version_to_elect": "68fc31a141b25f842f078c600168d8211339f422",
+                    "release_package_sha256_hex": "9a2600d06c6e6ed15eb3f061ed024b9e3b9f355b9f81e198457dd9cf86eb19d4",
+                },
+                "proposal_timestamp_seconds": 1743789296,
+                "proposer": 61,
+                "status": "EXECUTED",
+                "summary": "Elect new HostOS binary revision [68fc31a141b25f842f078c600168d8211339f422](https://github.com/dfinity/ic/tree/release-2025-04-03_03-15-base)\nStubbed out.",
+                "title": "Elect new IC/Hostos revision (commit 68fc31a1), and retire old replica version ec140b74",
+            },
+            {
+                "payload": {
+                    "release_package_sha256_hex": "c6857ecf2ab737850ff4aa4445bf57417d5fb302c00117bfb3b8ba3d1bde41b8",
+                    "replica_version_to_elect": "34e659ec3272fa2d884f48cb8229140e512f7f5e",
+                },
+                "proposal_timestamp_seconds": 1731672225,
+                "proposer": 1730676817598423123,
+                "id": 134187,
+                "status": "EXECUTED",
+                "summary": "Release Notes for [**release\\-2024\\-11\\-14\\_03\\-07\\-6\\.11\\-kernel**](https://github.com/dfinity/ic/tree/release-2024-11-14_03-07-6.11-kernel) (34e659ec3272fa2d884f48cb8229140e512f7f5e)\nStubbed out",
+                "title": "Elect new IC/Replica revision (commit 34e659e)",
+            },
+        ]
 
 
 class MockActiveVersionProvider(object):
@@ -87,6 +124,7 @@ releases:
         ignore_releases=[""],
         active_version_provider=MockActiveVersionProvider(),
         dre=dre,
+        dashboard=MockDashboard(),
         slack_announcer=slack_announcer,
     )
 

@@ -12,6 +12,7 @@ import urllib.parse
 sys.path.append(os.path.join(os.path.dirname(__file__)))
 import dre_cli
 import dryrun
+import public_dashboard
 import release_index
 import slack_announce
 import reconciler_state
@@ -235,6 +236,14 @@ Phase = (
     | typing.Literal["proposal submission"]
     | typing.Literal["forum post update"]
 )
+PHASES: list[Phase] = [
+    "forum post creation",
+    "release notes preparation",
+    "release notes announcement",
+    "release notes pull request",
+    "proposal submission",
+    "forum post update",
+]
 
 
 class Failed(object):
@@ -259,6 +268,7 @@ class VersionState(object):
     os_kind: OsKind
     is_base: bool
     rc: release_index.Release
+    changelog_base: release_index.ChangelogBaseForVariants | None
 
     current_phase: Phase | None = None
     has_forum_post: bool | Failed = False
@@ -277,6 +287,7 @@ class VersionState(object):
         security_fix: bool,
         is_base: bool,
         rc: release_index.Release,
+        changelog_base: release_index.ChangelogBaseForVariants | None,
     ):
         self.rc_name = rc_name
         self.version_name = version_name
@@ -285,11 +296,12 @@ class VersionState(object):
         self.security_fix = security_fix
         self.is_base = is_base
         self.rc = rc
+        self.changelog_base = changelog_base
 
         self.phase_not_done = False
 
     @property
-    def complete(self) -> bool:
+    def fully_processed(self) -> bool:
         return self.has_proposal is True and self.forum_post_updated is True
 
     def __call__(self, phase: Phase) -> "VersionState":
@@ -342,6 +354,19 @@ class VersionState(object):
         self.current_phase = None
         self.phase_not_done = False
 
+    def __del__(self) -> None:
+        """Forget metrics data for forgotten (garbage-collected) versions."""
+        for phase in PHASES:
+            try:
+                LAST_CYCLE_SUCCESSFUL.remove(
+                    self.os_kind,
+                    self.rc_name,
+                    self.version_name,
+                    self.current_phase,
+                )
+            except KeyError:
+                pass
+
 
 class Reconciler:
     """Reconcile the state of the network with the release index, and create a forum post if needed."""
@@ -358,6 +383,7 @@ class Reconciler:
         change_determinator_factory: typing.Callable[[], ChangeDeterminatorProtocol],
         active_version_provider: ActiveVersionProvider,
         dre: dre_cli.DRECli,
+        dashboard: public_dashboard.DashboardAPI,
         slack_announcer: slack_announce.SlackAnnouncerProtocol,
         ignore_releases: list[str] | None = None,
     ):
@@ -372,67 +398,121 @@ class Reconciler:
         self.ic_repo = ic_repo
         self.ignore_releases = ignore_releases or []
         self.dre = dre
+        self.dashboard = dashboard
         self.slack_announcer = slack_announcer
         self.change_determinator_factory = change_determinator_factory
         self.local_release_state: dict[str, dict[str, dict[OsKind, VersionState]]] = {}
 
     def reconcile(self) -> None:
         """Reconcile the state of the network with the release index."""
-        config = self.loader.index()
-        active_guestos_versions = self.ic_prometheus.active_guestos_versions()
-        active_hostos_versions = self.ic_prometheus.active_hostos_versions()
         logger = LOGGER.getChild("reconciler")
+        index = self.loader.index()
 
-        oldest_active_guestos = oldest_active_release(config, active_guestos_versions)
-        oldest_active_hostos = oldest_active_release(config, active_hostos_versions)
-        oldest_active_index = max(
-            [
-                config.root.releases.index(oldest_active_guestos),
-                config.root.releases.index(oldest_active_hostos),
-            ]
-        )
-        releases = config.root.releases[: oldest_active_index + 1]
+        active_guestos_versions = self.ic_prometheus.active_guestos_versions()
+        try:
+            oldest_active_guestos = oldest_active_release(
+                index,
+                active_guestos_versions,
+            )
+        except ValueError:
+            logger.error(
+                "Cannot find any of %s active GuestOS in the index.",
+                active_guestos_versions,
+            )
+            raise
+        active_hostos_versions = self.ic_prometheus.active_hostos_versions()
+        try:
+            oldest_active_hostos = oldest_active_release(
+                index,
+                active_hostos_versions,
+            )
+        except ValueError:
+            logger.error(
+                "Cannot find any of %s active HostOS in the index.",
+                active_hostos_versions,
+            )
+            raise
+
+        # As a matter of principle, we will only process the very top
+        # two releases (and all its versions).  All else will be
+        # assumed to have been prepared before.
+        releases = index.root.releases[:2]
         # Remove ignored releases from list to process.
         releases = [r for r in releases if r.rc_name not in self.ignore_releases]
 
+        # Fetch latest election proposals and remember their state.
+        try:
+            self.state.update_state(self.dashboard.get_election_proposals_by_version)
+        except Exception as e:
+            logger.warning(
+                "Did not succeed in retrieving proposals from"
+                " the public dashboard API (%s), continuing anyway",
+                e,
+            )
+        # We always fetch and apply the state of the proposals
+        # from the DRE CLI (coming from governance canister)
+        # after the dashboard, since these are the authoritative proposals
+        # that have the freshest state (dashboard lags).
+        self.state.update_state(self.dre.get_election_proposals_by_version)
+
         # Preload the cache of known successfully processed releases.
         # We will use this information as an operation plan.
-        for relcand in releases:
-            if relcand.rc_name not in self.local_release_state:
-                self.local_release_state[relcand.rc_name] = {}
+        # Do them in oldest to newest lexical order.
+        new_local_release_state: dict[str, dict[str, dict[OsKind, VersionState]]] = {}
+        for relcand in reversed(releases):
+            new_local_release_state[relcand.rc_name] = {}
             for v_idx, rcver in enumerate(relcand.versions):
-                if rcver.name not in self.local_release_state[relcand.rc_name]:
-                    self.local_release_state[relcand.rc_name][rcver.name] = {}
+                new_local_release_state[relcand.rc_name][rcver.name] = {}
                 for os_kind in OS_KINDS:
                     if os_kind == GUESTOS or v_idx == 0:  # Do HostOS for base release.
-                        if (
-                            os_kind
-                            not in self.local_release_state[relcand.rc_name][rcver.name]
-                        ):
-                            self.local_release_state[relcand.rc_name][rcver.name][
-                                os_kind
-                            ] = VersionState(
+                        # Get the version state from the old release state if possible.
+                        # Else make a brand new one.
+                        # This whole loop preserves prior activity state while allowing
+                        # the actual list of versions and releases to process to be fresh
+                        # out of the latest index without keeping old state around.
+                        version = (
+                            self.local_release_state.get(
                                 relcand.rc_name,
-                                rcver.name,
-                                rcver.version,
-                                os_kind,
-                                rcver.security_fix,
-                                is_base=v_idx == 0,
-                                rc=relcand,
+                                {},
                             )
-                        version = self.local_release_state[relcand.rc_name][rcver.name][
-                            os_kind
-                        ]
-                        # Update this just in case the commit ID changed for this version name.
+                            .get(
+                                rcver.name,
+                                {},
+                            )
+                            .get(
+                                os_kind,
+                                VersionState(
+                                    relcand.rc_name,
+                                    rcver.name,
+                                    rcver.version,
+                                    os_kind,
+                                    rcver.security_fix,
+                                    is_base=v_idx == 0,
+                                    rc=relcand,
+                                    changelog_base=rcver.changelog_base,
+                                ),
+                            )
+                        )
+                        # Update info just in case info changed since the last cycle.
                         version.git_revision = rcver.version
                         version.security_fix = rcver.security_fix
                         version.is_base = v_idx == 0
                         version.rc = relcand
+                        version.changelog_base = rcver.changelog_base
                         if isinstance(
                             self.state.version_proposal(rcver.version, os_kind),
                             reconciler_state.SubmittedProposal,
                         ):
                             version.completed("proposal submission")
+                        new_local_release_state[relcand.rc_name][rcver.name][
+                            os_kind
+                        ] = version
+        # When the next line runs, all VersionState objects attached to the
+        # old release state (being replaced) but not referenced by the new
+        # release state will get garbage-collected, and therefore the telemetry
+        # for those VersionState objects will be forgotten thru their __del__()
+        # methods being called.
+        self.local_release_state = new_local_release_state
 
         # Filter the releases to process by removing those which are complete.
         versions = [
@@ -440,7 +520,7 @@ class Reconciler:
             for rc in self.local_release_state.values()
             for version_batch in rc.values()
             for version in version_batch.values()
-            if not version.complete
+            if not version.fully_processed
         ]
 
         if [x for x in versions if x.os_kind == GUESTOS]:
@@ -459,13 +539,6 @@ class Reconciler:
             logger.info(
                 "Oldest active HostOS release: %s", oldest_active_hostos.rc_name
             )
-
-        if versions:
-            existing_guestos_proposals, existing_hostos_proposals = (
-                self.dre.get_election_proposals_by_version()
-            )
-        else:
-            existing_guestos_proposals, existing_hostos_proposals = ({}, {})
 
         if versions:
             logger.info("Processing the following release versions:")
@@ -489,13 +562,11 @@ class Reconciler:
             prop = self.state.version_proposal(release_commit, v.os_kind)
             if isinstance(prop, reconciler_state.SubmittedProposal):
                 revlogger.debug("%s.  Proposal not needed.", prop)
-                phase.completed("proposal submission")
             elif (
                 isinstance(prop, reconciler_state.DREMalfunction)
                 and not prop.ready_to_retry()
             ):
                 phase.failed("proposal submission")
-                revlogger.debug("%s.  Not ready to retry yet.")
                 continue
 
             # update to create posts for any releases
@@ -529,9 +600,23 @@ class Reconciler:
                         )
                         self.ic_repo.push_release_tags(v.rc)
                         self.ic_repo.fetch()
-                        base_release_commit, base_release_tag = find_base_release(
-                            self.ic_repo, config, release_commit
-                        )
+                        if v.changelog_base and getattr(v.changelog_base, v.os_kind):
+                            cbase = getattr(v.changelog_base, v.os_kind)
+                            try:
+                                base_release_commit = index.root.version(
+                                    cbase.rc_name, cbase.name
+                                )
+                            except KeyError as e:
+                                logger.error(
+                                    "Cannot find within index the specified base release/version"
+                                    f" {e} to base the changelog on.",
+                                )
+                                raise
+                            base_release_tag = version_name(cbase.rc_name, cbase.name)
+                        else:
+                            base_release_commit, base_release_tag = find_base_release(
+                                self.ic_repo, index, release_commit
+                            )
                         request = OrdinaryReleaseNotesRequest(
                             release_tag,
                             release_commit,
@@ -603,39 +688,20 @@ class Reconciler:
             with phase("proposal submission"):
                 if isinstance(prop, reconciler_state.SubmittedProposal):
                     revlogger.info(
-                        "%s.  We will check if forum post needs update.",
+                        "%s.  We do not need to submit a proposal, but"
+                        " we will check if forum post needs update.",
                         prop,
                     )
-                elif discovered_proposal := (
-                    existing_hostos_proposals
-                    if v.os_kind == HOSTOS
-                    else existing_guestos_proposals
-                ).get(release_commit):
-                    if isinstance(prop, reconciler_state.NoProposal):
-                        revlogger.warning(
-                            "We have no record of a proposal being submitted.  However, contrary"
-                            " to our record, proposal to elect %s was indeed successfully"
-                            " submitted by someone else as ID %s.",
-                            release_commit,
-                            discovered_proposal["id"],
-                        )
-                    elif isinstance(prop, reconciler_state.DREMalfunction):
-                        revlogger.warning(
-                            "%s.  However, contrary to recorded failure, proposal"
-                            " to elect %s was indeed successfully submitted by us as ID %s.",
-                            prop,
-                            release_commit,
-                            discovered_proposal["id"],
-                        )
-                    prop.record_submission(discovered_proposal["id"])
                 else:
-                    # No discovered proposal and either prior malfunction or no proposal.
-                    # Time to create a proposal proposal.
                     revlogger.info("Preparing proposal for %s", release_commit)
                     try:
                         checksum = version_package_checksum(release_commit, v.os_kind)
                     except requests.exceptions.HTTPError as e:
-                        if e.response.status_code == 404:
+                        if (
+                            hasattr(e, "response")
+                            and e.response is not None
+                            and e.response.status_code == 404
+                        ):
                             phase.incomplete()
                             revlogger.warning(
                                 "Proposal cannot be placed because one of the URLs"
@@ -644,13 +710,14 @@ class Reconciler:
                                 " all the URLs required for the proposal."
                             )
                             continue
+                        raise
 
                     urls = version_package_urls(release_commit, v.os_kind)
                     unelect_versions = []
                     if v.is_base == 0:
                         unelect_versions.extend(
                             versions_to_unelect(
-                                config,
+                                index,
                                 active_versions=(
                                     active_hostos_versions
                                     if v.os_kind == HOSTOS
@@ -721,6 +788,14 @@ def main() -> None:
         " simultaneously on this computer.",
     )
     parser.add_argument(
+        "--release-loader",
+        dest="release_loader",
+        type=str,
+        default="git",
+        help="Which release loader to use.  `git` works with the DRE repo."
+        "  Any other local path uses the specified path as git repository.",
+    )
+    parser.add_argument(
         "--verbose",
         "--debug",
         action="store_true",
@@ -742,12 +817,6 @@ def main() -> None:
         help="Time to wait (in seconds) between loop executions.  If 0 or less, exit immediately after the first loop.",
     )
     parser.add_argument(
-        "--skip-preloading-state",
-        action="store_true",
-        dest="skip_preloading_state",
-        help="Do not fill the reconciler state upon startup with the known proposals from the governance canister.",
-    )
-    parser.add_argument(
         "--telemetry_port",
         type=int,
         dest="telemetry_port",
@@ -761,10 +830,6 @@ def main() -> None:
     opts = parser.parse_args()
 
     dry_run = opts.dry_run
-    skip_preloading_state = opts.skip_preloading_state
-
-    if skip_preloading_state and not dry_run:
-        assert 0, "To prevent double submission of proposals, preloading state must not be skipped when run without --dry-run"
 
     if opts.dotenv_file:
         load_dotenv(opts.dotenv_file)
@@ -783,8 +848,8 @@ def main() -> None:
 
     config_loader = (
         GitReleaseLoader(f"https://github.com/{dre_repo}.git")
-        if "dev" not in os.environ
-        else DevReleaseLoader()
+        if "git" == opts.release_loader
+        else DevReleaseLoader(opts.release_loader)
     )
     forum_client = (
         ReleaseCandidateForumClient(
@@ -839,9 +904,8 @@ def main() -> None:
         if not dry_run
         else dryrun.DRECli()
     )
-    state = reconciler_state.ReconcilerState(
-        None if skip_preloading_state else dre.get_election_proposals_by_version,
-    )
+    dashboard = public_dashboard.DashboardAPI()
+    state = reconciler_state.ReconcilerState(None)
     slack_announcer: slack_announce.SlackAnnouncerProtocol = (
         slack_announce.SlackAnnouncer() if not dry_run else dryrun.MockSlackAnnouncer()
     )
@@ -870,6 +934,7 @@ def main() -> None:
         ),
         slack_announcer=slack_announcer,
         dre=dre,
+        dashboard=dashboard,
     )
 
     if opts.loop_every > 0:
