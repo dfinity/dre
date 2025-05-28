@@ -65,18 +65,18 @@ impl ExecutableCommand for SubnetNodeDiff {
         AuthRequirement::Anonymous
     }
 
-    async fn execute(&self, ctx: DreContext) -> anyhow::Result<()> {
+    async fn fetch_and_collate_subnet_changes(&self, ctx: &DreContext) -> anyhow::Result<SubnetNodeDiffOutput> {
         if self.version1 >= self.version2 {
             bail!("version1 ({}) must be strictly less than version2 ({}).", self.version1, self.version2);
         }
 
         let mut all_changes: HashMap<PrincipalId, Vec<ChangeEntry>> = HashMap::new();
         let mut previous_subnet_node_counts = 
-            get_subnet_node_counts(&ctx, self.version1).await?;
+            get_subnet_node_counts(ctx, self.version1).await?;
 
         // Iterate from version1 + 1 up to version2
         for current_version in (self.version1 + 1)..=self.version2 {
-            let current_subnet_node_counts = get_subnet_node_counts(&ctx, current_version).await?;
+            let current_subnet_node_counts = get_subnet_node_counts(ctx, current_version).await?;
             let mut checked_subnets = HashSet::new(); 
 
             for (subnet_id, current_count) in &current_subnet_node_counts {
@@ -112,6 +112,11 @@ impl ExecutableCommand for SubnetNodeDiff {
                 changes,
             })
             .collect();
+        Ok(output_data)
+    }
+
+    async fn execute(&self, ctx: DreContext) -> anyhow::Result<()> {
+        let output_data = self.fetch_and_collate_subnet_changes(&ctx).await?;
 
         let writer: Box<dyn std::io::Write> = match &self.output {
             Some(path) => {
@@ -128,7 +133,7 @@ impl ExecutableCommand for SubnetNodeDiff {
 
         Ok(())
     }
-
+    
     fn validate(&self, _args: &GlobalArgs, _cmd: &mut clap::Command) {
         // Validation moved to the beginning of `execute`
     }
@@ -148,10 +153,11 @@ mod tests {
     use ic_registry_local_store::LocalStoreImpl; // For creating a mock LocalStore
     use std::collections::{HashMap, VecDeque};
     use std::sync::Arc;
-    use tempfile::NamedTempFile;
-    use assert_json_diff::assert_json_eq;
-    use serde_json::json;
+    // Removed: use tempfile::NamedTempFile;
+    // Removed: use assert_json_diff::assert_json_eq;
+    use serde_json::json; // Used for creating expected values
     use tokio::runtime::Runtime; // For running async tests
+    // std::io::Write is implicitly used by Box<dyn Write> in main code, not directly in tests now
     use std::str::FromStr; // For PrincipalId::from_str
 
     // Mock RegistryProvider
@@ -201,19 +207,10 @@ mod tests {
         DreContext::new_anonymous_for_tests(mock_registry_provider, Network::Mainnet)
     }
     
-    async fn run_and_get_json_output(cmd: SubnetNodeDiff, ctx: DreContext) -> serde_json::Value {
-        let temp_file = NamedTempFile::new().unwrap();
-        let output_path = temp_file.path().to_path_buf();
-        
-        let cmd_with_output = SubnetNodeDiff {
-            output: Some(output_path.clone()),
-            ..cmd
-        };
-
-        cmd_with_output.execute(ctx).await.unwrap();
-        
-        let content = fs_err::read_to_string(output_path).unwrap();
-        serde_json::from_str(&content).unwrap_or(json!(null))
+    async fn run_and_get_json_output(cmd: &SubnetNodeDiff, ctx: DreContext) -> serde_json::Value {
+        // Calls the refactored core logic function directly
+        let output_data = cmd.fetch_and_collate_subnet_changes(&ctx).await.unwrap();
+        serde_json::to_value(output_data).unwrap()
     }
 
     #[test]
@@ -222,7 +219,8 @@ mod tests {
         rt.block_on(async {
             let ctx = create_mock_dre_context(HashMap::new());
             let cmd = SubnetNodeDiff { version1: 2, version2: 1, output: None };
-            let result = cmd.execute(ctx).await;
+            // Test the fetch_and_collate_subnet_changes directly as it contains the validation
+            let result = cmd.fetch_and_collate_subnet_changes(&ctx).await;
             assert!(result.is_err());
             assert_eq!(result.err().unwrap().to_string(), "version1 (2) must be strictly less than version2 (1).");
         });
@@ -240,8 +238,9 @@ mod tests {
             let ctx = create_mock_dre_context(versions_data);
             let cmd = SubnetNodeDiff { version1: 1, version2: 2, output: None };
             
-            let output = run_and_get_json_output(cmd, ctx).await;
-            assert_json_eq!(output, json!([]));
+            let output = run_and_get_json_output(&cmd, ctx).await;
+            let expected_val = json!([]);
+            assert_eq!(output, expected_val);
         });
     }
 
@@ -257,9 +256,9 @@ mod tests {
 
             let ctx = create_mock_dre_context(versions_data);
             let cmd = SubnetNodeDiff { version1: 1, version2: 3, output: None };
-            let output = run_and_get_json_output(cmd, ctx).await;
+            let output = run_and_get_json_output(&cmd, ctx).await;
             
-            let expected = json!([
+            let expected_val = json!([
                 {
                     "subnet_id": subnet1_id.to_string(),
                     "changes": [
@@ -267,7 +266,7 @@ mod tests {
                     ]
                 }
             ]);
-            assert_json_eq!(output, expected);
+            assert_eq!(output, expected_val);
         });
     }
     
@@ -282,9 +281,9 @@ mod tests {
 
             let ctx = create_mock_dre_context(versions_data);
             let cmd = SubnetNodeDiff { version1: 5, version2: 6, output: None };
-            let output = run_and_get_json_output(cmd, ctx).await;
+            let output = run_and_get_json_output(&cmd, ctx).await;
 
-            let expected = json!([
+            let expected_val = json!([
                 {
                     "subnet_id": subnet1_id.to_string(),
                     "changes": [
@@ -292,7 +291,7 @@ mod tests {
                     ]
                 }
             ]);
-            assert_json_eq!(output, expected);
+            assert_eq!(output, expected_val);
         });
     }
 
@@ -307,9 +306,9 @@ mod tests {
 
             let ctx = create_mock_dre_context(versions_data);
             let cmd = SubnetNodeDiff { version1: 10, version2: 11, output: None };
-            let output = run_and_get_json_output(cmd, ctx).await;
+            let output = run_and_get_json_output(&cmd, ctx).await;
             
-            let expected = json!([
+            let expected_val = json!([
                 {
                     "subnet_id": subnet1_id.to_string(),
                     "changes": [
@@ -317,7 +316,7 @@ mod tests {
                     ]
                 }
             ]);
-            assert_json_eq!(output, expected);
+            assert_eq!(output, expected_val);
         });
     }
 
@@ -351,9 +350,9 @@ mod tests {
 
             let ctx = create_mock_dre_context(versions_data);
             let cmd = SubnetNodeDiff { version1: 20, version2: 23, output: None };
-            let output = run_and_get_json_output(cmd, ctx).await;
+            let output = run_and_get_json_output(&cmd, ctx).await; // Pass cmd by reference
 
-            let expected_json = json!([
+            let expected_val = json!([ // Renamed to expected_val for clarity
                 {
                     "subnet_id": s1_id.to_string(),
                     "changes": [ { "registry_version": 22, "node_count": 3 } ]
@@ -371,20 +370,20 @@ mod tests {
                 }
             ]);
             
+            // The output is already serde_json::Value, but if we want to sort, we need to deserialize, sort, then re-serialize to json for comparison.
             let mut output_vec: Vec<SubnetChangeLog> = serde_json::from_value(output).unwrap();
             output_vec.sort_by(|a, b| a.subnet_id.cmp(&b.subnet_id));
             for change_log in &mut output_vec {
                 change_log.changes.sort_by_key(|c| c.registry_version);
             }
 
-
-            let mut expected_vec: Vec<SubnetChangeLog> = serde_json::from_value(expected_json).unwrap();
+            let mut expected_vec: Vec<SubnetChangeLog> = serde_json::from_value(expected_val.clone()).unwrap(); // Clone expected_val before moving it
             expected_vec.sort_by(|a, b| a.subnet_id.cmp(&b.subnet_id));
             for change_log in &mut expected_vec {
                 change_log.changes.sort_by_key(|c| c.registry_version);
             }
             
-            assert_json_eq!(json!(output_vec), json!(expected_vec));
+            assert_eq!(json!(output_vec), json!(expected_vec));
         });
     }
 }
