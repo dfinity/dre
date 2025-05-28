@@ -162,7 +162,7 @@ fn setup_timers() {
     // I had to rewrite this to compute the correct remaining time until next 1AM.
     // It is simply not true that one can get a midnight from the modulo of seconds since
     // the UNIX epoch (as it was being done before).  Leap seconds are a thing.
-    ic_cdk_timers::set_timer(std::time::Duration::from_secs(0), || {
+    ic_cdk_timers::set_timer(time_left_for_next_1am(None), || {
         // It's 1AM since the canister was installed or upgraded.
         // Schedule a repeat timer to run sync_all() every 24 hours.
         // Sadly we ignore leap seconds here.
