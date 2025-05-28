@@ -5,7 +5,9 @@ use ic_nervous_system_canisters::registry::Registry;
 use ic_nervous_system_common::NervousSystemError;
 use ic_nns_constants::REGISTRY_CANISTER_ID;
 use ic_registry_transport::pb::v1::RegistryDelta;
-use ic_registry_transport::{deserialize_get_changes_since_response, deserialize_get_latest_version_response, serialize_get_changes_since_request};
+use ic_registry_transport::{
+    dechunkify_delta, deserialize_get_changes_since_response, deserialize_get_latest_version_response, serialize_get_changes_since_request,
+};
 use std::future::Future;
 
 // TODO: Remove this when the RegistryCanister in the IC repo uses ic-cdk 0.18.0
@@ -64,16 +66,20 @@ impl Registry for RegistryCanister {
             NervousSystemError::new_with_message(format!("Could not encode request for get_changes_since for version {:?}: {}", version, e))
         })?;
 
-        self.execute_with_retries(5, || async {
-            Call::bounded_wait(PrincipalId::from(self.canister_id).into(), "get_changes_since")
-                .with_raw_args(&bytes)
+        let (high_capacity_deltas, _version) = deserialize_get_changes_since_response(result).map_err(|err| {
+            NervousSystemError::new_with_message(format!("Unable to deserialize get_changes_since response (from Registry): {}", err,))
+        })?;
+
+        // Dechunkify deltas (this may require follow up get_chunk calls to Registry).
+        let mut dechunkified_deltas = vec![];
+        for delta in high_capacity_deltas {
+            let delta = dechunkify_delta(delta, self)
                 .await
-        })
-        .await
-        .and_then(|response| {
-            deserialize_get_changes_since_response(response.into_bytes())
-                .map_err(|e| NervousSystemError::new_with_message(format!("Could not decode response {e:?}")))
-                .map(|(deltas, _)| deltas)
-        })
+                .map_err(|e| NervousSystemError::new_with_message(format!("Could not decode response {e:?}")))?;
+
+            dechunkified_deltas.push(delta);
+        }
+
+        Ok(dechunkified_deltas)
     }
 }

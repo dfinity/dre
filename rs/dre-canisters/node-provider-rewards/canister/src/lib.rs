@@ -2,8 +2,8 @@ use crate::storage::{METRICS_MANAGER, REGISTRY_STORE};
 use candid::{candid_method, encode_one, CandidType};
 use chrono::Months;
 use chrono::{DateTime, Days, Duration, Timelike, Utc};
-use ic_canisters_http_types::{HttpRequest, HttpResponse, HttpResponseBuilder};
 use ic_cdk_macros::*;
+use ic_http_types::{HttpRequest, HttpResponse, HttpResponseBuilder};
 use ic_nervous_system_common::serve_metrics;
 use ic_types::PrincipalId;
 use node_provider_rewards_api::endpoints::{NodeProviderRewardsCalculationArgs, NodeProvidersRewards, RewardPeriodArgs, RewardsCalculatorResults};
@@ -163,7 +163,7 @@ fn setup_timers() {
     // I had to rewrite this to compute the correct remaining time until next 1AM.
     // It is simply not true that one can get a midnight from the modulo of seconds since
     // the UNIX epoch (as it was being done before).  Leap seconds are a thing.
-    ic_cdk_timers::set_timer(time_left_for_next_1am(None), || {
+    ic_cdk_timers::set_timer(std::time::Duration::from_secs(0), || {
         // It's 1AM since the canister was installed or upgraded.
         // Schedule a repeat timer to run sync_all() every 24 hours.
         // Sadly we ignore leap seconds here.
