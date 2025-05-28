@@ -85,6 +85,8 @@ url = { workspace = true }
 
 [dev-dependencies]
 actix-rt = { workspace = true }
+tempfile = "3.3"
+assert_json_diff = "2.0"
 
 [build-dependencies]
 clap = { workspace = true }

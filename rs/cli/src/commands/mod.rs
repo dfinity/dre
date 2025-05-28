@@ -14,6 +14,7 @@ pub(crate) mod propose;
 pub mod qualify;
 pub(crate) mod registry;
 pub(crate) mod subnet;
+pub(crate) mod subnet_node_diff;
 pub(crate) mod update_authorized_subnets;
 pub(crate) mod update_unassigned_nodes;
 pub mod upgrade;
