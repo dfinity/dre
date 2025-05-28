@@ -1,16 +1,14 @@
-use std::path::PathBuf;
-use clap::Args;
-use crate::auth::AuthRequirement;
 use crate::auth::AuthRequirement;
 use crate::ctx::DreContext;
 use crate::exe::args::GlobalArgs;
 use crate::exe::ExecutableCommand;
+use anyhow::bail;
 use clap::Args;
-use ic_management_types::PrincipalId;
+use ic_base_types::PrincipalId;
 use serde::Serialize;
 use std::collections::{HashMap, HashSet}; // Added HashSet
 use std::path::PathBuf;
-use anyhow::bail; // Added for error handling
+// Added for error handling
 
 // Structs defined in the previous step (ChangeEntry, SubnetChangeLog, SubnetNodeDiffOutput)
 // should be present above this. (They are already here)
@@ -71,13 +69,12 @@ impl ExecutableCommand for SubnetNodeDiff {
         }
 
         let mut all_changes: HashMap<PrincipalId, Vec<ChangeEntry>> = HashMap::new();
-        let mut previous_subnet_node_counts = 
-            get_subnet_node_counts(ctx, self.version1).await?;
+        let mut previous_subnet_node_counts = get_subnet_node_counts(ctx, self.version1).await?;
 
         // Iterate from version1 + 1 up to version2
         for current_version in (self.version1 + 1)..=self.version2 {
             let current_subnet_node_counts = get_subnet_node_counts(ctx, current_version).await?;
-            let mut checked_subnets = HashSet::new(); 
+            let mut checked_subnets = HashSet::new();
 
             for (subnet_id, current_count) in &current_subnet_node_counts {
                 checked_subnets.insert(*subnet_id);
@@ -96,17 +93,17 @@ impl ExecutableCommand for SubnetNodeDiff {
                 if !checked_subnets.contains(subnet_id) {
                     let change_entry = ChangeEntry {
                         registry_version: current_version,
-                        node_count: 0, 
+                        node_count: 0,
                     };
                     all_changes.entry(*subnet_id).or_default().push(change_entry);
                 }
             }
             previous_subnet_node_counts = current_subnet_node_counts;
         }
-        
+
         let output_data: SubnetNodeDiffOutput = all_changes
             .into_iter()
-            .filter(|(_, changes)| !changes.is_empty()) 
+            .filter(|(_, changes)| !changes.is_empty())
             .map(|(subnet_id, changes)| SubnetChangeLog {
                 subnet_id: subnet_id.to_string(),
                 changes,
@@ -133,7 +130,7 @@ impl ExecutableCommand for SubnetNodeDiff {
 
         Ok(())
     }
-    
+
     fn validate(&self, _args: &GlobalArgs, _cmd: &mut clap::Command) {
         // Validation moved to the beginning of `execute`
     }
@@ -157,7 +154,7 @@ mod tests {
     // Removed: use assert_json_diff::assert_json_eq;
     use serde_json::json; // Used for creating expected values
     use tokio::runtime::Runtime; // For running async tests
-    // std::io::Write is implicitly used by Box<dyn Write> in main code, not directly in tests now
+                                 // std::io::Write is implicitly used by Box<dyn Write> in main code, not directly in tests now
     use std::str::FromStr; // For PrincipalId::from_str
 
     // Mock RegistryProvider
@@ -169,12 +166,23 @@ mod tests {
     #[async_trait::async_trait]
     impl RegistryProvider for MockRegistryProvider {
         async fn get_registry_at_version(&self, version: u64) -> anyhow::Result<Arc<dyn LocalStoreImpl>> {
-            self.versions.get(&version).cloned().ok_or_else(|| anyhow::anyhow!("Mock version not found: {}", version))
+            self.versions
+                .get(&version)
+                .cloned()
+                .ok_or_else(|| anyhow::anyhow!("Mock version not found: {}", version))
         }
-        async fn get_latest_version(&self) -> anyhow::Result<u64> { unimplemented!("get_latest_version not implemented for mock") }
-        fn get_network(&self) -> Network { unimplemented!("get_network not implemented for mock") }
-        fn new_replica_agent(&self, _url: String, _maybe_fetch_root_key: bool) -> anyhow::Result<ic_agent::Agent> { unimplemented!("new_replica_agent not implemented for mock") }
-        fn get_local_store_path(&self) -> PathBuf { unimplemented!("get_local_store_path not implemented for mock") }
+        async fn get_latest_version(&self) -> anyhow::Result<u64> {
+            unimplemented!("get_latest_version not implemented for mock")
+        }
+        fn get_network(&self) -> Network {
+            unimplemented!("get_network not implemented for mock")
+        }
+        fn new_replica_agent(&self, _url: String, _maybe_fetch_root_key: bool) -> anyhow::Result<ic_agent::Agent> {
+            unimplemented!("new_replica_agent not implemented for mock")
+        }
+        fn get_local_store_path(&self) -> PathBuf {
+            unimplemented!("get_local_store_path not implemented for mock")
+        }
     }
 
     #[derive(Default)]
@@ -184,17 +192,47 @@ mod tests {
 
     #[async_trait::async_trait]
     impl LocalStoreImpl for MockLocalStore {
-        async fn nodes(&self) -> anyhow::Result<HashMap<PrincipalId, Node>> { Ok(HashMap::new()) }
-        async fn subnets(&self) -> anyhow::Result<HashMap<PrincipalId, Subnet>> { Ok(self.subnets_data.clone()) }
-        async fn unassigned_nodes(&self) -> anyhow::Result<Vec<PrincipalId>> { Ok(vec![]) }
-        async fn operators(&self) -> anyhow::Result<HashMap<PrincipalId, Operator>> { Ok(HashMap::new()) }
-        async fn providers(&self) -> anyhow::Result<HashMap<PrincipalId, Provider>> { Ok(HashMap::new()) }
-        fn get_latest_version(&self) -> u64 { 0 }
-        fn get_path(&self) -> PathBuf {PathBuf::new()}
-        async fn get_updates_since(&self, _version: u64) -> anyhow::Result<Vec<ic_registry_local_store::RegistryValue>> {Ok(vec![])}
-        async fn get_certified_updates_since(&self, _version: u64, _canister_id: PrincipalId) -> anyhow::Result<(Vec<ic_registry_local_store::RegistryValue>, u64, Arc<VecDeque<(u64, ic_registry_local_store::RegistryValue)>>)> {anyhow::bail!("Unimplemented")}
-        async fn get_changelog_since_version(&self, _version: u64) -> anyhow::Result<Vec<(u64, String, String, String)>> {anyhow::bail!("Unimplemented")}
-        async fn get_diff(&self, _from: u64, _to: u64) -> anyhow::Result<Vec<(u64, String, String, String)>> {anyhow::bail!("Unimplemented")}
+        async fn nodes(&self) -> anyhow::Result<HashMap<PrincipalId, Node>> {
+            Ok(HashMap::new())
+        }
+        async fn subnets(&self) -> anyhow::Result<HashMap<PrincipalId, Subnet>> {
+            Ok(self.subnets_data.clone())
+        }
+        async fn unassigned_nodes(&self) -> anyhow::Result<Vec<PrincipalId>> {
+            Ok(vec![])
+        }
+        async fn operators(&self) -> anyhow::Result<HashMap<PrincipalId, Operator>> {
+            Ok(HashMap::new())
+        }
+        async fn providers(&self) -> anyhow::Result<HashMap<PrincipalId, Provider>> {
+            Ok(HashMap::new())
+        }
+        fn get_latest_version(&self) -> u64 {
+            0
+        }
+        fn get_path(&self) -> PathBuf {
+            PathBuf::new()
+        }
+        async fn get_updates_since(&self, _version: u64) -> anyhow::Result<Vec<ic_registry_local_store::RegistryValue>> {
+            Ok(vec![])
+        }
+        async fn get_certified_updates_since(
+            &self,
+            _version: u64,
+            _canister_id: PrincipalId,
+        ) -> anyhow::Result<(
+            Vec<ic_registry_local_store::RegistryValue>,
+            u64,
+            Arc<VecDeque<(u64, ic_registry_local_store::RegistryValue)>>,
+        )> {
+            anyhow::bail!("Unimplemented")
+        }
+        async fn get_changelog_since_version(&self, _version: u64) -> anyhow::Result<Vec<(u64, String, String, String)>> {
+            anyhow::bail!("Unimplemented")
+        }
+        async fn get_diff(&self, _from: u64, _to: u64) -> anyhow::Result<Vec<(u64, String, String, String)>> {
+            anyhow::bail!("Unimplemented")
+        }
     }
 
     fn create_mock_dre_context(versions_data: HashMap<u64, HashMap<PrincipalId, Subnet>>) -> DreContext {
@@ -203,10 +241,12 @@ mod tests {
             let mock_store = Arc::new(MockLocalStore { subnets_data });
             mock_versions.insert(version, mock_store as Arc<dyn LocalStoreImpl>);
         }
-        let mock_registry_provider = Arc::new(MockRegistryProvider { versions: Arc::new(mock_versions) });
+        let mock_registry_provider = Arc::new(MockRegistryProvider {
+            versions: Arc::new(mock_versions),
+        });
         DreContext::new_anonymous_for_tests(mock_registry_provider, Network::Mainnet)
     }
-    
+
     async fn run_and_get_json_output(cmd: &SubnetNodeDiff, ctx: DreContext) -> serde_json::Value {
         // Calls the refactored core logic function directly
         let output_data = cmd.fetch_and_collate_subnet_changes(&ctx).await.unwrap();
@@ -218,7 +258,11 @@ mod tests {
         let rt = Runtime::new().unwrap();
         rt.block_on(async {
             let ctx = create_mock_dre_context(HashMap::new());
-            let cmd = SubnetNodeDiff { version1: 2, version2: 1, output: None };
+            let cmd = SubnetNodeDiff {
+                version1: 2,
+                version2: 1,
+                output: None,
+            };
             // Test the fetch_and_collate_subnet_changes directly as it contains the validation
             let result = cmd.fetch_and_collate_subnet_changes(&ctx).await;
             assert!(result.is_err());
@@ -232,12 +276,34 @@ mod tests {
         rt.block_on(async {
             let subnet1_id = PrincipalId::from_str("tdb26-jop6k-aogll-7ltgs-eruif-6kk7m-qpktf-gdiqx-mxtrf-vbq6s-eqe").unwrap();
             let mut versions_data = HashMap::new();
-            versions_data.insert(1, HashMap::from([(subnet1_id, Subnet { nodes: vec![PrincipalId::new_user_test_id(1)], ..Subnet::default() })]));
-            versions_data.insert(2, HashMap::from([(subnet1_id, Subnet { nodes: vec![PrincipalId::new_user_test_id(1)], ..Subnet::default() })]));
-            
+            versions_data.insert(
+                1,
+                HashMap::from([(
+                    subnet1_id,
+                    Subnet {
+                        nodes: vec![PrincipalId::new_user_test_id(1)],
+                        ..Subnet::default()
+                    },
+                )]),
+            );
+            versions_data.insert(
+                2,
+                HashMap::from([(
+                    subnet1_id,
+                    Subnet {
+                        nodes: vec![PrincipalId::new_user_test_id(1)],
+                        ..Subnet::default()
+                    },
+                )]),
+            );
+
             let ctx = create_mock_dre_context(versions_data);
-            let cmd = SubnetNodeDiff { version1: 1, version2: 2, output: None };
-            
+            let cmd = SubnetNodeDiff {
+                version1: 1,
+                version2: 2,
+                output: None,
+            };
+
             let output = run_and_get_json_output(&cmd, ctx).await;
             let expected_val = json!([]);
             assert_eq!(output, expected_val);
@@ -250,14 +316,45 @@ mod tests {
         rt.block_on(async {
             let subnet1_id = PrincipalId::from_str("tdb26-jop6k-aogll-7ltgs-eruif-6kk7m-qpktf-gdiqx-mxtrf-vbq6s-eqe").unwrap();
             let mut versions_data = HashMap::new();
-            versions_data.insert(1, HashMap::from([(subnet1_id, Subnet { nodes: vec![PrincipalId::new_user_test_id(10)], ..Subnet::default() })]));
-            versions_data.insert(2, HashMap::from([(subnet1_id, Subnet { nodes: vec![PrincipalId::new_user_test_id(10)], ..Subnet::default() })]));
-            versions_data.insert(3, HashMap::from([(subnet1_id, Subnet { nodes: vec![PrincipalId::new_user_test_id(10), PrincipalId::new_user_test_id(11)], ..Subnet::default() })]));
+            versions_data.insert(
+                1,
+                HashMap::from([(
+                    subnet1_id,
+                    Subnet {
+                        nodes: vec![PrincipalId::new_user_test_id(10)],
+                        ..Subnet::default()
+                    },
+                )]),
+            );
+            versions_data.insert(
+                2,
+                HashMap::from([(
+                    subnet1_id,
+                    Subnet {
+                        nodes: vec![PrincipalId::new_user_test_id(10)],
+                        ..Subnet::default()
+                    },
+                )]),
+            );
+            versions_data.insert(
+                3,
+                HashMap::from([(
+                    subnet1_id,
+                    Subnet {
+                        nodes: vec![PrincipalId::new_user_test_id(10), PrincipalId::new_user_test_id(11)],
+                        ..Subnet::default()
+                    },
+                )]),
+            );
 
             let ctx = create_mock_dre_context(versions_data);
-            let cmd = SubnetNodeDiff { version1: 1, version2: 3, output: None };
+            let cmd = SubnetNodeDiff {
+                version1: 1,
+                version2: 3,
+                output: None,
+            };
             let output = run_and_get_json_output(&cmd, ctx).await;
-            
+
             let expected_val = json!([
                 {
                     "subnet_id": subnet1_id.to_string(),
@@ -269,18 +366,31 @@ mod tests {
             assert_eq!(output, expected_val);
         });
     }
-    
+
     #[test]
     fn test_subnet_added() {
         let rt = Runtime::new().unwrap();
         rt.block_on(async {
             let subnet1_id = PrincipalId::from_str("tdb26-jop6k-aogll-7ltgs-eruif-6kk7m-qpktf-gdiqx-mxtrf-vbq6s-eqe").unwrap();
             let mut versions_data = HashMap::new();
-            versions_data.insert(5, HashMap::new()); 
-            versions_data.insert(6, HashMap::from([(subnet1_id, Subnet { nodes: vec![PrincipalId::new_user_test_id(1)],..Subnet::default() })]));
+            versions_data.insert(5, HashMap::new());
+            versions_data.insert(
+                6,
+                HashMap::from([(
+                    subnet1_id,
+                    Subnet {
+                        nodes: vec![PrincipalId::new_user_test_id(1)],
+                        ..Subnet::default()
+                    },
+                )]),
+            );
 
             let ctx = create_mock_dre_context(versions_data);
-            let cmd = SubnetNodeDiff { version1: 5, version2: 6, output: None };
+            let cmd = SubnetNodeDiff {
+                version1: 5,
+                version2: 6,
+                output: None,
+            };
             let output = run_and_get_json_output(&cmd, ctx).await;
 
             let expected_val = json!([
@@ -301,18 +411,31 @@ mod tests {
         rt.block_on(async {
             let subnet1_id = PrincipalId::from_str("tdb26-jop6k-aogll-7ltgs-eruif-6kk7m-qpktf-gdiqx-mxtrf-vbq6s-eqe").unwrap();
             let mut versions_data = HashMap::new();
-            versions_data.insert(10, HashMap::from([(subnet1_id, Subnet { nodes: vec![PrincipalId::new_user_test_id(1)],..Subnet::default() })]));
-            versions_data.insert(11, HashMap::new()); 
+            versions_data.insert(
+                10,
+                HashMap::from([(
+                    subnet1_id,
+                    Subnet {
+                        nodes: vec![PrincipalId::new_user_test_id(1)],
+                        ..Subnet::default()
+                    },
+                )]),
+            );
+            versions_data.insert(11, HashMap::new());
 
             let ctx = create_mock_dre_context(versions_data);
-            let cmd = SubnetNodeDiff { version1: 10, version2: 11, output: None };
+            let cmd = SubnetNodeDiff {
+                version1: 10,
+                version2: 11,
+                output: None,
+            };
             let output = run_and_get_json_output(&cmd, ctx).await;
-            
+
             let expected_val = json!([
                 {
                     "subnet_id": subnet1_id.to_string(),
                     "changes": [
-                        { "registry_version": 11, "node_count": 0 } 
+                        { "registry_version": 11, "node_count": 0 }
                     ]
                 }
             ]);
@@ -331,25 +454,81 @@ mod tests {
             let node3 = PrincipalId::new_user_test_id(3);
 
             let mut versions_data = HashMap::new();
-            versions_data.insert(20, HashMap::from([
-                (s1_id, Subnet { nodes: vec![node1], ..Subnet::default() }),
-                (s2_id, Subnet { nodes: vec![node1, node2], ..Subnet::default() }),
-            ]));
-            versions_data.insert(21, HashMap::from([
-                (s1_id, Subnet { nodes: vec![node1], ..Subnet::default() }),
-                (s2_id, Subnet { nodes: vec![node1], ..Subnet::default() }),
-            ]));
-            versions_data.insert(22, HashMap::from([
-                (s1_id, Subnet { nodes: vec![node1, node2, node3], ..Subnet::default() }),
-            ]));
+            versions_data.insert(
+                20,
+                HashMap::from([
+                    (
+                        s1_id,
+                        Subnet {
+                            nodes: vec![node1],
+                            ..Subnet::default()
+                        },
+                    ),
+                    (
+                        s2_id,
+                        Subnet {
+                            nodes: vec![node1, node2],
+                            ..Subnet::default()
+                        },
+                    ),
+                ]),
+            );
+            versions_data.insert(
+                21,
+                HashMap::from([
+                    (
+                        s1_id,
+                        Subnet {
+                            nodes: vec![node1],
+                            ..Subnet::default()
+                        },
+                    ),
+                    (
+                        s2_id,
+                        Subnet {
+                            nodes: vec![node1],
+                            ..Subnet::default()
+                        },
+                    ),
+                ]),
+            );
+            versions_data.insert(
+                22,
+                HashMap::from([(
+                    s1_id,
+                    Subnet {
+                        nodes: vec![node1, node2, node3],
+                        ..Subnet::default()
+                    },
+                )]),
+            );
             let s3_id = PrincipalId::from_str("xkbj4-xqaaa-aaaam-qafda-cai").unwrap();
-            versions_data.insert(23, HashMap::from([
-                (s1_id, Subnet { nodes: vec![node1, node2, node3], ..Subnet::default() }),
-                (s3_id, Subnet { nodes: vec![node1], ..Subnet::default() }),
-            ]));
+            versions_data.insert(
+                23,
+                HashMap::from([
+                    (
+                        s1_id,
+                        Subnet {
+                            nodes: vec![node1, node2, node3],
+                            ..Subnet::default()
+                        },
+                    ),
+                    (
+                        s3_id,
+                        Subnet {
+                            nodes: vec![node1],
+                            ..Subnet::default()
+                        },
+                    ),
+                ]),
+            );
 
             let ctx = create_mock_dre_context(versions_data);
-            let cmd = SubnetNodeDiff { version1: 20, version2: 23, output: None };
+            let cmd = SubnetNodeDiff {
+                version1: 20,
+                version2: 23,
+                output: None,
+            };
             let output = run_and_get_json_output(&cmd, ctx).await; // Pass cmd by reference
 
             let expected_val = json!([ // Renamed to expected_val for clarity
@@ -369,7 +548,7 @@ mod tests {
                     "changes": [ { "registry_version": 23, "node_count": 1 } ]
                 }
             ]);
-            
+
             // The output is already serde_json::Value, but if we want to sort, we need to deserialize, sort, then re-serialize to json for comparison.
             let mut output_vec: Vec<SubnetChangeLog> = serde_json::from_value(output).unwrap();
             output_vec.sort_by(|a, b| a.subnet_id.cmp(&b.subnet_id));
@@ -382,7 +561,7 @@ mod tests {
             for change_log in &mut expected_vec {
                 change_log.changes.sort_by_key(|c| c.registry_version);
             }
-            
+
             assert_eq!(json!(output_vec), json!(expected_vec));
         });
     }

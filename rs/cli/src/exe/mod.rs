@@ -1,6 +1,10 @@
 use crate::auth::AuthRequirement;
 use crate::ctx::DreContext;
+use anyhow::bail;
 use clap::Command;
+use ic_base_types::PrincipalId;
+use std::collections::{HashMap, HashSet};
+
 pub mod args;
 
 pub trait ExecutableCommand {
@@ -13,6 +17,7 @@ pub trait ExecutableCommand {
     fn neuron_override(&self) -> Option<crate::auth::Neuron> {
         None
     }
+    async fn fetch_and_collate_subnet_changes(&self, ctx: &DreContext) -> anyhow::Result<SubnetNodeDiffOutput>;
 }
 
 macro_rules! impl_executable_command_for_enums {
