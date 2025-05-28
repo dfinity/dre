@@ -1,3 +1,5 @@
+use async_trait::async_trait;
+use candid::{Decode, Encode};
 use ic_agent::Agent;
 use ic_base_types::PrincipalId;
 use ic_interfaces_registry::RegistryTransportRecord;
@@ -6,8 +8,10 @@ use ic_protobuf::{
     registry::{crypto::v1::PublicKey, subnet::v1::SubnetListRecord},
     types::v1::SubnetId,
 };
+use ic_registry_canister_api::{Chunk, GetChunkRequest};
 use ic_registry_keys::make_crypto_threshold_signing_pubkey_key;
 use ic_registry_nns_data_provider::certification::decode_certified_deltas;
+
 use ic_registry_transport::pb::v1::{
     RegistryGetChangesSinceRequest, RegistryGetLatestVersionResponse, RegistryGetValueRequest, RegistryGetValueResponse,
 };
@@ -23,6 +27,32 @@ pub struct RegistryCanisterWrapper {
 impl From<IcAgentCanisterClient> for RegistryCanisterWrapper {
     fn from(value: IcAgentCanisterClient) -> Self {
         Self { agent: value.agent }
+    }
+}
+
+#[async_trait]
+impl ic_registry_transport::GetChunk for RegistryCanisterWrapper {
+    async fn get_chunk_without_validation(&self, content_sha256: &[u8]) -> Result<Vec<u8>, String> {
+        fn new_err(cause: impl std::fmt::Debug) -> String {
+            format!("Unable to fetch large registry record: {:?}", cause,)
+        }
+
+        // Call get_chunk.
+        let content_sha256 = Some(content_sha256.to_vec());
+        let request = Encode!(&GetChunkRequest { content_sha256 }).map_err(new_err)?;
+        let get_chunk_response: Vec<u8> = self
+            .agent
+            .query(&REGISTRY_CANISTER_ID.into(), "get_chunk")
+            .with_arg(request)
+            .call()
+            .await
+            .map_err(new_err)?;
+
+        // Extract chunk from get_chunk call.
+        let Chunk { content } = Decode!(&get_chunk_response, Result<Chunk, String>)
+            .map_err(new_err)? // unable to decode
+            .map_err(new_err)?; // Registry canister returned Err.
+        content.ok_or_else(|| new_err("content in get_chunk response is null (not even an empty string)"))
     }
 }
 
@@ -76,7 +106,8 @@ impl RegistryCanisterWrapper {
             .call()
             .await?;
 
-        decode_certified_deltas(version, &REGISTRY_CANISTER_ID, &self.nns_public_key().await?, response.as_slice())
+        decode_certified_deltas(version, &REGISTRY_CANISTER_ID, &self.nns_public_key().await?, response.as_slice(), self)
+            .await
             .map_err(|e| anyhow::anyhow!("Error decoding certificed deltas: {:?}", e))
             .map(|(res, _, _)| res)
     }
