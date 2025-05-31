@@ -18,6 +18,7 @@ use super::upgrade::Upgrade;
 use super::version::Version;
 use super::vote::Vote;
 use crate::commands::subnet::Subnet;
+use super::subnet_node_diff::SubnetNodeDiff; // Added import
 use crate::exe::impl_executable_command_for_enums;
 use clap::Parser;
 use clap::{Args, CommandFactory};
@@ -33,7 +34,8 @@ pub struct MainCommand {
     pub subcommands: Subcommands,
 }
 
-impl_executable_command_for_enums! { MainCommand, DerToPrincipal, Network, Subnet, Get, Propose, UpdateUnassignedNodes, Version, NodeMetrics, HostOs, Nodes, ApiBoundaryNodes, Vote, Registry, Firewall, Upgrade, Proposals, Completions, Qualify, UpdateAuthorizedSubnets, Neuron, Governance }
+// Added SubnetNodeDiff to the macro invocation
+impl_executable_command_for_enums! { MainCommand, DerToPrincipal, Network, Subnet, Get, Propose, UpdateUnassignedNodes, Version, NodeMetrics, HostOs, Nodes, ApiBoundaryNodes, Vote, Registry, Firewall, Upgrade, Proposals, Completions, Qualify, UpdateAuthorizedSubnets, Neuron, Governance, SubnetNodeDiff }
 
 #[derive(Args, Debug)]
 pub struct Completions {
