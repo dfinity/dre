@@ -254,8 +254,6 @@ def main():
                 # print(f"  Querying for day: {day_to_query.strftime('%Y-%m-%d')} (Timestamp: {query_timestamp})") # Verbose
 
                 for i, node_id in enumerate(nodes_for_provider):
-                    # if (i + 1) % 10 == 0 or i == total_nodes_count - 1: # Verbose progress
-                    #      print(f"    Checking node {i+1}/{total_nodes_count} for {day_to_query.strftime('%Y-%m-%d')}...")
                     if is_node_assigned(node_id, query_timestamp):
                         assigned_on_this_day += 1
 
