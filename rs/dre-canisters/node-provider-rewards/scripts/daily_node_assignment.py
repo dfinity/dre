@@ -251,7 +251,6 @@ def main():
                                                12, 0, 0, tzinfo=timezone.utc).timestamp())
 
                 assigned_on_this_day = 0
-                # print(f"  Querying for day: {day_to_query.strftime('%Y-%m-%d')} (Timestamp: {query_timestamp})") # Verbose
 
                 for i, node_id in enumerate(nodes_for_provider):
                     if is_node_assigned(node_id, query_timestamp):
