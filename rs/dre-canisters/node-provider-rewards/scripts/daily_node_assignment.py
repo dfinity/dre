@@ -111,8 +111,6 @@ def query_victoria_metrics(query, timestamp=None):
     Queries VictoriaMetrics.
     If timestamp is provided, it's an instant query.
     """
-    if VICTORIA_METRICS_URL == "http://localhost:8428" and "your-victoria-metrics" not in VICTORIA_METRICS_URL:
-        print("Warning: VICTORIA_METRICS_URL is set to default. Ensure it's correctly configured.")
 
     api_endpoint = f"{VICTORIA_METRICS_URL.rstrip('/')}/api/v1/query"
     params = {'query': query}
