@@ -100,8 +100,6 @@ def load_node_provider_data(filepath):
     # Convert node sets to lists
     for pid in providers_data:
         providers_data[pid]["nodes"] = list(providers_data[pid]["nodes"])
-        # if not providers_data[pid]["nodes"]:
-        #     print(f"Info: Provider {pid} ({providers_data[pid]['name']}) has no nodes listed after parsing all operator records.")
 
     return providers_data
 
