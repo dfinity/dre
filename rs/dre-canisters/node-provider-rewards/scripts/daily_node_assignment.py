@@ -7,7 +7,6 @@ import os
 import time
 
 # --- Configuration ---
-# !!! IMPORTANT: Replace with your VictoriaMetrics URL !!!
 VICTORIA_METRICS_URL = "https://victoria.mainnet.dfinity.network/select/0/prometheus"  # Example: "http://your-victoria-metrics-instance:8428"
 # Path to your registry.json file
 INPUT_JSON_PATH = "registry.json"
