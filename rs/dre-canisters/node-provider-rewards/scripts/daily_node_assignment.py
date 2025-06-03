@@ -87,7 +87,6 @@ def load_node_provider_data(filepath):
         # Add more checks here if registry.json has other ways of listing nodes for an operator
 
         if not current_nodes_for_operator:
-            # print(f"Info: No nodes found for operator {node_operator_id} (Provider: {provider_id}) in record: {operator_record}")
             pass  # Continue, as a provider might have other operators with nodes
 
         if provider_id not in providers_data:
