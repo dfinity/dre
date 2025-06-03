@@ -204,13 +204,6 @@ def plot_provider_data(provider_id, chart_data, dates_for_plot, output_dir):
 def main():
     print("Starting node assignment charting script...")
 
-    if VICTORIA_METRICS_URL == "http://localhost:8428" or "your-victoria-metrics-instance" in VICTORIA_METRICS_URL:
-        print("=" * 50)
-        print("!!! WARNING !!!")
-        print("VICTORIA_METRICS_URL is set to a placeholder or default.")
-        print("Please update it in the script to your actual VictoriaMetrics endpoint.")
-        print("Script will likely fail or query a local instance if not changed.")
-        print("=" * 50)
 
     providers_info = load_node_provider_data(INPUT_JSON_PATH)
     if providers_info is None:
