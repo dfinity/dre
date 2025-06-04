@@ -1,15 +1,5 @@
 use std::{cell::RefCell, rc::Rc, sync::Arc};
 
-use ic_canisters::{governance::GovernanceCanisterWrapper, IcAgentCanisterClient};
-use ic_management_backend::{
-    health::HealthStatusQuerier,
-    lazy_git::LazyGit,
-    lazy_registry::LazyRegistry,
-    proposal::{ProposalAgent, ProposalAgentImpl},
-};
-use ic_management_types::Network;
-use log::warn;
-
 use crate::{
     artifact_downloader::{ArtifactDownloader, ArtifactDownloaderImpl},
     auth::{AuthOpts, AuthRequirement, Neuron},
@@ -21,6 +11,16 @@ use crate::{
     store::Store,
     subnet_manager::SubnetManager,
 };
+use ic_canisters::{governance::GovernanceCanisterWrapper, IcAgentCanisterClient};
+use ic_management_backend::{
+    health::HealthStatusQuerier,
+    lazy_git::LazyGit,
+    lazy_registry::LazyRegistry,
+    proposal::{ProposalAgent, ProposalAgentImpl},
+};
+use ic_management_types::Network;
+use log::warn;
+use url::Url;
 
 #[cfg(test)]
 mod unit_tests;
@@ -140,6 +140,10 @@ impl DreContext {
         let neuron = self.neuron().await?;
         let canister_client = neuron.auth.clone().create_canister_client(self.network.get_nns_urls().to_vec())?;
         Ok((neuron, canister_client))
+    }
+
+    pub fn get_nns_urls(&self) -> Vec<Url> {
+        self.network.get_nns_urls().to_vec()
     }
 
     async fn ic_admin(&self) -> anyhow::Result<Arc<dyn IcAdmin>> {

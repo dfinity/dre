@@ -1,64 +1,24 @@
-use async_trait::async_trait;
-use candid::{Decode, Encode};
-use ic_agent::Agent;
 use ic_base_types::PrincipalId;
-use ic_interfaces_registry::RegistryTransportRecord;
-use ic_nns_constants::REGISTRY_CANISTER_ID;
+use ic_interfaces_registry::RegistryRecord;
 use ic_protobuf::{
     registry::{crypto::v1::PublicKey, subnet::v1::SubnetListRecord},
     types::v1::SubnetId,
 };
-use ic_registry_canister_api::{Chunk, GetChunkRequest};
 use ic_registry_keys::make_crypto_threshold_signing_pubkey_key;
-use ic_registry_nns_data_provider::certification::decode_certified_deltas;
-
-use ic_registry_transport::pb::v1::{
-    RegistryGetChangesSinceRequest, RegistryGetLatestVersionResponse, RegistryGetValueRequest, RegistryGetValueResponse,
-};
+use ic_registry_nns_data_provider::registry::RegistryCanister;
 use ic_types::crypto::threshold_sig::ThresholdSigPublicKey;
 use prost::Message;
-
-use crate::IcAgentCanisterClient;
+use url::Url;
 
 pub struct RegistryCanisterWrapper {
-    pub agent: Agent,
-}
-
-impl From<IcAgentCanisterClient> for RegistryCanisterWrapper {
-    fn from(value: IcAgentCanisterClient) -> Self {
-        Self { agent: value.agent }
-    }
-}
-
-#[async_trait]
-impl ic_registry_transport::GetChunk for RegistryCanisterWrapper {
-    async fn get_chunk_without_validation(&self, content_sha256: &[u8]) -> Result<Vec<u8>, String> {
-        fn new_err(cause: impl std::fmt::Debug) -> String {
-            format!("Unable to fetch large registry record: {:?}", cause,)
-        }
-
-        // Call get_chunk.
-        let content_sha256 = Some(content_sha256.to_vec());
-        let request = Encode!(&GetChunkRequest { content_sha256 }).map_err(new_err)?;
-        let get_chunk_response: Vec<u8> = self
-            .agent
-            .query(&REGISTRY_CANISTER_ID.into(), "get_chunk")
-            .with_arg(request)
-            .call()
-            .await
-            .map_err(new_err)?;
-
-        // Extract chunk from get_chunk call.
-        let Chunk { content } = Decode!(&get_chunk_response, Result<Chunk, String>)
-            .map_err(new_err)? // unable to decode
-            .map_err(new_err)?; // Registry canister returned Err.
-        content.ok_or_else(|| new_err("content in get_chunk response is null (not even an empty string)"))
-    }
+    registry_canister: RegistryCanister,
 }
 
 impl RegistryCanisterWrapper {
-    pub fn new(agent: Agent) -> Self {
-        Self { agent }
+    pub fn new(urls: Vec<Url>) -> Self {
+        Self {
+            registry_canister: RegistryCanister::new(urls),
+        }
     }
 
     pub async fn get_subnets(&self) -> anyhow::Result<Vec<PrincipalId>> {
@@ -87,46 +47,19 @@ impl RegistryCanisterWrapper {
     }
 
     pub async fn get_latest_version(&self) -> anyhow::Result<u64> {
-        let response = self.agent.query(&REGISTRY_CANISTER_ID.into(), "get_latest_version").call().await?;
-
-        RegistryGetLatestVersionResponse::decode(response.as_slice())
-            .map_err(anyhow::Error::from)
-            .map(|r| r.version)
+        self.registry_canister.get_latest_version().await.map_err(anyhow::Error::from)
     }
 
-    pub async fn get_certified_changes_since(&self, version: u64) -> anyhow::Result<Vec<RegistryTransportRecord>> {
-        let request = RegistryGetChangesSinceRequest { version };
-        let mut buf = vec![];
-        request.encode(&mut buf)?;
-
-        let response = self
-            .agent
-            .query(&REGISTRY_CANISTER_ID.into(), "get_certified_changes_since")
-            .with_arg(buf)
-            .call()
-            .await?;
-
-        decode_certified_deltas(version, &REGISTRY_CANISTER_ID, &self.nns_public_key().await?, response.as_slice(), self)
+    pub async fn get_certified_changes_since(&self, version: u64) -> anyhow::Result<Vec<RegistryRecord>> {
+        self.registry_canister
+            .get_certified_changes_since(version, &self.nns_public_key().await?)
             .await
             .map_err(|e| anyhow::anyhow!("Error decoding certificed deltas: {:?}", e))
             .map(|(res, _, _)| res)
     }
 
     async fn get_value(&self, request: String) -> anyhow::Result<Vec<u8>> {
-        let request = RegistryGetValueRequest {
-            key: request.as_bytes().to_vec(),
-            ..Default::default()
-        };
-
-        let mut buf = vec![];
-        request.encode(&mut buf)?;
-        let response = self.agent.query(&REGISTRY_CANISTER_ID.into(), "get_value").with_arg(buf).call().await?;
-
-        let decoded_resp = RegistryGetValueResponse::decode(&response[..])?;
-        if let Some(error) = decoded_resp.error {
-            return Err(anyhow::anyhow!(error.reason));
-        }
-
-        Ok(decoded_resp.value)
+        let (response, _) = self.registry_canister.get_value(request.as_bytes().to_vec(), None).await?;
+        Ok(response)
     }
 }
