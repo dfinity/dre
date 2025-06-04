@@ -81,7 +81,7 @@ dre get            # Wrapper around ic-admin get-* commands
 dre propose        # Wrapper around ic-admin propose-* commands
 dre firewall       # Submitting proposals for firewall updates
 dre node-metrics   # Getting the trustworthy node metrics
-dre update-authorized-subnets  # Automatically updating the list of public IC subnets, based on subnet utilization
+dre update-default-subnets  # Automatically updating the list of default (public) IC subnets, based on subnet utilization
 dre neuron         # Neuron topping up and checking balance
 ```
 

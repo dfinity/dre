@@ -18,7 +18,7 @@ impl From<IcAgentCanisterClient> for CyclesMintingCanisterWrapper {
 }
 
 impl CyclesMintingCanisterWrapper {
-    pub async fn get_authorized_subnets(&self) -> anyhow::Result<Vec<PrincipalId>> {
+    pub async fn get_default_subnets(&self) -> anyhow::Result<Vec<PrincipalId>> {
         self.agent
             .query(&self.canister_id.into(), "get_default_subnets", candid::encode_one(())?)
             .await
