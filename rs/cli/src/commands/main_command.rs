@@ -12,7 +12,7 @@ use super::proposals::Proposals;
 use super::propose::Propose;
 use super::qualify::Qualify;
 use super::registry::Registry;
-use super::update_authorized_subnets::UpdateAuthorizedSubnets;
+use super::update_default_subnets::UpdateDefaultSubnets;
 use super::update_unassigned_nodes::UpdateUnassignedNodes;
 use super::upgrade::Upgrade;
 use super::version::Version;
@@ -33,7 +33,7 @@ pub struct MainCommand {
     pub subcommands: Subcommands,
 }
 
-impl_executable_command_for_enums! { MainCommand, DerToPrincipal, Network, Subnet, Get, Propose, UpdateUnassignedNodes, Version, NodeMetrics, HostOs, Nodes, ApiBoundaryNodes, Vote, Registry, Firewall, Upgrade, Proposals, Completions, Qualify, UpdateAuthorizedSubnets, Neuron, Governance }
+impl_executable_command_for_enums! { MainCommand, DerToPrincipal, Network, Subnet, Get, Propose, UpdateUnassignedNodes, Version, NodeMetrics, HostOs, Nodes, ApiBoundaryNodes, Vote, Registry, Firewall, Upgrade, Proposals, Completions, Qualify, UpdateDefaultSubnets, Neuron, Governance }
 
 #[derive(Args, Debug)]
 pub struct Completions {

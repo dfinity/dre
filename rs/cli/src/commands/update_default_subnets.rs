@@ -20,10 +20,11 @@ use crate::{
 const DEFAULT_CANISTER_LIMIT: u64 = 60_000;
 const DEFAULT_STATE_SIZE_BYTES_LIMIT: u64 = 400 * 1024 * 1024 * 1024; // 400GB
 
-const DEFAULT_AUTHORIZED_SUBNETS_CSV: &str = include_str!(concat!(env!("OUT_DIR"), "/non_default_subnets.csv"));
+const EMBEDDED_NON_DEFAULT_SUBNETS_CSV: &str = include_str!(concat!(env!("OUT_DIR"), "/non_default_subnets.csv"));
 
 #[derive(Args, Debug)]
-pub struct UpdateAuthorizedSubnets {
+#[clap(about = "Update the list of default subnets in the registry", visible_alias = "update-authorized-subnets")]
+pub struct UpdateDefaultSubnets {
     /// Path to csv file containing the blacklist.
     #[clap(long)]
     path: Option<PathBuf>,
@@ -44,7 +45,7 @@ pub struct UpdateAuthorizedSubnets {
     pub submission_parameters: SubmissionParameters,
 }
 
-impl ExecutableCommand for UpdateAuthorizedSubnets {
+impl ExecutableCommand for UpdateDefaultSubnets {
     fn require_auth(&self) -> AuthRequirement {
         AuthRequirement::Neuron
     }
@@ -74,7 +75,7 @@ impl ExecutableCommand for UpdateAuthorizedSubnets {
         let (_, agent) = ctx.create_ic_agent_canister_client().await?;
 
         let cmc = CyclesMintingCanisterWrapper::from(agent.clone());
-        let default_subnets = cmc.get_authorized_subnets().await?;
+        let default_subnets = cmc.get_default_subnets().await?;
         let default_subnets: BTreeSet<PrincipalId> = default_subnets.into_iter().collect();
 
         let mut verified_subnets_to_open = self.open_verified_subnets;
@@ -162,13 +163,13 @@ impl ExecutableCommand for UpdateAuthorizedSubnets {
     }
 }
 
-impl UpdateAuthorizedSubnets {
+impl UpdateDefaultSubnets {
     fn parse_csv(&self) -> anyhow::Result<Vec<(String, String)>> {
         let contents = match &self.path {
             Some(p) => fs_err::read_to_string(p)?,
             None => {
                 info!("Using embedded version of authorized subnets csv that is added during build time");
-                DEFAULT_AUTHORIZED_SUBNETS_CSV.to_string()
+                EMBEDDED_NON_DEFAULT_SUBNETS_CSV.to_string()
             }
         };
         let mut ret = vec![];
