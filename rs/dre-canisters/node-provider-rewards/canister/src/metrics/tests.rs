@@ -1,7 +1,7 @@
 use crate::metrics::{MetricsManager, UnixTsNanos};
 use crate::metrics_types::{NodeMetricsDailyStored, SubnetMetricsDailyKeyStored};
 use ic_base_types::{NodeId, PrincipalId, SubnetId};
-use ic_cdk::call::{CallPerformFailed, CallResult};
+use ic_cdk::api::call::{CallResult, RejectionCode};
 use ic_management_canister_types_private::{NodeMetrics, NodeMetricsHistoryArgs, NodeMetricsHistoryResponse};
 use ic_stable_structures::memory_manager::{MemoryId, VirtualMemory};
 use ic_stable_structures::DefaultMemoryImpl;
@@ -83,7 +83,7 @@ async fn subnets_to_retry_filled() {
     let mut mock = mock::MockCanisterClient::new();
     mock.expect_node_metrics_history()
         .times(1)
-        .return_const(CallResult::Err(CallPerformFailed.into()));
+        .return_const(CallResult::Err((RejectionCode::Unknown, "Error".to_string())));
     mock.expect_node_metrics_history()
         .times(1)
         .return_const(CallResult::Ok(node_metrics_history_gen(2)));
@@ -124,7 +124,8 @@ async fn multiple_subnets_metrics_added_correctly() {
 #[tokio::test]
 async fn retry_count_increments_on_failure() {
     let mut mock = mock::MockCanisterClient::new();
-    mock.expect_node_metrics_history().return_const(CallResult::Err(CallPerformFailed.into()));
+    mock.expect_node_metrics_history()
+        .return_const(CallResult::Err((RejectionCode::Unknown, "Temporary error".to_string())));
 
     let mm = MetricsManager::new(mock);
     let subnet_1 = subnet_id(1);
@@ -145,7 +146,8 @@ async fn no_metrics_added_when_call_fails() {
     let mut mock = mock::MockCanisterClient::new();
     let subnet_1 = subnet_id(1);
 
-    mock.expect_node_metrics_history().return_const(CallResult::Err(CallPerformFailed.into()));
+    mock.expect_node_metrics_history()
+        .return_const(CallResult::Err((RejectionCode::Unknown, "Error".to_string())));
     let mm = MetricsManager::new(mock);
 
     mm.update_subnets_metrics(vec![subnet_1]).await;
@@ -160,7 +162,7 @@ async fn partial_failures_are_handled_correctly() {
     let mut mock = mock::MockCanisterClient::new();
     mock.expect_node_metrics_history().returning(move |subnet| {
         if SubnetId::from(subnet.subnet_id) == subnet_1 {
-            CallResult::Err(CallPerformFailed.into())
+            CallResult::Err((RejectionCode::Unknown, "Error".to_string()))
         } else {
             CallResult::Ok(node_metrics_history_gen(1))
         }

@@ -28,8 +28,7 @@ impl ExecutableCommand for UpdateUnassignedNodes {
         let nns_subnet_id = match &self.nns_subnet_id {
             Some(n) => n.to_owned(),
             None => {
-                let (_, canister_agent) = ctx.create_ic_agent_canister_client().await?;
-                let registry_client = RegistryCanisterWrapper::new(canister_agent.agent);
+                let registry_client = RegistryCanisterWrapper::new(ctx.get_nns_urls());
                 let subnet_list = registry_client.get_subnets().await?;
                 subnet_list
                     .first()

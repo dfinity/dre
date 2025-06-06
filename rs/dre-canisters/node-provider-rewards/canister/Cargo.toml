@@ -13,7 +13,6 @@ crate-type = ["cdylib"]
 [dependencies]
 async-trait = { workspace = true }
 chrono = { version = "0.4.41", default-features = false, features = [] }
-ic-canisters-http-types = { workspace = true }
 ic-cdk = { workspace = true }
 ic-cdk-timers = { workspace = true }
 ic-cdk-macros = { workspace = true }
@@ -38,6 +37,7 @@ mockall = { workspace = true }
 rewards-calculation = { workspace = true }
 node-provider-rewards-api = { workspace = true }
 serde_cbor = "0.11.2"
+ic-http-types = { workspace = true }
 
 [dev-dependencies]
 tokio = { workspace = true }

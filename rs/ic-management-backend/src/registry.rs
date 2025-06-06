@@ -9,7 +9,6 @@ use futures::TryFutureExt;
 use ic_base_types::NodeId;
 use ic_base_types::{RegistryVersion, SubnetId};
 use ic_canisters::registry::RegistryCanisterWrapper;
-use ic_canisters::IcAgentCanisterClient;
 use ic_interfaces_registry::{RegistryClient, RegistryValue, ZERO_REGISTRY_VERSION};
 use ic_management_types::{
     Artifact, ArtifactReleases, Datacenter, DatacenterOwner, Guest, Network, NetworkError, Node, NodeProviderDetails, NodeProvidersResponse,
@@ -950,8 +949,7 @@ pub async fn sync_local_store(target_network: &Network) -> anyhow::Result<()> {
 pub async fn sync_local_store_with_path(target_network: &Network, local_registry_path: &PathBuf) -> anyhow::Result<()> {
     let local_store = Arc::new(LocalStoreImpl::new(local_registry_path.clone()));
     let nns_urls = target_network.get_nns_urls().clone();
-    let agent = IcAgentCanisterClient::from_anonymous(nns_urls.first().unwrap().clone()).unwrap();
-    let registry_canister: RegistryCanisterWrapper = agent.into();
+    let registry_canister: RegistryCanisterWrapper = RegistryCanisterWrapper::new(nns_urls);
     let mut local_latest_version = if !Path::new(&local_registry_path).exists() {
         ZERO_REGISTRY_VERSION
     } else {

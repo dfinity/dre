@@ -8,6 +8,7 @@ documentation.workspace = true
 license.workspace = true
 
 [dependencies]
+async-trait = { workspace = true }
 anyhow = { workspace = true }
 byteorder = "1.5.0"
 backoff = { workspace = true }
@@ -22,6 +23,7 @@ ic-nns-governance = { workspace = true }
 ic-nns-governance-api = { workspace = true }
 ic-protobuf = { workspace = true }
 ic-registry-transport = { workspace = true }
+ic-registry-canister-api = { workspace = true }
 ic-utils = { workspace = true }
 log = { workspace = true }
 prost = { workspace = true }

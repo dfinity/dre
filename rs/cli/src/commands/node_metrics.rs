@@ -39,17 +39,18 @@ pub struct NodeMetrics {
 }
 
 impl NodeMetrics {
-    async fn get_trustworthy_metrics(&self, canister_agent: ic_canisters::IcAgentCanisterClient) -> anyhow::Result<CLINodeMetrics> {
+    async fn get_trustworthy_metrics(
+        &self,
+        registry_client: RegistryCanisterWrapper,
+        canister_agent: ic_canisters::IcAgentCanisterClient,
+    ) -> anyhow::Result<CLINodeMetrics> {
         let mut metrics_by_subnet = BTreeMap::new();
         let wallet: CanisterId = CanisterId::from_str(self.wallet.as_ref().unwrap().as_str())?;
         let wallet_client = Arc::new(WalletCanisterWrapper::new(canister_agent.agent.clone()));
 
         let subnets = match &self.subnet_ids.is_empty() {
             false => self.subnet_ids.clone(),
-            true => {
-                let registry_client = RegistryCanisterWrapper::new(canister_agent.agent);
-                registry_client.get_subnets().await?
-            }
+            true => registry_client.get_subnets().await?,
         };
 
         let handles = subnets
@@ -130,10 +131,11 @@ impl ExecutableCommand for NodeMetrics {
 
     async fn execute(&self, ctx: crate::ctx::DreContext) -> anyhow::Result<()> {
         let (_, canister_agent) = ctx.create_ic_agent_canister_client().await?;
+        let registry_client = RegistryCanisterWrapper::new(ctx.get_nns_urls());
         info!("Started action...");
 
         let metrics_by_subnet = if self.trustworthy {
-            self.get_trustworthy_metrics(canister_agent).await
+            self.get_trustworthy_metrics(registry_client, canister_agent).await
         } else {
             self.get_untrusted_metrics(canister_agent).await
         }?;
