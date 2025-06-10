@@ -3,3 +3,6 @@
 # The full list of features can be found here:
 # https://github.com/dfinity/dre/blob/main/rs/ic-management-types/src/lib.rs#L317-L324
 features:
+  - feature: node_provider
+    value: wlxga-ebupj-sj2nf-g3sii-75i6b-oh64s-qmq7u-gmros-vi2if-3ktdv-cqe
+    explanation: Handing over the servers to another Node provider.
