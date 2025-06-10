@@ -714,7 +714,7 @@ class Reconciler:
 
                     urls = version_package_urls(release_commit, v.os_kind)
                     unelect_versions = []
-                    if v.is_base == 0:
+                    if v.is_base:
                         unelect_versions.extend(
                             versions_to_unelect(
                                 index,
