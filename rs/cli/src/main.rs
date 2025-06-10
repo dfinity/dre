@@ -13,7 +13,9 @@ use log::{info, warn};
 async fn main() -> anyhow::Result<()> {
     init_logger();
     let curr_version = env!("CARGO_PKG_VERSION");
-    info!("Running version {}", curr_version);
+    if curr_version != "0.0.0" {
+        info!("Running version {}", curr_version);
+    }
 
     dotenv().ok();
 

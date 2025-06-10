@@ -696,6 +696,7 @@ class Reconciler:
                     revlogger.info("Preparing proposal for %s", release_commit)
                     try:
                         checksum = version_package_checksum(release_commit, v.os_kind)
+                        revlogger.info("Package checksum is %s", checksum)
                     except requests.exceptions.HTTPError as e:
                         if (
                             hasattr(e, "response")
@@ -732,6 +733,10 @@ class Reconciler:
                                     )
                                 ],
                             ),
+                        )
+                        revlogger.info(
+                            "The following revisions will be unelected: %s",
+                            ", ".join(unelect_versions),
                         )
                     try:
                         proposal_id = self.dre.propose_to_revise_elected_os_versions(
