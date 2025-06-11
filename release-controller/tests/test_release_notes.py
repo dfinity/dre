@@ -209,8 +209,7 @@ def test_release_notes(ic_repo: GitRepo) -> None:
 
 <span style="color: red">Please cross-out your team once you finished the review</span>
 
-- @team-execution
-- @team-messaging
+
 
 # Release Notes for [release-2024-08-02_01-30-base](https://github.com/dfinity/ic/tree/release-2024-08-02_01-30-base) (`3d0b3f10417fc6708e8b5d844a0bac5e86f3e17d`)
 This release is based on changes since [release-2024-07-25_21-03-base](https://dashboard.internetcomputer.org/release/2c0b76cfc7e596d5c4304cff5222a2619294c8c1) (`2c0b76cfc7e596d5c4304cff5222a2619294c8c1`).
