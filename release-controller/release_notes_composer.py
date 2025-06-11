@@ -90,7 +90,7 @@ GUESTOS_RELEASE_NOTES_REVIEWERS = [
 ]
 
 HOSTOS_RELEASE_NOTES_REVIEWERS = [
-    Team("node", "@node-team", "S027838EY30", False),
+    Team("node", "@node-team", "S027838EY30", True),
 ]
 
 TYPE_PRETTY_MAP = {
