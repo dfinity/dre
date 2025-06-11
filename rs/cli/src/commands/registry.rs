@@ -219,7 +219,11 @@ fn fetch_max_rewardable_count(record: &Operator, nodes_in_registry: u64) -> BTre
     if nodes_in_registry == 0 {
         return BTreeMap::new();
     }
-    panic!("This should never happen");
+    warn!(
+        "Node operator {} has {} nodes in registry with {} node allowance total, but {} reward types!  The rewardable nodes by reward type for this operator are: {:?}",
+        record.principal, nodes_in_registry, node_allowance_total, nodes_rewards_types_count, record.rewardable_nodes
+    );
+    BTreeMap::new()
 }
 
 async fn get_node_operators(local_registry: &Arc<dyn LazyRegistry>, network: &Network) -> anyhow::Result<IndexMap<PrincipalId, NodeOperator>> {
