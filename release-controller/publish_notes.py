@@ -169,6 +169,12 @@ class PublishNotesClient:
                 "Could not find release notes section for version %s" % version
             )
 
+        # Attempt to find NO text between the Review checklist sentence and the Release notes headline.
+        # The post_process_release_notes function above should have removed all crossed-out teams
+        # from the list of teams that are supposed to review the changelog.  If that list was empty
+        # because all teams elected to not review the changelog, then this should immediately succeed
+        # and the reconciler (which calls this code) should proceed immediately with publishing the
+        # post-processed changelog (from Google Drive) to Github.
         if not re.match(
             r"^Review checklist=+Please cross(\\|)-out your team once you finished the review\s*$",
             changelog[:release_notes_start].replace("\n", ""),

@@ -5,8 +5,8 @@ from slack_sdk.http_retry.handler import RetryHandler
 from slack_sdk.webhook import WebhookClient
 import typing
 
-from const import OsKind, GUESTOS, HOSTOS
-from release_notes_composer import HOSTOS_RELEASE_NOTES_REVIEWERS
+from const import OsKind, GUESTOS
+from release_notes_composer import RELEASE_NOTES_REVIEWERS
 
 
 class SlackAnnouncerProtocol(typing.Protocol):
@@ -27,9 +27,7 @@ class SlackAnnouncer(SlackAnnouncerProtocol):
         google_doc_url: str,
         os_kind: OsKind,
     ) -> None:
-        announce_release_on_slack(
-            webhook, version_name, google_doc_url, os_kind
-        )
+        announce_release_on_slack(webhook, version_name, google_doc_url, os_kind)
 
 
 def announce_release_on_slack(
@@ -41,20 +39,20 @@ def announce_release_on_slack(
     slack = WebhookClient(
         url=slack_url, retry_handlers=[RetryHandler(max_retry_count=2)]
     )
-    notify_line = (
-        " ".join(
-            [
-                f"<!subteam^{t.slack_id}>"
-                for t in HOSTOS_RELEASE_NOTES_REVIEWERS
-                if t.send_announcement
-            ]
-        )
-        if os_kind == HOSTOS
-        else "everyone"
+    notify_line = " ".join(
+        [
+            f"<!subteam^{t.slack_id}>"
+            for t in RELEASE_NOTES_REVIEWERS[os_kind]
+            if t.send_announcement
+        ]
     )
+    if not notify_line:
+        # No teams elected to be notified about this wondrous event.
+        # Revert to Farnsworth mode.
+        notify_line = "everyone"
     slack.send(
         text=f"""\
-Hi {notify_line}!
+Good news {notify_line}!
 Here are the {os_kind} release notes for the rollout of <https://github.com/dfinity/ic/tree/{version_name}|`{version_name}`> <{google_doc_url}|Release Notes> :railway_car:
 """,
     )
