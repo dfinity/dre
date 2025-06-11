@@ -82,15 +82,15 @@ class Team:
 GUESTOS_RELEASE_NOTES_REVIEWERS = [
     Team("consensus", "@team-consensus", "SRJ3R849E", False),
     Team("crypto", "@team-crypto", "SU7BZQ78E", False),
-    Team("execution", "@team-execution", "S01A577UL56", True),
-    Team("messaging", "@team-messaging", "S01SVC713PS", True),
+    Team("execution", "@team-execution", "S01A577UL56", False),
+    Team("messaging", "@team-messaging", "S01SVC713PS", False),
     Team("networking", "@team-networking", "SR6KC1DMZ", False),
     Team("node", "@node-team", "S027838EY30", False),
     Team("runtime", "@team-runtime", "S03BM6C0CJY", False),
 ]
 
 HOSTOS_RELEASE_NOTES_REVIEWERS = [
-    Team("node", "@node-team", "S027838EY30", True)
+    Team("node", "@node-team", "S027838EY30", False),
 ]
 
 TYPE_PRETTY_MAP = {
