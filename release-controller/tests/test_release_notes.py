@@ -9,7 +9,7 @@ from release_notes_composer import (
 )
 from commit_annotation import LocalCommitChangeDeterminator, COMMIT_BELONGS
 from git_repo import GitRepo
-from const import GUESTOS
+from const import GUESTOS, HOSTOS
 
 
 def test_get_change_description_for_commit(ic_repo: GitRepo) -> None:
@@ -190,7 +190,7 @@ def test_get_change_description_for_commit(ic_repo: GitRepo) -> None:
     )
 
 
-def test_release_notes(ic_repo: GitRepo) -> None:
+def test_guestos_release_notes(ic_repo: GitRepo) -> None:
     belongs = LocalCommitChangeDeterminator(ic_repo)
     assert (
         prepare_release_notes(
@@ -290,6 +290,100 @@ To see a full list of commits added since last release, compare the revisions on
 * ~~author: Dani Shar | [`d8a956a2e`](https://github.com/dfinity/ic/commit/d8a956a2e) Interface(test-driver): Increase `max_concurrent_requests` in system test agent to 10_000 ([#715](https://github.com/dfinity/ic/pull/715)) [AUTO-EXCLUDED:Not modifying GuestOS]~~
 * ~~author: Dani Shar | [`c6cde0abe`](https://github.com/dfinity/ic/commit/c6cde0abe) Interface(call-v3): Make agent to use the v3 call endpoint for system tests ([#635](https://github.com/dfinity/ic/pull/635)) [AUTO-EXCLUDED:Not modifying GuestOS]~~
 * ~~author: oggy      | [`32bc2c260`](https://github.com/dfinity/ic/commit/32bc2c260) Interface,Message Routing: Use mainnet binaries for the queues compatibility test ([#419](https://github.com/dfinity/ic/pull/419)) [AUTO-EXCLUDED:Not modifying GuestOS]~~
+"""
+    )
+
+    res = prepare_release_notes(
+        SecurityReleaseNotesRequest(
+            "release-2024-08-02_01-30-base",
+            "3d0b3f10417fc6708e8b5d844a0bac5e86f3e17d",
+            GUESTOS,
+        ),
+        ic_repo,
+        belongs,
+    )
+    assert "accordance" in res, f"No security caveat present in {res}"
+    assert "Release Notes for" in res, f"No Release Notes headline present in {res}"
+
+
+def test_hostos_release_notes(ic_repo: GitRepo) -> None:
+    belongs = LocalCommitChangeDeterminator(ic_repo)
+    assert (
+        prepare_release_notes(
+            OrdinaryReleaseNotesRequest(
+                "release-2025-04-16_11-12-base",
+                "c9210f4d299546658760465d7fde93913989f70b",
+                "release-2025-04-11_13-20-base",
+                "579b8ba3a31341f354f4ddb3d60ac44548a91bc2",
+                HOSTOS,
+            ),
+            ic_repo,
+            belongs,
+        )
+        == """\
+# Review checklist
+
+<span style="color: red">Please cross-out your team once you finished the review</span>
+
+- @node-team
+
+# Release Notes for [release-2025-04-16_11-12-base](https://github.com/dfinity/ic/tree/release-2025-04-16_11-12-base) (`c9210f4d299546658760465d7fde93913989f70b`)
+This release is based on changes since [release-2025-04-11_13-20-base](https://dashboard.internetcomputer.org/release/579b8ba3a31341f354f4ddb3d60ac44548a91bc2) (`579b8ba3a31341f354f4ddb3d60ac44548a91bc2`).
+
+Please note that some commits may be excluded from this release if they're not relevant, or not modifying the HostOS image.
+Additionally, descriptions of some changes might have been slightly modified to fit the release notes format.
+
+To see a full list of commits added since last release, compare the revisions on [GitHub](https://github.com/dfinity/ic/compare/release-2025-04-11_13-20-base...release-2025-04-16_11-12-base).
+## Features:
+* author: kpop      | [`6b953276b`](https://github.com/dfinity/ic/commit/6b953276b) Consensus,Interface: periodically fetch the nns delegation ([#3902](https://github.com/dfinity/ic/pull/3902))
+* author: mich      | [`66ffd5231`](https://github.com/dfinity/ic/commit/66ffd5231) Execution,Interface: Charge for snapshot data download ([#4787](https://github.com/dfinity/ic/pull/4787))
+* author: mich      | [`23abac589`](https://github.com/dfinity/ic/commit/23abac589) Execution,Interface: Enable snapshot data download in statemachine tests ([#4729](https://github.com/dfinity/ic/pull/4729))
+* ~~author: max-      | [`c00595a6d`](https://github.com/dfinity/ic/commit/c00595a6d) Interface(registry): Node Rewards can target a specific version ([#4828](https://github.com/dfinity/ic/pull/4828)) [AUTO-EXCLUDED:Changed files are excluded by file path filter]~~
+## Bugfixes:
+* author: Leon Tan  | [`56b0c90d2`](https://github.com/dfinity/ic/commit/56b0c90d2) Consensus,Interface(consnesus): Fix reshare chain key validation ([#4829](https://github.com/dfinity/ic/pull/4829))
+* author: mich      | [`7575e49a4`](https://github.com/dfinity/ic/commit/7575e49a4) Execution,Interface: Improve constants in wasm chunk store ([#4712](https://github.com/dfinity/ic/pull/4712))
+* author: Math Björ | [`5599a9860`](https://github.com/dfinity/ic/commit/5599a9860) Interface(ICRC_Ledger): Recompute ICRC ledger certified data in post upgrade ([#4796](https://github.com/dfinity/ic/pull/4796))
+* author: Shuo Wang | [`79f0a7d1f`](https://github.com/dfinity/ic/commit/79f0a7d1f) Interface,Message Routing: switch to checkpoint for wasm binaries in canister snapshots ([#4777](https://github.com/dfinity/ic/pull/4777))
+* author: Bas  van  | [`c9210f4d2`](https://github.com/dfinity/ic/commit/c9210f4d2) Interface,Node: revert "chore: unifying downloading logic ([#4805](https://github.com/dfinity/ic/pull/4805))" ([#4836](https://github.com/dfinity/ic/pull/4836))
+* ~~author: Igor Novg | [`e564b0380`](https://github.com/dfinity/ic/commit/e564b0380) Node: api bn: update `ic-gateway`, increase h2 streams, lower shedding threshold ([#4818](https://github.com/dfinity/ic/pull/4818)) [AUTO-EXCLUDED:Changed files are excluded by file path filter]~~
+## Chores:
+* author: Andr Batt | [`b60e4861d`](https://github.com/dfinity/ic/commit/b60e4861d) Consensus,Interface(node): Improve orchestrator node_operator_private_key.pem logging ([#4753](https://github.com/dfinity/ic/pull/4753))
+* author: kpop      | [`6876dcac8`](https://github.com/dfinity/ic/commit/6876dcac8) Consensus,Interface(ic-replay): add more logs to `ic-replay` ([#4685](https://github.com/dfinity/ic/pull/4685))
+* author: Adam Brat | [`d6c72756c`](https://github.com/dfinity/ic/commit/d6c72756c) Execution,Interface: Remove old sandbox rpc calls ([#4728](https://github.com/dfinity/ic/pull/4728))
+* author: Andr Bere | [`bd371e73a`](https://github.com/dfinity/ic/commit/bd371e73a) Execution,Interface: EXC: Fix flaky monitor thread test ([#4789](https://github.com/dfinity/ic/pull/4789))
+* author: Shuo Wang | [`5c0d15487`](https://github.com/dfinity/ic/commit/5c0d15487) Interface,Message Routing: Deserialize wasm with hash always present ([#4734](https://github.com/dfinity/ic/pull/4734))
+* author: Niko Milo | [`943d3bf19`](https://github.com/dfinity/ic/commit/943d3bf19) Interface,Node: unifying downloading logic ([#4805](https://github.com/dfinity/ic/pull/4805))
+* author: pr-c      | [`896a78fbe`](https://github.com/dfinity/ic/commit/896a78fbe) Node: Update Base Image Refs [2025-04-15-0151] ([#4814](https://github.com/dfinity/ic/pull/4814))
+* author: r-bi      | [`f9a54926d`](https://github.com/dfinity/ic/commit/f9a54926d) Node: export hostos config as metric ([#4785](https://github.com/dfinity/ic/pull/4785))
+## Refactoring:
+* ~~author: jaso      | [`af2c159bf`](https://github.com/dfinity/ic/commit/af2c159bf) Interface(nns): Initialize NNS Governance with candid ([#4797](https://github.com/dfinity/ic/pull/4797)) [AUTO-EXCLUDED:Changed files are excluded by file path filter]~~
+## Tests:
+* ~~author: max-      | [`8bb84553e`](https://github.com/dfinity/ic/commit/8bb84553e) Interface(node_rewards): Create a test to prove same results as registry ([#4754](https://github.com/dfinity/ic/pull/4754)) [AUTO-EXCLUDED:Changed files are excluded by file path filter]~~
+* ~~author: Arsh Ter- | [`d412bc7c7`](https://github.com/dfinity/ic/commit/d412bc7c7) Interface(sns): Faster set-following tests ([#4772](https://github.com/dfinity/ic/pull/4772)) [AUTO-EXCLUDED:Changed files are excluded by file path filter]~~
+## ~~Other changes not modifying HostOS~~
+* ~~author: Dani Wong | [`ecee8457c`](https://github.com/dfinity/ic/commit/ecee8457c) Interface(registry): Library for chunkifying whale registry mutations. ([#4761](https://github.com/dfinity/ic/pull/4761)) [AUTO-EXCLUDED:Not modifying HostOS]~~
+* ~~author: jaso      | [`13b6e2630`](https://github.com/dfinity/ic/commit/13b6e2630) Interface(nns): Add a timer task to perform voting power snapshots ([#4405](https://github.com/dfinity/ic/pull/4405)) [AUTO-EXCLUDED:Not modifying HostOS]~~
+* ~~author: jaso      | [`e41b1f0c4`](https://github.com/dfinity/ic/commit/e41b1f0c4) Interface(nns): Define NeuronAsyncLock to be compatible with safer access pattern to global state ([#4774](https://github.com/dfinity/ic/pull/4774)) [AUTO-EXCLUDED:Not modifying HostOS]~~
+* ~~author: jaso      | [`6aca5540e`](https://github.com/dfinity/ic/commit/6aca5540e) Interface(nns): Add an index for maturity disbursement based on finalization timestamp ([#4770](https://github.com/dfinity/ic/pull/4770)) [AUTO-EXCLUDED:Not modifying HostOS]~~
+* ~~author: jaso      | [`1c46b8a2c`](https://github.com/dfinity/ic/commit/1c46b8a2c) Interface(nns): Turn off disburse maturity which was incorrectly turned on ([#4827](https://github.com/dfinity/ic/pull/4827)) [AUTO-EXCLUDED:Not modifying HostOS]~~
+* ~~author: greg      | [`34404b5a8`](https://github.com/dfinity/ic/commit/34404b5a8) Interface: re-enable `ic_xc_cketh_test` ([#4780](https://github.com/dfinity/ic/pull/4780)) [AUTO-EXCLUDED:Not modifying HostOS]~~
+* ~~author: stie      | [`51f052788`](https://github.com/dfinity/ic/commit/51f052788) Interface,Message Routing: Make the Heartbeat Counter on the Random Traffic Canister increment only for substantial Heartbeats. ([#4807](https://github.com/dfinity/ic/pull/4807)) [AUTO-EXCLUDED:Not modifying HostOS]~~
+* ~~author: venk      | [`ce266e1df`](https://github.com/dfinity/ic/commit/ce266e1df) Execution,Interface(fuzzing): Switch to ExecutionTest framework from StateMachine ([#4786](https://github.com/dfinity/ic/pull/4786)) [AUTO-EXCLUDED:Not modifying HostOS]~~
+* ~~author: Dimi Sarl | [`7c0b90e5a`](https://github.com/dfinity/ic/commit/7c0b90e5a) Interface: Add a Contributing.md file in rs/embedders ([#4677](https://github.com/dfinity/ic/pull/4677)) [AUTO-EXCLUDED:Not modifying HostOS]~~
+* ~~author: Dani Wong | [`28ef5ff67`](https://github.com/dfinity/ic/commit/28ef5ff67) Interface(nns): Delete flags related to periodic confirmation of following. ([#3782](https://github.com/dfinity/ic/pull/3782)) [AUTO-EXCLUDED:Not modifying HostOS]~~
+* ~~author: max-      | [`971eecc54`](https://github.com/dfinity/ic/commit/971eecc54) Interface(nns): update changelogs ([#4793](https://github.com/dfinity/ic/pull/4793)) [AUTO-EXCLUDED:Not modifying HostOS]~~
+* ~~author: Paul Liu  | [`39c02b84c`](https://github.com/dfinity/ic/commit/39c02b84c) Interface(ckbtc): Upgrade the btc checker ([#4709](https://github.com/dfinity/ic/pull/4709)) [AUTO-EXCLUDED:Not modifying HostOS]~~
+* ~~author: pr-c      | [`19523bdab`](https://github.com/dfinity/ic/commit/19523bdab) Owners: Update Mainnet IC revisions canisters file ([#4809](https://github.com/dfinity/ic/pull/4809)) [AUTO-EXCLUDED:Not modifying HostOS]~~
+* ~~author: pr-c      | [`44558846e`](https://github.com/dfinity/ic/commit/44558846e) Owners: Update Mainnet IC revisions canisters file ([#4808](https://github.com/dfinity/ic/pull/4808)) [AUTO-EXCLUDED:Not modifying HostOS]~~
+* ~~author: pr-c      | [`512cf412f`](https://github.com/dfinity/ic/commit/512cf412f) Owners: Update Mainnet IC revisions file ([#4806](https://github.com/dfinity/ic/pull/4806)) [AUTO-EXCLUDED:Not modifying HostOS]~~
+* ~~author: pr-c      | [`d95941df2`](https://github.com/dfinity/ic/commit/d95941df2) Owners: Update Mainnet IC revisions file ([#4802](https://github.com/dfinity/ic/pull/4802)) [AUTO-EXCLUDED:Not modifying HostOS]~~
+* ~~author: Nico Matt | [`bc4751117`](https://github.com/dfinity/ic/commit/bc4751117) Owners(IDX): clean up execlogs workflows ([#4791](https://github.com/dfinity/ic/pull/4791)) [AUTO-EXCLUDED:Not modifying HostOS]~~
+* ~~author: Nico Matt | [`800d9a1a3`](https://github.com/dfinity/ic/commit/800d9a1a3) Owners(IDX): use execution log for determinism checks ([#4771](https://github.com/dfinity/ic/pull/4771)) [AUTO-EXCLUDED:Not modifying HostOS]~~
+* ~~author: Paul Liu  | [`c90a65062`](https://github.com/dfinity/ic/commit/c90a65062) Interface(ckbtc): Clean up types used by ckbtc minter ([#4757](https://github.com/dfinity/ic/pull/4757)) [AUTO-EXCLUDED:Not modifying HostOS]~~
+* ~~author: Leon Tan  | [`593392e05`](https://github.com/dfinity/ic/commit/593392e05) Consensus,Interface(consensus): Increase number of retries of get signature in system tests ([#4835](https://github.com/dfinity/ic/pull/4835)) [AUTO-EXCLUDED:Not modifying HostOS]~~
+* ~~author: Leo  Eich | [`3e3a91cb3`](https://github.com/dfinity/ic/commit/3e3a91cb3) Consensus,Interface: Increase subnet size to 4 nodes in recovery tests ([#4830](https://github.com/dfinity/ic/pull/4830)) [AUTO-EXCLUDED:Not modifying HostOS]~~
+* ~~author: Bas  van  | [`f46f61285`](https://github.com/dfinity/ic/commit/f46f61285) Execution,Interface(IDX): move //rs/execution_environment:execution_environment_misc_integration_tests/dts to its own target ([#4711](https://github.com/dfinity/ic/pull/4711)) [AUTO-EXCLUDED:Not modifying HostOS]~~
+* ~~author: Math Björ | [`02eb45caf`](https://github.com/dfinity/ic/commit/02eb45caf) Interface(ICRC_Ledger): Remove migration-related checks in ICRC ledger suite golden state test ([#4782](https://github.com/dfinity/ic/pull/4782)) [AUTO-EXCLUDED:Not modifying HostOS]~~
 """
     )
 
