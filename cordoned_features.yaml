@@ -6,3 +6,6 @@ features:
   - feature: node_provider
     value: wlxga-ebupj-sj2nf-g3sii-75i6b-oh64s-qmq7u-gmros-vi2if-3ktdv-cqe
     explanation: Handing over the servers to another Node provider.
+  - feature: node_provider
+    value: spp3m-vawt7-3gyh6-pjz5d-6zidf-up3qb-yte62-otexv-vfpqg-n6awf-lqe
+    explanation: Rivonia is getting ready to sell its nodes per agreement with DFINITY. https://dfinity.slack.com/archives/C02BEQD3410/p1749652046739739 contains the request.
