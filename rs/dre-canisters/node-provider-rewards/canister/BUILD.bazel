@@ -43,6 +43,23 @@ rust_library(
        ) + [":build_script"],
 )
 
+rust_library(
+    name = "node_provider_rewards_canister_instant_sync",
+    srcs = glob(["src/**/*.rs"]),
+    aliases = ALIASES,
+    crate_name = "node_provider_rewards_canister",
+    crate_features = [
+        "instant-sync"
+    ],
+    proc_macro_deps = all_crate_deps(
+           proc_macro = True,
+       ),
+    version = "0.9.0",
+    deps = DEPS + all_crate_deps(
+           normal = True,
+       ) + [":build_script"],
+)
+
 rust_test(
     name = "npr_test",
     crate = ":node_provider_rewards_canister",
