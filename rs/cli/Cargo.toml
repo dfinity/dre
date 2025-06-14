@@ -41,6 +41,7 @@ ic-base-types = { workspace = true }
 ic-canister-client = { workspace = true }
 ic-canister-client-sender = { workspace = true }
 ic-canisters = { workspace = true }
+ic-registry-nns-data-provider.workspace = true
 ic-icrc1-test-utils.workspace = true
 ic-management-backend = { workspace = true }
 ic-management-types = { workspace = true }

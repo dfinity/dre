@@ -12,7 +12,7 @@ use std::time::SystemTime;
 use tokio::time::{sleep, Duration};
 mod slack;
 use clap::Parser;
-use ic_nns_governance_api::pb::v1::{ListProposalInfoResponse, ProposalInfo};
+use ic_nns_governance_api::{ListProposalInfoResponse, ProposalInfo};
 use reqwest::Url;
 
 #[macro_use]

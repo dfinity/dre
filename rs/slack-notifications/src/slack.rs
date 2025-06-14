@@ -3,7 +3,7 @@ use ic_nns_common::pb::v1::NeuronId;
 use ic_nns_common::pb::v1::ProposalId;
 use ic_nns_governance::pb::v1::ProposalStatus;
 use ic_nns_governance::pb::v1::Topic;
-use ic_nns_governance_api::pb::v1::ProposalInfo;
+use ic_nns_governance_api::ProposalInfo;
 use itertools::Itertools;
 use log::info;
 use regex::Regex;
@@ -244,9 +244,9 @@ mod tests {
     use std::collections::HashMap;
     use std::time::SystemTime;
 
-    use ic_nns_governance_api::pb::v1::proposal::Action;
-    use ic_nns_governance_api::pb::v1::Motion;
-    use ic_nns_governance_api::pb::v1::Proposal;
+    use ic_nns_governance_api::proposal::Action;
+    use ic_nns_governance_api::Motion;
+    use ic_nns_governance_api::Proposal;
 
     fn gen_test_proposal(proposal_id: u64, proposer: u64, summary: &str, topic: i32) -> ProposalInfo {
         ProposalInfo {

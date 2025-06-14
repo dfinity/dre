@@ -4,7 +4,7 @@ use clap::Args;
 use humantime::{format_duration, parse_duration};
 use ic_canisters::governance::GovernanceCanisterWrapper;
 use ic_nns_governance::pb::v1::Topic;
-use ic_nns_governance_api::pb::v1::ProposalInfo;
+use ic_nns_governance_api::ProposalInfo;
 use log::info;
 use spinners::{Spinner, Spinners};
 

@@ -1,7 +1,7 @@
 use futures::future::BoxFuture;
 use ic_canisters::governance::GovernanceCanisterWrapper;
 use ic_nns_common::pb::v1::NeuronId;
-use ic_nns_governance_api::pb::v1::MakeProposalRequest;
+use ic_nns_governance_api::MakeProposalRequest;
 use url::Url;
 
 use crate::proposal_executors::{ProposableViaGovernanceCanister, ProposalExecution, ProposalResponseWithId};
