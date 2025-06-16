@@ -27,7 +27,7 @@ jobs:
         uses: ./.github/workflows/manage-runner-pre
 
       - name: "📥 Download main test artifact"
-        uses: dawidd6/action-download-artifact@v9
+        uses: dawidd6/action-download-artifact@v11
         with:
           name: test-artifacts
           branch: main
