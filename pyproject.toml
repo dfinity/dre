@@ -55,7 +55,7 @@ dependencies = [
     "httpretty>=1.1.4",
     "aiohttp>=3.10.5",
     "uv>=0.5.20",
-    "mypy==1.15.0",
+    "mypy==1.16.0",
     "prometheus-client>=0.21.1",
     "filelock==3.18.0",
 ]
