@@ -2,10 +2,10 @@ use crate::metrics_types::{KeyRange, NodeMetricsDailyStored, SubnetIdKey, Subnet
 use async_trait::async_trait;
 use candid::Principal;
 use ic_base_types::SubnetId;
-use ic_cdk::call::Call;
-use ic_cdk::call::CallResult;
+use ic_cdk::api::call::CallResult;
 use ic_management_canister_types_private::{NodeMetricsHistoryArgs, NodeMetricsHistoryResponse};
 use ic_stable_structures::StableBTreeMap;
+use ic_types::messages::HttpCallContent::Call;
 use rewards_calculation::types::{NodeMetricsDailyRaw, SubnetMetricsDailyKey, UnixTsNanos};
 use std::cell::RefCell;
 use std::collections::{BTreeMap, HashMap};
