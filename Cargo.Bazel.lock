@@ -61988,7 +61988,6 @@
     "multiservice-discovery-shared 0.6.3": "rs/ic-observability/multiservice-discovery-shared",
     "node-provider-rewards-api 0.6.3": "rs/dre-canisters/node-provider-rewards/canister/api",
     "node-provider-rewards-canister 0.6.3": "rs/dre-canisters/node-provider-rewards/canister",
-    "node-status-updater 0.6.3": "rs/ic-observability/node-status-updater",
     "obs-canister-clients 0.6.3": "rs/ic-observability/obs-canister-clients",
     "prometheus-config-updater 0.6.3": "rs/ic-observability/prometheus-config-updater",
     "rewards-calculation 0.6.3": "rs/dre-canisters/node-provider-rewards/rewards-calculation",
