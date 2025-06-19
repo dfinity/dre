@@ -38,7 +38,6 @@ def external_crates_repository():
             "//rs/ic-observability/general-testnet-service-discovery:Cargo.toml",
             "//rs/ic-observability/multiservice-discovery-downloader:Cargo.toml",
             "//rs/ic-observability/multiservice-discovery-shared:Cargo.toml",
-            "//rs/ic-observability/node-status-updater:Cargo.toml",
             "//rs/ic-observability/obs-canister-clients:Cargo.toml",
             "//rs/ic-observability/prometheus-config-updater:Cargo.toml",
             "//rs/ic-observability/service-discovery:Cargo.toml",

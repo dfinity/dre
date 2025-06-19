@@ -11,7 +11,6 @@ members = [
     "rs/ic-observability/multiservice-discovery",
     "rs/ic-observability/multiservice-discovery-downloader",
     "rs/ic-observability/multiservice-discovery-shared",
-    "rs/ic-observability/node-status-updater",
     "rs/ic-observability/obs-canister-clients",
     "rs/ic-observability/prometheus-config-updater",
     "rs/ic-observability/service-discovery",

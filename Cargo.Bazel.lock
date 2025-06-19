@@ -1,5 +1,5 @@
 {
-  "checksum": "596102558f1ca113cf9c2d78be62ba3ed60fe6e6550cd53bcce850f5a0ad7f07",
+  "checksum": "e694eea9bdc7f15677990e1691f13e3da532772a372af92b433da483d88fcf15",
   "crates": {
     "actix-codec 0.5.2": {
       "name": "actix-codec",
@@ -36307,87 +36307,6 @@
       ],
       "license_file": null
     },
-    "node-status-updater 0.6.3": {
-      "name": "node-status-updater",
-      "version": "0.6.3",
-      "package_url": null,
-      "repository": null,
-      "targets": [],
-      "library_target_name": null,
-      "common_attrs": {
-        "compile_data_glob": [
-          "**"
-        ],
-        "deps": {
-          "common": [
-            {
-              "id": "anyhow 1.0.98",
-              "target": "anyhow"
-            },
-            {
-              "id": "clap 4.5.32",
-              "target": "clap"
-            },
-            {
-              "id": "crossbeam 0.8.4",
-              "target": "crossbeam"
-            },
-            {
-              "id": "crossbeam-channel 0.5.15",
-              "target": "crossbeam_channel"
-            },
-            {
-              "id": "futures-util 0.3.31",
-              "target": "futures_util"
-            },
-            {
-              "id": "humantime 2.2.0",
-              "target": "humantime"
-            },
-            {
-              "id": "ic-agent 0.39.3",
-              "target": "ic_agent"
-            },
-            {
-              "id": "ic-metrics 0.9.0",
-              "target": "ic_metrics"
-            },
-            {
-              "id": "prometheus-http-query 0.8.3",
-              "target": "prometheus_http_query"
-            },
-            {
-              "id": "slog 2.7.0",
-              "target": "slog"
-            },
-            {
-              "id": "slog-async 2.8.0",
-              "target": "slog_async"
-            },
-            {
-              "id": "slog-term 2.9.1",
-              "target": "slog_term"
-            },
-            {
-              "id": "tokio 1.44.2",
-              "target": "tokio"
-            },
-            {
-              "id": "url 2.5.4",
-              "target": "url"
-            }
-          ],
-          "selects": {}
-        },
-        "edition": "2021",
-        "version": "0.6.3"
-      },
-      "license": "Apache-2.0",
-      "license_ids": [
-        "Apache-2.0"
-      ],
-      "license_file": null
-    },
     "nom 7.1.3": {
       "name": "nom",
       "version": "7.1.3",
@@ -61988,7 +61907,6 @@
     "multiservice-discovery-shared 0.6.3": "rs/ic-observability/multiservice-discovery-shared",
     "node-provider-rewards-api 0.6.3": "rs/dre-canisters/node-provider-rewards/canister/api",
     "node-provider-rewards-canister 0.6.3": "rs/dre-canisters/node-provider-rewards/canister",
-    "node-status-updater 0.6.3": "rs/ic-observability/node-status-updater",
     "obs-canister-clients 0.6.3": "rs/ic-observability/obs-canister-clients",
     "prometheus-config-updater 0.6.3": "rs/ic-observability/prometheus-config-updater",
     "rewards-calculation 0.6.3": "rs/dre-canisters/node-provider-rewards/rewards-calculation",
