@@ -199,10 +199,9 @@ async fn main() -> Result<(), anyhow::Error> {
             leftover_buffer.clear();
         }
     }
-    Ok(())
 
-    // info!("Writing cursor {}...", cursor);
-    // write_cursor(&args.cursor_path, cursor)
+    info!("Writing cursor {}...", cursor);
+    write_cursor(&args.cursor_path, cursor)
 }
 
 fn fetch_cursor(path: &PathBuf) -> Result<String, anyhow::Error> {
