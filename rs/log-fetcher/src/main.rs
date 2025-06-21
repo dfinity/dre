@@ -8,6 +8,7 @@ use std::{
 
 use anyhow::anyhow;
 use clap::Parser;
+use journald_parser::JournalEntry;
 use log::{error, info};
 use pretty_env_logger::formatted_builder;
 use reqwest::ClientBuilder;
@@ -51,6 +52,7 @@ async fn main() -> Result<(), anyhow::Error> {
     let mut should_run = true;
     while should_run {
         let mut leftover_buffer = vec![];
+        let mut leftover_entry: Option<JournalEntry> = None;
         select! {
             biased;
             _ = token.cancelled() => {
@@ -114,23 +116,31 @@ async fn main() -> Result<(), anyhow::Error> {
                     break;
                 }
             };
+
             leftover_buffer.extend_from_slice(&chunk);
+            let len = leftover_buffer.len();
 
-            let split_pos = leftover_buffer.windows(2).rposition(|window| window == b"\n\n");
-            let to_parse = if let Some(pos) = split_pos {
-                let (to_parse, rest) = leftover_buffer.split_at(pos + 2);
-                let parsed = to_parse.to_vec();
-                leftover_buffer = rest.to_vec();
-                parsed
-            } else {
-                // Not a complete single entry, nothing to parse
+            // Checks that enforce that the message is parsable.
+            // It can happen that the chunk breaks somewhere within the line.
+            // If these checks pass we can parse something but it could be
+            // that we are going to parse only half a message because the chunk
+            // broke at the end of a binary field that has a '\n' at the end.
+            if len < 2 {
+                // Unexpectedly short message.
+                // Uncomment when debugging because this can spam in prod.
+                // warn!("Unexpectedly short message.")
                 continue;
-            };
+            } else if len >= 2 && &leftover_buffer[leftover_buffer.len() - 2..] != b"\n\n" {
+                // Message broke, accumulate
+                // Uncomment when debugging because this can spam in prod.
+                // warn!("Message broke, accumulating")
+                continue;
+            }
 
-            let entries = parse_journal_entries_new(&to_parse);
+            let entries = parse_journal_entries_new(&leftover_buffer);
 
             for entry in &entries {
-                let map: BTreeMap<String, String> = entry
+                let mut map: BTreeMap<String, String> = entry
                     .fields
                     .iter()
                     .map(|(name, val)| match val {
@@ -138,24 +148,40 @@ async fn main() -> Result<(), anyhow::Error> {
                     })
                     .collect();
 
-                let curr_cursor = match map.get("__CURSOR") {
-                    Some(v) => v,
-                    None => {
-                        error!(
-                            "Didn't find a cursor for the following entry: \n{:?}\n\n\\
-                        Leftover buffer: {}\n\n\\
-                        Current chunk: {}\n\n\\
-                        ",
-                            map,
-                            std::str::from_utf8(&leftover_buffer).unwrap(),
-                            std::str::from_utf8(&chunk).unwrap()
-                        );
-                        continue;
-                    }
-                };
+                let mut taken = false;
+                if let Some(entry) = &leftover_entry {
+                    let leftover_map: BTreeMap<String, String> = entry
+                        .fields
+                        .iter()
+                        .map(|(name, val)| match val {
+                            JournalField::Binary(value) | JournalField::Utf8(value) => (name.clone(), value.clone()),
+                        })
+                        .collect();
 
-                if curr_cursor == &cursor {
-                    continue;
+                    map.extend(leftover_map);
+                    taken = true;
+                }
+
+                // Check that map contains both `_CURSOR` and `MESSAGE`
+                match (map.get("__CURSOR"), map.get("MESSAGE")) {
+                    (Some(_), Some(_)) => {}
+                    _ => {
+                        if taken {
+                            panic!(
+                                "Combined with the previous entry this entry doesn't contain required fields.\n\\
+                            Total map: {:?}\n\n\\
+                            Current chunk: {}\n\n\\
+                            Previous entry: {}\n\n\\",
+                                map,
+                                String::from_utf8_lossy(&leftover_buffer),
+                                serde_json::to_string(&leftover_entry).unwrap(),
+                            );
+                        }
+                    }
+                }
+
+                if taken {
+                    leftover_entry = None;
                 }
 
                 // If the struct is created ok, serialization should not
@@ -170,11 +196,13 @@ async fn main() -> Result<(), anyhow::Error> {
                     cursor = val.to_string()
                 }
             }
+            leftover_buffer.clear();
         }
     }
+    Ok(())
 
-    info!("Writing cursor {}...", cursor);
-    write_cursor(&args.cursor_path, cursor)
+    // info!("Writing cursor {}...", cursor);
+    // write_cursor(&args.cursor_path, cursor)
 }
 
 fn fetch_cursor(path: &PathBuf) -> Result<String, anyhow::Error> {
