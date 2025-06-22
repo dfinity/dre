@@ -177,6 +177,7 @@ async fn main() -> Result<(), anyhow::Error> {
                                 serde_json::to_string(&leftover_entry).unwrap(),
                             );
                         }
+                        leftover_entry = Some(entry.clone());
                     }
                 }
 

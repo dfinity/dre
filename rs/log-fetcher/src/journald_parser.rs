@@ -1,13 +1,13 @@
 use serde::Serialize;
 use std::collections::VecDeque;
 
-#[derive(Debug, Serialize, PartialEq)]
+#[derive(Debug, Serialize, PartialEq, Clone)]
 pub enum JournalField {
     Utf8(String),
     Binary(String),
 }
 
-#[derive(Debug, Serialize, PartialEq)]
+#[derive(Debug, Serialize, PartialEq, Clone)]
 pub struct JournalEntry {
     pub fields: Vec<(String, JournalField)>,
 }
