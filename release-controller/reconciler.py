@@ -700,9 +700,9 @@ class Reconciler:
                             )
                         elif v.os_kind == HOSTOS:
                             active = list(
-                                set(self.ic_prometheus.active_hostos_versions())
-                                | self.dre.get_active_hostos_versions()
-                                # Above needed if Prometheus does not see all the registered HostOSes.
+                                # Use the versions of HostOS registered as active on nodes
+                                # in the registry.
+                                self.dre.get_active_hostos_versions()
                             )
                             revlogger.info("Active HostOS versions: %s", active)
                             try:
