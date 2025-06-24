@@ -81,6 +81,7 @@ def main() -> None:
         url="https://victoria.mainnet.dfinity.network/select/0/prometheus"
     )
     print(icprom.active_guestos_versions())
+    print(icprom.active_hostos_versions())
 
 
 if __name__ == "__main__":
