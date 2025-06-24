@@ -1,5 +1,6 @@
 use candid::{CandidType, Decode, Encode, Principal};
 use ic_base_types::{NodeId, PrincipalId, SubnetId};
+use ic_management_canister_types_private::NodeMetrics;
 use ic_stable_structures::storable::Bound;
 use ic_stable_structures::Storable;
 use rewards_calculation::types::{NodeMetricsDailyRaw, SubnetMetricsDailyKey, UnixTsNanos};
@@ -17,7 +18,7 @@ pub const MAX_PRINCIPAL_ID: PrincipalId = PrincipalId(Principal::from_slice(&[0x
 #[test]
 fn max_bound_size() {
     let max_subnet_id_stored = SubnetIdKey(MAX_PRINCIPAL_ID.into());
-    let max_subnet_metrics_stored_key = SubnetMetricsDailyKeyStored {
+    let max_subnet_metrics_stored_key = SubnetMetricsKeyStored {
         ts: u64::MAX,
         subnet_id: MAX_PRINCIPAL_ID.into(),
     };
@@ -56,13 +57,13 @@ pub trait KeyRange {
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq, PartialOrd, Ord)]
-pub struct SubnetMetricsDailyKeyStored {
+pub struct SubnetMetricsKeyStored {
     pub ts: UnixTsNanos,
     pub subnet_id: SubnetId,
 }
 
-impl From<SubnetMetricsDailyKeyStored> for SubnetMetricsDailyKey {
-    fn from(key: SubnetMetricsDailyKeyStored) -> Self {
+impl From<SubnetMetricsKeyStored> for SubnetMetricsDailyKey {
+    fn from(key: SubnetMetricsKeyStored) -> Self {
         Self {
             day: key.ts.into(),
             subnet_id: key.subnet_id,
@@ -70,7 +71,7 @@ impl From<SubnetMetricsDailyKeyStored> for SubnetMetricsDailyKey {
     }
 }
 
-impl Storable for SubnetMetricsDailyKeyStored {
+impl Storable for SubnetMetricsKeyStored {
     fn to_bytes(&self) -> Cow<[u8]> {
         Cow::Owned(serde_cbor::to_vec(self).unwrap())
     }
@@ -85,7 +86,7 @@ impl Storable for SubnetMetricsDailyKeyStored {
     };
 }
 
-impl KeyRange for SubnetMetricsDailyKeyStored {
+impl KeyRange for SubnetMetricsKeyStored {
     fn min_key() -> Self {
         Self {
             ts: u64::MIN,
@@ -102,34 +103,44 @@ impl KeyRange for SubnetMetricsDailyKeyStored {
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
-pub struct NodeMetricsDailyStored {
+pub struct NodeMetricsStored {
     pub node_id: NodeId,
-    pub num_blocks_proposed: u64,
-    pub num_blocks_failed: u64,
+    pub num_blocks_proposed_total: u64,
+    pub num_blocks_failed_total: u64,
 }
 
-impl From<NodeMetricsDailyStored> for NodeMetricsDailyRaw {
-    fn from(node_metrics: NodeMetricsDailyStored) -> Self {
+impl From<NodeMetrics> for NodeMetricsStored {
+    fn from(node_metrics: NodeMetrics) -> Self {
+        Self {
+            node_id: NodeId::from(node_metrics.node_id),
+            num_blocks_proposed_total: node_metrics.num_blocks_proposed_total,
+            num_blocks_failed_total: node_metrics.num_block_failures_total,
+        }
+    }
+}
+
+impl From<NodeMetricsStored> for NodeMetricsDailyRaw {
+    fn from(node_metrics: NodeMetricsStored) -> Self {
         Self {
             node_id: node_metrics.node_id,
-            num_blocks_proposed: node_metrics.num_blocks_proposed,
-            num_blocks_failed: node_metrics.num_blocks_failed,
+            num_blocks_proposed: node_metrics.num_blocks_proposed_total,
+            num_blocks_failed: node_metrics.num_blocks_failed_total,
         }
     }
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
-pub struct SubnetMetricsDailyValueStored {
-    pub nodes_metrics: Vec<NodeMetricsDailyStored>,
+pub struct SubnetMetricsValueStored {
+    pub nodes_metrics: Vec<NodeMetricsStored>,
 }
 
-impl From<SubnetMetricsDailyValueStored> for Vec<NodeMetricsDailyRaw> {
-    fn from(subnet_metrics: SubnetMetricsDailyValueStored) -> Self {
+impl From<SubnetMetricsValueStored> for Vec<NodeMetricsDailyRaw> {
+    fn from(subnet_metrics: SubnetMetricsValueStored) -> Self {
         subnet_metrics.nodes_metrics.into_iter().map(NodeMetricsDailyRaw::from).collect()
     }
 }
 
-impl Storable for SubnetMetricsDailyValueStored {
+impl Storable for SubnetMetricsValueStored {
     fn to_bytes(&self) -> Cow<[u8]> {
         Cow::Owned(serde_cbor::to_vec(self).unwrap())
     }
