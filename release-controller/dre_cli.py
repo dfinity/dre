@@ -102,13 +102,16 @@ class DRECli:
         """Query the blessed HostOS versions."""
         # FIXME waiting on Nikola to add feature to dre registry to dump this info.
         return set(
-            ln
-            for ln in subprocess.check_output(
-                [self.cli, "get", "elected-hostos-versions"],
-                env=self.env,
-                text=True,
-            ).splitlines()
-            if ln
+            typing.cast(
+                list[str],
+                [
+                    n["hostos_version_id"]
+                    for n in json.loads(
+                        subprocess.check_output([self.cli, "registry"], env=self.env)
+                    )["elected_host_os_versions"]
+                    if "hostos_version_id" in n and n["hostos_version_id"].strip()
+                ],
+            )
         )
 
     def get_active_hostos_versions(self) -> set[str]:
