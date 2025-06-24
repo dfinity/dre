@@ -144,9 +144,9 @@ where
     }
     pub fn daily_metrics_by_subnet(&self, start_ts: UnixTsNanos, end_ts: UnixTsNanos) -> BTreeMap<SubnetMetricsDailyKey, Vec<NodeMetricsDailyRaw>> {
         let mut daily_metrics_by_subnet = BTreeMap::new();
-        let day_before_start = start_ts.checked_sub(DAY_IN_SECONDS * 1_000_000_000).unwrap_or_default();
+        let one_day_before_start = start_ts.checked_sub(DAY_IN_SECONDS * 1_000_000_000).unwrap_or_default();
         let first_key = SubnetMetricsKeyStored {
-            ts: day_before_start,
+            ts: one_day_before_start,
             ..SubnetMetricsKeyStored::min_key()
         };
         let last_key = SubnetMetricsKeyStored {
@@ -154,7 +154,7 @@ where
             ..SubnetMetricsKeyStored::max_key()
         };
 
-        let mut subnets_metrics: BTreeMap<_, _> = self
+        let mut subnets_metrics_by_day: BTreeMap<_, _> = self
             .subnets_metrics
             .borrow()
             .range(first_key..=last_key)
@@ -163,9 +163,9 @@ where
             .collect();
 
         let mut last_total_metrics: HashMap<_, _> = HashMap::new();
-        if let Some((ts, _)) = subnets_metrics.first_key_value() {
+        if let Some((ts, _)) = subnets_metrics_by_day.first_key_value() {
             if ts.get() < start_ts {
-                last_total_metrics = subnets_metrics
+                last_total_metrics = subnets_metrics_by_day
                     .pop_first()
                     .unwrap()
                     .1
@@ -182,9 +182,9 @@ where
             }
         };
 
-        for (_, value) in subnets_metrics {
+        for (_, subnets_metrics) in subnets_metrics_by_day {
             let mut current_total_metrics: HashMap<_, _> = HashMap::new();
-            for (k, v) in value {
+            for (k, v) in subnets_metrics {
                 // For each day, calculate the daily metrics for each node in the subnet.
                 let daily_nodes_metrics: Vec<NodeMetricsDailyRaw> = v
                     .nodes_metrics
