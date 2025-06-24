@@ -182,7 +182,7 @@ impl RewardCalculatorRunnerTest {
         RewardsCalculatorBuilder {
             reward_period,
             rewardable_nodes_per_provider,
-            daily_metrics_by_subnet: subnets_metrics,
+            daily_metrics_by_subnet: subnets_metrics.into_iter().collect(),
             rewards_table: self.node_rewards_table.unwrap_or_default(),
         }
         .build()
