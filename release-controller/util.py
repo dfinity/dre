@@ -33,14 +33,13 @@ def resolve_binary(name: str) -> str:
     for thing in things_to_try:
         search_path = os.path.pathsep.join(
             # First, look for the binary in the same folder as this file.
-            [
-                # Special-casing DRE it's actually in ../rs/cli.
-                os.path.pathsep + str(me.parent.parent / "rs" / "cli"),
-            ]
-            if name == "dre"
-            else [
-                os.path.pathsep + str(me.parent),
-            ]
+            (
+                [
+                    str(me.parent.parent / "rs" / "cli")
+                ]  # Special-casing DRE it's actually in ../rs/cli in prod.
+                if name == "dre"
+                else [str(me.parent)]
+            )
             + [
                 # Also search in the regular executable search path.
                 os.getenv("PATH", "."),
