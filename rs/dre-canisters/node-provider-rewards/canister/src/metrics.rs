@@ -183,9 +183,10 @@ where
         };
 
         for (_, subnets_metrics) in subnets_metrics_by_day {
+            // current_total_metrics holds the total metrics for the current day per node per subnet.
+            // It will be used to calculate the daily metrics for each node the next day.
             let mut current_total_metrics: HashMap<_, _> = HashMap::new();
             for (k, v) in subnets_metrics {
-                // For each day, calculate the daily metrics for each node in the subnet.
                 let daily_nodes_metrics: Vec<NodeMetricsDailyRaw> = v
                     .nodes_metrics
                     .into_iter()
