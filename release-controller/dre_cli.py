@@ -114,7 +114,7 @@ class DRECli:
         )
 
     def get_active_hostos_versions(self) -> set[str]:
-        """Query the HostOS versions of every HostOS record in the registry."""
+        """Query the HostOS versions of every node record in the registry."""
         return set(
             typing.cast(
                 list[str],
