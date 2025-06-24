@@ -1,5 +1,5 @@
 {
-  "checksum": "e694eea9bdc7f15677990e1691f13e3da532772a372af92b433da483d88fcf15",
+  "checksum": "0f535df41d8e46af28348d887968857b2bff07012fe8e0519081636fd1d1f883",
   "crates": {
     "actix-codec 0.5.2": {
       "name": "actix-codec",
@@ -36248,6 +36248,10 @@
             {
               "id": "indexmap 2.9.0",
               "target": "indexmap"
+            },
+            {
+              "id": "itertools 0.13.0",
+              "target": "itertools"
             },
             {
               "id": "mockall 0.13.1",
