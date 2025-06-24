@@ -100,7 +100,6 @@ class DRECli:
 
     def get_blessed_hostos_versions(self) -> set[str]:
         """Query the blessed HostOS versions."""
-        # FIXME waiting on Nikola to add feature to dre registry to dump this info.
         return set(
             typing.cast(
                 list[str],
