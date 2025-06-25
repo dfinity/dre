@@ -876,7 +876,7 @@ def main() -> None:
     )
     ic_repo = (
         GitRepo(
-            f"https://oauth2:{os.environ['GITHUB_TOKEN']}@github.com/dfinity/ic.git",
+            f"https://{os.environ['GITHUB_TOKEN']}@github.com/dfinity/ic.git",
             main_branch="master",
             repo_cache_dir=pathlib.Path.home() / ".cache/reconciler",
         )

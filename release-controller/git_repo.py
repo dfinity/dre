@@ -424,7 +424,7 @@ def main() -> None:
 
     token = os.environ["GITHUB_TOKEN"]
     repo = GitRepo(
-        f"https://oauth2:{token}@github.com/dfinity/ic-dre-testing.git",
+        f"https://{token}@github.com/dfinity/ic.git",
         main_branch="master",
     )
     repo.push_release_tags(
