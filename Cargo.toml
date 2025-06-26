@@ -100,7 +100,7 @@ ic-base-types = { git = "https://github.com/dfinity/ic.git", rev = "317aacf3f9fe
 ic-canister-client = { git = "https://github.com/dfinity/ic.git", rev = "317aacf3f9fed00c1ff8fddb3def43259f1d83a7" }
 ic-canister-client-sender = { git = "https://github.com/dfinity/ic.git", rev = "317aacf3f9fed00c1ff8fddb3def43259f1d83a7" }
 ic-canisters = { path = "rs/ic-canisters" }
-ic-http-types = { version = "0.1.0" }
+ic-http-types = { git = "https://github.com/dfinity/ic.git", rev = "317aacf3f9fed00c1ff8fddb3def43259f1d83a7" }
 ic-config = { git = "https://github.com/dfinity/ic.git", rev = "317aacf3f9fed00c1ff8fddb3def43259f1d83a7" }
 ic-crypto-utils-threshold-sig-der = { git = "https://github.com/dfinity/ic.git", rev = "317aacf3f9fed00c1ff8fddb3def43259f1d83a7" }
 ic-http-endpoints-metrics = { git = "https://github.com/dfinity/ic.git", rev = "317aacf3f9fed00c1ff8fddb3def43259f1d83a7" }
