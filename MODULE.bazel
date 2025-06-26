@@ -3,7 +3,7 @@ module(name = "dre")
 bazel_dep(name = "bazel_skylib", version = "1.7.1")
 bazel_dep(name = "aspect_bazel_lib", version = "2.11.0")
 
-bazel_dep(name = "rules_python", version = "0.37.0")
+bazel_dep(name = "rules_python", version = "1.4.1")
 python_version = "3.12"
 
 python = use_extension("@rules_python//python/extensions:python.bzl", "python")
@@ -112,7 +112,7 @@ oci.pull(
     name = "ubuntu_24_04_minimal",
     image = "ubuntu", # Comes from Docker Hub.
     # Hash of latest Noble 24.04.
-    digest = "sha256:f8b860e4f9036f2694571770da292642eebcc4c2ea0c70a1a9244c2a1d436cd9",
+    digest = "sha256:b59d21599a2b151e23eea5f6602f4af4d7d31c4e236d22bf0b62b86d2e386b8f",
     platforms = [
         "linux/amd64",
     ],
@@ -152,7 +152,7 @@ http_file(
 
 http_archive = use_repo_rule("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 
-IC_REPO_VERSION = "a700085f0575a440cb44941da69cfa2efeea3ab9"
+IC_REPO_VERSION = "317aacf3f9fed00c1ff8fddb3def43259f1d83a7"
 
 http_archive(
     name = "ic_repo",

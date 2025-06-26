@@ -3,7 +3,7 @@ use std::{borrow::Cow, fmt};
 use candid::{CandidType, Decode, Deserialize, Encode, Principal};
 use dfn_core::api::PrincipalId;
 use ic_management_canister_types_private::NodeMetricsHistoryResponse;
-use ic_nns_governance_api::pb::v1::MonthlyNodeProviderRewards;
+use ic_nns_governance_api::MonthlyNodeProviderRewards;
 use ic_protobuf::registry::node_rewards::v2::{NodeRewardRate, NodeRewardRates};
 use ic_stable_structures::{storable::Bound, Storable};
 use serde::Serialize;

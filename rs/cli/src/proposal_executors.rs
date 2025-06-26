@@ -1,7 +1,7 @@
 use std::fmt::{self, Debug, Display};
 
 use futures::future::BoxFuture;
-use ic_nns_governance_api::pb::v1::{manage_neuron_response::MakeProposalResponse, MakeProposalRequest};
+use ic_nns_governance_api::{manage_neuron_response::MakeProposalResponse, MakeProposalRequest};
 use regex::Regex;
 use url::Url;
 
@@ -38,7 +38,7 @@ impl TryFrom<String> for ProposalResponseWithId {
         let last_line = response
             .lines()
             .filter(|line| !line.trim().is_empty())
-            .last()
+            .next_back()
             .ok_or(anyhow::anyhow!("Expected at least one line in the response"))?;
         let re = Regex::new(r"\s*(\d+)\s*")?;
 

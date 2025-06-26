@@ -508,12 +508,12 @@ mod tests {
             // malicious
             assert_eq!(
                 (1 + (actors / 3), 1 + (actors / 3)),
-                NakamotoScore::nakamoto(&std::iter::repeat(1).take(actors).collect::<Vec<usize>>())
+                NakamotoScore::nakamoto(&std::iter::repeat_n(1, actors).collect::<Vec<usize>>())
             );
         }
         // Included above as well, but more explicit for readability: 5/13 nodes need to
         // be malicious
-        assert_eq!((5, 5), NakamotoScore::nakamoto(&std::iter::repeat(1).take(13).collect::<Vec<usize>>()));
+        assert_eq!((5, 5), NakamotoScore::nakamoto(&std::iter::repeat_n(1, 13).collect::<Vec<usize>>()));
         assert_eq!((1, 3), NakamotoScore::nakamoto(&[1, 2, 3])); // one actor controls 3/6 nodes
         assert_eq!((1, 3), NakamotoScore::nakamoto(&[2, 3, 1])); // one actor controls 3/6 nodes
         assert_eq!((1, 3), NakamotoScore::nakamoto(&[3, 2, 1])); // one actor controls 3/6 nodes

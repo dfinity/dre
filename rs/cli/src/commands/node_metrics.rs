@@ -47,7 +47,7 @@ impl NodeMetrics {
         let subnets = match &self.subnet_ids.is_empty() {
             false => self.subnet_ids.clone(),
             true => {
-                let registry_client = RegistryCanisterWrapper::new(canister_agent.agent);
+                let registry_client = RegistryCanisterWrapper::new(canister_agent.agent, canister_agent.nns_url);
                 registry_client.get_subnets().await?
             }
         };

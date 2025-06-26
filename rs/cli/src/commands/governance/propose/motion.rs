@@ -1,7 +1,7 @@
 use std::path::PathBuf;
 
 use clap::Args;
-use ic_nns_governance_api::pb::v1::{MakeProposalRequest, Motion as MotionPayload, ProposalActionRequest};
+use ic_nns_governance_api::{MakeProposalRequest, Motion as MotionPayload, ProposalActionRequest};
 use tokio::io::AsyncReadExt;
 
 use crate::{

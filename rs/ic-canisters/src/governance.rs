@@ -12,15 +12,14 @@ use ic_nns_governance::pb::v1::manage_neuron::RegisterVote;
 use ic_nns_governance::pb::v1::GovernanceError;
 use ic_nns_governance::pb::v1::ListProposalInfo;
 use ic_nns_governance::pb::v1::ManageNeuron;
-use ic_nns_governance::pb::v1::Neuron;
 use ic_nns_governance::pb::v1::NodeProvider as PbNodeProvider;
 use ic_nns_governance::pb::v1::Proposal;
-use ic_nns_governance_api::pb::v1::manage_neuron_response::Command as CommandResponse;
-use ic_nns_governance_api::pb::v1::manage_neuron_response::MakeProposalResponse;
-use ic_nns_governance_api::pb::v1::ListNeuronsResponse;
-use ic_nns_governance_api::pb::v1::ListNodeProvidersResponse;
-use ic_nns_governance_api::pb::v1::ManageNeuronResponse;
-use ic_nns_governance_api::pb::v1::{ListNeurons, ListProposalInfoResponse, NeuronInfo, ProposalInfo};
+use ic_nns_governance_api::manage_neuron_response::Command as CommandResponse;
+use ic_nns_governance_api::manage_neuron_response::MakeProposalResponse;
+use ic_nns_governance_api::ListNodeProvidersResponse;
+use ic_nns_governance_api::ManageNeuronResponse;
+use ic_nns_governance_api::{ListNeurons, ListProposalInfoResponse, NeuronInfo, ProposalInfo};
+use ic_nns_governance_api::{ListNeuronsResponse, Neuron};
 use serde::{self, Serialize};
 use std::str::FromStr;
 use std::time::Duration;
@@ -143,7 +142,7 @@ impl GovernanceCanisterWrapper {
             Some(CommandResponse::RegisterVote(response)) => Ok(format!("Successfully voted on proposal {} {:?}", proposal_id, response)),
             Some(CommandResponse::Error(err))
                 if err
-                    == ic_nns_governance_api::pb::v1::GovernanceError {
+                    == ic_nns_governance_api::GovernanceError {
                         error_type: ic_nns_governance::pb::v1::governance_error::ErrorTypeDesc::PreconditionFailed as i32,
                         error_message: "Neuron already voted on proposal.".to_string(),
                     } =>
@@ -220,8 +219,10 @@ impl GovernanceCanisterWrapper {
             acc.full_neurons.extend(current.full_neurons);
             acc.neuron_infos.extend(current.neuron_infos);
 
-            if page_number >= acc.total_pages_available() {
-                break;
+            if let Some(total) = acc.total_pages_available {
+                if page_number >= total {
+                    break;
+                }
             }
 
             page_number += 1;
