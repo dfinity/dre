@@ -248,10 +248,7 @@ impl<S: IdentityState> PKCS11Sess<S> {
                             // Object has a label.
                             if let [Attribute::Label(token_label)] = &self.sess.get_attributes(*hnd, &label_types)?[0..label_types.len()] {
                                 // We have extracted the label; we make a copy of it.
-                                label = match String::from_utf8(token_label.clone()) {
-                                    Ok(label) => Some(label),
-                                    Err(_) => None,
-                                }
+                                label = String::from_utf8(token_label.clone()).ok()
                             }
                         }
                         return Ok(Some((found_key_id.clone(), label)));
