@@ -1,3 +1,4 @@
+use crate::IcAgentCanisterClient;
 use ic_agent::Agent;
 use ic_base_types::PrincipalId;
 use ic_interfaces_registry::RegistryRecord;
@@ -8,13 +9,10 @@ use ic_protobuf::{
 };
 use ic_registry_keys::make_crypto_threshold_signing_pubkey_key;
 use ic_registry_nns_data_provider::registry::RegistryCanister;
-use ic_registry_transport::pb::v1::{
-    RegistryGetLatestVersionResponse, RegistryGetValueRequest, RegistryGetValueResponse,
-};
+use ic_registry_transport::pb::v1::{RegistryGetLatestVersionResponse, RegistryGetValueRequest, RegistryGetValueResponse};
 use ic_types::crypto::threshold_sig::ThresholdSigPublicKey;
 use prost::Message;
 use url::Url;
-use crate::IcAgentCanisterClient;
 
 pub struct RegistryCanisterWrapper {
     pub agent: Agent,
@@ -23,13 +21,19 @@ pub struct RegistryCanisterWrapper {
 
 impl From<IcAgentCanisterClient> for RegistryCanisterWrapper {
     fn from(value: IcAgentCanisterClient) -> Self {
-        Self { agent: value.agent, ic_wrapper: RegistryCanister::new(vec![value.nns_url]) }
+        Self {
+            agent: value.agent,
+            ic_wrapper: RegistryCanister::new(vec![value.nns_url]),
+        }
     }
 }
 
 impl RegistryCanisterWrapper {
     pub fn new(agent: Agent, nns_url: Url) -> Self {
-        Self { agent, ic_wrapper: RegistryCanister::new(vec![nns_url]) }
+        Self {
+            agent,
+            ic_wrapper: RegistryCanister::new(vec![nns_url]),
+        }
     }
 
     pub async fn get_subnets(&self) -> anyhow::Result<Vec<PrincipalId>> {
@@ -70,7 +74,7 @@ impl RegistryCanisterWrapper {
             .get_certified_changes_since(version, &self.nns_public_key().await?)
             .await
             .map_err(|e| anyhow::anyhow!("Error decoding certificed deltas: {:?}", e))
-            .map(|(res, _, _)| res)    
+            .map(|(res, _, _)| res)
     }
 
     async fn get_value(&self, request: String) -> anyhow::Result<Vec<u8>> {

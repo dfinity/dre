@@ -32,8 +32,8 @@ impl ManagementCanisterClient for ICCanisterClient {
             (contract,),
             0_u128,
         )
-            .await
-            .map(|(response,)| response)
+        .await
+        .map(|(response,)| response)
     }
 }
 

@@ -3,6 +3,7 @@ use candid::{candid_method, encode_one, CandidType};
 use chrono::Months;
 use chrono::{DateTime, Days, Duration, Timelike, Utc};
 use ic_cdk_macros::*;
+use ic_http_types::{HttpRequest, HttpResponse, HttpResponseBuilder};
 use ic_nervous_system_common::serve_metrics;
 use ic_types::PrincipalId;
 use node_provider_rewards_api::endpoints::{NodeProviderRewardsCalculationArgs, NodeProvidersRewards, RewardPeriodArgs, RewardsCalculatorResults};
@@ -12,7 +13,6 @@ use rewards_calculation::types::RewardPeriod;
 use std::collections::BTreeMap;
 use std::ops::Add;
 use std::str::FromStr;
-use ic_http_types::{HttpRequest, HttpResponse, HttpResponseBuilder};
 use telemetry::QueryCallMeasurement;
 
 mod metrics;

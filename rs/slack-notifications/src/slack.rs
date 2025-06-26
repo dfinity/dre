@@ -241,10 +241,10 @@ impl TryFrom<Vec<ProposalInfo>> for MessageGroups {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use ic_nns_governance_api::proposal::Action;
+    use ic_nns_governance_api::{Motion, Proposal};
     use std::collections::HashMap;
     use std::time::SystemTime;
-    use ic_nns_governance_api::{Motion, Proposal};
-    use ic_nns_governance_api::proposal::Action;
 
     fn gen_test_proposal(proposal_id: u64, proposer: u64, summary: &str, topic: i32) -> ProposalInfo {
         ProposalInfo {
