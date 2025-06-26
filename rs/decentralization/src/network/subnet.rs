@@ -298,7 +298,9 @@ impl DecentralizedSubnet {
                 (score, controlled_nodes) => {
                     debug!(
                         "NodeFeature {} does not have valid score {:?} controlled_nodes {:?}",
-                        feature, &score, &controlled_nodes
+                        feature.to_string(),
+                        &score,
+                        &controlled_nodes
                     );
                 }
             }
@@ -321,7 +323,7 @@ impl DecentralizedSubnet {
             }
         }
 
-        debug!("Business rules checks succeeded for subnet {}: {:?}", subnet_id, checks);
+        debug!("Business rules checks succeeded for subnet {}: {:?}", subnet_id.to_string(), checks);
         Ok((penalties, checks))
     }
 
