@@ -12,3 +12,9 @@ features:
   - feature: node_provider
     value: dnpkk-x67ir-zwcyz-fkgzz-547t7-papxf-zby5t-i2log-uodsf-pcizd-jae
     explanation: "Cordoning until the UBO audit is completed. https://dfinity.slack.com/archives/C02BEQD3410/p1750167518659589"
+  - feature: node_provider
+    value: qsdw4-ao5ye-6rtq4-y3zhm-icjbj-lutd2-sbejz-4ajqz-pcflr-xrhsg-jae
+    explanation: "Carbon12 is selling its nodes to DEF: https://forum.dfinity.org/t/def-acquiring-nodes-from-carbon12/47236/2"
+  - feature: node_provider
+    value: glrjs-2dbzh-owbdd-fpp5e-eweoz-nsuto-e3jmk-tl42c-wem4f-qfpfa-qqe
+    explanation: "Cordone Zarety LLC due to the IPv6 issues: https://forum.dfinity.org/t/subnet-management-tdb26-nns/33663/93"

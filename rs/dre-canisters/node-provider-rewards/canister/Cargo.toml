@@ -34,6 +34,7 @@ ic-registry-transport = { workspace = true }
 ic-protobuf = { workspace = true }
 ic-registry-canister-client = { workspace = true }
 ic-types = { workspace = true }
+itertools = { workspace = true }
 mockall = { workspace = true }
 rewards-calculation = { workspace = true }
 node-provider-rewards-api = { workspace = true }

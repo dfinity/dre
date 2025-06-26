@@ -8,6 +8,16 @@
 #         rc_name: <reference RC name>
 #         name: <version name>
 releases:
+  - rc_name: rc--2025-06-26_03-25
+    versions:
+      - # Release qualification pipeline: https://github.com/dfinity/ic/actions/runs/15892232695
+        name: base
+        version: 60fb469c46e44e6071193a3314cc442044fcf17a
+  - rc_name: rc--2025-06-19_03-24
+    versions:
+      - # Release qualification pipeline: https://github.com/dfinity/ic/actions/runs/15748637763
+        name: base
+        version: 035f978fb5cffaef57f73242e1bb2a56423e84c3
   - rc_name: rc--2025-06-12_03-23
     versions:
       - # Release qualification pipeline: https://github.com/dfinity/ic/actions/runs/15600837563

@@ -1,11 +1,11 @@
 use crate::metrics::{MetricsManager, UnixTsNanos};
-use crate::metrics_types::{NodeMetricsDailyStored, SubnetMetricsDailyKeyStored};
+use crate::metrics_types::SubnetMetricsKeyStored;
 use ic_base_types::{NodeId, PrincipalId, SubnetId};
 use ic_cdk::call::{CallPerformFailed, CallResult};
 use ic_management_canister_types_private::{NodeMetrics, NodeMetricsHistoryArgs, NodeMetricsHistoryResponse};
 use ic_stable_structures::memory_manager::{MemoryId, VirtualMemory};
 use ic_stable_structures::DefaultMemoryImpl;
-use rewards_calculation::types::DayEnd;
+use rewards_calculation::types::{DayEnd, NodeMetricsDailyRaw};
 use std::cell::RefCell;
 use std::collections::{BTreeMap, HashMap};
 
@@ -69,7 +69,7 @@ async fn subnet_metrics_added_correctly() {
 
     mm.update_subnets_metrics(vec![subnet_1]).await;
     for i in 0..days {
-        let key = SubnetMetricsDailyKeyStored {
+        let key = SubnetMetricsKeyStored {
             ts: i * ONE_DAY_NANOS,
             subnet_id: subnet_1,
         };
@@ -112,7 +112,7 @@ async fn multiple_subnets_metrics_added_correctly() {
 
     for subnet in &[subnet_1, subnet_2] {
         for i in 0..days {
-            let key = SubnetMetricsDailyKeyStored {
+            let key = SubnetMetricsKeyStored {
                 ts: i * ONE_DAY_NANOS,
                 subnet_id: *subnet,
             };
@@ -180,13 +180,13 @@ async fn partial_failures_are_handled_correctly() {
         "Subnet 2 should not be in retry list"
     );
 
-    let key = SubnetMetricsDailyKeyStored { ts: 0, subnet_id: subnet_1 };
+    let key = SubnetMetricsKeyStored { ts: 0, subnet_id: subnet_1 };
     assert!(
         mm.subnets_metrics.borrow().get(&key).is_none(),
         "Metrics should not be present for subnet 1"
     );
 
-    let key = SubnetMetricsDailyKeyStored { ts: 0, subnet_id: subnet_2 };
+    let key = SubnetMetricsKeyStored { ts: 0, subnet_id: subnet_2 };
     assert!(mm.subnets_metrics.borrow().get(&key).is_some(), "Metrics should be present for subnet 2");
 }
 
@@ -271,14 +271,7 @@ async fn _daily_metrics_correct_different_update_size(size: usize) {
     for _ in 0..MAX_TIMES {
         mm.update_subnets_metrics(vec![subnet_id(1)]).await;
     }
-    let daily_metrics: Vec<Vec<NodeMetricsDailyStored>> = mm
-        .subnets_metrics
-        .borrow()
-        .iter()
-        .collect::<BTreeMap<_, _>>()
-        .into_values()
-        .map(|node_metrics| node_metrics.nodes_metrics.clone())
-        .collect();
+    let daily_metrics: Vec<Vec<NodeMetricsDailyRaw>> = mm.daily_metrics_by_subnet(0, 4 * ONE_DAY_NANOS).into_values().collect();
 
     // (7, 5)
     assert_eq!(daily_metrics[0][0].num_blocks_proposed, 7);
@@ -298,8 +291,6 @@ async fn _daily_metrics_correct_different_update_size(size: usize) {
     // (15 - 10, 6 - 6) = (5, 0)
     assert_eq!(daily_metrics[2][0].num_blocks_proposed, 5);
     assert_eq!(daily_metrics[2][0].num_blocks_failed, 0);
-
-    assert_eq!(daily_metrics[2].len(), 1);
 
     // (25 - 15, 50 - 6) = (10, 44)
     assert_eq!(daily_metrics[3][0].num_blocks_proposed, 10);

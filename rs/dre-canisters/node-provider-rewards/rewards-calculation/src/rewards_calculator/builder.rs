@@ -4,7 +4,7 @@ use crate::types::ProviderRewardableNodes;
 pub struct RewardsCalculatorBuilder {
     pub reward_period: RewardPeriod,
     pub rewards_table: NodeRewardsTable,
-    pub daily_metrics_by_subnet: HashMap<SubnetMetricsDailyKey, Vec<NodeMetricsDailyRaw>>,
+    pub daily_metrics_by_subnet: BTreeMap<SubnetMetricsDailyKey, Vec<NodeMetricsDailyRaw>>,
     pub rewardable_nodes_per_provider: BTreeMap<PrincipalId, ProviderRewardableNodes>,
 }
 

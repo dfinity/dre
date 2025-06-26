@@ -408,31 +408,6 @@ class Reconciler:
         logger = LOGGER.getChild("reconciler")
         index = self.loader.index()
 
-        active_guestos_versions = self.ic_prometheus.active_guestos_versions()
-        try:
-            oldest_active_guestos = oldest_active_release(
-                index,
-                active_guestos_versions,
-            )
-        except ValueError:
-            logger.error(
-                "Cannot find any of %s active GuestOS in the index.",
-                active_guestos_versions,
-            )
-            raise
-        active_hostos_versions = self.ic_prometheus.active_hostos_versions()
-        try:
-            oldest_active_hostos = oldest_active_release(
-                index,
-                active_hostos_versions,
-            )
-        except ValueError:
-            logger.error(
-                "Cannot find any of %s active HostOS in the index.",
-                active_hostos_versions,
-            )
-            raise
-
         # As a matter of principle, we will only process the very top
         # two releases (and all its versions).  All else will be
         # assumed to have been prepared before.
@@ -522,23 +497,6 @@ class Reconciler:
             for version in version_batch.values()
             if not version.fully_processed
         ]
-
-        if [x for x in versions if x.os_kind == GUESTOS]:
-            logger.info(
-                "GuestOS versions active on subnets or unassigned nodes: %s",
-                ", ".join(active_guestos_versions),
-            )
-            logger.info(
-                "Oldest active GuestOS release: %s", oldest_active_guestos.rc_name
-            )
-        if [x for x in versions if x.os_kind == HOSTOS]:
-            logger.info(
-                "HostOS versions active on subnets or unassigned nodes: %s",
-                ", ".join(active_hostos_versions),
-            )
-            logger.info(
-                "Oldest active HostOS release: %s", oldest_active_hostos.rc_name
-            )
 
         if versions:
             logger.info("Processing the following release versions:")
@@ -716,28 +674,65 @@ class Reconciler:
                     urls = version_package_urls(release_commit, v.os_kind)
                     unelect_versions = []
                     if v.is_base:
+                        # Only do this work when:
+                        #
+                        # 1. This is a base release.
+                        # 2. A proposal needs to be placed.
+                        #
+                        # That is why this chunk of code is here.
+                        if v.os_kind == GUESTOS:
+                            active = self.ic_prometheus.active_guestos_versions()
+                            revlogger.info("Active GuestOS versions: %s", active)
+                            try:
+                                oldest_rc = oldest_active_release(index, active)
+                            except ValueError:
+                                revlogger.error(
+                                    "Cannot find any of %s active GuestOS in the index.",
+                                    active,
+                                )
+                                raise
+                            revlogger.info(
+                                "Oldest active GuestOS release: %s", oldest_rc.rc_name
+                            )
+                            blessed = self.dre.get_blessed_guestos_versions()
+                            revlogger.info(
+                                "Currently elected GuestOS versions: %s", blessed
+                            )
+                        elif v.os_kind == HOSTOS:
+                            active = list(
+                                # Use the versions of HostOS registered as active on nodes
+                                # in the registry.
+                                self.dre.get_active_hostos_versions()
+                            )
+                            revlogger.info("Active HostOS versions: %s", active)
+                            try:
+                                oldest_rc = oldest_active_release(index, active)
+                            except ValueError:
+                                revlogger.error(
+                                    "Cannot find any of %s active HostOS in the index.",
+                                    active,
+                                )
+                                raise
+                            revlogger.info(
+                                "Oldest active HostOS release: %s", oldest_rc.rc_name
+                            )
+                            blessed = self.dre.get_blessed_hostos_versions()
+                            revlogger.info(
+                                "Currently elected HostOS versions: %s", blessed
+                            )
+
                         unelect_versions.extend(
                             versions_to_unelect(
                                 index,
-                                active_versions=(
-                                    active_hostos_versions
-                                    if v.os_kind == HOSTOS
-                                    else active_guestos_versions
-                                ),
-                                elected_versions=[
-                                    v
-                                    for v in (
-                                        self.dre.get_blessed_hostos_versions()
-                                        if v.os_kind == HOSTOS
-                                        else self.dre.get_blessed_guestos_versions()
-                                    )
-                                ],
+                                active_versions=active,
+                                elected_versions=list(blessed),
                             ),
                         )
                         revlogger.info(
                             "The following revisions will be unelected: %s",
-                            ", ".join(unelect_versions),
+                            unelect_versions,
                         )
+
                     try:
                         proposal_id = self.dre.propose_to_revise_elected_os_versions(
                             changelog=changelog,
@@ -881,7 +876,7 @@ def main() -> None:
     )
     ic_repo = (
         GitRepo(
-            f"https://oauth2:{os.environ['GITHUB_TOKEN']}@github.com/dfinity/ic.git",
+            f"https://{os.environ['GITHUB_TOKEN']}@github.com/dfinity/ic.git",
             main_branch="master",
             repo_cache_dir=pathlib.Path.home() / ".cache/reconciler",
         )

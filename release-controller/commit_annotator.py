@@ -501,7 +501,7 @@ def main() -> None:
 
     github_token = opts.github_token or os.getenv("GITHUB_TOKEN", None)
     github_org = os.getenv("GITHUB_ORG", "dfinity")
-    creds = f"oauth2:{github_token}@" if github_token else ""
+    creds = f"{github_token}@" if github_token else ""
 
     conventional_logging(opts.one_line_logs, opts.verbose)
 
