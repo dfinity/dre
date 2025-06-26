@@ -2,7 +2,6 @@ use crate::storage::{METRICS_MANAGER, REGISTRY_STORE};
 use candid::{candid_method, encode_one, CandidType};
 use chrono::Months;
 use chrono::{DateTime, Days, Duration, Timelike, Utc};
-use ic_canisters_http_types::{HttpRequest, HttpResponse, HttpResponseBuilder};
 use ic_cdk_macros::*;
 use ic_nervous_system_common::serve_metrics;
 use ic_types::PrincipalId;
@@ -13,12 +12,12 @@ use rewards_calculation::types::RewardPeriod;
 use std::collections::BTreeMap;
 use std::ops::Add;
 use std::str::FromStr;
+use ic_http_types::{HttpRequest, HttpResponse, HttpResponseBuilder};
 use telemetry::QueryCallMeasurement;
 
 mod metrics;
 mod metrics_types;
 mod registry;
-mod registry_canister;
 mod storage;
 mod telemetry;
 
@@ -167,10 +166,10 @@ fn setup_timers() {
         // It's 1AM since the canister was installed or upgraded.
         // Schedule a repeat timer to run sync_all() every 24 hours.
         // Sadly we ignore leap seconds here.
-        ic_cdk_timers::set_timer_interval(std::time::Duration::from_secs(DAY_IN_SECONDS), || ic_cdk::futures::spawn(sync_all()));
+        ic_cdk_timers::set_timer_interval(std::time::Duration::from_secs(DAY_IN_SECONDS), || ic_cdk::spawn(sync_all()));
 
         // Spawn a sync_all() right now.
-        ic_cdk::futures::spawn(sync_all());
+        ic_cdk::spawn(sync_all());
 
         // Hourly timers after first sync.  One for rewards query, and N for rewards calculation query.
         ic_cdk_timers::set_timer_interval(std::time::Duration::from_secs(HOUR_IN_SECONDS), measure_get_node_providers_rewards_query);
@@ -184,7 +183,7 @@ fn setup_timers() {
     // Hourly timers.
     ic_cdk_timers::set_timer_interval(std::time::Duration::from_secs(HOUR_IN_SECONDS), || {
         // Retry subnets fetching every hour.
-        ic_cdk::futures::spawn(async {
+        ic_cdk::spawn(async {
             let metrics_manager = METRICS_MANAGER.with(|m| m.clone());
             metrics_manager.retry_failed_subnets().await;
         });

@@ -111,6 +111,7 @@ ic-management-types = { path = "rs/ic-management-types" }
 ic-metrics = { git = "https://github.com/dfinity/ic.git", rev = "317aacf3f9fed00c1ff8fddb3def43259f1d83a7" }
 ic-nervous-system-canisters = { git = "https://github.com/dfinity/ic.git", rev = "317aacf3f9fed00c1ff8fddb3def43259f1d83a7" }
 ic-nervous-system-common = { git = "https://github.com/dfinity/ic.git", rev = "317aacf3f9fed00c1ff8fddb3def43259f1d83a7" }
+ic-nervous-system-runtime = { git = "https://github.com/dfinity/ic.git", rev = "317aacf3f9fed00c1ff8fddb3def43259f1d83a7" }
 ic-nns-common = { git = "https://github.com/dfinity/ic.git", rev = "317aacf3f9fed00c1ff8fddb3def43259f1d83a7" }
 ic-nns-constants = { git = "https://github.com/dfinity/ic.git", rev = "317aacf3f9fed00c1ff8fddb3def43259f1d83a7" }
 ic-nns-governance = { git = "https://github.com/dfinity/ic.git", rev = "317aacf3f9fed00c1ff8fddb3def43259f1d83a7" }

@@ -28,6 +28,7 @@ pub mod sns_wasm;
 #[derive(Clone)]
 pub struct IcAgentCanisterClient {
     pub agent: Agent,
+    pub nns_url: Url,
 }
 
 impl IcAgentCanisterClient {
@@ -58,10 +59,10 @@ impl IcAgentCanisterClient {
         let agent = Agent::builder()
             .with_identity(identity)
             .with_http_client(client)
-            .with_url(url)
+            .with_url(url.clone())
             .with_verify_query_signatures(false)
             .build()?;
-        Ok(Self { agent })
+        Ok(Self { agent, nns_url: url })
     }
 
     pub async fn read_state_subnet_metrics(&self, subnet_id: &PrincipalId) -> anyhow::Result<SubnetMetrics> {

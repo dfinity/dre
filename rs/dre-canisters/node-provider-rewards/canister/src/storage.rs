@@ -1,11 +1,12 @@
 use crate::metrics::{ICCanisterClient, MetricsManager};
 use crate::registry::RegistryClient;
-use crate::registry_canister::RegistryCanister;
 use ic_registry_canister_client::{RegistryDataStableMemory, StableCanisterRegistryClient, StorableRegistryKey, StorableRegistryValue};
 use ic_stable_structures::memory_manager::{MemoryId, MemoryManager, VirtualMemory};
 use ic_stable_structures::{DefaultMemoryImpl, StableBTreeMap, Storable};
 use std::cell::RefCell;
 use std::rc::Rc;
+use std::sync::Arc;
+use ic_nervous_system_canisters::registry::RegistryCanister;
 
 pub type VM = VirtualMemory<DefaultMemoryImpl>;
 
@@ -42,7 +43,7 @@ thread_local! {
     pub static REGISTRY_STORE: Rc<RegistryClient<RegistryStoreStableMemoryBorrower>> = {
         let registry_client = RegistryClient {
             store: StableCanisterRegistryClient::<RegistryStoreStableMemoryBorrower>::new(
-            Box::new(RegistryCanister::new()))
+            Arc::new(RegistryCanister::new()))
         };
         Rc::new(registry_client)
     };
