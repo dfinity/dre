@@ -254,7 +254,7 @@ impl IcAdminImpl {
                         };
                         if s.starts_with("--") {
                             format!("{acc} \\\n    {s}")
-                        } else if !acc.split(' ').last().unwrap_or_default().starts_with("--") {
+                        } else if !acc.split(' ').next_back().unwrap_or_default().starts_with("--") {
                             format!("{acc} \\\n  {s}")
                         } else {
                             format!("{acc} {s}")

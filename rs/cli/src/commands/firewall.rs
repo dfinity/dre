@@ -104,7 +104,7 @@ impl ExecutableCommand for Firewall {
         info!("Pretty printing diff:\n{}", diff);
         //TODO: adapt to use set-firewall config so we can modify more than 1 rule at a time
 
-        match reverse_sorted.into_iter().last() {
+        match reverse_sorted.into_iter().next_back() {
             Some((_, mods)) => {
                 Self::create_proposal(
                     &ctx,
