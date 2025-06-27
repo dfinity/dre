@@ -59,7 +59,7 @@ use ic_registry_client_helpers::subnet::SubnetListRegistry;
 
 pub const NNS_SUBNET_NAME: &str = "NNS";
 
-pub const DFINITY_DCS: &str = "zh2 mr1 bo1 sh1";
+pub const DFINITY_DCS: &str = "zh2 sh1 se1";
 
 pub struct RegistryState {
     network: Network,
