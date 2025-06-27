@@ -219,10 +219,8 @@ impl GovernanceCanisterWrapper {
             acc.full_neurons.extend(current.full_neurons);
             acc.neuron_infos.extend(current.neuron_infos);
 
-            if let Some(total) = acc.total_pages_available {
-                if page_number >= total {
-                    break;
-                }
+            if Some(page_number) >= acc.total_pages_available || acc.total_pages_available.is_none() {
+                break;
             }
 
             page_number += 1;
