@@ -90,7 +90,7 @@ futures-util = "0.3.31"
 hex = "0.4.3"
 humantime = "2.2.0"
 humantime-serde = "1.1.1"
-ic-agent = "0.39.3"
+ic-agent = "0.40.1"
 octocrab = "0.41.2"
 self_update = { version = "0.41.0", default-features = false, features = [
     "archive-tar",
@@ -140,7 +140,7 @@ rosetta-core = { git = "https://github.com/dfinity/ic.git", rev = "317aacf3f9fed
 icp-ledger = { git = "https://github.com/dfinity/ic.git", rev = "317aacf3f9fed00c1ff8fddb3def43259f1d83a7" }
 icrc-ledger-types = { version = "0.1.9" }
 ic-metrics-encoder = "1.1.1"
-ic-transport-types = "0.39.3"
+ic-transport-types = "0.40.1"
 ic-utils = "0.39.3"
 itertools = "0.13.0"
 keyring = { version = "3.6.2", features = [
@@ -199,7 +199,7 @@ thiserror = "2.0.12"
 tokio = { version = "1.45.1", features = ["full"] }
 tokio-util = "0.7.15"
 url = "2.5.4"
-wiremock = "0.6.3"
+wiremock = "0.6.4"
 human_bytes = "0.4"
 mockall = "0.13.1"
 
@@ -213,7 +213,7 @@ rewards-calculation = { path = "rs/dre-canisters/node-provider-rewards/rewards-c
 node-provider-rewards-api = { path = "rs/dre-canisters/node-provider-rewards/canister/api" }
 
 # dre-airflow deps, should be replaced with dre-airflow once
-indexmap = { version = "2.9.0", features = ["serde"] }
+indexmap = { version = "2.10.0", features = ["serde"] }
 
 [profile.release]
 # Add debug information to the release build (does NOT reduce the level of optimization!)
