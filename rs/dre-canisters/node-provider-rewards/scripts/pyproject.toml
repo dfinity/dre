@@ -1,0 +1,27 @@
+[project]
+name = "scripts"
+version = "0.1.0"
+description = "Add your description here"
+authors = [
+    { name = "Pietro", email = "pietro.di.marco@dfinity.org" }
+]
+dependencies = [
+    "requests>=2.32.3",
+    "matplotlib>=3.10.3",
+]
+readme = "README.md"
+requires-python = ">= 3.12"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.rye]
+managed = true
+dev-dependencies = []
+
+[tool.hatch.metadata]
+allow-direct-references = true
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/scripts"]

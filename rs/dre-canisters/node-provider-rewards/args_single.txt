@@ -1,0 +1,9 @@
+(
+  record {
+    provider_id = principal "rbn2y-6vfsb-gv35j-4cyvy-pzbdu-e5aum-jzjg6-5b4n5-vuguf-ycubq-zae";
+    reward_period = record {
+      start_ts = 1746748800000000000;
+      end_ts = 1750012799999999999;
+    };
+  }
+)

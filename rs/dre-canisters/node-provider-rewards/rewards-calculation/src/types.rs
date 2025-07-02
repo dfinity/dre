@@ -1,7 +1,7 @@
 use crate::rewards_calculator_results::DayUTC;
 use ic_base_types::{NodeId, PrincipalId, SubnetId};
+use ic_protobuf::registry::node::v1::NodeRewardType;
 use ic_types::Time;
-use std::collections::HashMap;
 use std::error::Error;
 use std::fmt;
 use std::fmt::Display;
@@ -37,19 +37,40 @@ impl DayEnd {
     }
 }
 
+#[derive(Debug, Clone, PartialEq, Default)]
+pub struct DateRange {
+    pub from: DayUTC,
+    pub to: DayUTC,
+}
+
+impl DateRange {
+    pub fn iter_days(&self) -> impl Iterator<Item = DayUTC> + use<'_> {
+        (0..)
+            .map(move |i| self.from.0.get() + i * NANOS_PER_DAY)
+            .take_while(move |&ts| ts <= self.to.0.get())
+            .map(|ts| ts.into())
+    }
+
+    pub fn contains(&self, day: DayUTC) -> bool {
+        day >= self.from && day <= self.to
+    }
+}
+
 /// Reward period in which we want to reward the node providers
 ///
 /// This period ensures that all `BlockmakerMetrics` collected during the reward period are included consistently
 /// with the invariant defined in [`ic_replicated_state::metadata_state::BlockmakerMetricsTimeSeries`].
 #[derive(Debug, Clone, PartialEq)]
-pub struct RewardPeriod {
-    pub from: DayUTC,
-    pub to: DayUTC,
-}
+pub struct RewardPeriod(pub DateRange);
 
 impl Display for RewardPeriod {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "RewardPeriod: {} - {}", self.from.unix_ts_at_day_start(), self.to.unix_ts_at_day_end())
+        write!(
+            f,
+            "RewardPeriod: {} - {}",
+            self.0.from.unix_ts_at_day_start(),
+            self.0.to.unix_ts_at_day_end()
+        )
     }
 }
 
@@ -74,14 +95,14 @@ impl RewardPeriod {
             return Err(RewardPeriodError::EndTimestampLaterThanToday);
         }
 
-        Ok(Self {
+        Ok(Self(DateRange {
             from: start_ts.into(),
             to: end_ts.into(),
-        })
+        }))
     }
 
     pub fn contains(&self, day: DayUTC) -> bool {
-        day >= self.from && day <= self.to
+        self.0.contains(day)
     }
 }
 
@@ -108,13 +129,10 @@ impl Error for RewardPeriodError {}
 
 #[derive(Eq, Hash, PartialEq, Clone, Ord, PartialOrd, Debug, Default)]
 pub struct Region(pub String);
-#[derive(Eq, Hash, PartialEq, Clone, Ord, PartialOrd, Debug, Default)]
-pub struct NodeType(pub String);
 
 #[derive(Default)]
 pub struct ProviderRewardableNodes {
     pub provider_id: PrincipalId,
-    pub rewardable_nodes_count: HashMap<(Region, NodeType), u32>,
     pub rewardable_nodes: Vec<RewardableNode>,
 }
 #[derive(Eq, Hash, PartialEq, Clone, Ord, PartialOrd, Debug)]
@@ -123,7 +141,7 @@ pub struct RewardableNode {
     pub rewardable_from: DayUTC,
     pub rewardable_to: DayUTC,
     pub region: Region,
-    pub node_type: NodeType,
+    pub node_type: NodeRewardType,
     pub dc_id: String,
 }
 
@@ -143,7 +161,6 @@ pub struct SubnetMetricsDailyKey {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::rewards_calculator_results::days_between;
     use crate::types::UnixTsNanos;
     use chrono::{TimeZone, Utc};
 
@@ -159,18 +176,9 @@ mod tests {
         let rp = RewardPeriod::new(unaligned_start_ts, unaligned_end_ts).unwrap();
         let expected_start_ts = ymdh_to_ts(2020, 1, 12, 0);
         let expected_end_ts = ymdh_to_ts(2020, 1, 16, 0) - 1;
-        let days = days_between(rp.from, rp.to);
 
-        assert_eq!(rp.from.unix_ts_at_day_start(), expected_start_ts);
-        assert_eq!(rp.to.unix_ts_at_day_end(), expected_end_ts);
-        assert_eq!(days, 4);
-
-        let unaligned_end_ts = ymdh_to_ts(2020, 1, 12, 13);
-
-        let rp = RewardPeriod::new(unaligned_start_ts, unaligned_end_ts).unwrap();
-        let days = days_between(rp.from, rp.to);
-
-        assert_eq!(days, 1);
+        assert_eq!(rp.0.from.unix_ts_at_day_start(), expected_start_ts);
+        assert_eq!(rp.0.to.unix_ts_at_day_end(), expected_end_ts);
     }
 
     #[test]
