@@ -1,9 +1,11 @@
+use crate::ctx::DreContext;
 use crate::{auth::AuthRequirement, exe::args::GlobalArgs, exe::ExecutableCommand};
 use clap::Args;
 use ic_canisters::governance::GovernanceCanisterWrapper;
 use ic_canisters::IcAgentCanisterClient;
 use ic_management_backend::{health::HealthStatusQuerier, lazy_registry::LazyRegistry};
 use ic_management_types::{HealthStatus, Network, Operator};
+use ic_protobuf::registry::node::v1::NodeRewardType;
 use ic_protobuf::registry::{
     dc::v1::DataCenterRecord,
     hostos_version::v1::HostosVersionRecord,
@@ -30,8 +32,6 @@ use std::{
     str::FromStr,
     sync::Arc,
 };
-
-use crate::ctx::DreContext;
 
 #[derive(Args, Debug)]
 #[clap(after_help = r#"EXAMPLES:
@@ -343,13 +343,21 @@ async fn _get_nodes(
         .iter()
         .map(|(k, record)| {
             let node_operator_id = record.operator.principal;
-            let node_type = match rewardable_nodes.get_mut(&node_operator_id) {
+            let node_reward_type = match rewardable_nodes.get_mut(&node_operator_id) {
                 Some(rewardable_nodes) => {
                     if rewardable_nodes.len() > 1 {
                         // NodeId -> NodeType mapping needed in this case
-                        "unknown:multiple_rewardable_nodes".to_string()
+                        if record.node_reward_type != NodeRewardType::Unspecified {
+                            format!("{}", record.node_reward_type.as_str_name())
+                        } else {
+                            "unknown:multiple_rewardable_nodes".to_string()
+                        }
                     } else if rewardable_nodes.is_empty() {
-                        "unknown:no_rewardable_nodes_found".to_string()
+                        if record.node_reward_type != NodeRewardType::Unspecified {
+                            format!("{}", record.node_reward_type.as_str_name())
+                        } else {
+                            "unknown:no_rewardable_nodes_found".to_string()
+                        }
                     } else {
                         // Find the first non-zero rewardable node type, or "unknown" if none are found
                         let (k, mut v) = loop {
@@ -366,7 +374,11 @@ async fn _get_nodes(
                         if v != 0 {
                             rewardable_nodes.insert(k.clone(), v);
                         }
-                        k
+                        if record.node_reward_type == NodeRewardType::Unspecified {
+                            format!("estimated:{}", k)
+                        } else {
+                            record.node_reward_type.as_str_name().to_string()
+                        }
                     }
                 }
                 None => "unknown".to_string(),
@@ -398,7 +410,7 @@ async fn _get_nodes(
                     None => "".to_string(),
                 },
                 status: nodes_health.get(k).unwrap_or(&ic_management_types::HealthStatus::Unknown).clone(),
-                node_type,
+                node_reward_type,
             }
         })
         .collect::<Vec<_>>();
@@ -584,7 +596,7 @@ struct NodeDetails {
     dc_id: String,
     node_provider_id: PrincipalId,
     status: HealthStatus,
-    node_type: String,
+    node_reward_type: String,
 }
 
 /// User-friendly representation of a SubnetRecord. For instance,
