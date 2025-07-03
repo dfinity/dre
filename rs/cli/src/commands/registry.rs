@@ -336,53 +336,57 @@ async fn _get_nodes(
         .map(|(k, v)| (*k, v.computed.max_rewardable_count.clone()))
         .collect();
 
-    let nodes = local_registry
-        .nodes()
-        .await
-        .map_err(|e| anyhow::anyhow!("Couldn't get nodes: {:?}", e))?
+    let nodes = local_registry.nodes().await.map_err(|e| anyhow::anyhow!("Couldn't get nodes: {:?}", e))?;
+
+    for (_, record) in nodes.iter() {
+        let node_operator_id = record.operator.principal;
+        let rewardable_nodes = rewardable_nodes.get_mut(&node_operator_id);
+
+        if let Some(rewardable_nodes) = rewardable_nodes {
+            let table_node_reward_type = match record.node_reward_type {
+                NodeRewardType::Type0 => "type0",
+                NodeRewardType::Type1 => "type1",
+                NodeRewardType::Type2 => "type2",
+                NodeRewardType::Type3 => "type3",
+                NodeRewardType::Type1dot1 => "type1.1",
+                NodeRewardType::Type3dot1 => "type3.1",
+                NodeRewardType::Unspecified => "unspecified",
+            };
+
+            if let Some(count) = rewardable_nodes.remove(table_node_reward_type) {
+                let new_count = count.saturating_sub(1);
+                if new_count > 0 {
+                    rewardable_nodes.insert(table_node_reward_type.to_string(), new_count);
+                }
+            }
+        }
+    }
+
+    let nodes = nodes
         .iter()
         .map(|(k, record)| {
             let node_operator_id = record.operator.principal;
-            let node_reward_type = match rewardable_nodes.get_mut(&node_operator_id) {
-                Some(rewardable_nodes) => {
-                    if rewardable_nodes.len() > 1 {
-                        // NodeId -> NodeType mapping needed in this case
-                        if record.node_reward_type != NodeRewardType::Unspecified {
-                            format!("{}", record.node_reward_type.as_str_name())
-                        } else {
-                            "unknown:multiple_rewardable_nodes".to_string()
-                        }
-                    } else if rewardable_nodes.is_empty() {
-                        if record.node_reward_type != NodeRewardType::Unspecified {
-                            format!("{}", record.node_reward_type.as_str_name())
-                        } else {
-                            "unknown:no_rewardable_nodes_found".to_string()
-                        }
-                    } else {
-                        // Find the first non-zero rewardable node type, or "unknown" if none are found
-                        let (k, mut v) = loop {
-                            let (k, v) = match rewardable_nodes.pop_first() {
-                                Some(kv) => kv,
-                                None => break ("unknown:rewardable_nodes_used_up".to_string(), 0),
-                            };
+            let rewardable_nodes = rewardable_nodes.get_mut(&node_operator_id);
+            let node_reward_type = if record.node_reward_type != NodeRewardType::Unspecified {
+                record.node_reward_type.as_str_name().to_string()
+            } else {
+                match rewardable_nodes {
+                    Some(rewardable_nodes) => match rewardable_nodes.len() {
+                        0 => "unknown:no_rewardable_nodes_found".to_string(),
+                        1 => {
+                            let (k, mut v) = rewardable_nodes.pop_first().unwrap_or_else(|| ("unknown".to_string(), 0));
+                            v = v.saturating_sub(1);
                             if v != 0 {
-                                break (k, v);
+                                rewardable_nodes.insert(k.clone(), v);
                             }
-                        };
-                        v = v.saturating_sub(1);
-                        // Insert back if not zero
-                        if v != 0 {
-                            rewardable_nodes.insert(k.clone(), v);
-                        }
-                        if record.node_reward_type == NodeRewardType::Unspecified {
                             format!("estimated:{}", k)
-                        } else {
-                            record.node_reward_type.as_str_name().to_string()
                         }
-                    }
+                        _ => "unknown:multiple_rewardable_nodes".to_string(),
+                    },
+                    None => "unknown".to_string(),
                 }
-                None => "unknown".to_string(),
             };
+
             NodeDetails {
                 node_id: *k,
                 xnet: Some(ConnectionEndpoint {
