@@ -353,12 +353,10 @@ async fn _get_nodes(
                 NodeRewardType::Unspecified => "unspecified",
             };
 
-            if let Some(count) = rewardable_nodes.remove(table_node_reward_type) {
-                let new_count = count.saturating_sub(1);
-                if new_count > 0 {
-                    rewardable_nodes.insert(table_node_reward_type.to_string(), new_count);
-                }
-            }
+            rewardable_nodes
+                .entry(table_node_reward_type.to_string())
+                .and_modify(|count| *count = 0.max(count.saturating_sub(1)));
+
         }
     }
 
