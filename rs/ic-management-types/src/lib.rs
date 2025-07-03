@@ -311,7 +311,7 @@ pub struct Node {
     pub is_api_boundary_node: bool,
     pub chip_id: Option<Vec<u8>>,
     pub public_ipv4_config: Option<IPv4InterfaceConfig>,
-    pub node_reward_type: NodeRewardType,
+    pub node_reward_type: Option<NodeRewardType>,
 }
 
 impl Node {

@@ -343,7 +343,7 @@ async fn _get_nodes(
         let rewardable_nodes = rewardable_nodes.get_mut(&node_operator_id);
 
         if let Some(rewardable_nodes) = rewardable_nodes {
-            let table_node_reward_type = match record.node_reward_type {
+            let table_node_reward_type = match record.node_reward_type.unwrap_or(NodeRewardType::Unspecified) {
                 NodeRewardType::Type0 => "type0",
                 NodeRewardType::Type1 => "type1",
                 NodeRewardType::Type2 => "type2",
@@ -366,9 +366,11 @@ async fn _get_nodes(
         .iter()
         .map(|(k, record)| {
             let node_operator_id = record.operator.principal;
+            let node_reward_type = record.node_reward_type.unwrap_or(NodeRewardType::Unspecified);
             let rewardable_nodes = rewardable_nodes.get_mut(&node_operator_id);
-            let node_reward_type = if record.node_reward_type != NodeRewardType::Unspecified {
-                record.node_reward_type.as_str_name().to_string()
+
+            let node_reward_type = if node_reward_type != NodeRewardType::Unspecified {
+                node_reward_type.as_str_name().to_string()
             } else {
                 match rewardable_nodes {
                     Some(rewardable_nodes) => match rewardable_nodes.len() {

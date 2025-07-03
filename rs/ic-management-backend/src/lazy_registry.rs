@@ -563,7 +563,9 @@ impl LazyRegistry for LazyRegistryImpl {
                             is_api_boundary_node: api_boundary_nodes.contains_key(p),
                             chip_id: nr.chip_id.clone(),
                             public_ipv4_config: nr.public_ipv4_config.clone(),
-                            node_reward_type: NodeRewardType::try_from(nr.node_reward_type.unwrap_or_default()).expect("invalid node reward type"),
+                            node_reward_type: Some(
+                                NodeRewardType::try_from(nr.node_reward_type.unwrap_or_default()).expect("invalid node reward type"),
+                            ),
                         },
                     )
                 })
