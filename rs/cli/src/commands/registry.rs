@@ -355,7 +355,7 @@ async fn _get_nodes(
 
             rewardable_nodes
                 .entry(table_node_reward_type.to_string())
-                .and_modify(|count| *count = 0.max(count.saturating_sub(1)));
+                .and_modify(|count| *count = count.saturating_sub(1));
         }
     }
 
