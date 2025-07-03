@@ -374,7 +374,7 @@ async fn _get_nodes(
                     Some(rewardable_nodes) => match rewardable_nodes.len() {
                         0 => "unknown:no_rewardable_nodes_found".to_string(),
                         1 => {
-                            let (k, mut v) = rewardable_nodes.pop_first().unwrap_or_else(|| ("unknown".to_string(), 0));
+                            let (k, mut v) = rewardable_nodes.pop_first().unwrap();
                             v = v.saturating_sub(1);
                             if v != 0 {
                                 rewardable_nodes.insert(k.clone(), v);
