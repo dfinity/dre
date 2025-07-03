@@ -10,7 +10,7 @@ use ic_nns_governance::pb::v1::NnsFunction;
 use ic_nns_governance::pb::v1::ProposalStatus;
 use ic_nns_governance_api::proposal::Action;
 use ic_nns_governance_api::ProposalInfo;
-use ic_protobuf::registry::node::v1::IPv4InterfaceConfig;
+use ic_protobuf::registry::node::v1::{IPv4InterfaceConfig, NodeRewardType};
 use ic_protobuf::registry::subnet::v1::ChainKeyConfig;
 use ic_protobuf::registry::subnet::v1::SubnetFeatures;
 use ic_registry_subnet_type::SubnetType;
@@ -311,6 +311,7 @@ pub struct Node {
     pub is_api_boundary_node: bool,
     pub chip_id: Option<Vec<u8>>,
     pub public_ipv4_config: Option<IPv4InterfaceConfig>,
+    pub node_reward_type: Option<NodeRewardType>,
 }
 
 impl Node {
@@ -597,6 +598,8 @@ pub struct Operator {
     pub datacenter: Option<Datacenter>,
     #[serde(default)]
     pub rewardable_nodes: BTreeMap<String, u32>,
+    #[serde(default)]
+    pub max_rewardable_nodes: BTreeMap<String, u32>,
     #[serde(default)]
     pub ipv6: String,
 }

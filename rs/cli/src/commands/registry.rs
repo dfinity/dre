@@ -1,9 +1,11 @@
+use crate::ctx::DreContext;
 use crate::{auth::AuthRequirement, exe::args::GlobalArgs, exe::ExecutableCommand};
 use clap::Args;
 use ic_canisters::governance::GovernanceCanisterWrapper;
 use ic_canisters::IcAgentCanisterClient;
 use ic_management_backend::{health::HealthStatusQuerier, lazy_registry::LazyRegistry};
 use ic_management_types::{HealthStatus, Network, Operator};
+use ic_protobuf::registry::node::v1::NodeRewardType;
 use ic_protobuf::registry::{
     dc::v1::DataCenterRecord,
     hostos_version::v1::HostosVersionRecord,
@@ -30,8 +32,6 @@ use std::{
     str::FromStr,
     sync::Arc,
 };
-
-use crate::ctx::DreContext;
 
 #[derive(Args, Debug)]
 #[clap(after_help = r#"EXAMPLES:
@@ -336,41 +336,56 @@ async fn _get_nodes(
         .map(|(k, v)| (*k, v.computed.max_rewardable_count.clone()))
         .collect();
 
-    let nodes = local_registry
-        .nodes()
-        .await
-        .map_err(|e| anyhow::anyhow!("Couldn't get nodes: {:?}", e))?
+    let nodes = local_registry.nodes().await.map_err(|e| anyhow::anyhow!("Couldn't get nodes: {:?}", e))?;
+
+    for (_, record) in nodes.iter() {
+        let node_operator_id = record.operator.principal;
+        let rewardable_nodes = rewardable_nodes.get_mut(&node_operator_id);
+
+        if let Some(rewardable_nodes) = rewardable_nodes {
+            let table_node_reward_type = match record.node_reward_type.unwrap_or(NodeRewardType::Unspecified) {
+                NodeRewardType::Type0 => "type0",
+                NodeRewardType::Type1 => "type1",
+                NodeRewardType::Type2 => "type2",
+                NodeRewardType::Type3 => "type3",
+                NodeRewardType::Type1dot1 => "type1.1",
+                NodeRewardType::Type3dot1 => "type3.1",
+                NodeRewardType::Unspecified => "unspecified",
+            };
+
+            rewardable_nodes
+                .entry(table_node_reward_type.to_string())
+                .and_modify(|count| *count = count.saturating_sub(1));
+        }
+    }
+
+    let nodes = nodes
         .iter()
         .map(|(k, record)| {
             let node_operator_id = record.operator.principal;
-            let node_type = match rewardable_nodes.get_mut(&node_operator_id) {
-                Some(rewardable_nodes) => {
-                    if rewardable_nodes.len() > 1 {
-                        // NodeId -> NodeType mapping needed in this case
-                        "unknown:multiple_rewardable_nodes".to_string()
-                    } else if rewardable_nodes.is_empty() {
-                        "unknown:no_rewardable_nodes_found".to_string()
-                    } else {
-                        // Find the first non-zero rewardable node type, or "unknown" if none are found
-                        let (k, mut v) = loop {
-                            let (k, v) = match rewardable_nodes.pop_first() {
-                                Some(kv) => kv,
-                                None => break ("unknown:rewardable_nodes_used_up".to_string(), 0),
-                            };
+            let node_reward_type = record.node_reward_type.unwrap_or(NodeRewardType::Unspecified);
+            let rewardable_nodes = rewardable_nodes.get_mut(&node_operator_id);
+
+            let node_reward_type = if node_reward_type != NodeRewardType::Unspecified {
+                node_reward_type.as_str_name().to_string()
+            } else {
+                match rewardable_nodes {
+                    Some(rewardable_nodes) => match rewardable_nodes.len() {
+                        0 => "unknown:no_rewardable_nodes_found".to_string(),
+                        1 => {
+                            let (k, mut v) = rewardable_nodes.pop_first().unwrap();
+                            v = v.saturating_sub(1);
                             if v != 0 {
-                                break (k, v);
+                                rewardable_nodes.insert(k.clone(), v);
                             }
-                        };
-                        v = v.saturating_sub(1);
-                        // Insert back if not zero
-                        if v != 0 {
-                            rewardable_nodes.insert(k.clone(), v);
+                            format!("estimated:{}", k)
                         }
-                        k
-                    }
+                        _ => "unknown:multiple_rewardable_nodes".to_string(),
+                    },
+                    None => "unknown".to_string(),
                 }
-                None => "unknown".to_string(),
             };
+
             NodeDetails {
                 node_id: *k,
                 xnet: Some(ConnectionEndpoint {
@@ -398,7 +413,7 @@ async fn _get_nodes(
                     None => "".to_string(),
                 },
                 status: nodes_health.get(k).unwrap_or(&ic_management_types::HealthStatus::Unknown).clone(),
-                node_type,
+                node_reward_type,
             }
         })
         .collect::<Vec<_>>();
@@ -584,7 +599,7 @@ struct NodeDetails {
     dc_id: String,
     node_provider_id: PrincipalId,
     status: HealthStatus,
-    node_type: String,
+    node_reward_type: String,
 }
 
 /// User-friendly representation of a SubnetRecord. For instance,
