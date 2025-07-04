@@ -133,7 +133,7 @@ impl<S: RegistryDataStableMemory> RegistryClient<S> {
 
         let key_prefix = NodeRecord::KEY_PREFIX;
         let prefix_length = key_prefix.len();
-        let start_range = StorableRegistryKey::new(key_prefix.to_string(), Default::default());
+        let start_range = StorableRegistryKey::new(key_prefix.to_string(), Default::default(), 0);
 
         let mut registered_between_versions = IndexMap::new();
         S::with_registry_map(|map| {
