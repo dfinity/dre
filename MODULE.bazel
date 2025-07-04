@@ -152,7 +152,7 @@ http_file(
 
 http_archive = use_repo_rule("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 
-IC_REPO_VERSION = "317aacf3f9fed00c1ff8fddb3def43259f1d83a7"
+IC_REPO_VERSION = "44a0b91087f662dfc6f0f81a303029f07bdec213"
 
 http_archive(
     name = "ic_repo",
