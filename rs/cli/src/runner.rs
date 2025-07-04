@@ -169,6 +169,12 @@ impl Runner {
                 .expect("Failed to get a GuestOS version of the NNS subnet"),
         );
 
+        let summary_nodes = subnet_creation_data
+            .node_ids_added
+            .iter()
+            .map(|i| i.to_string().split_once("-").unwrap().0.to_string())
+            .join(", ");
+
         Ok(Some(IcAdminProposal::new(
             IcAdminProposalCommand::CreateSubnet {
                 node_ids: subnet_creation_data.node_ids_added,
@@ -176,8 +182,8 @@ impl Runner {
                 other_args,
             },
             IcAdminProposalOptions {
-                title: Some("Creating new subnet".into()),
-                summary: Some("# Creating new subnet with nodes: ".into()),
+                title: Some("Creating a new subnet".into()),
+                summary: Some(format!("# Creating a new subnet with nodes: [{}]", summary_nodes)),
                 motivation: Some(motivation),
             },
         )))
