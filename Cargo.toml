@@ -90,7 +90,7 @@ futures-util = "0.3.31"
 hex = "0.4.3"
 humantime = "2.2.0"
 humantime-serde = "1.1.1"
-ic-agent = "0.39.3"
+ic-agent = "0.40.1"
 octocrab = "0.41.2"
 self_update = { version = "0.41.0", default-features = false, features = [
     "archive-tar",
@@ -140,7 +140,7 @@ rosetta-core = { git = "https://github.com/dfinity/ic.git", rev = "44a0b91087f66
 icp-ledger = { git = "https://github.com/dfinity/ic.git", rev = "44a0b91087f662dfc6f0f81a303029f07bdec213" }
 icrc-ledger-types = { version = "0.1.10" }
 ic-metrics-encoder = "1.1.1"
-ic-transport-types = "0.39.3"
+ic-transport-types = "0.40.1"
 ic-utils = "0.39.3"
 itertools = "0.13.0"
 keyring = { version = "3.6.2", features = [
