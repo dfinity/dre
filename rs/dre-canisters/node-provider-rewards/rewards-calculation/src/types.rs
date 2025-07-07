@@ -112,7 +112,7 @@ pub struct Region(pub String);
 #[derive(Eq, Hash, PartialEq, Clone, Ord, PartialOrd, Debug, Default)]
 pub struct NodeType(pub String);
 
-#[derive(Default)]
+#[derive(Default, Debug)]
 pub struct ProviderRewardableNodes {
     pub provider_id: PrincipalId,
     pub rewardable_nodes: Vec<RewardableNode>,
