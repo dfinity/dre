@@ -96,48 +96,48 @@ self_update = { version = "0.41.0", default-features = false, features = [
     "archive-tar",
     "rustls",
 ] }
-ic-base-types = { git = "https://github.com/dfinity/ic.git", rev = "44a0b91087f662dfc6f0f81a303029f07bdec213" }
-ic-canister-client = { git = "https://github.com/dfinity/ic.git", rev = "44a0b91087f662dfc6f0f81a303029f07bdec213" }
-ic-canister-client-sender = { git = "https://github.com/dfinity/ic.git", rev = "44a0b91087f662dfc6f0f81a303029f07bdec213" }
+ic-base-types = { git = "https://github.com/dfinity/ic.git", rev = "2f87fe95207dc6371a2f2dc273362ba03b41e0e9" }
+ic-canister-client = { git = "https://github.com/dfinity/ic.git", rev = "2f87fe95207dc6371a2f2dc273362ba03b41e0e9" }
+ic-canister-client-sender = { git = "https://github.com/dfinity/ic.git", rev = "2f87fe95207dc6371a2f2dc273362ba03b41e0e9" }
 ic-canisters = { path = "rs/ic-canisters" }
-ic-http-types = { git = "https://github.com/dfinity/ic.git", rev = "44a0b91087f662dfc6f0f81a303029f07bdec213" }
-ic-config = { git = "https://github.com/dfinity/ic.git", rev = "44a0b91087f662dfc6f0f81a303029f07bdec213" }
-ic-crypto-utils-threshold-sig-der = { git = "https://github.com/dfinity/ic.git", rev = "44a0b91087f662dfc6f0f81a303029f07bdec213" }
-ic-http-endpoints-metrics = { git = "https://github.com/dfinity/ic.git", rev = "44a0b91087f662dfc6f0f81a303029f07bdec213" }
-ic-interfaces-registry = { git = "https://github.com/dfinity/ic.git", rev = "44a0b91087f662dfc6f0f81a303029f07bdec213" }
+ic-http-types = { git = "https://github.com/dfinity/ic.git", rev = "2f87fe95207dc6371a2f2dc273362ba03b41e0e9" }
+ic-config = { git = "https://github.com/dfinity/ic.git", rev = "2f87fe95207dc6371a2f2dc273362ba03b41e0e9" }
+ic-crypto-utils-threshold-sig-der = { git = "https://github.com/dfinity/ic.git", rev = "2f87fe95207dc6371a2f2dc273362ba03b41e0e9" }
+ic-http-endpoints-metrics = { git = "https://github.com/dfinity/ic.git", rev = "2f87fe95207dc6371a2f2dc273362ba03b41e0e9" }
+ic-interfaces-registry = { git = "https://github.com/dfinity/ic.git", rev = "2f87fe95207dc6371a2f2dc273362ba03b41e0e9" }
 ic-management-backend = { path = "rs/ic-management-backend" }
-ic-management-canister-types-private = { git = "https://github.com/dfinity/ic.git", rev = "44a0b91087f662dfc6f0f81a303029f07bdec213" }
+ic-management-canister-types-private = { git = "https://github.com/dfinity/ic.git", rev = "2f87fe95207dc6371a2f2dc273362ba03b41e0e9" }
 ic-management-types = { path = "rs/ic-management-types" }
-ic-metrics = { git = "https://github.com/dfinity/ic.git", rev = "44a0b91087f662dfc6f0f81a303029f07bdec213" }
-ic-nervous-system-canisters = { git = "https://github.com/dfinity/ic.git", rev = "44a0b91087f662dfc6f0f81a303029f07bdec213" }
-ic-nervous-system-common = { git = "https://github.com/dfinity/ic.git", rev = "44a0b91087f662dfc6f0f81a303029f07bdec213" }
-ic-nervous-system-runtime = { git = "https://github.com/dfinity/ic.git", rev = "44a0b91087f662dfc6f0f81a303029f07bdec213" }
-ic-nns-common = { git = "https://github.com/dfinity/ic.git", rev = "44a0b91087f662dfc6f0f81a303029f07bdec213" }
-ic-nns-constants = { git = "https://github.com/dfinity/ic.git", rev = "44a0b91087f662dfc6f0f81a303029f07bdec213" }
-ic-nns-governance = { git = "https://github.com/dfinity/ic.git", rev = "44a0b91087f662dfc6f0f81a303029f07bdec213" }
-ic-nns-governance-api = { git = "https://github.com/dfinity/ic.git", rev = "44a0b91087f662dfc6f0f81a303029f07bdec213" }
-ic-protobuf = { git = "https://github.com/dfinity/ic.git", rev = "44a0b91087f662dfc6f0f81a303029f07bdec213" }
-ic-registry-canister-client = { git = "https://github.com/dfinity/ic.git", rev = "44a0b91087f662dfc6f0f81a303029f07bdec213" }
-ic-registry-client = { git = "https://github.com/dfinity/ic.git", rev = "44a0b91087f662dfc6f0f81a303029f07bdec213" }
-ic-registry-client-fake = { git = "https://github.com/dfinity/ic.git", rev = "44a0b91087f662dfc6f0f81a303029f07bdec213" }
-ic-registry-client-helpers = { git = "https://github.com/dfinity/ic.git", rev = "44a0b91087f662dfc6f0f81a303029f07bdec213" }
-ic-registry-common-proto = { git = "https://github.com/dfinity/ic.git", rev = "44a0b91087f662dfc6f0f81a303029f07bdec213" }
-ic-registry-keys = { git = "https://github.com/dfinity/ic.git", rev = "44a0b91087f662dfc6f0f81a303029f07bdec213" }
-ic-registry-local-registry = { git = "https://github.com/dfinity/ic.git", rev = "44a0b91087f662dfc6f0f81a303029f07bdec213" }
-ic-registry-local-store = { git = "https://github.com/dfinity/ic.git", rev = "44a0b91087f662dfc6f0f81a303029f07bdec213" }
-ic-registry-local-store-artifacts = { git = "https://github.com/dfinity/ic.git", rev = "44a0b91087f662dfc6f0f81a303029f07bdec213" }
-ic-registry-nns-data-provider = { git = "https://github.com/dfinity/ic.git", rev = "44a0b91087f662dfc6f0f81a303029f07bdec213" }
-ic-registry-subnet-type = { git = "https://github.com/dfinity/ic.git", rev = "44a0b91087f662dfc6f0f81a303029f07bdec213" }
-ic-registry-transport = { git = "https://github.com/dfinity/ic.git", rev = "44a0b91087f662dfc6f0f81a303029f07bdec213" }
-ic-sys = { git = "https://github.com/dfinity/ic.git", rev = "44a0b91087f662dfc6f0f81a303029f07bdec213" }
-ic-types = { git = "https://github.com/dfinity/ic.git", rev = "44a0b91087f662dfc6f0f81a303029f07bdec213" }
-ic-nervous-system-root = { git = "https://github.com/dfinity/ic.git", rev = "44a0b91087f662dfc6f0f81a303029f07bdec213" }
-ic-nervous-system-clients = { git = "https://github.com/dfinity/ic.git", rev = "44a0b91087f662dfc6f0f81a303029f07bdec213" }
-ic-sns-wasm = { git = "https://github.com/dfinity/ic.git", rev = "44a0b91087f662dfc6f0f81a303029f07bdec213" }
-cycles-minting-canister = { git = "https://github.com/dfinity/ic.git", rev = "44a0b91087f662dfc6f0f81a303029f07bdec213" }
-ic-icrc1-test-utils = { git = "https://github.com/dfinity/ic.git", rev = "44a0b91087f662dfc6f0f81a303029f07bdec213" }
-rosetta-core = { git = "https://github.com/dfinity/ic.git", rev = "44a0b91087f662dfc6f0f81a303029f07bdec213" }
-icp-ledger = { git = "https://github.com/dfinity/ic.git", rev = "44a0b91087f662dfc6f0f81a303029f07bdec213" }
+ic-metrics = { git = "https://github.com/dfinity/ic.git", rev = "2f87fe95207dc6371a2f2dc273362ba03b41e0e9" }
+ic-nervous-system-canisters = { git = "https://github.com/dfinity/ic.git", rev = "2f87fe95207dc6371a2f2dc273362ba03b41e0e9" }
+ic-nervous-system-common = { git = "https://github.com/dfinity/ic.git", rev = "2f87fe95207dc6371a2f2dc273362ba03b41e0e9" }
+ic-nervous-system-runtime = { git = "https://github.com/dfinity/ic.git", rev = "2f87fe95207dc6371a2f2dc273362ba03b41e0e9" }
+ic-nns-common = { git = "https://github.com/dfinity/ic.git", rev = "2f87fe95207dc6371a2f2dc273362ba03b41e0e9" }
+ic-nns-constants = { git = "https://github.com/dfinity/ic.git", rev = "2f87fe95207dc6371a2f2dc273362ba03b41e0e9" }
+ic-nns-governance = { git = "https://github.com/dfinity/ic.git", rev = "2f87fe95207dc6371a2f2dc273362ba03b41e0e9" }
+ic-nns-governance-api = { git = "https://github.com/dfinity/ic.git", rev = "2f87fe95207dc6371a2f2dc273362ba03b41e0e9" }
+ic-protobuf = { git = "https://github.com/dfinity/ic.git", rev = "2f87fe95207dc6371a2f2dc273362ba03b41e0e9" }
+ic-registry-canister-client = { git = "https://github.com/dfinity/ic.git", rev = "2f87fe95207dc6371a2f2dc273362ba03b41e0e9" }
+ic-registry-client = { git = "https://github.com/dfinity/ic.git", rev = "2f87fe95207dc6371a2f2dc273362ba03b41e0e9" }
+ic-registry-client-fake = { git = "https://github.com/dfinity/ic.git", rev = "2f87fe95207dc6371a2f2dc273362ba03b41e0e9" }
+ic-registry-client-helpers = { git = "https://github.com/dfinity/ic.git", rev = "2f87fe95207dc6371a2f2dc273362ba03b41e0e9" }
+ic-registry-common-proto = { git = "https://github.com/dfinity/ic.git", rev = "2f87fe95207dc6371a2f2dc273362ba03b41e0e9" }
+ic-registry-keys = { git = "https://github.com/dfinity/ic.git", rev = "2f87fe95207dc6371a2f2dc273362ba03b41e0e9" }
+ic-registry-local-registry = { git = "https://github.com/dfinity/ic.git", rev = "2f87fe95207dc6371a2f2dc273362ba03b41e0e9" }
+ic-registry-local-store = { git = "https://github.com/dfinity/ic.git", rev = "2f87fe95207dc6371a2f2dc273362ba03b41e0e9" }
+ic-registry-local-store-artifacts = { git = "https://github.com/dfinity/ic.git", rev = "2f87fe95207dc6371a2f2dc273362ba03b41e0e9" }
+ic-registry-nns-data-provider = { git = "https://github.com/dfinity/ic.git", rev = "2f87fe95207dc6371a2f2dc273362ba03b41e0e9" }
+ic-registry-subnet-type = { git = "https://github.com/dfinity/ic.git", rev = "2f87fe95207dc6371a2f2dc273362ba03b41e0e9" }
+ic-registry-transport = { git = "https://github.com/dfinity/ic.git", rev = "2f87fe95207dc6371a2f2dc273362ba03b41e0e9" }
+ic-sys = { git = "https://github.com/dfinity/ic.git", rev = "2f87fe95207dc6371a2f2dc273362ba03b41e0e9" }
+ic-types = { git = "https://github.com/dfinity/ic.git", rev = "2f87fe95207dc6371a2f2dc273362ba03b41e0e9" }
+ic-nervous-system-root = { git = "https://github.com/dfinity/ic.git", rev = "2f87fe95207dc6371a2f2dc273362ba03b41e0e9" }
+ic-nervous-system-clients = { git = "https://github.com/dfinity/ic.git", rev = "2f87fe95207dc6371a2f2dc273362ba03b41e0e9" }
+ic-sns-wasm = { git = "https://github.com/dfinity/ic.git", rev = "2f87fe95207dc6371a2f2dc273362ba03b41e0e9" }
+cycles-minting-canister = { git = "https://github.com/dfinity/ic.git", rev = "2f87fe95207dc6371a2f2dc273362ba03b41e0e9" }
+ic-icrc1-test-utils = { git = "https://github.com/dfinity/ic.git", rev = "2f87fe95207dc6371a2f2dc273362ba03b41e0e9" }
+rosetta-core = { git = "https://github.com/dfinity/ic.git", rev = "2f87fe95207dc6371a2f2dc273362ba03b41e0e9" }
+icp-ledger = { git = "https://github.com/dfinity/ic.git", rev = "2f87fe95207dc6371a2f2dc273362ba03b41e0e9" }
 icrc-ledger-types = { version = "0.1.10" }
 ic-metrics-encoder = "1.1.1"
 ic-transport-types = "0.39.3"
@@ -164,7 +164,7 @@ prost = "0.13"
 rand = { version = "0.9.1", features = ["std_rng"] }
 rand_seeder = "0.3.0"
 regex = "1.11.1"
-registry-canister = { git = "https://github.com/dfinity/ic.git", rev = "44a0b91087f662dfc6f0f81a303029f07bdec213" }
+registry-canister = { git = "https://github.com/dfinity/ic.git", rev = "2f87fe95207dc6371a2f2dc273362ba03b41e0e9" }
 reqwest = { version = "0.12", default-features = false, features = [
     "rustls-tls-webpki-roots",
     "blocking",
@@ -196,7 +196,7 @@ tabled = "0.18.0"
 tabular = "0.2"
 tempfile = "3.20.0"
 thiserror = "2.0.12"
-tokio = { version = "1.46.0", features = ["full"] }
+tokio = { version = "1.46.1", features = ["full"] }
 tokio-util = "0.7.15"
 url = "2.5.4"
 wiremock = "0.6.4"
@@ -208,7 +208,7 @@ ic-cdk = { version = "^0.17.2" }
 ic-cdk-timers = { version = "^0.11.0" }
 ic-cdk-macros = { version = "^0.17.2" }
 ic-stable-structures = "0.6.9"
-dfn_core = { git = "https://github.com/dfinity/ic.git", rev = "44a0b91087f662dfc6f0f81a303029f07bdec213" }
+dfn_core = { git = "https://github.com/dfinity/ic.git", rev = "2f87fe95207dc6371a2f2dc273362ba03b41e0e9" }
 rewards-calculation = { path = "rs/dre-canisters/node-provider-rewards/rewards-calculation" }
 node-provider-rewards-api = { path = "rs/dre-canisters/node-provider-rewards/canister/api" }
 
