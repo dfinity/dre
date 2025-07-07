@@ -150,7 +150,7 @@ impl RewardCalculatorRunnerTest {
             .collect();
 
         let rewardable_nodes_count = rewardables.iter().fold(HashMap::new(), |mut acc, node| {
-            *acc.entry((node.region.clone(), node.node_reward_type.clone())).or_insert(0) += 1;
+            *acc.entry((node.region.clone(), node.node_reward_type)).or_insert(0) += 1;
             acc
         });
 
