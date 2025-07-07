@@ -143,22 +143,30 @@ impl<S: RegistryDataStableMemory> RegistryClient<S> {
                         // Remove nodes entry if it is not valid anymore
                         registered_between_versions.shift_remove(&node_key.key);
                     }
-                } else {
-                    match registered_between_versions.get_mut(&node_key.key) {
-                        Some((_, valid_to, present_value)) => {
-                            if let Some(value) = maybe_value {
-                                // If the node is already registered, update the present value
-                                *present_value = value;
-                            } else {
-                                // In None this node has been deleted. Set the valid_to to the current version timestamp
-                                *valid_to = version_ts;
+                    continue;
+                }
+
+                // Inside rewarding period
+                match registered_between_versions.get_mut(&node_key.key) {
+                    Some((valid_from, valid_to, present_value)) => {
+                        if let Some(value) = maybe_value {
+                            // If the node is already registered, update the present value
+                            *present_value = value;
+
+                            if valid_to != &end_ts {
+                                // In this case the node has been removed inside the reward period and re-added
+                                *valid_from = version_ts;
+                                *valid_to = end_ts;
                             }
+                        } else {
+                            // In None this node has been deleted. Set the valid_to to the current version timestamp
+                            *valid_to = version_ts;
                         }
-                        None => {
-                            // If the node is not registered yet, add it with the current value
-                            if let Some(value) = maybe_value {
-                                registered_between_versions.insert(node_key.key, (version_ts, end_ts, value));
-                            }
+                    }
+                    None => {
+                        // If the node is not registered yet, add it with the current value
+                        if let Some(value) = maybe_value {
+                            registered_between_versions.insert(node_key.key, (version_ts, end_ts, value));
                         }
                     }
                 }
