@@ -4,18 +4,17 @@ use ic_protobuf::registry::dc::v1::DataCenterRecord;
 use ic_protobuf::registry::node::v1::{NodeRecord, NodeRewardType};
 use ic_protobuf::registry::node_operator::v1::NodeOperatorRecord;
 use ic_protobuf::registry::node_rewards::v2::NodeRewardsTable;
-use ic_protobuf::registry::subnet::v1::{SubnetListRecord, SubnetRecord};
+use ic_protobuf::registry::subnet::v1::SubnetListRecord;
 use ic_registry_canister_client::{
     CanisterRegistryClient, RegistryDataStableMemory, StableCanisterRegistryClient, StorableRegistryKey, StorableRegistryValue,
 };
 use ic_registry_keys::{
     make_subnet_list_record_key, DATA_CENTER_KEY_PREFIX, NODE_OPERATOR_RECORD_KEY_PREFIX, NODE_RECORD_KEY_PREFIX, NODE_REWARDS_TABLE_KEY,
-    SUBNET_RECORD_KEY_PREFIX,
 };
 use ic_types::registry::RegistryClientError;
 use indexmap::IndexMap;
 use rewards_calculation::rewards_calculator_results::DayUTC;
-use rewards_calculation::types::{NodeType, ProviderRewardableNodes, Region, RewardableNode, UnixTsNanos};
+use rewards_calculation::types::{ProviderRewardableNodes, Region, RegisteredPeriod, RewardableNode, UnixTsNanos};
 use std::collections::{BTreeMap, HashMap};
 use std::str::FromStr;
 
@@ -35,21 +34,12 @@ impl RegistryEntry for NodeRecord {
     const KEY_PREFIX: &'static str = NODE_RECORD_KEY_PREFIX;
 }
 
-impl RegistryEntry for SubnetRecord {
-    const KEY_PREFIX: &'static str = SUBNET_RECORD_KEY_PREFIX;
-}
-
 impl RegistryEntry for NodeRewardsTable {
     const KEY_PREFIX: &'static str = NODE_REWARDS_TABLE_KEY;
 }
 
 pub struct RegistryClient<S: RegistryDataStableMemory> {
     pub(crate) store: StableCanisterRegistryClient<S>,
-}
-
-struct RegistryVersionBounds {
-    start_version: RegistryVersion,
-    end_version: RegistryVersion,
 }
 
 struct NodeOperatorData {
@@ -119,77 +109,92 @@ impl<S: RegistryDataStableMemory> RegistryClient<S> {
 
     /// Nodes In Registry
     ///
-    /// This function retrieves all nodes present in the registry within a specified registry version range.
-    /// The results include the node ID, the node record, and the version bounds indicating the period during which the node was present in the registry.
-    /// Nodes deleted before `registry_version_range.start_bound` are not included in the results.
-    /// Nodes are ordered by their registration time, with the earliest registered node appearing first.
-    fn nodes_in_registry(
-        &self,
-        version_start: RegistryVersion,
-        version_end: RegistryVersion,
-    ) -> Result<IndexMap<NodeId, (NodeRecord, RegistryVersionBounds)>, RegistryClientError> {
+    /// This function retrieves all nodes present in the registry between two timestamps.
+    fn nodes_in_registry(&self, from: DayUTC, to: DayUTC) -> Result<IndexMap<NodeId, (NodeRecord, RegisteredPeriod)>, RegistryClientError> {
+        let mut registered_between_versions = IndexMap::new();
+        let start_ts = from.unix_ts_at_day_start();
+        let end_ts = to.unix_ts_at_day_end();
+        let registry_version_to_timestamp_map = self.registry_version_to_timestamp_map();
         let key_prefix = NodeRecord::KEY_PREFIX;
         let prefix_length = key_prefix.len();
-        let version_start = version_start.get();
-        let version_end = version_end.get();
         let start_range = StorableRegistryKey {
             key: key_prefix.to_string(),
             ..Default::default()
         };
 
-        let mut registered_between_versions = IndexMap::new();
         S::with_registry_map(|map| {
-            for (node_key, StorableRegistryValue(maybe_value)) in map
+            for (version_ts, node_key, StorableRegistryValue(maybe_value)) in map
                 .range(start_range..)
-                .filter(|(k, _)| k.version <= version_end)
-                .take_while(|(k, _)| k.key.starts_with(key_prefix))
+                .map(|(k, v)| {
+                    let ts = registry_version_to_timestamp_map
+                        .get(&RegistryVersion::from(k.version))
+                        .expect("Failed to get timestamp for version");
+                    (*ts, k, v)
+                })
+                .filter(|(ts, _, _)| ts <= &end_ts)
+                .take_while(|(_, k, _)| k.key.starts_with(key_prefix))
             {
                 // Before rewarding period
-                if node_key.version <= version_start {
+                if version_ts < start_ts {
                     if let Some(value) = maybe_value {
                         // Add nodes entry assuming registered for the entire rewards period
-                        registered_between_versions.insert(node_key.key, (version_start, version_end, value));
+                        registered_between_versions.insert(node_key.key, (start_ts, end_ts, value));
                     } else {
                         // Remove nodes entry if it is not valid anymore
                         registered_between_versions.shift_remove(&node_key.key);
                     }
-                    continue;
-                }
-
-                // Inside rewards period
-                if let Some(entry) = registered_between_versions.get_mut(&node_key.key) {
-                    let (_, valid_to, present_value) = entry;
-                    match maybe_value {
-                        Some(value) => *present_value = value,
-                        // If the node gets deleted the `node_key.version` represents the last version
-                        // where the node was registered.
-                        None => *valid_to = node_key.version,
+                } else {
+                    match registered_between_versions.get_mut(&node_key.key) {
+                        Some((_, valid_to, present_value)) => {
+                            if let Some(value) = maybe_value {
+                                // If the node is already registered, update the present value
+                                *present_value = value;
+                            } else {
+                                // In None this node has been deleted. Set the valid_to to the current version timestamp
+                                *valid_to = version_ts;
+                            }
+                        }
+                        None => {
+                            // If the node is not registered yet, add it with the current value
+                            if let Some(value) = maybe_value {
+                                registered_between_versions.insert(node_key.key, (version_ts, end_ts, value));
+                            }
+                        }
                     }
-                } else if let Some(value) = maybe_value {
-                    // Handle case where the node is registered in the reward period
-                    registered_between_versions.insert(node_key.key, (node_key.version, version_end, value));
                 }
             }
         });
 
-        Ok(registered_between_versions
+        let registered_between_versions = registered_between_versions
             .into_iter()
             .map(|(node_id_key, (valid_from, valid_to, node_record))| {
-                let node_id = node_id_key[prefix_length..].to_string();
-                let node_id = NodeId::from(PrincipalId::from_str(&node_id).expect("Failed to parse node id"));
-                let version_bounds = RegistryVersionBounds {
-                    start_version: RegistryVersion::from(valid_from),
-                    end_version: RegistryVersion::from(valid_to),
-                };
+                let node_id = NodeId::from(PrincipalId::from_str(&node_id_key[prefix_length..].to_string()).expect("Failed to parse node id"));
                 let node_record = NodeRecord::decode(node_record.as_slice()).expect("Failed to decode node record");
-                (node_id, (node_record, version_bounds))
+                let rewardable_period = RegisteredPeriod {
+                    from: valid_from.into(),
+                    to: valid_to.into(),
+                };
+
+                (node_id, (node_record, rewardable_period))
             })
-            .collect())
+            .collect();
+
+        Ok(registered_between_versions)
     }
 
-    fn node_operators_data(&self, version_end: RegistryVersion) -> HashMap<PrincipalId, NodeOperatorData> {
+    fn node_operators_data(&self, day: DayUTC) -> HashMap<PrincipalId, NodeOperatorData> {
+        let end_ts = day.unix_ts_at_day_end();
+        let version_before_end_ts: RegistryVersion = self
+            .store
+            .timestamp_to_versions_map()
+            .range(..=end_ts)
+            .rev()
+            .next()
+            .map(|(_, versions)| versions.into_iter().max().expect("Failed to get max version"))
+            .expect("Failed to find a version before end_ts")
+            .clone();
         let node_operators = self
-            .get_family_entries_of_version::<NodeOperatorRecord>(version_end)
+            .get_family_entries_of_version::<NodeOperatorRecord>(version_before_end_ts)
             .into_iter()
             .map(|(_, (_, node_operator_record))| {
                 (
@@ -198,7 +203,7 @@ impl<S: RegistryDataStableMemory> RegistryClient<S> {
                 )
             })
             .collect::<HashMap<_, _>>();
-        let data_centers = self.get_family_entries_of_version::<DataCenterRecord>(version_end);
+        let data_centers = self.get_family_entries_of_version::<DataCenterRecord>(version_before_end_ts);
 
         node_operators
             .into_iter()
@@ -221,48 +226,37 @@ impl<S: RegistryDataStableMemory> RegistryClient<S> {
             .collect()
     }
 
-    fn registry_versions_between(&self, from: UnixTsNanos, to: UnixTsNanos) -> BTreeMap<RegistryVersion, UnixTsNanos> {
+    fn registry_version_to_timestamp_map(&self) -> BTreeMap<RegistryVersion, UnixTsNanos> {
         self.store
             .timestamp_to_versions_map()
-            .range(from..=to)
+            .clone()
             .into_iter()
-            .flat_map(|(ts, versions)| versions.iter().map(move |version| (*version, *ts)))
+            .flat_map(|(ts, versions)| versions.into_iter().map(move |version| (version, ts)))
             .collect()
-    }
-
-    fn get_rewards_table_type(&self, node_reward_type: &NodeRewardType) -> String {
-        match node_reward_type {
-            NodeRewardType::Type0 => "type0",
-            NodeRewardType::Type1 => "type1",
-            NodeRewardType::Type2 => "type2",
-            NodeRewardType::Type3 => "type3",
-            NodeRewardType::Type3dot1 => "type3.1",
-            NodeRewardType::Type1dot1 => "type1.1",
-            NodeRewardType::Unspecified => "unspecified",
-        }.to_string()
     }
 
     pub fn get_rewardable_nodes_per_provider(
         &self,
-        start_ts: UnixTsNanos,
-        end_ts: UnixTsNanos,
+        from: DayUTC,
+        to: DayUTC,
     ) -> Result<BTreeMap<PrincipalId, ProviderRewardableNodes>, RegistryClientError> {
         let mut rewardable_nodes_per_provider: BTreeMap<_, ProviderRewardableNodes> = BTreeMap::new();
 
-        let mut registry_versions_to_ts = self.registry_versions_between(start_ts, end_ts);
-        let version_start = registry_versions_to_ts.first_key_value().map(|(version, _)| *version).unwrap();
-        let version_end = registry_versions_to_ts.last_key_value().map(|(version, _)| *version).unwrap();
+        let nodes_in_range = self.nodes_in_registry(from, to)?;
+        let node_operators_data = self.node_operators_data(to);
 
-        let nodes_in_range = self.nodes_in_registry(version_start, version_end)?;
-        let node_operators_data = self.node_operators_data(version_end);
-
-        for (node_id, (node_record, versions_in_registry)) in nodes_in_range {
+        for (node_id, (node_record, rewardable_period)) in nodes_in_range {
             let node_reward_type = match node_record.node_reward_type {
-                Some(node_type) => NodeRewardType::try_from(node_type).expect("Invalid node_reward_type value"),
+                Some(some_node_reward_type) => {
+                    let node_reward_type = NodeRewardType::try_from(some_node_reward_type).expect("Invalid node_reward_type value");
+                    if node_reward_type == NodeRewardType::Unspecified {
+                        continue; // Skip nodes with unspecified reward type
+                    }
+                    node_reward_type
+                }
+                // If the node does not have a reward type, it won't be rewarded.
                 _ => continue,
             };
-            let rewardable_from: DayUTC = registry_versions_to_ts.get(&versions_in_registry.start_version).unwrap().clone().into();
-            let rewardable_to: DayUTC = registry_versions_to_ts.get(&versions_in_registry.end_version).unwrap().clone().into();
 
             let node_operator_id: PrincipalId = node_record.node_operator_id.try_into().unwrap();
             let NodeOperatorData {
@@ -281,17 +275,18 @@ impl<S: RegistryDataStableMemory> RegistryClient<S> {
                 ..Default::default()
             });
 
-            let node_type = self.get_rewards_table_type(&node_reward_type);
-
             provider_rewardable_nodes.rewardable_nodes.push(RewardableNode {
                 node_id,
-                node_type: NodeType(node_type),
+                node_reward_type,
                 dc_id: dc_id.clone(),
                 region: region.clone(),
-                rewardable_from,
-                rewardable_to,
+                rewardable_from: rewardable_period.from,
+                rewardable_to: rewardable_period.to,
             });
         }
         Ok(rewardable_nodes_per_provider)
     }
 }
+
+#[cfg(test)]
+mod tests;

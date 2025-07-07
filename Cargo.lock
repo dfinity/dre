@@ -6359,6 +6359,7 @@ dependencies = [
  "itertools 0.13.0",
  "mockall",
  "node-provider-rewards-api",
+ "prost",
  "rewards-calculation",
  "serde",
  "serde_cbor",

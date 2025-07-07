@@ -7,6 +7,7 @@ use ic_cdk::api::call::CallResult;
 use ic_management_canister_types_private::{NodeMetricsHistoryArgs, NodeMetricsHistoryResponse};
 use ic_stable_structures::StableBTreeMap;
 use itertools::Itertools;
+use rewards_calculation::rewards_calculator_results::DayUTC;
 use rewards_calculation::types::{DayEnd, NodeMetricsDailyRaw, SubnetMetricsDailyKey, UnixTsNanos};
 use std::cell::RefCell;
 use std::collections::{BTreeMap, HashMap};
@@ -143,15 +144,16 @@ where
             }
         }
     }
-    pub fn daily_metrics_by_subnet(&self, start_ts: UnixTsNanos, end_ts: UnixTsNanos) -> BTreeMap<SubnetMetricsDailyKey, Vec<NodeMetricsDailyRaw>> {
+    pub fn daily_metrics_by_subnet(&self, from: DayUTC, to: DayUTC) -> BTreeMap<SubnetMetricsDailyKey, Vec<NodeMetricsDailyRaw>> {
         let mut daily_metrics_by_subnet = BTreeMap::new();
+        let start_ts = from.unix_ts_at_day_start();
         let one_day_before_start = start_ts.checked_sub(DAY_IN_SECONDS * 1_000_000_000).unwrap_or_default();
         let first_key = SubnetMetricsKeyStored {
             ts: one_day_before_start,
             ..SubnetMetricsKeyStored::min_key()
         };
         let last_key = SubnetMetricsKeyStored {
-            ts: end_ts,
+            ts: to.unix_ts_at_day_end(),
             ..SubnetMetricsKeyStored::max_key()
         };
 

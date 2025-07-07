@@ -17,6 +17,7 @@ MACRO_DEPENDENCIES = [
 DEV_DEPENDENCIES = [
     # Keep sorted.
     "@crate_index_dre//:tokio",
+    "@crate_index_dre//:prost",
 ]
 
 ALIASES = {}

@@ -34,7 +34,7 @@ impl Default for RewardableNode {
             rewardable_from: 0.into(),
             rewardable_to: 0.into(),
             region: Default::default(),
-            node_type: Default::default(),
+            node_reward_type: Default::default(),
             dc_id: Default::default(),
         }
     }
@@ -56,11 +56,11 @@ impl RewardCalculatorRunnerTest {
 }
 
 impl RewardCalculatorRunnerTest {
-    pub fn with_rewards_rates(mut self, region: &str, node_types: Vec<&str>, rate: u64, coeff: u64) -> Self {
+    pub fn with_rewards_rates(mut self, region: &str, node_types: Vec<NodeRewardType>, rate: u64, coeff: u64) -> Self {
         let mut rates: BTreeMap<String, NodeRewardRate> = BTreeMap::new();
         for node_type in node_types {
             rates.insert(
-                node_type.to_string(),
+                get_rewards_table_type(&node_type),
                 NodeRewardRate {
                     xdr_permyriad_per_node_per_month: rate,
                     reward_coefficient_percent: Some(coeff as i32),
@@ -103,7 +103,7 @@ impl RewardCalculatorRunnerTest {
         self
     }
 
-    pub fn with_rewardable_nodes(mut self, nodes: Vec<NodeId>, region: &str, node_type: &str) -> Self {
+    pub fn with_rewardable_nodes(mut self, nodes: Vec<NodeId>, region: &str, node_type: &NodeRewardType) -> Self {
         let period = self.reward_period.clone().unwrap();
         let start_ts = period.from;
         let end_ts = period.to;
@@ -111,7 +111,7 @@ impl RewardCalculatorRunnerTest {
         let rewardables = nodes.into_iter().map(|node_id| RewardableNode {
             node_id,
             region: Region(region.to_string()),
-            node_type: NodeType(node_type.to_string()),
+            node_reward_type: *node_type,
             rewardable_from: start_ts,
             rewardable_to: end_ts,
             ..Default::default()
@@ -150,7 +150,7 @@ impl RewardCalculatorRunnerTest {
             .collect();
 
         let rewardable_nodes_count = rewardables.iter().fold(HashMap::new(), |mut acc, node| {
-            *acc.entry((node.region.clone(), node.node_type.clone())).or_insert(0) += 1;
+            *acc.entry((node.region.clone(), node.node_reward_type.clone())).or_insert(0) += 1;
             acc
         });
 
@@ -336,9 +336,9 @@ fn test_node_provider_rewards_one_assigned() {
 
     let mut builder = RewardCalculatorRunnerTest::default()
         .with_reward_period(0, 30 * NANOS_PER_DAY)
-        .with_rewards_rates("A,B", vec!["type0", "type1", "type3"], 1000, 97)
+        .with_rewards_rates("A,B", vec![NodeRewardType::Type0, NodeRewardType::Type1, NodeRewardType::Type3], 1000, 97)
         // Node Provider 1: node_1 assigned, rest unassigned
-        .with_rewardable_nodes(nodes_np_1, "A,B", "type1")
+        .with_rewardable_nodes(nodes_np_1, "A,B", &NodeRewardType::Type1)
         .with_node_metrics(
             node_id(1),
             vec![

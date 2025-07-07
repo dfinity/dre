@@ -1,5 +1,6 @@
 use crate::rewards_calculator_results::DayUTC;
 use ic_base_types::{NodeId, PrincipalId, SubnetId};
+use ic_protobuf::registry::node::v1::NodeRewardType;
 use ic_types::Time;
 use std::collections::HashMap;
 use std::error::Error;
@@ -46,6 +47,8 @@ pub struct RewardPeriod {
     pub from: DayUTC,
     pub to: DayUTC,
 }
+
+pub type RegisteredPeriod = RewardPeriod;
 
 impl Display for RewardPeriod {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
@@ -108,13 +111,11 @@ impl Error for RewardPeriodError {}
 
 #[derive(Eq, Hash, PartialEq, Clone, Ord, PartialOrd, Debug, Default)]
 pub struct Region(pub String);
-#[derive(Eq, Hash, PartialEq, Clone, Ord, PartialOrd, Debug, Default)]
-pub struct NodeType(pub String);
 
-#[derive(Default)]
+#[derive(Default, Debug)]
 pub struct ProviderRewardableNodes {
     pub provider_id: PrincipalId,
-    pub rewardable_nodes_count: HashMap<(Region, NodeType), u32>,
+    pub rewardable_nodes_count: HashMap<(Region, NodeRewardType), u32>,
     pub rewardable_nodes: Vec<RewardableNode>,
 }
 #[derive(Eq, Hash, PartialEq, Clone, Ord, PartialOrd, Debug)]
@@ -123,7 +124,7 @@ pub struct RewardableNode {
     pub rewardable_from: DayUTC,
     pub rewardable_to: DayUTC,
     pub region: Region,
-    pub node_type: NodeType,
+    pub node_reward_type: NodeRewardType,
     pub dc_id: String,
 }
 
