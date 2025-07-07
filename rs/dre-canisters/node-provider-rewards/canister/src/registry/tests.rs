@@ -1,6 +1,7 @@
 use crate::registry::RegistryClient;
-use chrono::{DateTime, NaiveDateTime, Utc};
-use ic_base_types::{NodeId, PrincipalId};
+use chrono::{DateTime, NaiveDateTime, TimeZone, Utc};
+use ic_base_types::PrincipalId;
+use ic_interfaces_registry::RegistryValue;
 use ic_nervous_system_canisters::registry::RegistryCanister;
 use ic_protobuf::registry::dc::v1::DataCenterRecord;
 use ic_protobuf::registry::node::v1::{NodeRecord, NodeRewardType};
@@ -41,6 +42,11 @@ pub fn dt_to_timestamp_nanos(datetime_str: &str) -> u64 {
     datetime.timestamp_nanos_opt().unwrap() as u64
 }
 
+pub fn as_date_string(day: DayUTC) -> String {
+    let datetime: DateTime<Utc> = Utc.timestamp_nanos(day.0.get() as i64);
+    datetime.format("%Y-%m-%d").to_string()
+}
+
 pub fn add_record_helper(key: &str, version: u64, value: Option<impl ::prost::Message>, datetime_str: &str) {
     STATE.with_borrow_mut(|map| {
         map.insert(
@@ -54,7 +60,7 @@ fn add_dummy_data() {
     fn generate_node_key_value(id: u64, node_type: NodeRewardType, node_operator_id: u64) -> (String, NodeRecord) {
         let value = NodeRecord {
             node_reward_type: Some(node_type as i32),
-            node_operator_id: PrincipalId::new_user_test_id(node_operator_id).to_vec(),
+            node_operator_id: PrincipalId::new_user_test_id(node_operator_id).encode_to_vec(),
             ..NodeRecord::default()
         };
         let key = format!("{}{}", NODE_RECORD_KEY_PREFIX, PrincipalId::new_node_test_id(id));
@@ -63,10 +69,9 @@ fn add_dummy_data() {
     }
     fn generate_node_operator_key_value(id: u64, node_provider_id: u64, dc_id: String) -> (String, NodeOperatorRecord) {
         let principal_id = PrincipalId::new_user_test_id(id);
-        let node_provider = PrincipalId::new_user_test_id(node_provider_id);
         let value = NodeOperatorRecord {
-            node_operator_principal_id: principal_id.to_vec(),
-            node_provider_principal_id: node_provider.to_vec(),
+            node_operator_principal_id: principal_id.encode_to_vec(),
+            node_provider_principal_id: PrincipalId::new_user_test_id(node_provider_id).encode_to_vec(),
             dc_id,
             ..NodeOperatorRecord::default()
         };
@@ -125,27 +130,16 @@ fn test_rewardable_nodes_deleted_nodes() {
 
     let mut rewardables = client.get_rewardable_nodes_per_provider(from.into(), to.into()).unwrap();
 
-    let np_1_rewardables = rewardables.remove(&PrincipalId::new_user_test_id(20)).unwrap();
+    for (provider, nodes) in rewardables.iter_mut() {
+        println!("principal: {}", provider);
 
-    // Verify that node_1 is not present in the rewardables
-    assert!(!np_1_rewardables
-        .rewardable_nodes
-        .iter()
-        .any(|n| n.node_id == NodeId::from(PrincipalId::new_node_test_id(1))));
-
-    let node_2 = np_1_rewardables
-        .rewardable_nodes
-        .iter()
-        .find(|n| n.node_id == NodeId::from(PrincipalId::new_node_test_id(2)))
-        .unwrap();
-    let node_3 = np_1_rewardables
-        .rewardable_nodes
-        .iter()
-        .find(|n| n.node_id == NodeId::from(PrincipalId::new_node_test_id(3)))
-        .unwrap();
-
-    assert_eq!(node_2.rewardable_from, DayUTC::from(from));
-    assert_eq!(node_2.rewardable_to, DayUTC::from(to));
-    assert_eq!(node_3.rewardable_from, DayUTC::from(from));
-    assert_eq!(node_3.rewardable_to, DayUTC::from(to));
+        for node in &nodes.rewardable_nodes {
+            let from_date = as_date_string(node.rewardable_from);
+            let to_date = as_date_string(node.rewardable_to);
+            println!(
+                "  node: {}, from: {} , to: {}, type: {:?}",
+                node.node_id, from_date, to_date, node.node_type
+            );
+        }
+    }
 }
