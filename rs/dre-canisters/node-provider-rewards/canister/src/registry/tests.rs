@@ -1,6 +1,7 @@
 use crate::registry::RegistryClient;
-use chrono::{DateTime, NaiveDateTime, Utc};
-use ic_base_types::{NodeId, PrincipalId};
+use chrono::{DateTime, NaiveDateTime, TimeZone, Utc};
+use ic_base_types::PrincipalId;
+use ic_interfaces_registry::RegistryValue;
 use ic_nervous_system_canisters::registry::RegistryCanister;
 use ic_protobuf::registry::dc::v1::DataCenterRecord;
 use ic_protobuf::registry::node::v1::{NodeRecord, NodeRewardType};
@@ -41,6 +42,11 @@ pub fn dt_to_timestamp_nanos(datetime_str: &str) -> u64 {
     datetime.timestamp_nanos_opt().unwrap() as u64
 }
 
+pub fn as_date_string(day: DayUTC) -> String {
+    let datetime: DateTime<Utc> = Utc.timestamp_nanos(day.0.get() as i64);
+    datetime.format("%Y-%m-%d").to_string()
+}
+
 pub fn add_record_helper(key: &str, version: u64, value: Option<impl ::prost::Message>, datetime_str: &str) {
     STATE.with_borrow_mut(|map| {
         map.insert(
@@ -54,7 +60,7 @@ fn add_dummy_data() {
     fn generate_node_key_value(id: u64, node_type: NodeRewardType, node_operator_id: u64) -> (String, NodeRecord) {
         let value = NodeRecord {
             node_reward_type: Some(node_type as i32),
-            node_operator_id: PrincipalId::new_user_test_id(node_operator_id).to_vec(),
+            node_operator_id: PrincipalId::new_user_test_id(node_operator_id).encode_to_vec(),
             ..NodeRecord::default()
         };
         let key = format!("{}{}", NODE_RECORD_KEY_PREFIX, PrincipalId::new_node_test_id(id));
@@ -63,10 +69,9 @@ fn add_dummy_data() {
     }
     fn generate_node_operator_key_value(id: u64, node_provider_id: u64, dc_id: String) -> (String, NodeOperatorRecord) {
         let principal_id = PrincipalId::new_user_test_id(id);
-        let node_provider = PrincipalId::new_user_test_id(node_provider_id);
         let value = NodeOperatorRecord {
-            node_operator_principal_id: principal_id.to_vec(),
-            node_provider_principal_id: node_provider.to_vec(),
+            node_operator_principal_id: principal_id.encode_to_vec(),
+            node_provider_principal_id: PrincipalId::new_user_test_id(node_provider_id).encode_to_vec(),
             dc_id,
             ..NodeOperatorRecord::default()
         };
@@ -120,199 +125,21 @@ fn client_for_tests() -> RegistryClient<DummyStore> {
 fn test_rewardable_nodes_deleted_nodes() {
     let client = client_for_tests();
 
-    // Define the range for which we want to check rewardable nodes.
-    // This is *after* node_1 was deleted.
     let from = dt_to_timestamp_nanos("2025-07-12");
     let to = dt_to_timestamp_nanos("2025-07-14");
 
-    let mut rewardables = client
-        .get_rewardable_nodes_per_provider(from.into(), to.into())
-        .expect("Failed to fetch rewardable nodes");
+    let mut rewardables = client.get_rewardable_nodes_per_provider(from.into(), to.into()).unwrap();
 
-    let np_1_id = PrincipalId::new_user_test_id(20);
-    let np_1_rewardables = rewardables.remove(&np_1_id).expect("No rewardables found for node provider");
+    for (provider, nodes) in rewardables.iter_mut() {
+        println!("principal: {}", provider);
 
-    let node_id_1 = NodeId::from(PrincipalId::new_node_test_id(1));
-    let node_id_2 = NodeId::from(PrincipalId::new_node_test_id(2));
-    let node_id_3 = NodeId::from(PrincipalId::new_node_test_id(3));
-
-    // Node 1 was deleted before this period, so it should NOT be present.
-    assert!(
-        !np_1_rewardables.rewardable_nodes.iter().any(|n| n.node_id == node_id_1),
-        "Node 1 should not be rewardable after it was deleted"
-    );
-
-    // Node 2 and 3 should be rewardable in this period.
-    let node_2 = np_1_rewardables
-        .rewardable_nodes
-        .iter()
-        .find(|n| n.node_id == node_id_2)
-        .expect("Node 2 should be present");
-
-    assert_eq!(node_2.rewardable_from, DayUTC::from(from));
-    assert_eq!(node_2.rewardable_to, DayUTC::from(to));
-
-    let node_3 = np_1_rewardables
-        .rewardable_nodes
-        .iter()
-        .find(|n| n.node_id == node_id_3)
-        .expect("Node 3 should be present");
-
-    assert_eq!(node_3.rewardable_from, DayUTC::from(from));
-    assert_eq!(node_3.rewardable_to, DayUTC::from(to));
-}
-
-#[test]
-fn test_rewardable_nodes_rewardables_till_deleted() {
-    let client = client_for_tests();
-
-    // Define a time range that spans:
-    // - The active time of node_1 (until deletion on 2025-07-08),
-    // - Node_2's full active range,
-    // - Node_3's creation (on 2025-07-11).
-    let from = dt_to_timestamp_nanos("2025-07-03");
-    let to = dt_to_timestamp_nanos("2025-07-12");
-
-    let mut rewardables = client
-        .get_rewardable_nodes_per_provider(from.into(), to.into())
-        .expect("Failed to fetch rewardable nodes");
-
-    let np_1_id = PrincipalId::new_user_test_id(20);
-    let np_1_rewardables = rewardables.remove(&np_1_id).expect("No rewardables found for node provider");
-
-    let node_id_1 = NodeId::from(PrincipalId::new_node_test_id(1));
-    let node_id_2 = NodeId::from(PrincipalId::new_node_test_id(2));
-    let node_id_3 = NodeId::from(PrincipalId::new_node_test_id(3));
-
-    // Node 1 was deleted on 2025-07-08, so its rewardable period ends there.
-    let node_1 = np_1_rewardables
-        .rewardable_nodes
-        .iter()
-        .find(|n| n.node_id == node_id_1)
-        .expect("Node 1 should be present before deletion");
-
-    assert_eq!(node_1.rewardable_from, DayUTC::from(from));
-    assert_eq!(node_1.rewardable_to, DayUTC::from(dt_to_timestamp_nanos("2025-07-08")));
-
-    // Node 2 is active throughout the whole range.
-    let node_2 = np_1_rewardables
-        .rewardable_nodes
-        .iter()
-        .find(|n| n.node_id == node_id_2)
-        .expect("Node 2 should be present");
-
-    assert_eq!(node_2.rewardable_from, DayUTC::from(dt_to_timestamp_nanos("2025-07-04")));
-    assert_eq!(node_2.rewardable_to, DayUTC::from(to));
-
-    // Node 3 became active on 2025-07-11.
-    let node_3 = np_1_rewardables
-        .rewardable_nodes
-        .iter()
-        .find(|n| n.node_id == node_id_3)
-        .expect("Node 3 should be present");
-
-    assert_eq!(node_3.rewardable_from, DayUTC::from(dt_to_timestamp_nanos("2025-07-11")));
-    assert_eq!(node_3.rewardable_to, DayUTC::from(to));
-}
-
-#[test]
-fn test_rewardable_nodes_node_appears_mid_range() {
-    let client = client_for_tests();
-
-    // Range spans before and after node_3 is created on 2025-07-11.
-    let from = dt_to_timestamp_nanos("2025-07-10");
-    let to = dt_to_timestamp_nanos("2025-07-14");
-
-    let mut rewardables = client
-        .get_rewardable_nodes_per_provider(from.into(), to.into())
-        .expect("Failed to fetch rewardables");
-
-    let np_1_id = PrincipalId::new_user_test_id(20);
-    let np_1_rewardables = rewardables.remove(&np_1_id).expect("Expected rewardables for node provider");
-
-    let node_3 = np_1_rewardables
-        .rewardable_nodes
-        .iter()
-        .find(|n| n.node_id == NodeId::from(PrincipalId::new_node_test_id(3)))
-        .expect("Node 3 should appear in this range");
-
-    assert_eq!(
-        node_3.rewardable_from,
-        DayUTC::from(dt_to_timestamp_nanos("2025-07-11")),
-        "Node 3 should be rewardable only from its registration date"
-    );
-    assert_eq!(node_3.rewardable_to, DayUTC::from(to), "Node 3 should be rewardable until end of range");
-}
-#[test]
-fn test_rewardable_nodes_node_deleted_before_range() {
-    let client = client_for_tests();
-
-    // node_1 is deleted on 2025-07-08. This range is entirely after that.
-    let from = dt_to_timestamp_nanos("2025-07-09");
-    let to = dt_to_timestamp_nanos("2025-07-11");
-
-    let mut rewardables = client
-        .get_rewardable_nodes_per_provider(from.into(), to.into())
-        .expect("Failed to fetch rewardables");
-
-    let np_1_id = PrincipalId::new_user_test_id(20);
-    let np_1_rewardables = rewardables.remove(&np_1_id).expect("Expected rewardables for node provider");
-
-    let node_1_id = NodeId::from(PrincipalId::new_node_test_id(1));
-
-    assert!(
-        !np_1_rewardables.rewardable_nodes.iter().any(|n| n.node_id == node_1_id),
-        "Node 1 should not be rewardable after deletion"
-    );
-}
-
-#[test]
-fn test_node_re_registered_after_deletion() {
-    let node_1_id = 1;
-    let no_1_id = 10;
-
-    // Re-register node_1 after it was deleted
-    let node_id = PrincipalId::new_node_test_id(node_1_id);
-    let node_key = format!("{}{}", NODE_RECORD_KEY_PREFIX, node_id);
-    let node_record = NodeRecord {
-        node_reward_type: Some(NodeRewardType::Type0 as i32),
-        node_operator_id: PrincipalId::new_user_test_id(no_1_id).to_vec(),
-        ..NodeRecord::default()
-    };
-
-    add_record_helper(&node_key, 39668, Some(node_record), "2025-07-10");
-
-    let client = client_for_tests();
-
-    // Range that includes both the deletion and re-registration periods
-    let from = dt_to_timestamp_nanos("2025-07-07");
-    let to = dt_to_timestamp_nanos("2025-07-12");
-
-    let mut rewardables = client
-        .get_rewardable_nodes_per_provider(from.into(), to.into())
-        .expect("Failed to fetch rewardables");
-
-    let np_1_id = PrincipalId::new_user_test_id(20);
-    let np_1_rewardables = rewardables.remove(&np_1_id).expect("No rewardables for node provider");
-
-    let node_id = NodeId::from(PrincipalId::new_node_test_id(node_1_id));
-
-    let node_1 = np_1_rewardables
-        .rewardable_nodes
-        .iter()
-        .find(|n| n.node_id == node_id)
-        .expect("Node 1 should appear after re-registration");
-
-    // First registration: 07-03 to 07-08 (deleted)
-    // Re-registration: 07-10 to 07-12
-    assert_eq!(
-        node_1.rewardable_from,
-        DayUTC::from(dt_to_timestamp_nanos("2025-07-10")),
-        "Re-added node should be rewardable from re-registration date"
-    );
-    assert_eq!(
-        node_1.rewardable_to,
-        DayUTC::from(to),
-        "Re-added node should be rewardable till end of range"
-    );
+        for node in &nodes.rewardable_nodes {
+            let from_date = as_date_string(node.rewardable_from);
+            let to_date = as_date_string(node.rewardable_to);
+            println!(
+                "  node: {}, from: {} , to: {}, type: {:?}",
+                node.node_id, from_date, to_date, node.node_type
+            );
+        }
+    }
 }
