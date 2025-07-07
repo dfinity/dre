@@ -1,0 +1,7 @@
+(record {
+    provider_id = opt principal "34mm6-e24vu-pnyce-lp4fx-xtz2h-y5jpo-kwzgz-grf4m-v5kvr-xmeu4-tqe";
+    reward_period = record {
+        start_ts = 1751769600000000000;
+        end_ts = 1751932800000000000;
+    };
+})

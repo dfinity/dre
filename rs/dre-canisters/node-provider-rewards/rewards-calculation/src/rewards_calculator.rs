@@ -8,6 +8,7 @@ use rust_decimal::Decimal;
 use rust_decimal_macros::dec;
 use std::cmp::max;
 use std::collections::{BTreeMap, HashMap, HashSet};
+use std::fmt::format;
 use std::marker::PhantomData;
 
 pub mod builder;
@@ -253,9 +254,13 @@ impl<'a> RewardsCalculatorPipeline<'a, ComputeBaseRewardsByCategory> {
     fn fill_nodes_base_rewards(&mut self, rewards_by_category: HashMap<(Region, NodeRewardType), Decimal>) {
         for node_results in self.calculator_results.results_by_node.values_mut() {
             let node_category = (node_results.region.clone(), node_results.node_reward_type);
-            let base_rewards_per_month = *rewards_by_category
-                .get(&node_category)
-                .expect("Each node category should have a base reward");
+            let base_rewards_per_month = *rewards_by_category.get(&node_category).expect(
+                format!(
+                    "Each node category should have a base reward, but not found for {:?} {:?}",
+                    node_category, rewards_by_category
+                )
+                .as_str(),
+            );
 
             node_results.base_rewards_per_month = base_rewards_per_month.into();
         }
@@ -281,6 +286,11 @@ impl<'a> RewardsCalculatorPipeline<'a, ComputeBaseRewardsByCategory> {
                     (base_rewards_per_month, reward_coefficient_percent)
                 })
                 .unwrap_or((dec!(1), dec!(100)));
+
+            panic!(
+                "Rewards table entry for region: {}, node type: {}, nodes count: {}",
+                region.0, rewards_table_type, nodes_count
+            );
 
             // For nodes which are type3* the base rewards for the single node is computed as the average of base rewards
             // on DC Country level. Moreover, to de-stimulate the same NP having too many nodes in the same country,

@@ -25,6 +25,7 @@ ic-registry-keys = { workspace = true }
 futures = { workspace = true }
 indexmap = { workspace = true }
 ic-base-types = { workspace = true }
+ic-dummy-getrandom-for-wasm = { workspace = true }
 ic-management-canister-types-private = { workspace = true }
 ic-metrics-encoder = { workspace = true }
 ic-nervous-system-canisters = { workspace = true }

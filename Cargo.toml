@@ -103,6 +103,7 @@ ic-canisters = { path = "rs/ic-canisters" }
 ic-http-types = { git = "https://github.com/dfinity/ic.git", rev = "44a0b91087f662dfc6f0f81a303029f07bdec213" }
 ic-config = { git = "https://github.com/dfinity/ic.git", rev = "44a0b91087f662dfc6f0f81a303029f07bdec213" }
 ic-crypto-utils-threshold-sig-der = { git = "https://github.com/dfinity/ic.git", rev = "44a0b91087f662dfc6f0f81a303029f07bdec213" }
+ic-dummy-getrandom-for-wasm = { git = "https://github.com/dfinity/ic.git", rev = "44a0b91087f662dfc6f0f81a303029f07bdec213" }
 ic-http-endpoints-metrics = { git = "https://github.com/dfinity/ic.git", rev = "44a0b91087f662dfc6f0f81a303029f07bdec213" }
 ic-interfaces-registry = { git = "https://github.com/dfinity/ic.git", rev = "44a0b91087f662dfc6f0f81a303029f07bdec213" }
 ic-management-backend = { path = "rs/ic-management-backend" }
