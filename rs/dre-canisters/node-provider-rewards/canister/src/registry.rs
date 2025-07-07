@@ -168,7 +168,7 @@ impl<S: RegistryDataStableMemory> RegistryClient<S> {
         let registered_between_versions = registered_between_versions
             .into_iter()
             .map(|(node_id_key, (valid_from, valid_to, node_record))| {
-                let node_id = NodeId::from(PrincipalId::from_str(&node_id_key[prefix_length..].to_string()).expect("Failed to parse node id"));
+                let node_id = NodeId::from(PrincipalId::from_str(&node_id_key[prefix_length..]).expect("Failed to parse node id"));
                 let node_record = NodeRecord::decode(node_record.as_slice()).expect("Failed to decode node record");
                 let rewardable_period = RegisteredPeriod {
                     from: valid_from.into(),
@@ -184,15 +184,13 @@ impl<S: RegistryDataStableMemory> RegistryClient<S> {
 
     fn node_operators_data(&self, day: DayUTC) -> HashMap<PrincipalId, NodeOperatorData> {
         let end_ts = day.unix_ts_at_day_end();
-        let version_before_end_ts: RegistryVersion = self
+        let version_before_end_ts: RegistryVersion = *self
             .store
             .timestamp_to_versions_map()
             .range(..=end_ts)
-            .rev()
-            .next()
-            .map(|(_, versions)| versions.into_iter().max().expect("Failed to get max version"))
-            .expect("Failed to find a version before end_ts")
-            .clone();
+            .next_back()
+            .map(|(_, versions)| versions.iter().max().expect("Failed to get max version"))
+            .expect("Failed to find a version before end_ts");
         let node_operators = self
             .get_family_entries_of_version::<NodeOperatorRecord>(version_before_end_ts)
             .into_iter()
