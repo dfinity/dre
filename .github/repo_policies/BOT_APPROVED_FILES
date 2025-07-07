@@ -12,3 +12,4 @@ VERSION
 docker/Dockerfile
 ic-revisions.json
 pylib/ic_admin.py
+MODULE.bazel
