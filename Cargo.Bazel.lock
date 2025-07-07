@@ -1,5 +1,5 @@
 {
-  "checksum": "f5ab51ee8d706d7d0f2b7f344c55d7a67ac6334142d63be005aefc700aca3910",
+  "checksum": "1e6d90ad483223c8dc9a0f2bc877644e78be4d98808f2f6b293d4423749cad8d",
   "crates": {
     "actix-codec 0.5.2": {
       "name": "actix-codec",
@@ -35865,6 +35865,10 @@
         },
         "deps_dev": {
           "common": [
+            {
+              "id": "prost 0.13.5",
+              "target": "prost"
+            },
             {
               "id": "tokio 1.46.0",
               "target": "tokio"
