@@ -1,7 +1,7 @@
 use crate::types::{DayEnd, NodeType, Region, RewardPeriod, RewardPeriodError, UnixTsNanos, NANOS_PER_DAY};
 use ic_base_types::{NodeId, PrincipalId, SubnetId};
 use rust_decimal::Decimal;
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, HashMap};
 use std::error::Error;
 use std::fmt;
 
@@ -148,6 +148,8 @@ pub struct RewardsCalculatorResults {
     /// Rewards Total
     /// The total rewards for the entire reward period computed as sum of the `AR`
     pub rewards_total: XDRPermyriad,
+
+    pub rewardable_nodes_count: HashMap<(Region, NodeType), u32>,
 }
 
 #[derive(Debug, PartialEq)]

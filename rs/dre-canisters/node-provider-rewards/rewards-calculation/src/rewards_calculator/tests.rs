@@ -157,7 +157,6 @@ impl RewardCalculatorRunnerTest {
         let rewardable_nodes_per_provider = btreemap! {
             PrincipalId::new_anonymous() => ProviderRewardableNodes {
                 provider_id: PrincipalId::new_anonymous(),
-                rewardable_nodes_count,
                 rewardable_nodes: rewardables,
             }
         };

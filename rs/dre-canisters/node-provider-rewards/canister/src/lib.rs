@@ -210,17 +210,14 @@ fn http_request(request: HttpRequest) -> HttpResponse {
 
 fn rewards_calculator(reward_period: RewardPeriodArgs) -> Result<RewardsCalculator, String> {
     let reward_period = RewardPeriod::new(reward_period.start_ts, reward_period.end_ts).map_err(|err| err.to_string())?;
-    let start_ts = reward_period.from.unix_ts_at_day_start();
-    let end_ts = reward_period.to.unix_ts_at_day_end();
-
     let metrics_manager = METRICS_MANAGER.with(|m| m.clone());
     let registry_store = REGISTRY_STORE.with(|m| m.clone());
 
     let rewards_table = registry_store.get_rewards_table();
-    let daily_metrics_by_subnet = metrics_manager.daily_metrics_by_subnet(start_ts, end_ts);
+    let daily_metrics_by_subnet = metrics_manager.daily_metrics_by_subnet(reward_period.from, reward_period.to);
 
     let rewardable_nodes_per_provider = registry_store
-        .get_rewardable_nodes_per_provider(start_ts, end_ts)
+        .get_rewardable_nodes_per_provider(reward_period.from, reward_period.to)
         .map_err(|err| err.to_string())?;
 
     let rewards_calculator = RewardsCalculatorBuilder {
