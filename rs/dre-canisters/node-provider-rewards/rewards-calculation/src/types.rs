@@ -1,7 +1,6 @@
 use crate::rewards_calculator_results::DayUTC;
 use ic_base_types::{NodeId, PrincipalId, SubnetId};
 use ic_types::Time;
-use std::collections::HashMap;
 use std::error::Error;
 use std::fmt;
 use std::fmt::Display;
@@ -46,6 +45,8 @@ pub struct RewardPeriod {
     pub from: DayUTC,
     pub to: DayUTC,
 }
+
+pub type RegisteredPeriod = RewardPeriod;
 
 impl Display for RewardPeriod {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
@@ -111,10 +112,9 @@ pub struct Region(pub String);
 #[derive(Eq, Hash, PartialEq, Clone, Ord, PartialOrd, Debug, Default)]
 pub struct NodeType(pub String);
 
-#[derive(Default)]
+#[derive(Default, Debug)]
 pub struct ProviderRewardableNodes {
     pub provider_id: PrincipalId,
-    pub rewardable_nodes_count: HashMap<(Region, NodeType), u32>,
     pub rewardable_nodes: Vec<RewardableNode>,
 }
 #[derive(Eq, Hash, PartialEq, Clone, Ord, PartialOrd, Debug)]

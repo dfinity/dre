@@ -1,5 +1,5 @@
 {
-  "checksum": "804b6a3865666ec1f16e50dab94dc25a59d61839903c18fce16929eb8a2db21c",
+  "checksum": "1cdfce59bbac59b9678f238a447e128345310b3864dbedc1c99f63c8de09e76c",
   "crates": {
     "actix-codec 0.5.2": {
       "name": "actix-codec",
@@ -35781,6 +35781,10 @@
               "target": "ic_cdk_timers"
             },
             {
+              "id": "ic-dummy-getrandom-for-wasm 0.1.0",
+              "target": "ic_dummy_getrandom_for_wasm"
+            },
+            {
               "id": "ic-http-types 0.1.0",
               "target": "ic_http_types"
             },
@@ -35865,6 +35869,10 @@
         },
         "deps_dev": {
           "common": [
+            {
+              "id": "prost 0.13.5",
+              "target": "prost"
+            },
             {
               "id": "tokio 1.46.1",
               "target": "tokio"
@@ -60132,6 +60140,7 @@
     "ic-cdk-timers 0.11.0",
     "ic-config 0.9.0",
     "ic-crypto-utils-threshold-sig-der 0.9.0",
+    "ic-dummy-getrandom-for-wasm 0.1.0",
     "ic-http-endpoints-metrics 0.9.0",
     "ic-http-types 0.1.0",
     "ic-icrc1-test-utils 0.9.0",

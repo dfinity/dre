@@ -119,6 +119,12 @@ impl<'a> RewardsCalculatorPipeline<'a, ComputeRewardableNodesMetrics> {
             node_results.rewardable_to = node.rewardable_to;
             node_results.rewardable_days = days_between(node.rewardable_from, node.rewardable_to);
 
+            self.calculator_results
+                .rewardable_nodes_count
+                .entry((node.region.clone(), node.node_type.clone()))
+                .and_modify(|count| *count += 1)
+                .or_insert(1);
+
             if let Some(rewardable_node_metrics) = self.metrics_by_node.get(&node.node_id) {
                 rewardable_node_metrics
                     .iter()
@@ -250,7 +256,7 @@ impl<'a> RewardsCalculatorPipeline<'a, ComputeBaseRewardsByCategory> {
         let mut rewards_by_category: HashMap<(Region, NodeType), Decimal> = HashMap::default();
         let mut type3_category_rewards: HashMap<String, Type3Rewards> = HashMap::default();
 
-        for ((region, node_type), nodes_count) in self.provider_rewardable_nodes.rewardable_nodes_count.iter() {
+        for ((region, node_type), nodes_count) in self.calculator_results.rewardable_nodes_count.iter() {
             let (base_rewards_per_month, coefficient) = self
                 .rewards_table
                 .get_rate(&region.0, &node_type.0)
