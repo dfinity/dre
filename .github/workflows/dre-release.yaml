@@ -81,6 +81,7 @@ jobs:
         shell: bash
         run: |
           rustup target add x86_64-apple-darwin
+          rustup target add aarch64-apple-darwin
           CARGO_BAZEL_REPIN=true bazel build --config=ci //rs/cli:dre
           cargo cross-x86
           cargo cross-aarch
