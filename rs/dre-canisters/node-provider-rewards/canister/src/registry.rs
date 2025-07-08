@@ -14,7 +14,7 @@ use ic_registry_keys::{
 use ic_types::registry::RegistryClientError;
 use indexmap::IndexMap;
 use rewards_calculation::rewards_calculator_results::DayUTC;
-use rewards_calculation::types::{NodeType, ProviderRewardableNodes, Region, RegisteredPeriod, RewardableNode, UnixTsNanos};
+use rewards_calculation::types::{NodeType, ProviderRewardableNodes, Region, RewardableNode, UnixTsNanos};
 use std::collections::{BTreeMap, HashMap};
 use std::str::FromStr;
 
@@ -46,6 +46,11 @@ struct NodeOperatorData {
     node_provider_id: PrincipalId,
     dc_id: String,
     region: Region,
+}
+
+enum NodeRegistryChanges {
+    Present(UnixTsNanos),
+    Deleted(UnixTsNanos),
 }
 
 impl<S: RegistryDataStableMemory> RegistryClient<S> {
@@ -107,87 +112,136 @@ impl<S: RegistryDataStableMemory> RegistryClient<S> {
             .expect("Failed to get NodeRewardsTable")
     }
 
-    /// Nodes In Registry
-    ///
-    /// This function retrieves all nodes present in the registry between two timestamps.
-    fn nodes_in_registry(&self, from: DayUTC, to: DayUTC) -> Result<IndexMap<NodeId, (NodeRecord, RegisteredPeriod)>, RegistryClientError> {
-        let mut registered_between_versions = IndexMap::new();
+    // Nodes In Registry
+    //
+    // Collect all nodes present in the registry within the specified date range, extremes included.
+    // Returns a vector of UTC days in which the node is present in the registry.
+    fn nodes_in_registry(&self, from: DayUTC, to: DayUTC) -> Result<Vec<(NodeId, NodeRecord, Vec<DayUTC>)>, RegistryClientError> {
         let start_ts = from.unix_ts_at_day_start();
         let end_ts = to.unix_ts_at_day_end();
-        let registry_version_to_timestamp_map = self.registry_version_to_timestamp_map();
+        let prefix_length = NodeRecord::KEY_PREFIX.len();
+
+        let nodes_registry_changes = self.collect_nodes_registry_changes(start_ts, end_ts)?;
+
+        let result = nodes_registry_changes
+            .into_iter()
+            .map(|(node_id_key, (node_record, registry_changes))| {
+                let node_id = NodeId::from(PrincipalId::from_str(&node_id_key[prefix_length..]).expect("Failed to parse node id"));
+                let node_record = NodeRecord::decode(node_record.as_slice()).expect("Failed to decode node record");
+                let days_in_registry = self.expand_registry_changes_to_presence_days(&registry_changes, end_ts);
+
+                (node_id, node_record, days_in_registry)
+            })
+            .collect();
+
+        Ok(result)
+    }
+
+    fn collect_nodes_registry_changes(
+        &self,
+        start_ts: UnixTsNanos,
+        end_ts: UnixTsNanos,
+    ) -> Result<IndexMap<String, (Vec<u8>, Vec<NodeRegistryChanges>)>, RegistryClientError> {
+        let mut changes = IndexMap::new();
+        let entries = self.nodes_entries_before(&end_ts);
+
+        for (version_ts, node_key, StorableRegistryValue(maybe_value)) in entries {
+            if version_ts < start_ts {
+                if let Some(value) = maybe_value {
+                    // If the value is present before the start_ts, we add it as a present since start_ts.
+                    changes.insert(node_key.key, (value, vec![NodeRegistryChanges::Present(start_ts)]));
+                } else {
+                    changes.shift_remove(&node_key.key);
+                }
+            } else {
+                match changes.get_mut(&node_key.key) {
+                    Some((present_value, registry_changes)) => {
+                        if let Some(value) = maybe_value {
+                            *present_value = value;
+                            if let Some(NodeRegistryChanges::Deleted(_)) = registry_changes.last() {
+                                // If the last change was a deletion, it means the node was re-added.
+                                registry_changes.push(NodeRegistryChanges::Present(version_ts));
+                            }
+                        } else {
+                            // If the value is None, it means the node was deleted at this version.
+                            registry_changes.push(NodeRegistryChanges::Deleted(version_ts));
+                        }
+                    }
+                    None => {
+                        // If the key is not present, the node was added inside the reward period.
+                        if let Some(value) = maybe_value {
+                            changes.insert(node_key.key, (value, vec![NodeRegistryChanges::Present(version_ts)]));
+                        }
+                    }
+                }
+            }
+        }
+
+        Ok(changes)
+    }
+
+    fn nodes_entries_before(&self, timestamp: &UnixTsNanos) -> Vec<(UnixTsNanos, StorableRegistryKey, StorableRegistryValue)> {
         let key_prefix = NodeRecord::KEY_PREFIX;
-        let prefix_length = key_prefix.len();
         let start_range = StorableRegistryKey {
             key: key_prefix.to_string(),
             ..Default::default()
         };
 
+        let registry_version_to_timestamp_map: BTreeMap<RegistryVersion, UnixTsNanos> = self
+            .store
+            .timestamp_to_versions_map()
+            .clone()
+            .into_iter()
+            .flat_map(|(ts, versions)| versions.into_iter().map(move |version| (version, ts)))
+            .collect();
+
         S::with_registry_map(|map| {
-            for (version_ts, node_key, StorableRegistryValue(maybe_value)) in map
-                .range(start_range..)
+            map.range(start_range..)
                 .map(|(k, v)| {
                     let ts = registry_version_to_timestamp_map
                         .get(&RegistryVersion::from(k.version))
                         .expect("Failed to get timestamp for version");
+
                     (*ts, k, v)
                 })
-                .filter(|(ts, _, _)| ts <= &end_ts)
+                .filter(|(ts, _, _)| ts <= timestamp)
                 .take_while(|(_, k, _)| k.key.starts_with(key_prefix))
-            {
-                // Before rewarding period
-                if version_ts < start_ts {
-                    if let Some(value) = maybe_value {
-                        // Add nodes entry assuming registered for the entire rewards period
-                        registered_between_versions.insert(node_key.key, (start_ts, end_ts, value));
-                    } else {
-                        // Remove nodes entry if it is not valid anymore
-                        registered_between_versions.shift_remove(&node_key.key);
-                    }
-                    continue;
+                .collect::<Vec<_>>()
+        })
+    }
+
+    fn expand_registry_changes_to_presence_days(&self, changes: &[NodeRegistryChanges], end_ts: UnixTsNanos) -> Vec<DayUTC> {
+        let mut days = Vec::new();
+        let mut current_start: Option<DayUTC> = None;
+
+        for change in changes {
+            match change {
+                NodeRegistryChanges::Present(ts) => {
+                    current_start = Some(DayUTC::from(*ts));
                 }
-
-                // Inside rewarding period
-                match registered_between_versions.get_mut(&node_key.key) {
-                    Some((valid_from, valid_to, present_value)) => {
-                        if let Some(value) = maybe_value {
-                            // If the node is already registered, update the present value
-                            *present_value = value;
-
-                            if valid_to != &end_ts {
-                                // In this case the node has been removed inside the reward period and re-added
-                                *valid_from = version_ts;
-                                *valid_to = end_ts;
-                            }
-                        } else {
-                            // In None this node has been deleted. Set the valid_to to the current version timestamp
-                            *valid_to = version_ts;
-                        }
-                    }
-                    None => {
-                        // If the node is not registered yet, add it with the current value
-                        if let Some(value) = maybe_value {
-                            registered_between_versions.insert(node_key.key, (version_ts, end_ts, value));
+                NodeRegistryChanges::Deleted(ts) => {
+                    if let Some(start) = current_start.take() {
+                        let mut day = start;
+                        let end_day = DayUTC::from(*ts);
+                        while day <= end_day {
+                            days.push(day.clone());
+                            day = day.next_day();
                         }
                     }
                 }
             }
-        });
+        }
 
-        let registered_between_versions = registered_between_versions
-            .into_iter()
-            .map(|(node_id_key, (valid_from, valid_to, node_record))| {
-                let node_id = NodeId::from(PrincipalId::from_str(&node_id_key[prefix_length..]).expect("Failed to parse node id"));
-                let node_record = NodeRecord::decode(node_record.as_slice()).expect("Failed to decode node record");
-                let rewardable_period = RegisteredPeriod {
-                    from: valid_from.into(),
-                    to: valid_to.into(),
-                };
+        if let Some(start) = current_start {
+            let mut day = start;
+            let end_day = DayUTC::from(end_ts);
+            while day <= end_day {
+                days.push(day.clone());
+                day = day.next_day();
+            }
+        }
 
-                (node_id, (node_record, rewardable_period))
-            })
-            .collect();
-
-        Ok(registered_between_versions)
+        days
     }
 
     fn node_operators_data(&self, day: DayUTC) -> HashMap<PrincipalId, NodeOperatorData> {
@@ -232,15 +286,6 @@ impl<S: RegistryDataStableMemory> RegistryClient<S> {
             .collect()
     }
 
-    fn registry_version_to_timestamp_map(&self) -> BTreeMap<RegistryVersion, UnixTsNanos> {
-        self.store
-            .timestamp_to_versions_map()
-            .clone()
-            .into_iter()
-            .flat_map(|(ts, versions)| versions.into_iter().map(move |version| (version, ts)))
-            .collect()
-    }
-
     pub fn get_rewards_table_type(node_reward_type: &NodeRewardType) -> String {
         match node_reward_type {
             NodeRewardType::Type0 => "type0",
@@ -264,7 +309,7 @@ impl<S: RegistryDataStableMemory> RegistryClient<S> {
         let nodes_in_range = self.nodes_in_registry(from, to)?;
         let node_operators_data = self.node_operators_data(to);
 
-        for (node_id, (node_record, rewardable_period)) in nodes_in_range {
+        for (node_id, node_record, rewardable_days) in nodes_in_range {
             let node_reward_type = match node_record.node_reward_type {
                 Some(some_node_reward_type) => {
                     let node_reward_type = NodeRewardType::try_from(some_node_reward_type).expect("Invalid node_reward_type value");
@@ -302,8 +347,7 @@ impl<S: RegistryDataStableMemory> RegistryClient<S> {
                 node_type,
                 dc_id: dc_id.clone(),
                 region: region.clone(),
-                rewardable_from: rewardable_period.from,
-                rewardable_to: rewardable_period.to,
+                rewardable_days,
             });
         }
         Ok(rewardable_nodes_per_provider)
