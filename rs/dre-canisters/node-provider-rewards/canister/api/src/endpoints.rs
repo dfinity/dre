@@ -97,7 +97,9 @@ pub struct NodeResults {
     pub node_type: String,
     pub region: String,
     pub dc_id: String,
-    pub rewardable_days: Vec<DayUTC>,
+    pub rewardable_from: DayUTC,
+    pub rewardable_to: DayUTC,
+    pub rewardable_days: u64,
     pub daily_metrics: Vec<NodeMetricsDaily>,
     pub avg_relative_fr: Option<Percent>,
     pub avg_extrapolated_fr: Percent,
@@ -125,7 +127,7 @@ impl TryFrom<rewards_calculator_results::RewardsCalculatorResults> for RewardsCa
             .into_iter()
             .map(|(node_id, node_results)| {
                 let region = node_results.region.0;
-                let node_type = node_results.node_type.0;
+                let node_type = node_results.node_reward_type.as_str_name().to_string();
                 let dc_id = node_results.dc_id.to_string();
                 let avg_relative_fr = node_results.avg_relative_fr.map(|fr| fr.try_into()).transpose()?;
 
@@ -153,7 +155,9 @@ impl TryFrom<rewards_calculator_results::RewardsCalculatorResults> for RewardsCa
                         dc_id,
                         daily_metrics: daily_node_results,
                         avg_relative_fr,
-                        rewardable_days: node_results.rewardable_days.into_iter().map(|day| day.into()).collect(),
+                        rewardable_from: (*node_results.rewardable_days.first().unwrap()).into(),
+                        rewardable_to: (*node_results.rewardable_days.last().unwrap()).into(),
+                        rewardable_days: node_results.rewardable_days.len() as u64,
                         avg_extrapolated_fr: node_results.avg_extrapolated_fr.try_into()?,
                         rewards_reduction: node_results.rewards_reduction.try_into()?,
                         performance_multiplier: node_results.performance_multiplier.try_into()?,

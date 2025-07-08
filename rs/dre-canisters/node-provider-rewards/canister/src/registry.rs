@@ -14,7 +14,7 @@ use ic_registry_keys::{
 use ic_types::registry::RegistryClientError;
 use indexmap::IndexMap;
 use rewards_calculation::rewards_calculator_results::DayUTC;
-use rewards_calculation::types::{NodeType, ProviderRewardableNodes, Region, RewardableNode, UnixTsNanos};
+use rewards_calculation::types::{ProviderRewardableNodes, Region, RewardableNode, UnixTsNanos};
 use std::collections::{BTreeMap, HashMap};
 use std::str::FromStr;
 
@@ -297,19 +297,6 @@ impl<S: RegistryDataStableMemory> RegistryClient<S> {
             .collect()
     }
 
-    pub fn get_rewards_table_type(node_reward_type: &NodeRewardType) -> String {
-        match node_reward_type {
-            NodeRewardType::Type0 => "type0",
-            NodeRewardType::Type1 => "type1",
-            NodeRewardType::Type2 => "type2",
-            NodeRewardType::Type3 => "type3",
-            NodeRewardType::Type3dot1 => "type3.1",
-            NodeRewardType::Type1dot1 => "type1.1",
-            NodeRewardType::Unspecified => "unspecified",
-        }
-        .to_string()
-    }
-
     pub fn get_rewardable_nodes_per_provider(
         &self,
         from: DayUTC,
@@ -321,45 +308,38 @@ impl<S: RegistryDataStableMemory> RegistryClient<S> {
         let node_operators_data = self.node_operators_data(to);
 
         for (node_id, node_record, rewardable_days) in nodes_in_range {
-            let node_reward_type = match node_record.node_reward_type {
-                Some(some_node_reward_type) => {
-                    let node_reward_type = NodeRewardType::try_from(some_node_reward_type).expect("Invalid node_reward_type value");
-                    if node_reward_type == NodeRewardType::Unspecified {
-                        continue; // Skip nodes with unspecified reward type
-                    }
-                    node_reward_type
-                }
-                // If the node does not have a reward type, it won't be rewarded.
-                _ => continue,
+            let node_operator_id: PrincipalId = node_record.node_operator_id.try_into().unwrap();
+            let Some(some_node_operator_data) = node_operators_data.get(&node_operator_id) else {
+                // Reward only node operators that are registered in the registry at the end of the period
+                continue;
+            };
+            let Some(some_reward_type) = node_record.node_reward_type else {
+                // If the node does not have a reward type, we skip it.
+                continue;
             };
 
-            let node_operator_id: PrincipalId = node_record.node_operator_id.try_into().unwrap();
+            let node_reward_type = NodeRewardType::try_from(some_reward_type).expect("Invalid node_reward_type value");
             let NodeOperatorData {
                 node_provider_id,
                 dc_id,
                 region,
                 ..
-            } = if let Some(node_operator_data) = node_operators_data.get(&node_operator_id) {
-                node_operator_data
-            } else {
-                // Reward only node operators that are registered in the registry at the end of the period
-                continue;
-            };
+            } = some_node_operator_data;
 
-            let provider_rewardable_nodes = rewardable_nodes_per_provider.entry(*node_provider_id).or_insert(ProviderRewardableNodes {
-                provider_id: *node_provider_id,
-                ..Default::default()
-            });
-
-            let node_type = NodeType(Self::get_rewards_table_type(&node_reward_type));
-
-            provider_rewardable_nodes.rewardable_nodes.push(RewardableNode {
-                node_id,
-                node_type,
-                dc_id: dc_id.clone(),
-                region: region.clone(),
-                rewardable_days,
-            });
+            rewardable_nodes_per_provider
+                .entry(*node_provider_id)
+                .or_insert(ProviderRewardableNodes {
+                    provider_id: *node_provider_id,
+                    ..Default::default()
+                })
+                .rewardable_nodes
+                .push(RewardableNode {
+                    node_id,
+                    node_reward_type,
+                    dc_id: dc_id.clone(),
+                    region: region.clone(),
+                    rewardable_days,
+                });
         }
         Ok(rewardable_nodes_per_provider)
     }

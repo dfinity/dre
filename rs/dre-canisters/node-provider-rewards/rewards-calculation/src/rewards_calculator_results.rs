@@ -1,5 +1,6 @@
-use crate::types::{DayEnd, NodeType, Region, RewardPeriod, RewardPeriodError, UnixTsNanos, NANOS_PER_DAY};
+use crate::types::{DayEnd, Region, RewardPeriod, RewardPeriodError, UnixTsNanos, NANOS_PER_DAY};
 use ic_base_types::{NodeId, PrincipalId, SubnetId};
+use ic_protobuf::registry::node::v1::NodeRewardType;
 use rust_decimal::Decimal;
 use std::collections::{BTreeMap, HashMap};
 use std::error::Error;
@@ -110,7 +111,7 @@ pub struct NodeMetricsDaily {
 #[derive(Debug, Default)]
 pub struct NodeResults {
     pub region: Region,
-    pub node_type: NodeType,
+    pub node_reward_type: NodeRewardType,
     pub dc_id: String,
     pub rewardable_days: Vec<DayUTC>,
     pub daily_metrics: Vec<NodeMetricsDaily>,
@@ -161,8 +162,8 @@ pub struct RewardsCalculatorResults {
     /// Rewards Total
     /// The total rewards for the entire reward period computed as sum of the `AR`
     pub rewards_total: XDRPermyriad,
-
-    pub rewardable_nodes_count: HashMap<(Region, NodeType), u32>,
+    /// Rewardable nodes count by region and node reward type.
+    pub rewardable_nodes_count: HashMap<(Region, NodeRewardType), u32>,
 }
 
 #[derive(Debug, PartialEq)]
