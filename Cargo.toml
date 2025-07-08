@@ -139,7 +139,7 @@ cycles-minting-canister = { git = "https://github.com/dfinity/ic.git", rev = "2f
 ic-icrc1-test-utils = { git = "https://github.com/dfinity/ic.git", rev = "2f87fe95207dc6371a2f2dc273362ba03b41e0e9" }
 rosetta-core = { git = "https://github.com/dfinity/ic.git", rev = "2f87fe95207dc6371a2f2dc273362ba03b41e0e9" }
 icp-ledger = { git = "https://github.com/dfinity/ic.git", rev = "2f87fe95207dc6371a2f2dc273362ba03b41e0e9" }
-icrc-ledger-types = { version = "0.1.10" }
+icrc-ledger-types = { git = "https://github.com/dfinity/ic.git",rev = "2f87fe95207dc6371a2f2dc273362ba03b41e0e9"  }
 ic-metrics-encoder = "1.1.1"
 ic-transport-types = "0.39.3"
 ic-utils = "0.39.3"

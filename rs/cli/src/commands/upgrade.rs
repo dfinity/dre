@@ -83,7 +83,10 @@ impl Upgrade {
 
         let triple = match std::env::consts::OS {
             "linux" => "x86_64-unknown-linux",
-            "macos" => "x86_64-apple-darwin",
+            "macos" => match std::env::consts::ARCH {
+                "aarch64" => "aarch64-apple-darwin",
+                _ => "x86_64-apple-darwin",
+            },
             s => {
                 return Err(anyhow::anyhow!(
                     "{} is not currently not supported for automatic upgrades. Try building the code from source",
@@ -91,6 +94,8 @@ impl Upgrade {
                 ))
             }
         };
+
+        info!("Using triple: {triple}");
 
         info!("Binary not up to date. Updating to {}", release.version);
         info!("Release: {:?}", release);
