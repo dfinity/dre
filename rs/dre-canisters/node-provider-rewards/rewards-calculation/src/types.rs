@@ -1,5 +1,6 @@
 use crate::rewards_calculator_results::DayUTC;
 use ic_base_types::{NodeId, PrincipalId, SubnetId};
+use ic_protobuf::registry::node::v1::NodeRewardType;
 use ic_types::Time;
 use std::error::Error;
 use std::fmt;
@@ -122,7 +123,7 @@ pub struct RewardableNode {
     pub node_id: NodeId,
     pub rewardable_days: Vec<DayUTC>,
     pub region: Region,
-    pub node_type: NodeType,
+    pub node_reward_type: NodeRewardType,
     pub dc_id: String,
 }
 
