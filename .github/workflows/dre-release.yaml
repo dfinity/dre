@@ -91,7 +91,8 @@ jobs:
           cp target/x86_64-apple-darwin/release/dre release/artifacts/dre-x86_64-apple-darwin
           cp target/aarch64-apple-darwin/release/dre release/artifacts/dre-aarch64-apple-darwin
 
-          git cliff --current --sort newest > release/CHANGELOG.md
+          # git cliff --current --sort newest > release/CHANGELOG.md
+          echo "Testing mostly" > release/CHANGELOG.md
 
       - name: "🆕 📢 Prepare release"
         # v0.1.15
