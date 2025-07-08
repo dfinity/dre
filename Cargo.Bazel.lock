@@ -1,5 +1,5 @@
 {
-  "checksum": "248d2afa8cef2df9b5b8f6755a838d697dbb78128a003fb9fca2630792467836",
+  "checksum": "ad5c6212e58ec9c5ea6a1ca3b75e4036897c098e353961fd6e454d5fb3d4504f",
   "crates": {
     "actix-codec 0.5.2": {
       "name": "actix-codec",
