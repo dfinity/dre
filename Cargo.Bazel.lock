@@ -1,5 +1,5 @@
 {
-  "checksum": "ad1929dcadb8fc9565991ede4e1522eba99ad792dcaad9696b710e96f30ac760",
+  "checksum": "c968aafbacd9e4e32e4a50dda256fd5d74df9b2f5c03ef0aad1a40b7c67f8732",
   "crates": {
     "actix-codec 0.5.2": {
       "name": "actix-codec",
@@ -30669,9 +30669,12 @@
       "version": "0.1.0",
       "package_url": "https://github.com/dfinity/ic",
       "repository": {
-        "Http": {
-          "url": "https://static.crates.io/crates/icrc-cbor/0.1.0/download",
-          "sha256": "90569d2894d9536c5416943556ac6339df249f06611b3c41029196b39e0dd119"
+        "Git": {
+          "remote": "https://github.com/dfinity/ic.git",
+          "commitish": {
+            "Rev": "2f87fe95207dc6371a2f2dc273362ba03b41e0e9"
+          },
+          "strip_prefix": "packages/icrc-cbor"
         }
       },
       "targets": [
@@ -30797,9 +30800,12 @@
       "version": "0.1.10",
       "package_url": "https://github.com/dfinity/ic",
       "repository": {
-        "Http": {
-          "url": "https://static.crates.io/crates/icrc-ledger-types/0.1.10/download",
-          "sha256": "87c31beeee0e5ab964861a3d5ea2b5ed7b688b2b22400367a832b1fcf0db1fa4"
+        "Git": {
+          "remote": "https://github.com/dfinity/ic.git",
+          "commitish": {
+            "Rev": "2f87fe95207dc6371a2f2dc273362ba03b41e0e9"
+          },
+          "strip_prefix": "packages/icrc-ledger-types"
         }
       },
       "targets": [
