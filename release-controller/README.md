@@ -80,6 +80,16 @@ To recreate Google Doc, remove the document from [Google Drive directory](https:
 
 To recreate GitHub PR, close the outstanding PR and make sure to **delete the branch of the PR**.
 
+## In production
+
+Several credentials are necessary.  For the reconciler:
+
+1. The Google Drive credentials.  These are stored in the DRE Team vault and named *FIT on-call schedule sync and release controller Google Drive credential*.  Saved to a file, the path to this file must be set in environment variable `GDOCS_CREDENTIALS_PATH`.
+2. `PROPOSER_NEURON_ID` should be set to the neuron ID of the proposer, and the proposer key material should be saved to a file (asn the DRE team for information), whose path should be added to environment variable `PROPOSER_KEY_FILE`.
+3. The `GITHUB_TOKEN` environment variable must be set to the token that has access to the IC and DRE repositories.  This secret resides in the DRE Team vault under the name *Release Controller GitHub API Key*.  In the reconciler, this token is used to push tags.
+
+The commit annotator only needs the `GITHUB_TOKEN` credentials.  This token is used to push notes.
+
 ## Contributing
 
 The project is split into two parts - commit annotator and reconciler.
