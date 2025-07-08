@@ -95,7 +95,7 @@ impl Upgrade {
             }
         };
 
-        info!("Using tripple: {triple}");
+        info!("Using triple: {triple}");
 
         info!("Binary not up to date. Updating to {}", release.version);
         info!("Release: {:?}", release);
