@@ -224,3 +224,4 @@ debug = true
 
 [patch.'https://github.com/dfinity/cdk-rs.git']
 ic0 = "0.23.0"
+icrc-ledger-types = "0.1.10"
