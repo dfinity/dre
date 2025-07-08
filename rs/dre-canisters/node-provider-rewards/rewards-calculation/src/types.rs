@@ -120,8 +120,7 @@ pub struct ProviderRewardableNodes {
 #[derive(Eq, Hash, PartialEq, Clone, Ord, PartialOrd, Debug)]
 pub struct RewardableNode {
     pub node_id: NodeId,
-    pub rewardable_from: DayUTC,
-    pub rewardable_to: DayUTC,
+    pub rewardable_days: Vec<DayUTC>,
     pub region: Region,
     pub node_type: NodeType,
     pub dc_id: String,

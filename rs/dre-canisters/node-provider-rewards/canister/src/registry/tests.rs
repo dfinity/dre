@@ -10,6 +10,7 @@ use ic_registry_keys::{DATA_CENTER_KEY_PREFIX, NODE_OPERATOR_RECORD_KEY_PREFIX, 
 use ic_stable_structures::memory_manager::{MemoryId, MemoryManager, VirtualMemory};
 use ic_stable_structures::{DefaultMemoryImpl, StableBTreeMap};
 use rewards_calculation::rewards_calculator_results::DayUTC;
+use rewards_calculation::types::ProviderRewardableNodes;
 use std::cell::RefCell;
 use std::sync::Arc;
 
@@ -116,6 +117,18 @@ fn client_for_tests() -> RegistryClient<DummyStore> {
     }
 }
 
+fn node_rewardable_days(rewardable_nodes: &ProviderRewardableNodes, node_id: u64) -> Vec<DayUTC> {
+    let node_id = NodeId::from(PrincipalId::new_node_test_id(node_id));
+
+    rewardable_nodes
+        .rewardable_nodes
+        .iter()
+        .find(|n| n.node_id == node_id)
+        .unwrap_or_else(|| panic!("Node {} should be present", node_id))
+        .clone()
+        .rewardable_days
+}
+
 #[test]
 fn test_rewardable_nodes_deleted_nodes() {
     let client = client_for_tests();
@@ -132,34 +145,25 @@ fn test_rewardable_nodes_deleted_nodes() {
     let np_1_id = PrincipalId::new_user_test_id(20);
     let np_1_rewardables = rewardables.remove(&np_1_id).expect("No rewardables found for node provider");
 
-    let node_id_1 = NodeId::from(PrincipalId::new_node_test_id(1));
-    let node_id_2 = NodeId::from(PrincipalId::new_node_test_id(2));
-    let node_id_3 = NodeId::from(PrincipalId::new_node_test_id(3));
-
     // Node 1 was deleted before this period, so it should NOT be present.
     assert!(
-        !np_1_rewardables.rewardable_nodes.iter().any(|n| n.node_id == node_id_1),
+        !np_1_rewardables
+            .rewardable_nodes
+            .iter()
+            .any(|n| n.node_id == NodeId::from(PrincipalId::new_node_test_id(1))),
         "Node 1 should not be rewardable after it was deleted"
     );
 
     // Node 2 and 3 should be rewardable in this period.
-    let node_2 = np_1_rewardables
-        .rewardable_nodes
-        .iter()
-        .find(|n| n.node_id == node_id_2)
-        .expect("Node 2 should be present");
+    let node_2_rewardable_days = node_rewardable_days(&np_1_rewardables, 2);
 
-    assert_eq!(node_2.rewardable_from, DayUTC::from(from));
-    assert_eq!(node_2.rewardable_to, DayUTC::from(to));
+    assert_eq!(node_2_rewardable_days.first(), Some(&from.into()));
+    assert_eq!(node_2_rewardable_days.last(), Some(&to.into()));
 
-    let node_3 = np_1_rewardables
-        .rewardable_nodes
-        .iter()
-        .find(|n| n.node_id == node_id_3)
-        .expect("Node 3 should be present");
+    let node_3_rewardable_days = node_rewardable_days(&np_1_rewardables, 3);
 
-    assert_eq!(node_3.rewardable_from, DayUTC::from(from));
-    assert_eq!(node_3.rewardable_to, DayUTC::from(to));
+    assert_eq!(node_3_rewardable_days.first(), Some(&from.into()));
+    assert_eq!(node_3_rewardable_days.last(), Some(&to.into()));
 }
 
 #[test]
@@ -180,39 +184,23 @@ fn test_rewardable_nodes_rewardables_till_deleted() {
     let np_1_id = PrincipalId::new_user_test_id(20);
     let np_1_rewardables = rewardables.remove(&np_1_id).expect("No rewardables found for node provider");
 
-    let node_id_1 = NodeId::from(PrincipalId::new_node_test_id(1));
-    let node_id_2 = NodeId::from(PrincipalId::new_node_test_id(2));
-    let node_id_3 = NodeId::from(PrincipalId::new_node_test_id(3));
-
     // Node 1 was deleted on 2025-07-08, so its rewardable period ends there.
-    let node_1 = np_1_rewardables
-        .rewardable_nodes
-        .iter()
-        .find(|n| n.node_id == node_id_1)
-        .expect("Node 1 should be present before deletion");
+    let node_1_rewardable_days = node_rewardable_days(&np_1_rewardables, 1);
 
-    assert_eq!(node_1.rewardable_from, DayUTC::from(from));
-    assert_eq!(node_1.rewardable_to, DayUTC::from(dt_to_timestamp_nanos("2025-07-08")));
+    assert_eq!(node_1_rewardable_days.first(), Some(&from.into()));
+    assert_eq!(node_1_rewardable_days.last(), Some(&dt_to_timestamp_nanos("2025-07-08").into()));
 
     // Node 2 is active throughout the whole range.
-    let node_2 = np_1_rewardables
-        .rewardable_nodes
-        .iter()
-        .find(|n| n.node_id == node_id_2)
-        .expect("Node 2 should be present");
+    let node_2_rewardable_days = node_rewardable_days(&np_1_rewardables, 2);
 
-    assert_eq!(node_2.rewardable_from, DayUTC::from(dt_to_timestamp_nanos("2025-07-04")));
-    assert_eq!(node_2.rewardable_to, DayUTC::from(to));
+    assert_eq!(node_2_rewardable_days.first(), Some(&dt_to_timestamp_nanos("2025-07-04").into()));
+    assert_eq!(node_2_rewardable_days.last(), Some(&to.into()));
 
     // Node 3 became active on 2025-07-11.
-    let node_3 = np_1_rewardables
-        .rewardable_nodes
-        .iter()
-        .find(|n| n.node_id == node_id_3)
-        .expect("Node 3 should be present");
+    let node_3_rewardable_days = node_rewardable_days(&np_1_rewardables, 3);
 
-    assert_eq!(node_3.rewardable_from, DayUTC::from(dt_to_timestamp_nanos("2025-07-11")));
-    assert_eq!(node_3.rewardable_to, DayUTC::from(to));
+    assert_eq!(node_3_rewardable_days.first(), Some(&dt_to_timestamp_nanos("2025-07-11").into()));
+    assert_eq!(node_3_rewardable_days.last(), Some(&to.into()));
 }
 
 #[test]
@@ -230,39 +218,17 @@ fn test_rewardable_nodes_node_appears_mid_range() {
     let np_1_id = PrincipalId::new_user_test_id(20);
     let np_1_rewardables = rewardables.remove(&np_1_id).expect("Expected rewardables for node provider");
 
-    let node_3 = np_1_rewardables
-        .rewardable_nodes
-        .iter()
-        .find(|n| n.node_id == NodeId::from(PrincipalId::new_node_test_id(3)))
-        .expect("Node 3 should appear in this range");
+    let node_3_rewardable_days = node_rewardable_days(&np_1_rewardables, 3);
 
     assert_eq!(
-        node_3.rewardable_from,
-        DayUTC::from(dt_to_timestamp_nanos("2025-07-11")),
-        "Node 3 should be rewardable only from its registration date"
+        node_3_rewardable_days.first(),
+        Some(&dt_to_timestamp_nanos("2025-07-11").into()),
+        "Node 3 should become rewardable on 2025-07-11"
     );
-    assert_eq!(node_3.rewardable_to, DayUTC::from(to), "Node 3 should be rewardable until end of range");
-}
-#[test]
-fn test_rewardable_nodes_node_deleted_before_range() {
-    let client = client_for_tests();
-
-    // node_1 is deleted on 2025-07-08. This range is entirely after that.
-    let from = dt_to_timestamp_nanos("2025-07-09");
-    let to = dt_to_timestamp_nanos("2025-07-11");
-
-    let mut rewardables = client
-        .get_rewardable_nodes_per_provider(from.into(), to.into())
-        .expect("Failed to fetch rewardables");
-
-    let np_1_id = PrincipalId::new_user_test_id(20);
-    let np_1_rewardables = rewardables.remove(&np_1_id).expect("Expected rewardables for node provider");
-
-    let node_1_id = NodeId::from(PrincipalId::new_node_test_id(1));
-
-    assert!(
-        !np_1_rewardables.rewardable_nodes.iter().any(|n| n.node_id == node_1_id),
-        "Node 1 should not be rewardable after deletion"
+    assert_eq!(
+        node_3_rewardable_days.last(),
+        Some(&to.into()),
+        "Node 3 should remain rewardable until end of the range"
     );
 }
 
@@ -295,24 +261,16 @@ fn test_node_re_registered_after_deletion() {
     let np_1_id = PrincipalId::new_user_test_id(20);
     let np_1_rewardables = rewardables.remove(&np_1_id).expect("No rewardables for node provider");
 
-    let node_id = NodeId::from(PrincipalId::new_node_test_id(node_1_id));
+    let node_1_rewardable_days = node_rewardable_days(&np_1_rewardables, node_1_id);
 
-    let node_1 = np_1_rewardables
-        .rewardable_nodes
-        .iter()
-        .find(|n| n.node_id == node_id)
-        .expect("Node 1 should appear after re-registration");
+    let expected_days: Vec<DayUTC> = vec![
+        dt_to_timestamp_nanos("2025-07-07").into(),
+        dt_to_timestamp_nanos("2025-07-08").into(),
+        // On 2025-07-08, node_1 was deleted, so it should not be rewardable the 2025-07-09.
+        dt_to_timestamp_nanos("2025-07-10").into(),
+        dt_to_timestamp_nanos("2025-07-11").into(),
+        dt_to_timestamp_nanos("2025-07-12").into(),
+    ];
 
-    // First registration: 07-03 to 07-08 (deleted)
-    // Re-registration: 07-10 to 07-12
-    assert_eq!(
-        node_1.rewardable_from,
-        DayUTC::from(dt_to_timestamp_nanos("2025-07-10")),
-        "Re-added node should be rewardable from re-registration date"
-    );
-    assert_eq!(
-        node_1.rewardable_to,
-        DayUTC::from(to),
-        "Re-added node should be rewardable till end of range"
-    );
+    assert_eq!(node_1_rewardable_days, expected_days);
 }

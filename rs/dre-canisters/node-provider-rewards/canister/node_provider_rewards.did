@@ -48,9 +48,7 @@ type NodeResults = record {
     node_type: text;
     region: text;
     dc_id: text;
-    rewardable_from: DayUTC;
-    rewardable_to: DayUTC;
-    rewardable_days: nat64;
+    rewardable_days: vec DayUTC;
     daily_metrics: vec NodeMetricsDaily;
     /// Average Relative Failure Rate (`ARFR`).
     ///
