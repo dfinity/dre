@@ -50,6 +50,17 @@ impl DayUTC {
     pub fn next_day(&self) -> DayUTC {
         DayUTC(DayEnd::from(self.0.get() + NANOS_PER_DAY))
     }
+
+    pub fn days_until(&self, other: &DayUTC) -> Vec<DayUTC> {
+        let mut current_ts = *self;
+        let mut days_between: Vec<_> = Vec::new();
+        while &current_ts <= other {
+            days_between.push(current_ts);
+            current_ts = current_ts.next_day();
+        }
+
+        days_between
+    }
 }
 impl From<DayEnd> for DayUTC {
     fn from(value: DayEnd) -> Self {

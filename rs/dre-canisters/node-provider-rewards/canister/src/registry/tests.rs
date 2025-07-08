@@ -124,7 +124,7 @@ fn node_rewardable_days(rewardable_nodes: &ProviderRewardableNodes, node_id: u64
         .rewardable_nodes
         .iter()
         .find(|n| n.node_id == node_id)
-        .expect(format!("Node {} should be present", node_id).as_str())
+        .unwrap_or_else(|| panic!("Node {} should be present", node_id))
         .clone()
         .rewardable_days
 }

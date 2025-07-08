@@ -48,9 +48,15 @@ struct NodeOperatorData {
     region: Region,
 }
 
-enum NodeRegistryChanges {
+enum RegistryRecordState {
     Present(UnixTsNanos),
     Deleted(UnixTsNanos),
+}
+
+struct RegistryRecordWithStates {
+    key: String,
+    value: Vec<u8>,
+    registry_record_states: Vec<RegistryRecordState>,
 }
 
 impl<S: RegistryDataStableMemory> RegistryClient<S> {
@@ -125,13 +131,19 @@ impl<S: RegistryDataStableMemory> RegistryClient<S> {
 
         let result = nodes_registry_changes
             .into_iter()
-            .map(|(node_id_key, (node_record, registry_changes))| {
-                let node_id = NodeId::from(PrincipalId::from_str(&node_id_key[prefix_length..]).expect("Failed to parse node id"));
-                let node_record = NodeRecord::decode(node_record.as_slice()).expect("Failed to decode node record");
-                let days_in_registry = self.expand_registry_changes_to_presence_days(&registry_changes, end_ts);
+            .map(
+                |RegistryRecordWithStates {
+                     key,
+                     value,
+                     registry_record_states: registry_changes,
+                 }| {
+                    let node_id = NodeId::from(PrincipalId::from_str(&key[prefix_length..]).expect("Failed to parse node id"));
+                    let node_record = NodeRecord::decode(value.as_slice()).expect("Failed to decode node record");
+                    let days_in_registry = self.expand_registry_changes_to_presence_days(&registry_changes, end_ts);
 
-                (node_id, node_record, days_in_registry)
-            })
+                    (node_id, node_record, days_in_registry)
+                },
+            )
             .collect();
 
         Ok(result)
@@ -141,7 +153,7 @@ impl<S: RegistryDataStableMemory> RegistryClient<S> {
         &self,
         start_ts: UnixTsNanos,
         end_ts: UnixTsNanos,
-    ) -> Result<IndexMap<String, (Vec<u8>, Vec<NodeRegistryChanges>)>, RegistryClientError> {
+    ) -> Result<Vec<RegistryRecordWithStates>, RegistryClientError> {
         let mut changes = IndexMap::new();
         let entries = self.nodes_entries_before(&end_ts);
 
@@ -149,7 +161,7 @@ impl<S: RegistryDataStableMemory> RegistryClient<S> {
             if version_ts < start_ts {
                 if let Some(value) = maybe_value {
                     // If the value is present before the start_ts, we add it as a present since start_ts.
-                    changes.insert(node_key.key, (value, vec![NodeRegistryChanges::Present(start_ts)]));
+                    changes.insert(node_key.key, (value, vec![RegistryRecordState::Present(start_ts)]));
                 } else {
                     changes.shift_remove(&node_key.key);
                 }
@@ -158,26 +170,33 @@ impl<S: RegistryDataStableMemory> RegistryClient<S> {
                     Some((present_value, registry_changes)) => {
                         if let Some(value) = maybe_value {
                             *present_value = value;
-                            if let Some(NodeRegistryChanges::Deleted(_)) = registry_changes.last() {
+                            if let Some(RegistryRecordState::Deleted(_)) = registry_changes.last() {
                                 // If the last change was a deletion, it means the node was re-added.
-                                registry_changes.push(NodeRegistryChanges::Present(version_ts));
+                                registry_changes.push(RegistryRecordState::Present(version_ts));
                             }
                         } else {
                             // If the value is None, it means the node was deleted at this version.
-                            registry_changes.push(NodeRegistryChanges::Deleted(version_ts));
+                            registry_changes.push(RegistryRecordState::Deleted(version_ts));
                         }
                     }
                     None => {
                         // If the key is not present, the node was added inside the reward period.
                         if let Some(value) = maybe_value {
-                            changes.insert(node_key.key, (value, vec![NodeRegistryChanges::Present(version_ts)]));
+                            changes.insert(node_key.key, (value, vec![RegistryRecordState::Present(version_ts)]));
                         }
                     }
                 }
             }
         }
 
-        Ok(changes)
+        Ok(changes
+            .into_iter()
+            .map(|(key, (value, registry_changes))| RegistryRecordWithStates {
+                key,
+                value,
+                registry_record_states: registry_changes,
+            })
+            .collect())
     }
 
     fn nodes_entries_before(&self, timestamp: &UnixTsNanos) -> Vec<(UnixTsNanos, StorableRegistryKey, StorableRegistryValue)> {
@@ -210,35 +229,27 @@ impl<S: RegistryDataStableMemory> RegistryClient<S> {
         })
     }
 
-    fn expand_registry_changes_to_presence_days(&self, changes: &[NodeRegistryChanges], end_ts: UnixTsNanos) -> Vec<DayUTC> {
+    fn expand_registry_changes_to_presence_days(&self, changes: &[RegistryRecordState], end_ts: UnixTsNanos) -> Vec<DayUTC> {
         let mut days = Vec::new();
         let mut current_start: Option<DayUTC> = None;
 
         for change in changes {
             match change {
-                NodeRegistryChanges::Present(ts) => {
+                RegistryRecordState::Present(ts) => {
                     current_start = Some(DayUTC::from(*ts));
                 }
-                NodeRegistryChanges::Deleted(ts) => {
+                RegistryRecordState::Deleted(ts) => {
                     if let Some(start) = current_start.take() {
-                        let mut day = start;
-                        let end_day = DayUTC::from(*ts);
-                        while day <= end_day {
-                            days.push(day.clone());
-                            day = day.next_day();
-                        }
+                        let days_between = start.days_until(&DayUTC::from(*ts));
+                        days.extend(days_between);
                     }
                 }
             }
         }
 
         if let Some(start) = current_start {
-            let mut day = start;
-            let end_day = DayUTC::from(end_ts);
-            while day <= end_day {
-                days.push(day.clone());
-                day = day.next_day();
-            }
+            let days_between = start.days_until(&DayUTC::from(end_ts));
+            days.extend(days_between);
         }
 
         days
