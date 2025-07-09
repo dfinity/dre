@@ -8,7 +8,7 @@ use ic_nervous_system_common::serve_metrics;
 use ic_types::PrincipalId;
 use node_provider_rewards_api::endpoints::{NodeProviderRewardsCalculationArgs, NodeProvidersRewards, RewardPeriodArgs, RewardsCalculatorResults};
 use rewards_calculation::rewards_calculator::builder::RewardsCalculatorBuilder;
-use rewards_calculation::rewards_calculator::{AlgoVersion, RewardsCalculator};
+use rewards_calculation::rewards_calculator::RewardsCalculator;
 use rewards_calculation::types::RewardPeriod;
 use std::collections::BTreeMap;
 use std::ops::Add;
@@ -250,7 +250,7 @@ fn get_node_providers_rewards(args: RewardPeriodArgs) -> Result<NodeProvidersRew
 fn get_node_provider_rewards_calculation(args: NodeProviderRewardsCalculationArgs) -> Result<RewardsCalculatorResults, String> {
     let calculator = rewards_calculator(args.reward_period)?;
     let provider_rewards_calculation = calculator
-        .calculate_rewards_single_provider(args.provider_id, AlgoVersion::V1)
+        .calculate_rewards_single_provider(args.provider_id)
         .map_err(|err| err.to_string())?;
 
     provider_rewards_calculation.try_into()
