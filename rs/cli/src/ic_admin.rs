@@ -32,7 +32,12 @@ pub trait IcAdmin: Send + Sync + Debug {
     fn ic_admin_path(&self) -> Option<String>;
 
     /// Runs the proposal in simulation mode (--dry-run).  Prints out the result.
-    fn simulate_proposal(&self, cmd: Vec<String>, forum_post_link_description: Option<String>) -> BoxFuture<'_, anyhow::Result<()>>;
+    fn simulate_proposal(
+        &self,
+        cmd: Vec<String>,
+        machine_readable: bool,
+        forum_post_link_description: Option<String>,
+    ) -> BoxFuture<'_, anyhow::Result<()>>;
 
     /// Runs the proposal in forrealz mode.  Result is returned and logged at debug level.
     fn submit_proposal<'a, 'b>(&'a self, cmd: Vec<String>, forum_post_link: Option<Url>) -> BoxFuture<'b, anyhow::Result<String>>
@@ -148,7 +153,12 @@ impl IcAdmin for IcAdminImpl {
         })
     }
 
-    fn simulate_proposal(&self, cmd: Vec<String>, forum_post_link_description: Option<String>) -> BoxFuture<'_, anyhow::Result<()>> {
+    fn simulate_proposal(
+        &self,
+        cmd: Vec<String>,
+        machine_readable: bool,
+        forum_post_link_description: Option<String>,
+    ) -> BoxFuture<'_, anyhow::Result<()>> {
         Box::pin(async move {
             debug!("Simulating proposal {:?}.", cmd);
 
@@ -168,6 +178,10 @@ impl IcAdmin for IcAdminImpl {
             if !args.contains(&String::from("--dry-run")) {
                 args.push("--dry-run".into())
             };
+            // When we want to simulate as JSON.
+            if machine_readable {
+                args.push("--json".into())
+            }
 
             self.run(args.as_slice(), true).await.map(|r| r.trim().to_string())?;
 
@@ -546,6 +560,7 @@ impl IcAdminProposalExecutor {
     pub fn simulate<'c, 'd, T: RunnableViaIcAdmin + 'c>(
         &'d self,
         cmd: &'c T,
+        machine_readable: bool,
         forum_post_link_description: Option<String>,
     ) -> BoxFuture<'c, anyhow::Result<()>>
     where
@@ -553,7 +568,9 @@ impl IcAdminProposalExecutor {
     {
         Box::pin(async move {
             let propose_command = cmd.to_ic_admin_arguments()?;
-            self.ic_admin.simulate_proposal(propose_command, forum_post_link_description).await?;
+            self.ic_admin
+                .simulate_proposal(propose_command, machine_readable, forum_post_link_description)
+                .await?;
             Ok(())
         })
     }
@@ -587,8 +604,12 @@ where
     T: RunnableViaIcAdmin<Output = ProposalResponseWithId>,
     T: ProducesProposalResult<ProposalResult = ProposalResponseWithId>,
 {
-    fn simulate(&self, forum_post_link_description: Option<String>) -> BoxFuture<'_, anyhow::Result<()>> {
-        Box::pin(async { self.executor.simulate(&self.proposal, forum_post_link_description).await })
+    fn simulate(&self, machine_readable: bool, forum_post_link_description: Option<String>) -> BoxFuture<'_, anyhow::Result<()>> {
+        Box::pin(async move {
+            self.executor
+                .simulate(&self.proposal, machine_readable, forum_post_link_description)
+                .await
+        })
     }
 
     fn submit<'a, 'b>(&'a self, forum_post_link: Option<Url>) -> BoxFuture<'b, anyhow::Result<ProposalResponseWithId>>

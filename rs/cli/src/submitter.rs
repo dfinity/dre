@@ -2,7 +2,7 @@ use clap::Args as ClapArgs;
 use log::warn;
 
 use crate::{
-    confirm::{ConfirmationModeOptions, HowToProceed},
+    confirm::{ConfirmationModeOptions, DryRunFormat, HowToProceed},
     forum::{ForumContext, ForumParameters, ForumPostKind},
     proposal_executors::{ProposalExecution, ProposalResponseWithId},
     util::yesno,
@@ -43,7 +43,10 @@ impl Submitter {
     pub async fn propose(&self, execution: Box<dyn ProposalExecution>, kind: ForumPostKind) -> anyhow::Result<Option<ProposalResponseWithId>> {
         if let HowToProceed::Unconditional = self.mode {
         } else {
-            execution.simulate(self.forum_parameters.forum_post_link_for_simulation()).await?;
+            let machine_readable = matches!(self.mode, HowToProceed::DryRun(DryRunFormat::Json));
+            execution
+                .simulate(machine_readable, self.forum_parameters.forum_post_link_for_simulation())
+                .await?;
         };
 
         if let HowToProceed::Confirm = self.mode {
@@ -53,7 +56,7 @@ impl Submitter {
             }
         }
 
-        if let HowToProceed::DryRun = self.mode {
+        if let HowToProceed::DryRun(_) = self.mode {
             Ok(None)
         } else {
             let forum_post = ForumContext::from(&self.forum_parameters).client()?.forum_post(kind).await?;

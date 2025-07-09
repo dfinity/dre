@@ -9,6 +9,7 @@ use log::info;
 use spinners::{Spinner, Spinners};
 
 use crate::auth::AuthRequirement;
+use crate::confirm::DryRunFormat;
 use crate::exe::{args::GlobalArgs, ExecutableCommand};
 use crate::{
     confirm::{ConfirmationModeOptions, HowToProceed},
@@ -119,7 +120,10 @@ impl ExecutableCommand for Vote {
                                     }
                                 }
                             }
-                            HowToProceed::DryRun => info!("Would have voted for proposal {}", prop_id),
+                            HowToProceed::DryRun(format) => match format {
+                                DryRunFormat::HumanReadable => info!("Would have voted for proposal {}", prop_id),
+                                DryRunFormat::Json => println!("{}", prop_id),
+                            },
                         }
                         voted_proposals.insert(prop_id);
                     }

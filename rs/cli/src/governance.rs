@@ -2,6 +2,7 @@ use futures::future::BoxFuture;
 use ic_canisters::governance::GovernanceCanisterWrapper;
 use ic_nns_common::pb::v1::NeuronId;
 use ic_nns_governance_api::MakeProposalRequest;
+use serde_json::json;
 use url::Url;
 
 use crate::proposal_executors::{ProposableViaGovernanceCanister, ProposalExecution, ProposalResponseWithId};
@@ -32,14 +33,23 @@ impl GovernanceCanisterProposalExecutor {
     pub fn simulate<'c, 'd, W: ProposableViaGovernanceCanister + 'c>(
         &'d self,
         cmd: &'c W,
+        machine_readable: bool,
         forum_post_link_description: Option<String>,
     ) -> BoxFuture<'c, anyhow::Result<()>>
     where
         'd: 'c,
     {
         Box::pin(async move {
-            println!("Proposal that would be submitted:\n{:#?}", cmd);
-            println!("Forum post link: {}", forum_post_link_description.unwrap_or("None".to_string()));
+            match machine_readable {
+                true => {
+                    println!("Proposal that would be submitted:\n{:#?}", cmd);
+                    println!("Forum post link: {}", forum_post_link_description.unwrap_or("None".to_string()));
+                }
+                false => {
+                    let res = json!(cmd);
+                    println!("{}", res);
+                }
+            }
             Ok(())
         })
     }
@@ -85,8 +95,12 @@ impl<T> ProposalExecution for ProposalExecutionViaGovernanceCanister<T>
 where
     T: ProposableViaGovernanceCanister<ProposalResult = ProposalResponseWithId>,
 {
-    fn simulate(&self, forum_post_link_description: Option<String>) -> BoxFuture<'_, anyhow::Result<()>> {
-        Box::pin(async { self.executor.simulate(&self.proposal, forum_post_link_description).await })
+    fn simulate(&self, machine_readable: bool, forum_post_link_description: Option<String>) -> BoxFuture<'_, anyhow::Result<()>> {
+        Box::pin(async move {
+            self.executor
+                .simulate(&self.proposal, machine_readable, forum_post_link_description)
+                .await
+        })
     }
 
     fn submit<'a, 'b>(&'a self, forum_post_link: Option<Url>) -> BoxFuture<'b, anyhow::Result<ProposalResponseWithId>>
