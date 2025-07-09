@@ -532,6 +532,7 @@ pub mod test {
     use ic_management_backend::health::MockHealthStatusQuerier;
     use ic_management_backend::proposal::ProposalAgentImpl;
     use ic_management_types::{Network, Node, Operator, Provider, Subnet};
+    use ic_protobuf::registry::node::v1::NodeRewardType;
     use std::collections::BTreeMap;
     use std::sync::OnceLock;
 
@@ -688,6 +689,7 @@ pub mod test {
         for i in start_at_number..start_at_number + num_nodes {
             let node = Node {
                 principal: PrincipalId::new_node_test_id(i),
+                node_reward_type: Some(NodeRewardType::Type3),
                 ip_addr: None,
                 operator: Operator {
                     principal: PrincipalId::new_node_test_id(i),
@@ -700,6 +702,7 @@ pub mod test {
                     datacenter: None,
                     rewardable_nodes: BTreeMap::new(),
                     ipv6: "".to_string(),
+                    max_rewardable_nodes: BTreeMap::new(),
                 },
                 cached_features: OnceLock::new(),
                 hostname: None,
