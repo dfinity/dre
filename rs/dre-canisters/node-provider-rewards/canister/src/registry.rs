@@ -118,8 +118,6 @@ impl<S: RegistryDataStableMemory> RegistryClient<S> {
             .expect("Failed to get NodeRewardsTable")
     }
 
-    // Nodes In Registry
-    //
     // Collect all nodes present in the registry within the specified date range, extremes included.
     // Returns a vector of UTC days in which the node is present in the registry.
     fn nodes_in_registry(&self, from: DayUTC, to: DayUTC) -> Result<Vec<(NodeId, NodeRecord, Vec<DayUTC>)>, RegistryClientError> {
