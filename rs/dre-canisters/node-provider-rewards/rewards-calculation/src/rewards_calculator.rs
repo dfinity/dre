@@ -29,6 +29,8 @@ pub enum AlgoVersion {
 }
 
 impl RewardsCalculator {
+    // V0: extrapolation for unassigned nodes is done based on the average of the averages of the
+    // relative failure rates on the entire reward period.
     fn calculate_rewards_v0(&self, provider_rewardable_nodes: &ProviderRewardableNodes) -> RewardsCalculatorResults {
         let ctx: RewardsCalculatorPipeline<Initialized> = RewardsCalculatorPipeline {
             reward_period: &self.reward_period,
@@ -43,6 +45,8 @@ impl RewardsCalculator {
         computed.get_results()
     }
 
+    // V1: extrapolation for unassigned nodes is done based on the average of the relative failure rates
+    // for each day in the reward period.
     fn calculate_rewards_v1(&self, provider_rewardable_nodes: &ProviderRewardableNodes) -> RewardsCalculatorResults {
         let ctx: RewardsCalculatorPipeline<InitializedV1> = RewardsCalculatorPipeline {
             reward_period: &self.reward_period,
