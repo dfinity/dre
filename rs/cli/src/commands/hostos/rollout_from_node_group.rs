@@ -1,5 +1,3 @@
-use std::str::FromStr;
-
 use clap::{Args, ValueEnum};
 
 use crate::{
@@ -74,9 +72,10 @@ pub struct RolloutFromNodeGroup {
     #[clap(
         long,
         help = r#"How many nodes in the group to update with the version specified
-supported values are absolute numbers (10) or percentage (10%)"#
+supported values are absolute numbers (10) or percentage (10%)"#,
+        default_value = "100%"
     )]
-    pub nodes_in_group: String,
+    pub nodes_in_group: NumberOfNodes,
 
     #[clap(flatten)]
     pub submission_parameters: SubmissionParameters,
@@ -88,7 +87,7 @@ impl ExecutableCommand for RolloutFromNodeGroup {
     }
 
     async fn execute(&self, ctx: crate::ctx::DreContext) -> anyhow::Result<()> {
-        let update_group = NodeGroupUpdate::new(self.assignment, self.owner, NumberOfNodes::from_str(&self.nodes_in_group)?);
+        let update_group = NodeGroupUpdate::new(self.assignment, self.owner, self.nodes_in_group);
         let runner = ctx.runner().await?;
 
         let (nodes_to_update, summary) = match runner
