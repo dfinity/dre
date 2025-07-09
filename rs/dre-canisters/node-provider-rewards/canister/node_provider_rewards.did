@@ -102,8 +102,42 @@ type GetNodeProvidersRewardsResponse = variant {
     Err : text;
 };
 
+type NodeStatus = variant {
+  Assigned: record {
+    node_metrics: NodeMetricsDaily;
+  };
+  Unassigned: record {
+    extrapolated_fr: Percent;
+  };
+};
+
+type DailyResults = record {
+  node_status: NodeStatus;
+  performance_multiplier: Percent;
+  base_rewards: XDRPermyriad;
+  adjusted_rewards: XDRPermyriad;
+};
+
+type NodeResultsV1 = record {
+  node_type: text;
+  region: text;
+  dc_id: text;
+  daily_results: vec record { DayUTC; DailyResults };
+};
+
+type RewardsCalculatorResultsV1 = record {
+  results_by_node: vec record { NodeId; NodeResultsV1 };
+  rewards_total: XDRPermyriad;
+};
+
+type GetNodeProviderRewardsCalculationResponseV1 = variant {
+    Ok : RewardsCalculatorResultsV1;
+    Err : text;
+};
+
 
 service : {
     get_node_providers_rewards : (RewardPeriodArgs) -> (GetNodeProvidersRewardsResponse) query;
     get_node_provider_rewards_calculation : (NodeProviderRewardsCalculationArgs) -> (GetNodeProviderRewardsCalculationResponse) query;
+    get_node_provider_rewards_calculation_v1 : (NodeProviderRewardsCalculationArgs) -> (GetNodeProviderRewardsCalculationResponseV1) query;
 }

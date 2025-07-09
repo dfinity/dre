@@ -6,7 +6,9 @@ use ic_cdk_macros::*;
 use ic_http_types::{HttpRequest, HttpResponse, HttpResponseBuilder};
 use ic_nervous_system_common::serve_metrics;
 use ic_types::PrincipalId;
-use node_provider_rewards_api::endpoints::{NodeProviderRewardsCalculationArgs, NodeProvidersRewards, RewardPeriodArgs, RewardsCalculatorResults};
+use node_provider_rewards_api::endpoints::{
+    NodeProviderRewardsCalculationArgs, NodeProvidersRewards, RewardPeriodArgs, RewardsCalculatorResults, RewardsCalculatorResultsV1,
+};
 use rewards_calculation::rewards_calculator::builder::RewardsCalculatorBuilder;
 use rewards_calculation::rewards_calculator::{AlgoVersion, RewardsCalculator};
 use rewards_calculation::types::RewardPeriod;
@@ -248,6 +250,17 @@ fn get_node_providers_rewards(args: RewardPeriodArgs) -> Result<NodeProvidersRew
 #[query]
 #[candid_method(query)]
 fn get_node_provider_rewards_calculation(args: NodeProviderRewardsCalculationArgs) -> Result<RewardsCalculatorResults, String> {
+    let calculator = rewards_calculator(args.reward_period)?;
+    let provider_rewards_calculation = calculator
+        .calculate_rewards_single_provider(args.provider_id, AlgoVersion::V0)
+        .map_err(|err| err.to_string())?;
+
+    provider_rewards_calculation.try_into()
+}
+
+#[query]
+#[candid_method(query)]
+fn get_node_provider_rewards_calculation_v1(args: NodeProviderRewardsCalculationArgs) -> Result<RewardsCalculatorResultsV1, String> {
     let calculator = rewards_calculator(args.reward_period)?;
     let provider_rewards_calculation = calculator
         .calculate_rewards_single_provider(args.provider_id, AlgoVersion::V1)
