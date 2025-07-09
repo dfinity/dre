@@ -115,6 +115,7 @@ pub struct NodeResults {
     pub dc_id: String,
     pub rewardable_days: Vec<DayUTC>,
     pub daily_metrics: Vec<NodeMetricsDaily>,
+    pub daily_metrics_v1: BTreeMap<DayUTC, NodeMetricsDaily>,
 
     /// Average Relative Failure Rate (`ARFR`).
     ///
@@ -140,6 +141,7 @@ pub struct NodeResults {
     ///
     /// Calculated as 1 - 'RR'
     pub performance_multiplier: Percent,
+    pub performance_multiplier_v1: BTreeMap<DayUTC, Percent>,
     pub base_rewards_per_month: XDRPermyriad,
 
     /// Base Rewards for the rewards period.
@@ -151,6 +153,7 @@ pub struct NodeResults {
     ///
     /// Calculated as base_rewards * `PM`
     pub adjusted_rewards: XDRPermyriad,
+    pub adjusted_rewards_v1: BTreeMap<DayUTC, XDRPermyriad>,
 }
 
 #[derive(Debug, Default)]
@@ -159,11 +162,15 @@ pub struct RewardsCalculatorResults {
     // [EFR]
     // Extrapolated failure rate used as replacement for days when the node is unassigned
     pub extrapolated_fr: Percent,
+    pub extrapolated_fr_v1: BTreeMap<DayUTC, Percent>,
     /// Rewards Total
     /// The total rewards for the entire reward period computed as sum of the `AR`
     pub rewards_total: XDRPermyriad,
     /// Rewardable nodes count by region and node reward type.
     pub rewardable_nodes_count: HashMap<(Region, NodeRewardType), u32>,
+    /// Rewardable nodes count by day region and node reward type.
+    pub rewardable_nodes_count_v1: HashMap<(DayUTC, Region, NodeRewardType), u32>,
+    pub base_rewards_by_category_v1: HashMap<(DayUTC, Region, NodeRewardType), XDRPermyriad>,
 }
 
 #[derive(Debug, PartialEq)]
