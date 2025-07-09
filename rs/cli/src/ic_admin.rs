@@ -186,7 +186,7 @@ impl IcAdmin for IcAdminImpl {
             self.run(args.as_slice(), true).await.map(|r| r.trim().to_string())?;
 
             // Add the forum post link description as a string after the ic-admin command.
-            if forum_post_link_description.is_some() && !is_forum_post_link_description_url {
+            if forum_post_link_description.is_some() && !is_forum_post_link_description_url && !machine_readable {
                 println!("Forum post link: {}", forum_post_link_description.unwrap());
             }
 

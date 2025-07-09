@@ -101,7 +101,7 @@ fn cordoned_feature_fetcher_tests() {
     let mut failed_scenarios = vec![];
 
     for scenario in &scenarios {
-        println!("### Starting scenario `{}`", scenario.name);
+        eprintln!("### Starting scenario `{}`", scenario.name);
         let store = Store::new(scenario.offline).unwrap();
 
         match &scenario.cache_contents {
@@ -117,7 +117,7 @@ fn cordoned_feature_fetcher_tests() {
             if let Ok(features) = maybe_cordoned_features {
                 failed_scenarios.push((features, scenario));
             }
-            println!("### Ending scenario `{}`", scenario.name);
+            eprintln!("### Ending scenario `{}`", scenario.name);
             continue;
         }
 
@@ -128,7 +128,7 @@ fn cordoned_feature_fetcher_tests() {
         if !cordoned_features.eq(&cordoned_features_from_cache) {
             failed_scenarios.push((cordoned_features, scenario));
         }
-        println!("### Ending scenario `{}`", scenario.name);
+        eprintln!("### Ending scenario `{}`", scenario.name);
     }
 
     assert!(

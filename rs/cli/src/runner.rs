@@ -33,6 +33,7 @@ use ic_management_types::TopologyChangePayload;
 use ic_types::PrincipalId;
 use indexmap::{IndexMap, IndexSet};
 use itertools::Itertools;
+use log::error;
 use log::info;
 use log::warn;
 
@@ -157,10 +158,10 @@ impl Runner {
 
         if self.verbose {
             if let Some(run_log) = &subnet_creation_data.run_log {
-                println!("{}\n", run_log.join("\n"));
+                info!("{}\n", run_log.join("\n"));
             }
         }
-        println!("{}", subnet_creation_data);
+        info!("{}", subnet_creation_data);
         let replica_version = replica_version.unwrap_or(
             self.registry
                 .nns_replica_version()
@@ -192,7 +193,7 @@ impl Runner {
     pub async fn propose_subnet_change(&self, change: &SubnetChangeResponse) -> anyhow::Result<Option<IcAdminProposal>> {
         if self.verbose {
             if let Some(run_log) = &change.run_log {
-                println!("{}\n", run_log.join("\n"));
+                info!("{}\n", run_log.join("\n"));
             }
         }
 
@@ -411,7 +412,7 @@ impl Runner {
             HostosRolloutResponse::None(reason) => {
                 reason
                     .iter()
-                    .for_each(|(group, reason)| println!("No nodes to update in group: {} because: {}", group, reason));
+                    .for_each(|(group, reason)| error!("No nodes to update in group: {} because: {}", group, reason));
                 Ok(None)
             }
         }
@@ -473,7 +474,7 @@ impl Runner {
             row.add_cell(nr.reason.message());
             table.add_row(row);
         }
-        println!("{}", table);
+        info!("{}", table);
 
         Ok(IcAdminProposal::new(
             ic_admin::IcAdminProposalCommand::RemoveNodes {
@@ -541,7 +542,7 @@ impl Runner {
                 .run_membership_change(change, replace_proposal_options(change).await?)
                 .await
                 .map_err(|e| {
-                    println!("{}", e);
+                    error!("{}", e);
                     errors.push(e);
                 });
             changes.push(current)
@@ -904,7 +905,7 @@ impl Runner {
             removed_nodes: removed_nodes.clone(),
             ..Default::default()
         };
-        println!("{}", SubnetChangeResponse::new(&subnet_change, &health_of_nodes, summary));
+        info!("{}", SubnetChangeResponse::new(&subnet_change, &health_of_nodes, summary));
         Ok(())
     }
 

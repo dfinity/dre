@@ -41,13 +41,12 @@ impl GovernanceCanisterProposalExecutor {
     {
         Box::pin(async move {
             match machine_readable {
-                true => {
+                false => {
                     println!("Proposal that would be submitted:\n{:#?}", cmd);
                     println!("Forum post link: {}", forum_post_link_description.unwrap_or("None".to_string()));
                 }
-                false => {
-                    let res = json!(cmd);
-                    println!("{}", res);
+                true => {
+                    println!("{}", json!(cmd));
                 }
             }
             Ok(())

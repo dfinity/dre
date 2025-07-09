@@ -121,7 +121,7 @@ fn test_node_labels() {
     let mut failed_scenarios = vec![];
 
     for scenario in &scenarios {
-        println!("### Starting scenario `{}`", scenario.name);
+        eprintln!("### Starting scenario `{}`", scenario.name);
         let network = Network::new_unchecked(scenario.network.clone(), &[]).unwrap();
         let store = Store::new(scenario.offline).unwrap();
         let labels_path = store.guest_labels_cache_path_outer(&network).unwrap();
@@ -141,7 +141,7 @@ fn test_node_labels() {
             if let Ok(labels) = maybe_labels {
                 failed_scenarios.push((labels, scenario));
             }
-            println!("### Ending scenario `{}`", scenario.name);
+            eprintln!("### Ending scenario `{}`", scenario.name);
             continue;
         }
 
@@ -151,7 +151,7 @@ fn test_node_labels() {
         if !labels.eq(&labels_from_cache) {
             failed_scenarios.push((labels, scenario));
         }
-        println!("### Ending scenario `{}`", scenario.name);
+        eprintln!("### Ending scenario `{}`", scenario.name);
     }
 
     assert!(

@@ -178,7 +178,7 @@ impl Discourse {
             warn!("While creating a new post in topic {}, Discourse returned an error: {:?}", topic_url, e);
         }
         warn!("Please create a post in topic {} with the following content", topic_url);
-        println!("{}", body);
+        eprintln!("{}", body);
         let forum_post_link = dialoguer::Input::<String>::new()
             .with_prompt("Forum post link")
             .allow_empty(false)

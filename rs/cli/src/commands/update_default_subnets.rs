@@ -137,7 +137,7 @@ impl ExecutableCommand for UpdateDefaultSubnets {
             .collect();
 
         if new_authorized == default_subnets {
-            println!("There are no diffs. Skipping proposal creation.");
+            info!("There are no diffs. Skipping proposal creation.");
             return Ok(());
         }
 
