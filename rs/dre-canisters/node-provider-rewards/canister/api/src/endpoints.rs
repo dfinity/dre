@@ -150,7 +150,7 @@ impl TryFrom<rewards_calculator_results::RewardsCalculatorResults> for RewardsCa
                 let daily_metrics: Vec<_> = node_results
                     .daily_metrics
                     .into_iter()
-                    .map(|daily_metrics| Ok(daily_metrics.try_into()?))
+                    .map(|daily_metrics| daily_metrics.try_into())
                     .collect::<Result<Vec<_>, String>>()?;
 
                 Ok((
