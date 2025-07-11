@@ -47,7 +47,7 @@ impl TryFrom<rewards_calculator_results::Percent> for Percent {
     }
 }
 
-#[derive(candid::CandidType, candid::Deserialize)]
+#[derive(candid::CandidType, candid::Deserialize, Ord, PartialOrd, Eq, PartialEq)]
 pub struct DayUTC(String);
 impl From<rewards_calculator_results::DayUTC> for DayUTC {
     fn from(value: rewards_calculator_results::DayUTC) -> Self {
@@ -91,6 +91,22 @@ pub struct NodeMetricsDaily {
     pub relative_fr: Percent,
 }
 
+impl TryFrom<rewards_calculator_results::NodeMetricsDaily> for NodeMetricsDaily {
+    type Error = String;
+
+    fn try_from(value: rewards_calculator_results::NodeMetricsDaily) -> Result<Self, Self::Error> {
+        Ok(Self {
+            day: value.day.into(),
+            subnet_assigned: value.subnet_assigned,
+            subnet_assigned_fr: value.subnet_assigned_fr.try_into()?,
+            num_blocks_proposed: value.num_blocks_proposed,
+            num_blocks_failed: value.num_blocks_failed,
+            original_fr: value.original_fr.try_into()?,
+            relative_fr: value.relative_fr.try_into()?,
+        })
+    }
+}
+
 #[derive(candid::CandidType, candid::Deserialize)]
 /// see [`rewards_calculator_results::NodeResults`]
 pub struct NodeResults {
@@ -131,20 +147,10 @@ impl TryFrom<rewards_calculator_results::RewardsCalculatorResults> for RewardsCa
                 let dc_id = node_results.dc_id.to_string();
                 let avg_relative_fr = node_results.avg_relative_fr.map(|fr| fr.try_into()).transpose()?;
 
-                let daily_node_results: Vec<_> = node_results
+                let daily_metrics: Vec<_> = node_results
                     .daily_metrics
                     .into_iter()
-                    .map(|daily_metrics| {
-                        Ok(NodeMetricsDaily {
-                            day: daily_metrics.day.into(),
-                            subnet_assigned: daily_metrics.subnet_assigned,
-                            subnet_assigned_fr: daily_metrics.subnet_assigned_fr.try_into()?,
-                            num_blocks_proposed: daily_metrics.num_blocks_proposed,
-                            num_blocks_failed: daily_metrics.num_blocks_failed,
-                            original_fr: daily_metrics.original_fr.try_into()?,
-                            relative_fr: daily_metrics.relative_fr.try_into()?,
-                        })
-                    })
+                    .map(|daily_metrics| daily_metrics.try_into())
                     .collect::<Result<Vec<_>, String>>()?;
 
                 Ok((
@@ -153,7 +159,7 @@ impl TryFrom<rewards_calculator_results::RewardsCalculatorResults> for RewardsCa
                         node_type,
                         region,
                         dc_id,
-                        daily_metrics: daily_node_results,
+                        daily_metrics,
                         avg_relative_fr,
                         rewardable_from: (*node_results.rewardable_days.first().unwrap()).into(),
                         rewardable_to: (*node_results.rewardable_days.last().unwrap()).into(),
@@ -172,6 +178,110 @@ impl TryFrom<rewards_calculator_results::RewardsCalculatorResults> for RewardsCa
         Ok(Self {
             results_by_node,
             extrapolated_fr: value.extrapolated_fr.try_into()?,
+            rewards_total: value.rewards_total.try_into()?,
+        })
+    }
+}
+
+#[derive(candid::CandidType, candid::Deserialize)]
+pub enum NodeStatus {
+    Assigned { node_metrics: NodeMetricsDaily },
+    Unassigned { extrapolated_fr: Percent },
+}
+
+#[derive(candid::CandidType, candid::Deserialize)]
+pub struct DailyResults {
+    pub node_status: NodeStatus,
+    pub performance_multiplier: Percent,
+    pub base_rewards: XDRPermyriad,
+    pub adjusted_rewards: XDRPermyriad,
+}
+
+#[derive(candid::CandidType, candid::Deserialize)]
+pub struct NodeResultsV1 {
+    pub node_type: String,
+    pub region: String,
+    pub dc_id: String,
+    pub daily_results: BTreeMap<DayUTC, DailyResults>,
+}
+
+#[derive(candid::CandidType, candid::Deserialize)]
+pub struct RewardsCalculatorResultsV1 {
+    pub results_by_node: BTreeMap<NodeId, NodeResultsV1>,
+    pub rewards_total: XDRPermyriad,
+}
+
+impl TryFrom<rewards_calculator_results::RewardsCalculatorResults> for RewardsCalculatorResultsV1 {
+    type Error = String;
+
+    fn try_from(value: rewards_calculator_results::RewardsCalculatorResults) -> Result<Self, Self::Error> {
+        let results_by_node = value
+            .results_by_node
+            .into_iter()
+            .map(|(node_id, mut node_results)| {
+                let region = node_results.region.0.clone();
+                let node_type = node_results.node_reward_type.as_str_name().to_string();
+                let dc_id = node_results.dc_id.to_string();
+                let daily_results: BTreeMap<DayUTC, DailyResults> = node_results
+                    .rewardable_days
+                    .into_iter()
+                    .map(|day| {
+                        let node_status = match node_results.daily_metrics_v1.remove(&day) {
+                            Some(daily_metrics) => NodeStatus::Assigned {
+                                node_metrics: NodeMetricsDaily::try_from(daily_metrics)?,
+                            },
+                            None => NodeStatus::Unassigned {
+                                extrapolated_fr: value
+                                    .extrapolated_fr_v1
+                                    .get(&day)
+                                    .expect("Extrapolated failure rate must exist for each rewardable day")
+                                    .clone()
+                                    .try_into()?,
+                            },
+                        };
+                        let performance_multiplier = node_results
+                            .performance_multiplier_v1
+                            .remove(&day)
+                            .expect("Performance multiplier must exist for each rewardable day")
+                            .try_into()?;
+                        let base_rewards = value
+                            .base_rewards_by_category_v1
+                            .get(&(day, node_results.region.clone(), node_results.node_reward_type))
+                            .expect("Base rewards must exist for each rewardable day")
+                            .clone()
+                            .try_into()?;
+                        let adjusted_rewards = node_results
+                            .adjusted_rewards_v1
+                            .remove(&day)
+                            .expect("Adjusted rewards must exist for each rewardable day")
+                            .try_into()?;
+
+                        Ok((
+                            day.into(),
+                            DailyResults {
+                                node_status,
+                                performance_multiplier,
+                                base_rewards,
+                                adjusted_rewards,
+                            },
+                        ))
+                    })
+                    .collect::<Result<BTreeMap<_, _>, String>>()?;
+
+                Ok((
+                    node_id,
+                    NodeResultsV1 {
+                        node_type,
+                        region,
+                        dc_id,
+                        daily_results,
+                    },
+                ))
+            })
+            .collect::<Result<BTreeMap<_, _>, String>>()?;
+
+        Ok(Self {
+            results_by_node,
             rewards_total: value.rewards_total.try_into()?,
         })
     }
