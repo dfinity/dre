@@ -58,21 +58,38 @@ impl std::fmt::Display for NodeGroup {
 }
 #[derive(Copy, Clone, Debug, Ord, Eq, PartialEq, PartialOrd)]
 pub enum NumberOfNodes {
-    Percentage(i32),
-    Absolute(i32),
+    Percentage(u32),
+    Absolute(u32),
 }
 impl FromStr for NumberOfNodes {
-    type Err = anyhow::Error;
+    type Err = clap::Error;
     fn from_str(input: &str) -> Result<Self, Self::Err> {
         if input.ends_with('%') {
-            let percentage = i32::from_str(input.trim_end_matches('%'))?;
+            let percentage = match u32::from_str(input.trim_end_matches('%')) {
+                Ok(p) => p,
+                Err(e) => {
+                    return Err(
+                        clap::Command::new("dre").error(clap::error::ErrorKind::InvalidValue, format!("while parsing --nodes-in-group: {}", e))
+                    )
+                }
+            };
             if (0..=100).contains(&percentage) {
                 Ok(NumberOfNodes::Percentage(percentage))
             } else {
-                Err(anyhow!("Percentage must be between 0 and 100"))
+                Err(clap::Command::new("dre").error(
+                    clap::error::ErrorKind::InvalidValue,
+                    "while parsing --nodes-in-group: percentage must be between 0 and 100",
+                ))
             }
         } else {
-            Ok(NumberOfNodes::Absolute(i32::from_str(input)?))
+            Ok(NumberOfNodes::Absolute(match u32::from_str(input) {
+                Ok(v) => v,
+                Err(e) => {
+                    return Err(
+                        clap::Command::new("dre").error(clap::error::ErrorKind::InvalidValue, format!("while parsing --nodes-in-group: {}", e))
+                    )
+                }
+            }))
         }
     }
 }
@@ -95,13 +112,13 @@ impl std::fmt::Display for NumberOfNodes {
 #[derive(Copy, Clone, Debug, Ord, Eq, PartialEq, PartialOrd)]
 pub struct NodeGroupUpdate {
     pub node_group: NodeGroup,
-    pub maybe_number_nodes: Option<NumberOfNodes>,
+    pub number_nodes: NumberOfNodes,
 }
 impl NodeGroupUpdate {
     pub fn new(assignment: Option<NodeAssignment>, owner: Option<NodeOwner>, nodes_per_subnet: NumberOfNodes) -> Self {
         NodeGroupUpdate {
             node_group: NodeGroup::new(assignment.unwrap_or_default(), owner.unwrap_or_default()),
-            maybe_number_nodes: Some(nodes_per_subnet),
+            number_nodes: nodes_per_subnet,
         }
     }
 
@@ -111,11 +128,11 @@ impl NodeGroupUpdate {
                 assignment,
                 owner: self.node_group.owner,
             },
-            maybe_number_nodes: self.maybe_number_nodes,
+            number_nodes: self.number_nodes,
         }
     }
     pub fn nodes_to_take(&self, group_size: usize) -> usize {
-        match self.maybe_number_nodes.unwrap_or_default() {
+        match self.number_nodes {
             NumberOfNodes::Percentage(percent_to_update) => (group_size as f32 * percent_to_update as f32 / 100.0).floor() as usize,
             NumberOfNodes::Absolute(number_nodes) => number_nodes as usize,
         }
@@ -378,7 +395,7 @@ impl HostosRollout {
                     }
                 })
                 .count(),
-            update_group.maybe_number_nodes.unwrap_or_default(),
+            update_group.number_nodes,
             update_group.node_group.owner,
             update_group.node_group.assignment
         );
@@ -393,8 +410,9 @@ impl HostosRollout {
                 {
                     CandidatesSelection::Ok(candidates_unassigned) => {
                         let nodes_to_take = update_group.nodes_to_take(unassigned_nodes.len());
-                        let nodes_to_update = candidates_unassigned.into_iter().take(nodes_to_take).collect::<Vec<_>>();
+                        let nodes_to_update = candidates_unassigned.clone().into_iter().take(nodes_to_take).collect::<Vec<_>>();
                         info!("{} candidate nodes selected for: {}", nodes_to_update.len(), update_group.node_group);
+
                         Ok(HostosRolloutResponse::Ok(nodes_to_update, None))
                     }
                     CandidatesSelection::None(reason) => {
@@ -532,6 +550,7 @@ pub mod test {
     use ic_management_backend::health::MockHealthStatusQuerier;
     use ic_management_backend::proposal::ProposalAgentImpl;
     use ic_management_types::{Network, Node, Operator, Provider, Subnet};
+    use ic_protobuf::registry::node::v1::NodeRewardType;
     use std::collections::BTreeMap;
     use std::sync::OnceLock;
 
@@ -596,7 +615,7 @@ pub mod test {
                 open_proposals.clone(),
                 NodeGroupUpdate {
                     node_group: NodeGroup::new(Assigned, Others),
-                    maybe_number_nodes: None,
+                    number_nodes: NumberOfNodes::Percentage(100),
                 },
             )
             .await;
@@ -635,7 +654,7 @@ pub mod test {
                 open_proposals.clone(),
                 NodeGroupUpdate {
                     node_group: NodeGroup::new(Assigned, Others),
-                    maybe_number_nodes: None,
+                    number_nodes: NumberOfNodes::Percentage(100),
                 },
             )
             .await
@@ -688,6 +707,7 @@ pub mod test {
         for i in start_at_number..start_at_number + num_nodes {
             let node = Node {
                 principal: PrincipalId::new_node_test_id(i),
+                node_reward_type: Some(NodeRewardType::Type3),
                 ip_addr: None,
                 operator: Operator {
                     principal: PrincipalId::new_node_test_id(i),
@@ -700,6 +720,7 @@ pub mod test {
                     datacenter: None,
                     rewardable_nodes: BTreeMap::new(),
                     ipv6: "".to_string(),
+                    max_rewardable_nodes: BTreeMap::new(),
                 },
                 cached_features: OnceLock::new(),
                 hostname: None,

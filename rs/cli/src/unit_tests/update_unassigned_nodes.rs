@@ -122,7 +122,7 @@ async fn should_skip_update_same_version_nns_provided() {
 async fn should_update_unassigned_nodes() {
     let mut ic_admin = MockIcAdmin::new();
     // Should be called since versions differ
-    ic_admin.expect_simulate_proposal().once().returning(|_, _| Box::pin(async { Ok(()) }));
+    ic_admin.expect_simulate_proposal().once().returning(|_, _, _| Box::pin(async { Ok(()) }));
     ic_admin
         .expect_submit_proposal()
         .once()

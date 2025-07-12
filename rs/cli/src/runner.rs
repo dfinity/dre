@@ -33,6 +33,7 @@ use ic_management_types::TopologyChangePayload;
 use ic_types::PrincipalId;
 use indexmap::{IndexMap, IndexSet};
 use itertools::Itertools;
+use log::error;
 use log::info;
 use log::warn;
 
@@ -157,10 +158,10 @@ impl Runner {
 
         if self.verbose {
             if let Some(run_log) = &subnet_creation_data.run_log {
-                println!("{}\n", run_log.join("\n"));
+                info!("{}\n", run_log.join("\n"));
             }
         }
-        println!("{}", subnet_creation_data);
+        info!("{}", subnet_creation_data);
         let replica_version = replica_version.unwrap_or(
             self.registry
                 .nns_replica_version()
@@ -192,7 +193,7 @@ impl Runner {
     pub async fn propose_subnet_change(&self, change: &SubnetChangeResponse) -> anyhow::Result<Option<IcAdminProposal>> {
         if self.verbose {
             if let Some(run_log) = &change.run_log {
-                println!("{}\n", run_log.join("\n"));
+                info!("{}\n", run_log.join("\n"));
             }
         }
 
@@ -411,7 +412,7 @@ impl Runner {
             HostosRolloutResponse::None(reason) => {
                 reason
                     .iter()
-                    .for_each(|(group, reason)| println!("No nodes to update in group: {} because: {}", group, reason));
+                    .for_each(|(group, reason)| error!("No nodes to update in group: {} because: {}", group, reason));
                 Ok(None)
             }
         }
@@ -424,8 +425,8 @@ impl Runner {
             .iter()
             .map(|p| p.to_string().split('-').next().unwrap().to_string())
             .collect::<Vec<_>>();
-        println!("Will submit proposal to update the following nodes: {:?}", nodes_short);
-        println!("You will be able to follow the upgrade progress at https://grafana.mainnet.dfinity.network/explore?orgId=1&left=%7B%22datasource%22:%22PE62C54679EC3C073%22,%22queries%22:%5B%7B%22refId%22:%22A%22,%22datasource%22:%7B%22type%22:%22prometheus%22,%22uid%22:%22PE62C54679EC3C073%22%7D,%22editorMode%22:%22code%22,%22expr%22:%22hostos_version%7Bic_node%3D~%5C%22{}%5C%22%7D%5Cn%22,%22legendFormat%22:%22__auto%22,%22range%22:true,%22instant%22:true%7D%5D,%22range%22:%7B%22from%22:%22now-1h%22,%22to%22:%22now%22%7D%7D", nodes_short.iter().map(|n| n.to_string() + ".%2B").join("%7C"));
+        info!("Will submit proposal to update the following nodes: {:?}", nodes_short);
+        info!("You will be able to follow the upgrade progress at https://grafana.mainnet.dfinity.network/explore?orgId=1&left=%7B%22datasource%22:%22PE62C54679EC3C073%22,%22queries%22:%5B%7B%22refId%22:%22A%22,%22datasource%22:%7B%22type%22:%22prometheus%22,%22uid%22:%22PE62C54679EC3C073%22%7D,%22editorMode%22:%22code%22,%22expr%22:%22hostos_version%7Bic_node%3D~%5C%22{}%5C%22%7D%5Cn%22,%22legendFormat%22:%22__auto%22,%22range%22:true,%22instant%22:true%7D%5D,%22range%22:%7B%22from%22:%22now-1h%22,%22to%22:%22now%22%7D%7D", nodes_short.iter().map(|n| n.to_string() + ".%2B").join("%7C"));
 
         Ok(IcAdminProposal::new(
             IcAdminProposalCommand::DeployHostosToSomeNodes {
@@ -473,7 +474,7 @@ impl Runner {
             row.add_cell(nr.reason.message());
             table.add_row(row);
         }
-        println!("{}", table);
+        info!("{}", table);
 
         Ok(IcAdminProposal::new(
             ic_admin::IcAdminProposalCommand::RemoveNodes {
@@ -541,7 +542,7 @@ impl Runner {
                 .run_membership_change(change, replace_proposal_options(change).await?)
                 .await
                 .map_err(|e| {
-                    println!("{}", e);
+                    error!("{}", e);
                     errors.push(e);
                 });
             changes.push(current)
@@ -904,7 +905,7 @@ impl Runner {
             removed_nodes: removed_nodes.clone(),
             ..Default::default()
         };
-        println!("{}", SubnetChangeResponse::new(&subnet_change, &health_of_nodes, summary));
+        info!("{}", SubnetChangeResponse::new(&subnet_change, &health_of_nodes, summary));
         Ok(())
     }
 

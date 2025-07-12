@@ -98,7 +98,7 @@ pub trait ProducesProposalResult {
 /// Represents anything that can be turned into a proposal request
 /// suitable to be made through the GovernanceCanisterWrapper, and
 /// also has the ability to deserialize to a ProposalResponseWithId.
-pub trait ProposableViaGovernanceCanister: Debug + Send + Sync + Clone + Into<MakeProposalRequest> {
+pub trait ProposableViaGovernanceCanister: Debug + Send + Sync + Clone + Into<MakeProposalRequest> + serde::Serialize {
     type ProposalResult: TryFrom<u64> + TryInto<ProposalResponseWithId>;
 }
 
@@ -112,7 +112,7 @@ impl ProposableViaGovernanceCanister for MakeProposalRequest {
 /// of a proposal (any object that implements either RunnableViaIcAdmin or
 /// ProposableViaGovernanceCanister, and produces a ProposalResponseWithId).
 pub trait ProposalExecution: Send + Sync {
-    fn simulate(&self, forum_post_link_description: Option<String>) -> BoxFuture<'_, anyhow::Result<()>>;
+    fn simulate(&self, machine_readable: bool, forum_post_link_description: Option<String>) -> BoxFuture<'_, anyhow::Result<()>>;
 
     /// Runs the proposal in forrealz mode.  Result is returned and logged at debug level.
     fn submit<'a, 'b>(&'a self, forum_post_link: Option<Url>) -> BoxFuture<'b, anyhow::Result<ProposalResponseWithId>>

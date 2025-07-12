@@ -1,6 +1,7 @@
 use clap::{error::ErrorKind, Args};
 
 use crate::auth::AuthRequirement;
+use crate::confirm::DryRunType;
 use crate::exe::args::GlobalArgs;
 use crate::exe::ExecutableCommand;
 use crate::{
@@ -49,7 +50,7 @@ impl ExecutableCommand for Propose {
         // This automatically bypasses interactive prompts, as they are unnecessary and unexpected when displaying help.
         let mut submission_params = self.submission_parameters.clone();
         if args.contains(&String::from("--help")) {
-            submission_params.confirmation_mode.dry_run = true;
+            submission_params.confirmation_mode.dry_run = DryRunType::HumanReadable;
         }
 
         Submitter::from(&submission_params)

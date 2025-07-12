@@ -33,7 +33,7 @@ async fn guest_os_elect_version_tests() {
     let captured_cmd_clone = captured_cmd.clone();
 
     let mut ic_admin = MockIcAdmin::new();
-    ic_admin.expect_simulate_proposal().returning(|_, _| Box::pin(async { Ok(()) }));
+    ic_admin.expect_simulate_proposal().returning(|_, _, _| Box::pin(async { Ok(()) }));
     let captured_cmd_clone = captured_cmd_clone.clone();
     ic_admin.expect_submit_proposal().returning(move |cmd, _forum_post| {
         *captured_cmd_clone.write().unwrap() = Some(cmd.clone());
