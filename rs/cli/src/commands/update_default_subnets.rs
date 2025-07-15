@@ -9,7 +9,7 @@ use ic_registry_subnet_type::SubnetType;
 use ic_types::PrincipalId;
 use itertools::Itertools;
 
-use log::info;
+use log::{info, warn};
 
 use crate::{
     forum::ForumPostKind,
@@ -137,7 +137,7 @@ impl ExecutableCommand for UpdateDefaultSubnets {
             .collect();
 
         if new_authorized == default_subnets {
-            println!("There are no diffs. Skipping proposal creation.");
+            warn!("There are no diffs. Skipping proposal creation.");
             return Ok(());
         }
 
