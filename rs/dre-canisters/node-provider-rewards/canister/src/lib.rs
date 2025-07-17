@@ -105,8 +105,8 @@ fn get_n_months_rewards_period(now: Option<DateTime<Utc>>, months: u32) -> Rewar
     let midnite = today_at_midnight(now);
     let ago = midnite.checked_sub_months(Months::new(months)).expect("UTC dates cannot have a nonexistent or unambiguous date after we subtract months, because UTC dates do not have daylight savings time, and there is no way this could be out of range.  See checked_sub_months() documentation.");
     RewardPeriodArgs {
-        start_ts: ago.timestamp().try_into().unwrap(),
-        end_ts: midnite.timestamp().try_into().unwrap(),
+        start_ts: ago.timestamp_nanos_opt().unwrap() as u64,
+        end_ts: midnite.timestamp_nanos_opt().unwrap() as u64,
     }
 }
 
