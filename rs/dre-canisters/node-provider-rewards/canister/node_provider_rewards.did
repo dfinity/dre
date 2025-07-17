@@ -104,37 +104,24 @@ type GetNodeProvidersRewardsResponse = variant {
 
 type NodeStatus = variant {
   Assigned: record {
-    /// Same as before
     node_metrics: NodeMetricsDaily;
   };
   Unassigned: record {
-    /// This is the only extrapolation that we do
-    /// Every day the extrapolated failure rate is the average
-    /// of the relative failure rates of the nodes assigned on that day
     extrapolated_fr: Percent;
   };
 };
 
 type DailyResults = record {
   node_status: NodeStatus;
-  /// Same as v0 but now daily
   performance_multiplier: Percent;
-  /// Same as v0 but now daily
-  rewards_reduction: Percent;
-  /// Same as v0 but now daily
   base_rewards: XDRPermyriad;
-  /// Same as v0 but now daily
   adjusted_rewards: XDRPermyriad;
 };
 
 type NodeResultsV1 = record {
-  /// Same as v0
   node_type: text;
-  /// Same as v0
   region: text;
-  /// Same as v0
   dc_id: text;
-  /// Daily results for the node
   daily_results: vec record { DayUTC; DailyResults };
 };
 
@@ -154,6 +141,3 @@ service : {
     get_node_provider_rewards_calculation : (NodeProviderRewardsCalculationArgs) -> (GetNodeProviderRewardsCalculationResponse) query;
     get_node_provider_rewards_calculation_v1 : (NodeProviderRewardsCalculationArgs) -> (GetNodeProviderRewardsCalculationResponseV1) query;
 }
-
-
-

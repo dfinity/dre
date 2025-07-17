@@ -495,7 +495,6 @@ impl<'a> RewardsCalculatorPipeline<'a, ComputeExtrapolatedFRV1> {
     pub fn next(mut self) -> RewardsCalculatorPipeline<'a, ComputePerformanceMultipliersV1> {
         let mut daily_extrapolated_fr: BTreeMap<DayUTC, Vec<Decimal>> = BTreeMap::new();
 
-        // Step 1: For each node, collect the relative failure rates for each day
         self.calculator_results
             .results_by_node
             .values()
@@ -503,19 +502,6 @@ impl<'a> RewardsCalculatorPipeline<'a, ComputeExtrapolatedFRV1> {
             .for_each(|(_, metrics)| {
                 daily_extrapolated_fr.entry(metrics.day).or_default().push(metrics.relative_fr.get());
             });
-
-        // Step 2: Collect all rewardable days across all nodes
-        let all_rewardable_days: HashSet<DayUTC> = self
-            .calculator_results
-            .results_by_node
-            .values()
-            .flat_map(|node| node.rewardable_days.clone())
-            .collect();
-
-        // Step 3: Fill in missing days with ZERO failure rate
-        for day in all_rewardable_days {
-            daily_extrapolated_fr.entry(day).or_insert(vec![Decimal::ZERO]);
-        }
 
         self.calculator_results.extrapolated_fr_v1 = daily_extrapolated_fr
             .into_iter()
@@ -537,12 +523,13 @@ impl<'a> RewardsCalculatorPipeline<'a, ComputePerformanceMultipliersV1> {
                 if let Some(metrics) = node_results.daily_metrics_v1.get(day) {
                     // If the node is assigned on this day, use the relative failure rate for that day.
                     daily_fr_used = metrics.relative_fr.clone().get();
-                } else {
-                    let extrapolated_fr = self.calculator_results.extrapolated_fr_v1.get(day).cloned().expect("Exists");
+                } else if let Some(avg_fr) = self.calculator_results.extrapolated_fr_v1.get(day) {
                     // If the node is not assigned on this day, use the extrapolated failure rate for that day.
-                    daily_fr_used = extrapolated_fr.get();
+                    daily_fr_used = avg_fr.clone().get();
+                } else {
+                    // If there is no extrapolated failure rate for this day, the node will not be rewarded.
+                    continue;
                 }
-
                 if daily_fr_used < MIN_FAILURE_RATE {
                     rewards_reduction = MIN_REWARDS_REDUCTION;
                 } else if daily_fr_used > MAX_FAILURE_RATE {
@@ -552,7 +539,6 @@ impl<'a> RewardsCalculatorPipeline<'a, ComputePerformanceMultipliersV1> {
                     rewards_reduction = ((daily_fr_used - MIN_FAILURE_RATE) / (MAX_FAILURE_RATE - MIN_FAILURE_RATE)) * MAX_REWARDS_REDUCTION;
                 };
 
-                node_results.rewards_reduction_v1.insert(*day, rewards_reduction.into());
                 node_results.performance_multiplier_v1.insert(*day, (dec!(1) - rewards_reduction).into());
             }
         }
