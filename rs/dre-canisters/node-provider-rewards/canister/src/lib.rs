@@ -13,7 +13,7 @@ use rewards_calculation::rewards_calculator::builder::RewardsCalculatorBuilder;
 use rewards_calculation::rewards_calculator::{AlgoVersion, RewardsCalculator};
 use rewards_calculation::types::RewardPeriod;
 use std::collections::BTreeMap;
-use std::ops::Add;
+use std::ops::{Add, Sub};
 use std::str::FromStr;
 use telemetry::QueryCallMeasurement;
 
@@ -102,7 +102,7 @@ fn today_at_midnight(now: Option<DateTime<Utc>>) -> DateTime<Utc> {
 /// * supplied date/time: 2025-04-30T03:01:00
 /// * returned interval: (2025-02-28T00:00:00 -- 2025-04-30T00:00:00)
 fn get_n_months_rewards_period(now: Option<DateTime<Utc>>, months: u32) -> RewardPeriodArgs {
-    let midnite = today_at_midnight(now);
+    let midnite = today_at_midnight(now).sub(Days::new(1));
     let ago = midnite.checked_sub_months(Months::new(months)).expect("UTC dates cannot have a nonexistent or unambiguous date after we subtract months, because UTC dates do not have daylight savings time, and there is no way this could be out of range.  See checked_sub_months() documentation.");
     RewardPeriodArgs {
         start_ts: ago.timestamp_nanos_opt().unwrap() as u64,
