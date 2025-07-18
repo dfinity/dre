@@ -7,6 +7,7 @@ use super::hostos::HostOs;
 use super::network::Network;
 use super::neuron::Neuron;
 use super::node_metrics::NodeMetrics;
+use super::node_provider_rewards::NodeProviderRewards;
 use super::nodes::Nodes;
 use super::proposals::Proposals;
 use super::propose::Propose;
@@ -33,7 +34,7 @@ pub struct MainCommand {
     pub subcommands: Subcommands,
 }
 
-impl_executable_command_for_enums! { MainCommand, DerToPrincipal, Network, Subnet, Get, Propose, UpdateUnassignedNodes, Version, NodeMetrics, HostOs, Nodes, ApiBoundaryNodes, Vote, Registry, Firewall, Upgrade, Proposals, Completions, Qualify, UpdateDefaultSubnets, Neuron, Governance }
+impl_executable_command_for_enums! { MainCommand, DerToPrincipal, Network, Subnet, Get, Propose, UpdateUnassignedNodes, Version, NodeMetrics, NodeProviderRewards, HostOs, Nodes, ApiBoundaryNodes, Vote, Registry, Firewall, Upgrade, Proposals, Completions, Qualify, UpdateDefaultSubnets, Neuron, Governance }
 
 #[derive(Args, Debug)]
 pub struct Completions {
