@@ -346,15 +346,8 @@ impl Node {
                 .as_ref()
                 .map(|d| d.country.clone())
                 .unwrap_or_else(|| "unknown".to_string());
-            let area = self
-                .operator
-                .datacenter
-                .as_ref()
-                .map(|d| d.area.clone())
-                .unwrap_or_else(|| "unknown".to_string());
 
             NodeFeatures::from_iter([
-                (NodeFeature::Area, area),
                 (NodeFeature::Country, country),
                 (
                     NodeFeature::Continent,
@@ -475,7 +468,6 @@ pub enum NodeFeature {
     NodeProvider,
     DataCenter,
     DataCenterOwner,
-    Area,    // Represents smaller geographic entities like cities and states
     Country, // Covers larger contexts, like countries or broader regions under shared legal jurisdiction
     Continent,
 }
