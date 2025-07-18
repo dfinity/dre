@@ -1,14 +1,11 @@
 use std::collections::BTreeSet;
 
 use clap::Args;
-use decentralization::{
-    network::{DecentralizedSubnet, SubnetChangeRequest},
-    SubnetChangeResponse,
-};
 use ic_management_types::Node;
 use ic_types::PrincipalId;
 use indexmap::IndexMap;
 use itertools::Itertools;
+use registry_canister::mutations::do_change_subnet_membership::ChangeSubnetMembershipPayload;
 
 use crate::{
     exe::ExecutableCommand,
@@ -87,7 +84,7 @@ impl ExecutableCommand for ForceReplace {
 
         if !wrong_from_nodes.is_empty() {
             return Err(anyhow::anyhow!(
-                "The following nodes are not memebers of subnet {}: [{}]",
+                "The following nodes are not members of subnet {}: [{}]",
                 self.subnet_id,
                 wrong_from_nodes.iter().map(|p| p.to_string()).join(", ")
             ));
@@ -110,26 +107,36 @@ impl ExecutableCommand for ForceReplace {
             ));
         }
 
-        // Create a request
-        let nodes_to_remove = subnet.nodes.iter().filter(|n| self.from.contains(&n.principal)).cloned().collect();
-        let subnet = DecentralizedSubnet::from(subnet);
+        // Check that no included nodes have open proposals.
+        let nodes_with_proposals: Vec<Node> = self
+            .from
+            .iter()
+            .chain(self.to.iter())
+            .map(|node| nodes.get(node).unwrap())
+            .filter(|node| node.proposal.is_some())
+            .cloned()
+            .collect();
 
-        let only_nodes = self.to.iter().map(|p| unassigned_nodes.get(p).unwrap().clone()).collect();
-        let request = SubnetChangeRequest::new(subnet, vec![], only_nodes, nodes_to_remove, vec![]);
-
-        let fetcher = ctx.cordoned_features_fetcher();
-        let cordoned_features = fetcher.fetch().await?;
-        let nodes = nodes.values().cloned().collect_vec();
-        let health_client = ctx.health_client();
-        let health_of_nodes = health_client.nodes().await?;
-        let response = request.optimize(0, &[], &health_of_nodes, cordoned_features, &nodes)?;
-
-        let run_log = response.after().run_log;
-        if !run_log.is_empty() {
-            println!("{}", run_log.iter().join("\n"));
+        if !nodes_with_proposals.is_empty() {
+            return Err(anyhow::anyhow!(
+                "The following nodes have open proposals:\n{}",
+                nodes_with_proposals
+                    .iter()
+                    .map(|node| format!(" - {} - {}", node.principal, node.proposal.clone().unwrap().id))
+                    .join("\n")
+            ));
         }
 
-        let subnet_change_response = SubnetChangeResponse::new(&response, &health_of_nodes, self.motivation.clone());
+        // Create a request
+        let runner = ctx.runner().await?;
+
+        let change_membership = ChangeSubnetMembershipPayload {
+            subnet_id: self.subnet_id,
+            node_ids_add: self.to.iter().map(|id| (*id).into()).collect(),
+            node_ids_remove: self.from.iter().map(|id| (*id).into()).collect(),
+        };
+
+        let subnet_change_response = runner.decentralization_change(&change_membership, None, self.motivation.clone()).await?;
 
         let runner_proposal = match ctx.runner().await?.propose_subnet_change(&subnet_change_response).await? {
             Some(runner_proposal) => runner_proposal,
