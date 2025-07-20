@@ -63,6 +63,7 @@ itertools = { workspace = true }
 keyring = { workspace = true, optional = true }
 log = { workspace = true }
 mockall.workspace = true
+node-provider-rewards-api = { workspace = true }
 pretty_env_logger = { workspace = true }
 prost = { workspace = true }
 regex = { workspace = true }

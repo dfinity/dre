@@ -1,82 +1,87 @@
 use std::str::FromStr;
 
+use crate::{auth::AuthRequirement, exe::ExecutableCommand};
 use chrono::{NaiveDate, NaiveDateTime};
 use clap::Args;
 use ic_canisters::node_provider_rewards::NodeProviderRewardsCanisterWrapper;
 use ic_types::PrincipalId;
 use log::info;
-use node_provider_rewards_api::endpoints::{NodeProviderRewardsCalculationArgs, RewardPeriodArgs, RewardsCalculatorResultsV1};
+use node_provider_rewards_api::endpoints::{
+    DailyResults, NodeProviderRewardsCalculationArgs, NodeStatus, RewardPeriodArgs, RewardsCalculatorResultsV1,
+};
+use tabled::builder::Builder;
+use tabled::settings::object::Rows;
+use tabled::settings::style::LineText;
+use tabled::settings::Style;
 use tabled::{Table, Tabled};
-
-use crate::{auth::AuthRequirement, exe::ExecutableCommand};
 
 #[derive(Args, Debug)]
 pub struct NodeProviderRewards {
-    /// The id of the node provider
     #[clap(long)]
-    pub provider_id: String,
+    pub provider_id: PrincipalId,
 
-    /// The start date of the rewards period in YYYY-MM-DD format
-    #[clap(long)]
     pub start_date: String,
 
-    /// The end date of the rewards period in YYYY-MM-DD format
-    #[clap(long)]
     pub end_date: String,
-}
-
-#[derive(Tabled)]
-struct NodeRewardRow {
-    #[tabled(rename = "Node ID")]
-    node_id: String,
-    #[tabled(rename = "Uptime")]
-    uptime: String,
-    #[tabled(rename = "Reward (XDR)")]
-    reward: String,
 }
 
 impl ExecutableCommand for NodeProviderRewards {
     fn require_auth(&self) -> AuthRequirement {
-        AuthRequirement::None
+        AuthRequirement::Anonymous
     }
+
+    fn validate(&self, _args: &crate::exe::args::GlobalArgs, _cmd: &mut clap::Command) {}
 
     async fn execute(&self, ctx: crate::ctx::DreContext) -> anyhow::Result<()> {
         let (_, canister_agent) = ctx.create_ic_agent_canister_client().await?;
-        info!("Started action...");
-
-        let start_date = NaiveDate::from_str(&self.start_date)?;
-        let end_date = NaiveDate::from_str(&self.end_date)?;
-        let start_ts = start_date.and_hms_opt(0, 0, 0).unwrap().timestamp_nanos_opt().unwrap() as u64;
-        let end_ts = end_date.and_hms_opt(0, 0, 0).unwrap().timestamp_nanos_opt().unwrap() as u64;
-
         let args = NodeProviderRewardsCalculationArgs {
-            provider_id: PrincipalId::from_str(&self.provider_id)?,
-            reward_period: RewardPeriodArgs { start_ts, end_ts },
+            provider_id: self.provider_id,
+            reward_period: RewardPeriodArgs::from_dd_mm_yyyy(&self.start_date, &self.end_date)?,
         };
+        let npr_canister = NodeProviderRewardsCanisterWrapper::new(canister_agent);
+        let result = npr_canister.get_node_provider_rewards_calculation_v1(args).await?;
 
-        let rewards_canister = NodeProviderRewardsCanisterWrapper::new(canister_agent);
-        let result: Result<RewardsCalculatorResultsV1, String> = rewards_canister.get_node_provider_rewards_calculation_v1(args).await;
+        for (node_id, node_results) in result.results_by_node {
+            let mut builder = Builder::default();
 
-        match result {
-            Ok(rewards) => {
-                let mut rows = vec![];
-                for (node_id, node_reward) in rewards.rewards_per_node {
-                    rows.push(NodeRewardRow {
-                        node_id: node_id.to_string(),
-                        uptime: format!("{:.2}%", node_reward.uptime_percentage * 100.0),
-                        reward: format!("{:.2}", node_reward.reward_e8s as f64 / 100_000_000.0),
-                    });
-                }
-                let table = Table::new(rows);
-                println!("{}", table);
+            builder.push_record(["Day UTC", "Status", "Performance Multiplier", "Base Rewards", "Adjusted Rewards"]);
+
+            for (day, results_by_day) in node_results.daily_results {
+                let DailyResults {
+                    node_status,
+                    performance_multiplier,
+                    base_rewards,
+                    adjusted_rewards,
+                    ..
+                } = results_by_day;
+
+                let status = match node_status {
+                    NodeStatus::Assigned { node_metrics } => format!(
+                        "Assigned\nSubnet: {}\nSubnet FR: {:?}\nProposed Blocks: {}\nFailed Blocks: {}\nOriginal FR: {:?}\nRelative FR: {:?}",
+                        node_metrics.subnet_assigned.get(),
+                        node_metrics.subnet_assigned_fr,
+                        node_metrics.num_blocks_proposed,
+                        node_metrics.num_blocks_failed,
+                        node_metrics.original_fr,
+                        node_metrics.relative_fr
+                    ),
+                    NodeStatus::Unassigned { extrapolated_fr } => format!("Unassigned\nExtrapolated FR: {:?}", extrapolated_fr),
+                };
+
+                builder.push_record(vec![
+                    day.to_string(),
+                    status,
+                    performance_multiplier.to_string(),
+                    base_rewards.to_string(),
+                    adjusted_rewards.to_string(),
+                ]);
             }
-            Err(e) => {
-                println!("Error: {}", e);
-            }
+
+            let mut table = builder.build();
+            table.with(LineText::new(node_id.get().to_string(), Rows::first()).offset(2));
+            println!("{}", table);
         }
 
         Ok(())
     }
-
-    fn validate(&self, _args: &crate::exe::args::GlobalArgs, _cmd: &mut clap::Command) {}
 }

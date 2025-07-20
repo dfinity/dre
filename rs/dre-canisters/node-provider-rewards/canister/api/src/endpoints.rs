@@ -1,9 +1,10 @@
-use chrono::DateTime;
+use chrono::{DateTime, Datelike, NaiveDate, ParseError, TimeZone, Utc};
 use ic_base_types::{NodeId, PrincipalId, SubnetId};
 use rewards_calculation::rewards_calculator_results;
 use rust_decimal::prelude::ToPrimitive;
 use rust_decimal::Decimal;
 use std::collections::BTreeMap;
+use std::fmt::Display;
 
 // FIXME: these fields need to be documented!  Are they inclusive or exclusive ranges?  How does this work?
 #[derive(candid::CandidType, candid::Deserialize, Clone)]
@@ -15,6 +16,29 @@ pub struct RewardPeriodArgs {
     /// End of the reward distribution period, as a Unix timestamp in nanoseconds.
     /// This timestamp is covers the entire correspondent UTC day and is inclusive.
     pub end_ts: u64,
+}
+
+impl RewardPeriodArgs {
+    /// Parses two dates in "dd-mm-yyyy" format and returns RewardPeriodArgs
+    pub fn from_dd_mm_yyyy(start: &str, end: &str) -> Result<RewardPeriodArgs, ParseError> {
+        // Parse input dates
+        let start_date = NaiveDate::parse_from_str(start, "%d-%m-%Y")?;
+        let end_date = NaiveDate::parse_from_str(end, "%d-%m-%Y")?;
+
+        let start_dt = Utc
+            .with_ymd_and_hms(start_date.year(), start_date.month(), start_date.day(), 0, 0, 0)
+            .single()
+            .unwrap_or_default();
+        let end_dt = Utc
+            .with_ymd_and_hms(end_date.year(), end_date.month(), end_date.day(), 23, 59, 59)
+            .single()
+            .unwrap_or_default();
+
+        Ok(RewardPeriodArgs {
+            start_ts: start_dt.timestamp_nanos_opt().unwrap() as u64,
+            end_ts: end_dt.timestamp_nanos_opt().unwrap() as u64,
+        })
+    }
 }
 
 #[derive(candid::CandidType, candid::Deserialize)]
@@ -37,7 +61,13 @@ impl TryFrom<rewards_calculator_results::XDRPermyriad> for XDRPermyriad {
     }
 }
 
-#[derive(candid::CandidType, candid::Deserialize)]
+impl Display for XDRPermyriad {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{:.4} XDR", self.0 / 10_000.0)
+    }
+}
+
+#[derive(candid::CandidType, candid::Deserialize, Debug)]
 pub struct Percent(f64);
 impl TryFrom<rewards_calculator_results::Percent> for Percent {
     type Error = String;
@@ -47,7 +77,13 @@ impl TryFrom<rewards_calculator_results::Percent> for Percent {
     }
 }
 
-#[derive(candid::CandidType, candid::Deserialize, Ord, PartialOrd, Eq, PartialEq)]
+impl Display for Percent {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{:.2}%", self.0 * 100.0)
+    }
+}
+
+#[derive(candid::CandidType, candid::Deserialize, Ord, PartialOrd, Eq, PartialEq, Clone)]
 pub struct DayUTC(String);
 impl From<rewards_calculator_results::DayUTC> for DayUTC {
     fn from(value: rewards_calculator_results::DayUTC) -> Self {
@@ -57,6 +93,12 @@ impl From<rewards_calculator_results::DayUTC> for DayUTC {
             .to_string();
 
         Self(dd_mm_yyyy)
+    }
+}
+
+impl Display for DayUTC {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.0)
     }
 }
 
@@ -188,7 +230,6 @@ pub enum NodeStatus {
     Assigned { node_metrics: NodeMetricsDaily },
     Unassigned { extrapolated_fr: Percent },
 }
-
 #[derive(candid::CandidType, candid::Deserialize)]
 pub struct DailyResults {
     pub node_status: NodeStatus,
