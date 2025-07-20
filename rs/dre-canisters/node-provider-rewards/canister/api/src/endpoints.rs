@@ -52,7 +52,7 @@ fn decimal_to_f64(value: Decimal) -> Result<f64, String> {
 }
 
 #[derive(candid::CandidType, candid::Deserialize)]
-pub struct XDRPermyriad(f64);
+pub struct XDRPermyriad(pub f64);
 impl TryFrom<rewards_calculator_results::XDRPermyriad> for XDRPermyriad {
     type Error = String;
 
@@ -68,7 +68,7 @@ impl Display for XDRPermyriad {
 }
 
 #[derive(candid::CandidType, candid::Deserialize, Debug)]
-pub struct Percent(f64);
+pub struct Percent(pub f64);
 impl TryFrom<rewards_calculator_results::Percent> for Percent {
     type Error = String;
 
@@ -83,7 +83,7 @@ impl Display for Percent {
     }
 }
 
-#[derive(candid::CandidType, candid::Deserialize, Ord, PartialOrd, Eq, PartialEq, Clone)]
+#[derive(candid::CandidType, candid::Deserialize, Ord, PartialOrd, Eq, PartialEq, Clone, Hash)]
 pub struct DayUTC(String);
 impl From<rewards_calculator_results::DayUTC> for DayUTC {
     fn from(value: rewards_calculator_results::DayUTC) -> Self {
@@ -96,9 +96,9 @@ impl From<rewards_calculator_results::DayUTC> for DayUTC {
     }
 }
 
-impl Display for DayUTC {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", self.0)
+impl From<DayUTC> for String {
+    fn from(value: DayUTC) -> Self {
+        value.0
     }
 }
 
@@ -244,7 +244,7 @@ pub struct NodeResultsV1 {
     pub node_type: String,
     pub region: String,
     pub dc_id: String,
-    pub daily_results: BTreeMap<DayUTC, DailyResults>,
+    pub daily_results: Vec<(DayUTC, DailyResults)>,
 }
 
 #[derive(candid::CandidType, candid::Deserialize)]
@@ -264,7 +264,7 @@ impl TryFrom<rewards_calculator_results::RewardsCalculatorResults> for RewardsCa
                 let region = node_results.region.0.clone();
                 let node_type = node_results.node_reward_type.as_str_name().to_string();
                 let dc_id = node_results.dc_id.to_string();
-                let daily_results: BTreeMap<DayUTC, DailyResults> = node_results
+                let daily_results: Vec<(DayUTC, DailyResults)> = node_results
                     .rewardable_days
                     .into_iter()
                     .map(|day| {
@@ -314,7 +314,7 @@ impl TryFrom<rewards_calculator_results::RewardsCalculatorResults> for RewardsCa
                             },
                         ))
                     })
-                    .collect::<Result<BTreeMap<_, _>, String>>()?;
+                    .collect::<Result<Vec<_>, String>>()?;
 
                 Ok((
                     node_id,
