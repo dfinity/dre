@@ -152,6 +152,6 @@ def canister_version(agent: Agent, canister_principal: str) -> str:
 
 if __name__ == "__main__":
     # One can run some simple one-off tests here, e.g.:
-    ic_admin = IcAdmin("https://ic0.app", git_revision="2f87fe95207dc6371a2f2dc273362ba03b41e0e9")
+    ic_admin = IcAdmin("https://ic0.app", git_revision="aa078c6c1b0b97d84fc085b4d086017fcd31e239")
 
     print(ic_admin.get_subnet_replica_versions())
