@@ -40,3 +40,4 @@ ic-types.workspace = true
 ic-interfaces-registry.workspace = true
 ic-registry-nns-data-provider.workspace = true
 icrc-ledger-types.workspace = true
+node-provider-rewards-api = { workspace = true }
