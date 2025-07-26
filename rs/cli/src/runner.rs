@@ -872,7 +872,7 @@ impl Runner {
         change: &ChangeSubnetMembershipPayload,
         override_subnet_nodes: Option<Vec<PrincipalId>>,
         summary: Option<String>,
-    ) -> anyhow::Result<()> {
+    ) -> anyhow::Result<SubnetChangeResponse> {
         let subnet_before = match override_subnet_nodes {
             Some(nodes) => {
                 let nodes = self.registry.get_nodes_from_ids(&nodes).await?;
@@ -904,8 +904,7 @@ impl Runner {
             removed_nodes: removed_nodes.clone(),
             ..Default::default()
         };
-        println!("{}", SubnetChangeResponse::new(&subnet_change, &health_of_nodes, summary));
-        Ok(())
+        Ok(SubnetChangeResponse::new(&subnet_change, &health_of_nodes, summary))
     }
 
     pub async fn subnet_rescue(&self, subnet: &PrincipalId, keep_nodes: Option<Vec<String>>) -> anyhow::Result<Option<IcAdminProposal>> {

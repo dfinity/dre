@@ -38,9 +38,12 @@ impl ExecutableCommand for WhatifDecentralization {
             node_ids_remove: self.remove_nodes.iter().map(|id| (*id).into()).collect(),
         };
 
-        runner
+        let change = runner
             .decentralization_change(&change_membership, self.subnet_nodes_initial.clone(), None)
-            .await
+            .await?;
+
+        println!("{}", change);
+        Ok(())
     }
 
     fn validate(&self, _args: &GlobalArgs, _cmd: &mut clap::Command) {}
