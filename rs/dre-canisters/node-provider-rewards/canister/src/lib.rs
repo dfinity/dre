@@ -72,7 +72,7 @@ fn post_upgrade() {
 const SYNC_INTERVAL_SECONDS: Duration = Duration::from_secs(60 * 60); // 1 hour
 
 fn schedule_timers() {
-    ic_cdk_timers::set_timer_interval(SYNC_INTERVAL_SECONDS, move || {
+    ic_cdk_timers::set_timer(Duration::from_secs(0), move || {
         spawn(async move {
             telemetry::PROMETHEUS_METRICS.with_borrow_mut(|m| m.mark_last_sync_start());
             let mut instruction_counter = telemetry::InstructionCounter::default();
@@ -201,7 +201,7 @@ fn rewards_calculator(reward_period: RewardPeriodArgs) -> Result<RewardsCalculat
 
     let rewards_table = get_decoded_value::<NodeRewardsTable>(&*registry_store, NODE_REWARDS_TABLE_KEY, registry_store.get_latest_version())
         .map_err(|err| format!("Failed to get rewards table from registry: {}", err))?
-        .unwrap();
+        .ok_or("Rewards table not found")?;
     let daily_metrics_by_subnet = metrics_manager
         .daily_metrics_by_subnet(reward_period.from, reward_period.to)
         .into_iter()
