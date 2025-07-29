@@ -18,9 +18,6 @@ members = [
     "rs/log-fetcher",
     "rs/canister-log-fetcher",
     "rs/slack-notifications",
-    "rs/dre-canisters/node-provider-rewards/canister",
-    "rs/dre-canisters/node-provider-rewards/canister/api",
-    "rs/dre-canisters/node-provider-rewards/rewards-calculation",
     "rs/dre-canisters/trustworthy-node-metrics/src/trustworthy-node-metrics-types",
     "rs/ic-observability/general-testnet-service-discovery",
 ]
@@ -139,7 +136,7 @@ cycles-minting-canister = { git = "https://github.com/dfinity/ic.git", rev = "2f
 ic-icrc1-test-utils = { git = "https://github.com/dfinity/ic.git", rev = "2f87fe95207dc6371a2f2dc273362ba03b41e0e9" }
 rosetta-core = { git = "https://github.com/dfinity/ic.git", rev = "2f87fe95207dc6371a2f2dc273362ba03b41e0e9" }
 icp-ledger = { git = "https://github.com/dfinity/ic.git", rev = "2f87fe95207dc6371a2f2dc273362ba03b41e0e9" }
-icrc-ledger-types = { git = "https://github.com/dfinity/ic.git",rev = "2f87fe95207dc6371a2f2dc273362ba03b41e0e9"  }
+icrc-ledger-types = { git = "https://github.com/dfinity/ic.git", rev = "2f87fe95207dc6371a2f2dc273362ba03b41e0e9" }
 ic-metrics-encoder = "1.1.1"
 ic-transport-types = "0.39.3"
 ic-utils = "0.39.3"
@@ -205,13 +202,9 @@ human_bytes = "0.4"
 mockall = "0.13.1"
 
 # dre-canisters dependencies
-ic-cdk = { version = "^0.17.2" }
-ic-cdk-timers = { version = "^0.11.0" }
-ic-cdk-macros = { version = "^0.17.2" }
 ic-stable-structures = "0.6.9"
 dfn_core = { git = "https://github.com/dfinity/ic.git", rev = "2f87fe95207dc6371a2f2dc273362ba03b41e0e9" }
-rewards-calculation = { path = "rs/dre-canisters/node-provider-rewards/rewards-calculation" }
-node-provider-rewards-api = { path = "rs/dre-canisters/node-provider-rewards/canister/api" }
+rewards-calculation = { git = "https://github.com/dfinity/ic.git", rev = "86f9d1413b86892f4a98e14fc82600826ea90585" }
 
 # dre-airflow deps, should be replaced with dre-airflow once
 indexmap = { version = "2.10.0", features = ["serde"] }

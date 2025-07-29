@@ -102,10 +102,19 @@ type GetNodeProvidersRewardsResponse = variant {
     Err : text;
 };
 
-type NodeStatus = variant {
+type NodeMetricsDailyV1 = record {
+    subnet_assigned: SubnetId;
+    subnet_assigned_fr: Percent;
+    num_blocks_proposed: nat64;
+    num_blocks_failed: nat64;
+    original_fr: Percent;
+    relative_fr: Percent;
+};
+
+type NodeStatusV1 = variant {
   Assigned: record {
     /// Same as before
-    node_metrics: NodeMetricsDaily;
+    node_metrics: NodeMetricsDailyV1;
   };
   Unassigned: record {
     /// This is the only extrapolation that we do
@@ -115,8 +124,8 @@ type NodeStatus = variant {
   };
 };
 
-type DailyResults = record {
-  node_status: NodeStatus;
+type DailyResultsV1 = record {
+  node_status: NodeStatusV1;
   /// Same as v0 but now daily
   performance_multiplier: Percent;
   /// Same as v0 but now daily
@@ -129,17 +138,18 @@ type DailyResults = record {
 
 type NodeResultsV1 = record {
   /// Same as v0
-  node_type: text;
+  node_reward_type: text;
   /// Same as v0
   region: text;
   /// Same as v0
   dc_id: text;
   /// Daily results for the node
-  daily_results: vec record { DayUTC; DailyResults };
+  daily_results: vec record { DayUTC; DailyResultsV1 };
 };
 
 type RewardsCalculatorResultsV1 = record {
   results_by_node: vec record { NodeId; NodeResultsV1 };
+  computation_log: text;
   rewards_total: XDRPermyriad;
 };
 

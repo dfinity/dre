@@ -1,6 +1,6 @@
 use chrono::{DateTime, Datelike, NaiveDate, ParseError, TimeZone, Utc};
 use ic_base_types::{NodeId, PrincipalId, SubnetId};
-use rewards_calculation::rewards_calculator_results;
+use rewards_calculation_deprecated::rewards_calculator_results;
 use rust_decimal::prelude::ToPrimitive;
 use rust_decimal::Decimal;
 use std::collections::BTreeMap;
@@ -104,21 +104,7 @@ impl From<DayUTC> for String {
 
 #[derive(candid::CandidType, candid::Deserialize)]
 pub struct NodeProvidersRewards {
-    pub rewards_per_provider: BTreeMap<PrincipalId, XDRPermyriad>,
-}
-
-impl TryFrom<BTreeMap<PrincipalId, rewards_calculator_results::XDRPermyriad>> for NodeProvidersRewards {
-    type Error = String;
-
-    fn try_from(rewards_per_provider: BTreeMap<PrincipalId, rewards_calculator_results::XDRPermyriad>) -> Result<Self, Self::Error> {
-        let rewards_xdr_permyriad_per_provider = rewards_per_provider
-            .into_iter()
-            .map(|(k, v)| Ok((k, v.try_into()?)))
-            .collect::<Result<BTreeMap<PrincipalId, XDRPermyriad>, String>>()?;
-        Ok(Self {
-            rewards_per_provider: rewards_xdr_permyriad_per_provider,
-        })
-    }
+    pub rewards_per_provider: BTreeMap<PrincipalId, rewards_calculation::rewards_calculator_results::XDRPermyriad>,
 }
 
 #[derive(candid::CandidType, candid::Deserialize)]
