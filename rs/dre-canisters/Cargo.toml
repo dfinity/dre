@@ -19,17 +19,17 @@ license = "Apache-2.0"
 async-trait = "0.1.88"
 candid = "0.10.14"
 chrono = { version = "0.4.41", features = ["serde"] }
-ic-base-types = { git = "https://github.com/dfinity/ic.git", rev = "56f1f03145e755ca93ca8b4be254fafcdcde624a" }
-ic-registry-keys = { git = "https://github.com/dfinity/ic.git", rev = "56f1f03145e755ca93ca8b4be254fafcdcde624a" }
-ic-http-types = { git = "https://github.com/dfinity/ic.git", rev = "56f1f03145e755ca93ca8b4be254fafcdcde624a" }
-ic-nervous-system-canisters = { git = "https://github.com/dfinity/ic.git", rev = "56f1f03145e755ca93ca8b4be254fafcdcde624a" }
-ic-nervous-system-common = { git = "https://github.com/dfinity/ic.git", rev = "56f1f03145e755ca93ca8b4be254fafcdcde624a" }
-ic-node-rewards-canister = { git = "https://github.com/dfinity/ic.git", rev = "56f1f03145e755ca93ca8b4be254fafcdcde624a" }
-ic-protobuf = { git = "https://github.com/dfinity/ic.git", rev = "56f1f03145e755ca93ca8b4be254fafcdcde624a" }
-ic-registry-canister-client = { git = "https://github.com/dfinity/ic.git", rev = "56f1f03145e755ca93ca8b4be254fafcdcde624a" }
-ic-types = { git = "https://github.com/dfinity/ic.git", rev = "56f1f03145e755ca93ca8b4be254fafcdcde624a" }
-rewards-calculation = { git = "https://github.com/dfinity/ic.git", rev = "56f1f03145e755ca93ca8b4be254fafcdcde624a" }
-ic-dummy-getrandom-for-wasm = { git = "https://github.com/dfinity/ic.git", rev = "56f1f03145e755ca93ca8b4be254fafcdcde624a" }
+ic-base-types = { git = "https://github.com/dfinity/ic.git", rev = "c9d2f07fcec94944e3a37836042178aae7752001" }
+ic-registry-keys = { git = "https://github.com/dfinity/ic.git", rev = "c9d2f07fcec94944e3a37836042178aae7752001" }
+ic-http-types = { git = "https://github.com/dfinity/ic.git", rev = "c9d2f07fcec94944e3a37836042178aae7752001" }
+ic-nervous-system-canisters = { git = "https://github.com/dfinity/ic.git", rev = "c9d2f07fcec94944e3a37836042178aae7752001" }
+ic-nervous-system-common = { git = "https://github.com/dfinity/ic.git", rev = "c9d2f07fcec94944e3a37836042178aae7752001" }
+ic-node-rewards-canister = { git = "https://github.com/dfinity/ic.git", rev = "c9d2f07fcec94944e3a37836042178aae7752001" }
+ic-protobuf = { git = "https://github.com/dfinity/ic.git", rev = "c9d2f07fcec94944e3a37836042178aae7752001" }
+ic-registry-canister-client = { git = "https://github.com/dfinity/ic.git", rev = "c9d2f07fcec94944e3a37836042178aae7752001" }
+ic-types = { git = "https://github.com/dfinity/ic.git", rev = "c9d2f07fcec94944e3a37836042178aae7752001" }
+rewards-calculation = { git = "https://github.com/dfinity/ic.git", rev = "c9d2f07fcec94944e3a37836042178aae7752001" }
+ic-dummy-getrandom-for-wasm = { git = "https://github.com/dfinity/ic.git", rev = "c9d2f07fcec94944e3a37836042178aae7752001" }
 
 itertools = "0.13.0"
 prost = "0.13"
