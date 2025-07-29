@@ -14,7 +14,10 @@ rewards-calculation-deprecated = { workspace = true }
 rewards-calculation = { workspace = true }
 candid = { workspace = true }
 serde = { workspace = true }
-chrono = { version = "0.4.41", default-features = false, features = [] }
+chrono = { version = "0.4.41", default-features = false, features = [
+    "alloc",
+    "serde",
+] }
 
 [lib]
 name = "node_provider_rewards_api"
