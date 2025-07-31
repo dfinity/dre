@@ -192,6 +192,7 @@ pub enum NodeStatus {
 #[derive(candid::CandidType, candid::Deserialize)]
 pub struct DailyResults {
     pub node_status: NodeStatus,
+    pub rewards_reduction: Percent,
     pub performance_multiplier: Percent,
     pub base_rewards: XDRPermyriad,
     pub adjusted_rewards: XDRPermyriad,
@@ -244,6 +245,11 @@ impl TryFrom<rewards_calculator_results::RewardsCalculatorResults> for RewardsCa
                             .remove(&day)
                             .expect("Performance multiplier must exist for each rewardable day")
                             .try_into()?;
+                        let rewards_reduction = node_results
+                            .rewards_reduction_v1
+                            .remove(&day)
+                            .expect("Performance multiplier must exist for each rewardable day")
+                            .try_into()?;
                         let base_rewards = value
                             .base_rewards_by_category_v1
                             .get(&(day, node_results.region.clone(), node_results.node_reward_type))
@@ -260,6 +266,7 @@ impl TryFrom<rewards_calculator_results::RewardsCalculatorResults> for RewardsCa
                             day.into(),
                             DailyResults {
                                 node_status,
+                                rewards_reduction,
                                 performance_multiplier,
                                 base_rewards,
                                 adjusted_rewards,

@@ -136,6 +136,7 @@ pub struct NodeResults {
     /// - For nodes with `AEFR` > 0.6, the rewards reduction is 0.8
     /// - For nodes with 0.1 <= `AEFR` <= 0.6, the rewards reduction is linearly interpolated between 0 and 0.8
     pub rewards_reduction: Percent,
+    pub rewards_reduction_v1: BTreeMap<DayUTC, Percent>,
 
     /// Performance multiplier (`PM`).
     ///
