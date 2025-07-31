@@ -70,7 +70,7 @@ impl ExecutableCommand for ForceReplace {
     async fn execute(&self, ctx: crate::ctx::DreContext) -> anyhow::Result<()> {
         let registry = ctx.registry().await;
 
-        let subnets = registry.subnets().await?;
+        let subnets = registry.subnets_and_proposals().await?;
         let subnet = subnets
             .get(&self.subnet_id)
             .ok_or_else(|| anyhow::anyhow!("Subnet {} is not present in the registry.", self.subnet_id))?;
@@ -122,7 +122,11 @@ impl ExecutableCommand for ForceReplace {
                 "The following nodes have open proposals:\n{}",
                 nodes_with_proposals
                     .iter()
-                    .map(|node| format!(" - {} - {}", node.principal, node.proposal.clone().unwrap().id))
+                    .map(|node| format!(
+                        " - {} - https://dashboard.internetcomputer.org/proposal/{}",
+                        node.principal,
+                        node.proposal.clone().unwrap().id
+                    ))
                     .join("\n")
             ));
         }
