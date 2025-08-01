@@ -77,12 +77,7 @@ impl ExecutableCommand for ForceReplace {
             .get(&self.subnet_id)
             .ok_or_else(|| anyhow::anyhow!("Subnet {} is not present in the registry.", self.subnet_id))?;
         let nodes = registry.nodes().await?;
-        let missing_nodes: Vec<&PrincipalId> = self
-            .from
-            .iter()
-            .chain(self.to.iter())
-            .filter_map(|p| if nodes.get(p).is_some() { None } else { Some(p) })
-            .collect();
+        let missing_nodes: Vec<&PrincipalId> = self.from.iter().chain(self.to.iter()).filter(|p| nodes.get(*p).is_none()).collect();
         if !missing_nodes.is_empty() {
             return Err(anyhow::anyhow!(
                 "The following nodes are not present in the registry: [{}]",
@@ -161,18 +156,17 @@ impl ExecutableCommand for ForceReplace {
         if !warnings.is_empty() {
             warn!("Careful! There are a total of {} warnings related to this action.", warnings.len());
             for warning in &warnings {
-                warn!("{}", warning.to_string());
+                warn!("{}", warning);
             }
 
-            if !self.submission_parameters.confirmation_mode.dry_run {
-                if !Confirm::new()
+            if !self.submission_parameters.confirmation_mode.dry_run
+                && !Confirm::new()
                     .with_prompt("Accept warnings mentioned above?")
                     .default(false)
                     .interact()
                     .map_err(anyhow::Error::from)?
-                {
-                    return Ok(());
-                }
+            {
+                return Ok(());
             }
         }
 
