@@ -1,10 +1,12 @@
 use std::collections::BTreeSet;
 
 use clap::Args;
+use dialoguer::Confirm;
 use ic_management_types::Node;
 use ic_types::PrincipalId;
 use indexmap::IndexMap;
 use itertools::Itertools;
+use log::warn;
 use registry_canister::mutations::do_change_subnet_membership::ChangeSubnetMembershipPayload;
 
 use crate::{
@@ -74,6 +76,21 @@ impl ExecutableCommand for ForceReplace {
         let subnet = subnets
             .get(&self.subnet_id)
             .ok_or_else(|| anyhow::anyhow!("Subnet {} is not present in the registry.", self.subnet_id))?;
+        let nodes = registry.nodes().await?;
+        let missing_nodes: Vec<&PrincipalId> = self
+            .from
+            .iter()
+            .chain(self.to.iter())
+            .filter_map(|p| if nodes.get(p).is_some() { None } else { Some(p) })
+            .collect();
+        if !missing_nodes.is_empty() {
+            return Err(anyhow::anyhow!(
+                "The following nodes are not present in the registry: [{}]",
+                missing_nodes.iter().map(|p| p.to_string()).join(", ")
+            ));
+        }
+
+        let mut warnings = vec![];
 
         // Ensure that the `from` nodes are in the subnet
         let wrong_from_nodes: Vec<&PrincipalId> = self
@@ -83,7 +100,7 @@ impl ExecutableCommand for ForceReplace {
             .collect();
 
         if !wrong_from_nodes.is_empty() {
-            return Err(anyhow::anyhow!(
+            warnings.push(anyhow::anyhow!(
                 "The following nodes are not members of subnet {}: [{}]",
                 self.subnet_id,
                 wrong_from_nodes.iter().map(|p| p.to_string()).join(", ")
@@ -91,7 +108,6 @@ impl ExecutableCommand for ForceReplace {
         }
 
         // Ensure that the `to` nodes are not in any subnet
-        let nodes = registry.nodes().await?;
         let unassigned_nodes: IndexMap<PrincipalId, Node> = nodes
             .iter()
             .filter(|(_, n)| n.subnet_id.is_none())
@@ -101,7 +117,7 @@ impl ExecutableCommand for ForceReplace {
         let wrong_to_nodes: Vec<&PrincipalId> = self.to.iter().filter(|p| !unassigned_nodes.contains_key(*p)).collect();
 
         if !wrong_to_nodes.is_empty() {
-            return Err(anyhow::anyhow!(
+            warnings.push(anyhow::anyhow!(
                 "The following nodes are not found in unassigned nodes: [{}]",
                 wrong_to_nodes.iter().map(|p| p.to_string()).join(", ")
             ));
@@ -118,7 +134,7 @@ impl ExecutableCommand for ForceReplace {
             .collect();
 
         if !nodes_with_proposals.is_empty() {
-            return Err(anyhow::anyhow!(
+            warnings.push(anyhow::anyhow!(
                 "The following nodes have open proposals:\n{}",
                 nodes_with_proposals
                     .iter()
@@ -142,7 +158,25 @@ impl ExecutableCommand for ForceReplace {
 
         let subnet_change_response = runner.decentralization_change(&change_membership, None, self.motivation.clone()).await?;
 
-        let runner_proposal = match ctx.runner().await?.propose_subnet_change(&subnet_change_response).await? {
+        if !warnings.is_empty() {
+            warn!("Careful! There are a total of {} warnings related to this action.", warnings.len());
+            for warning in &warnings {
+                warn!("{}", warning.to_string());
+            }
+
+            if !self.submission_parameters.confirmation_mode.dry_run {
+                if !Confirm::new()
+                    .with_prompt("Accept warnings mentioned above?")
+                    .default(false)
+                    .interact()
+                    .map_err(anyhow::Error::from)?
+                {
+                    return Ok(());
+                }
+            }
+        }
+
+        let runner_proposal = match ctx.runner().await?.propose_subnet_change(&subnet_change_response, true).await? {
             Some(runner_proposal) => runner_proposal,
             None => return Ok(()),
         };
