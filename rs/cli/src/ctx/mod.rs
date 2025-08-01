@@ -259,6 +259,10 @@ impl DreContext {
     pub fn health_client(&self) -> Arc<dyn HealthStatusQuerier> {
         self.health_client.clone()
     }
+
+    pub fn cordoned_features_fetcher(&self) -> Arc<dyn CordonedFeatureFetcher> {
+        self.cordoned_features_fetcher.clone()
+    }
 }
 
 #[cfg(test)]

@@ -73,7 +73,7 @@ impl ExecutableCommand for Replace {
             )
             .await?;
 
-        let runner_proposal = match ctx.runner().await?.propose_subnet_change(&subnet_change_response).await? {
+        let runner_proposal = match ctx.runner().await?.propose_subnet_change(&subnet_change_response, false).await? {
             Some(runner_proposal) => runner_proposal,
             None => return Ok(()),
         };
