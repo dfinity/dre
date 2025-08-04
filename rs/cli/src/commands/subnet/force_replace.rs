@@ -154,7 +154,15 @@ impl ExecutableCommand for ForceReplace {
         let subnet_change_response = runner.decentralization_change(&change_membership, None, self.motivation.clone()).await?;
 
         if !warnings.is_empty() {
-            warn!("Careful! There are a total of {} warnings related to this action.", warnings.len());
+            warn!("Careful! There are warnings related to this action!");
+            warn!(
+                "Warnings: \n{}",
+                warnings
+                    .iter()
+                    .enumerate()
+                    .map(|(index, err)| format!(" {}. {}", index + 1, err.to_string()))
+                    .join("\n\n")
+            );
             for warning in &warnings {
                 warn!("{}", warning);
             }
