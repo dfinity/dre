@@ -67,7 +67,7 @@ impl NodeMetrics {
                     metrics_by_subnet.insert(subnet, m);
                 }
                 Err(e) => {
-                    warn!("Couldn't fetch trustworthy metrics for subnet {}: {}", subnet, e);
+                    warn!("Couldn't fetch trustworthy metrics for subnets {}: {}", subnet, e);
                 }
             };
         }
