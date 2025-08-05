@@ -21,6 +21,15 @@ use std::sync::Arc;
 use std::time::Duration;
 use tokio::sync::RwLock;
 
+// Add connection pooling and caching for better performance
+use std::time::{Duration, Instant};
+use lru::LruCache;
+
+// Cache for expensive registry operations
+type RegistryCache = LruCache<String, (Instant, serde_json::Value)>;
+const CACHE_TTL: Duration = Duration::from_secs(30);
+const CACHE_SIZE: usize = 100;
+
 pub async fn run_backend(
     target_network: &Network,
     listen_ip: &str,

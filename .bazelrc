@@ -1,3 +1,11 @@
 # import default bazelrc fragments, see bazel/conf/README.md
 import %workspace%/bazel/conf/.bazelrc.build
 try-import %workspace%/user.bazelrc
+
+# Performance monitoring and profiling
+build:perf --profile=/tmp/bazel-profile.json
+build:perf --experimental_profile_include_target_label
+build:perf --experimental_profile_include_primary_output
+
+# Memory profiling
+build:memory --experimental_oom_more_eagerly_threshold=90

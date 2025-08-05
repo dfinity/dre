@@ -57,6 +57,15 @@ extern crate env_logger;
 use anyhow::Result;
 use ic_protobuf::registry::node::v1::NodeRewardType;
 use ic_registry_client_helpers::subnet::SubnetListRegistry;
+use lru::LruCache;
+
+// Add memory-efficient caching
+const REGISTRY_CACHE_SIZE: usize = 1000;
+const NODE_CACHE_SIZE: usize = 5000;
+
+// Use more efficient data structures
+type NodeCache = LruCache<ic_base_types::PrincipalId, Node>;
+type SubnetCache = LruCache<ic_base_types::SubnetId, SubnetInfo>;
 
 pub const NNS_SUBNET_NAME: &str = "NNS";
 

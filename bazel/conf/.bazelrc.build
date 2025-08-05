@@ -40,6 +40,20 @@ build --@rules_rust//:extra_rustc_flags=-Cdebug-assertions=on
 build --@rules_rust//:extra_rustc_flag=-Dbindings_with_variant_name
 build --strip=never
 
+# Performance optimizations
+build --@rules_rust//:extra_rustc_flags=-Clto=thin
+build --@rules_rust//:extra_rustc_flags=-Ccodegen-units=1
+build --@rules_rust//:extra_rustc_flags=-Cpanic=abort
+build --@rules_rust//:extra_rustc_flags=-Ctarget-cpu=native
+
+# Enable persistent workers for faster builds
+build --worker_sandboxing
+build --experimental_worker_multiplex
+
+# Optimize memory usage during builds
+build --local_ram_resources=HOST_RAM*0.75
+build --local_cpu_resources=HOST_CPUS*0.75
+
 # Build everything ic-os without sandbox
 build --strategy_regexp=ic-os[:/].*=local
 

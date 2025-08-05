@@ -22,7 +22,40 @@ module.exports = {
   devtool: isDevelopment ? "source-map" : false,
   optimization: {
     minimize: !isDevelopment,
-    minimizer: [new TerserPlugin()],
+    minimizer: [new TerserPlugin({
+      terserOptions: {
+        compress: {
+          drop_console: !isDevelopment,
+          drop_debugger: !isDevelopment,
+          pure_funcs: isDevelopment ? [] : ['console.log', 'console.info', 'console.debug']
+        },
+        mangle: {
+          safari10: true
+        }
+      }
+    })],
+    // Add code splitting for better loading performance
+    splitChunks: {
+      chunks: 'all',
+      cacheGroups: {
+        vendor: {
+          test: /[\\/]node_modules[\\/]/,
+          name: 'vendors',
+          chunks: 'all',
+          priority: 10
+        },
+        common: {
+          name: 'common',
+          minChunks: 2,
+          chunks: 'all',
+          priority: 5,
+          reuseExistingChunk: true
+        }
+      }
+    },
+    // Enable tree shaking
+    usedExports: true,
+    sideEffects: false
   },
   resolve: {
     extensions: [".js", ".ts", ".jsx", ".tsx"],

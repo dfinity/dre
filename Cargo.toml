@@ -221,6 +221,22 @@ indexmap = { version = "2.10.0", features = ["serde"] }
 # Makes flamegraphs and backtraces more readable.
 # https://doc.rust-lang.org/cargo/reference/manifest.html#the-profile-sections
 debug = true
+# Additional optimizations for better performance
+lto = "thin"           # Enable Link Time Optimization
+codegen-units = 1      # Reduce parallel code generation for better optimization
+panic = "abort"        # Reduce binary size by not including unwinding code
+strip = "symbols"      # Strip symbols to reduce binary size
+
+# Optimize dependencies even in debug builds
+[profile.dev.package."*"]
+opt-level = 2
+
+# Fast compilation profile for development
+[profile.dev-fast]
+inherits = "dev"
+debug = false
+incremental = true
+opt-level = 0
 
 [patch.'https://github.com/dfinity/cdk-rs.git']
 ic0 = "0.23.0"
