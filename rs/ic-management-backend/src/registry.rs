@@ -962,7 +962,7 @@ pub async fn sync_local_store_with_path(target_network: &Network, local_registry
         registry_cache.update_to_latest_version();
         registry_cache.get_latest_version()
     };
-    let mut updates = vec![];
+    let mut changes = Vec::new();
 
     loop {
         match registry_canister.get_latest_version().await {
@@ -992,74 +992,31 @@ pub async fn sync_local_store_with_path(target_network: &Network, local_registry
             }
         }
         if let Ok(mut initial_records) = registry_canister.get_certified_changes_since(local_latest_version.get()).await {
-            initial_records.sort_by_key(|tr| tr.version);
-            let changelog = initial_records.iter().fold(Changelog::default(), |mut cl, r| {
-                let rel_version = (r.version - local_latest_version).get();
-                if cl.len() < rel_version as usize {
-                    cl.push(ChangelogEntry::default());
-                }
-                cl.last_mut().unwrap().push(KeyMutation {
-                    key: r.key.clone(),
-                    value: r.value.clone(),
-                });
-                cl
-            });
-
-            let versions_count = changelog.len();
-
-            changelog.into_iter().enumerate().for_each(|(i, ce)| {
-                let v = RegistryVersion::from(i as u64 + 1 + local_latest_version.get());
-                let local_registry_path = local_registry_path.clone();
-                updates.push(async move {
-                    let path_str = format!("{:016x}.pb", v.get());
-                    // 00 01 02 03 04 / 05 / 06 / 07.pb
-                    let v_path = &[&path_str[0..10], &path_str[10..12], &path_str[12..14], &path_str[14..19]]
-                        .iter()
-                        .collect::<PathBuf>();
-                    let path = local_registry_path.join(v_path.as_path());
-                    let r = tokio::fs::create_dir_all(path.clone().parent().unwrap())
-                        .and_then(|_| async {
-                            tokio::fs::write(
-                                path,
-                                PbChangelogEntry {
-                                    key_mutations: ce
-                                        .iter()
-                                        .map(|km| {
-                                            let mutation_type = if km.value.is_some() {
-                                                MutationType::Set as i32
-                                            } else {
-                                                MutationType::Unset as i32
-                                            };
-                                            PbKeyMutation {
-                                                key: km.key.clone(),
-                                                value: km.value.clone().unwrap_or_default(),
-                                                mutation_type,
-                                            }
-                                        })
-                                        .collect(),
-                                }
-                                .encode_to_vec(),
-                            )
-                            .await
-                        })
-                        .await;
-                    if let Err(e) = &r {
-                        debug!("Storage err for {v}: {}", e);
-                    } else {
-                        debug!("Stored version {}", v);
-                    }
-                    r
-                });
-            });
-
-            local_latest_version = local_latest_version.add(RegistryVersion::new(versions_count as u64));
-
-            debug!("Sync reached version {local_latest_version}");
-            tokio::time::sleep(std::time::Duration::from_secs(1)).await;
+            let max_version = initial_records
+                .iter()
+                .flat_map(|delta| delta.values.iter().map(|values| values.version))
+                .max()
+                .unwrap();
+            changes.extend(initial_records);
+            local_latest_version = RegistryVersion::new(max_version);
         }
+
+        tokio::time::sleep(std::time::Duration::from_secs(1)).await;
     }
 
-    futures::future::join_all(updates).await;
+    let mut buf = Vec::new();
+
+    for item in changes {
+        if item.key.starts_with(NODE_OPERATOR_RECORD_KEY_PREFIX.as_bytes())
+            || item.key.starts_with(DATA_CENTER_KEY_PREFIX.as_bytes())
+            || item.key.starts_with(NODE_RECORD_KEY_PREFIX.as_bytes())
+        {
+            item.encode_length_delimited(&mut buf)?; // Use length-delimited encoding for Vecs
+        }
+    }
+    tokio::fs::create_dir_all(Path::new(&local_registry_path)).await.unwrap();
+
+    tokio::fs::write(Path::new(&local_registry_path).join("output"), buf).await.unwrap();
     Ok(())
 }
 

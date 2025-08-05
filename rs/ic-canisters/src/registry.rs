@@ -9,7 +9,7 @@ use ic_protobuf::{
 };
 use ic_registry_keys::make_crypto_threshold_signing_pubkey_key;
 use ic_registry_nns_data_provider::registry::RegistryCanister;
-use ic_registry_transport::pb::v1::{RegistryGetLatestVersionResponse, RegistryGetValueRequest, RegistryGetValueResponse};
+use ic_registry_transport::pb::v1::{RegistryDelta, RegistryGetLatestVersionResponse, RegistryGetValueRequest, RegistryGetValueResponse};
 use ic_types::crypto::threshold_sig::ThresholdSigPublicKey;
 use prost::Message;
 use url::Url;
@@ -69,12 +69,12 @@ impl RegistryCanisterWrapper {
             .map(|r| r.version)
     }
 
-    pub async fn get_certified_changes_since(&self, version: u64) -> anyhow::Result<Vec<RegistryRecord>> {
+    pub async fn get_certified_changes_since(&self, version: u64) -> anyhow::Result<Vec<RegistryDelta>> {
         self.ic_wrapper
-            .get_certified_changes_since(version, &self.nns_public_key().await?)
+            .get_changes_since(version)
             .await
             .map_err(|e| anyhow::anyhow!("Error decoding certificed deltas: {:?}", e))
-            .map(|(res, _, _)| res)
+            .map(|(res, _)| res)
     }
 
     async fn get_value(&self, request: String) -> anyhow::Result<Vec<u8>> {
