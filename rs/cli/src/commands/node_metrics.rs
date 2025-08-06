@@ -1,9 +1,6 @@
-use std::{
-    collections::{btree_map::Entry, BTreeMap},
-    str::FromStr,
-    sync::Arc,
-};
-
+use crate::{auth::AuthRequirement, exe::args::GlobalArgs, exe::ExecutableCommand};
+use anyhow::Context;
+use candid::{CandidType, Deserialize, Encode};
 use clap::{error::ErrorKind, Args};
 use ic_canisters::{
     management::{NodeMetricsHistoryResponse, WalletCanisterWrapper},
@@ -13,8 +10,15 @@ use ic_canisters::{
 use ic_types::{CanisterId, PrincipalId};
 use itertools::Itertools;
 use log::{info, warn};
-
-use crate::{auth::AuthRequirement, exe::args::GlobalArgs, exe::ExecutableCommand};
+use serde::Serialize;
+use std::io::Write;
+use std::path::Path;
+use std::{
+    collections::{btree_map::Entry, BTreeMap},
+    fs,
+    str::FromStr,
+    sync::Arc,
+};
 
 type CLINodeMetrics = BTreeMap<PrincipalId, Vec<NodeMetricsHistoryResponse>>;
 
@@ -72,6 +76,13 @@ impl NodeMetrics {
             };
         }
 
+        let export = SubnetMetricsExport {
+            metrics_by_subnet: metrics_by_subnet.clone(),
+        };
+        let encoded = Encode!(&export).unwrap();
+
+        Self::write_export_sync(" ~/RustroverProjects/dre/rs/cli/subnets_metrics_export.candid", encoded)?;
+
         Ok(metrics_by_subnet)
     }
 
@@ -119,8 +130,40 @@ impl NodeMetrics {
         }
         metrics_by_subnet.values_mut().for_each(|f| f.sort_by_key(|k| k.timestamp_nanos));
 
+        let export = SubnetMetricsExport {
+            metrics_by_subnet: metrics_by_subnet.clone(),
+        };
+        let encoded = Encode!(&export).unwrap();
+
+        Self::write_export_sync("~/RustroverProjects/dre/rs/cli/subnets_metrics_export.candid", encoded).unwrap();
+
         Ok(metrics_by_subnet)
     }
+
+    fn write_export_sync<P: AsRef<Path>>(path: P, encoded: Vec<u8>) -> anyhow::Result<()> {
+        let path = path.as_ref();
+
+        if let Some(parent) = path.parent() {
+            fs::create_dir_all(parent).with_context(|| format!("failed to create parent dir {}", parent.display()))?;
+        }
+
+        // atomic-ish write: write to tmp file then rename
+        let tmp_path = path.with_extension("tmp");
+        {
+            let mut f = fs::File::create(&tmp_path).with_context(|| format!("failed to create temp file {}", tmp_path.display()))?;
+            f.write_all(&encoded)
+                .with_context(|| format!("failed to write to temp file {}", tmp_path.display()))?;
+            f.sync_all().ok(); // ignore failure to sync if you want
+        }
+        fs::rename(&tmp_path, &path).with_context(|| format!("failed to rename {} -> {}", tmp_path.display(), path.display()))?;
+
+        Ok(())
+    }
+}
+
+#[derive(Default, CandidType, Deserialize, Clone, Debug, Serialize)]
+struct SubnetMetricsExport {
+    metrics_by_subnet: BTreeMap<PrincipalId, Vec<NodeMetricsHistoryResponse>>,
 }
 
 impl ExecutableCommand for NodeMetrics {
