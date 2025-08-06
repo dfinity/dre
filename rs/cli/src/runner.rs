@@ -189,7 +189,11 @@ impl Runner {
         )))
     }
 
-    pub async fn propose_subnet_change(&self, change: &SubnetChangeResponse) -> anyhow::Result<Option<IcAdminProposal>> {
+    pub async fn propose_subnet_change(
+        &self,
+        change: &SubnetChangeResponse,
+        ignore_existing_proposal: bool,
+    ) -> anyhow::Result<Option<IcAdminProposal>> {
         if self.verbose {
             if let Some(run_log) = &change.run_log {
                 println!("{}\n", run_log.join("\n"));
@@ -200,7 +204,7 @@ impl Runner {
             return Ok(None);
         }
 
-        self.run_membership_change(change, replace_proposal_options(change).await?)
+        self.run_membership_change_inner(change, replace_proposal_options(change).await?, ignore_existing_proposal)
             .await
             .map(Some)
     }
@@ -872,7 +876,7 @@ impl Runner {
         change: &ChangeSubnetMembershipPayload,
         override_subnet_nodes: Option<Vec<PrincipalId>>,
         summary: Option<String>,
-    ) -> anyhow::Result<()> {
+    ) -> anyhow::Result<SubnetChangeResponse> {
         let subnet_before = match override_subnet_nodes {
             Some(nodes) => {
                 let nodes = self.registry.get_nodes_from_ids(&nodes).await?;
@@ -904,8 +908,7 @@ impl Runner {
             removed_nodes: removed_nodes.clone(),
             ..Default::default()
         };
-        println!("{}", SubnetChangeResponse::new(&subnet_change, &health_of_nodes, summary));
-        Ok(())
+        Ok(SubnetChangeResponse::new(&subnet_change, &health_of_nodes, summary))
     }
 
     pub async fn subnet_rescue(&self, subnet: &PrincipalId, keep_nodes: Option<Vec<String>>) -> anyhow::Result<Option<IcAdminProposal>> {
@@ -998,7 +1001,16 @@ impl Runner {
             .collect())
     }
 
-    async fn run_membership_change(&self, change: &SubnetChangeResponse, options: IcAdminProposalOptions) -> anyhow::Result<IcAdminProposal> {
+    pub async fn run_membership_change(&self, change: &SubnetChangeResponse, options: IcAdminProposalOptions) -> anyhow::Result<IcAdminProposal> {
+        self.run_membership_change_inner(change, options, false).await
+    }
+
+    async fn run_membership_change_inner(
+        &self,
+        change: &SubnetChangeResponse,
+        options: IcAdminProposalOptions,
+        ignore_existing_proposal: bool,
+    ) -> anyhow::Result<IcAdminProposal> {
         let subnet_id = change.subnet_id.ok_or_else(|| anyhow::anyhow!("subnet_id is required"))?;
         let pending_action = self
             .registry
@@ -1008,13 +1020,14 @@ impl Runner {
             .map(|s| s.proposal.clone())
             .ok_or(NetworkError::SubnetNotFound(subnet_id))?;
 
-        if let Some(proposal) = pending_action {
-            return Err(anyhow::anyhow!(format!(
-                "There is a pending proposal for this subnet: https://dashboard.internetcomputer.org/proposal/{}",
-                proposal.id
-            )));
+        if !ignore_existing_proposal {
+            if let Some(proposal) = pending_action {
+                return Err(anyhow::anyhow!(format!(
+                    "There is a pending proposal for this subnet: https://dashboard.internetcomputer.org/proposal/{}",
+                    proposal.id
+                )));
+            }
         }
-
         Ok(IcAdminProposal::new(
             IcAdminProposalCommand::ChangeSubnetMembership {
                 subnet_id,

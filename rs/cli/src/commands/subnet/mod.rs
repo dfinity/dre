@@ -1,6 +1,7 @@
 use clap::Parser;
 use create::Create;
 use deploy::Deploy;
+use force_replace::ForceReplace;
 use replace::Replace;
 use rescue::Rescue;
 use resize::Resize;
@@ -11,6 +12,7 @@ use crate::exe::impl_executable_command_for_enums;
 
 mod create;
 mod deploy;
+mod force_replace;
 mod replace;
 mod rescue;
 mod resize;
@@ -23,4 +25,4 @@ pub struct Subnet {
     pub subcommands: Subcommands,
 }
 
-impl_executable_command_for_enums! { Subnet, WhatifDecentralization, Deploy, Replace, Resize, Create, Rescue, SetAuthorization }
+impl_executable_command_for_enums! { Subnet, WhatifDecentralization, Deploy, Replace, Resize, Create, Rescue, SetAuthorization, ForceReplace }
