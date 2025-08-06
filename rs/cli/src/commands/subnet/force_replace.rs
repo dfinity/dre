@@ -160,7 +160,7 @@ impl ExecutableCommand for ForceReplace {
                 warnings
                     .iter()
                     .enumerate()
-                    .map(|(index, err)| format!(" {}. {}", index + 1, err.to_string()))
+                    .map(|(index, err)| format!(" {}. {}", index + 1, err))
                     .join("\n\n")
             );
             for warning in &warnings {
