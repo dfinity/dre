@@ -201,7 +201,7 @@ impl ExecutableCommand for ForceReplace {
             .await?
             .propose_force_subnet_change(
                 &subnet_change_response,
-                TargetTopology::from_option(self.target_topology.clone().unwrap_or_default(), ctx.store()).await?,
+                ctx.target_topology(self.target_topology.clone().unwrap_or_default()).await?,
             )
             .await?
         {

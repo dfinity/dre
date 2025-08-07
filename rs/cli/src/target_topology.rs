@@ -1,5 +1,6 @@
 use std::{path::PathBuf, str::FromStr};
 
+use csv::Reader;
 use decentralization::SubnetChangeResponse;
 use ic_types::PrincipalId;
 use serde::Deserialize;
@@ -62,7 +63,10 @@ impl TargetTopology {
     }
 
     fn from_path(path: PathBuf) -> anyhow::Result<Self> {
-        Ok(Self::new())
+        let contents = fs_err::read_to_string(path).map_err(anyhow::Error::from)?;
+        let mut reader = csv::Reader::from_reader(contents.as_bytes());
+
+        Self::from_reader(&mut reader)
     }
 
     fn from_current(store: Store) -> anyhow::Result<Self> {
@@ -71,6 +75,17 @@ impl TargetTopology {
 
     fn from_proposal(proposal: u64, store: Store) -> anyhow::Result<Self> {
         Ok(Self::new())
+    }
+
+    fn from_reader(reader: &mut Reader<&[u8]>) -> anyhow::Result<Self> {
+        let mut topology = Self::new();
+
+        for record in reader.deserialize() {
+            let record: TargetTopologyEntry = record?;
+            topology.entries.push(record);
+        }
+
+        Ok(topology)
     }
 
     pub fn for_change(&self, change: &SubnetChangeResponse) -> String {
