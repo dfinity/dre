@@ -1,0 +1,7 @@
+node_reward_type,region,monthly_xdr_permyriad,daily_xdr_permyriad
+Type1,"Europe,CH,Zurich",0.0000,0.0000
+Type1,"Europe,SE,Stockholm",0.0000,0.0000
+Type1,"North America,US,Washington",0.0000,0.0000
+Type1dot1,"Europe,CH,Zurich",11360000.0000,373223.8193
+Type1dot1,"Europe,SE,Stockholm",10610000.0000,348583.1622
+Type1dot1,"North America,US,Washington",10040000.0000,329856.2628

@@ -1,0 +1,266 @@
+node_id,node_reward_type,region,dc_id,day,status,subnet_assigned,subnet_assigned_fr,num_blocks_proposed,num_blocks_failed,original_fr,relative_fr,extrapolated_fr,performance_multiplier,rewards_reduction,base_rewards_xdr_permyriad,adjusted_rewards_xdr_permyriad
+pavbw,Type1dot1,"North America,US,Florida",jv1,08-07-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,352197.1252,352197.1252
+pavbw,Type1dot1,"North America,US,Florida",jv1,09-07-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,352197.1252,352197.1252
+h2cfd,Type1dot1,"North America,US,New York",ny1,09-07-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,329856.2628,329856.2628
+h2cfd,Type1dot1,"North America,US,New York",ny1,10-07-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,329856.2628,329856.2628
+h2cfd,Type1dot1,"North America,US,New York",ny1,11-07-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,329856.2628,329856.2628
+h2cfd,Type1dot1,"North America,US,New York",ny1,12-07-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,329856.2628,329856.2628
+h2cfd,Type1dot1,"North America,US,New York",ny1,13-07-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,329856.2628,329856.2628
+fj3mf,Type1dot1,"North America,US,New York",ny1,09-07-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,329856.2628,329856.2628
+fj3mf,Type1dot1,"North America,US,New York",ny1,10-07-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,329856.2628,329856.2628
+iclum,Type1dot1,"North America,US,Florida",jv1,08-07-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,352197.1252,352197.1252
+iclum,Type1dot1,"North America,US,Florida",jv1,09-07-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,352197.1252,352197.1252
+hqae2,Type1dot1,"North America,US,New York",ny1,10-07-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,329856.2628,329856.2628
+hqae2,Type1dot1,"North America,US,New York",ny1,11-07-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,329856.2628,329856.2628
+hqae2,Type1dot1,"North America,US,New York",ny1,12-07-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,329856.2628,329856.2628
+hqae2,Type1dot1,"North America,US,New York",ny1,13-07-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,329856.2628,329856.2628
+s4rub,Type1dot1,"North America,US,Florida",jv1,08-07-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,352197.1252,352197.1252
+s4rub,Type1dot1,"North America,US,Florida",jv1,09-07-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,352197.1252,352197.1252
+s4rub,Type1dot1,"North America,US,Florida",jv1,10-07-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,352197.1252,352197.1252
+mf3vf,Type1dot1,"North America,US,Florida",jv1,08-07-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,352197.1252,352197.1252
+mf3vf,Type1dot1,"North America,US,Florida",jv1,09-07-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,352197.1252,352197.1252
+msjxi,Type1dot1,"North America,US,Florida",jv1,09-07-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,352197.1252,352197.1252
+msjxi,Type1dot1,"North America,US,Florida",jv1,10-07-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,352197.1252,352197.1252
+peo4s,Type1dot1,"North America,US,New York",ny1,09-07-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,329856.2628,329856.2628
+peo4s,Type1dot1,"North America,US,New York",ny1,10-07-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,329856.2628,329856.2628
+peo4s,Type1dot1,"North America,US,New York",ny1,11-07-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,329856.2628,329856.2628
+peo4s,Type1dot1,"North America,US,New York",ny1,12-07-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,329856.2628,329856.2628
+peo4s,Type1dot1,"North America,US,New York",ny1,13-07-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,329856.2628,329856.2628
+ouote,Type1dot1,"North America,US,Florida",jv1,10-07-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,352197.1252,352197.1252
+ouote,Type1dot1,"North America,US,Florida",jv1,11-07-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,352197.1252,352197.1252
+ouote,Type1dot1,"North America,US,Florida",jv1,12-07-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,352197.1252,352197.1252
+ouote,Type1dot1,"North America,US,Florida",jv1,13-07-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,352197.1252,352197.1252
+dn3cd,Type1dot1,"North America,US,Florida",jv1,09-07-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,352197.1252,352197.1252
+dn3cd,Type1dot1,"North America,US,Florida",jv1,10-07-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,352197.1252,352197.1252
+dn3cd,Type1dot1,"North America,US,Florida",jv1,11-07-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,352197.1252,352197.1252
+dn3cd,Type1dot1,"North America,US,Florida",jv1,12-07-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,352197.1252,352197.1252
+dn3cd,Type1dot1,"North America,US,Florida",jv1,13-07-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,352197.1252,352197.1252
+xu66k,Type1dot1,"North America,US,Florida",jv1,09-07-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,352197.1252,352197.1252
+xu66k,Type1dot1,"North America,US,Florida",jv1,10-07-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,352197.1252,352197.1252
+xu66k,Type1dot1,"North America,US,Florida",jv1,11-07-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,352197.1252,352197.1252
+xu66k,Type1dot1,"North America,US,Florida",jv1,12-07-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,352197.1252,352197.1252
+xu66k,Type1dot1,"North America,US,Florida",jv1,13-07-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,352197.1252,352197.1252
+qn3td,Type1dot1,"North America,US,Florida",jv1,10-07-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,352197.1252,352197.1252
+qn3td,Type1dot1,"North America,US,Florida",jv1,11-07-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,352197.1252,352197.1252
+qn3td,Type1dot1,"North America,US,Florida",jv1,12-07-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,352197.1252,352197.1252
+qn3td,Type1dot1,"North America,US,Florida",jv1,13-07-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,352197.1252,352197.1252
+z3bza,Type1dot1,"North America,US,Florida",jv1,09-07-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,352197.1252,352197.1252
+z3bza,Type1dot1,"North America,US,Florida",jv1,10-07-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,352197.1252,352197.1252
+2wl47,Type1dot1,"North America,US,Florida",jv1,09-07-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,352197.1252,352197.1252
+2wl47,Type1dot1,"North America,US,Florida",jv1,10-07-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,352197.1252,352197.1252
+a3wja,Type1dot1,"North America,US,Florida",jv1,09-07-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,352197.1252,352197.1252
+a3wja,Type1dot1,"North America,US,Florida",jv1,10-07-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,352197.1252,352197.1252
+a3wja,Type1dot1,"North America,US,Florida",jv1,11-07-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,352197.1252,352197.1252
+a3wja,Type1dot1,"North America,US,Florida",jv1,12-07-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,352197.1252,352197.1252
+a3wja,Type1dot1,"North America,US,Florida",jv1,13-07-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,352197.1252,352197.1252
+piaa3,Type1dot1,"North America,US,New York",ny1,09-07-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,329856.2628,329856.2628
+bp2my,Type1dot1,"North America,US,Florida",jv1,09-07-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,352197.1252,352197.1252
+bp2my,Type1dot1,"North America,US,Florida",jv1,10-07-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,352197.1252,352197.1252
+bp2my,Type1dot1,"North America,US,Florida",jv1,11-07-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,352197.1252,352197.1252
+bp2my,Type1dot1,"North America,US,Florida",jv1,12-07-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,352197.1252,352197.1252
+bp2my,Type1dot1,"North America,US,Florida",jv1,13-07-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,352197.1252,352197.1252
+2x3w4,Type1dot1,"North America,US,New York",ny1,09-07-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,329856.2628,329856.2628
+2x3w4,Type1dot1,"North America,US,New York",ny1,10-07-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,329856.2628,329856.2628
+2x3w4,Type1dot1,"North America,US,New York",ny1,11-07-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,329856.2628,329856.2628
+2x3w4,Type1dot1,"North America,US,New York",ny1,12-07-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,329856.2628,329856.2628
+2x3w4,Type1dot1,"North America,US,New York",ny1,13-07-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,329856.2628,329856.2628
+y6e2f,Type1dot1,"North America,US,Florida",jv1,09-07-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,352197.1252,352197.1252
+y6e2f,Type1dot1,"North America,US,Florida",jv1,10-07-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,352197.1252,352197.1252
+y6e2f,Type1dot1,"North America,US,Florida",jv1,11-07-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,352197.1252,352197.1252
+y6e2f,Type1dot1,"North America,US,Florida",jv1,12-07-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,352197.1252,352197.1252
+y6e2f,Type1dot1,"North America,US,Florida",jv1,13-07-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,352197.1252,352197.1252
+qears,Type1dot1,"North America,US,New York",ny1,10-07-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,329856.2628,329856.2628
+qears,Type1dot1,"North America,US,New York",ny1,11-07-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,329856.2628,329856.2628
+qears,Type1dot1,"North America,US,New York",ny1,12-07-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,329856.2628,329856.2628
+qears,Type1dot1,"North America,US,New York",ny1,13-07-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,329856.2628,329856.2628
+cxwof,Type1dot1,"North America,US,Florida",jv1,09-07-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,352197.1252,352197.1252
+cxwof,Type1dot1,"North America,US,Florida",jv1,10-07-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,352197.1252,352197.1252
+cxwof,Type1dot1,"North America,US,Florida",jv1,11-07-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,352197.1252,352197.1252
+cxwof,Type1dot1,"North America,US,Florida",jv1,12-07-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,352197.1252,352197.1252
+cxwof,Type1dot1,"North America,US,Florida",jv1,13-07-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,352197.1252,352197.1252
+3fmsy,Type1dot1,"North America,US,Florida",jv1,09-07-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,352197.1252,352197.1252
+3fmsy,Type1dot1,"North America,US,Florida",jv1,10-07-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,352197.1252,352197.1252
+3fmsy,Type1dot1,"North America,US,Florida",jv1,11-07-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,352197.1252,352197.1252
+3fmsy,Type1dot1,"North America,US,Florida",jv1,12-07-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,352197.1252,352197.1252
+3fmsy,Type1dot1,"North America,US,Florida",jv1,13-07-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,352197.1252,352197.1252
+mmftj,Type1dot1,"North America,US,Florida",jv1,10-07-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,352197.1252,352197.1252
+mmftj,Type1dot1,"North America,US,Florida",jv1,11-07-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,352197.1252,352197.1252
+mmftj,Type1dot1,"North America,US,Florida",jv1,12-07-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,352197.1252,352197.1252
+mmftj,Type1dot1,"North America,US,Florida",jv1,13-07-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,352197.1252,352197.1252
+ad36i,Type1dot1,"North America,US,Florida",jv1,09-07-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,352197.1252,352197.1252
+ad36i,Type1dot1,"North America,US,Florida",jv1,10-07-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,352197.1252,352197.1252
+md37k,Type1dot1,"North America,US,Florida",jv1,10-07-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,352197.1252,352197.1252
+md37k,Type1dot1,"North America,US,Florida",jv1,11-07-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,352197.1252,352197.1252
+md37k,Type1dot1,"North America,US,Florida",jv1,12-07-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,352197.1252,352197.1252
+md37k,Type1dot1,"North America,US,Florida",jv1,13-07-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,352197.1252,352197.1252
+y63kf,Type1dot1,"North America,US,Florida",jv1,09-07-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,352197.1252,352197.1252
+y63kf,Type1dot1,"North America,US,Florida",jv1,10-07-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,352197.1252,352197.1252
+3h65u,Type1dot1,"North America,US,Florida",jv1,10-07-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,352197.1252,352197.1252
+3h65u,Type1dot1,"North America,US,Florida",jv1,11-07-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,352197.1252,352197.1252
+3h65u,Type1dot1,"North America,US,Florida",jv1,12-07-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,352197.1252,352197.1252
+3h65u,Type1dot1,"North America,US,Florida",jv1,13-07-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,352197.1252,352197.1252
+clecv,Type1dot1,"North America,US,Florida",jv1,09-07-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,352197.1252,352197.1252
+clecv,Type1dot1,"North America,US,Florida",jv1,10-07-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,352197.1252,352197.1252
+clecv,Type1dot1,"North America,US,Florida",jv1,11-07-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,352197.1252,352197.1252
+clecv,Type1dot1,"North America,US,Florida",jv1,12-07-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,352197.1252,352197.1252
+clecv,Type1dot1,"North America,US,Florida",jv1,13-07-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,352197.1252,352197.1252
+hpzzc,Type1dot1,"North America,US,New York",ny1,09-07-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,329856.2628,329856.2628
+hpzzc,Type1dot1,"North America,US,New York",ny1,10-07-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,329856.2628,329856.2628
+hpzzc,Type1dot1,"North America,US,New York",ny1,11-07-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,329856.2628,329856.2628
+hpzzc,Type1dot1,"North America,US,New York",ny1,12-07-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,329856.2628,329856.2628
+hpzzc,Type1dot1,"North America,US,New York",ny1,13-07-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,329856.2628,329856.2628
+4veet,Type1dot1,"North America,US,Florida",jv1,09-07-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,352197.1252,352197.1252
+4veet,Type1dot1,"North America,US,Florida",jv1,10-07-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,352197.1252,352197.1252
+aptx7,Type1dot1,"North America,US,New York",ny1,10-07-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,329856.2628,329856.2628
+aptx7,Type1dot1,"North America,US,New York",ny1,11-07-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,329856.2628,329856.2628
+aptx7,Type1dot1,"North America,US,New York",ny1,12-07-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,329856.2628,329856.2628
+aptx7,Type1dot1,"North America,US,New York",ny1,13-07-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,329856.2628,329856.2628
+jnjr4,Type1dot1,"North America,US,Florida",jv1,08-07-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,352197.1252,352197.1252
+jnjr4,Type1dot1,"North America,US,Florida",jv1,09-07-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,352197.1252,352197.1252
+avrvz,Type1dot1,"North America,US,New York",ny1,10-07-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,329856.2628,329856.2628
+avrvz,Type1dot1,"North America,US,New York",ny1,11-07-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,329856.2628,329856.2628
+avrvz,Type1dot1,"North America,US,New York",ny1,12-07-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,329856.2628,329856.2628
+avrvz,Type1dot1,"North America,US,New York",ny1,13-07-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,329856.2628,329856.2628
+uhaco,Type1dot1,"North America,US,New York",ny1,09-07-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,329856.2628,329856.2628
+uhaco,Type1dot1,"North America,US,New York",ny1,10-07-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,329856.2628,329856.2628
+xmd24,Type1dot1,"North America,US,New York",ny1,09-07-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,329856.2628,329856.2628
+xmd24,Type1dot1,"North America,US,New York",ny1,10-07-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,329856.2628,329856.2628
+xmd24,Type1dot1,"North America,US,New York",ny1,11-07-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,329856.2628,329856.2628
+xmd24,Type1dot1,"North America,US,New York",ny1,12-07-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,329856.2628,329856.2628
+xmd24,Type1dot1,"North America,US,New York",ny1,13-07-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,329856.2628,329856.2628
+yiepb,Type1dot1,"North America,US,Florida",jv1,10-07-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,352197.1252,352197.1252
+yiepb,Type1dot1,"North America,US,Florida",jv1,11-07-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,352197.1252,352197.1252
+yiepb,Type1dot1,"North America,US,Florida",jv1,12-07-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,352197.1252,352197.1252
+yiepb,Type1dot1,"North America,US,Florida",jv1,13-07-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,352197.1252,352197.1252
+eceha,Type1dot1,"North America,US,Florida",jv1,09-07-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,352197.1252,352197.1252
+eceha,Type1dot1,"North America,US,Florida",jv1,10-07-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,352197.1252,352197.1252
+eceha,Type1dot1,"North America,US,Florida",jv1,11-07-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,352197.1252,352197.1252
+eceha,Type1dot1,"North America,US,Florida",jv1,12-07-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,352197.1252,352197.1252
+eceha,Type1dot1,"North America,US,Florida",jv1,13-07-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,352197.1252,352197.1252
+4552p,Type1dot1,"North America,US,Florida",jv1,09-07-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,352197.1252,352197.1252
+4552p,Type1dot1,"North America,US,Florida",jv1,10-07-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,352197.1252,352197.1252
+s4yvm,Type1dot1,"North America,US,New York",ny1,09-07-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,329856.2628,329856.2628
+s4yvm,Type1dot1,"North America,US,New York",ny1,10-07-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,329856.2628,329856.2628
+ubws6,Type1dot1,"North America,US,New York",ny1,08-07-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,329856.2628,329856.2628
+ubws6,Type1dot1,"North America,US,New York",ny1,09-07-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,329856.2628,329856.2628
+adohu,Type1dot1,"North America,US,New York",ny1,09-07-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,329856.2628,329856.2628
+xz3mr,Type1dot1,"North America,US,New York",ny1,09-07-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,329856.2628,329856.2628
+xz3mr,Type1dot1,"North America,US,New York",ny1,10-07-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,329856.2628,329856.2628
+xz3mr,Type1dot1,"North America,US,New York",ny1,11-07-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,329856.2628,329856.2628
+xz3mr,Type1dot1,"North America,US,New York",ny1,12-07-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,329856.2628,329856.2628
+xz3mr,Type1dot1,"North America,US,New York",ny1,13-07-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,329856.2628,329856.2628
+p2vmg,Type1dot1,"North America,US,New York",ny1,09-07-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,329856.2628,329856.2628
+p2vmg,Type1dot1,"North America,US,New York",ny1,10-07-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,329856.2628,329856.2628
+cjv75,Type1dot1,"North America,US,New York",ny1,09-07-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,329856.2628,329856.2628
+rjhta,Type1dot1,"North America,US,Florida",jv1,09-07-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,352197.1252,352197.1252
+rjhta,Type1dot1,"North America,US,Florida",jv1,10-07-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,352197.1252,352197.1252
+qesyc,Type1dot1,"North America,US,Florida",jv1,10-07-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,352197.1252,352197.1252
+qesyc,Type1dot1,"North America,US,Florida",jv1,11-07-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,352197.1252,352197.1252
+qesyc,Type1dot1,"North America,US,Florida",jv1,12-07-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,352197.1252,352197.1252
+qesyc,Type1dot1,"North America,US,Florida",jv1,13-07-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,352197.1252,352197.1252
+5y24o,Type1dot1,"North America,US,Florida",jv1,08-07-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,352197.1252,352197.1252
+5y24o,Type1dot1,"North America,US,Florida",jv1,09-07-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,352197.1252,352197.1252
+kufe4,Type1dot1,"North America,US,Florida",jv1,10-07-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,352197.1252,352197.1252
+kufe4,Type1dot1,"North America,US,Florida",jv1,11-07-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,352197.1252,352197.1252
+kufe4,Type1dot1,"North America,US,Florida",jv1,12-07-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,352197.1252,352197.1252
+kufe4,Type1dot1,"North America,US,Florida",jv1,13-07-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,352197.1252,352197.1252
+2qlts,Type1dot1,"North America,US,Florida",jv1,09-07-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,352197.1252,352197.1252
+2qlts,Type1dot1,"North America,US,Florida",jv1,10-07-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,352197.1252,352197.1252
+2qlts,Type1dot1,"North America,US,Florida",jv1,11-07-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,352197.1252,352197.1252
+2qlts,Type1dot1,"North America,US,Florida",jv1,12-07-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,352197.1252,352197.1252
+2qlts,Type1dot1,"North America,US,Florida",jv1,13-07-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,352197.1252,352197.1252
+uzmig,Type1dot1,"North America,US,New York",ny1,08-07-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,329856.2628,329856.2628
+uzmig,Type1dot1,"North America,US,New York",ny1,09-07-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,329856.2628,329856.2628
+qzoiw,Type1dot1,"North America,US,Florida",jv1,10-07-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,352197.1252,352197.1252
+qzoiw,Type1dot1,"North America,US,Florida",jv1,11-07-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,352197.1252,352197.1252
+qzoiw,Type1dot1,"North America,US,Florida",jv1,12-07-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,352197.1252,352197.1252
+qzoiw,Type1dot1,"North America,US,Florida",jv1,13-07-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,352197.1252,352197.1252
+tpj2f,Type1dot1,"North America,US,Florida",jv1,09-07-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,352197.1252,352197.1252
+tpj2f,Type1dot1,"North America,US,Florida",jv1,10-07-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,352197.1252,352197.1252
+wv3d7,Type1dot1,"North America,US,Florida",jv1,08-07-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,352197.1252,352197.1252
+wv3d7,Type1dot1,"North America,US,Florida",jv1,09-07-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,352197.1252,352197.1252
+3tbds,Type1dot1,"North America,US,New York",ny1,09-07-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,329856.2628,329856.2628
+3tbds,Type1dot1,"North America,US,New York",ny1,10-07-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,329856.2628,329856.2628
+52rvq,Type1dot1,"North America,US,Florida",jv1,08-07-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,352197.1252,352197.1252
+52rvq,Type1dot1,"North America,US,Florida",jv1,09-07-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,352197.1252,352197.1252
+52rvq,Type1dot1,"North America,US,Florida",jv1,10-07-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,352197.1252,352197.1252
+ykoqz,Type1dot1,"North America,US,Florida",jv1,08-07-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,352197.1252,352197.1252
+ykoqz,Type1dot1,"North America,US,Florida",jv1,09-07-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,352197.1252,352197.1252
+ap7t5,Type1dot1,"North America,US,Florida",jv1,08-07-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,352197.1252,352197.1252
+ap7t5,Type1dot1,"North America,US,Florida",jv1,09-07-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,352197.1252,352197.1252
+z52zv,Type1dot1,"North America,US,Florida",jv1,09-07-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,352197.1252,352197.1252
+z52zv,Type1dot1,"North America,US,Florida",jv1,10-07-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,352197.1252,352197.1252
+nhq32,Type1dot1,"North America,US,Florida",jv1,08-07-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,352197.1252,352197.1252
+nhq32,Type1dot1,"North America,US,Florida",jv1,09-07-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,352197.1252,352197.1252
+oqqmz,Type1dot1,"North America,US,Florida",jv1,10-07-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,352197.1252,352197.1252
+oqqmz,Type1dot1,"North America,US,Florida",jv1,11-07-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,352197.1252,352197.1252
+oqqmz,Type1dot1,"North America,US,Florida",jv1,12-07-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,352197.1252,352197.1252
+oqqmz,Type1dot1,"North America,US,Florida",jv1,13-07-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,352197.1252,352197.1252
+iy42o,Type1dot1,"North America,US,New York",ny1,08-07-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,329856.2628,329856.2628
+iy42o,Type1dot1,"North America,US,New York",ny1,09-07-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,329856.2628,329856.2628
+2pnht,Type1dot1,"North America,US,New York",ny1,09-07-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,329856.2628,329856.2628
+2pnht,Type1dot1,"North America,US,New York",ny1,10-07-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,329856.2628,329856.2628
+36vim,Type1dot1,"North America,US,Florida",jv1,09-07-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,352197.1252,352197.1252
+36vim,Type1dot1,"North America,US,Florida",jv1,10-07-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,352197.1252,352197.1252
+36vim,Type1dot1,"North America,US,Florida",jv1,11-07-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,352197.1252,352197.1252
+36vim,Type1dot1,"North America,US,Florida",jv1,12-07-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,352197.1252,352197.1252
+36vim,Type1dot1,"North America,US,Florida",jv1,13-07-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,352197.1252,352197.1252
+l5rwf,Type1dot1,"North America,US,New York",ny1,10-07-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,329856.2628,329856.2628
+l5rwf,Type1dot1,"North America,US,New York",ny1,11-07-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,329856.2628,329856.2628
+l5rwf,Type1dot1,"North America,US,New York",ny1,12-07-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,329856.2628,329856.2628
+l5rwf,Type1dot1,"North America,US,New York",ny1,13-07-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,329856.2628,329856.2628
+nxl2k,Type1dot1,"North America,US,Florida",jv1,09-07-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,352197.1252,352197.1252
+nxl2k,Type1dot1,"North America,US,Florida",jv1,10-07-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,352197.1252,352197.1252
+nxl2k,Type1dot1,"North America,US,Florida",jv1,11-07-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,352197.1252,352197.1252
+nxl2k,Type1dot1,"North America,US,Florida",jv1,12-07-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,352197.1252,352197.1252
+nxl2k,Type1dot1,"North America,US,Florida",jv1,13-07-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,352197.1252,352197.1252
+u2odr,Type1dot1,"North America,US,Florida",jv1,09-07-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,352197.1252,352197.1252
+u2odr,Type1dot1,"North America,US,Florida",jv1,10-07-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,352197.1252,352197.1252
+u2odr,Type1dot1,"North America,US,Florida",jv1,11-07-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,352197.1252,352197.1252
+u2odr,Type1dot1,"North America,US,Florida",jv1,12-07-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,352197.1252,352197.1252
+u2odr,Type1dot1,"North America,US,Florida",jv1,13-07-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,352197.1252,352197.1252
+ckoby,Type1dot1,"North America,US,Florida",jv1,10-07-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,352197.1252,352197.1252
+ckoby,Type1dot1,"North America,US,Florida",jv1,11-07-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,352197.1252,352197.1252
+ckoby,Type1dot1,"North America,US,Florida",jv1,12-07-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,352197.1252,352197.1252
+ckoby,Type1dot1,"North America,US,Florida",jv1,13-07-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,352197.1252,352197.1252
+55aa5,Type1dot1,"North America,US,New York",ny1,10-07-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,329856.2628,329856.2628
+55aa5,Type1dot1,"North America,US,New York",ny1,11-07-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,329856.2628,329856.2628
+55aa5,Type1dot1,"North America,US,New York",ny1,12-07-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,329856.2628,329856.2628
+55aa5,Type1dot1,"North America,US,New York",ny1,13-07-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,329856.2628,329856.2628
+x2il3,Type1dot1,"North America,US,New York",ny1,10-07-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,329856.2628,329856.2628
+x2il3,Type1dot1,"North America,US,New York",ny1,11-07-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,329856.2628,329856.2628
+x2il3,Type1dot1,"North America,US,New York",ny1,12-07-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,329856.2628,329856.2628
+x2il3,Type1dot1,"North America,US,New York",ny1,13-07-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,329856.2628,329856.2628
+4tm5f,Type1dot1,"North America,US,Florida",jv1,09-07-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,352197.1252,352197.1252
+4tm5f,Type1dot1,"North America,US,Florida",jv1,10-07-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,352197.1252,352197.1252
+4tm5f,Type1dot1,"North America,US,Florida",jv1,11-07-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,352197.1252,352197.1252
+4tm5f,Type1dot1,"North America,US,Florida",jv1,12-07-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,352197.1252,352197.1252
+4tm5f,Type1dot1,"North America,US,Florida",jv1,13-07-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,352197.1252,352197.1252
+o4cb7,Type1dot1,"North America,US,New York",ny1,09-07-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,329856.2628,329856.2628
+o4cb7,Type1dot1,"North America,US,New York",ny1,10-07-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,329856.2628,329856.2628
+qtfgl,Type1dot1,"North America,US,Florida",jv1,08-07-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,352197.1252,352197.1252
+qtfgl,Type1dot1,"North America,US,Florida",jv1,09-07-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,352197.1252,352197.1252
+ijj5m,Type1dot1,"North America,US,Florida",jv1,08-07-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,352197.1252,352197.1252
+ijj5m,Type1dot1,"North America,US,Florida",jv1,09-07-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,352197.1252,352197.1252
+opdeg,Type1dot1,"North America,US,Florida",jv1,08-07-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,352197.1252,352197.1252
+opdeg,Type1dot1,"North America,US,Florida",jv1,09-07-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,352197.1252,352197.1252
+mjkwh,Type1dot1,"North America,US,Florida",jv1,10-07-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,352197.1252,352197.1252
+mjkwh,Type1dot1,"North America,US,Florida",jv1,11-07-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,352197.1252,352197.1252
+mjkwh,Type1dot1,"North America,US,Florida",jv1,12-07-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,352197.1252,352197.1252
+mjkwh,Type1dot1,"North America,US,Florida",jv1,13-07-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,352197.1252,352197.1252
+5y7xz,Type1dot1,"North America,US,Florida",jv1,08-07-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,352197.1252,352197.1252
+5y7xz,Type1dot1,"North America,US,Florida",jv1,09-07-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,352197.1252,352197.1252
+xa56g,Type1dot1,"North America,US,Florida",jv1,08-07-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,352197.1252,352197.1252
+xa56g,Type1dot1,"North America,US,Florida",jv1,09-07-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,352197.1252,352197.1252
+bpnbw,Type1dot1,"North America,US,Florida",jv1,09-07-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,352197.1252,352197.1252
+bpnbw,Type1dot1,"North America,US,Florida",jv1,10-07-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,352197.1252,352197.1252
+v2664,Type1dot1,"North America,US,Florida",jv1,10-07-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,352197.1252,352197.1252
+v2664,Type1dot1,"North America,US,Florida",jv1,11-07-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,352197.1252,352197.1252
+v2664,Type1dot1,"North America,US,Florida",jv1,12-07-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,352197.1252,352197.1252
+v2664,Type1dot1,"North America,US,Florida",jv1,13-07-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,352197.1252,352197.1252
+r2epf,Type1dot1,"North America,US,Florida",jv1,10-07-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,352197.1252,352197.1252
+r2epf,Type1dot1,"North America,US,Florida",jv1,11-07-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,352197.1252,352197.1252
+r2epf,Type1dot1,"North America,US,Florida",jv1,12-07-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,352197.1252,352197.1252
+r2epf,Type1dot1,"North America,US,Florida",jv1,13-07-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,352197.1252,352197.1252
+7w46i,Type1dot1,"North America,US,Florida",jv1,09-07-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,352197.1252,352197.1252
+7w46i,Type1dot1,"North America,US,Florida",jv1,10-07-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,352197.1252,352197.1252

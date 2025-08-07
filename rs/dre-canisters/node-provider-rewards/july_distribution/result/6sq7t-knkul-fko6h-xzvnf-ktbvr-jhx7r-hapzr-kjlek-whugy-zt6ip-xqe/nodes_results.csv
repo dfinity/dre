@@ -1,0 +1,481 @@
+node_id,node_reward_type,region,dc_id,day,status,subnet_assigned,subnet_assigned_fr,num_blocks_proposed,num_blocks_failed,original_fr,relative_fr,extrapolated_fr,performance_multiplier,rewards_reduction,base_rewards_xdr_permyriad,adjusted_rewards_xdr_permyriad
+h57j6,Type3dot1,"Asia,IL,Tel Aviv",tv1,14-06-2025,unassigned,,,,,,,0.0318,1.0000,0.0000,570180.9942,570180.9942
+h57j6,Type3dot1,"Asia,IL,Tel Aviv",tv1,15-06-2025,unassigned,,,,,,,0.0260,1.0000,0.0000,570180.9942,570180.9942
+h57j6,Type3dot1,"Asia,IL,Tel Aviv",tv1,16-06-2025,unassigned,,,,,,,0.0254,1.0000,0.0000,570180.9942,570180.9942
+h57j6,Type3dot1,"Asia,IL,Tel Aviv",tv1,17-06-2025,unassigned,,,,,,,0.0468,1.0000,0.0000,570180.9942,570180.9942
+h57j6,Type3dot1,"Asia,IL,Tel Aviv",tv1,18-06-2025,unassigned,,,,,,,0.0857,1.0000,0.0000,570180.9942,570180.9942
+h57j6,Type3dot1,"Asia,IL,Tel Aviv",tv1,19-06-2025,unassigned,,,,,,,0.1747,0.8804,0.1195,570180.9942,502004.1471
+h57j6,Type3dot1,"Asia,IL,Tel Aviv",tv1,20-06-2025,unassigned,,,,,,,0.1637,0.8979,0.1020,570180.9942,512003.2839
+h57j6,Type3dot1,"Asia,IL,Tel Aviv",tv1,21-06-2025,unassigned,,,,,,,0.1668,0.8930,0.1069,570180.9942,509173.8066
+h57j6,Type3dot1,"Asia,IL,Tel Aviv",tv1,22-06-2025,unassigned,,,,,,,0.0920,1.0000,0.0000,570180.9942,570180.9942
+h57j6,Type3dot1,"Asia,IL,Tel Aviv",tv1,23-06-2025,unassigned,,,,,,,0.0014,1.0000,0.0000,570180.9942,570180.9942
+h57j6,Type3dot1,"Asia,IL,Tel Aviv",tv1,24-06-2025,unassigned,,,,,,,0.0053,1.0000,0.0000,570180.9942,570180.9942
+h57j6,Type3dot1,"Asia,IL,Tel Aviv",tv1,25-06-2025,unassigned,,,,,,,0.0305,1.0000,0.0000,570180.9942,570180.9942
+h57j6,Type3dot1,"Asia,IL,Tel Aviv",tv1,26-06-2025,unassigned,,,,,,,0.1741,0.8812,0.1187,570180.9942,502492.5637
+h57j6,Type3dot1,"Asia,IL,Tel Aviv",tv1,27-06-2025,unassigned,,,,,,,0.1628,0.8994,0.1005,570180.9942,512826.9947
+h57j6,Type3dot1,"Asia,IL,Tel Aviv",tv1,28-06-2025,unassigned,,,,,,,0.0063,1.0000,0.0000,570180.9942,570180.9942
+h57j6,Type3dot1,"Asia,IL,Tel Aviv",tv1,29-06-2025,unassigned,,,,,,,0.0003,1.0000,0.0000,570180.9942,570180.9942
+h57j6,Type3dot1,"Asia,IL,Tel Aviv",tv1,30-06-2025,unassigned,,,,,,,0.0006,1.0000,0.0000,570180.9942,570180.9942
+h57j6,Type3dot1,"Asia,IL,Tel Aviv",tv1,01-07-2025,unassigned,,,,,,,0.0014,1.0000,0.0000,570180.9942,570180.9942
+h57j6,Type3dot1,"Asia,IL,Tel Aviv",tv1,02-07-2025,unassigned,,,,,,,0.0016,1.0000,0.0000,570180.9942,570180.9942
+h57j6,Type3dot1,"Asia,IL,Tel Aviv",tv1,03-07-2025,unassigned,,,,,,,0.0010,1.0000,0.0000,570180.9942,570180.9942
+h57j6,Type3dot1,"Asia,IL,Tel Aviv",tv1,04-07-2025,unassigned,,,,,,,0.0012,1.0000,0.0000,570180.9942,570180.9942
+h57j6,Type3dot1,"Asia,IL,Tel Aviv",tv1,05-07-2025,unassigned,,,,,,,0.0002,1.0000,0.0000,570180.9942,570180.9942
+h57j6,Type3dot1,"Asia,IL,Tel Aviv",tv1,06-07-2025,unassigned,,,,,,,0.0002,1.0000,0.0000,570180.9942,570180.9942
+h57j6,Type3dot1,"Asia,IL,Tel Aviv",tv1,07-07-2025,assigned,4utr6,0.0014,9007,0,0.0000,0.0000,,1.0000,0.0000,570180.9942,570180.9942
+h57j6,Type3dot1,"Asia,IL,Tel Aviv",tv1,08-07-2025,assigned,4utr6,0.0002,15554,0,0.0000,0.0000,,1.0000,0.0000,570180.9942,570180.9942
+h57j6,Type3dot1,"Asia,IL,Tel Aviv",tv1,09-07-2025,assigned,4utr6,0.0004,15502,2,0.0001,0.0000,,1.0000,0.0000,570180.9942,570180.9942
+h57j6,Type3dot1,"Asia,IL,Tel Aviv",tv1,10-07-2025,assigned,4utr6,0.0001,15571,3,0.0001,0.0000,,1.0000,0.0000,570180.9942,570180.9942
+h57j6,Type3dot1,"Asia,IL,Tel Aviv",tv1,11-07-2025,assigned,4utr6,0.0005,15641,0,0.0000,0.0000,,1.0000,0.0000,570180.9942,570180.9942
+h57j6,Type3dot1,"Asia,IL,Tel Aviv",tv1,12-07-2025,assigned,4utr6,0.0001,15576,0,0.0000,0.0000,,1.0000,0.0000,570180.9942,570180.9942
+h57j6,Type3dot1,"Asia,IL,Tel Aviv",tv1,13-07-2025,assigned,4utr6,0.0001,15692,0,0.0000,0.0000,,1.0000,0.0000,570180.9942,570180.9942
+os2wv,Type3dot1,"North America,CR,San Jose",cr1,14-06-2025,unassigned,,,,,,,0.0318,1.0000,0.0000,596374.7635,596374.7635
+os2wv,Type3dot1,"North America,CR,San Jose",cr1,15-06-2025,unassigned,,,,,,,0.0260,1.0000,0.0000,596374.7635,596374.7635
+os2wv,Type3dot1,"North America,CR,San Jose",cr1,16-06-2025,unassigned,,,,,,,0.0254,1.0000,0.0000,596374.7635,596374.7635
+os2wv,Type3dot1,"North America,CR,San Jose",cr1,17-06-2025,unassigned,,,,,,,0.0468,1.0000,0.0000,596374.7635,596374.7635
+os2wv,Type3dot1,"North America,CR,San Jose",cr1,18-06-2025,unassigned,,,,,,,0.0857,1.0000,0.0000,596374.7635,596374.7635
+os2wv,Type3dot1,"North America,CR,San Jose",cr1,19-06-2025,unassigned,,,,,,,0.1747,0.8804,0.1195,596374.7635,525065.9134
+os2wv,Type3dot1,"North America,CR,San Jose",cr1,20-06-2025,unassigned,,,,,,,0.1637,0.8979,0.1020,596374.7635,535524.4045
+os2wv,Type3dot1,"North America,CR,San Jose",cr1,21-06-2025,unassigned,,,,,,,0.1668,0.8930,0.1069,596374.7635,532564.9427
+os2wv,Type3dot1,"North America,CR,San Jose",cr1,22-06-2025,unassigned,,,,,,,0.0920,1.0000,0.0000,596374.7635,596374.7635
+os2wv,Type3dot1,"North America,CR,San Jose",cr1,23-06-2025,unassigned,,,,,,,0.0014,1.0000,0.0000,596374.7635,596374.7635
+os2wv,Type3dot1,"North America,CR,San Jose",cr1,24-06-2025,unassigned,,,,,,,0.0053,1.0000,0.0000,596374.7635,596374.7635
+os2wv,Type3dot1,"North America,CR,San Jose",cr1,25-06-2025,unassigned,,,,,,,0.0305,1.0000,0.0000,596374.7635,596374.7635
+os2wv,Type3dot1,"North America,CR,San Jose",cr1,26-06-2025,unassigned,,,,,,,0.1741,0.8812,0.1187,596374.7635,525576.7675
+os2wv,Type3dot1,"North America,CR,San Jose",cr1,27-06-2025,unassigned,,,,,,,0.1628,0.8994,0.1005,596374.7635,536385.9560
+os2wv,Type3dot1,"North America,CR,San Jose",cr1,28-06-2025,unassigned,,,,,,,0.0063,1.0000,0.0000,596374.7635,596374.7635
+os2wv,Type3dot1,"North America,CR,San Jose",cr1,29-06-2025,unassigned,,,,,,,0.0003,1.0000,0.0000,596374.7635,596374.7635
+os2wv,Type3dot1,"North America,CR,San Jose",cr1,30-06-2025,unassigned,,,,,,,0.0006,1.0000,0.0000,596374.7635,596374.7635
+os2wv,Type3dot1,"North America,CR,San Jose",cr1,01-07-2025,unassigned,,,,,,,0.0014,1.0000,0.0000,596374.7635,596374.7635
+os2wv,Type3dot1,"North America,CR,San Jose",cr1,02-07-2025,unassigned,,,,,,,0.0016,1.0000,0.0000,596374.7635,596374.7635
+os2wv,Type3dot1,"North America,CR,San Jose",cr1,03-07-2025,unassigned,,,,,,,0.0010,1.0000,0.0000,596374.7635,596374.7635
+os2wv,Type3dot1,"North America,CR,San Jose",cr1,04-07-2025,unassigned,,,,,,,0.0012,1.0000,0.0000,596374.7635,596374.7635
+os2wv,Type3dot1,"North America,CR,San Jose",cr1,05-07-2025,unassigned,,,,,,,0.0002,1.0000,0.0000,596374.7635,596374.7635
+os2wv,Type3dot1,"North America,CR,San Jose",cr1,06-07-2025,unassigned,,,,,,,0.0002,1.0000,0.0000,596374.7635,596374.7635
+os2wv,Type3dot1,"North America,CR,San Jose",cr1,07-07-2025,unassigned,,,,,,,0.0006,1.0000,0.0000,596374.7635,596374.7635
+os2wv,Type3dot1,"North America,CR,San Jose",cr1,08-07-2025,unassigned,,,,,,,0.0006,1.0000,0.0000,596374.7635,596374.7635
+os2wv,Type3dot1,"North America,CR,San Jose",cr1,09-07-2025,unassigned,,,,,,,0.0050,1.0000,0.0000,596374.7635,596374.7635
+os2wv,Type3dot1,"North America,CR,San Jose",cr1,10-07-2025,unassigned,,,,,,,0.0072,1.0000,0.0000,596374.7635,596374.7635
+os2wv,Type3dot1,"North America,CR,San Jose",cr1,11-07-2025,unassigned,,,,,,,0.0019,1.0000,0.0000,596374.7635,596374.7635
+os2wv,Type3dot1,"North America,CR,San Jose",cr1,12-07-2025,unassigned,,,,,,,0.0012,1.0000,0.0000,596374.7635,596374.7635
+os2wv,Type3dot1,"North America,CR,San Jose",cr1,13-07-2025,unassigned,,,,,,,0.0003,1.0000,0.0000,596374.7635,596374.7635
+np33o,Type3dot1,"Asia,IL,Tel Aviv",tv1,14-06-2025,assigned,pzp6e,0.0017,5132,0,0.0000,0.0000,,1.0000,0.0000,570180.9942,570180.9942
+np33o,Type3dot1,"Asia,IL,Tel Aviv",tv1,15-06-2025,assigned,pzp6e,0.0019,5239,1,0.0001,0.0000,,1.0000,0.0000,570180.9942,570180.9942
+np33o,Type3dot1,"Asia,IL,Tel Aviv",tv1,16-06-2025,assigned,pzp6e,0.0039,5009,0,0.0000,0.0000,,1.0000,0.0000,570180.9942,570180.9942
+np33o,Type3dot1,"Asia,IL,Tel Aviv",tv1,17-06-2025,assigned,pzp6e,0.0019,5051,0,0.0000,0.0000,,1.0000,0.0000,570180.9942,570180.9942
+np33o,Type3dot1,"Asia,IL,Tel Aviv",tv1,18-06-2025,assigned,pzp6e,0.0027,5208,0,0.0000,0.0000,,1.0000,0.0000,570180.9942,570180.9942
+np33o,Type3dot1,"Asia,IL,Tel Aviv",tv1,19-06-2025,assigned,pzp6e,0.0021,5332,1,0.0001,0.0000,,1.0000,0.0000,570180.9942,570180.9942
+np33o,Type3dot1,"Asia,IL,Tel Aviv",tv1,20-06-2025,assigned,pzp6e,0.0009,5167,0,0.0000,0.0000,,1.0000,0.0000,570180.9942,570180.9942
+np33o,Type3dot1,"Asia,IL,Tel Aviv",tv1,21-06-2025,assigned,pzp6e,0.0014,4569,1,0.0002,0.0000,,1.0000,0.0000,570180.9942,570180.9942
+np33o,Type3dot1,"Asia,IL,Tel Aviv",tv1,22-06-2025,assigned,pzp6e,0.0013,4339,1,0.0002,0.0000,,1.0000,0.0000,570180.9942,570180.9942
+np33o,Type3dot1,"Asia,IL,Tel Aviv",tv1,23-06-2025,assigned,pzp6e,0.0027,4674,12,0.0025,0.0000,,1.0000,0.0000,570180.9942,570180.9942
+np33o,Type3dot1,"Asia,IL,Tel Aviv",tv1,24-06-2025,assigned,pzp6e,0.0031,5018,10,0.0019,0.0000,,1.0000,0.0000,570180.9942,570180.9942
+np33o,Type3dot1,"Asia,IL,Tel Aviv",tv1,25-06-2025,assigned,pzp6e,0.0018,4950,1,0.0002,0.0000,,1.0000,0.0000,570180.9942,570180.9942
+np33o,Type3dot1,"Asia,IL,Tel Aviv",tv1,26-06-2025,assigned,pzp6e,0.0028,4189,0,0.0000,0.0000,,1.0000,0.0000,570180.9942,570180.9942
+np33o,Type3dot1,"Asia,IL,Tel Aviv",tv1,27-06-2025,assigned,pzp6e,0.0047,4416,0,0.0000,0.0000,,1.0000,0.0000,570180.9942,570180.9942
+np33o,Type3dot1,"Asia,IL,Tel Aviv",tv1,28-06-2025,assigned,pzp6e,0.0012,4871,0,0.0000,0.0000,,1.0000,0.0000,570180.9942,570180.9942
+np33o,Type3dot1,"Asia,IL,Tel Aviv",tv1,29-06-2025,assigned,pzp6e,0.0012,5050,0,0.0000,0.0000,,1.0000,0.0000,570180.9942,570180.9942
+np33o,Type3dot1,"Asia,IL,Tel Aviv",tv1,30-06-2025,assigned,pzp6e,0.0026,4613,0,0.0000,0.0000,,1.0000,0.0000,570180.9942,570180.9942
+np33o,Type3dot1,"Asia,IL,Tel Aviv",tv1,01-07-2025,assigned,pzp6e,0.0012,4873,0,0.0000,0.0000,,1.0000,0.0000,570180.9942,570180.9942
+np33o,Type3dot1,"Asia,IL,Tel Aviv",tv1,02-07-2025,assigned,pzp6e,0.0022,4837,0,0.0000,0.0000,,1.0000,0.0000,570180.9942,570180.9942
+np33o,Type3dot1,"Asia,IL,Tel Aviv",tv1,03-07-2025,assigned,pzp6e,0.0034,4806,0,0.0000,0.0000,,1.0000,0.0000,570180.9942,570180.9942
+np33o,Type3dot1,"Asia,IL,Tel Aviv",tv1,04-07-2025,assigned,pzp6e,0.0022,4807,7,0.0014,0.0000,,1.0000,0.0000,570180.9942,570180.9942
+np33o,Type3dot1,"Asia,IL,Tel Aviv",tv1,05-07-2025,assigned,pzp6e,0.0018,4826,0,0.0000,0.0000,,1.0000,0.0000,570180.9942,570180.9942
+np33o,Type3dot1,"Asia,IL,Tel Aviv",tv1,06-07-2025,assigned,pzp6e,0.0026,4785,0,0.0000,0.0000,,1.0000,0.0000,570180.9942,570180.9942
+np33o,Type3dot1,"Asia,IL,Tel Aviv",tv1,07-07-2025,assigned,pzp6e,0.0034,4911,1,0.0002,0.0000,,1.0000,0.0000,570180.9942,570180.9942
+np33o,Type3dot1,"Asia,IL,Tel Aviv",tv1,08-07-2025,assigned,pzp6e,0.0014,4883,0,0.0000,0.0000,,1.0000,0.0000,570180.9942,570180.9942
+np33o,Type3dot1,"Asia,IL,Tel Aviv",tv1,09-07-2025,assigned,pzp6e,0.0063,4698,3,0.0006,0.0000,,1.0000,0.0000,570180.9942,570180.9942
+np33o,Type3dot1,"Asia,IL,Tel Aviv",tv1,10-07-2025,assigned,pzp6e,0.0018,4871,13,0.0026,0.0008,,1.0000,0.0000,570180.9942,570180.9942
+np33o,Type3dot1,"Asia,IL,Tel Aviv",tv1,11-07-2025,assigned,pzp6e,0.0014,4883,0,0.0000,0.0000,,1.0000,0.0000,570180.9942,570180.9942
+np33o,Type3dot1,"Asia,IL,Tel Aviv",tv1,12-07-2025,assigned,pzp6e,0.0014,4880,0,0.0000,0.0000,,1.0000,0.0000,570180.9942,570180.9942
+np33o,Type3dot1,"Asia,IL,Tel Aviv",tv1,13-07-2025,assigned,pzp6e,0.0022,4788,0,0.0000,0.0000,,1.0000,0.0000,570180.9942,570180.9942
+xetvj,Type3dot1,"Asia,IL,Tel Aviv",tv1,14-06-2025,unassigned,,,,,,,0.0318,1.0000,0.0000,570180.9942,570180.9942
+xetvj,Type3dot1,"Asia,IL,Tel Aviv",tv1,15-06-2025,unassigned,,,,,,,0.0260,1.0000,0.0000,570180.9942,570180.9942
+xetvj,Type3dot1,"Asia,IL,Tel Aviv",tv1,16-06-2025,unassigned,,,,,,,0.0254,1.0000,0.0000,570180.9942,570180.9942
+xetvj,Type3dot1,"Asia,IL,Tel Aviv",tv1,17-06-2025,unassigned,,,,,,,0.0468,1.0000,0.0000,570180.9942,570180.9942
+xetvj,Type3dot1,"Asia,IL,Tel Aviv",tv1,18-06-2025,unassigned,,,,,,,0.0857,1.0000,0.0000,570180.9942,570180.9942
+xetvj,Type3dot1,"Asia,IL,Tel Aviv",tv1,19-06-2025,unassigned,,,,,,,0.1747,0.8804,0.1195,570180.9942,502004.1471
+xetvj,Type3dot1,"Asia,IL,Tel Aviv",tv1,20-06-2025,unassigned,,,,,,,0.1637,0.8979,0.1020,570180.9942,512003.2839
+xetvj,Type3dot1,"Asia,IL,Tel Aviv",tv1,21-06-2025,unassigned,,,,,,,0.1668,0.8930,0.1069,570180.9942,509173.8066
+xetvj,Type3dot1,"Asia,IL,Tel Aviv",tv1,22-06-2025,unassigned,,,,,,,0.0920,1.0000,0.0000,570180.9942,570180.9942
+xetvj,Type3dot1,"Asia,IL,Tel Aviv",tv1,23-06-2025,unassigned,,,,,,,0.0014,1.0000,0.0000,570180.9942,570180.9942
+xetvj,Type3dot1,"Asia,IL,Tel Aviv",tv1,24-06-2025,unassigned,,,,,,,0.0053,1.0000,0.0000,570180.9942,570180.9942
+xetvj,Type3dot1,"Asia,IL,Tel Aviv",tv1,25-06-2025,unassigned,,,,,,,0.0305,1.0000,0.0000,570180.9942,570180.9942
+xetvj,Type3dot1,"Asia,IL,Tel Aviv",tv1,26-06-2025,unassigned,,,,,,,0.1741,0.8812,0.1187,570180.9942,502492.5637
+xetvj,Type3dot1,"Asia,IL,Tel Aviv",tv1,27-06-2025,unassigned,,,,,,,0.1628,0.8994,0.1005,570180.9942,512826.9947
+xetvj,Type3dot1,"Asia,IL,Tel Aviv",tv1,28-06-2025,unassigned,,,,,,,0.0063,1.0000,0.0000,570180.9942,570180.9942
+xetvj,Type3dot1,"Asia,IL,Tel Aviv",tv1,29-06-2025,unassigned,,,,,,,0.0003,1.0000,0.0000,570180.9942,570180.9942
+xetvj,Type3dot1,"Asia,IL,Tel Aviv",tv1,30-06-2025,unassigned,,,,,,,0.0006,1.0000,0.0000,570180.9942,570180.9942
+xetvj,Type3dot1,"Asia,IL,Tel Aviv",tv1,01-07-2025,unassigned,,,,,,,0.0014,1.0000,0.0000,570180.9942,570180.9942
+xetvj,Type3dot1,"Asia,IL,Tel Aviv",tv1,02-07-2025,unassigned,,,,,,,0.0016,1.0000,0.0000,570180.9942,570180.9942
+xetvj,Type3dot1,"Asia,IL,Tel Aviv",tv1,03-07-2025,unassigned,,,,,,,0.0010,1.0000,0.0000,570180.9942,570180.9942
+xetvj,Type3dot1,"Asia,IL,Tel Aviv",tv1,04-07-2025,unassigned,,,,,,,0.0012,1.0000,0.0000,570180.9942,570180.9942
+xetvj,Type3dot1,"Asia,IL,Tel Aviv",tv1,05-07-2025,unassigned,,,,,,,0.0002,1.0000,0.0000,570180.9942,570180.9942
+xetvj,Type3dot1,"Asia,IL,Tel Aviv",tv1,06-07-2025,unassigned,,,,,,,0.0002,1.0000,0.0000,570180.9942,570180.9942
+xetvj,Type3dot1,"Asia,IL,Tel Aviv",tv1,07-07-2025,unassigned,,,,,,,0.0006,1.0000,0.0000,570180.9942,570180.9942
+xetvj,Type3dot1,"Asia,IL,Tel Aviv",tv1,08-07-2025,unassigned,,,,,,,0.0006,1.0000,0.0000,570180.9942,570180.9942
+xetvj,Type3dot1,"Asia,IL,Tel Aviv",tv1,09-07-2025,unassigned,,,,,,,0.0050,1.0000,0.0000,570180.9942,570180.9942
+xetvj,Type3dot1,"Asia,IL,Tel Aviv",tv1,10-07-2025,unassigned,,,,,,,0.0072,1.0000,0.0000,570180.9942,570180.9942
+xetvj,Type3dot1,"Asia,IL,Tel Aviv",tv1,11-07-2025,unassigned,,,,,,,0.0019,1.0000,0.0000,570180.9942,570180.9942
+xetvj,Type3dot1,"Asia,IL,Tel Aviv",tv1,12-07-2025,unassigned,,,,,,,0.0012,1.0000,0.0000,570180.9942,570180.9942
+xetvj,Type3dot1,"Asia,IL,Tel Aviv",tv1,13-07-2025,unassigned,,,,,,,0.0003,1.0000,0.0000,570180.9942,570180.9942
+gvm7l,Type3dot1,"Asia,IL,Tel Aviv",tv1,14-06-2025,assigned,tdb26,0.0028,3924,3,0.0007,0.0000,,1.0000,0.0000,570180.9942,570180.9942
+gvm7l,Type3dot1,"Asia,IL,Tel Aviv",tv1,15-06-2025,assigned,tdb26,0.0018,3858,2,0.0005,0.0000,,1.0000,0.0000,570180.9942,570180.9942
+gvm7l,Type3dot1,"Asia,IL,Tel Aviv",tv1,16-06-2025,assigned,tdb26,0.0021,3830,1,0.0002,0.0000,,1.0000,0.0000,570180.9942,570180.9942
+gvm7l,Type3dot1,"Asia,IL,Tel Aviv",tv1,17-06-2025,assigned,tdb26,0.0020,3958,0,0.0000,0.0000,,1.0000,0.0000,570180.9942,570180.9942
+gvm7l,Type3dot1,"Asia,IL,Tel Aviv",tv1,18-06-2025,assigned,tdb26,0.0026,3832,1,0.0002,0.0000,,1.0000,0.0000,570180.9942,570180.9942
+gvm7l,Type3dot1,"Asia,IL,Tel Aviv",tv1,19-06-2025,assigned,tdb26,0.0035,4053,3,0.0007,0.0000,,1.0000,0.0000,570180.9942,570180.9942
+gvm7l,Type3dot1,"Asia,IL,Tel Aviv",tv1,20-06-2025,assigned,tdb26,0.0017,3914,1,0.0002,0.0000,,1.0000,0.0000,570180.9942,570180.9942
+gvm7l,Type3dot1,"Asia,IL,Tel Aviv",tv1,21-06-2025,assigned,tdb26,0.0012,3895,0,0.0000,0.0000,,1.0000,0.0000,570180.9942,570180.9942
+gvm7l,Type3dot1,"Asia,IL,Tel Aviv",tv1,22-06-2025,assigned,tdb26,0.0025,3890,0,0.0000,0.0000,,1.0000,0.0000,570180.9942,570180.9942
+gvm7l,Type3dot1,"Asia,IL,Tel Aviv",tv1,23-06-2025,assigned,tdb26,0.0028,3839,16,0.0041,0.0012,,1.0000,0.0000,570180.9942,570180.9942
+gvm7l,Type3dot1,"Asia,IL,Tel Aviv",tv1,24-06-2025,assigned,tdb26,0.0031,3916,11,0.0028,0.0000,,1.0000,0.0000,570180.9942,570180.9942
+gvm7l,Type3dot1,"Asia,IL,Tel Aviv",tv1,25-06-2025,assigned,tdb26,0.0031,3880,0,0.0000,0.0000,,1.0000,0.0000,570180.9942,570180.9942
+gvm7l,Type3dot1,"Asia,IL,Tel Aviv",tv1,26-06-2025,assigned,tdb26,0.0032,3559,0,0.0000,0.0000,,1.0000,0.0000,570180.9942,570180.9942
+gvm7l,Type3dot1,"Asia,IL,Tel Aviv",tv1,27-06-2025,assigned,tdb26,0.0034,3697,1,0.0002,0.0000,,1.0000,0.0000,570180.9942,570180.9942
+gvm7l,Type3dot1,"Asia,IL,Tel Aviv",tv1,28-06-2025,assigned,tdb26,0.0016,3486,2,0.0005,0.0000,,1.0000,0.0000,570180.9942,570180.9942
+gvm7l,Type3dot1,"Asia,IL,Tel Aviv",tv1,29-06-2025,assigned,tdb26,0.0018,3862,0,0.0000,0.0000,,1.0000,0.0000,570180.9942,570180.9942
+gvm7l,Type3dot1,"Asia,IL,Tel Aviv",tv1,30-06-2025,assigned,tdb26,0.0048,3803,0,0.0000,0.0000,,1.0000,0.0000,570180.9942,570180.9942
+gvm7l,Type3dot1,"Asia,IL,Tel Aviv",tv1,01-07-2025,assigned,tdb26,0.0017,3946,1,0.0002,0.0000,,1.0000,0.0000,570180.9942,570180.9942
+gvm7l,Type3dot1,"Asia,IL,Tel Aviv",tv1,02-07-2025,assigned,tdb26,0.0017,3935,4,0.0010,0.0000,,1.0000,0.0000,570180.9942,570180.9942
+gvm7l,Type3dot1,"Asia,IL,Tel Aviv",tv1,03-07-2025,assigned,tdb26,0.0017,3980,0,0.0000,0.0000,,1.0000,0.0000,570180.9942,570180.9942
+gvm7l,Type3dot1,"Asia,IL,Tel Aviv",tv1,04-07-2025,assigned,tdb26,0.0012,3988,4,0.0010,0.0000,,1.0000,0.0000,570180.9942,570180.9942
+gvm7l,Type3dot1,"Asia,IL,Tel Aviv",tv1,05-07-2025,assigned,tdb26,0.0017,3976,1,0.0002,0.0000,,1.0000,0.0000,570180.9942,570180.9942
+gvm7l,Type3dot1,"Asia,IL,Tel Aviv",tv1,06-07-2025,assigned,tdb26,0.0046,3897,2,0.0005,0.0000,,1.0000,0.0000,570180.9942,570180.9942
+gvm7l,Type3dot1,"Asia,IL,Tel Aviv",tv1,07-07-2025,assigned,tdb26,0.0061,3942,0,0.0000,0.0000,,1.0000,0.0000,570180.9942,570180.9942
+gvm7l,Type3dot1,"Asia,IL,Tel Aviv",tv1,08-07-2025,assigned,tdb26,0.0030,3958,0,0.0000,0.0000,,1.0000,0.0000,570180.9942,570180.9942
+gvm7l,Type3dot1,"Asia,IL,Tel Aviv",tv1,09-07-2025,assigned,tdb26,0.0044,3763,0,0.0000,0.0000,,1.0000,0.0000,570180.9942,570180.9942
+gvm7l,Type3dot1,"Asia,IL,Tel Aviv",tv1,10-07-2025,assigned,tdb26,0.0033,4020,8,0.0019,0.0000,,1.0000,0.0000,570180.9942,570180.9942
+gvm7l,Type3dot1,"Asia,IL,Tel Aviv",tv1,11-07-2025,assigned,tdb26,0.0035,4009,0,0.0000,0.0000,,1.0000,0.0000,570180.9942,570180.9942
+gvm7l,Type3dot1,"Asia,IL,Tel Aviv",tv1,12-07-2025,assigned,tdb26,0.0017,3823,0,0.0000,0.0000,,1.0000,0.0000,570180.9942,570180.9942
+gvm7l,Type3dot1,"Asia,IL,Tel Aviv",tv1,13-07-2025,assigned,tdb26,0.0017,4086,1,0.0002,0.0000,,1.0000,0.0000,570180.9942,570180.9942
+7muaz,Type3dot1,"North America,CR,San Jose",cr1,14-06-2025,unassigned,,,,,,,0.0318,1.0000,0.0000,596374.7635,596374.7635
+7muaz,Type3dot1,"North America,CR,San Jose",cr1,15-06-2025,unassigned,,,,,,,0.0260,1.0000,0.0000,596374.7635,596374.7635
+7muaz,Type3dot1,"North America,CR,San Jose",cr1,16-06-2025,unassigned,,,,,,,0.0254,1.0000,0.0000,596374.7635,596374.7635
+7muaz,Type3dot1,"North America,CR,San Jose",cr1,17-06-2025,unassigned,,,,,,,0.0468,1.0000,0.0000,596374.7635,596374.7635
+7muaz,Type3dot1,"North America,CR,San Jose",cr1,18-06-2025,unassigned,,,,,,,0.0857,1.0000,0.0000,596374.7635,596374.7635
+7muaz,Type3dot1,"North America,CR,San Jose",cr1,19-06-2025,unassigned,,,,,,,0.1747,0.8804,0.1195,596374.7635,525065.9134
+7muaz,Type3dot1,"North America,CR,San Jose",cr1,20-06-2025,unassigned,,,,,,,0.1637,0.8979,0.1020,596374.7635,535524.4045
+7muaz,Type3dot1,"North America,CR,San Jose",cr1,21-06-2025,unassigned,,,,,,,0.1668,0.8930,0.1069,596374.7635,532564.9427
+7muaz,Type3dot1,"North America,CR,San Jose",cr1,22-06-2025,unassigned,,,,,,,0.0920,1.0000,0.0000,596374.7635,596374.7635
+7muaz,Type3dot1,"North America,CR,San Jose",cr1,23-06-2025,unassigned,,,,,,,0.0014,1.0000,0.0000,596374.7635,596374.7635
+7muaz,Type3dot1,"North America,CR,San Jose",cr1,24-06-2025,unassigned,,,,,,,0.0053,1.0000,0.0000,596374.7635,596374.7635
+7muaz,Type3dot1,"North America,CR,San Jose",cr1,25-06-2025,unassigned,,,,,,,0.0305,1.0000,0.0000,596374.7635,596374.7635
+7muaz,Type3dot1,"North America,CR,San Jose",cr1,26-06-2025,unassigned,,,,,,,0.1741,0.8812,0.1187,596374.7635,525576.7675
+7muaz,Type3dot1,"North America,CR,San Jose",cr1,27-06-2025,unassigned,,,,,,,0.1628,0.8994,0.1005,596374.7635,536385.9560
+7muaz,Type3dot1,"North America,CR,San Jose",cr1,28-06-2025,unassigned,,,,,,,0.0063,1.0000,0.0000,596374.7635,596374.7635
+7muaz,Type3dot1,"North America,CR,San Jose",cr1,29-06-2025,unassigned,,,,,,,0.0003,1.0000,0.0000,596374.7635,596374.7635
+7muaz,Type3dot1,"North America,CR,San Jose",cr1,30-06-2025,unassigned,,,,,,,0.0006,1.0000,0.0000,596374.7635,596374.7635
+7muaz,Type3dot1,"North America,CR,San Jose",cr1,01-07-2025,unassigned,,,,,,,0.0014,1.0000,0.0000,596374.7635,596374.7635
+7muaz,Type3dot1,"North America,CR,San Jose",cr1,02-07-2025,unassigned,,,,,,,0.0016,1.0000,0.0000,596374.7635,596374.7635
+7muaz,Type3dot1,"North America,CR,San Jose",cr1,03-07-2025,unassigned,,,,,,,0.0010,1.0000,0.0000,596374.7635,596374.7635
+7muaz,Type3dot1,"North America,CR,San Jose",cr1,04-07-2025,unassigned,,,,,,,0.0012,1.0000,0.0000,596374.7635,596374.7635
+7muaz,Type3dot1,"North America,CR,San Jose",cr1,05-07-2025,unassigned,,,,,,,0.0002,1.0000,0.0000,596374.7635,596374.7635
+7muaz,Type3dot1,"North America,CR,San Jose",cr1,06-07-2025,unassigned,,,,,,,0.0002,1.0000,0.0000,596374.7635,596374.7635
+7muaz,Type3dot1,"North America,CR,San Jose",cr1,07-07-2025,unassigned,,,,,,,0.0006,1.0000,0.0000,596374.7635,596374.7635
+7muaz,Type3dot1,"North America,CR,San Jose",cr1,08-07-2025,unassigned,,,,,,,0.0006,1.0000,0.0000,596374.7635,596374.7635
+7muaz,Type3dot1,"North America,CR,San Jose",cr1,09-07-2025,unassigned,,,,,,,0.0050,1.0000,0.0000,596374.7635,596374.7635
+7muaz,Type3dot1,"North America,CR,San Jose",cr1,10-07-2025,unassigned,,,,,,,0.0072,1.0000,0.0000,596374.7635,596374.7635
+7muaz,Type3dot1,"North America,CR,San Jose",cr1,11-07-2025,unassigned,,,,,,,0.0019,1.0000,0.0000,596374.7635,596374.7635
+7muaz,Type3dot1,"North America,CR,San Jose",cr1,12-07-2025,unassigned,,,,,,,0.0012,1.0000,0.0000,596374.7635,596374.7635
+7muaz,Type3dot1,"North America,CR,San Jose",cr1,13-07-2025,unassigned,,,,,,,0.0003,1.0000,0.0000,596374.7635,596374.7635
+nbela,Type3dot1,"North America,CR,San Jose",cr1,14-06-2025,unassigned,,,,,,,0.0318,1.0000,0.0000,596374.7635,596374.7635
+nbela,Type3dot1,"North America,CR,San Jose",cr1,15-06-2025,unassigned,,,,,,,0.0260,1.0000,0.0000,596374.7635,596374.7635
+nbela,Type3dot1,"North America,CR,San Jose",cr1,16-06-2025,unassigned,,,,,,,0.0254,1.0000,0.0000,596374.7635,596374.7635
+nbela,Type3dot1,"North America,CR,San Jose",cr1,17-06-2025,unassigned,,,,,,,0.0468,1.0000,0.0000,596374.7635,596374.7635
+nbela,Type3dot1,"North America,CR,San Jose",cr1,18-06-2025,unassigned,,,,,,,0.0857,1.0000,0.0000,596374.7635,596374.7635
+nbela,Type3dot1,"North America,CR,San Jose",cr1,19-06-2025,unassigned,,,,,,,0.1747,0.8804,0.1195,596374.7635,525065.9134
+nbela,Type3dot1,"North America,CR,San Jose",cr1,20-06-2025,unassigned,,,,,,,0.1637,0.8979,0.1020,596374.7635,535524.4045
+nbela,Type3dot1,"North America,CR,San Jose",cr1,21-06-2025,unassigned,,,,,,,0.1668,0.8930,0.1069,596374.7635,532564.9427
+nbela,Type3dot1,"North America,CR,San Jose",cr1,22-06-2025,unassigned,,,,,,,0.0920,1.0000,0.0000,596374.7635,596374.7635
+nbela,Type3dot1,"North America,CR,San Jose",cr1,23-06-2025,unassigned,,,,,,,0.0014,1.0000,0.0000,596374.7635,596374.7635
+nbela,Type3dot1,"North America,CR,San Jose",cr1,24-06-2025,unassigned,,,,,,,0.0053,1.0000,0.0000,596374.7635,596374.7635
+nbela,Type3dot1,"North America,CR,San Jose",cr1,25-06-2025,unassigned,,,,,,,0.0305,1.0000,0.0000,596374.7635,596374.7635
+nbela,Type3dot1,"North America,CR,San Jose",cr1,26-06-2025,unassigned,,,,,,,0.1741,0.8812,0.1187,596374.7635,525576.7675
+nbela,Type3dot1,"North America,CR,San Jose",cr1,27-06-2025,unassigned,,,,,,,0.1628,0.8994,0.1005,596374.7635,536385.9560
+nbela,Type3dot1,"North America,CR,San Jose",cr1,28-06-2025,unassigned,,,,,,,0.0063,1.0000,0.0000,596374.7635,596374.7635
+nbela,Type3dot1,"North America,CR,San Jose",cr1,29-06-2025,unassigned,,,,,,,0.0003,1.0000,0.0000,596374.7635,596374.7635
+nbela,Type3dot1,"North America,CR,San Jose",cr1,30-06-2025,unassigned,,,,,,,0.0006,1.0000,0.0000,596374.7635,596374.7635
+nbela,Type3dot1,"North America,CR,San Jose",cr1,01-07-2025,unassigned,,,,,,,0.0014,1.0000,0.0000,596374.7635,596374.7635
+nbela,Type3dot1,"North America,CR,San Jose",cr1,02-07-2025,unassigned,,,,,,,0.0016,1.0000,0.0000,596374.7635,596374.7635
+nbela,Type3dot1,"North America,CR,San Jose",cr1,03-07-2025,unassigned,,,,,,,0.0010,1.0000,0.0000,596374.7635,596374.7635
+nbela,Type3dot1,"North America,CR,San Jose",cr1,04-07-2025,unassigned,,,,,,,0.0012,1.0000,0.0000,596374.7635,596374.7635
+nbela,Type3dot1,"North America,CR,San Jose",cr1,05-07-2025,unassigned,,,,,,,0.0002,1.0000,0.0000,596374.7635,596374.7635
+nbela,Type3dot1,"North America,CR,San Jose",cr1,06-07-2025,unassigned,,,,,,,0.0002,1.0000,0.0000,596374.7635,596374.7635
+nbela,Type3dot1,"North America,CR,San Jose",cr1,07-07-2025,unassigned,,,,,,,0.0006,1.0000,0.0000,596374.7635,596374.7635
+nbela,Type3dot1,"North America,CR,San Jose",cr1,08-07-2025,unassigned,,,,,,,0.0006,1.0000,0.0000,596374.7635,596374.7635
+nbela,Type3dot1,"North America,CR,San Jose",cr1,09-07-2025,unassigned,,,,,,,0.0050,1.0000,0.0000,596374.7635,596374.7635
+nbela,Type3dot1,"North America,CR,San Jose",cr1,10-07-2025,unassigned,,,,,,,0.0072,1.0000,0.0000,596374.7635,596374.7635
+nbela,Type3dot1,"North America,CR,San Jose",cr1,11-07-2025,unassigned,,,,,,,0.0019,1.0000,0.0000,596374.7635,596374.7635
+nbela,Type3dot1,"North America,CR,San Jose",cr1,12-07-2025,unassigned,,,,,,,0.0012,1.0000,0.0000,596374.7635,596374.7635
+nbela,Type3dot1,"North America,CR,San Jose",cr1,13-07-2025,unassigned,,,,,,,0.0003,1.0000,0.0000,596374.7635,596374.7635
+qobom,Type3dot1,"North America,CR,San Jose",cr1,14-06-2025,unassigned,,,,,,,0.0318,1.0000,0.0000,596374.7635,596374.7635
+qobom,Type3dot1,"North America,CR,San Jose",cr1,15-06-2025,unassigned,,,,,,,0.0260,1.0000,0.0000,596374.7635,596374.7635
+qobom,Type3dot1,"North America,CR,San Jose",cr1,16-06-2025,unassigned,,,,,,,0.0254,1.0000,0.0000,596374.7635,596374.7635
+qobom,Type3dot1,"North America,CR,San Jose",cr1,17-06-2025,unassigned,,,,,,,0.0468,1.0000,0.0000,596374.7635,596374.7635
+qobom,Type3dot1,"North America,CR,San Jose",cr1,18-06-2025,unassigned,,,,,,,0.0857,1.0000,0.0000,596374.7635,596374.7635
+qobom,Type3dot1,"North America,CR,San Jose",cr1,19-06-2025,unassigned,,,,,,,0.1747,0.8804,0.1195,596374.7635,525065.9134
+qobom,Type3dot1,"North America,CR,San Jose",cr1,20-06-2025,unassigned,,,,,,,0.1637,0.8979,0.1020,596374.7635,535524.4045
+qobom,Type3dot1,"North America,CR,San Jose",cr1,21-06-2025,unassigned,,,,,,,0.1668,0.8930,0.1069,596374.7635,532564.9427
+qobom,Type3dot1,"North America,CR,San Jose",cr1,22-06-2025,unassigned,,,,,,,0.0920,1.0000,0.0000,596374.7635,596374.7635
+qobom,Type3dot1,"North America,CR,San Jose",cr1,23-06-2025,unassigned,,,,,,,0.0014,1.0000,0.0000,596374.7635,596374.7635
+qobom,Type3dot1,"North America,CR,San Jose",cr1,24-06-2025,unassigned,,,,,,,0.0053,1.0000,0.0000,596374.7635,596374.7635
+qobom,Type3dot1,"North America,CR,San Jose",cr1,25-06-2025,unassigned,,,,,,,0.0305,1.0000,0.0000,596374.7635,596374.7635
+qobom,Type3dot1,"North America,CR,San Jose",cr1,26-06-2025,unassigned,,,,,,,0.1741,0.8812,0.1187,596374.7635,525576.7675
+qobom,Type3dot1,"North America,CR,San Jose",cr1,27-06-2025,unassigned,,,,,,,0.1628,0.8994,0.1005,596374.7635,536385.9560
+qobom,Type3dot1,"North America,CR,San Jose",cr1,28-06-2025,unassigned,,,,,,,0.0063,1.0000,0.0000,596374.7635,596374.7635
+qobom,Type3dot1,"North America,CR,San Jose",cr1,29-06-2025,unassigned,,,,,,,0.0003,1.0000,0.0000,596374.7635,596374.7635
+qobom,Type3dot1,"North America,CR,San Jose",cr1,30-06-2025,unassigned,,,,,,,0.0006,1.0000,0.0000,596374.7635,596374.7635
+qobom,Type3dot1,"North America,CR,San Jose",cr1,01-07-2025,unassigned,,,,,,,0.0014,1.0000,0.0000,596374.7635,596374.7635
+qobom,Type3dot1,"North America,CR,San Jose",cr1,02-07-2025,unassigned,,,,,,,0.0016,1.0000,0.0000,596374.7635,596374.7635
+qobom,Type3dot1,"North America,CR,San Jose",cr1,03-07-2025,unassigned,,,,,,,0.0010,1.0000,0.0000,596374.7635,596374.7635
+qobom,Type3dot1,"North America,CR,San Jose",cr1,04-07-2025,unassigned,,,,,,,0.0012,1.0000,0.0000,596374.7635,596374.7635
+qobom,Type3dot1,"North America,CR,San Jose",cr1,05-07-2025,unassigned,,,,,,,0.0002,1.0000,0.0000,596374.7635,596374.7635
+qobom,Type3dot1,"North America,CR,San Jose",cr1,06-07-2025,unassigned,,,,,,,0.0002,1.0000,0.0000,596374.7635,596374.7635
+qobom,Type3dot1,"North America,CR,San Jose",cr1,07-07-2025,unassigned,,,,,,,0.0006,1.0000,0.0000,596374.7635,596374.7635
+qobom,Type3dot1,"North America,CR,San Jose",cr1,08-07-2025,unassigned,,,,,,,0.0006,1.0000,0.0000,596374.7635,596374.7635
+qobom,Type3dot1,"North America,CR,San Jose",cr1,09-07-2025,unassigned,,,,,,,0.0050,1.0000,0.0000,596374.7635,596374.7635
+qobom,Type3dot1,"North America,CR,San Jose",cr1,10-07-2025,unassigned,,,,,,,0.0072,1.0000,0.0000,596374.7635,596374.7635
+qobom,Type3dot1,"North America,CR,San Jose",cr1,11-07-2025,unassigned,,,,,,,0.0019,1.0000,0.0000,596374.7635,596374.7635
+qobom,Type3dot1,"North America,CR,San Jose",cr1,12-07-2025,unassigned,,,,,,,0.0012,1.0000,0.0000,596374.7635,596374.7635
+qobom,Type3dot1,"North America,CR,San Jose",cr1,13-07-2025,unassigned,,,,,,,0.0003,1.0000,0.0000,596374.7635,596374.7635
+ltzjy,Type3dot1,"North America,CR,San Jose",cr1,14-06-2025,unassigned,,,,,,,0.0318,1.0000,0.0000,596374.7635,596374.7635
+ltzjy,Type3dot1,"North America,CR,San Jose",cr1,15-06-2025,unassigned,,,,,,,0.0260,1.0000,0.0000,596374.7635,596374.7635
+ltzjy,Type3dot1,"North America,CR,San Jose",cr1,16-06-2025,unassigned,,,,,,,0.0254,1.0000,0.0000,596374.7635,596374.7635
+ltzjy,Type3dot1,"North America,CR,San Jose",cr1,17-06-2025,unassigned,,,,,,,0.0468,1.0000,0.0000,596374.7635,596374.7635
+ltzjy,Type3dot1,"North America,CR,San Jose",cr1,18-06-2025,unassigned,,,,,,,0.0857,1.0000,0.0000,596374.7635,596374.7635
+ltzjy,Type3dot1,"North America,CR,San Jose",cr1,19-06-2025,unassigned,,,,,,,0.1747,0.8804,0.1195,596374.7635,525065.9134
+ltzjy,Type3dot1,"North America,CR,San Jose",cr1,20-06-2025,unassigned,,,,,,,0.1637,0.8979,0.1020,596374.7635,535524.4045
+ltzjy,Type3dot1,"North America,CR,San Jose",cr1,21-06-2025,unassigned,,,,,,,0.1668,0.8930,0.1069,596374.7635,532564.9427
+ltzjy,Type3dot1,"North America,CR,San Jose",cr1,22-06-2025,unassigned,,,,,,,0.0920,1.0000,0.0000,596374.7635,596374.7635
+ltzjy,Type3dot1,"North America,CR,San Jose",cr1,23-06-2025,unassigned,,,,,,,0.0014,1.0000,0.0000,596374.7635,596374.7635
+ltzjy,Type3dot1,"North America,CR,San Jose",cr1,24-06-2025,unassigned,,,,,,,0.0053,1.0000,0.0000,596374.7635,596374.7635
+ltzjy,Type3dot1,"North America,CR,San Jose",cr1,25-06-2025,unassigned,,,,,,,0.0305,1.0000,0.0000,596374.7635,596374.7635
+ltzjy,Type3dot1,"North America,CR,San Jose",cr1,26-06-2025,unassigned,,,,,,,0.1741,0.8812,0.1187,596374.7635,525576.7675
+ltzjy,Type3dot1,"North America,CR,San Jose",cr1,27-06-2025,unassigned,,,,,,,0.1628,0.8994,0.1005,596374.7635,536385.9560
+ltzjy,Type3dot1,"North America,CR,San Jose",cr1,28-06-2025,unassigned,,,,,,,0.0063,1.0000,0.0000,596374.7635,596374.7635
+ltzjy,Type3dot1,"North America,CR,San Jose",cr1,29-06-2025,unassigned,,,,,,,0.0003,1.0000,0.0000,596374.7635,596374.7635
+ltzjy,Type3dot1,"North America,CR,San Jose",cr1,30-06-2025,unassigned,,,,,,,0.0006,1.0000,0.0000,596374.7635,596374.7635
+ltzjy,Type3dot1,"North America,CR,San Jose",cr1,01-07-2025,unassigned,,,,,,,0.0014,1.0000,0.0000,596374.7635,596374.7635
+ltzjy,Type3dot1,"North America,CR,San Jose",cr1,02-07-2025,unassigned,,,,,,,0.0016,1.0000,0.0000,596374.7635,596374.7635
+ltzjy,Type3dot1,"North America,CR,San Jose",cr1,03-07-2025,unassigned,,,,,,,0.0010,1.0000,0.0000,596374.7635,596374.7635
+ltzjy,Type3dot1,"North America,CR,San Jose",cr1,04-07-2025,unassigned,,,,,,,0.0012,1.0000,0.0000,596374.7635,596374.7635
+ltzjy,Type3dot1,"North America,CR,San Jose",cr1,05-07-2025,unassigned,,,,,,,0.0002,1.0000,0.0000,596374.7635,596374.7635
+ltzjy,Type3dot1,"North America,CR,San Jose",cr1,06-07-2025,unassigned,,,,,,,0.0002,1.0000,0.0000,596374.7635,596374.7635
+ltzjy,Type3dot1,"North America,CR,San Jose",cr1,07-07-2025,unassigned,,,,,,,0.0006,1.0000,0.0000,596374.7635,596374.7635
+ltzjy,Type3dot1,"North America,CR,San Jose",cr1,08-07-2025,unassigned,,,,,,,0.0006,1.0000,0.0000,596374.7635,596374.7635
+ltzjy,Type3dot1,"North America,CR,San Jose",cr1,09-07-2025,unassigned,,,,,,,0.0050,1.0000,0.0000,596374.7635,596374.7635
+ltzjy,Type3dot1,"North America,CR,San Jose",cr1,10-07-2025,unassigned,,,,,,,0.0072,1.0000,0.0000,596374.7635,596374.7635
+ltzjy,Type3dot1,"North America,CR,San Jose",cr1,11-07-2025,unassigned,,,,,,,0.0019,1.0000,0.0000,596374.7635,596374.7635
+ltzjy,Type3dot1,"North America,CR,San Jose",cr1,12-07-2025,unassigned,,,,,,,0.0012,1.0000,0.0000,596374.7635,596374.7635
+ltzjy,Type3dot1,"North America,CR,San Jose",cr1,13-07-2025,unassigned,,,,,,,0.0003,1.0000,0.0000,596374.7635,596374.7635
+aqbno,Type3dot1,"North America,CR,San Jose",cr1,14-06-2025,assigned,2fq7c,0.0247,5500,1461,0.2098,0.1851,,0.8637,0.1362,596374.7635,515146.8174
+aqbno,Type3dot1,"North America,CR,San Jose",cr1,15-06-2025,assigned,2fq7c,0.0208,5878,1220,0.1718,0.1509,,0.9184,0.0815,596374.7635,547716.7811
+aqbno,Type3dot1,"North America,CR,San Jose",cr1,16-06-2025,assigned,2fq7c,0.0408,5478,1250,0.1857,0.1449,,0.9281,0.0718,596374.7635,553520.5608
+aqbno,Type3dot1,"North America,CR,San Jose",cr1,17-06-2025,assigned,2fq7c,0.0363,4974,2191,0.3057,0.2694,,0.7288,0.2711,596374.7635,434694.3412
+aqbno,Type3dot1,"North America,CR,San Jose",cr1,18-06-2025,assigned,2fq7c,0.0181,3648,3382,0.4810,0.4629,,0.4193,0.5806,596374.7635,250094.0348
+aqbno,Type3dot1,"North America,CR,San Jose",cr1,19-06-2025,assigned,2fq7c,0.0195,0,6668,1.0000,0.9804,,0.2000,0.8000,596374.7635,119274.9527
+aqbno,Type3dot1,"North America,CR,San Jose",cr1,20-06-2025,assigned,2fq7c,0.0299,0,6407,1.0000,0.9700,,0.2000,0.8000,596374.7635,119274.9527
+aqbno,Type3dot1,"North America,CR,San Jose",cr1,21-06-2025,assigned,2fq7c,0.0072,0,6252,1.0000,0.9927,,0.2000,0.8000,596374.7635,119274.9527
+aqbno,Type3dot1,"North America,CR,San Jose",cr1,22-06-2025,assigned,2fq7c,0.0433,2580,3725,0.5908,0.5474,,0.2841,0.7158,596374.7635,169444.2343
+aqbno,Type3dot1,"North America,CR,San Jose",cr1,23-06-2025,assigned,2fq7c,0.1761,6634,152,0.0223,0.0000,,1.0000,0.0000,596374.7635,596374.7635
+aqbno,Type3dot1,"North America,CR,San Jose",cr1,24-06-2025,assigned,2fq7c,0.0587,6651,651,0.0891,0.0303,,1.0000,0.0000,596374.7635,596374.7635
+aqbno,Type3dot1,"North America,CR,San Jose",cr1,25-06-2025,assigned,2fq7c,0.0192,5838,1155,0.1651,0.1458,,0.9265,0.0734,596374.7635,552596.2222
+aqbno,Type3dot1,"North America,CR,San Jose",cr1,26-06-2025,assigned,2fq7c,0.0130,0,6568,1.0000,0.9869,,0.2000,0.8000,596374.7635,119274.9527
+aqbno,Type3dot1,"North America,CR,San Jose",cr1,27-06-2025,assigned,2fq7c,0.0261,0,6589,1.0000,0.9738,,0.2000,0.8000,596374.7635,119274.9527
+aqbno,Type3dot1,"North America,CR,San Jose",cr1,28-06-2025,assigned,2fq7c,0.0213,6507,398,0.0576,0.0362,,1.0000,0.0000,596374.7635,596374.7635
+aqbno,Type3dot1,"North America,CR,San Jose",cr1,29-06-2025,assigned,2fq7c,0.0170,6935,120,0.0170,0.0000,,1.0000,0.0000,596374.7635,596374.7635
+aqbno,Type3dot1,"North America,CR,San Jose",cr1,30-06-2025,assigned,2fq7c,0.2269,3371,32,0.0094,0.0000,,1.0000,0.0000,596374.7635,596374.7635
+aqbno,Type3dot1,"North America,CR,San Jose",cr1,01-07-2025,unassigned,,,,,,,0.0014,1.0000,0.0000,596374.7635,596374.7635
+aqbno,Type3dot1,"North America,CR,San Jose",cr1,02-07-2025,unassigned,,,,,,,0.0016,1.0000,0.0000,596374.7635,596374.7635
+aqbno,Type3dot1,"North America,CR,San Jose",cr1,03-07-2025,unassigned,,,,,,,0.0010,1.0000,0.0000,596374.7635,596374.7635
+aqbno,Type3dot1,"North America,CR,San Jose",cr1,04-07-2025,unassigned,,,,,,,0.0012,1.0000,0.0000,596374.7635,596374.7635
+aqbno,Type3dot1,"North America,CR,San Jose",cr1,05-07-2025,unassigned,,,,,,,0.0002,1.0000,0.0000,596374.7635,596374.7635
+aqbno,Type3dot1,"North America,CR,San Jose",cr1,06-07-2025,unassigned,,,,,,,0.0002,1.0000,0.0000,596374.7635,596374.7635
+aqbno,Type3dot1,"North America,CR,San Jose",cr1,07-07-2025,unassigned,,,,,,,0.0006,1.0000,0.0000,596374.7635,596374.7635
+aqbno,Type3dot1,"North America,CR,San Jose",cr1,08-07-2025,unassigned,,,,,,,0.0006,1.0000,0.0000,596374.7635,596374.7635
+aqbno,Type3dot1,"North America,CR,San Jose",cr1,09-07-2025,unassigned,,,,,,,0.0050,1.0000,0.0000,596374.7635,596374.7635
+aqbno,Type3dot1,"North America,CR,San Jose",cr1,10-07-2025,unassigned,,,,,,,0.0072,1.0000,0.0000,596374.7635,596374.7635
+aqbno,Type3dot1,"North America,CR,San Jose",cr1,11-07-2025,unassigned,,,,,,,0.0019,1.0000,0.0000,596374.7635,596374.7635
+aqbno,Type3dot1,"North America,CR,San Jose",cr1,12-07-2025,unassigned,,,,,,,0.0012,1.0000,0.0000,596374.7635,596374.7635
+aqbno,Type3dot1,"North America,CR,San Jose",cr1,13-07-2025,unassigned,,,,,,,0.0003,1.0000,0.0000,596374.7635,596374.7635
+5rvo7,Type3dot1,"Asia,IL,Tel Aviv",tv1,14-06-2025,unassigned,,,,,,,0.0318,1.0000,0.0000,570180.9942,570180.9942
+5rvo7,Type3dot1,"Asia,IL,Tel Aviv",tv1,15-06-2025,unassigned,,,,,,,0.0260,1.0000,0.0000,570180.9942,570180.9942
+5rvo7,Type3dot1,"Asia,IL,Tel Aviv",tv1,16-06-2025,unassigned,,,,,,,0.0254,1.0000,0.0000,570180.9942,570180.9942
+5rvo7,Type3dot1,"Asia,IL,Tel Aviv",tv1,17-06-2025,unassigned,,,,,,,0.0468,1.0000,0.0000,570180.9942,570180.9942
+5rvo7,Type3dot1,"Asia,IL,Tel Aviv",tv1,18-06-2025,unassigned,,,,,,,0.0857,1.0000,0.0000,570180.9942,570180.9942
+5rvo7,Type3dot1,"Asia,IL,Tel Aviv",tv1,19-06-2025,unassigned,,,,,,,0.1747,0.8804,0.1195,570180.9942,502004.1471
+5rvo7,Type3dot1,"Asia,IL,Tel Aviv",tv1,20-06-2025,unassigned,,,,,,,0.1637,0.8979,0.1020,570180.9942,512003.2839
+5rvo7,Type3dot1,"Asia,IL,Tel Aviv",tv1,21-06-2025,unassigned,,,,,,,0.1668,0.8930,0.1069,570180.9942,509173.8066
+5rvo7,Type3dot1,"Asia,IL,Tel Aviv",tv1,22-06-2025,unassigned,,,,,,,0.0920,1.0000,0.0000,570180.9942,570180.9942
+5rvo7,Type3dot1,"Asia,IL,Tel Aviv",tv1,23-06-2025,unassigned,,,,,,,0.0014,1.0000,0.0000,570180.9942,570180.9942
+5rvo7,Type3dot1,"Asia,IL,Tel Aviv",tv1,24-06-2025,unassigned,,,,,,,0.0053,1.0000,0.0000,570180.9942,570180.9942
+5rvo7,Type3dot1,"Asia,IL,Tel Aviv",tv1,25-06-2025,unassigned,,,,,,,0.0305,1.0000,0.0000,570180.9942,570180.9942
+5rvo7,Type3dot1,"Asia,IL,Tel Aviv",tv1,26-06-2025,unassigned,,,,,,,0.1741,0.8812,0.1187,570180.9942,502492.5637
+5rvo7,Type3dot1,"Asia,IL,Tel Aviv",tv1,27-06-2025,unassigned,,,,,,,0.1628,0.8994,0.1005,570180.9942,512826.9947
+5rvo7,Type3dot1,"Asia,IL,Tel Aviv",tv1,28-06-2025,unassigned,,,,,,,0.0063,1.0000,0.0000,570180.9942,570180.9942
+5rvo7,Type3dot1,"Asia,IL,Tel Aviv",tv1,29-06-2025,unassigned,,,,,,,0.0003,1.0000,0.0000,570180.9942,570180.9942
+5rvo7,Type3dot1,"Asia,IL,Tel Aviv",tv1,30-06-2025,unassigned,,,,,,,0.0006,1.0000,0.0000,570180.9942,570180.9942
+5rvo7,Type3dot1,"Asia,IL,Tel Aviv",tv1,01-07-2025,unassigned,,,,,,,0.0014,1.0000,0.0000,570180.9942,570180.9942
+5rvo7,Type3dot1,"Asia,IL,Tel Aviv",tv1,02-07-2025,unassigned,,,,,,,0.0016,1.0000,0.0000,570180.9942,570180.9942
+5rvo7,Type3dot1,"Asia,IL,Tel Aviv",tv1,03-07-2025,unassigned,,,,,,,0.0010,1.0000,0.0000,570180.9942,570180.9942
+5rvo7,Type3dot1,"Asia,IL,Tel Aviv",tv1,04-07-2025,unassigned,,,,,,,0.0012,1.0000,0.0000,570180.9942,570180.9942
+5rvo7,Type3dot1,"Asia,IL,Tel Aviv",tv1,05-07-2025,unassigned,,,,,,,0.0002,1.0000,0.0000,570180.9942,570180.9942
+5rvo7,Type3dot1,"Asia,IL,Tel Aviv",tv1,06-07-2025,unassigned,,,,,,,0.0002,1.0000,0.0000,570180.9942,570180.9942
+5rvo7,Type3dot1,"Asia,IL,Tel Aviv",tv1,07-07-2025,unassigned,,,,,,,0.0006,1.0000,0.0000,570180.9942,570180.9942
+5rvo7,Type3dot1,"Asia,IL,Tel Aviv",tv1,08-07-2025,unassigned,,,,,,,0.0006,1.0000,0.0000,570180.9942,570180.9942
+5rvo7,Type3dot1,"Asia,IL,Tel Aviv",tv1,09-07-2025,unassigned,,,,,,,0.0050,1.0000,0.0000,570180.9942,570180.9942
+5rvo7,Type3dot1,"Asia,IL,Tel Aviv",tv1,10-07-2025,unassigned,,,,,,,0.0072,1.0000,0.0000,570180.9942,570180.9942
+5rvo7,Type3dot1,"Asia,IL,Tel Aviv",tv1,11-07-2025,unassigned,,,,,,,0.0019,1.0000,0.0000,570180.9942,570180.9942
+5rvo7,Type3dot1,"Asia,IL,Tel Aviv",tv1,12-07-2025,unassigned,,,,,,,0.0012,1.0000,0.0000,570180.9942,570180.9942
+5rvo7,Type3dot1,"Asia,IL,Tel Aviv",tv1,13-07-2025,unassigned,,,,,,,0.0003,1.0000,0.0000,570180.9942,570180.9942
+63rak,Type3dot1,"North America,CR,San Jose",cr1,14-06-2025,unassigned,,,,,,,0.0318,1.0000,0.0000,596374.7635,596374.7635
+63rak,Type3dot1,"North America,CR,San Jose",cr1,15-06-2025,unassigned,,,,,,,0.0260,1.0000,0.0000,596374.7635,596374.7635
+63rak,Type3dot1,"North America,CR,San Jose",cr1,16-06-2025,unassigned,,,,,,,0.0254,1.0000,0.0000,596374.7635,596374.7635
+63rak,Type3dot1,"North America,CR,San Jose",cr1,17-06-2025,unassigned,,,,,,,0.0468,1.0000,0.0000,596374.7635,596374.7635
+63rak,Type3dot1,"North America,CR,San Jose",cr1,18-06-2025,unassigned,,,,,,,0.0857,1.0000,0.0000,596374.7635,596374.7635
+63rak,Type3dot1,"North America,CR,San Jose",cr1,19-06-2025,unassigned,,,,,,,0.1747,0.8804,0.1195,596374.7635,525065.9134
+63rak,Type3dot1,"North America,CR,San Jose",cr1,20-06-2025,unassigned,,,,,,,0.1637,0.8979,0.1020,596374.7635,535524.4045
+63rak,Type3dot1,"North America,CR,San Jose",cr1,21-06-2025,unassigned,,,,,,,0.1668,0.8930,0.1069,596374.7635,532564.9427
+63rak,Type3dot1,"North America,CR,San Jose",cr1,22-06-2025,unassigned,,,,,,,0.0920,1.0000,0.0000,596374.7635,596374.7635
+63rak,Type3dot1,"North America,CR,San Jose",cr1,23-06-2025,unassigned,,,,,,,0.0014,1.0000,0.0000,596374.7635,596374.7635
+63rak,Type3dot1,"North America,CR,San Jose",cr1,24-06-2025,unassigned,,,,,,,0.0053,1.0000,0.0000,596374.7635,596374.7635
+63rak,Type3dot1,"North America,CR,San Jose",cr1,25-06-2025,unassigned,,,,,,,0.0305,1.0000,0.0000,596374.7635,596374.7635
+63rak,Type3dot1,"North America,CR,San Jose",cr1,26-06-2025,unassigned,,,,,,,0.1741,0.8812,0.1187,596374.7635,525576.7675
+63rak,Type3dot1,"North America,CR,San Jose",cr1,27-06-2025,unassigned,,,,,,,0.1628,0.8994,0.1005,596374.7635,536385.9560
+63rak,Type3dot1,"North America,CR,San Jose",cr1,28-06-2025,unassigned,,,,,,,0.0063,1.0000,0.0000,596374.7635,596374.7635
+63rak,Type3dot1,"North America,CR,San Jose",cr1,29-06-2025,unassigned,,,,,,,0.0003,1.0000,0.0000,596374.7635,596374.7635
+63rak,Type3dot1,"North America,CR,San Jose",cr1,30-06-2025,unassigned,,,,,,,0.0006,1.0000,0.0000,596374.7635,596374.7635
+63rak,Type3dot1,"North America,CR,San Jose",cr1,01-07-2025,unassigned,,,,,,,0.0014,1.0000,0.0000,596374.7635,596374.7635
+63rak,Type3dot1,"North America,CR,San Jose",cr1,02-07-2025,unassigned,,,,,,,0.0016,1.0000,0.0000,596374.7635,596374.7635
+63rak,Type3dot1,"North America,CR,San Jose",cr1,03-07-2025,unassigned,,,,,,,0.0010,1.0000,0.0000,596374.7635,596374.7635
+63rak,Type3dot1,"North America,CR,San Jose",cr1,04-07-2025,unassigned,,,,,,,0.0012,1.0000,0.0000,596374.7635,596374.7635
+63rak,Type3dot1,"North America,CR,San Jose",cr1,05-07-2025,unassigned,,,,,,,0.0002,1.0000,0.0000,596374.7635,596374.7635
+63rak,Type3dot1,"North America,CR,San Jose",cr1,06-07-2025,unassigned,,,,,,,0.0002,1.0000,0.0000,596374.7635,596374.7635
+63rak,Type3dot1,"North America,CR,San Jose",cr1,07-07-2025,unassigned,,,,,,,0.0006,1.0000,0.0000,596374.7635,596374.7635
+63rak,Type3dot1,"North America,CR,San Jose",cr1,08-07-2025,unassigned,,,,,,,0.0006,1.0000,0.0000,596374.7635,596374.7635
+63rak,Type3dot1,"North America,CR,San Jose",cr1,09-07-2025,unassigned,,,,,,,0.0050,1.0000,0.0000,596374.7635,596374.7635
+63rak,Type3dot1,"North America,CR,San Jose",cr1,10-07-2025,unassigned,,,,,,,0.0072,1.0000,0.0000,596374.7635,596374.7635
+63rak,Type3dot1,"North America,CR,San Jose",cr1,11-07-2025,unassigned,,,,,,,0.0019,1.0000,0.0000,596374.7635,596374.7635
+63rak,Type3dot1,"North America,CR,San Jose",cr1,12-07-2025,unassigned,,,,,,,0.0012,1.0000,0.0000,596374.7635,596374.7635
+63rak,Type3dot1,"North America,CR,San Jose",cr1,13-07-2025,unassigned,,,,,,,0.0003,1.0000,0.0000,596374.7635,596374.7635
+4ilsj,Type3dot1,"Asia,IL,Tel Aviv",tv1,14-06-2025,unassigned,,,,,,,0.0318,1.0000,0.0000,570180.9942,570180.9942
+4ilsj,Type3dot1,"Asia,IL,Tel Aviv",tv1,15-06-2025,unassigned,,,,,,,0.0260,1.0000,0.0000,570180.9942,570180.9942
+4ilsj,Type3dot1,"Asia,IL,Tel Aviv",tv1,16-06-2025,unassigned,,,,,,,0.0254,1.0000,0.0000,570180.9942,570180.9942
+4ilsj,Type3dot1,"Asia,IL,Tel Aviv",tv1,17-06-2025,unassigned,,,,,,,0.0468,1.0000,0.0000,570180.9942,570180.9942
+4ilsj,Type3dot1,"Asia,IL,Tel Aviv",tv1,18-06-2025,unassigned,,,,,,,0.0857,1.0000,0.0000,570180.9942,570180.9942
+4ilsj,Type3dot1,"Asia,IL,Tel Aviv",tv1,19-06-2025,unassigned,,,,,,,0.1747,0.8804,0.1195,570180.9942,502004.1471
+4ilsj,Type3dot1,"Asia,IL,Tel Aviv",tv1,20-06-2025,unassigned,,,,,,,0.1637,0.8979,0.1020,570180.9942,512003.2839
+4ilsj,Type3dot1,"Asia,IL,Tel Aviv",tv1,21-06-2025,unassigned,,,,,,,0.1668,0.8930,0.1069,570180.9942,509173.8066
+4ilsj,Type3dot1,"Asia,IL,Tel Aviv",tv1,22-06-2025,unassigned,,,,,,,0.0920,1.0000,0.0000,570180.9942,570180.9942
+4ilsj,Type3dot1,"Asia,IL,Tel Aviv",tv1,23-06-2025,unassigned,,,,,,,0.0014,1.0000,0.0000,570180.9942,570180.9942
+4ilsj,Type3dot1,"Asia,IL,Tel Aviv",tv1,24-06-2025,unassigned,,,,,,,0.0053,1.0000,0.0000,570180.9942,570180.9942
+4ilsj,Type3dot1,"Asia,IL,Tel Aviv",tv1,25-06-2025,unassigned,,,,,,,0.0305,1.0000,0.0000,570180.9942,570180.9942
+4ilsj,Type3dot1,"Asia,IL,Tel Aviv",tv1,26-06-2025,unassigned,,,,,,,0.1741,0.8812,0.1187,570180.9942,502492.5637
+4ilsj,Type3dot1,"Asia,IL,Tel Aviv",tv1,27-06-2025,unassigned,,,,,,,0.1628,0.8994,0.1005,570180.9942,512826.9947
+4ilsj,Type3dot1,"Asia,IL,Tel Aviv",tv1,28-06-2025,unassigned,,,,,,,0.0063,1.0000,0.0000,570180.9942,570180.9942
+4ilsj,Type3dot1,"Asia,IL,Tel Aviv",tv1,29-06-2025,unassigned,,,,,,,0.0003,1.0000,0.0000,570180.9942,570180.9942
+4ilsj,Type3dot1,"Asia,IL,Tel Aviv",tv1,30-06-2025,unassigned,,,,,,,0.0006,1.0000,0.0000,570180.9942,570180.9942
+4ilsj,Type3dot1,"Asia,IL,Tel Aviv",tv1,01-07-2025,unassigned,,,,,,,0.0014,1.0000,0.0000,570180.9942,570180.9942
+4ilsj,Type3dot1,"Asia,IL,Tel Aviv",tv1,02-07-2025,unassigned,,,,,,,0.0016,1.0000,0.0000,570180.9942,570180.9942
+4ilsj,Type3dot1,"Asia,IL,Tel Aviv",tv1,03-07-2025,unassigned,,,,,,,0.0010,1.0000,0.0000,570180.9942,570180.9942
+4ilsj,Type3dot1,"Asia,IL,Tel Aviv",tv1,04-07-2025,unassigned,,,,,,,0.0012,1.0000,0.0000,570180.9942,570180.9942
+4ilsj,Type3dot1,"Asia,IL,Tel Aviv",tv1,05-07-2025,unassigned,,,,,,,0.0002,1.0000,0.0000,570180.9942,570180.9942
+4ilsj,Type3dot1,"Asia,IL,Tel Aviv",tv1,06-07-2025,unassigned,,,,,,,0.0002,1.0000,0.0000,570180.9942,570180.9942
+4ilsj,Type3dot1,"Asia,IL,Tel Aviv",tv1,07-07-2025,unassigned,,,,,,,0.0006,1.0000,0.0000,570180.9942,570180.9942
+4ilsj,Type3dot1,"Asia,IL,Tel Aviv",tv1,08-07-2025,unassigned,,,,,,,0.0006,1.0000,0.0000,570180.9942,570180.9942
+4ilsj,Type3dot1,"Asia,IL,Tel Aviv",tv1,09-07-2025,unassigned,,,,,,,0.0050,1.0000,0.0000,570180.9942,570180.9942
+4ilsj,Type3dot1,"Asia,IL,Tel Aviv",tv1,10-07-2025,unassigned,,,,,,,0.0072,1.0000,0.0000,570180.9942,570180.9942
+4ilsj,Type3dot1,"Asia,IL,Tel Aviv",tv1,11-07-2025,unassigned,,,,,,,0.0019,1.0000,0.0000,570180.9942,570180.9942
+4ilsj,Type3dot1,"Asia,IL,Tel Aviv",tv1,12-07-2025,unassigned,,,,,,,0.0012,1.0000,0.0000,570180.9942,570180.9942
+4ilsj,Type3dot1,"Asia,IL,Tel Aviv",tv1,13-07-2025,unassigned,,,,,,,0.0003,1.0000,0.0000,570180.9942,570180.9942
+rfkza,Type3dot1,"Asia,IL,Tel Aviv",tv1,14-06-2025,assigned,uzr34,0.0027,5388,0,0.0000,0.0000,,1.0000,0.0000,570180.9942,570180.9942
+rfkza,Type3dot1,"Asia,IL,Tel Aviv",tv1,15-06-2025,assigned,uzr34,0.0022,5379,0,0.0000,0.0000,,1.0000,0.0000,570180.9942,570180.9942
+rfkza,Type3dot1,"Asia,IL,Tel Aviv",tv1,16-06-2025,assigned,uzr34,0.0020,5203,1,0.0001,0.0000,,1.0000,0.0000,570180.9942,570180.9942
+rfkza,Type3dot1,"Asia,IL,Tel Aviv",tv1,17-06-2025,assigned,uzr34,0.0012,5461,0,0.0000,0.0000,,1.0000,0.0000,570180.9942,570180.9942
+rfkza,Type3dot1,"Asia,IL,Tel Aviv",tv1,18-06-2025,assigned,uzr34,0.0007,5382,0,0.0000,0.0000,,1.0000,0.0000,570180.9942,570180.9942
+rfkza,Type3dot1,"Asia,IL,Tel Aviv",tv1,19-06-2025,assigned,uzr34,0.0012,5340,3,0.0005,0.0000,,1.0000,0.0000,570180.9942,570180.9942
+rfkza,Type3dot1,"Asia,IL,Tel Aviv",tv1,20-06-2025,assigned,uzr34,0.0009,5590,0,0.0000,0.0000,,1.0000,0.0000,570180.9942,570180.9942
+rfkza,Type3dot1,"Asia,IL,Tel Aviv",tv1,21-06-2025,assigned,uzr34,0.0006,4948,0,0.0000,0.0000,,1.0000,0.0000,570180.9942,570180.9942
+rfkza,Type3dot1,"Asia,IL,Tel Aviv",tv1,22-06-2025,assigned,uzr34,0.0008,4793,0,0.0000,0.0000,,1.0000,0.0000,570180.9942,570180.9942
+rfkza,Type3dot1,"Asia,IL,Tel Aviv",tv1,23-06-2025,assigned,uzr34,0.0036,5288,20,0.0037,0.0000,,1.0000,0.0000,570180.9942,570180.9942
+rfkza,Type3dot1,"Asia,IL,Tel Aviv",tv1,24-06-2025,assigned,uzr34,0.0009,5609,5,0.0008,0.0000,,1.0000,0.0000,570180.9942,570180.9942
+rfkza,Type3dot1,"Asia,IL,Tel Aviv",tv1,25-06-2025,assigned,uzr34,0.0019,5637,1,0.0001,0.0000,,1.0000,0.0000,570180.9942,570180.9942
+rfkza,Type3dot1,"Asia,IL,Tel Aviv",tv1,26-06-2025,assigned,uzr34,0.0015,5381,5,0.0009,0.0000,,1.0000,0.0000,570180.9942,570180.9942
+rfkza,Type3dot1,"Asia,IL,Tel Aviv",tv1,27-06-2025,assigned,uzr34,0.0019,5019,9,0.0017,0.0000,,1.0000,0.0000,570180.9942,570180.9942
+rfkza,Type3dot1,"Asia,IL,Tel Aviv",tv1,28-06-2025,assigned,uzr34,0.0017,4620,15,0.0032,0.0015,,1.0000,0.0000,570180.9942,570180.9942
+rfkza,Type3dot1,"Asia,IL,Tel Aviv",tv1,29-06-2025,assigned,uzr34,0.0013,5231,0,0.0000,0.0000,,1.0000,0.0000,570180.9942,570180.9942
+rfkza,Type3dot1,"Asia,IL,Tel Aviv",tv1,30-06-2025,assigned,uzr34,0.0020,5454,0,0.0000,0.0000,,1.0000,0.0000,570180.9942,570180.9942
+rfkza,Type3dot1,"Asia,IL,Tel Aviv",tv1,01-07-2025,assigned,uzr34,0.0014,5416,12,0.0022,0.0007,,1.0000,0.0000,570180.9942,570180.9942
+rfkza,Type3dot1,"Asia,IL,Tel Aviv",tv1,02-07-2025,assigned,uzr34,0.0010,5555,3,0.0005,0.0000,,1.0000,0.0000,570180.9942,570180.9942
+rfkza,Type3dot1,"Asia,IL,Tel Aviv",tv1,03-07-2025,assigned,uzr34,0.0014,5452,3,0.0005,0.0000,,1.0000,0.0000,570180.9942,570180.9942
+rfkza,Type3dot1,"Asia,IL,Tel Aviv",tv1,04-07-2025,assigned,uzr34,0.0009,5472,0,0.0000,0.0000,,1.0000,0.0000,570180.9942,570180.9942
+rfkza,Type3dot1,"Asia,IL,Tel Aviv",tv1,05-07-2025,assigned,uzr34,0.0007,5556,0,0.0000,0.0000,,1.0000,0.0000,570180.9942,570180.9942
+rfkza,Type3dot1,"Asia,IL,Tel Aviv",tv1,06-07-2025,assigned,uzr34,0.0007,5509,0,0.0000,0.0000,,1.0000,0.0000,570180.9942,570180.9942
+rfkza,Type3dot1,"Asia,IL,Tel Aviv",tv1,07-07-2025,assigned,uzr34,0.0016,5452,2,0.0003,0.0000,,1.0000,0.0000,570180.9942,570180.9942
+rfkza,Type3dot1,"Asia,IL,Tel Aviv",tv1,08-07-2025,assigned,uzr34,0.0012,5490,0,0.0000,0.0000,,1.0000,0.0000,570180.9942,570180.9942
+rfkza,Type3dot1,"Asia,IL,Tel Aviv",tv1,09-07-2025,assigned,uzr34,0.0007,5539,0,0.0000,0.0000,,1.0000,0.0000,570180.9942,570180.9942
+rfkza,Type3dot1,"Asia,IL,Tel Aviv",tv1,10-07-2025,assigned,uzr34,0.0012,5460,20,0.0036,0.0023,,1.0000,0.0000,570180.9942,570180.9942
+rfkza,Type3dot1,"Asia,IL,Tel Aviv",tv1,11-07-2025,assigned,uzr34,0.0007,5470,2,0.0003,0.0000,,1.0000,0.0000,570180.9942,570180.9942
+rfkza,Type3dot1,"Asia,IL,Tel Aviv",tv1,12-07-2025,assigned,uzr34,0.0003,5549,1,0.0001,0.0000,,1.0000,0.0000,570180.9942,570180.9942
+rfkza,Type3dot1,"Asia,IL,Tel Aviv",tv1,13-07-2025,assigned,uzr34,0.0005,5337,1,0.0001,0.0000,,1.0000,0.0000,570180.9942,570180.9942
+vwsvq,Type3dot1,"Asia,IL,Tel Aviv",tv1,14-06-2025,assigned,6pbhf,0.0012,11404,0,0.0000,0.0000,,1.0000,0.0000,570180.9942,570180.9942
+vwsvq,Type3dot1,"Asia,IL,Tel Aviv",tv1,15-06-2025,assigned,6pbhf,0.0032,10947,2,0.0001,0.0000,,1.0000,0.0000,570180.9942,570180.9942
+vwsvq,Type3dot1,"Asia,IL,Tel Aviv",tv1,16-06-2025,assigned,6pbhf,0.0090,9912,0,0.0000,0.0000,,1.0000,0.0000,570180.9942,570180.9942
+vwsvq,Type3dot1,"Asia,IL,Tel Aviv",tv1,17-06-2025,assigned,6pbhf,0.0040,9673,2,0.0002,0.0000,,1.0000,0.0000,570180.9942,570180.9942
+vwsvq,Type3dot1,"Asia,IL,Tel Aviv",tv1,18-06-2025,assigned,6pbhf,0.0064,8868,4,0.0004,0.0000,,1.0000,0.0000,570180.9942,570180.9942
+vwsvq,Type3dot1,"Asia,IL,Tel Aviv",tv1,19-06-2025,assigned,6pbhf,0.0204,8387,40,0.0047,0.0000,,1.0000,0.0000,570180.9942,570180.9942
+vwsvq,Type3dot1,"Asia,IL,Tel Aviv",tv1,20-06-2025,assigned,6pbhf,0.0070,7557,1,0.0001,0.0000,,1.0000,0.0000,570180.9942,570180.9942
+vwsvq,Type3dot1,"Asia,IL,Tel Aviv",tv1,21-06-2025,assigned,6pbhf,0.0045,7318,7,0.0009,0.0000,,1.0000,0.0000,570180.9942,570180.9942
+vwsvq,Type3dot1,"Asia,IL,Tel Aviv",tv1,22-06-2025,assigned,6pbhf,0.0030,7042,14,0.0019,0.0000,,1.0000,0.0000,570180.9942,570180.9942
+vwsvq,Type3dot1,"Asia,IL,Tel Aviv",tv1,23-06-2025,assigned,6pbhf,0.0024,6463,16,0.0024,0.0000,,1.0000,0.0000,570180.9942,570180.9942
+vwsvq,Type3dot1,"Asia,IL,Tel Aviv",tv1,24-06-2025,assigned,6pbhf,0.0387,6357,4,0.0006,0.0000,,1.0000,0.0000,570180.9942,570180.9942
+vwsvq,Type3dot1,"Asia,IL,Tel Aviv",tv1,25-06-2025,assigned,6pbhf,0.0227,6042,1,0.0001,0.0000,,1.0000,0.0000,570180.9942,570180.9942
+vwsvq,Type3dot1,"Asia,IL,Tel Aviv",tv1,26-06-2025,assigned,6pbhf,0.0169,5775,5,0.0008,0.0000,,1.0000,0.0000,570180.9942,570180.9942
+vwsvq,Type3dot1,"Asia,IL,Tel Aviv",tv1,27-06-2025,assigned,6pbhf,0.0368,5774,2,0.0003,0.0000,,1.0000,0.0000,570180.9942,570180.9942
+vwsvq,Type3dot1,"Asia,IL,Tel Aviv",tv1,28-06-2025,assigned,6pbhf,0.0017,7368,0,0.0000,0.0000,,1.0000,0.0000,570180.9942,570180.9942
+vwsvq,Type3dot1,"Asia,IL,Tel Aviv",tv1,29-06-2025,assigned,6pbhf,0.0010,13638,1,0.0000,0.0000,,1.0000,0.0000,570180.9942,570180.9942
+vwsvq,Type3dot1,"Asia,IL,Tel Aviv",tv1,30-06-2025,assigned,6pbhf,0.0010,12841,1,0.0000,0.0000,,1.0000,0.0000,570180.9942,570180.9942
+vwsvq,Type3dot1,"Asia,IL,Tel Aviv",tv1,01-07-2025,assigned,6pbhf,0.0005,11717,3,0.0002,0.0000,,1.0000,0.0000,570180.9942,570180.9942
+vwsvq,Type3dot1,"Asia,IL,Tel Aviv",tv1,02-07-2025,assigned,6pbhf,0.0020,11211,3,0.0002,0.0000,,1.0000,0.0000,570180.9942,570180.9942
+vwsvq,Type3dot1,"Asia,IL,Tel Aviv",tv1,03-07-2025,assigned,6pbhf,0.0008,10468,1,0.0000,0.0000,,1.0000,0.0000,570180.9942,570180.9942
+vwsvq,Type3dot1,"Asia,IL,Tel Aviv",tv1,04-07-2025,assigned,6pbhf,0.0030,9787,38,0.0038,0.0008,,1.0000,0.0000,570180.9942,570180.9942
+vwsvq,Type3dot1,"Asia,IL,Tel Aviv",tv1,05-07-2025,assigned,6pbhf,0.0006,9041,1,0.0001,0.0000,,1.0000,0.0000,570180.9942,570180.9942
+vwsvq,Type3dot1,"Asia,IL,Tel Aviv",tv1,06-07-2025,assigned,6pbhf,0.0008,8334,7,0.0008,0.0000,,1.0000,0.0000,570180.9942,570180.9942
+vwsvq,Type3dot1,"Asia,IL,Tel Aviv",tv1,07-07-2025,assigned,6pbhf,0.0067,7806,2,0.0002,0.0000,,1.0000,0.0000,570180.9942,570180.9942
+vwsvq,Type3dot1,"Asia,IL,Tel Aviv",tv1,08-07-2025,assigned,6pbhf,0.0040,7639,31,0.0040,0.0000,,1.0000,0.0000,570180.9942,570180.9942
+vwsvq,Type3dot1,"Asia,IL,Tel Aviv",tv1,09-07-2025,assigned,6pbhf,0.0091,7141,66,0.0091,0.0000,,1.0000,0.0000,570180.9942,570180.9942
+vwsvq,Type3dot1,"Asia,IL,Tel Aviv",tv1,10-07-2025,assigned,6pbhf,0.0051,6700,25,0.0037,0.0000,,1.0000,0.0000,570180.9942,570180.9942
+vwsvq,Type3dot1,"Asia,IL,Tel Aviv",tv1,11-07-2025,assigned,6pbhf,0.0119,6523,6,0.0009,0.0000,,1.0000,0.0000,570180.9942,570180.9942
+vwsvq,Type3dot1,"Asia,IL,Tel Aviv",tv1,12-07-2025,assigned,6pbhf,0.0071,6074,16,0.0026,0.0000,,1.0000,0.0000,570180.9942,570180.9942
+vwsvq,Type3dot1,"Asia,IL,Tel Aviv",tv1,13-07-2025,assigned,6pbhf,0.0113,6112,9,0.0014,0.0000,,1.0000,0.0000,570180.9942,570180.9942
+fvy7i,Type3dot1,"North America,CR,San Jose",cr1,14-06-2025,assigned,qxesv,0.0001,15531,97,0.0062,0.0060,,1.0000,0.0000,596374.7635,596374.7635
+fvy7i,Type3dot1,"North America,CR,San Jose",cr1,15-06-2025,assigned,qxesv,0.0001,15495,83,0.0053,0.0051,,1.0000,0.0000,596374.7635,596374.7635
+fvy7i,Type3dot1,"North America,CR,San Jose",cr1,16-06-2025,assigned,qxesv,0.0008,15517,132,0.0084,0.0075,,1.0000,0.0000,596374.7635,596374.7635
+fvy7i,Type3dot1,"North America,CR,San Jose",cr1,17-06-2025,assigned,qxesv,0.0010,15418,203,0.0129,0.0118,,1.0000,0.0000,596374.7635,596374.7635
+fvy7i,Type3dot1,"North America,CR,San Jose",cr1,18-06-2025,assigned,qxesv,0.0005,14653,809,0.0523,0.0517,,1.0000,0.0000,596374.7635,596374.7635
+fvy7i,Type3dot1,"North America,CR,San Jose",cr1,19-06-2025,assigned,qxesv,0.0002,14455,1058,0.0682,0.0679,,1.0000,0.0000,596374.7635,596374.7635
+fvy7i,Type3dot1,"North America,CR,San Jose",cr1,20-06-2025,assigned,qxesv,0.0002,15126,197,0.0128,0.0125,,1.0000,0.0000,596374.7635,596374.7635
+fvy7i,Type3dot1,"North America,CR,San Jose",cr1,21-06-2025,assigned,qxesv,0.0002,15478,136,0.0087,0.0084,,1.0000,0.0000,596374.7635,596374.7635
+fvy7i,Type3dot1,"North America,CR,San Jose",cr1,22-06-2025,assigned,qxesv,0.0000,15656,78,0.0049,0.0048,,1.0000,0.0000,596374.7635,596374.7635
+fvy7i,Type3dot1,"North America,CR,San Jose",cr1,23-06-2025,assigned,qxesv,0.0007,15689,124,0.0078,0.0070,,1.0000,0.0000,596374.7635,596374.7635
+fvy7i,Type3dot1,"North America,CR,San Jose",cr1,24-06-2025,assigned,qxesv,0.0082,15242,154,0.0100,0.0017,,1.0000,0.0000,596374.7635,596374.7635
+fvy7i,Type3dot1,"North America,CR,San Jose",cr1,25-06-2025,assigned,qxesv,0.0005,14895,588,0.0379,0.0373,,1.0000,0.0000,596374.7635,596374.7635
+fvy7i,Type3dot1,"North America,CR,San Jose",cr1,26-06-2025,assigned,qxesv,0.0061,13959,961,0.0644,0.0582,,1.0000,0.0000,596374.7635,596374.7635
+fvy7i,Type3dot1,"North America,CR,San Jose",cr1,27-06-2025,assigned,qxesv,0.0023,15208,87,0.0056,0.0033,,1.0000,0.0000,596374.7635,596374.7635
+fvy7i,Type3dot1,"North America,CR,San Jose",cr1,28-06-2025,assigned,qxesv,0.0018,15474,31,0.0019,0.0001,,1.0000,0.0000,596374.7635,596374.7635
+fvy7i,Type3dot1,"North America,CR,San Jose",cr1,29-06-2025,assigned,qxesv,0.0001,15405,34,0.0022,0.0020,,1.0000,0.0000,596374.7635,596374.7635
+fvy7i,Type3dot1,"North America,CR,San Jose",cr1,30-06-2025,assigned,qxesv,0.0005,15538,71,0.0045,0.0039,,1.0000,0.0000,596374.7635,596374.7635
+fvy7i,Type3dot1,"North America,CR,San Jose",cr1,01-07-2025,assigned,qxesv,0.0008,15293,112,0.0072,0.0064,,1.0000,0.0000,596374.7635,596374.7635
+fvy7i,Type3dot1,"North America,CR,San Jose",cr1,02-07-2025,assigned,qxesv,0.0003,15349,135,0.0087,0.0083,,1.0000,0.0000,596374.7635,596374.7635
+fvy7i,Type3dot1,"North America,CR,San Jose",cr1,03-07-2025,assigned,qxesv,0.0002,15637,84,0.0053,0.0050,,1.0000,0.0000,596374.7635,596374.7635
+fvy7i,Type3dot1,"North America,CR,San Jose",cr1,04-07-2025,assigned,qxesv,0.0001,15542,90,0.0057,0.0056,,1.0000,0.0000,596374.7635,596374.7635
+fvy7i,Type3dot1,"North America,CR,San Jose",cr1,05-07-2025,assigned,qxesv,0.0002,15346,20,0.0013,0.0010,,1.0000,0.0000,596374.7635,596374.7635
+fvy7i,Type3dot1,"North America,CR,San Jose",cr1,06-07-2025,assigned,qxesv,0.0001,15587,25,0.0016,0.0014,,1.0000,0.0000,596374.7635,596374.7635
+fvy7i,Type3dot1,"North America,CR,San Jose",cr1,07-07-2025,assigned,qxesv,0.0009,15500,72,0.0046,0.0036,,1.0000,0.0000,596374.7635,596374.7635
+fvy7i,Type3dot1,"North America,CR,San Jose",cr1,08-07-2025,assigned,qxesv,0.0012,15514,84,0.0053,0.0041,,1.0000,0.0000,596374.7635,596374.7635
+fvy7i,Type3dot1,"North America,CR,San Jose",cr1,09-07-2025,assigned,qxesv,0.0004,14996,477,0.0308,0.0303,,1.0000,0.0000,596374.7635,596374.7635
+fvy7i,Type3dot1,"North America,CR,San Jose",cr1,10-07-2025,assigned,qxesv,0.0012,14715,637,0.0414,0.0402,,1.0000,0.0000,596374.7635,596374.7635
+fvy7i,Type3dot1,"North America,CR,San Jose",cr1,11-07-2025,assigned,qxesv,0.0003,15251,189,0.0122,0.0118,,1.0000,0.0000,596374.7635,596374.7635
+fvy7i,Type3dot1,"North America,CR,San Jose",cr1,12-07-2025,assigned,qxesv,0.0010,15391,130,0.0083,0.0072,,1.0000,0.0000,596374.7635,596374.7635
+fvy7i,Type3dot1,"North America,CR,San Jose",cr1,13-07-2025,assigned,qxesv,0.0009,15598,44,0.0028,0.0019,,1.0000,0.0000,596374.7635,596374.7635

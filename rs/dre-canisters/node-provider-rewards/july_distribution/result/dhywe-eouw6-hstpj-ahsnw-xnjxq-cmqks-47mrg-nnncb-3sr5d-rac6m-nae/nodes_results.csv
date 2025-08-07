@@ -1,0 +1,211 @@
+node_id,node_reward_type,region,dc_id,day,status,subnet_assigned,subnet_assigned_fr,num_blocks_proposed,num_blocks_failed,original_fr,relative_fr,extrapolated_fr,performance_multiplier,rewards_reduction,base_rewards_xdr_permyriad,adjusted_rewards_xdr_permyriad
+mswad,Type3dot1,"Europe,PL,Warszawa",wa2,14-06-2025,assigned,yinp6,0.0001,15643,0,0.0000,0.0000,,1.0000,0.0000,506447.6386,506447.6386
+mswad,Type3dot1,"Europe,PL,Warszawa",wa2,15-06-2025,assigned,yinp6,0.0001,15800,0,0.0000,0.0000,,1.0000,0.0000,506447.6386,506447.6386
+mswad,Type3dot1,"Europe,PL,Warszawa",wa2,16-06-2025,assigned,yinp6,0.0008,15777,115,0.0072,0.0064,,1.0000,0.0000,506447.6386,506447.6386
+mswad,Type3dot1,"Europe,PL,Warszawa",wa2,17-06-2025,assigned,yinp6,0.0001,15794,2,0.0001,0.0000,,1.0000,0.0000,506447.6386,506447.6386
+mswad,Type3dot1,"Europe,PL,Warszawa",wa2,18-06-2025,assigned,yinp6,0.0003,15692,0,0.0000,0.0000,,1.0000,0.0000,506447.6386,506447.6386
+mswad,Type3dot1,"Europe,PL,Warszawa",wa2,19-06-2025,assigned,yinp6,0.0012,15751,3,0.0001,0.0000,,1.0000,0.0000,506447.6386,506447.6386
+mswad,Type3dot1,"Europe,PL,Warszawa",wa2,20-06-2025,assigned,yinp6,0.0001,15800,5,0.0003,0.0001,,1.0000,0.0000,506447.6386,506447.6386
+mswad,Type3dot1,"Europe,PL,Warszawa",wa2,21-06-2025,assigned,yinp6,0.0001,15861,0,0.0000,0.0000,,1.0000,0.0000,506447.6386,506447.6386
+mswad,Type3dot1,"Europe,PL,Warszawa",wa2,22-06-2025,assigned,yinp6,0.0009,15718,173,0.0108,0.0099,,1.0000,0.0000,506447.6386,506447.6386
+mswad,Type3dot1,"Europe,PL,Warszawa",wa2,23-06-2025,assigned,yinp6,0.0008,15890,34,0.0021,0.0012,,1.0000,0.0000,506447.6386,506447.6386
+mswad,Type3dot1,"Europe,PL,Warszawa",wa2,24-06-2025,assigned,yinp6,0.0011,15580,0,0.0000,0.0000,,1.0000,0.0000,506447.6386,506447.6386
+mswad,Type3dot1,"Europe,PL,Warszawa",wa2,25-06-2025,assigned,yinp6,0.0003,15739,0,0.0000,0.0000,,1.0000,0.0000,506447.6386,506447.6386
+mswad,Type3dot1,"Europe,PL,Warszawa",wa2,26-06-2025,assigned,yinp6,0.0017,14049,2,0.0001,0.0000,,1.0000,0.0000,506447.6386,506447.6386
+mswad,Type3dot1,"Europe,PL,Warszawa",wa2,27-06-2025,assigned,yinp6,0.0016,15066,0,0.0000,0.0000,,1.0000,0.0000,506447.6386,506447.6386
+mswad,Type3dot1,"Europe,PL,Warszawa",wa2,28-06-2025,assigned,yinp6,0.0005,15625,117,0.0074,0.0069,,1.0000,0.0000,506447.6386,506447.6386
+mswad,Type3dot1,"Europe,PL,Warszawa",wa2,29-06-2025,assigned,yinp6,0.0002,15809,0,0.0000,0.0000,,1.0000,0.0000,506447.6386,506447.6386
+mswad,Type3dot1,"Europe,PL,Warszawa",wa2,30-06-2025,assigned,yinp6,0.0010,15505,0,0.0000,0.0000,,1.0000,0.0000,506447.6386,506447.6386
+mswad,Type3dot1,"Europe,PL,Warszawa",wa2,01-07-2025,assigned,yinp6,0.0004,15618,0,0.0000,0.0000,,1.0000,0.0000,506447.6386,506447.6386
+mswad,Type3dot1,"Europe,PL,Warszawa",wa2,02-07-2025,assigned,yinp6,0.0003,15516,0,0.0000,0.0000,,1.0000,0.0000,506447.6386,506447.6386
+mswad,Type3dot1,"Europe,PL,Warszawa",wa2,03-07-2025,assigned,yinp6,0.0012,15526,95,0.0060,0.0048,,1.0000,0.0000,506447.6386,506447.6386
+mswad,Type3dot1,"Europe,PL,Warszawa",wa2,04-07-2025,assigned,yinp6,0.0001,15613,0,0.0000,0.0000,,1.0000,0.0000,506447.6386,506447.6386
+mswad,Type3dot1,"Europe,PL,Warszawa",wa2,05-07-2025,assigned,yinp6,0.0003,15683,0,0.0000,0.0000,,1.0000,0.0000,506447.6386,506447.6386
+mswad,Type3dot1,"Europe,PL,Warszawa",wa2,06-07-2025,assigned,yinp6,0.0001,15581,0,0.0000,0.0000,,1.0000,0.0000,506447.6386,506447.6386
+mswad,Type3dot1,"Europe,PL,Warszawa",wa2,07-07-2025,assigned,yinp6,0.0003,15162,105,0.0068,0.0064,,1.0000,0.0000,506447.6386,506447.6386
+mswad,Type3dot1,"Europe,PL,Warszawa",wa2,08-07-2025,assigned,yinp6,0.0005,15932,1,0.0000,0.0000,,1.0000,0.0000,506447.6386,506447.6386
+mswad,Type3dot1,"Europe,PL,Warszawa",wa2,09-07-2025,assigned,yinp6,0.0006,15886,0,0.0000,0.0000,,1.0000,0.0000,506447.6386,506447.6386
+mswad,Type3dot1,"Europe,PL,Warszawa",wa2,10-07-2025,assigned,yinp6,0.0012,15648,0,0.0000,0.0000,,1.0000,0.0000,506447.6386,506447.6386
+mswad,Type3dot1,"Europe,PL,Warszawa",wa2,11-07-2025,assigned,yinp6,0.0005,15566,0,0.0000,0.0000,,1.0000,0.0000,506447.6386,506447.6386
+mswad,Type3dot1,"Europe,PL,Warszawa",wa2,12-07-2025,assigned,yinp6,0.0003,15484,0,0.0000,0.0000,,1.0000,0.0000,506447.6386,506447.6386
+mswad,Type3dot1,"Europe,PL,Warszawa",wa2,13-07-2025,assigned,yinp6,0.0004,15550,102,0.0065,0.0060,,1.0000,0.0000,506447.6386,506447.6386
+kwict,Type3dot1,"Europe,CZ,South Moravian Region",bn1,14-06-2025,unassigned,,,,,,,0.0037,1.0000,0.0000,506447.6386,506447.6386
+kwict,Type3dot1,"Europe,CZ,South Moravian Region",bn1,15-06-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,506447.6386,506447.6386
+kwict,Type3dot1,"Europe,CZ,South Moravian Region",bn1,16-06-2025,unassigned,,,,,,,0.0012,1.0000,0.0000,506447.6386,506447.6386
+kwict,Type3dot1,"Europe,CZ,South Moravian Region",bn1,17-06-2025,unassigned,,,,,,,0.0007,1.0000,0.0000,506447.6386,506447.6386
+kwict,Type3dot1,"Europe,CZ,South Moravian Region",bn1,18-06-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,506447.6386,506447.6386
+kwict,Type3dot1,"Europe,CZ,South Moravian Region",bn1,19-06-2025,unassigned,,,,,,,0.0002,1.0000,0.0000,506447.6386,506447.6386
+kwict,Type3dot1,"Europe,CZ,South Moravian Region",bn1,20-06-2025,unassigned,,,,,,,0.0053,1.0000,0.0000,506447.6386,506447.6386
+kwict,Type3dot1,"Europe,CZ,South Moravian Region",bn1,21-06-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,506447.6386,506447.6386
+kwict,Type3dot1,"Europe,CZ,South Moravian Region",bn1,22-06-2025,unassigned,,,,,,,0.0019,1.0000,0.0000,506447.6386,506447.6386
+kwict,Type3dot1,"Europe,CZ,South Moravian Region",bn1,23-06-2025,unassigned,,,,,,,0.0019,1.0000,0.0000,506447.6386,506447.6386
+kwict,Type3dot1,"Europe,CZ,South Moravian Region",bn1,24-06-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,506447.6386,506447.6386
+kwict,Type3dot1,"Europe,CZ,South Moravian Region",bn1,25-06-2025,unassigned,,,,,,,0.0007,1.0000,0.0000,506447.6386,506447.6386
+kwict,Type3dot1,"Europe,CZ,South Moravian Region",bn1,26-06-2025,unassigned,,,,,,,0.0029,1.0000,0.0000,506447.6386,506447.6386
+kwict,Type3dot1,"Europe,CZ,South Moravian Region",bn1,27-06-2025,unassigned,,,,,,,0.0067,1.0000,0.0000,506447.6386,506447.6386
+kwict,Type3dot1,"Europe,CZ,South Moravian Region",bn1,28-06-2025,unassigned,,,,,,,0.0053,1.0000,0.0000,506447.6386,506447.6386
+kwict,Type3dot1,"Europe,CZ,South Moravian Region",bn1,29-06-2025,unassigned,,,,,,,0.0019,1.0000,0.0000,506447.6386,506447.6386
+kwict,Type3dot1,"Europe,CZ,South Moravian Region",bn1,30-06-2025,unassigned,,,,,,,0.0010,1.0000,0.0000,506447.6386,506447.6386
+kwict,Type3dot1,"Europe,CZ,South Moravian Region",bn1,01-07-2025,unassigned,,,,,,,0.0010,1.0000,0.0000,506447.6386,506447.6386
+kwict,Type3dot1,"Europe,CZ,South Moravian Region",bn1,02-07-2025,unassigned,,,,,,,0.0014,1.0000,0.0000,506447.6386,506447.6386
+kwict,Type3dot1,"Europe,CZ,South Moravian Region",bn1,03-07-2025,unassigned,,,,,,,0.0128,1.0000,0.0000,506447.6386,506447.6386
+kwict,Type3dot1,"Europe,CZ,South Moravian Region",bn1,04-07-2025,unassigned,,,,,,,0.0122,1.0000,0.0000,506447.6386,506447.6386
+kwict,Type3dot1,"Europe,CZ,South Moravian Region",bn1,05-07-2025,unassigned,,,,,,,0.0060,1.0000,0.0000,506447.6386,506447.6386
+kwict,Type3dot1,"Europe,CZ,South Moravian Region",bn1,06-07-2025,unassigned,,,,,,,0.0062,1.0000,0.0000,506447.6386,506447.6386
+kwict,Type3dot1,"Europe,CZ,South Moravian Region",bn1,07-07-2025,unassigned,,,,,,,0.0066,1.0000,0.0000,506447.6386,506447.6386
+kwict,Type3dot1,"Europe,CZ,South Moravian Region",bn1,08-07-2025,unassigned,,,,,,,0.0020,1.0000,0.0000,506447.6386,506447.6386
+kwict,Type3dot1,"Europe,CZ,South Moravian Region",bn1,09-07-2025,unassigned,,,,,,,0.0013,1.0000,0.0000,506447.6386,506447.6386
+kwict,Type3dot1,"Europe,CZ,South Moravian Region",bn1,10-07-2025,unassigned,,,,,,,0.0058,1.0000,0.0000,506447.6386,506447.6386
+kwict,Type3dot1,"Europe,CZ,South Moravian Region",bn1,11-07-2025,unassigned,,,,,,,0.0064,1.0000,0.0000,506447.6386,506447.6386
+kwict,Type3dot1,"Europe,CZ,South Moravian Region",bn1,12-07-2025,unassigned,,,,,,,0.0045,1.0000,0.0000,506447.6386,506447.6386
+kwict,Type3dot1,"Europe,CZ,South Moravian Region",bn1,13-07-2025,unassigned,,,,,,,0.0069,1.0000,0.0000,506447.6386,506447.6386
+67m4d,Type3dot1,"Europe,EE,Tallinn",ta1,14-06-2025,assigned,tdb26,0.0028,3886,0,0.0000,0.0000,,1.0000,0.0000,506447.6386,506447.6386
+67m4d,Type3dot1,"Europe,EE,Tallinn",ta1,15-06-2025,assigned,tdb26,0.0018,3777,2,0.0005,0.0000,,1.0000,0.0000,506447.6386,506447.6386
+67m4d,Type3dot1,"Europe,EE,Tallinn",ta1,16-06-2025,assigned,tdb26,0.0021,3797,2,0.0005,0.0000,,1.0000,0.0000,506447.6386,506447.6386
+67m4d,Type3dot1,"Europe,EE,Tallinn",ta1,17-06-2025,assigned,tdb26,0.0020,3793,0,0.0000,0.0000,,1.0000,0.0000,506447.6386,506447.6386
+67m4d,Type3dot1,"Europe,EE,Tallinn",ta1,18-06-2025,assigned,tdb26,0.0026,3771,4,0.0010,0.0000,,1.0000,0.0000,506447.6386,506447.6386
+67m4d,Type3dot1,"Europe,EE,Tallinn",ta1,19-06-2025,assigned,tdb26,0.0035,3850,6,0.0015,0.0000,,1.0000,0.0000,506447.6386,506447.6386
+67m4d,Type3dot1,"Europe,EE,Tallinn",ta1,20-06-2025,assigned,tdb26,0.0017,3969,7,0.0017,0.0000,,1.0000,0.0000,506447.6386,506447.6386
+67m4d,Type3dot1,"Europe,EE,Tallinn",ta1,21-06-2025,assigned,tdb26,0.0012,3940,1,0.0002,0.0000,,1.0000,0.0000,506447.6386,506447.6386
+67m4d,Type3dot1,"Europe,EE,Tallinn",ta1,22-06-2025,assigned,tdb26,0.0025,3833,0,0.0000,0.0000,,1.0000,0.0000,506447.6386,506447.6386
+67m4d,Type3dot1,"Europe,EE,Tallinn",ta1,23-06-2025,assigned,tdb26,0.0028,3881,1,0.0002,0.0000,,1.0000,0.0000,506447.6386,506447.6386
+67m4d,Type3dot1,"Europe,EE,Tallinn",ta1,24-06-2025,assigned,tdb26,0.0031,3859,0,0.0000,0.0000,,1.0000,0.0000,506447.6386,506447.6386
+67m4d,Type3dot1,"Europe,EE,Tallinn",ta1,25-06-2025,assigned,tdb26,0.0031,3936,0,0.0000,0.0000,,1.0000,0.0000,506447.6386,506447.6386
+67m4d,Type3dot1,"Europe,EE,Tallinn",ta1,26-06-2025,assigned,tdb26,0.0032,3584,0,0.0000,0.0000,,1.0000,0.0000,506447.6386,506447.6386
+67m4d,Type3dot1,"Europe,EE,Tallinn",ta1,27-06-2025,assigned,tdb26,0.0034,3721,0,0.0000,0.0000,,1.0000,0.0000,506447.6386,506447.6386
+67m4d,Type3dot1,"Europe,EE,Tallinn",ta1,28-06-2025,assigned,tdb26,0.0016,3517,0,0.0000,0.0000,,1.0000,0.0000,506447.6386,506447.6386
+67m4d,Type3dot1,"Europe,EE,Tallinn",ta1,29-06-2025,assigned,tdb26,0.0018,3765,0,0.0000,0.0000,,1.0000,0.0000,506447.6386,506447.6386
+67m4d,Type3dot1,"Europe,EE,Tallinn",ta1,30-06-2025,assigned,tdb26,0.0048,3787,5,0.0013,0.0000,,1.0000,0.0000,506447.6386,506447.6386
+67m4d,Type3dot1,"Europe,EE,Tallinn",ta1,01-07-2025,assigned,tdb26,0.0017,3976,0,0.0000,0.0000,,1.0000,0.0000,506447.6386,506447.6386
+67m4d,Type3dot1,"Europe,EE,Tallinn",ta1,02-07-2025,assigned,tdb26,0.0017,3954,0,0.0000,0.0000,,1.0000,0.0000,506447.6386,506447.6386
+67m4d,Type3dot1,"Europe,EE,Tallinn",ta1,03-07-2025,assigned,tdb26,0.0017,3902,2,0.0005,0.0000,,1.0000,0.0000,506447.6386,506447.6386
+67m4d,Type3dot1,"Europe,EE,Tallinn",ta1,04-07-2025,assigned,tdb26,0.0012,4106,2,0.0004,0.0000,,1.0000,0.0000,506447.6386,506447.6386
+67m4d,Type3dot1,"Europe,EE,Tallinn",ta1,05-07-2025,assigned,tdb26,0.0017,3952,1,0.0002,0.0000,,1.0000,0.0000,506447.6386,506447.6386
+67m4d,Type3dot1,"Europe,EE,Tallinn",ta1,06-07-2025,assigned,tdb26,0.0046,3976,1,0.0002,0.0000,,1.0000,0.0000,506447.6386,506447.6386
+67m4d,Type3dot1,"Europe,EE,Tallinn",ta1,07-07-2025,assigned,tdb26,0.0061,3973,0,0.0000,0.0000,,1.0000,0.0000,506447.6386,506447.6386
+67m4d,Type3dot1,"Europe,EE,Tallinn",ta1,08-07-2025,assigned,tdb26,0.0030,3876,18,0.0046,0.0015,,1.0000,0.0000,506447.6386,506447.6386
+67m4d,Type3dot1,"Europe,EE,Tallinn",ta1,09-07-2025,assigned,tdb26,0.0044,3873,1,0.0002,0.0000,,1.0000,0.0000,506447.6386,506447.6386
+67m4d,Type3dot1,"Europe,EE,Tallinn",ta1,10-07-2025,assigned,tdb26,0.0033,4093,2,0.0004,0.0000,,1.0000,0.0000,506447.6386,506447.6386
+67m4d,Type3dot1,"Europe,EE,Tallinn",ta1,11-07-2025,assigned,tdb26,0.0035,4040,0,0.0000,0.0000,,1.0000,0.0000,506447.6386,506447.6386
+67m4d,Type3dot1,"Europe,EE,Tallinn",ta1,12-07-2025,assigned,tdb26,0.0017,4016,1,0.0002,0.0000,,1.0000,0.0000,506447.6386,506447.6386
+67m4d,Type3dot1,"Europe,EE,Tallinn",ta1,13-07-2025,assigned,tdb26,0.0017,3873,3,0.0007,0.0000,,1.0000,0.0000,506447.6386,506447.6386
+pbva7,Type3dot1,"Europe,ES,Madrid",ma1,14-06-2025,assigned,x33ed,0.0019,4580,5,0.0010,0.0000,,1.0000,0.0000,506447.6386,506447.6386
+pbva7,Type3dot1,"Europe,ES,Madrid",ma1,15-06-2025,assigned,x33ed,0.0019,4759,9,0.0018,0.0000,,1.0000,0.0000,506447.6386,506447.6386
+pbva7,Type3dot1,"Europe,ES,Madrid",ma1,16-06-2025,assigned,x33ed,0.0006,4545,0,0.0000,0.0000,,1.0000,0.0000,506447.6386,506447.6386
+pbva7,Type3dot1,"Europe,ES,Madrid",ma1,17-06-2025,assigned,x33ed,0.0006,4712,1,0.0002,0.0000,,1.0000,0.0000,506447.6386,506447.6386
+pbva7,Type3dot1,"Europe,ES,Madrid",ma1,18-06-2025,assigned,x33ed,0.0015,4678,0,0.0000,0.0000,,1.0000,0.0000,506447.6386,506447.6386
+pbva7,Type3dot1,"Europe,ES,Madrid",ma1,19-06-2025,assigned,x33ed,0.0018,4933,16,0.0032,0.0013,,1.0000,0.0000,506447.6386,506447.6386
+pbva7,Type3dot1,"Europe,ES,Madrid",ma1,20-06-2025,assigned,x33ed,0.0005,5285,80,0.0149,0.0143,,1.0000,0.0000,506447.6386,506447.6386
+pbva7,Type3dot1,"Europe,ES,Madrid",ma1,21-06-2025,assigned,x33ed,0.0007,5551,0,0.0000,0.0000,,1.0000,0.0000,506447.6386,506447.6386
+pbva7,Type3dot1,"Europe,ES,Madrid",ma1,22-06-2025,assigned,x33ed,0.0015,5515,0,0.0000,0.0000,,1.0000,0.0000,506447.6386,506447.6386
+pbva7,Type3dot1,"Europe,ES,Madrid",ma1,23-06-2025,assigned,x33ed,0.0009,5248,0,0.0000,0.0000,,1.0000,0.0000,506447.6386,506447.6386
+pbva7,Type3dot1,"Europe,ES,Madrid",ma1,24-06-2025,assigned,x33ed,0.0007,5569,0,0.0000,0.0000,,1.0000,0.0000,506447.6386,506447.6386
+pbva7,Type3dot1,"Europe,ES,Madrid",ma1,25-06-2025,assigned,x33ed,0.0005,5455,2,0.0003,0.0000,,1.0000,0.0000,506447.6386,506447.6386
+pbva7,Type3dot1,"Europe,ES,Madrid",ma1,26-06-2025,assigned,x33ed,0.0033,5272,0,0.0000,0.0000,,1.0000,0.0000,506447.6386,506447.6386
+pbva7,Type3dot1,"Europe,ES,Madrid",ma1,27-06-2025,assigned,x33ed,0.0011,5179,0,0.0000,0.0000,,1.0000,0.0000,506447.6386,506447.6386
+pbva7,Type3dot1,"Europe,ES,Madrid",ma1,28-06-2025,assigned,x33ed,0.0007,5390,0,0.0000,0.0000,,1.0000,0.0000,506447.6386,506447.6386
+pbva7,Type3dot1,"Europe,ES,Madrid",ma1,29-06-2025,assigned,x33ed,0.0003,5472,0,0.0000,0.0000,,1.0000,0.0000,506447.6386,506447.6386
+pbva7,Type3dot1,"Europe,ES,Madrid",ma1,30-06-2025,assigned,x33ed,0.0014,5288,0,0.0000,0.0000,,1.0000,0.0000,506447.6386,506447.6386
+pbva7,Type3dot1,"Europe,ES,Madrid",ma1,01-07-2025,assigned,x33ed,0.0003,5467,1,0.0001,0.0000,,1.0000,0.0000,506447.6386,506447.6386
+pbva7,Type3dot1,"Europe,ES,Madrid",ma1,02-07-2025,assigned,x33ed,0.0010,5405,0,0.0000,0.0000,,1.0000,0.0000,506447.6386,506447.6386
+pbva7,Type3dot1,"Europe,ES,Madrid",ma1,03-07-2025,assigned,x33ed,0.0020,5230,0,0.0000,0.0000,,1.0000,0.0000,506447.6386,506447.6386
+pbva7,Type3dot1,"Europe,ES,Madrid",ma1,04-07-2025,assigned,x33ed,0.0003,5295,0,0.0000,0.0000,,1.0000,0.0000,506447.6386,506447.6386
+pbva7,Type3dot1,"Europe,ES,Madrid",ma1,05-07-2025,assigned,x33ed,0.0001,5565,0,0.0000,0.0000,,1.0000,0.0000,506447.6386,506447.6386
+pbva7,Type3dot1,"Europe,ES,Madrid",ma1,06-07-2025,assigned,x33ed,0.0003,5321,0,0.0000,0.0000,,1.0000,0.0000,506447.6386,506447.6386
+pbva7,Type3dot1,"Europe,ES,Madrid",ma1,07-07-2025,assigned,x33ed,0.0005,5369,0,0.0000,0.0000,,1.0000,0.0000,506447.6386,506447.6386
+pbva7,Type3dot1,"Europe,ES,Madrid",ma1,08-07-2025,assigned,x33ed,0.0007,5268,0,0.0000,0.0000,,1.0000,0.0000,506447.6386,506447.6386
+pbva7,Type3dot1,"Europe,ES,Madrid",ma1,09-07-2025,assigned,x33ed,0.0003,5273,0,0.0000,0.0000,,1.0000,0.0000,506447.6386,506447.6386
+pbva7,Type3dot1,"Europe,ES,Madrid",ma1,10-07-2025,assigned,x33ed,0.0011,5362,0,0.0000,0.0000,,1.0000,0.0000,506447.6386,506447.6386
+pbva7,Type3dot1,"Europe,ES,Madrid",ma1,11-07-2025,assigned,x33ed,0.0013,4990,1,0.0002,0.0000,,1.0000,0.0000,506447.6386,506447.6386
+pbva7,Type3dot1,"Europe,ES,Madrid",ma1,12-07-2025,assigned,x33ed,0.0004,4687,1,0.0002,0.0000,,1.0000,0.0000,506447.6386,506447.6386
+pbva7,Type3dot1,"Europe,ES,Madrid",ma1,13-07-2025,assigned,x33ed,0.0002,4327,0,0.0000,0.0000,,1.0000,0.0000,506447.6386,506447.6386
+7exbb,Type3dot1,"Europe,PT,Barreiro",ba1,14-06-2025,assigned,bkfrj,0.0036,11097,252,0.0222,0.0185,,1.0000,0.0000,506447.6386,506447.6386
+7exbb,Type3dot1,"Europe,PT,Barreiro",ba1,15-06-2025,assigned,bkfrj,0.0213,11250,246,0.0213,0.0000,,1.0000,0.0000,506447.6386,506447.6386
+7exbb,Type3dot1,"Europe,PT,Barreiro",ba1,16-06-2025,assigned,bkfrj,0.0257,10936,289,0.0257,0.0000,,1.0000,0.0000,506447.6386,506447.6386
+7exbb,Type3dot1,"Europe,PT,Barreiro",ba1,17-06-2025,assigned,bkfrj,0.0203,11185,279,0.0243,0.0039,,1.0000,0.0000,506447.6386,506447.6386
+7exbb,Type3dot1,"Europe,PT,Barreiro",ba1,18-06-2025,assigned,bkfrj,0.0250,11056,248,0.0219,0.0000,,1.0000,0.0000,506447.6386,506447.6386
+7exbb,Type3dot1,"Europe,PT,Barreiro",ba1,19-06-2025,assigned,bkfrj,0.0165,11179,188,0.0165,0.0000,,1.0000,0.0000,506447.6386,506447.6386
+7exbb,Type3dot1,"Europe,PT,Barreiro",ba1,20-06-2025,assigned,bkfrj,0.0042,11180,186,0.0163,0.0121,,1.0000,0.0000,506447.6386,506447.6386
+7exbb,Type3dot1,"Europe,PT,Barreiro",ba1,21-06-2025,assigned,bkfrj,0.0020,11576,24,0.0020,0.0000,,1.0000,0.0000,506447.6386,506447.6386
+7exbb,Type3dot1,"Europe,PT,Barreiro",ba1,22-06-2025,assigned,bkfrj,0.0000,11450,1,0.0000,0.0000,,1.0000,0.0000,506447.6386,506447.6386
+7exbb,Type3dot1,"Europe,PT,Barreiro",ba1,23-06-2025,assigned,bkfrj,0.0031,11185,131,0.0115,0.0084,,1.0000,0.0000,506447.6386,506447.6386
+7exbb,Type3dot1,"Europe,PT,Barreiro",ba1,24-06-2025,assigned,bkfrj,0.0170,11305,115,0.0100,0.0000,,1.0000,0.0000,506447.6386,506447.6386
+7exbb,Type3dot1,"Europe,PT,Barreiro",ba1,25-06-2025,assigned,bkfrj,0.0068,11210,122,0.0107,0.0039,,1.0000,0.0000,506447.6386,506447.6386
+7exbb,Type3dot1,"Europe,PT,Barreiro",ba1,26-06-2025,assigned,bkfrj,0.0182,10924,372,0.0329,0.0146,,1.0000,0.0000,506447.6386,506447.6386
+7exbb,Type3dot1,"Europe,PT,Barreiro",ba1,27-06-2025,assigned,bkfrj,0.0090,10780,485,0.0430,0.0339,,1.0000,0.0000,506447.6386,506447.6386
+7exbb,Type3dot1,"Europe,PT,Barreiro",ba1,28-06-2025,assigned,bkfrj,0.0010,11100,236,0.0208,0.0197,,1.0000,0.0000,506447.6386,506447.6386
+7exbb,Type3dot1,"Europe,PT,Barreiro",ba1,29-06-2025,assigned,bkfrj,0.0007,10980,114,0.0102,0.0095,,1.0000,0.0000,506447.6386,506447.6386
+7exbb,Type3dot1,"Europe,PT,Barreiro",ba1,30-06-2025,assigned,bkfrj,0.0033,11247,99,0.0087,0.0053,,1.0000,0.0000,506447.6386,506447.6386
+7exbb,Type3dot1,"Europe,PT,Barreiro",ba1,01-07-2025,assigned,bkfrj,0.0007,11222,65,0.0057,0.0050,,1.0000,0.0000,506447.6386,506447.6386
+7exbb,Type3dot1,"Europe,PT,Barreiro",ba1,02-07-2025,assigned,bkfrj,0.0074,11178,167,0.0147,0.0073,,1.0000,0.0000,506447.6386,506447.6386
+7exbb,Type3dot1,"Europe,PT,Barreiro",ba1,03-07-2025,assigned,bkfrj,0.0031,10744,716,0.0624,0.0593,,1.0000,0.0000,506447.6386,506447.6386
+7exbb,Type3dot1,"Europe,PT,Barreiro",ba1,04-07-2025,assigned,bkfrj,0.0022,10759,731,0.0636,0.0613,,1.0000,0.0000,506447.6386,506447.6386
+7exbb,Type3dot1,"Europe,PT,Barreiro",ba1,05-07-2025,assigned,bkfrj,0.0089,11011,446,0.0389,0.0300,,1.0000,0.0000,506447.6386,506447.6386
+7exbb,Type3dot1,"Europe,PT,Barreiro",ba1,06-07-2025,assigned,bkfrj,0.0030,10954,390,0.0343,0.0313,,1.0000,0.0000,506447.6386,506447.6386
+7exbb,Type3dot1,"Europe,PT,Barreiro",ba1,07-07-2025,assigned,bkfrj,0.0002,10914,381,0.0337,0.0334,,1.0000,0.0000,506447.6386,506447.6386
+7exbb,Type3dot1,"Europe,PT,Barreiro",ba1,08-07-2025,assigned,bkfrj,0.0013,11216,140,0.0123,0.0109,,1.0000,0.0000,506447.6386,506447.6386
+7exbb,Type3dot1,"Europe,PT,Barreiro",ba1,09-07-2025,assigned,bkfrj,0.0014,11143,97,0.0086,0.0071,,1.0000,0.0000,506447.6386,506447.6386
+7exbb,Type3dot1,"Europe,PT,Barreiro",ba1,10-07-2025,assigned,bkfrj,0.0086,10959,502,0.0438,0.0351,,1.0000,0.0000,506447.6386,506447.6386
+7exbb,Type3dot1,"Europe,PT,Barreiro",ba1,11-07-2025,assigned,bkfrj,0.0127,10917,588,0.0511,0.0384,,1.0000,0.0000,506447.6386,506447.6386
+7exbb,Type3dot1,"Europe,PT,Barreiro",ba1,12-07-2025,assigned,bkfrj,0.0114,11023,442,0.0385,0.0270,,1.0000,0.0000,506447.6386,506447.6386
+7exbb,Type3dot1,"Europe,PT,Barreiro",ba1,13-07-2025,assigned,bkfrj,0.0071,10885,490,0.0430,0.0359,,1.0000,0.0000,506447.6386,506447.6386
+3beeq,Type3dot1,"Europe,LV,Riga",rg3,14-06-2025,unassigned,,,,,,,0.0037,1.0000,0.0000,506447.6386,506447.6386
+3beeq,Type3dot1,"Europe,LV,Riga",rg3,15-06-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,506447.6386,506447.6386
+3beeq,Type3dot1,"Europe,LV,Riga",rg3,16-06-2025,unassigned,,,,,,,0.0012,1.0000,0.0000,506447.6386,506447.6386
+3beeq,Type3dot1,"Europe,LV,Riga",rg3,17-06-2025,unassigned,,,,,,,0.0007,1.0000,0.0000,506447.6386,506447.6386
+3beeq,Type3dot1,"Europe,LV,Riga",rg3,18-06-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,506447.6386,506447.6386
+3beeq,Type3dot1,"Europe,LV,Riga",rg3,19-06-2025,unassigned,,,,,,,0.0002,1.0000,0.0000,506447.6386,506447.6386
+3beeq,Type3dot1,"Europe,LV,Riga",rg3,20-06-2025,unassigned,,,,,,,0.0053,1.0000,0.0000,506447.6386,506447.6386
+3beeq,Type3dot1,"Europe,LV,Riga",rg3,21-06-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,506447.6386,506447.6386
+3beeq,Type3dot1,"Europe,LV,Riga",rg3,22-06-2025,unassigned,,,,,,,0.0019,1.0000,0.0000,506447.6386,506447.6386
+3beeq,Type3dot1,"Europe,LV,Riga",rg3,23-06-2025,unassigned,,,,,,,0.0019,1.0000,0.0000,506447.6386,506447.6386
+3beeq,Type3dot1,"Europe,LV,Riga",rg3,24-06-2025,unassigned,,,,,,,0.0000,1.0000,0.0000,506447.6386,506447.6386
+3beeq,Type3dot1,"Europe,LV,Riga",rg3,25-06-2025,unassigned,,,,,,,0.0007,1.0000,0.0000,506447.6386,506447.6386
+3beeq,Type3dot1,"Europe,LV,Riga",rg3,26-06-2025,unassigned,,,,,,,0.0029,1.0000,0.0000,506447.6386,506447.6386
+3beeq,Type3dot1,"Europe,LV,Riga",rg3,27-06-2025,unassigned,,,,,,,0.0067,1.0000,0.0000,506447.6386,506447.6386
+3beeq,Type3dot1,"Europe,LV,Riga",rg3,28-06-2025,unassigned,,,,,,,0.0053,1.0000,0.0000,506447.6386,506447.6386
+3beeq,Type3dot1,"Europe,LV,Riga",rg3,29-06-2025,unassigned,,,,,,,0.0019,1.0000,0.0000,506447.6386,506447.6386
+3beeq,Type3dot1,"Europe,LV,Riga",rg3,30-06-2025,unassigned,,,,,,,0.0010,1.0000,0.0000,506447.6386,506447.6386
+3beeq,Type3dot1,"Europe,LV,Riga",rg3,01-07-2025,unassigned,,,,,,,0.0010,1.0000,0.0000,506447.6386,506447.6386
+3beeq,Type3dot1,"Europe,LV,Riga",rg3,02-07-2025,unassigned,,,,,,,0.0014,1.0000,0.0000,506447.6386,506447.6386
+3beeq,Type3dot1,"Europe,LV,Riga",rg3,03-07-2025,unassigned,,,,,,,0.0128,1.0000,0.0000,506447.6386,506447.6386
+3beeq,Type3dot1,"Europe,LV,Riga",rg3,04-07-2025,unassigned,,,,,,,0.0122,1.0000,0.0000,506447.6386,506447.6386
+3beeq,Type3dot1,"Europe,LV,Riga",rg3,05-07-2025,unassigned,,,,,,,0.0060,1.0000,0.0000,506447.6386,506447.6386
+3beeq,Type3dot1,"Europe,LV,Riga",rg3,06-07-2025,unassigned,,,,,,,0.0062,1.0000,0.0000,506447.6386,506447.6386
+3beeq,Type3dot1,"Europe,LV,Riga",rg3,07-07-2025,assigned,c4isl,0.0001,7011,1,0.0001,0.0000,,1.0000,0.0000,506447.6386,506447.6386
+3beeq,Type3dot1,"Europe,LV,Riga",rg3,08-07-2025,assigned,c4isl,0.0001,17314,2,0.0001,0.0000,,1.0000,0.0000,506447.6386,506447.6386
+3beeq,Type3dot1,"Europe,LV,Riga",rg3,09-07-2025,assigned,c4isl,0.0000,17186,12,0.0006,0.0006,,1.0000,0.0000,506447.6386,506447.6386
+3beeq,Type3dot1,"Europe,LV,Riga",rg3,10-07-2025,assigned,c4isl,0.0006,17035,14,0.0008,0.0001,,1.0000,0.0000,506447.6386,506447.6386
+3beeq,Type3dot1,"Europe,LV,Riga",rg3,11-07-2025,assigned,c4isl,0.0004,17033,0,0.0000,0.0000,,1.0000,0.0000,506447.6386,506447.6386
+3beeq,Type3dot1,"Europe,LV,Riga",rg3,12-07-2025,assigned,c4isl,0.0000,17266,0,0.0000,0.0000,,1.0000,0.0000,506447.6386,506447.6386
+3beeq,Type3dot1,"Europe,LV,Riga",rg3,13-07-2025,assigned,c4isl,0.0002,17179,0,0.0000,0.0000,,1.0000,0.0000,506447.6386,506447.6386
+ukmex,Type3dot1,"Europe,LT,Siauliai",si1,14-06-2025,assigned,qdvhd,0.0006,11716,0,0.0000,0.0000,,1.0000,0.0000,506447.6386,506447.6386
+ukmex,Type3dot1,"Europe,LT,Siauliai",si1,15-06-2025,assigned,qdvhd,0.0007,11834,0,0.0000,0.0000,,1.0000,0.0000,506447.6386,506447.6386
+ukmex,Type3dot1,"Europe,LT,Siauliai",si1,16-06-2025,assigned,qdvhd,0.0012,11718,1,0.0000,0.0000,,1.0000,0.0000,506447.6386,506447.6386
+ukmex,Type3dot1,"Europe,LT,Siauliai",si1,17-06-2025,assigned,qdvhd,0.0016,12047,2,0.0001,0.0000,,1.0000,0.0000,506447.6386,506447.6386
+ukmex,Type3dot1,"Europe,LT,Siauliai",si1,18-06-2025,assigned,qdvhd,0.0003,11925,0,0.0000,0.0000,,1.0000,0.0000,506447.6386,506447.6386
+ukmex,Type3dot1,"Europe,LT,Siauliai",si1,19-06-2025,assigned,qdvhd,0.0044,11767,0,0.0000,0.0000,,1.0000,0.0000,506447.6386,506447.6386
+ukmex,Type3dot1,"Europe,LT,Siauliai",si1,20-06-2025,assigned,qdvhd,0.0001,11744,0,0.0000,0.0000,,1.0000,0.0000,506447.6386,506447.6386
+ukmex,Type3dot1,"Europe,LT,Siauliai",si1,21-06-2025,assigned,qdvhd,0.0000,11529,0,0.0000,0.0000,,1.0000,0.0000,506447.6386,506447.6386
+ukmex,Type3dot1,"Europe,LT,Siauliai",si1,22-06-2025,assigned,qdvhd,0.0002,11553,0,0.0000,0.0000,,1.0000,0.0000,506447.6386,506447.6386
+ukmex,Type3dot1,"Europe,LT,Siauliai",si1,23-06-2025,assigned,qdvhd,0.0016,11356,1,0.0000,0.0000,,1.0000,0.0000,506447.6386,506447.6386
+ukmex,Type3dot1,"Europe,LT,Siauliai",si1,24-06-2025,assigned,qdvhd,0.0106,11550,11,0.0009,0.0000,,1.0000,0.0000,506447.6386,506447.6386
+ukmex,Type3dot1,"Europe,LT,Siauliai",si1,25-06-2025,assigned,qdvhd,0.0017,11407,0,0.0000,0.0000,,1.0000,0.0000,506447.6386,506447.6386
+ukmex,Type3dot1,"Europe,LT,Siauliai",si1,26-06-2025,assigned,qdvhd,0.0046,11447,1,0.0000,0.0000,,1.0000,0.0000,506447.6386,506447.6386
+ukmex,Type3dot1,"Europe,LT,Siauliai",si1,27-06-2025,assigned,qdvhd,0.0065,11723,1,0.0000,0.0000,,1.0000,0.0000,506447.6386,506447.6386
+ukmex,Type3dot1,"Europe,LT,Siauliai",si1,28-06-2025,assigned,qdvhd,0.0001,11422,0,0.0000,0.0000,,1.0000,0.0000,506447.6386,506447.6386
+ukmex,Type3dot1,"Europe,LT,Siauliai",si1,29-06-2025,assigned,qdvhd,0.0004,11609,0,0.0000,0.0000,,1.0000,0.0000,506447.6386,506447.6386
+ukmex,Type3dot1,"Europe,LT,Siauliai",si1,30-06-2025,assigned,qdvhd,0.0003,11444,0,0.0000,0.0000,,1.0000,0.0000,506447.6386,506447.6386
+ukmex,Type3dot1,"Europe,LT,Siauliai",si1,01-07-2025,assigned,qdvhd,0.0042,11576,6,0.0005,0.0000,,1.0000,0.0000,506447.6386,506447.6386
+ukmex,Type3dot1,"Europe,LT,Siauliai",si1,02-07-2025,assigned,qdvhd,0.0110,11399,0,0.0000,0.0000,,1.0000,0.0000,506447.6386,506447.6386
+ukmex,Type3dot1,"Europe,LT,Siauliai",si1,03-07-2025,assigned,qdvhd,0.0014,11489,0,0.0000,0.0000,,1.0000,0.0000,506447.6386,506447.6386
+ukmex,Type3dot1,"Europe,LT,Siauliai",si1,04-07-2025,assigned,qdvhd,0.0004,11685,0,0.0000,0.0000,,1.0000,0.0000,506447.6386,506447.6386
+ukmex,Type3dot1,"Europe,LT,Siauliai",si1,05-07-2025,assigned,qdvhd,0.0004,11613,0,0.0000,0.0000,,1.0000,0.0000,506447.6386,506447.6386
+ukmex,Type3dot1,"Europe,LT,Siauliai",si1,06-07-2025,assigned,qdvhd,0.0007,11359,0,0.0000,0.0000,,1.0000,0.0000,506447.6386,506447.6386
+ukmex,Type3dot1,"Europe,LT,Siauliai",si1,07-07-2025,assigned,qdvhd,0.0008,11129,0,0.0000,0.0000,,1.0000,0.0000,506447.6386,506447.6386
+ukmex,Type3dot1,"Europe,LT,Siauliai",si1,08-07-2025,assigned,qdvhd,0.0074,11162,50,0.0044,0.0000,,1.0000,0.0000,506447.6386,506447.6386
+ukmex,Type3dot1,"Europe,LT,Siauliai",si1,09-07-2025,assigned,qdvhd,0.0020,10980,1,0.0000,0.0000,,1.0000,0.0000,506447.6386,506447.6386
+ukmex,Type3dot1,"Europe,LT,Siauliai",si1,10-07-2025,assigned,qdvhd,0.0007,11392,0,0.0000,0.0000,,1.0000,0.0000,506447.6386,506447.6386
+ukmex,Type3dot1,"Europe,LT,Siauliai",si1,11-07-2025,assigned,qdvhd,0.0024,11133,8,0.0007,0.0000,,1.0000,0.0000,506447.6386,506447.6386
+ukmex,Type3dot1,"Europe,LT,Siauliai",si1,12-07-2025,assigned,qdvhd,0.0002,11125,2,0.0001,0.0000,,1.0000,0.0000,506447.6386,506447.6386
+ukmex,Type3dot1,"Europe,LT,Siauliai",si1,13-07-2025,assigned,qdvhd,0.0007,11133,0,0.0000,0.0000,,1.0000,0.0000,506447.6386,506447.6386
