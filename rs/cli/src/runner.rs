@@ -189,11 +189,7 @@ impl Runner {
         )))
     }
 
-    pub async fn propose_subnet_change(
-        &self,
-        change: &SubnetChangeResponse,
-        ignore_existing_proposal: bool,
-    ) -> anyhow::Result<Option<IcAdminProposal>> {
+    fn should_submit(&self, change: &SubnetChangeResponse) -> bool {
         if self.verbose {
             if let Some(run_log) = &change.run_log {
                 println!("{}\n", run_log.join("\n"));
@@ -201,12 +197,32 @@ impl Runner {
         }
 
         if change.node_ids_added.is_empty() && change.node_ids_removed.is_empty() {
+            return false;
+        }
+        true
+    }
+
+    pub async fn propose_subnet_change(&self, change: &SubnetChangeResponse) -> anyhow::Result<Option<IcAdminProposal>> {
+        if !self.should_submit(&change) {
             return Ok(None);
         }
 
-        self.run_membership_change_inner(change, replace_proposal_options(change).await?, ignore_existing_proposal)
-            .await
-            .map(Some)
+        self.run_membership_change(change, replace_proposal_options(change)?).await.map(Some)
+    }
+
+    pub async fn propose_force_subnet_change(&self, change: &SubnetChangeResponse) -> anyhow::Result<Option<IcAdminProposal>> {
+        if !self.should_submit(&change) {
+            return Ok(None);
+        }
+
+        Ok(Some(IcAdminProposal::new(
+            IcAdminProposalCommand::ChangeSubnetMembership {
+                subnet_id: change.subnet_id.ok_or(anyhow::anyhow!("Subnet id is required"))?,
+                node_ids_add: change.node_ids_added.to_vec(),
+                node_ids_remove: change.node_ids_removed.to_vec(),
+            },
+            force_replace_proposal_options(change)?,
+        )))
     }
 
     pub async fn prepare_versions_to_retire(&self, release_artifact: &Artifact, edit_summary: bool) -> anyhow::Result<(String, Option<Vec<String>>)> {
@@ -541,13 +557,10 @@ impl Runner {
 
         let mut changes = vec![];
         for change in &subnets_change_responses {
-            let current = self
-                .run_membership_change(change, replace_proposal_options(change).await?)
-                .await
-                .map_err(|e| {
-                    println!("{}", e);
-                    errors.push(e);
-                });
+            let current = self.run_membership_change(change, replace_proposal_options(change)?).await.map_err(|e| {
+                println!("{}", e);
+                errors.push(e);
+            });
             changes.push(current)
         }
         if !errors.is_empty() {
@@ -839,7 +852,7 @@ impl Runner {
                         continue;
                     }
                 };
-                changes.push(self.run_membership_change(&change, replace_proposal_options(&change).await?).await?);
+                changes.push(self.run_membership_change(&change, replace_proposal_options(&change)?).await?);
                 subnets_that_have_no_proposals.shift_remove(&change.subnet_id.expect("Subnet ID should be present"));
                 available_nodes.retain(|n| !change.node_ids_added.contains(&n.principal));
             } else {
@@ -933,9 +946,7 @@ impl Runner {
             return Ok(None);
         }
 
-        self.run_membership_change(&change, replace_proposal_options(&change).await?)
-            .await
-            .map(Some)
+        self.run_membership_change(&change, replace_proposal_options(&change)?).await.map(Some)
     }
 
     pub async fn retireable_versions(&self, artifact: &Artifact) -> anyhow::Result<Vec<Release>> {
@@ -1001,16 +1012,7 @@ impl Runner {
             .collect())
     }
 
-    pub async fn run_membership_change(&self, change: &SubnetChangeResponse, options: IcAdminProposalOptions) -> anyhow::Result<IcAdminProposal> {
-        self.run_membership_change_inner(change, options, false).await
-    }
-
-    async fn run_membership_change_inner(
-        &self,
-        change: &SubnetChangeResponse,
-        options: IcAdminProposalOptions,
-        ignore_existing_proposal: bool,
-    ) -> anyhow::Result<IcAdminProposal> {
+    async fn run_membership_change(&self, change: &SubnetChangeResponse, options: IcAdminProposalOptions) -> anyhow::Result<IcAdminProposal> {
         let subnet_id = change.subnet_id.ok_or_else(|| anyhow::anyhow!("subnet_id is required"))?;
         let pending_action = self
             .registry
@@ -1020,13 +1022,11 @@ impl Runner {
             .map(|s| s.proposal.clone())
             .ok_or(NetworkError::SubnetNotFound(subnet_id))?;
 
-        if !ignore_existing_proposal {
-            if let Some(proposal) = pending_action {
-                return Err(anyhow::anyhow!(format!(
-                    "There is a pending proposal for this subnet: https://dashboard.internetcomputer.org/proposal/{}",
-                    proposal.id
-                )));
-            }
+        if let Some(proposal) = pending_action {
+            return Err(anyhow::anyhow!(format!(
+                "There is a pending proposal for this subnet: https://dashboard.internetcomputer.org/proposal/{}",
+                proposal.id
+            )));
         }
         Ok(IcAdminProposal::new(
             IcAdminProposalCommand::ChangeSubnetMembership {
@@ -1107,7 +1107,7 @@ fn nodes_in_subnets_or_proposals(
     nodes_in_subnets_or_proposals
 }
 
-pub async fn replace_proposal_options(change: &SubnetChangeResponse) -> anyhow::Result<ic_admin::IcAdminProposalOptions> {
+fn title_and_summary(change: &SubnetChangeResponse) -> anyhow::Result<ic_admin::IcAdminProposalOptions> {
     let subnet_id = change.subnet_id.ok_or_else(|| anyhow::anyhow!("subnet_id is required"))?.to_string();
 
     let replace_target = if change.node_ids_added.len() > 1 || change.node_ids_removed.len() > 1 {
@@ -1126,7 +1126,26 @@ pub async fn replace_proposal_options(change: &SubnetChangeResponse) -> anyhow::
     Ok(ic_admin::IcAdminProposalOptions {
         title: Some(change_desc.clone()),
         summary: Some(format!("# {change_desc}")),
+        // Should be formatted later
+        motivation: None,
+    })
+}
+
+pub fn replace_proposal_options(change: &SubnetChangeResponse) -> anyhow::Result<ic_admin::IcAdminProposalOptions> {
+    title_and_summary(&change).map(|opts| ic_admin::IcAdminProposalOptions {
         motivation: Some(format!("{}\n\n{}\n", change.motivation.as_ref().unwrap_or(&String::new()), change)),
+        ..opts
+    })
+}
+
+fn force_replace_proposal_options(change: &SubnetChangeResponse) -> anyhow::Result<ic_admin::IcAdminProposalOptions> {
+    title_and_summary(&change).map(|opts| ic_admin::IcAdminProposalOptions {
+        motivation: Some(format!(
+            "{}\n\n{}\n",
+            change.motivation.as_ref().unwrap_or(&String::new()),
+            change.topology_format()
+        )),
+        ..opts
     })
 }
 

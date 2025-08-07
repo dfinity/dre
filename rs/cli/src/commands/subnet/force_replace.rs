@@ -1,4 +1,4 @@
-use std::collections::BTreeSet;
+use std::{collections::BTreeSet, path::PathBuf, str::FromStr};
 
 use clap::Args;
 use dialoguer::Confirm;
@@ -35,6 +35,30 @@ pub struct ForceReplace {
 
     #[clap(flatten)]
     pub submission_parameters: SubmissionParameters,
+
+    // TODO: add actual handling of `current` once we merge the code
+    #[clap(long)]
+    target_topology: Option<TargetTopologyOption>,
+}
+
+#[derive(Debug, Clone)]
+enum TargetTopologyOption {
+    ProposalId(u64),
+    Path(PathBuf),
+}
+
+impl FromStr for TargetTopologyOption {
+    type Err = String;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        // Try parsing as a number
+        if let Ok(id) = s.parse::<u64>() {
+            return Ok(TargetTopologyOption::ProposalId(id));
+        }
+
+        // Otherwise treat as path
+        Ok(TargetTopologyOption::Path(PathBuf::from(s)))
+    }
 }
 
 impl ExecutableCommand for ForceReplace {
@@ -43,6 +67,18 @@ impl ExecutableCommand for ForceReplace {
     }
 
     fn validate(&self, _args: &crate::exe::args::GlobalArgs, cmd: &mut clap::Command) {
+        if let Some(target_topology_option) = &self.target_topology {
+            if let TargetTopologyOption::Path(path) = target_topology_option {
+                if !path.exists() {
+                    cmd.error(
+                        clap::error::ErrorKind::InvalidValue,
+                        &format!("path `{}` not found locally.", path.display()),
+                    )
+                    .exit();
+                }
+            }
+        }
+
         let from: BTreeSet<PrincipalId> = self.from.iter().cloned().collect();
         let to: BTreeSet<PrincipalId> = self.to.iter().cloned().collect();
 
@@ -168,6 +204,7 @@ impl ExecutableCommand for ForceReplace {
             }
 
             if !self.submission_parameters.confirmation_mode.dry_run
+                && !self.submission_parameters.confirmation_mode.yes
                 && !Confirm::new()
                     .with_prompt("Accept warnings mentioned above?")
                     .default(false)
@@ -178,7 +215,7 @@ impl ExecutableCommand for ForceReplace {
             }
         }
 
-        let runner_proposal = match ctx.runner().await?.propose_subnet_change(&subnet_change_response, true).await? {
+        let runner_proposal = match ctx.runner().await?.propose_force_subnet_change(&subnet_change_response).await? {
             Some(runner_proposal) => runner_proposal,
             None => return Ok(()),
         };
