@@ -117,7 +117,9 @@ impl TargetTopology {
 
         let mut output: Vec<u8> = vec![];
 
-        writeln!(output, "## Target topology entry\nTarget topology used was established in proposal [{}](https://dashboard.internetcomputer.org/proposal/{})\nSubnet id: [`{subnet_id}`](https://dashboard.internetcomputer.org/network/subnets/{subnet_id})", self.proposal, self.proposal)?;
+        writeln!(output, "## Target topology entry\n")?;
+        writeln!(output, "Target topology used was established in proposal [{}](https://dashboard.internetcomputer.org/proposal/{})\nSubnet id: [`{subnet_id}`](https://dashboard.internetcomputer.org/network/subnets/{subnet_id})\n", self.proposal, self.proposal)?;
+
         let mut serialized_entry = serde_json::to_value(&entry)?;
         let serialized_entry = serialized_entry.as_object_mut().ok_or(anyhow::anyhow!("Unexpected row serialization."))?;
 
@@ -140,7 +142,7 @@ impl TargetTopology {
 
         writeln!(
             output,
-            "| {} |\n| {} |\n| {} |",
+            "| {} |\n| {} |\n| {} |\n",
             keys.join(" | "),
             keys.iter().map(|header| "-".repeat(header.len())).join(" | "),
             serialized_entry
@@ -187,7 +189,7 @@ impl TargetTopology {
                 format!("{key} changes")
             })
             .collect();
-        writeln!(output, "## Attribute wise view of the changes")?;
+        writeln!(output, "\n## Attribute wise view of the changes\n")?;
         writeln!(
             output,
             "| {} |\n| {} |",
