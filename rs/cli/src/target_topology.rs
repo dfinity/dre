@@ -235,7 +235,11 @@ impl TargetTopology {
             output.extend_from_slice(&line);
         }
 
-        String::from_utf8(output).map_err(anyhow::Error::from)
+        writeln!(output, "> **Note:** Each column represents changes for a single attribute type and is independent from the others. Rows are used only for layout purposes there is no correlation between entries in the same row.")?;
+
+        let output = String::from_utf8(output).map_err(anyhow::Error::from)?;
+
+        Ok(output.trim().to_string())
     }
 }
 
