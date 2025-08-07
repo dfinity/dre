@@ -26,8 +26,8 @@ use ic_registry_client_fake::FakeRegistryClient;
 use ic_registry_client_helpers::node::NodeRegistry;
 use ic_registry_common_proto::pb::local_store::v1::{ChangelogEntry as PbChangelogEntry, KeyMutation as PbKeyMutation, MutationType};
 use ic_registry_keys::{
-    make_blessed_replica_versions_key, HOSTOS_VERSION_KEY_PREFIX, NODE_OPERATOR_RECORD_KEY_PREFIX, NODE_RECORD_KEY_PREFIX,
-    REPLICA_VERSION_KEY_PREFIX, SUBNET_RECORD_KEY_PREFIX,
+    make_blessed_replica_versions_key, make_subnet_list_record_key, HOSTOS_VERSION_KEY_PREFIX, NODE_OPERATOR_RECORD_KEY_PREFIX,
+    NODE_RECORD_KEY_PREFIX, NODE_REWARDS_TABLE_KEY, REPLICA_VERSION_KEY_PREFIX, SUBNET_RECORD_KEY_PREFIX,
 };
 use ic_registry_keys::{make_crypto_threshold_signing_pubkey_key, ROOT_SUBNET_ID_KEY};
 use ic_registry_keys::{API_BOUNDARY_NODE_RECORD_KEY_PREFIX, DATA_CENTER_KEY_PREFIX};
@@ -55,6 +55,7 @@ use url::Url;
 extern crate env_logger;
 
 use anyhow::Result;
+use candid::CandidType;
 use ic_protobuf::registry::node::v1::NodeRewardType;
 use ic_registry_client_helpers::subnet::SubnetListRegistry;
 
@@ -975,16 +976,7 @@ pub async fn sync_local_store_with_path(target_network: &Network, local_registry
                     break;
                 }
                 Ordering::Greater => {
-                    warn!(
-                        "Removing faulty local copy of the registry for the IC network {}: {}",
-                        target_network.name,
-                        local_registry_path.display()
-                    );
-                    fs_err::remove_dir_all(local_registry_path)?;
-                    panic!(
-                        "Registry version local {} > remote {}, this should never happen",
-                        local_latest_version, remote_version
-                    );
+                    break;
                 }
             },
             Err(e) => {
@@ -998,7 +990,7 @@ pub async fn sync_local_store_with_path(target_network: &Network, local_registry
                 .max()
                 .unwrap();
             changes.extend(initial_records);
-            local_latest_version = RegistryVersion::new(max_version);
+            local_latest_version = RegistryVersion::new(max_version + 1);
         }
 
         tokio::time::sleep(std::time::Duration::from_secs(1)).await;
@@ -1010,6 +1002,8 @@ pub async fn sync_local_store_with_path(target_network: &Network, local_registry
         if item.key.starts_with(NODE_OPERATOR_RECORD_KEY_PREFIX.as_bytes())
             || item.key.starts_with(DATA_CENTER_KEY_PREFIX.as_bytes())
             || item.key.starts_with(NODE_RECORD_KEY_PREFIX.as_bytes())
+            || item.key == make_subnet_list_record_key().as_bytes()
+            || item.key == NODE_REWARDS_TABLE_KEY.as_bytes()
         {
             item.encode_length_delimited(&mut buf)?; // Use length-delimited encoding for Vecs
         }
