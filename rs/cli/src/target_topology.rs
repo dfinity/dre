@@ -1,7 +1,8 @@
-use std::{path::PathBuf, str::FromStr};
+use std::{path::PathBuf, str::FromStr, sync::Arc};
 
 use csv::Reader;
 use decentralization::SubnetChangeResponse;
+use ic_management_backend::lazy_registry::LazyRegistry;
 use ic_management_types::NodeFeature;
 use ic_types::PrincipalId;
 use itertools::Itertools;
@@ -106,7 +107,7 @@ impl TargetTopology {
         Ok(topology)
     }
 
-    pub fn summary_for_change(&self, change: &SubnetChangeResponse) -> anyhow::Result<String> {
+    pub async fn summary_for_change(&self, change: &SubnetChangeResponse, registry: Arc<dyn LazyRegistry>) -> anyhow::Result<String> {
         let subnet_id = change.subnet_id.ok_or(anyhow::anyhow!("Subnet id is missing"))?;
         let entry = self
             .entries
@@ -126,7 +127,12 @@ impl TargetTopology {
             .keys()
             .map(|key| {
                 let key = key.trim_start_matches("subnet_");
-                let key = key.trim_start_matches("limit_");
+                let key = if key.starts_with("liimt_") {
+                    let key = key.trim_start_matches("limit_");
+                    format!("{key}_limit")
+                } else {
+                    key.to_string()
+                };
 
                 key.replace("_", " ")
             })
@@ -156,7 +162,8 @@ impl TargetTopology {
                 .get(node_id)
                 .map(|h| h.to_string().to_lowercase())
                 .unwrap_or("unknown".to_string());
-            writeln!(output, "- `{}` [health: {}]", node_id, health)?;
+            let link = link_node_feature(&NodeFeature::NodeId, &node_id.to_string()).unwrap();
+            writeln!(output, "- [`{node_id}`]({link}) [health: {health}]")?;
         }
         writeln!(output, "\nNodes added:")?;
         for node_id in &change.node_ids_added {
@@ -165,29 +172,36 @@ impl TargetTopology {
                 .get(node_id)
                 .map(|h| h.to_string().to_lowercase())
                 .unwrap_or("unknown".to_string());
-            writeln!(output, "- `{}` [health: {}]", node_id, health)?;
+            let link = link_node_feature(&NodeFeature::NodeId, &node_id.to_string()).unwrap();
+            writeln!(output, "- [`{node_id}`]({link}) [health: {health}]")?;
         }
 
+        let mut feature_diffs = change.feature_diff.clone();
+        feature_diffs.shift_remove(&NodeFeature::Area);
+
+        let keys: Vec<_> = feature_diffs
+            .keys()
+            .map(|key| {
+                let key = key.to_string();
+                let key = key.replace("_", " ");
+                format!("{key} changes")
+            })
+            .collect();
         writeln!(output, "## Attribute wise view of the changes")?;
         writeln!(
             output,
             "| {} |\n| {} |",
-            change.feature_diff.keys().map(|key| format!("{key} changes")).join(" | "),
-            change
-                .feature_diff
-                .keys()
-                .map(|key| format!("{key} changes"))
-                .map(|extended| "-".repeat(extended.len()))
-                .join(" | "),
+            keys.join(" | "),
+            keys.iter().map(|extended| "-".repeat(extended.len())).join(" | "),
         )?;
 
-        let max_len = change.feature_diff.values().map(|inner| inner.len()).max().unwrap_or(0);
-        let num_features = change.feature_diff.len();
+        let max_len = feature_diffs.values().map(|inner| inner.len()).max().unwrap_or(0);
+        let num_features = feature_diffs.len();
 
-        let padded_features: Vec<(NodeFeature, Vec<(String, (usize, usize))>)> = change
-            .feature_diff
+        let padded_features: Vec<(NodeFeature, Vec<(String, (usize, usize))>)> = feature_diffs
             .clone()
             .into_iter()
+            .filter(|(feat, _)| feat != &NodeFeature::Area)
             .map(|(key, inner_map)| {
                 let mut entries: Vec<_> = inner_map.into_iter().collect();
                 while entries.len() < max_len {
@@ -201,12 +215,18 @@ impl TargetTopology {
             let mut line: Vec<u8> = vec![];
             write!(line, "| ")?;
             for column in 0..num_features {
-                let (value, (before, after)) = &padded_features[column].1[row];
+                let (feature, column_data) = &padded_features[column];
+                let (value, (before, after)) = &column_data[row];
+
                 if !value.is_empty() {
+                    let enriched_key = enrich_key(feature, value, registry.clone()).await?;
+                    let displayed_value = link_node_feature(feature, value)
+                        .map(|link| format!("[`{enriched_key}`]({link})"))
+                        .unwrap_or(format!("`{enriched_key}`"));
                     if before == after {
-                        write!(line, "{value} {before}")?;
+                        write!(line, "{displayed_value}  {before}")?;
                     } else {
-                        write!(line, "{value} {before} -> {after}")?;
+                        write!(line, "{displayed_value}  {before} -> {after}")?;
                     }
                 }
                 write!(line, " |")?;
@@ -216,5 +236,46 @@ impl TargetTopology {
         }
 
         String::from_utf8(output).map_err(anyhow::Error::from)
+    }
+}
+
+fn link_node_feature(feature: &NodeFeature, value: &str) -> Option<String> {
+    match feature {
+        NodeFeature::NodeId => Some(format!("https://dashboard.internetcomputer.org/network/nodes/{value}")),
+        NodeFeature::NodeProvider => Some(format!("https://dashboard.internetcomputer.org/network/providers/{value}")),
+        NodeFeature::DataCenter => Some(format!("https://dashboard.internetcomputer.org/network/centers/{value}")),
+        _ => None,
+    }
+}
+
+async fn enrich_key(feature: &NodeFeature, value: &str, registry: Arc<dyn LazyRegistry>) -> anyhow::Result<String> {
+    match feature {
+        NodeFeature::NodeProvider => {
+            let nodes = registry.nodes().await?;
+            let provider = nodes.values().find_map(|node| {
+                if node.operator.provider.principal.to_string() == value {
+                    node.operator.provider.name.clone()
+                } else {
+                    None
+                }
+            });
+
+            let display_value = value.split_once("-").unwrap().0;
+            Ok(provider.map(|name| format!("{display_value} - ({name})",)).unwrap_or(value.to_string()))
+        }
+        NodeFeature::DataCenter => {
+            let dcs = registry.get_datacenters()?;
+
+            let dc = dcs.iter().find_map(|dc| {
+                if dc.id == value {
+                    Some(dc.region.rsplit_once(",").unwrap().1)
+                } else {
+                    None
+                }
+            });
+
+            Ok(dc.map(|town| format!("{value} - ({town})")).unwrap_or(value.to_string()))
+        }
+        _ => Ok(value.to_string()),
     }
 }
