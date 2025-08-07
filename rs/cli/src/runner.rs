@@ -1147,11 +1147,12 @@ fn force_replace_proposal_options(
     change: &SubnetChangeResponse,
     target_topology: TargetTopology,
 ) -> anyhow::Result<ic_admin::IcAdminProposalOptions> {
+    let topology_summary = target_topology.summary_for_change(change)?;
     title_and_summary(&change).map(|opts| ic_admin::IcAdminProposalOptions {
         motivation: Some(format!(
             "{}\n\n{}\n",
             change.motivation.as_ref().unwrap_or(&String::new()),
-            target_topology.for_change(change),
+            topology_summary
         )),
         ..opts
     })

@@ -13,7 +13,7 @@ use crate::{
     exe::ExecutableCommand,
     forum::ForumPostKind,
     submitter::{SubmissionParameters, Submitter},
-    target_topology::{TargetTopology, TargetTopologyOption},
+    target_topology::TargetTopologyOption,
 };
 
 #[derive(Args, Debug)]
