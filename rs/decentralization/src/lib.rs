@@ -83,10 +83,6 @@ impl SubnetChangeResponse {
             ..self
         }
     }
-
-    pub fn topology_format(&self) -> String {
-        "TBD".to_string()
-    }
 }
 
 impl Display for SubnetChangeResponse {

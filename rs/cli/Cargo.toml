@@ -82,6 +82,7 @@ tabular = { workspace = true }
 tempfile = { workspace = true }
 tokio = { workspace = true }
 url = { workspace = true }
+csv = { workspace = true }
 
 [dev-dependencies]
 actix-rt = { workspace = true }

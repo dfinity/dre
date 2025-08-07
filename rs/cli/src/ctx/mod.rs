@@ -127,6 +127,10 @@ impl DreContext {
         self.store.is_offline()
     }
 
+    pub fn store(&self) -> Store {
+        self.store.clone()
+    }
+
     pub async fn registry(&self) -> Arc<dyn LazyRegistry> {
         self.registry_with_version(None).await
     }

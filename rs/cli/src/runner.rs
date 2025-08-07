@@ -49,6 +49,7 @@ use crate::ic_admin::{IcAdminProposalCommand, IcAdminProposalOptions};
 use crate::operations::hostos_rollout::HostosRollout;
 use crate::operations::hostos_rollout::HostosRolloutResponse;
 use crate::operations::hostos_rollout::NodeGroupUpdate;
+use crate::target_topology::TargetTopology;
 
 pub struct Runner {
     registry: Arc<dyn LazyRegistry>,
@@ -210,7 +211,11 @@ impl Runner {
         self.run_membership_change(change, replace_proposal_options(change)?).await.map(Some)
     }
 
-    pub async fn propose_force_subnet_change(&self, change: &SubnetChangeResponse) -> anyhow::Result<Option<IcAdminProposal>> {
+    pub async fn propose_force_subnet_change(
+        &self,
+        change: &SubnetChangeResponse,
+        target_topology: TargetTopology,
+    ) -> anyhow::Result<Option<IcAdminProposal>> {
         if !self.should_submit(&change) {
             return Ok(None);
         }
@@ -221,7 +226,7 @@ impl Runner {
                 node_ids_add: change.node_ids_added.to_vec(),
                 node_ids_remove: change.node_ids_removed.to_vec(),
             },
-            force_replace_proposal_options(change)?,
+            force_replace_proposal_options(change, target_topology)?,
         )))
     }
 
@@ -1138,12 +1143,15 @@ pub fn replace_proposal_options(change: &SubnetChangeResponse) -> anyhow::Result
     })
 }
 
-fn force_replace_proposal_options(change: &SubnetChangeResponse) -> anyhow::Result<ic_admin::IcAdminProposalOptions> {
+fn force_replace_proposal_options(
+    change: &SubnetChangeResponse,
+    target_topology: TargetTopology,
+) -> anyhow::Result<ic_admin::IcAdminProposalOptions> {
     title_and_summary(&change).map(|opts| ic_admin::IcAdminProposalOptions {
         motivation: Some(format!(
             "{}\n\n{}\n",
             change.motivation.as_ref().unwrap_or(&String::new()),
-            change.topology_format()
+            target_topology.for_change(change),
         )),
         ..opts
     })

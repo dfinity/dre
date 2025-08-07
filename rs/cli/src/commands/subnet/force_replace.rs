@@ -1,4 +1,4 @@
-use std::{collections::BTreeSet, path::PathBuf, str::FromStr};
+use std::collections::BTreeSet;
 
 use clap::Args;
 use dialoguer::Confirm;
@@ -13,6 +13,7 @@ use crate::{
     exe::ExecutableCommand,
     forum::ForumPostKind,
     submitter::{SubmissionParameters, Submitter},
+    target_topology::{TargetTopology, TargetTopologyOption},
 };
 
 #[derive(Args, Debug)]
@@ -39,26 +40,6 @@ pub struct ForceReplace {
     // TODO: add actual handling of `current` once we merge the code
     #[clap(long)]
     target_topology: Option<TargetTopologyOption>,
-}
-
-#[derive(Debug, Clone)]
-enum TargetTopologyOption {
-    ProposalId(u64),
-    Path(PathBuf),
-}
-
-impl FromStr for TargetTopologyOption {
-    type Err = String;
-
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        // Try parsing as a number
-        if let Ok(id) = s.parse::<u64>() {
-            return Ok(TargetTopologyOption::ProposalId(id));
-        }
-
-        // Otherwise treat as path
-        Ok(TargetTopologyOption::Path(PathBuf::from(s)))
-    }
 }
 
 impl ExecutableCommand for ForceReplace {
@@ -215,7 +196,15 @@ impl ExecutableCommand for ForceReplace {
             }
         }
 
-        let runner_proposal = match ctx.runner().await?.propose_force_subnet_change(&subnet_change_response).await? {
+        let runner_proposal = match ctx
+            .runner()
+            .await?
+            .propose_force_subnet_change(
+                &subnet_change_response,
+                TargetTopology::from_option(self.target_topology.clone().unwrap_or_default(), ctx.store()).await?,
+            )
+            .await?
+        {
             Some(runner_proposal) => runner_proposal,
             None => return Ok(()),
         };
