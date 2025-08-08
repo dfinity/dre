@@ -206,6 +206,7 @@ impl TargetTopology {
             .filter(|(feat, _)| feat != &NodeFeature::Area)
             .map(|(key, inner_map)| {
                 let mut entries: Vec<_> = inner_map.into_iter().collect();
+                entries.sort();
                 while entries.len() < max_len {
                     entries.push(("".to_string(), (0, 0)));
                 }

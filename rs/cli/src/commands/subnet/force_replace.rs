@@ -172,7 +172,12 @@ impl ExecutableCommand for ForceReplace {
         let subnet_change = SubnetChange {
             subnet_id: self.subnet_id,
             old_nodes: old_nodes.clone(),
-            new_nodes: old_nodes.iter().filter(|node| !self.from.contains(&node.principal)).cloned().collect(),
+            new_nodes: old_nodes
+                .iter()
+                .filter(|node| !self.from.contains(&node.principal))
+                .chain(self.to.iter().map(|p| all_nodes.get(p).unwrap()))
+                .cloned()
+                .collect(),
             removed_nodes: self.from.iter().map(|key| all_nodes.get(key).unwrap()).cloned().collect(),
             added_nodes: self.to.iter().map(|key| all_nodes.get(key).unwrap()).cloned().collect(),
             ..Default::default()
