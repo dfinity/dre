@@ -120,7 +120,7 @@ impl TargetTopology {
         writeln!(output, "## Target topology entry\n")?;
         writeln!(output, "Target topology used was established in proposal [{}](https://dashboard.internetcomputer.org/proposal/{})\nSubnet id: [`{subnet_id}`](https://dashboard.internetcomputer.org/network/subnets/{subnet_id})\n", self.proposal, self.proposal)?;
 
-        let mut serialized_entry = serde_json::to_value(&entry)?;
+        let mut serialized_entry = serde_json::to_value(entry)?;
         let serialized_entry = serialized_entry.as_object_mut().ok_or(anyhow::anyhow!("Unexpected row serialization."))?;
 
         serialized_entry.remove("subnet_id");
@@ -200,7 +200,7 @@ impl TargetTopology {
         let max_len = feature_diffs.values().map(|inner| inner.len()).max().unwrap_or(0);
         let num_features = feature_diffs.len();
 
-        let padded_features: Vec<(NodeFeature, Vec<(String, (usize, usize))>)> = feature_diffs
+        let padded_features: Vec<Column> = feature_diffs
             .clone()
             .into_iter()
             .filter(|(feat, _)| feat != &NodeFeature::Area)
@@ -210,16 +210,23 @@ impl TargetTopology {
                 while entries.len() < max_len {
                     entries.push(("".to_string(), (0, 0)));
                 }
-                (key, entries)
+                Column {
+                    feature: key,
+                    attributes: entries
+                        .into_iter()
+                        .map(|(value, (before, after))| AttributeValue { value, before, after })
+                        .collect(),
+                }
             })
             .collect();
 
         for row in 0..max_len {
             let mut line: Vec<u8> = vec![];
             write!(line, "| ")?;
-            for column in 0..num_features {
-                let (feature, column_data) = &padded_features[column];
-                let (value, (before, after)) = &column_data[row];
+            for column in padded_features.iter().take(num_features) {
+                let feature = &column.feature;
+                let column_data = &column.attributes;
+                let AttributeValue { value, before, after } = &column_data[row];
 
                 if !value.is_empty() {
                     let enriched_key = enrich_key(feature, value, registry.clone()).await?;
@@ -234,7 +241,7 @@ impl TargetTopology {
                 }
                 write!(line, " |")?;
             }
-            write!(line, "\n")?;
+            writeln!(line)?;
             output.extend_from_slice(&line);
         }
 
@@ -244,6 +251,17 @@ impl TargetTopology {
 
         Ok(output.trim().to_string())
     }
+}
+
+struct Column {
+    feature: NodeFeature,
+    attributes: Vec<AttributeValue>,
+}
+
+struct AttributeValue {
+    value: String,
+    before: usize,
+    after: usize,
 }
 
 fn link_node_feature(feature: &NodeFeature, value: &str) -> Option<String> {

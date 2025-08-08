@@ -204,7 +204,7 @@ impl Runner {
     }
 
     pub async fn propose_subnet_change(&self, change: &SubnetChangeResponse) -> anyhow::Result<Option<IcAdminProposal>> {
-        if !self.should_submit(&change) {
+        if !self.should_submit(change) {
             return Ok(None);
         }
 
@@ -216,7 +216,7 @@ impl Runner {
         change: &SubnetChangeResponse,
         target_topology: TargetTopology,
     ) -> anyhow::Result<Option<IcAdminProposal>> {
-        if !self.should_submit(&change) {
+        if !self.should_submit(change) {
             return Ok(None);
         }
 
@@ -1137,7 +1137,7 @@ fn title_and_summary(change: &SubnetChangeResponse) -> anyhow::Result<ic_admin::
 }
 
 pub fn replace_proposal_options(change: &SubnetChangeResponse) -> anyhow::Result<ic_admin::IcAdminProposalOptions> {
-    title_and_summary(&change).map(|opts| ic_admin::IcAdminProposalOptions {
+    title_and_summary(change).map(|opts| ic_admin::IcAdminProposalOptions {
         motivation: Some(format!("{}\n\n{}\n", change.motivation.as_ref().unwrap_or(&String::new()), change)),
         ..opts
     })
@@ -1149,7 +1149,7 @@ async fn force_replace_proposal_options(
     registry: Arc<dyn LazyRegistry>,
 ) -> anyhow::Result<ic_admin::IcAdminProposalOptions> {
     let topology_summary = target_topology.summary_for_change(change, registry).await?;
-    title_and_summary(&change).map(|opts| ic_admin::IcAdminProposalOptions {
+    title_and_summary(change).map(|opts| ic_admin::IcAdminProposalOptions {
         motivation: Some(format!(
             "{}\n\n{}\n",
             change.motivation.as_ref().unwrap_or(&String::new()),

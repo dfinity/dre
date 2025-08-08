@@ -48,15 +48,13 @@ impl ExecutableCommand for ForceReplace {
     }
 
     fn validate(&self, _args: &crate::exe::args::GlobalArgs, cmd: &mut clap::Command) {
-        if let Some(target_topology_option) = &self.target_topology {
-            if let TargetTopologyOption::Path(path) = target_topology_option {
-                if !path.exists() {
-                    cmd.error(
-                        clap::error::ErrorKind::InvalidValue,
-                        &format!("path `{}` not found locally.", path.display()),
-                    )
-                    .exit();
-                }
+        if let Some(TargetTopologyOption::Path(path)) = &self.target_topology {
+            if !path.exists() {
+                cmd.error(
+                    clap::error::ErrorKind::InvalidValue,
+                    format!("path `{}` not found locally.", path.display()),
+                )
+                .exit();
             }
         }
 
@@ -163,7 +161,7 @@ impl ExecutableCommand for ForceReplace {
         let registry = ctx.registry().await;
 
         let subnet = registry
-            .subnet(decentralization::network::SubnetQueryBy::SubnetId(self.subnet_id.clone()))
+            .subnet(decentralization::network::SubnetQueryBy::SubnetId(self.subnet_id))
             .await?;
 
         let old_nodes = subnet.nodes.clone();
