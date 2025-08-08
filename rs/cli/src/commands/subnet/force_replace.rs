@@ -1,18 +1,19 @@
 use std::collections::BTreeSet;
 
 use clap::Args;
+use decentralization::{network::SubnetChange, SubnetChangeResponse};
 use dialoguer::Confirm;
 use ic_management_types::Node;
 use ic_types::PrincipalId;
 use indexmap::IndexMap;
 use itertools::Itertools;
 use log::warn;
-use registry_canister::mutations::do_change_subnet_membership::ChangeSubnetMembershipPayload;
 
 use crate::{
     exe::ExecutableCommand,
     forum::ForumPostKind,
     submitter::{SubmissionParameters, Submitter},
+    target_topology::TargetTopologyOption,
 };
 
 #[derive(Args, Debug)]
@@ -35,6 +36,10 @@ pub struct ForceReplace {
 
     #[clap(flatten)]
     pub submission_parameters: SubmissionParameters,
+
+    // TODO: add actual handling of `current` once we merge the code
+    #[clap(long)]
+    target_topology: Option<TargetTopologyOption>,
 }
 
 impl ExecutableCommand for ForceReplace {
@@ -43,6 +48,16 @@ impl ExecutableCommand for ForceReplace {
     }
 
     fn validate(&self, _args: &crate::exe::args::GlobalArgs, cmd: &mut clap::Command) {
+        if let Some(TargetTopologyOption::Path(path)) = &self.target_topology {
+            if !path.exists() {
+                cmd.error(
+                    clap::error::ErrorKind::InvalidValue,
+                    format!("path `{}` not found locally.", path.display()),
+                )
+                .exit();
+            }
+        }
+
         let from: BTreeSet<PrincipalId> = self.from.iter().cloned().collect();
         let to: BTreeSet<PrincipalId> = self.to.iter().cloned().collect();
 
@@ -143,15 +158,31 @@ impl ExecutableCommand for ForceReplace {
         }
 
         // Create a request
-        let runner = ctx.runner().await?;
+        let registry = ctx.registry().await;
 
-        let change_membership = ChangeSubnetMembershipPayload {
+        let subnet = registry
+            .subnet(decentralization::network::SubnetQueryBy::SubnetId(self.subnet_id))
+            .await?;
+
+        let old_nodes = subnet.nodes.clone();
+        let all_nodes = registry.nodes().await?;
+
+        let subnet_change = SubnetChange {
             subnet_id: self.subnet_id,
-            node_ids_add: self.to.iter().map(|id| (*id).into()).collect(),
-            node_ids_remove: self.from.iter().map(|id| (*id).into()).collect(),
+            old_nodes: old_nodes.clone(),
+            new_nodes: old_nodes
+                .iter()
+                .filter(|node| !self.from.contains(&node.principal))
+                .chain(self.to.iter().map(|p| all_nodes.get(p).unwrap()))
+                .cloned()
+                .collect(),
+            removed_nodes: self.from.iter().map(|key| all_nodes.get(key).unwrap()).cloned().collect(),
+            added_nodes: self.to.iter().map(|key| all_nodes.get(key).unwrap()).cloned().collect(),
+            ..Default::default()
         };
-
-        let subnet_change_response = runner.decentralization_change(&change_membership, None, self.motivation.clone()).await?;
+        let health = ctx.health_client();
+        let node_health = health.nodes().await?;
+        let response = SubnetChangeResponse::new(&subnet_change, &node_health, None);
 
         if !warnings.is_empty() {
             warn!("Careful! There are warnings related to this action!");
@@ -168,6 +199,7 @@ impl ExecutableCommand for ForceReplace {
             }
 
             if !self.submission_parameters.confirmation_mode.dry_run
+                && !self.submission_parameters.confirmation_mode.yes
                 && !Confirm::new()
                     .with_prompt("Accept warnings mentioned above?")
                     .default(false)
@@ -178,7 +210,12 @@ impl ExecutableCommand for ForceReplace {
             }
         }
 
-        let runner_proposal = match ctx.runner().await?.propose_subnet_change(&subnet_change_response, true).await? {
+        let runner_proposal = match ctx
+            .runner()
+            .await?
+            .propose_force_subnet_change(&response, ctx.target_topology(self.target_topology.clone().unwrap_or_default()).await?)
+            .await?
+        {
             Some(runner_proposal) => runner_proposal,
             None => return Ok(()),
         };
@@ -186,7 +223,7 @@ impl ExecutableCommand for ForceReplace {
         Submitter::from(&self.submission_parameters)
             .propose_and_print(
                 ctx.ic_admin_executor().await?.execution(runner_proposal.clone()),
-                match subnet_change_response.subnet_id {
+                match response.subnet_id {
                     Some(id) => ForumPostKind::ReplaceNodes {
                         subnet_id: id,
                         body: match (&runner_proposal.options.motivation, &runner_proposal.options.summary) {

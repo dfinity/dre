@@ -2052,6 +2052,7 @@ dependencies = [
  "clap_complete",
  "colored",
  "comfy-table",
+ "csv",
  "cycles-minting-canister",
  "decentralization",
  "dialoguer",
