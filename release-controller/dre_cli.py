@@ -218,7 +218,7 @@ class DRECli:
             if not launch_measurements_path.exists():
                 raise ValueError(
                     "Guest launch measurements specified, but the file cannot be found on disk. Expected path"
-                    + launch_measurements_path
+                    + str(launch_measurements_path)
                 )
 
             args.extend(

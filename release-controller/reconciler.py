@@ -1029,6 +1029,7 @@ def oneoff() -> None:
         unelect_versions=[],
         package_checksum=version_package_checksum(version, GUESTOS),
         package_urls=version_package_urls(version, GUESTOS),
+        launch_measurements_path=None,
     )
 
 
