@@ -250,6 +250,7 @@ class DRECli(dre_cli.DRECli):
         unelect_versions: list[str],
         package_checksum: str,
         package_urls: list[str],
+        launch_measurements_path: typing.Optional[pathlib.Path],
         dry_run: bool = False,
     ) -> int:
         super().propose_to_revise_elected_os_versions(
@@ -260,6 +261,7 @@ class DRECli(dre_cli.DRECli):
             unelect_versions,
             package_checksum,
             package_urls,
+            launch_measurements_path,
             dry_run=True,
         )
         # Now mock the proposal ID using an integer derived from the version.
@@ -285,15 +287,29 @@ class MockSlackAnnouncer(object):
 def oneoff_dre_place_proposal() -> None:
     changelog = "Fake changelog"
     dre = DRECli()
-    dre.propose_to_revise_elected_os_versions(
-        changelog=changelog,
-        version="0" * 40,
-        os_kind=GUESTOS,
-        forum_post_url="https://forum.dfinity.org/t/proposal-to-elect-new-release-rc-2024-03-27-23-01/29042/7",
-        unelect_versions=[],
-        package_checksum="0" * 40,
-        package_urls=["https://doesntmatter.com/"],
-    )
+    measurements = {
+        "guest_launch_measurements": [
+            {
+                "measurement": list(os.urandom(48)),
+                "metadata": {
+                    "kernel_cmdline": "some command line that is linked to this measaurement",
+                },
+            }
+        ]
+    }
+    with tempfile.NamedTemporaryFile("w") as f:
+        json.dump(measurements, f)
+        f.flush()
+        dre.propose_to_revise_elected_os_versions(
+            changelog=changelog,
+            version="0" * 40,
+            os_kind=GUESTOS,
+            forum_post_url="https://forum.dfinity.org/t/proposal-to-elect-new-release-rc-2024-03-27-23-01/29042/7",
+            unelect_versions=[],
+            package_checksum="0" * 40,
+            package_urls=["https://doesntmatter.com/"],
+            launch_measurements_path=pathlib.Path(f.name),
+        )
 
 
 if __name__ == "__main__":

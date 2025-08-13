@@ -4,8 +4,9 @@ import subprocess
 import typing
 from util import resolve_binary
 import os
+from pathlib import Path
 
-from const import OsKind, HOSTOS
+from const import OsKind, HOSTOS, GUESTOS
 
 
 class Auth(typing.TypedDict):
@@ -70,6 +71,7 @@ class DRECli:
 
     def _run(self, *args: str, **subprocess_kwargs: typing.Any) -> str:
         """Run the dre CLI."""
+        print(self.env["IC_ADMIN_VERSION"])
         return typing.cast(
             str,
             subprocess.check_output(
@@ -178,6 +180,7 @@ class DRECli:
         unelect_versions: list[str],
         package_checksum: str,
         package_urls: list[str],
+        launch_measurements_path: typing.Optional[Path],
         dry_run: bool = False,
     ) -> int:
         x = "hostos" if os_kind == HOSTOS else "guestos"
@@ -187,8 +190,7 @@ class DRECli:
             if len(unelect_versions) > 0
             else []
         )
-        self._logger.info("Submitting proposal for version %s", version)
-        text = self._run(
+        args = [
             "propose",
             *_mode_flags(dry_run),
             "--proposal-url",
@@ -205,7 +207,30 @@ class DRECli:
             f"--{y}-version-to-elect",
             version,
             *unelect_versions_args,
+        ]
+
+        # TODO: generalize when the HOSTOS launch measurements are
+        #       supported in the ic-admin.
+        if os_kind == GUESTOS:
+            if launch_measurements_path is None:
+                raise ValueError("Guest launch measurements missing. Cannot proceed.")
+
+            if not launch_measurements_path.exists():
+                raise ValueError(
+                    "Guest launch measurements specified, but the file cannot be found on disk. Expected path"
+                    + launch_measurements_path
+                )
+
+            args.extend(
+                ["--guest-launch-measurements-path", str(launch_measurements_path)]
+            )
+
+        self._logger.info(
+            "Submitting proposal for version %s using args: %s",
+            version,
+            " ".join(args),
         )
+        text = self._run(*args)
         if not dry_run:
             try:
                 return int(text.rstrip().splitlines()[-1].split()[1])
