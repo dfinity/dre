@@ -223,6 +223,14 @@ py_binary(
     deps = ["release_notes_composer", "commit_annotation_recreator"],
 )
 
+py_binary(
+    name = "dry-run",
+    main = "dryrun.py",
+    srcs = ["dryrun.py"],
+    env = env,
+    deps = ["dre_cli", "git_repo", "google_docs", "release_notes_composer", "release_index", "forum"],
+)
+
 genrule(
     name = "ic_repo_clone",
     outs = ["ic.git.tar"],
