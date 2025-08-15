@@ -13,6 +13,7 @@ rust_decimal = { workspace = true }
 rust_decimal_macros = { workspace = true }
 rewards-calculation = { workspace = true }
 candid = { workspace = true }
+tabled = { workspace = true }
 serde = { workspace = true }
 
 itertools = { workspace = true }
