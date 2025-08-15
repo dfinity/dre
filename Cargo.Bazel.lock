@@ -1,5 +1,5 @@
 {
-  "checksum": "bd3768c7540f371110a824f1818960830b97d9a44b195334c3ea0bd91c5f6545",
+  "checksum": "630ae45dd163f4f28931058bc3e916e8e1f9b672ffe9065093ddb7e4ef749d7d",
   "crates": {
     "actix-codec 0.5.2": {
       "name": "actix-codec",
@@ -12067,6 +12067,10 @@
             {
               "id": "comfy-table 7.1.4",
               "target": "comfy_table"
+            },
+            {
+              "id": "csv 1.3.1",
+              "target": "csv"
             },
             {
               "id": "cycles-minting-canister 0.9.0",
@@ -60120,6 +60124,7 @@
     "crossbeam 0.8.4",
     "crossbeam-channel 0.5.15",
     "cryptoki 0.7.0",
+    "csv 1.3.1",
     "custom_error 1.9.2",
     "cycles-minting-canister 0.9.0",
     "dfn_core 0.9.0",
