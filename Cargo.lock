@@ -7522,6 +7522,7 @@ dependencies = [
 name = "rewards-calculation"
 version = "0.6.5"
 dependencies = [
+ "candid",
  "chrono",
  "ic-base-types",
  "ic-cdk",
