@@ -1,0 +1,12 @@
+type decl = 
+    service {
+        get_node_status : () -> (vec NodeStatus) query;
+        update_node_status: (vec NodeStatus) -> (bool);
+        get_node_count: () -> (nat64) query;
+    };
+    type NodeStatus = record {
+        node_id: principal;
+        subnet_id: opt principal;
+        status: bool;
+    };
+service : () -> decl

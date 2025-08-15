@@ -1,0 +1,31 @@
+[package]
+name = "rewards-calculation-deprecated"
+version.workspace = true
+authors.workspace = true
+description.workspace = true
+documentation.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+ic-types = { workspace = true }
+ic-base-types = { workspace = true }
+itertools = { workspace = true }
+rust_decimal = { workspace = true }
+rust_decimal_macros = { workspace = true }
+ic-protobuf = { workspace = true }
+rewards-calculation = { workspace = true }
+ic-cdk = { version = "^0.17.2" }
+candid = { workspace = true }
+
+[dev-dependencies]
+chrono = { version = "0.4.41", default-features = false, features = [
+    "alloc",
+    "clock",
+    "serde",
+] }
+maplit = "1.0"
+
+[lib]
+name = "rewards_calculation_deprecated"
+path = "src/lib.rs"

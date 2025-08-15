@@ -1,0 +1,46 @@
+[workspace]
+members = [
+    "node-provider-rewards/canister",
+    "node-provider-rewards/canister/api",
+    "node-provider-rewards/rewards-calculation-deprecated",
+]
+
+resolver = "2"
+
+[workspace.package]
+version = "0.0.1"
+edition = "2021"
+authors = ["IC Decentralized Reliability Engineering (DRE) Team"]
+description = "Canisters for the Internet Computer"
+documentation = "https://github.com/dfinity/dre/"
+license = "Apache-2.0"
+
+[workspace.dependencies]
+async-trait = "0.1.88"
+candid = "0.10.14"
+chrono = { version = "0.4.41", features = ["serde"] }
+ic-base-types = { git = "https://github.com/dfinity/ic.git", rev = "d10c16ea3af6bb5150078e0d8ef13de08da1b7e2" }
+ic-registry-keys = { git = "https://github.com/dfinity/ic.git", rev = "d10c16ea3af6bb5150078e0d8ef13de08da1b7e2" }
+ic-http-types = { git = "https://github.com/dfinity/ic.git", rev = "d10c16ea3af6bb5150078e0d8ef13de08da1b7e2" }
+ic-nervous-system-canisters = { git = "https://github.com/dfinity/ic.git", rev = "d10c16ea3af6bb5150078e0d8ef13de08da1b7e2" }
+ic-nervous-system-common = { git = "https://github.com/dfinity/ic.git", rev = "d10c16ea3af6bb5150078e0d8ef13de08da1b7e2" }
+ic-node-rewards-canister = { git = "https://github.com/dfinity/ic.git", rev = "d10c16ea3af6bb5150078e0d8ef13de08da1b7e2" }
+ic-protobuf = { git = "https://github.com/dfinity/ic.git", rev = "d10c16ea3af6bb5150078e0d8ef13de08da1b7e2" }
+ic-registry-canister-client = { git = "https://github.com/dfinity/ic.git", rev = "d10c16ea3af6bb5150078e0d8ef13de08da1b7e2" }
+ic-types = { git = "https://github.com/dfinity/ic.git", rev = "d10c16ea3af6bb5150078e0d8ef13de08da1b7e2" }
+rewards-calculation = { git = "https://github.com/dfinity/ic.git", rev = "d10c16ea3af6bb5150078e0d8ef13de08da1b7e2" }
+ic-dummy-getrandom-for-wasm = { git = "https://github.com/dfinity/ic.git", rev = "d10c16ea3af6bb5150078e0d8ef13de08da1b7e2" }
+
+itertools = "0.13.0"
+prost = "0.13"
+rust_decimal = "1.37.2"
+rust_decimal_macros = "1.37.1"
+serde = { version = "1.0", features = ["derive"] }
+tokio = { version = "1.46.1", features = ["full"] }
+mockall = "0.13.1"
+ic-cdk = { version = "^0.17.2" }
+ic-cdk-timers = { version = "^0.11.0" }
+ic-cdk-macros = { version = "^0.17.2" }
+ic-stable-structures = "0.6.9"
+rewards-calculation-deprecated = { path = "node-provider-rewards/rewards-calculation-deprecated" }
+node-provider-rewards-api = { path = "node-provider-rewards/canister/api" }

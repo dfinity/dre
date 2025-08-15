@@ -1,0 +1,36 @@
+{
+  "canisters": {
+    "node_status_canister_backend": {
+      "candid": "src/node_status_canister_backend/node_status_canister_backend.did",
+      "package": "node_status_canister_backend",
+      "type": "rust"
+    },
+    "node_status_canister_frontend": {
+      "dependencies": [
+        "node_status_canister_backend"
+      ],
+      "frontend": {
+        "entrypoint": "src/node_status_canister_frontend/src/index.html"
+      },
+      "source": [
+        "src/node_status_canister_frontend/assets",
+        "dist/node_status_canister_frontend/"
+      ],
+      "type": "assets"
+    }
+  },
+  "defaults": {
+    "build": {
+      "args": "",
+      "packtool": ""
+    }
+  },
+  "networks": {
+    "local": {
+      "bind": "127.0.0.1:4943",
+      "type": "ephemeral"
+    }
+  },
+  "output_env_file": ".env",
+  "version": 1
+}

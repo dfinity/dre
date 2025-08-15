@@ -1,0 +1,104 @@
+
+type NodeMetrics = record {
+    node_id: principal;
+    num_blocks_proposed_total: nat64;
+    num_blocks_failures_total: nat64;
+};
+
+type SubnetNodeMetricsResponse = record {
+    ts: nat64;
+    subnet_id: principal;
+    node_metrics: vec NodeMetrics;
+};
+
+type SubnetNodeMetricsResult = variant {
+  Ok : vec SubnetNodeMetricsResponse;
+  Err : text;
+};
+
+type SubnetNodeMetricsArgs = record {
+  subnet_id: opt principal;
+  ts: opt nat64;
+};
+
+type DailyNodeMetrics = record {
+  ts: nat64;
+  subnet_assigned: principal;
+  num_blocks_proposed: nat64;
+  num_blocks_failed: nat64;
+  failure_rate: float64;
+};
+
+type OperationExecutorLog = record {
+    reason: text;
+    operation: text;
+    result: text;
+};
+
+type MultiplierStats = record {
+  days_assigned: nat64;
+  days_unassigned: nat64;
+  rewards_reduction: float64;
+  blocks_failed: nat64;
+  blocks_proposed: nat64;
+  blocks_total: nat64;
+  failure_rate: float64;
+};
+
+type NodeRewardRate = record {
+  xdr_permyriad_per_node_per_month: nat64;
+  reward_coefficient_percent: opt int32;
+};
+
+type NodeRewardsMultiplier = record {
+  node_id: principal;
+  daily_node_metrics: vec DailyNodeMetrics;
+  node_rate: NodeRewardRate;
+  rewards_multiplier: float64;
+  rewards_multiplier_stats: MultiplierStats;
+};
+
+type NodeRewardsArgs = record {
+  from_ts: nat64;
+  to_ts: nat64;
+  node_id: principal;
+};
+
+type NodeProviderRewards = record {
+  node_provider_id: principal;
+  rewards_xdr_permyriad: nat64;
+  rewards_xdr_permyriad_no_reduction: nat64;
+  rewards_xdr_old: opt nat64;
+  ts_distribution: nat64;
+  xdr_conversion_rate: opt nat64;
+  rewards_multipliers_stats: vec MultiplierStats;
+  computation_log: vec text;
+};
+
+type NodeProviderRewardsArgs = record {
+  from_ts: nat64;
+  to_ts: nat64;
+  node_provider_id: principal;
+};
+
+type NodeMetadataStoredV2 = record {
+    node_operator_id: principal;
+    node_provider_id: principal;
+    node_provider_name: opt text;
+    dc_id: text;
+    region: text;
+    node_type: text;
+};
+
+type NodeMetadata = record {
+  node_id: principal;
+  node_metadata_stored: NodeMetadataStoredV2;
+};
+
+service : {
+    "subnet_node_metrics" : (SubnetNodeMetricsArgs) -> (SubnetNodeMetricsResult) query;
+    "node_rewards" : (NodeRewardsArgs) -> (NodeRewardsMultiplier) query;
+    "node_provider_rewards" : (NodeProviderRewardsArgs) -> (NodeProviderRewards) query;
+    "node_ids" : () -> (vec principal) query;
+    "nodes_metadata": () -> (vec NodeMetadata) query;
+}

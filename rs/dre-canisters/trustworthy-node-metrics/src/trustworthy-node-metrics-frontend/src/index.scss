@@ -1,0 +1,36 @@
+body {
+  font-family: sans-serif;
+  font-size: 1.5rem;
+}
+
+img {
+  max-width: 50vw;
+  max-height: 25vw;
+  display: block;
+  margin: auto;
+}
+
+form {
+  display: flex;
+  justify-content: center;
+  gap: 0.5em;
+  flex-flow: row wrap;
+  max-width: 40vw;
+  margin: auto;
+  align-items: baseline;
+}
+
+.custom-link {
+  text-decoration: none;
+  color: rgb(113, 113, 246);
+}
+
+.custom-link:hover {
+  color: rgb(44, 44, 191); 
+}
+
+.custom-paper {
+  background-color: #11171E;
+  border-radius: 10px;
+  color: white;
+}
