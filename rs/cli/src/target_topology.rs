@@ -1,13 +1,10 @@
-use std::{path::PathBuf, str::FromStr, sync::Arc};
+use std::fmt::Write;
+use std::{path::PathBuf, str::FromStr};
 
 use csv::Reader;
 use decentralization::SubnetChangeResponse;
-use ic_management_backend::lazy_registry::LazyRegistry;
-use ic_management_types::NodeFeature;
 use ic_types::PrincipalId;
-use itertools::Itertools;
 use serde::{Deserialize, Serialize};
-use std::io::Write;
 
 use crate::store::Store;
 
@@ -107,7 +104,7 @@ impl TargetTopology {
         Ok(topology)
     }
 
-    pub async fn summary_for_change(&self, change: &SubnetChangeResponse, registry: Arc<dyn LazyRegistry>) -> anyhow::Result<String> {
+    pub fn summary_for_change(&self, change: &SubnetChangeResponse) -> anyhow::Result<String> {
         let subnet_id = change.subnet_id.ok_or(anyhow::anyhow!("Subnet id is missing"))?;
         let entry = self
             .entries
@@ -115,17 +112,29 @@ impl TargetTopology {
             .find(|t| PartialEq::eq(&t.subnet_id, &subnet_id))
             .ok_or(anyhow::anyhow!("Topology entry for subnet {subnet_id} is missing."))?;
 
-        let mut output: Vec<u8> = vec![];
+        let mut output = String::new();
 
         writeln!(output, "## Target topology entry\n")?;
         writeln!(output, "Target topology used was established in proposal [{}](https://dashboard.internetcomputer.org/proposal/{})\nSubnet id: [`{subnet_id}`](https://dashboard.internetcomputer.org/network/subnets/{subnet_id})\n", self.proposal, self.proposal)?;
 
-        let mut serialized_entry = serde_json::to_value(entry)?;
-        let serialized_entry = serialized_entry.as_object_mut().ok_or(anyhow::anyhow!("Unexpected row serialization."))?;
+        self.write_target_topology_table(&mut output, entry)?;
+
+        change.write_details(&mut output)?;
+
+        change.write_attribute_table(&mut output)?;
+
+        writeln!(output, "> **Note:** Each column represents changes for a single attribute type and is independent from the others. Rows are used only for layout purposes there is no correlation between entries in the same row.")?;
+
+        Ok(output.trim().to_string())
+    }
+
+    fn write_target_topology_table<W: Write>(&self, f: &mut W, entry: &TargetTopologyEntry) -> std::fmt::Result {
+        let mut serialized_entry = serde_json::to_value(entry).unwrap();
+        let serialized_entry = serialized_entry.as_object_mut().unwrap();
 
         serialized_entry.remove("subnet_id");
 
-        let keys: Vec<_> = serialized_entry
+        let columns: Vec<_> = serialized_entry
             .keys()
             .map(|key| {
                 let key = key.trim_start_matches("subnet_");
@@ -140,167 +149,25 @@ impl TargetTopology {
             })
             .collect();
 
-        writeln!(
-            output,
-            "| {} |\n| {} |\n| {} |\n",
-            keys.join(" | "),
-            keys.iter().map(|header| "-".repeat(header.len())).join(" | "),
-            serialized_entry
-                .values()
-                .map(|val| match val {
-                    serde_json::Value::Number(n) => n.to_string(),
-                    serde_json::Value::String(s) => s.to_string(),
-                    serde_json::Value::Bool(b) => b.to_string(),
-                    other => panic!("Not known how to format {other:?}"),
-                })
-                .join(" | ")
-        )?;
+        let mut table = tabular::Table::new(&columns.iter().map(|_| "    {:<}").collect::<Vec<_>>().join(""));
+        table.add_row(columns.iter().fold(tabular::Row::new(), |acc, k| acc.with_cell(k.to_string())));
+        table.add_row(
+            columns
+                .iter()
+                .fold(tabular::Row::new(), |acc, k| acc.with_cell("-".repeat(k.to_string().len()))),
+        );
 
-        writeln!(output, "## Node replacement details")?;
-        writeln!(output, "Nodes removed:")?;
-        for node_id in &change.node_ids_removed {
-            let health = change
-                .health_of_nodes
-                .get(node_id)
-                .map(|h| h.to_string().to_lowercase())
-                .unwrap_or("unknown".to_string());
-            let link = link_node_feature(&NodeFeature::NodeId, &node_id.to_string()).unwrap();
-            writeln!(output, "- [`{node_id}`]({link}) [health: {health}]")?;
-        }
-        writeln!(output, "\nNodes added:")?;
-        for node_id in &change.node_ids_added {
-            let health = change
-                .health_of_nodes
-                .get(node_id)
-                .map(|h| h.to_string().to_lowercase())
-                .unwrap_or("unknown".to_string());
-            let link = link_node_feature(&NodeFeature::NodeId, &node_id.to_string()).unwrap();
-            writeln!(output, "- [`{node_id}`]({link}) [health: {health}]")?;
-        }
-
-        let mut feature_diffs = change.feature_diff.clone();
-        feature_diffs.shift_remove(&NodeFeature::Area);
-
-        let keys: Vec<_> = feature_diffs
-            .keys()
-            .map(|key| {
-                let key = key.to_string();
-                let key = key.replace("_", " ");
-                format!("{key} changes")
+        table.add_row(serialized_entry.values().fold(tabular::Row::new(), |acc, k| {
+            acc.with_cell(match k {
+                serde_json::Value::Bool(b) => b.to_string(),
+                serde_json::Value::Number(n) => n.to_string(),
+                serde_json::Value::String(s) => s.to_string(),
+                other => panic!("Not known how to format {other:?}"),
             })
-            .collect();
-        writeln!(output, "\n## Attribute wise view of the changes\n")?;
-        writeln!(
-            output,
-            "| {} |\n| {} |",
-            keys.join(" | "),
-            keys.iter().map(|extended| "-".repeat(extended.len())).join(" | "),
-        )?;
+        }));
 
-        let max_len = feature_diffs.values().map(|inner| inner.len()).max().unwrap_or(0);
-        let num_features = feature_diffs.len();
+        writeln!(f, "\n\n```\n{}```", table)?;
 
-        let padded_features: Vec<Column> = feature_diffs
-            .clone()
-            .into_iter()
-            .filter(|(feat, _)| feat != &NodeFeature::Area)
-            .map(|(key, inner_map)| {
-                let mut entries: Vec<_> = inner_map.into_iter().collect();
-                entries.sort();
-                while entries.len() < max_len {
-                    entries.push(("".to_string(), (0, 0)));
-                }
-                Column {
-                    feature: key,
-                    attributes: entries
-                        .into_iter()
-                        .map(|(value, (before, after))| AttributeValue { value, before, after })
-                        .collect(),
-                }
-            })
-            .collect();
-
-        for row in 0..max_len {
-            let mut line: Vec<u8> = vec![];
-            write!(line, "| ")?;
-            for column in padded_features.iter().take(num_features) {
-                let feature = &column.feature;
-                let column_data = &column.attributes;
-                let AttributeValue { value, before, after } = &column_data[row];
-
-                if !value.is_empty() {
-                    let enriched_key = enrich_key(feature, value, registry.clone()).await?;
-                    let displayed_value = link_node_feature(feature, value)
-                        .map(|link| format!("[`{enriched_key}`]({link})"))
-                        .unwrap_or(format!("`{enriched_key}`"));
-                    if before == after {
-                        write!(line, "{displayed_value}  {before}")?;
-                    } else {
-                        write!(line, "{displayed_value}  {before} -> {after}")?;
-                    }
-                }
-                write!(line, " |")?;
-            }
-            writeln!(line)?;
-            output.extend_from_slice(&line);
-        }
-
-        writeln!(output, "> **Note:** Each column represents changes for a single attribute type and is independent from the others. Rows are used only for layout purposes there is no correlation between entries in the same row.")?;
-
-        let output = String::from_utf8(output).map_err(anyhow::Error::from)?;
-
-        Ok(output.trim().to_string())
-    }
-}
-
-struct Column {
-    feature: NodeFeature,
-    attributes: Vec<AttributeValue>,
-}
-
-struct AttributeValue {
-    value: String,
-    before: usize,
-    after: usize,
-}
-
-fn link_node_feature(feature: &NodeFeature, value: &str) -> Option<String> {
-    match feature {
-        NodeFeature::NodeId => Some(format!("https://dashboard.internetcomputer.org/network/nodes/{value}")),
-        NodeFeature::NodeProvider => Some(format!("https://dashboard.internetcomputer.org/network/providers/{value}")),
-        NodeFeature::DataCenter => Some(format!("https://dashboard.internetcomputer.org/network/centers/{value}")),
-        _ => None,
-    }
-}
-
-async fn enrich_key(feature: &NodeFeature, value: &str, registry: Arc<dyn LazyRegistry>) -> anyhow::Result<String> {
-    match feature {
-        NodeFeature::NodeProvider => {
-            let nodes = registry.nodes().await?;
-            let provider = nodes.values().find_map(|node| {
-                if node.operator.provider.principal.to_string() == value {
-                    node.operator.provider.name.clone()
-                } else {
-                    None
-                }
-            });
-
-            let display_value = value.split_once("-").unwrap().0;
-            Ok(provider.map(|name| format!("{display_value} - ({name})",)).unwrap_or(value.to_string()))
-        }
-        NodeFeature::DataCenter => {
-            let dcs = registry.get_datacenters()?;
-
-            let dc = dcs.iter().find_map(|dc| {
-                if dc.id == value {
-                    Some(dc.region.rsplit_once(",").unwrap().1)
-                } else {
-                    None
-                }
-            });
-
-            Ok(dc.map(|town| format!("{value} - ({town})")).unwrap_or(value.to_string()))
-        }
-        _ => Ok(value.to_string()),
+        Ok(())
     }
 }

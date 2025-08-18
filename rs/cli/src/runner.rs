@@ -226,7 +226,7 @@ impl Runner {
                 node_ids_add: change.node_ids_added.to_vec(),
                 node_ids_remove: change.node_ids_removed.to_vec(),
             },
-            force_replace_proposal_options(change, target_topology, self.registry.clone()).await?,
+            force_replace_proposal_options(change, target_topology).await?,
         )))
     }
 
@@ -1146,9 +1146,8 @@ pub fn replace_proposal_options(change: &SubnetChangeResponse) -> anyhow::Result
 async fn force_replace_proposal_options(
     change: &SubnetChangeResponse,
     target_topology: TargetTopology,
-    registry: Arc<dyn LazyRegistry>,
 ) -> anyhow::Result<ic_admin::IcAdminProposalOptions> {
-    let topology_summary = target_topology.summary_for_change(change, registry).await?;
+    let topology_summary = target_topology.summary_for_change(change)?;
     title_and_summary(change).map(|opts| ic_admin::IcAdminProposalOptions {
         motivation: Some(format!(
             "{}\n\n{}\n",
