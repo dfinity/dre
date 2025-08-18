@@ -385,6 +385,7 @@ async fn _get_nodes(
                     None => "unknown".to_string(),
                 }
             };
+            let subnet = subnets.iter().find(|subnet| subnet.membership.contains(&k.to_string()));
 
             NodeDetails {
                 node_id: *k,
@@ -404,16 +405,16 @@ async fn _get_nodes(
                     Some(no) => no.node_provider_principal_id,
                     None => PrincipalId::new_anonymous(),
                 },
-                subnet_id: subnets
-                    .iter()
-                    .find(|subnet| subnet.membership.contains(&k.to_string()))
-                    .map(|subnet| subnet.subnet_id),
+                subnet_id: subnet.map(|subnet| subnet.subnet_id),
                 dc_id: match node_operators.get(&node_operator_id) {
                     Some(no) => no.dc_id.clone(),
                     None => "".to_string(),
                 },
                 status: nodes_health.get(k).unwrap_or(&ic_management_types::HealthStatus::Unknown).clone(),
                 node_reward_type,
+                dc_owner: record.operator.datacenter.clone().map(|dc| dc.owner.name).unwrap_or_default(),
+                guestos_version_id: subnet.map(|sr| sr.replica_version_id.to_string()),
+                country: record.operator.datacenter.clone().map(|dc| dc.country).unwrap_or_default(),
             }
         })
         .collect::<Vec<_>>();
@@ -600,6 +601,9 @@ struct NodeDetails {
     node_provider_id: PrincipalId,
     status: HealthStatus,
     node_reward_type: String,
+    dc_owner: String,
+    guestos_version_id: Option<String>,
+    country: String,
 }
 
 /// User-friendly representation of a SubnetRecord. For instance,
