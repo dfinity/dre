@@ -3,7 +3,7 @@ use std::{
     str::FromStr,
     sync::Arc,
 };
-
+use candid::CandidType;
 use clap::{error::ErrorKind, Args};
 use ic_canisters::{
     management::{NodeMetricsHistoryResponse, WalletCanisterWrapper},
@@ -36,6 +36,12 @@ pub struct NodeMetrics {
     /// Vector of subnets to query, if empty will dump metrics for
     /// all subnets
     pub subnet_ids: Vec<PrincipalId>,
+}
+
+
+#[derive(Default, CandidType, candid::Deserialize)]
+struct SubnetMetricsExport {
+    metrics_by_subnet: BTreeMap<PrincipalId, Vec<NodeMetricsHistoryResponse>>,
 }
 
 impl NodeMetrics {
@@ -74,6 +80,7 @@ impl NodeMetrics {
 
         Ok(metrics_by_subnet)
     }
+
 
     async fn get_untrusted_metrics(&self, canister_agent: ic_canisters::IcAgentCanisterClient) -> anyhow::Result<CLINodeMetrics> {
         let mut metrics_by_subnet = BTreeMap::new();

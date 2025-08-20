@@ -1761,6 +1761,37 @@ dependencies = [
 ]
 
 [[package]]
+name = "node-provider-rewards-canister-staging"
+version = "0.0.1"
+dependencies = [
+ "async-trait",
+ "candid",
+ "chrono",
+ "ic-base-types",
+ "ic-cdk",
+ "ic-cdk-macros",
+ "ic-cdk-timers",
+ "ic-dummy-getrandom-for-wasm",
+ "ic-http-types",
+ "ic-nervous-system-canisters",
+ "ic-nervous-system-common",
+ "ic-node-rewards-canister",
+ "ic-protobuf",
+ "ic-registry-canister-client",
+ "ic-registry-keys",
+ "ic-stable-structures",
+ "ic-types",
+ "itertools 0.13.0",
+ "mockall",
+ "node-provider-rewards-api",
+ "prost",
+ "rewards-calculation",
+ "rewards-calculation-deprecated",
+ "serde_cbor",
+ "tokio",
+]
+
+[[package]]
 name = "num-bigint"
 version = "0.4.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"

@@ -1,5 +1,6 @@
 [workspace]
 members = [
+    "node-provider-rewards-staging/canister",
     "node-provider-rewards/canister",
     "node-provider-rewards/canister/api",
     "node-provider-rewards/rewards-calculation-deprecated",

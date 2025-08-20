@@ -25,10 +25,7 @@ use ic_registry_client::client::ThresholdSigPublicKey;
 use ic_registry_client_fake::FakeRegistryClient;
 use ic_registry_client_helpers::node::NodeRegistry;
 use ic_registry_common_proto::pb::local_store::v1::{ChangelogEntry as PbChangelogEntry, KeyMutation as PbKeyMutation, MutationType};
-use ic_registry_keys::{
-    make_blessed_replica_versions_key, HOSTOS_VERSION_KEY_PREFIX, NODE_OPERATOR_RECORD_KEY_PREFIX, NODE_RECORD_KEY_PREFIX,
-    REPLICA_VERSION_KEY_PREFIX, SUBNET_RECORD_KEY_PREFIX,
-};
+use ic_registry_keys::{make_blessed_replica_versions_key, make_subnet_list_record_key, HOSTOS_VERSION_KEY_PREFIX, NODE_OPERATOR_RECORD_KEY_PREFIX, NODE_RECORD_KEY_PREFIX, NODE_REWARDS_TABLE_KEY, REPLICA_VERSION_KEY_PREFIX, SUBNET_RECORD_KEY_PREFIX};
 use ic_registry_keys::{make_crypto_threshold_signing_pubkey_key, ROOT_SUBNET_ID_KEY};
 use ic_registry_keys::{API_BOUNDARY_NODE_RECORD_KEY_PREFIX, DATA_CENTER_KEY_PREFIX};
 use ic_registry_local_registry::LocalRegistry;
@@ -44,6 +41,8 @@ use regex::Regex;
 use std::cmp::Ordering;
 use std::collections::{HashMap, HashSet};
 use std::convert::TryFrom;
+use std::fs::File;
+use std::io::{BufWriter, Write};
 use std::net::Ipv6Addr;
 use std::ops::Add;
 use std::path::{Path, PathBuf};
@@ -962,7 +961,7 @@ pub async fn sync_local_store_with_path(target_network: &Network, local_registry
         registry_cache.update_to_latest_version();
         registry_cache.get_latest_version()
     };
-    let mut updates = vec![];
+    let mut all_deltas = Vec::new();
 
     loop {
         match registry_canister.get_latest_version().await {
@@ -975,91 +974,42 @@ pub async fn sync_local_store_with_path(target_network: &Network, local_registry
                     break;
                 }
                 Ordering::Greater => {
-                    warn!(
-                        "Removing faulty local copy of the registry for the IC network {}: {}",
-                        target_network.name,
-                        local_registry_path.display()
-                    );
-                    fs_err::remove_dir_all(local_registry_path)?;
-                    panic!(
-                        "Registry version local {} > remote {}, this should never happen",
-                        local_latest_version, remote_version
-                    );
+                    break;
                 }
             },
             Err(e) => {
                 error!("Failed to get latest registry version: {:?}", e);
             }
         }
-        if let Ok(mut initial_records) = registry_canister.get_certified_changes_since(local_latest_version.get()).await {
-            initial_records.sort_by_key(|tr| tr.version);
-            let changelog = initial_records.iter().fold(Changelog::default(), |mut cl, r| {
-                let rel_version = (r.version - local_latest_version).get();
-                if cl.len() < rel_version as usize {
-                    cl.push(ChangelogEntry::default());
-                }
-                cl.last_mut().unwrap().push(KeyMutation {
-                    key: r.key.clone(),
-                    value: r.value.clone(),
-                });
-                cl
-            });
+        if let Ok((mut initial_records, version)) = registry_canister.get_changes_since(local_latest_version.get()).await {
+            all_deltas.extend_from_slice(&initial_records);
 
-            let versions_count = changelog.len();
+            let version = initial_records.iter().flat_map(|d| d.values.iter().map(|v|  v.version )).max().unwrap();
 
-            changelog.into_iter().enumerate().for_each(|(i, ce)| {
-                let v = RegistryVersion::from(i as u64 + 1 + local_latest_version.get());
-                let local_registry_path = local_registry_path.clone();
-                updates.push(async move {
-                    let path_str = format!("{:016x}.pb", v.get());
-                    // 00 01 02 03 04 / 05 / 06 / 07.pb
-                    let v_path = &[&path_str[0..10], &path_str[10..12], &path_str[12..14], &path_str[14..19]]
-                        .iter()
-                        .collect::<PathBuf>();
-                    let path = local_registry_path.join(v_path.as_path());
-                    let r = tokio::fs::create_dir_all(path.clone().parent().unwrap())
-                        .and_then(|_| async {
-                            tokio::fs::write(
-                                path,
-                                PbChangelogEntry {
-                                    key_mutations: ce
-                                        .iter()
-                                        .map(|km| {
-                                            let mutation_type = if km.value.is_some() {
-                                                MutationType::Set as i32
-                                            } else {
-                                                MutationType::Unset as i32
-                                            };
-                                            PbKeyMutation {
-                                                key: km.key.clone(),
-                                                value: km.value.clone().unwrap_or_default(),
-                                                mutation_type,
-                                            }
-                                        })
-                                        .collect(),
-                                }
-                                .encode_to_vec(),
-                            )
-                            .await
-                        })
-                        .await;
-                    if let Err(e) = &r {
-                        debug!("Storage err for {v}: {}", e);
-                    } else {
-                        debug!("Stored version {}", v);
-                    }
-                    r
-                });
-            });
-
-            local_latest_version = local_latest_version.add(RegistryVersion::new(versions_count as u64));
-
-            debug!("Sync reached version {local_latest_version}");
-            tokio::time::sleep(std::time::Duration::from_secs(1)).await;
+            local_latest_version = RegistryVersion::from(version + 1);
         }
+        sleep(Duration::from_secs(1)).await;
     }
 
-    futures::future::join_all(updates).await;
+    let file = File::create("/Users/pietro.di.marco/RustroverProjects/dre2/rs/cli/registry")?;
+    let mut writer = BufWriter::new(file);
+
+    for delta in all_deltas {
+        let key = std::str::from_utf8(&delta.key[..]).unwrap().to_string();
+        let subnets_list = make_subnet_list_record_key();
+        if key.starts_with(NODE_OPERATOR_RECORD_KEY_PREFIX)
+            || key.starts_with(DATA_CENTER_KEY_PREFIX)
+            || key.starts_with(NODE_RECORD_KEY_PREFIX)
+            || key.starts_with(NODE_REWARDS_TABLE_KEY)
+            || key.starts_with(&subnets_list)
+        {
+            println!("{key}");
+            let mut buf = Vec::new();
+            delta.encode_length_delimited(&mut buf).unwrap();
+            writer.write_all(&buf)?;
+        }
+    }
+    writer.flush()?;
     Ok(())
 }
 
