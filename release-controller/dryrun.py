@@ -298,21 +298,18 @@ def oneoff_dre_place_proposal() -> None:
         ]
     }
 
-    measurements = json.dumps(measurements)
+    measurements = json.dumps(measurements).encode()
 
-    with tempfile.NamedTemporaryFile("w") as f:
-        json.dump(measurements, f)
-        f.flush()
-        dre.propose_to_revise_elected_os_versions(
-            changelog=changelog,
-            version="0" * 40,
-            os_kind=GUESTOS,
-            forum_post_url="https://forum.dfinity.org/t/proposal-to-elect-new-release-rc-2024-03-27-23-01/29042/7",
-            unelect_versions=[],
-            package_checksum="0" * 40,
-            package_urls=["https://doesntmatter.com/"],
-            launch_measurements=measurements.encode(),
-        )
+    dre.propose_to_revise_elected_os_versions(
+        changelog=changelog,
+        version="0" * 40,
+        os_kind=GUESTOS,
+        forum_post_url="https://forum.dfinity.org/t/proposal-to-elect-new-release-rc-2024-03-27-23-01/29042/7",
+        unelect_versions=[],
+        package_checksum="0" * 40,
+        package_urls=["https://doesntmatter.com/"],
+        launch_measurements=measurements,
+    )
 
 
 if __name__ == "__main__":
