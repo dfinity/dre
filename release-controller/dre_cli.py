@@ -1,4 +1,5 @@
 import json
+import sys
 import logging
 import subprocess
 import typing
@@ -239,6 +240,7 @@ class DRECli:
         else:
             # We will not parse the text here.  We dry-ran the thing, after all,
             # so there will be no proposal ID to parse.
+            print(text, file=sys.stderr)
             return 0
 
 
