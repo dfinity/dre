@@ -1,11 +1,14 @@
 import json
+import sys
 import logging
 import subprocess
 import typing
 from util import resolve_binary
 import os
+from pathlib import Path
+import tempfile
 
-from const import OsKind, HOSTOS
+from const import OsKind, HOSTOS, GUESTOS
 
 
 class Auth(typing.TypedDict):
@@ -178,6 +181,7 @@ class DRECli:
         unelect_versions: list[str],
         package_checksum: str,
         package_urls: list[str],
+        launch_measurements: typing.Optional[bytes],
         dry_run: bool = False,
     ) -> int:
         x = "hostos" if os_kind == HOSTOS else "guestos"
@@ -187,8 +191,7 @@ class DRECli:
             if len(unelect_versions) > 0
             else []
         )
-        self._logger.info("Submitting proposal for version %s", version)
-        text = self._run(
+        args = [
             "propose",
             *_mode_flags(dry_run),
             "--proposal-url",
@@ -205,7 +208,27 @@ class DRECli:
             f"--{y}-version-to-elect",
             version,
             *unelect_versions_args,
+        ]
+
+        temp_measurements = tempfile.NamedTemporaryFile()
+
+        # TODO: generalize when the HOSTOS launch measurements are
+        #       supported in the ic-admin.
+        if os_kind == GUESTOS:
+            if launch_measurements is None:
+                raise ValueError("Guest launch measurements missing. Cannot proceed.")
+
+            temp_measurements.write(launch_measurements)
+            temp_measurements.flush()
+
+            args.extend(["--guest-launch-measurements-path", temp_measurements.name])
+
+        self._logger.info(
+            "Submitting proposal for version %s using args: %s",
+            version,
+            " ".join(args),
         )
+        text = self._run(*args)
         if not dry_run:
             try:
                 return int(text.rstrip().splitlines()[-1].split()[1])
@@ -217,6 +240,7 @@ class DRECli:
         else:
             # We will not parse the text here.  We dry-ran the thing, after all,
             # so there will be no proposal ID to parse.
+            print(text, file=sys.stderr)
             return 0
 
 
