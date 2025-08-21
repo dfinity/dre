@@ -1,5 +1,4 @@
 use candid::Decode;
-use ic_agent::Agent;
 use ic_nns_common::pb::v1::NeuronId;
 use ic_nns_common::pb::v1::ProposalId;
 use ic_nns_constants::GOVERNANCE_CANISTER_ID;
@@ -20,48 +19,14 @@ use ic_nns_governance_api::ListNodeProvidersResponse;
 use ic_nns_governance_api::ManageNeuronResponse;
 use ic_nns_governance_api::{ListNeurons, ListProposalInfoResponse, NeuronInfo, ProposalInfo};
 use ic_nns_governance_api::{ListNeuronsResponse, Neuron};
-use serde::{self, Serialize};
-use std::str::FromStr;
-use std::time::Duration;
 use url::Url;
 
+use crate::CanisterVersion;
 use crate::IcAgentCanisterClient;
 const MAX_RETRIES: usize = 5;
 
-#[derive(Clone, Serialize)]
-pub struct GovernanceCanisterVersion {
-    pub stringified_hash: String,
-}
-
-pub async fn governance_canister_version(nns_urls: &[Url]) -> Result<GovernanceCanisterVersion, anyhow::Error> {
-    let client = reqwest::Client::builder()
-        .use_rustls_tls()
-        .timeout(Duration::from_secs(30))
-        .build()
-        .expect("Could not create HTTP client.");
-    let canister_agent = Agent::builder()
-        .with_http_client(client)
-        .with_url(nns_urls[0].clone())
-        .with_verify_query_signatures(false)
-        .build()?;
-
-    canister_agent.fetch_root_key().await?;
-
-    let governance_canister_build = std::str::from_utf8(
-        &canister_agent
-            .read_state_canister_metadata(
-                candid::Principal::from_str(&GOVERNANCE_CANISTER_ID.to_string())
-                    .expect("failed to convert governance canister principal to candid type"),
-                "git_commit_id",
-            )
-            .await?,
-    )?
-    .trim()
-    .to_string();
-
-    Ok(GovernanceCanisterVersion {
-        stringified_hash: governance_canister_build,
-    })
+pub async fn governance_canister_version(nns_urls: &[Url]) -> Result<CanisterVersion, anyhow::Error> {
+    super::canister_version(nns_urls[0].clone(), GOVERNANCE_CANISTER_ID.into()).await
 }
 
 pub struct GovernanceCanisterWrapper {
