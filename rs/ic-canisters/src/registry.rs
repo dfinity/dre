@@ -1,4 +1,4 @@
-use crate::IcAgentCanisterClient;
+use crate::{CanisterVersion, IcAgentCanisterClient};
 use ic_agent::Agent;
 use ic_base_types::PrincipalId;
 use ic_interfaces_registry::RegistryRecord;
@@ -26,6 +26,10 @@ impl From<IcAgentCanisterClient> for RegistryCanisterWrapper {
             ic_wrapper: RegistryCanister::new(vec![value.nns_url]),
         }
     }
+}
+
+pub async fn registry_canister_version(url: Url) -> anyhow::Result<CanisterVersion> {
+    super::canister_version(url, REGISTRY_CANISTER_ID.into()).await
 }
 
 impl RegistryCanisterWrapper {
