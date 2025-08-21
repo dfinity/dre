@@ -12,6 +12,8 @@ releases:
     versions:
       - name: base
         version: f7b2fdb7deb1758622f9c8e282d09ab8813aac62
+      - name: snapshot-feature
+        version: 2e0c8a651a3c5dfcb45bf06c4e50edea5056375d
   - rc_name: rc--2025-08-14_03-27
     versions:
       - name: base
