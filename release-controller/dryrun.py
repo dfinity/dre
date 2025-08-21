@@ -250,7 +250,7 @@ class DRECli(dre_cli.DRECli):
         unelect_versions: list[str],
         package_checksum: str,
         package_urls: list[str],
-        launch_measurements_path: typing.Optional[pathlib.Path],
+        launch_measurements: typing.Optional[bytes],
         dry_run: bool = False,
     ) -> int:
         super().propose_to_revise_elected_os_versions(
@@ -261,7 +261,7 @@ class DRECli(dre_cli.DRECli):
             unelect_versions,
             package_checksum,
             package_urls,
-            launch_measurements_path,
+            launch_measurements,
             dry_run=True,
         )
         # Now mock the proposal ID using an integer derived from the version.
@@ -297,6 +297,9 @@ def oneoff_dre_place_proposal() -> None:
             }
         ]
     }
+
+    measurements = json.dumps(measurements)
+
     with tempfile.NamedTemporaryFile("w") as f:
         json.dump(measurements, f)
         f.flush()
@@ -308,7 +311,7 @@ def oneoff_dre_place_proposal() -> None:
             unelect_versions=[],
             package_checksum="0" * 40,
             package_urls=["https://doesntmatter.com/"],
-            launch_measurements_path=pathlib.Path(f.name),
+            launch_measurements=measurements.encode(),
         )
 
 

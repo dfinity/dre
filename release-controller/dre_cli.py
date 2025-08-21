@@ -5,6 +5,7 @@ import typing
 from util import resolve_binary
 import os
 from pathlib import Path
+import tempfile
 
 from const import OsKind, HOSTOS, GUESTOS
 
@@ -71,7 +72,6 @@ class DRECli:
 
     def _run(self, *args: str, **subprocess_kwargs: typing.Any) -> str:
         """Run the dre CLI."""
-        print(self.env["IC_ADMIN_VERSION"])
         return typing.cast(
             str,
             subprocess.check_output(
@@ -180,7 +180,7 @@ class DRECli:
         unelect_versions: list[str],
         package_checksum: str,
         package_urls: list[str],
-        launch_measurements_path: typing.Optional[Path],
+        launch_measurements: typing.Optional[bytes],
         dry_run: bool = False,
     ) -> int:
         x = "hostos" if os_kind == HOSTOS else "guestos"
@@ -209,21 +209,18 @@ class DRECli:
             *unelect_versions_args,
         ]
 
+        temp_measurements = tempfile.NamedTemporaryFile()
+
         # TODO: generalize when the HOSTOS launch measurements are
         #       supported in the ic-admin.
         if os_kind == GUESTOS:
-            if launch_measurements_path is None:
+            if launch_measurements is None:
                 raise ValueError("Guest launch measurements missing. Cannot proceed.")
 
-            if not launch_measurements_path.exists():
-                raise ValueError(
-                    "Guest launch measurements specified, but the file cannot be found on disk. Expected path"
-                    + str(launch_measurements_path)
-                )
+            temp_measurements.write(launch_measurements)
+            temp_measurements.flush()
 
-            args.extend(
-                ["--guest-launch-measurements-path", str(launch_measurements_path)]
-            )
+            args.extend(["--guest-launch-measurements-path", temp_measurements.name])
 
         self._logger.info(
             "Submitting proposal for version %s using args: %s",

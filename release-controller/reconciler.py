@@ -229,10 +229,7 @@ def version_package_checksum(version: str, os_kind: OsKind) -> str:
     return checksum
 
 
-# TODO: we can run a bazel target for these in the ic repo and not
-#       fetch them from s3 / r2.
-#       Target: //ic-os/guestos/envs/prod:launch-measurements.json
-def fetch_launch_measurements(version: str, os_kind: OsKind) -> str:
+def fetch_launch_measurements(version: str, os_kind: OsKind) -> bytes:
     url = version_launch_measurements(version, os_kind)
 
     logger = LOGGER.getChild("fetch_launch_measurements")
@@ -241,7 +238,7 @@ def fetch_launch_measurements(version: str, os_kind: OsKind) -> str:
     response = requests.get(url, timeout=10)
     response.raise_for_status()
 
-    return response.text
+    return response.content
 
 
 class ActiveVersionProvider(typing.Protocol):
@@ -725,14 +722,9 @@ class Reconciler:
                                 "Currently elected GuestOS versions: %s", blessed
                             )
 
-                            launch_measurements_path = pathlib.Path(
-                                "/tmp/guestos_measurements.json"
+                            measurements = fetch_launch_measurements(
+                                release_commit, v.os_kind
                             )
-                            with open(launch_measurements_path, "w") as f:
-                                measurements = fetch_launch_measurements(
-                                    release_commit, v.os_kind
-                                )
-                                f.write(measurements)
 
                         elif v.os_kind == HOSTOS:
                             active = list(
@@ -758,7 +750,7 @@ class Reconciler:
                             )
                             # TODO: support this once the HOSTOS launch measurements
                             #       are added to ic-admin.
-                            launch_measurements_path = None
+                            launch_measurements = None
 
                         unelect_versions.extend(
                             versions_to_unelect(
@@ -781,7 +773,7 @@ class Reconciler:
                             unelect_versions=unelect_versions,
                             package_checksum=checksum,
                             package_urls=urls,
-                            launch_measurements_path=launch_measurements_path,
+                            launch_measurements=measurements,
                         )
                         success = prop.record_submission(proposal_id)
                         revlogger.info("%s", success)
