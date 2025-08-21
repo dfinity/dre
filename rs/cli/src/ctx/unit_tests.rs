@@ -62,7 +62,7 @@ impl<'a> AdminVersionTestScenario<'a> {
     fn new(name: &'static str) -> Self {
         Self {
             name,
-            version: IcAdminVersion::FromGovernance,
+            version: IcAdminVersion::FromRegistry,
             should_delete_status_file: false,
             should_contain: None,
         }

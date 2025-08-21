@@ -17,7 +17,7 @@ pub struct GlobalArgs {
     #[clap(long, global = true, env = "IC_ADMIN")]
     pub ic_admin: Option<String>,
 
-    #[clap(long, global = true, env = "IC_ADMIN_VERSION", default_value = "from-governance", value_parser = clap::value_parser!(IcAdminVersion), help = r#"Specify the version of ic admin to use
+    #[clap(long, global = true, env = "IC_ADMIN_VERSION", default_value = "from-registry", value_parser = clap::value_parser!(IcAdminVersion), help = r#"Specify the version of ic admin to use
 Options:
     1. from-governance, governance, govn, g => same as governance canister
     2. default, d => strict default version, embedded at build time
@@ -57,7 +57,7 @@ The argument is mandatory for testnets, and is optional for mainnet and staging"
 
 #[derive(Debug, Display, Clone)]
 pub enum IcAdminVersion {
-    FromGovernance,
+    FromRegistry,
     Fallback,
     Strict(String),
 }
@@ -65,7 +65,7 @@ pub enum IcAdminVersion {
 impl From<&str> for IcAdminVersion {
     fn from(value: &str) -> Self {
         match value {
-            "from-governance" | "governance" | "g" | "govn" => Self::FromGovernance,
+            "from-registry" | "registry" | "r" | "reg" => Self::FromRegistry,
             "fallback" | "f" => Self::Fallback,
             s => Self::Strict(s.to_string()),
         }
