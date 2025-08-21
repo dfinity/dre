@@ -298,7 +298,7 @@ def oneoff_dre_place_proposal() -> None:
         ]
     }
 
-    measurements = json.dumps(measurements).encode()
+    measurementbytes = json.dumps(measurements).encode()
 
     dre.propose_to_revise_elected_os_versions(
         changelog=changelog,
@@ -308,7 +308,7 @@ def oneoff_dre_place_proposal() -> None:
         unelect_versions=[],
         package_checksum="0" * 40,
         package_urls=["https://doesntmatter.com/"],
-        launch_measurements=measurements,
+        launch_measurements=measurementbytes,
     )
 
 
