@@ -51,8 +51,18 @@ The argument is mandatory for testnets, and is optional for mainnet and staging"
     pub offline: bool,
 
     /// Path to file which contains cordoned features
-    #[clap(long, global = true, visible_aliases = &["cf-file", "cfff"])]
+    #[clap(long, global = true, visible_aliases = &["cf-file", "cfff", "cordone"])]
     pub cordoned_features_file: Option<String>,
+
+    /// Override health by data center ID or node ID, e.g. "sg2:healthy". Accepts multiple entries.
+    #[clap(long, global = true, num_args(1..), visible_aliases = &["oh", "override-healths"], help = r#"Override health for nodes. Matches exact data center ID (dc_id) or full node principal.
+Examples:
+    --override-health sg2:healthy
+    --override-health mn2:healthy de1:dead
+    --override-health bo1:degraded z6jp6-245uu-...:healthy
+
+Accepted health values: healthy, degraded, dead, unknown (case-insensitive)."#)]
+    pub override_health: Vec<String>,
 }
 
 #[derive(Debug, Display, Clone)]
