@@ -696,6 +696,7 @@ class Reconciler:
 
                     urls = version_package_urls(release_commit, v.os_kind)
                     unelect_versions = []
+
                     if v.is_base:
                         # Only do this work when:
                         #
@@ -722,10 +723,6 @@ class Reconciler:
                                 "Currently elected GuestOS versions: %s", blessed
                             )
 
-                            measurements = fetch_launch_measurements(
-                                release_commit, v.os_kind
-                            )
-
                         elif v.os_kind == HOSTOS:
                             active = list(
                                 # Use the versions of HostOS registered as active on nodes
@@ -748,9 +745,6 @@ class Reconciler:
                             revlogger.info(
                                 "Currently elected HostOS versions: %s", blessed
                             )
-                            # TODO: support this once the HOSTOS launch measurements
-                            #       are added to ic-admin.
-                            launch_measurements = None
 
                         unelect_versions.extend(
                             versions_to_unelect(
@@ -764,6 +758,15 @@ class Reconciler:
                             unelect_versions,
                         )
 
+                    if v.os_kind == GUESTOS:
+                        launch_measurements = fetch_launch_measurements(
+                            release_commit, v.os_kind
+                        )
+                    else:
+                        # TODO: support this once the HOSTOS launch measurements
+                        #       are added to ic-admin.
+                        launch_measurements = None
+
                     try:
                         proposal_id = self.dre.propose_to_revise_elected_os_versions(
                             changelog=changelog,
@@ -773,7 +776,7 @@ class Reconciler:
                             unelect_versions=unelect_versions,
                             package_checksum=checksum,
                             package_urls=urls,
-                            launch_measurements=measurements,
+                            launch_measurements=launch_measurements,
                         )
                         success = prop.record_submission(proposal_id)
                         revlogger.info("%s", success)
