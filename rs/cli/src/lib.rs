@@ -17,6 +17,7 @@ mod runner;
 mod store;
 mod submitter;
 mod subnet_manager;
+mod target_topology;
 mod util;
 
 #[cfg(test)]
