@@ -22,6 +22,7 @@ pub mod governance;
 pub mod ledger;
 pub mod management;
 pub mod node_metrics;
+pub mod node_provider_rewards;
 pub mod parallel_hardware_identity;
 pub mod registry;
 pub mod sns_wasm;
