@@ -14,7 +14,7 @@ jobs:
       labels: dre-runner-custom
     container: ghcr.io/dfinity/dre/actions-runner:6413f2909a49329ecbf5371ee7ddf07a9799b625
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: "☁️ Setup runner"
         uses: ./.github/workflows/manage-runner-pre
@@ -37,7 +37,7 @@ jobs:
       packages: write
       pages: write
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           fetch-tags: true
           fetch-depth: 0
