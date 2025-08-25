@@ -3,587 +3,1803 @@
     {
       "amount_e8s": 0,
       "details": {
-        "to_account": "b2f0cab014594b9c7bbdaf7e57179491ead918266945da6fd8b8beef"
+        "to_account": "2ea3cf31b2f0cab014594b9c7bbdaf7e57179491ead918266945da6fd8b8beef"
       },
-      "id": 6371,
+      "id": 6465,
       "maximum_node_provider_rewards_e8s": 10000000000000,
       "minimum_xdr_permyriad_per_icp": 10000,
       "node_provider": "kf7dx-5wayj-3p2u4-yd4hf-m2en4-np75j-tta25-wqe7y-rlm6s-nqceb-7ae",
       "proposal_id": null,
-      "registry_version": 51990,
+      "registry_version": 52681,
       "reward_mode": "RewardToAccount",
-      "timestamp_seconds": 1752523734,
-      "updated_at": "2025-07-15T04:30:03.053254",
+      "timestamp_seconds": 1755153534,
+      "updated_at": "2025-08-14T16:30:03.833355",
       "xdr_conversion_rate": {
-        "timestamp_seconds": 1752451200,
-        "xdr_permyriad_per_icp": 36570
+        "timestamp_seconds": 1755129600,
+        "xdr_permyriad_per_icp": 40502
       }
     },
     {
       "amount_e8s": 0,
       "details": {
-        "to_account": "8b75f16dacf2a0a216ca1f746d3ab235cecc64f1300175b80df0fcd3"
+        "to_account": "e3ce12fb8b75f16dacf2a0a216ca1f746d3ab235cecc64f1300175b80df0fcd3"
       },
-      "id": 6308,
+      "id": 6402,
       "maximum_node_provider_rewards_e8s": 10000000000000,
       "minimum_xdr_permyriad_per_icp": 10000,
       "node_provider": "egb3e-rzi2e-vpsmm-akysp-l2owk-4dgst-b5hmg-xrkwa-cr3uk-zlzds-mae",
       "proposal_id": null,
-      "registry_version": 51990,
+      "registry_version": 52681,
       "reward_mode": "RewardToAccount",
-      "timestamp_seconds": 1752523734,
-      "updated_at": "2025-07-15T04:30:02.950052",
+      "timestamp_seconds": 1755153534,
+      "updated_at": "2025-08-14T16:30:03.778455",
       "xdr_conversion_rate": {
-        "timestamp_seconds": 1752451200,
-        "xdr_permyriad_per_icp": 36570
+        "timestamp_seconds": 1755129600,
+        "xdr_permyriad_per_icp": 40502
       }
     },
     {
-      "amount_e8s": 334757063166,
+      "amount_e8s": 302258303293,
       "details": {
-        "to_account": "d992c7e82880a5dced116a8eb8211589cc793712eba5bea2ae2a6016"
+        "to_account": "ca4c919dd992c7e82880a5dced116a8eb8211589cc793712eba5bea2ae2a6016"
       },
-      "id": 6339,
+      "id": 6433,
       "maximum_node_provider_rewards_e8s": 10000000000000,
       "minimum_xdr_permyriad_per_icp": 10000,
       "node_provider": "optdi-nwa4m-hly3k-6ua4n-sqyxf-yahvb-wps77-ddayn-r7zcz-edla5-7qe",
       "proposal_id": null,
-      "registry_version": 51990,
+      "registry_version": 52681,
       "reward_mode": "RewardToAccount",
-      "timestamp_seconds": 1752523734,
-      "updated_at": "2025-07-15T04:30:02.989996",
+      "timestamp_seconds": 1755153534,
+      "updated_at": "2025-08-14T16:30:03.811156",
       "xdr_conversion_rate": {
-        "timestamp_seconds": 1752451200,
-        "xdr_permyriad_per_icp": 36570
+        "timestamp_seconds": 1755129600,
+        "xdr_permyriad_per_icp": 40502
       }
     },
     {
-      "amount_e8s": 776746847142,
+      "amount_e8s": 701339000543,
       "details": {
-        "to_account": "32330fa789ee3b3a449491270fbc435d970472b03b1c369f0309bcfc"
+        "to_account": "a86d7adc32330fa789ee3b3a449491270fbc435d970472b03b1c369f0309bcfc"
       },
-      "id": 6370,
+      "id": 6464,
       "maximum_node_provider_rewards_e8s": 10000000000000,
       "minimum_xdr_permyriad_per_icp": 10000,
       "node_provider": "6sq7t-knkul-fko6h-xzvnf-ktbvr-jhx7r-hapzr-kjlek-whugy-zt6ip-xqe",
       "proposal_id": null,
-      "registry_version": 51990,
+      "registry_version": 52681,
       "reward_mode": "RewardToAccount",
-      "timestamp_seconds": 1752523734,
-      "updated_at": "2025-07-15T04:30:03.052081",
+      "timestamp_seconds": 1755153534,
+      "updated_at": "2025-08-14T16:30:03.832751",
       "xdr_conversion_rate": {
-        "timestamp_seconds": 1752451200,
-        "xdr_permyriad_per_icp": 36570
+        "timestamp_seconds": 1755129600,
+        "xdr_permyriad_per_icp": 40502
       }
     },
     {
-      "amount_e8s": 869783975936,
+      "amount_e8s": 785343933632,
       "details": {
-        "to_account": "7f7b0dba89663ebfcbe1735286be0362f890a361d4ed74a1e024b9ba"
+        "to_account": "f816beba7f7b0dba89663ebfcbe1735286be0362f890a361d4ed74a1e024b9ba"
       },
-      "id": 6390,
+      "id": 6484,
       "maximum_node_provider_rewards_e8s": 10000000000000,
       "minimum_xdr_permyriad_per_icp": 10000,
       "node_provider": "ma7dp-gz4tg-3c2wv-pgnsv-wna7u-czvhu-fpu47-t4dr6-gzxql-wr2m2-qae",
       "proposal_id": null,
-      "registry_version": 51990,
+      "registry_version": 52681,
       "reward_mode": "RewardToAccount",
-      "timestamp_seconds": 1752523734,
-      "updated_at": "2025-07-15T04:30:03.082665",
+      "timestamp_seconds": 1755153534,
+      "updated_at": "2025-08-14T16:30:03.851981",
       "xdr_conversion_rate": {
-        "timestamp_seconds": 1752451200,
-        "xdr_permyriad_per_icp": 36570
+        "timestamp_seconds": 1755129600,
+        "xdr_permyriad_per_icp": 40502
       }
     },
     {
-      "amount_e8s": 242857145200,
+      "amount_e8s": 219280178756,
       "details": {
-        "to_account": "ef7ac7329871db6310ab2b8db0e14a5f84ef64d6a87fce2bf16a6152"
+        "to_account": "e7cd6e20ef7ac7329871db6310ab2b8db0e14a5f84ef64d6a87fce2bf16a6152"
       },
-      "id": 6372,
+      "id": 6466,
       "maximum_node_provider_rewards_e8s": 10000000000000,
       "minimum_xdr_permyriad_per_icp": 10000,
       "node_provider": "s5nvr-ipdxf-xg6wd-ofacm-7tl4i-nwjzx-uulum-cugwb-kbpsa-wrsgs-cae",
       "proposal_id": null,
-      "registry_version": 51990,
+      "registry_version": 52681,
       "reward_mode": "RewardToAccount",
-      "timestamp_seconds": 1752523734,
-      "updated_at": "2025-07-15T04:30:03.054363",
+      "timestamp_seconds": 1755153534,
+      "updated_at": "2025-08-14T16:30:03.834977",
       "xdr_conversion_rate": {
-        "timestamp_seconds": 1752451200,
-        "xdr_permyriad_per_icp": 36570
+        "timestamp_seconds": 1755129600,
+        "xdr_permyriad_per_icp": 40502
       }
     },
     {
-      "amount_e8s": 1153076292042,
+      "amount_e8s": 1041133771171,
       "details": {
-        "to_account": "8966382ca1043e91f60d426f75c73c6afabe6b7eee01d0439ccc3074"
+        "to_account": "a754940d8966382ca1043e91f60d426f75c73c6afabe6b7eee01d0439ccc3074"
       },
-      "id": 6323,
+      "id": 6417,
       "maximum_node_provider_rewards_e8s": 10000000000000,
       "minimum_xdr_permyriad_per_icp": 10000,
       "node_provider": "eipr5-izbom-neyqh-s3ec2-52eww-cyfpg-qfomg-3dpwj-4pffh-34xcu-7qe",
       "proposal_id": null,
-      "registry_version": 51990,
+      "registry_version": 52681,
       "reward_mode": "RewardToAccount",
-      "timestamp_seconds": 1752523734,
-      "updated_at": "2025-07-15T04:30:02.968113",
+      "timestamp_seconds": 1755153534,
+      "updated_at": "2025-08-14T16:30:03.792052",
       "xdr_conversion_rate": {
-        "timestamp_seconds": 1752451200,
-        "xdr_permyriad_per_icp": 36570
+        "timestamp_seconds": 1755129600,
+        "xdr_permyriad_per_icp": 40502
       }
     },
     {
-      "amount_e8s": 92400289855,
+      "amount_e8s": 83429919510,
       "details": {
-        "to_account": "7e0919755f31644af2b7e97739f8cf09d34cb73acce549dd5a70aa57"
+        "to_account": "ea7c7ec17e0919755f31644af2b7e97739f8cf09d34cb73acce549dd5a70aa57"
       },
-      "id": 6338,
+      "id": 6432,
       "maximum_node_provider_rewards_e8s": 10000000000000,
       "minimum_xdr_permyriad_per_icp": 10000,
       "node_provider": "hk7eo-22zam-kqmsx-dtfbj-k5i6f-jg65h-micpf-2cztc-t2eqk-efgvx-vqe",
       "proposal_id": null,
-      "registry_version": 51990,
+      "registry_version": 52681,
       "reward_mode": "RewardToAccount",
-      "timestamp_seconds": 1752523734,
-      "updated_at": "2025-07-15T04:30:02.988859",
+      "timestamp_seconds": 1755153534,
+      "updated_at": "2025-08-14T16:30:03.810640",
       "xdr_conversion_rate": {
-        "timestamp_seconds": 1752451200,
-        "xdr_permyriad_per_icp": 36570
+        "timestamp_seconds": 1755129600,
+        "xdr_permyriad_per_icp": 40502
       }
     },
     {
-      "amount_e8s": 120238684714,
+      "amount_e8s": 108565717742,
       "details": {
-        "to_account": "3d9448b0d053d6cfb82ff3c66788b090c2300cd53db25be2644a3be8"
+        "to_account": "ab0db79e3d9448b0d053d6cfb82ff3c66788b090c2300cd53db25be2644a3be8"
       },
-      "id": 6354,
+      "id": 6448,
       "maximum_node_provider_rewards_e8s": 10000000000000,
       "minimum_xdr_permyriad_per_icp": 10000,
       "node_provider": "mjnyf-lzqq6-s7fzb-62rqm-xzvge-5oa26-humwp-dvwxp-jxxkf-hoel7-fqe",
       "proposal_id": null,
-      "registry_version": 51990,
+      "registry_version": 52681,
       "reward_mode": "RewardToAccount",
-      "timestamp_seconds": 1752523734,
-      "updated_at": "2025-07-15T04:30:03.012617",
+      "timestamp_seconds": 1755153534,
+      "updated_at": "2025-08-14T16:30:03.821376",
       "xdr_conversion_rate": {
-        "timestamp_seconds": 1752451200,
-        "xdr_permyriad_per_icp": 36570
+        "timestamp_seconds": 1755129600,
+        "xdr_permyriad_per_icp": 40502
       }
     },
     {
       "amount_e8s": 0,
       "details": {
-        "to_account": "7e2262f97e0e8114b250fe5ac9adc0e5372bfc524c98e48d1adede57"
+        "to_account": "e9f7b8c97e2262f97e0e8114b250fe5ac9adc0e5372bfc524c98e48d1adede57"
       },
-      "id": 6369,
+      "id": 6463,
       "maximum_node_provider_rewards_e8s": 10000000000000,
       "minimum_xdr_permyriad_per_icp": 10000,
       "node_provider": "qipsq-44ztq-4oxob-dulxs-35tho-zjf5o-onu2b-sjuhk-4jd7x-yfdhz-qae",
       "proposal_id": null,
-      "registry_version": 51990,
+      "registry_version": 52681,
       "reward_mode": "RewardToAccount",
-      "timestamp_seconds": 1752523734,
-      "updated_at": "2025-07-15T04:30:03.048083",
+      "timestamp_seconds": 1755153534,
+      "updated_at": "2025-08-14T16:30:03.832001",
       "xdr_conversion_rate": {
-        "timestamp_seconds": 1752451200,
-        "xdr_permyriad_per_icp": 36570
+        "timestamp_seconds": 1755129600,
+        "xdr_permyriad_per_icp": 40502
       }
     },
     {
-      "amount_e8s": 944818156959,
+      "amount_e8s": 853093674386,
       "details": {
-        "to_account": "a3c7ebfd95677c26ea1130ce060f0021d1b7c605b068f7e692e00aeb"
+        "to_account": "215bcadda3c7ebfd95677c26ea1130ce060f0021d1b7c605b068f7e692e00aeb"
       },
-      "id": 6382,
+      "id": 6476,
       "maximum_node_provider_rewards_e8s": 10000000000000,
       "minimum_xdr_permyriad_per_icp": 10000,
       "node_provider": "x7uok-pi537-itm37-unjn3-ewkze-kuetg-kptap-nuqak-auq7z-tn5ey-dqe",
       "proposal_id": null,
-      "registry_version": 51990,
+      "registry_version": 52681,
       "reward_mode": "RewardToAccount",
-      "timestamp_seconds": 1752523734,
-      "updated_at": "2025-07-15T04:30:03.071995",
+      "timestamp_seconds": 1755153534,
+      "updated_at": "2025-08-14T16:30:03.845798",
       "xdr_conversion_rate": {
-        "timestamp_seconds": 1752451200,
-        "xdr_permyriad_per_icp": 36570
+        "timestamp_seconds": 1755129600,
+        "xdr_permyriad_per_icp": 40502
       }
     },
     {
-      "amount_e8s": 441017227235,
+      "amount_e8s": 398202557898,
       "details": {
-        "to_account": "97679691bcbe5f1a1d5e8d2c40c9596214eeca82ceac3a75f6adfe90"
+        "to_account": "d665257a97679691bcbe5f1a1d5e8d2c40c9596214eeca82ceac3a75f6adfe90"
       },
-      "id": 6389,
+      "id": 6483,
       "maximum_node_provider_rewards_e8s": 10000000000000,
       "minimum_xdr_permyriad_per_icp": 10000,
       "node_provider": "c5svp-7pkmf-agz5x-536k7-r7rcw-4wn3a-eo7pt-ry7su-j42uq-bvnzf-iqe",
       "proposal_id": null,
-      "registry_version": 51990,
+      "registry_version": 52681,
       "reward_mode": "RewardToAccount",
-      "timestamp_seconds": 1752523734,
-      "updated_at": "2025-07-15T04:30:03.081633",
+      "timestamp_seconds": 1755153534,
+      "updated_at": "2025-08-14T16:30:03.851319",
       "xdr_conversion_rate": {
-        "timestamp_seconds": 1752451200,
-        "xdr_permyriad_per_icp": 36570
+        "timestamp_seconds": 1755129600,
+        "xdr_permyriad_per_icp": 40502
       }
     },
     {
-      "amount_e8s": 1177686628383,
+      "amount_e8s": 1088143795368,
       "details": {
-        "to_account": "a8d44ea93b2aa4509e73d1f2b62f5307262fa0674ab2968e6997cad4"
+        "to_account": "bdf4e83aa8d44ea93b2aa4509e73d1f2b62f5307262fa0674ab2968e6997cad4"
       },
-      "id": 6396,
+      "id": 6490,
       "maximum_node_provider_rewards_e8s": 10000000000000,
       "minimum_xdr_permyriad_per_icp": 10000,
       "node_provider": "2hl5k-umjdt-ykii4-goecz-kkps6-nvl53-l7ost-p4mcp-qmnmw-rzrfc-mqe",
       "proposal_id": null,
-      "registry_version": 51990,
+      "registry_version": 52681,
       "reward_mode": "RewardToAccount",
-      "timestamp_seconds": 1752523734,
-      "updated_at": "2025-07-15T04:30:03.090127",
+      "timestamp_seconds": 1755153534,
+      "updated_at": "2025-08-14T16:30:03.855232",
       "xdr_conversion_rate": {
-        "timestamp_seconds": 1752451200,
-        "xdr_permyriad_per_icp": 36570
+        "timestamp_seconds": 1755129600,
+        "xdr_permyriad_per_icp": 40502
       }
     },
     {
       "amount_e8s": 0,
       "details": {
-        "to_account": "57ec85d9334cdd73b1a90108882508f2ffde49e853fbc5fa5e6990ec"
+        "to_account": "58dda08e57ec85d9334cdd73b1a90108882508f2ffde49e853fbc5fa5e6990ec"
       },
-      "id": 6374,
+      "id": 6468,
       "maximum_node_provider_rewards_e8s": 10000000000000,
       "minimum_xdr_permyriad_per_icp": 10000,
       "node_provider": "b7yyj-o7vc6-hdbzl-eggkm-bp2hg-3jmcv-5j5nn-t6zkq-ino4b-cvyde-yqe",
       "proposal_id": null,
-      "registry_version": 51990,
+      "registry_version": 52681,
       "reward_mode": "RewardToAccount",
-      "timestamp_seconds": 1752523734,
-      "updated_at": "2025-07-15T04:30:03.057147",
+      "timestamp_seconds": 1755153534,
+      "updated_at": "2025-08-14T16:30:03.836210",
       "xdr_conversion_rate": {
-        "timestamp_seconds": 1752451200,
-        "xdr_permyriad_per_icp": 36570
+        "timestamp_seconds": 1755129600,
+        "xdr_permyriad_per_icp": 40502
       }
     },
     {
-      "amount_e8s": 768717528028,
+      "amount_e8s": 694089180781,
       "details": {
-        "to_account": "03923d86f89df8a9b1629f1c241963c3464182979263ccce10f12a61"
+        "to_account": "231014cc03923d86f89df8a9b1629f1c241963c3464182979263ccce10f12a61"
       },
-      "id": 6315,
+      "id": 6409,
       "maximum_node_provider_rewards_e8s": 10000000000000,
       "minimum_xdr_permyriad_per_icp": 10000,
       "node_provider": "7a4u2-gevsy-5c5fs-hsgri-n2kdz-dxxwf-btcfp-jykro-l4y7c-7xky2-aqe",
       "proposal_id": null,
-      "registry_version": 51990,
+      "registry_version": 52681,
       "reward_mode": "RewardToAccount",
-      "timestamp_seconds": 1752523734,
-      "updated_at": "2025-07-15T04:30:02.958617",
+      "timestamp_seconds": 1755153534,
+      "updated_at": "2025-08-14T16:30:03.783181",
       "xdr_conversion_rate": {
-        "timestamp_seconds": 1752451200,
-        "xdr_permyriad_per_icp": 36570
+        "timestamp_seconds": 1755129600,
+        "xdr_permyriad_per_icp": 40502
       }
     },
     {
-      "amount_e8s": 812359857806,
+      "amount_e8s": 733494642239,
       "details": {
-        "to_account": "3851340c5094534e0c23c2a1f4d7d24fdfce713b391889496b9a5958"
+        "to_account": "9bbf62213851340c5094534e0c23c2a1f4d7d24fdfce713b391889496b9a5958"
       },
-      "id": 6322,
+      "id": 6416,
       "maximum_node_provider_rewards_e8s": 10000000000000,
       "minimum_xdr_permyriad_per_icp": 10000,
       "node_provider": "i7dto-bgkj2-xo5dx-cyrb7-zkk5y-q46eh-gz6iq-qkgyc-w4qte-scgtb-6ae",
       "proposal_id": null,
-      "registry_version": 51990,
+      "registry_version": 52681,
       "reward_mode": "RewardToAccount",
-      "timestamp_seconds": 1752523734,
-      "updated_at": "2025-07-15T04:30:02.966987",
+      "timestamp_seconds": 1755153534,
+      "updated_at": "2025-08-14T16:30:03.791377",
       "xdr_conversion_rate": {
-        "timestamp_seconds": 1752451200,
-        "xdr_permyriad_per_icp": 36570
+        "timestamp_seconds": 1755129600,
+        "xdr_permyriad_per_icp": 40502
       }
     },
     {
-      "amount_e8s": 223328323762,
+      "amount_e8s": 201647247049,
       "details": {
-        "to_account": "723de4dca467d0666c906cb2acc4dd35a2aa171e8e7b05d8d4984768"
+        "to_account": "a7aa27f9723de4dca467d0666c906cb2acc4dd35a2aa171e8e7b05d8d4984768"
       },
-      "id": 6330,
+      "id": 6424,
       "maximum_node_provider_rewards_e8s": 10000000000000,
       "minimum_xdr_permyriad_per_icp": 10000,
       "node_provider": "efem5-kmwaw-xose7-zzhgg-6bfif-twmcw-csg7a-lmqvn-wrdou-mjwlb-vqe",
       "proposal_id": null,
-      "registry_version": 51990,
+      "registry_version": 52681,
       "reward_mode": "RewardToAccount",
-      "timestamp_seconds": 1752523734,
-      "updated_at": "2025-07-15T04:30:02.977003",
+      "timestamp_seconds": 1755153534,
+      "updated_at": "2025-08-14T16:30:03.799325",
       "xdr_conversion_rate": {
-        "timestamp_seconds": 1752451200,
-        "xdr_permyriad_per_icp": 36570
+        "timestamp_seconds": 1755129600,
+        "xdr_permyriad_per_icp": 40502
       }
     },
     {
       "amount_e8s": 0,
       "details": {
-        "to_account": "76909f07e531ac46ed68459ec49c611b06510f53387dbbebd2340301"
+        "to_account": "19ef947676909f07e531ac46ed68459ec49c611b06510f53387dbbebd2340301"
       },
-      "id": 6337,
+      "id": 6431,
       "maximum_node_provider_rewards_e8s": 10000000000000,
       "minimum_xdr_permyriad_per_icp": 10000,
       "node_provider": "2byzn-q2crt-hgczo-eruff-6p7af-pemor-n2z4z-6d2sd-wvdqa-yqvxb-mqe",
       "proposal_id": null,
-      "registry_version": 51990,
+      "registry_version": 52681,
       "reward_mode": "RewardToAccount",
-      "timestamp_seconds": 1752523734,
-      "updated_at": "2025-07-15T04:30:02.986751",
+      "timestamp_seconds": 1755153534,
+      "updated_at": "2025-08-14T16:30:03.809964",
       "xdr_conversion_rate": {
-        "timestamp_seconds": 1752451200,
-        "xdr_permyriad_per_icp": 36570
+        "timestamp_seconds": 1755129600,
+        "xdr_permyriad_per_icp": 40502
       }
     },
     {
-      "amount_e8s": 1271815914684,
+      "amount_e8s": 1148345958224,
       "details": {
-        "to_account": "6de62b853f561e0bde6aebb2508ec62e4d3b1ef5b8ee9a7ec9952741"
+        "to_account": "0cabf5766de62b853f561e0bde6aebb2508ec62e4d3b1ef5b8ee9a7ec9952741"
       },
-      "id": 6346,
+      "id": 6440,
       "maximum_node_provider_rewards_e8s": 10000000000000,
       "minimum_xdr_permyriad_per_icp": 10000,
       "node_provider": "4dibr-2alzr-h6kva-bvwn2-yqgsl-o577t-od46o-v275p-a2zov-tcw4f-eae",
       "proposal_id": null,
-      "registry_version": 51990,
+      "registry_version": 52681,
       "reward_mode": "RewardToAccount",
-      "timestamp_seconds": 1752523734,
-      "updated_at": "2025-07-15T04:30:02.999490",
+      "timestamp_seconds": 1755153534,
+      "updated_at": "2025-08-14T16:30:03.815720",
       "xdr_conversion_rate": {
-        "timestamp_seconds": 1752451200,
-        "xdr_permyriad_per_icp": 36570
+        "timestamp_seconds": 1755129600,
+        "xdr_permyriad_per_icp": 40502
       }
     },
     {
-      "amount_e8s": 295064260322,
+      "amount_e8s": 266418942274,
       "details": {
-        "to_account": "bc29f494cea76625859e4ae213265463307d299c3692a3d57da70e96"
+        "to_account": "3efe74d5bc29f494cea76625859e4ae213265463307d299c3692a3d57da70e96"
       },
-      "id": 6353,
+      "id": 6447,
       "maximum_node_provider_rewards_e8s": 10000000000000,
       "minimum_xdr_permyriad_per_icp": 10000,
       "node_provider": "ivf2y-crxj4-y6ewo-un35q-a7pum-wqmbw-pkepy-d6uew-bfmff-g5yxe-eae",
       "proposal_id": null,
-      "registry_version": 51990,
+      "registry_version": 52681,
       "reward_mode": "RewardToAccount",
-      "timestamp_seconds": 1752523734,
-      "updated_at": "2025-07-15T04:30:03.011491",
+      "timestamp_seconds": 1755153534,
+      "updated_at": "2025-08-14T16:30:03.820670",
       "xdr_conversion_rate": {
-        "timestamp_seconds": 1752451200,
-        "xdr_permyriad_per_icp": 36570
+        "timestamp_seconds": 1755129600,
+        "xdr_permyriad_per_icp": 40502
       }
     },
     {
       "amount_e8s": 0,
       "details": {
-        "to_account": "8104a638c539bd7a9599d7b175e35fba557b8a7c365d2f6690eaa1c8"
+        "to_account": "4aca56538104a638c539bd7a9599d7b175e35fba557b8a7c365d2f6690eaa1c8"
       },
-      "id": 6361,
+      "id": 6455,
       "maximum_node_provider_rewards_e8s": 10000000000000,
       "minimum_xdr_permyriad_per_icp": 10000,
       "node_provider": "n6w7e-4cio3-an35h-hntwl-zzg4p-krqjk-yfmni-q7jiu-bage2-hef5b-pae",
       "proposal_id": null,
-      "registry_version": 51990,
+      "registry_version": 52681,
       "reward_mode": "RewardToAccount",
-      "timestamp_seconds": 1752523734,
-      "updated_at": "2025-07-15T04:30:03.028606",
+      "timestamp_seconds": 1755153534,
+      "updated_at": "2025-08-14T16:30:03.825688",
       "xdr_conversion_rate": {
-        "timestamp_seconds": 1752451200,
-        "xdr_permyriad_per_icp": 36570
+        "timestamp_seconds": 1755129600,
+        "xdr_permyriad_per_icp": 40502
       }
     },
     {
-      "amount_e8s": 1043509313645,
+      "amount_e8s": 942203733148,
       "details": {
-        "to_account": "24b0b6999f8913dc84e70367db9f0345e7aa0e2cbbdf8ffcf6ce0a7e"
+        "to_account": "6c2ec8bd24b0b6999f8913dc84e70367db9f0345e7aa0e2cbbdf8ffcf6ce0a7e"
       },
-      "id": 6368,
+      "id": 6462,
       "maximum_node_provider_rewards_e8s": 10000000000000,
       "minimum_xdr_permyriad_per_icp": 10000,
       "node_provider": "vegae-c4chr-aetfj-7gzuh-c23sx-u2paz-vmvbn-bcage-pu7lu-mptnn-eqe",
       "proposal_id": null,
-      "registry_version": 51990,
+      "registry_version": 52681,
       "reward_mode": "RewardToAccount",
-      "timestamp_seconds": 1752523734,
-      "updated_at": "2025-07-15T04:30:03.043600",
+      "timestamp_seconds": 1755153534,
+      "updated_at": "2025-08-14T16:30:03.831243",
       "xdr_conversion_rate": {
-        "timestamp_seconds": 1752451200,
-        "xdr_permyriad_per_icp": 36570
+        "timestamp_seconds": 1755129600,
+        "xdr_permyriad_per_icp": 40502
       }
     },
     {
       "amount_e8s": 0,
       "details": {
-        "to_account": "013582fbc1949e91f78f95a1de740ee9df347e47a3623633a8ada672"
+        "to_account": "21469605013582fbc1949e91f78f95a1de740ee9df347e47a3623633a8ada672"
       },
-      "id": 6377,
+      "id": 6471,
       "maximum_node_provider_rewards_e8s": 10000000000000,
       "minimum_xdr_permyriad_per_icp": 10000,
       "node_provider": "34cav-6s7rb-uwa3c-awdly-5md4r-lwueh-atzbn-unqpe-c5ope-f3nqj-wae",
       "proposal_id": null,
-      "registry_version": 51990,
+      "registry_version": 52681,
       "reward_mode": "RewardToAccount",
-      "timestamp_seconds": 1752523734,
-      "updated_at": "2025-07-15T04:30:03.065269",
+      "timestamp_seconds": 1755153534,
+      "updated_at": "2025-08-14T16:30:03.837857",
       "xdr_conversion_rate": {
-        "timestamp_seconds": 1752451200,
-        "xdr_permyriad_per_icp": 36570
+        "timestamp_seconds": 1755129600,
+        "xdr_permyriad_per_icp": 40502
       }
     },
     {
       "amount_e8s": 0,
       "details": {
-        "to_account": "b85db6566781be14eab3ad1a6b2a78166c6d8e3c376df8a159905022"
+        "to_account": "0616580eb85db6566781be14eab3ad1a6b2a78166c6d8e3c376df8a159905022"
       },
-      "id": 6381,
+      "id": 6475,
       "maximum_node_provider_rewards_e8s": 10000000000000,
       "minimum_xdr_permyriad_per_icp": 10000,
       "node_provider": "fnzev-s6xem-s2myy-rrxoa-2mpp6-oet33-pmnba-ajo75-qhfdw-esys7-7qe",
       "proposal_id": null,
-      "registry_version": 51990,
+      "registry_version": 52681,
       "reward_mode": "RewardToAccount",
-      "timestamp_seconds": 1752523734,
-      "updated_at": "2025-07-15T04:30:03.069783",
+      "timestamp_seconds": 1755153534,
+      "updated_at": "2025-08-14T16:30:03.845204",
       "xdr_conversion_rate": {
-        "timestamp_seconds": 1752451200,
-        "xdr_permyriad_per_icp": 36570
+        "timestamp_seconds": 1755129600,
+        "xdr_permyriad_per_icp": 40502
       }
     },
     {
-      "amount_e8s": 1558490566037,
+      "amount_e8s": 1407189768406,
       "details": {
-        "to_account": "a33a5a9222426e09624f4680edc836ba1fde7fdc294cd99973239ec1"
+        "to_account": "3298bb5ba33a5a9222426e09624f4680edc836ba1fde7fdc294cd99973239ec1"
       },
-      "id": 6385,
+      "id": 6479,
       "maximum_node_provider_rewards_e8s": 10000000000000,
       "minimum_xdr_permyriad_per_icp": 10000,
       "node_provider": "glrjs-2dbzh-owbdd-fpp5e-eweoz-nsuto-e3jmk-tl42c-wem4f-qfpfa-qqe",
       "proposal_id": null,
-      "registry_version": 51990,
+      "registry_version": 52681,
       "reward_mode": "RewardToAccount",
-      "timestamp_seconds": 1752523734,
-      "updated_at": "2025-07-15T04:30:03.077176",
+      "timestamp_seconds": 1755153534,
+      "updated_at": "2025-08-14T16:30:03.849102",
       "xdr_conversion_rate": {
-        "timestamp_seconds": 1752451200,
-        "xdr_permyriad_per_icp": 36570
+        "timestamp_seconds": 1755129600,
+        "xdr_permyriad_per_icp": 40502
       }
     },
     {
-      "amount_e8s": 833032540333,
+      "amount_e8s": 752160387141,
       "details": {
-        "to_account": "3569526c48c93ba8c53d7f3974ebf6839fe67b6e0f90a29505017806"
+        "to_account": "b287413a3569526c48c93ba8c53d7f3974ebf6839fe67b6e0f90a29505017806"
       },
-      "id": 6388,
+      "id": 6482,
       "maximum_node_provider_rewards_e8s": 10000000000000,
       "minimum_xdr_permyriad_per_icp": 10000,
       "node_provider": "2wxzd-qrbrs-ailta-kdtyb-ucg35-xcxd4-txevb-ot7hx-wiyus-szcca-nqe",
       "proposal_id": null,
-      "registry_version": 51990,
+      "registry_version": 52681,
       "reward_mode": "RewardToAccount",
-      "timestamp_seconds": 1752523734,
-      "updated_at": "2025-07-15T04:30:03.080585",
+      "timestamp_seconds": 1755153534,
+      "updated_at": "2025-08-14T16:30:03.850778",
       "xdr_conversion_rate": {
-        "timestamp_seconds": 1752451200,
-        "xdr_permyriad_per_icp": 36570
+        "timestamp_seconds": 1755129600,
+        "xdr_permyriad_per_icp": 40502
       }
     },
     {
-      "amount_e8s": 406179928903,
+      "amount_e8s": 366747321119,
       "details": {
-        "to_account": "4637d28a89b1a64004c757e5f853826b98949a741fd4b2045957fb14"
+        "to_account": "4154ffe94637d28a89b1a64004c757e5f853826b98949a741fd4b2045957fb14"
       },
-      "id": 6392,
+      "id": 6486,
       "maximum_node_provider_rewards_e8s": 10000000000000,
       "minimum_xdr_permyriad_per_icp": 10000,
       "node_provider": "acqus-l4yyc-h44lw-grfxw-h7jqf-mtvt3-huwmj-4s372-sc5db-5nsfr-2ae",
       "proposal_id": null,
-      "registry_version": 51990,
+      "registry_version": 52681,
       "reward_mode": "RewardToAccount",
-      "timestamp_seconds": 1752523734,
-      "updated_at": "2025-07-15T04:30:03.085706",
+      "timestamp_seconds": 1755153534,
+      "updated_at": "2025-08-14T16:30:03.853090",
       "xdr_conversion_rate": {
-        "timestamp_seconds": 1752451200,
-        "xdr_permyriad_per_icp": 36570
+        "timestamp_seconds": 1755129600,
+        "xdr_permyriad_per_icp": 40502
       }
     },
     {
-      "amount_e8s": 0,
+      "amount_e8s": 821292775665,
       "details": {
-        "to_account": "ebe71835d9f86cfcd7312bef0072c56aaed4adfa3d0bb660dd17383a"
+        "to_account": "3fad0cacebe71835d9f86cfcd7312bef0072c56aaed4adfa3d0bb660dd17383a"
       },
-      "id": 6395,
+      "id": 6489,
       "maximum_node_provider_rewards_e8s": 10000000000000,
       "minimum_xdr_permyriad_per_icp": 10000,
       "node_provider": "dnpkk-x67ir-zwcyz-fkgzz-547t7-papxf-zby5t-i2log-uodsf-pcizd-jae",
       "proposal_id": null,
-      "registry_version": 51990,
+      "registry_version": 52681,
       "reward_mode": "RewardToAccount",
-      "timestamp_seconds": 1752523734,
-      "updated_at": "2025-07-15T04:30:03.089102",
+      "timestamp_seconds": 1755153534,
+      "updated_at": "2025-08-14T16:30:03.854680",
       "xdr_conversion_rate": {
-        "timestamp_seconds": 1752451200,
-        "xdr_permyriad_per_icp": 36570
+        "timestamp_seconds": 1755129600,
+        "xdr_permyriad_per_icp": 40502
       }
     },
     {
       "amount_e8s": 0,
       "details": {
-        "to_account": "6f6fdc7d039dd9dd18093799735e344b933b8c552f7dd4288499273e"
+        "to_account": "894c62067ab06da82c72a488b2e90af86a671b14fcc76eab5c3773abb1517f0c"
       },
-      "id": 6378,
+      "id": 6491,
       "maximum_node_provider_rewards_e8s": 10000000000000,
       "minimum_xdr_permyriad_per_icp": 10000,
-      "node_provider": "7ne6c-3ahs2-76so4-te6hs-oq4mv-zhz4c-pqj2b-rxjmq-q56vn-tvpgj-2ae",
+      "node_provider": "gtdcl-kijoz-5fk3p-acmop-gmocy-nhpeq-a5fay-7q5ol-4lmdk-ldz4m-aqe",
       "proposal_id": null,
-      "registry_version": 51990,
+      "registry_version": 52681,
       "reward_mode": "RewardToAccount",
-      "timestamp_seconds": 1752523734,
-      "updated_at": "2025-07-15T04:30:03.066430",
+      "timestamp_seconds": 1755153534,
+      "updated_at": "2025-08-14T16:30:03.856029",
       "xdr_conversion_rate": {
-        "timestamp_seconds": 1752451200,
-        "xdr_permyriad_per_icp": 36570
+        "timestamp_seconds": 1755129600,
+        "xdr_permyriad_per_icp": 40502
       }
     },
     {
       "amount_e8s": 0,
       "details": {
-        "to_account": "6bbbde35b6d63c9629491d79615171b052664de6c58b31469f8f4d0f"
+        "to_account": "0566cc386bbbde35b6d63c9629491d79615171b052664de6c58b31469f8f4d0f"
       },
-      "id": 6375,
+      "id": 6469,
       "maximum_node_provider_rewards_e8s": 10000000000000,
       "minimum_xdr_permyriad_per_icp": 10000,
       "node_provider": "kgfpq-4th36-lvnpn-ayygq-hikoq-dndag-vvafx-msvg5-aczmu-pkzsv-7ae",
       "proposal_id": null,
-      "registry_version": 51990,
+      "registry_version": 52681,
       "reward_mode": "RewardToAccount",
-      "timestamp_seconds": 1752523734,
-      "updated_at": "2025-07-15T04:30:03.060036",
+      "timestamp_seconds": 1755153534,
+      "updated_at": "2025-08-14T16:30:03.836767",
       "xdr_conversion_rate": {
-        "timestamp_seconds": 1752451200,
-        "xdr_permyriad_per_icp": 36570
+        "timestamp_seconds": 1755129600,
+        "xdr_permyriad_per_icp": 40502
       }
     },
     {
-      "amount_e8s": 410391030899,
+      "amount_e8s": 370549602488,
       "details": {
-        "to_account": "16f79e0a12d3e5eca8d03db512f258daf2b0e3b362c5784e197f25af"
+        "to_account": "10a4ca4a16f79e0a12d3e5eca8d03db512f258daf2b0e3b362c5784e197f25af"
       },
-      "id": 6311,
+      "id": 6405,
       "maximum_node_provider_rewards_e8s": 10000000000000,
       "minimum_xdr_permyriad_per_icp": 10000,
       "node_provider": "sma3p-ivkif-hz7nu-ngmvq-ibnjg-nubke-zf6gh-wbnfc-2dlng-l3die-zqe",
       "proposal_id": null,
+      "registry_version": 52681,
+      "reward_mode": "RewardToAccount",
+      "timestamp_seconds": 1755153534,
+      "updated_at": "2025-08-14T16:30:03.780583",
+      "xdr_conversion_rate": {
+        "timestamp_seconds": 1755129600,
+        "xdr_permyriad_per_icp": 40502
+      }
+    },
+    {
+      "amount_e8s": 1178015900449,
+      "details": {
+        "to_account": "29d6bf0cef8be46ea0c92591a9087b90cee923bd08dd237968093bdc72a794f6"
+      },
+      "id": 6408,
+      "maximum_node_provider_rewards_e8s": 10000000000000,
+      "minimum_xdr_permyriad_per_icp": 10000,
+      "node_provider": "ucjqj-jmbj3-rs4aq-ekzpw-ltjs3-zrcma-t6r3t-m5wxc-j5yrj-unwoj-mae",
+      "proposal_id": null,
+      "registry_version": 52681,
+      "reward_mode": "RewardToAccount",
+      "timestamp_seconds": 1755153534,
+      "updated_at": "2025-08-14T16:30:03.782640",
+      "xdr_conversion_rate": {
+        "timestamp_seconds": 1755129600,
+        "xdr_permyriad_per_icp": 40502
+      }
+    },
+    {
+      "amount_e8s": 1194607673695,
+      "details": {
+        "to_account": "685b69738f27e2a008f8518e85db88793a9ff73238edfbc7da02b4438813e83d"
+      },
+      "id": 6412,
+      "maximum_node_provider_rewards_e8s": 10000000000000,
+      "minimum_xdr_permyriad_per_icp": 10000,
+      "node_provider": "wdjjk-blh44-lxm74-ojj43-rvgf4-j5rie-nm6xs-xvnuv-j3ptn-25t4v-6ae",
+      "proposal_id": null,
+      "registry_version": 52681,
+      "reward_mode": "RewardToAccount",
+      "timestamp_seconds": 1755153534,
+      "updated_at": "2025-08-14T16:30:03.786378",
+      "xdr_conversion_rate": {
+        "timestamp_seconds": 1755129600,
+        "xdr_permyriad_per_icp": 40502
+      }
+    },
+    {
+      "amount_e8s": 1128240580712,
+      "details": {
+        "to_account": "e3ce12fb8b75f16dacf2a0a216ca1f746d3ab235cecc64f1300175b80df0fcd3"
+      },
+      "id": 6415,
+      "maximum_node_provider_rewards_e8s": 10000000000000,
+      "minimum_xdr_permyriad_per_icp": 10000,
+      "node_provider": "7at4h-nhtvt-a4s55-jigss-wr2ha-ysxkn-e6w7x-7ggnm-qd3d5-ry66r-cae",
+      "proposal_id": null,
+      "registry_version": 52681,
+      "reward_mode": "RewardToAccount",
+      "timestamp_seconds": 1755153534,
+      "updated_at": "2025-08-14T16:30:03.788823",
+      "xdr_conversion_rate": {
+        "timestamp_seconds": 1755129600,
+        "xdr_permyriad_per_icp": 40502
+      }
+    },
+    {
+      "amount_e8s": 491073776603,
+      "details": {
+        "to_account": "de575e8245eb9882779c28d97c260639e134bd9fc4c72ea2d75a04a8ba97dd3b"
+      },
+      "id": 6420,
+      "maximum_node_provider_rewards_e8s": 10000000000000,
+      "minimum_xdr_permyriad_per_icp": 10000,
+      "node_provider": "kos24-5xact-6aror-uofg2-tnvt6-dq3bk-c2c5z-jtptt-jbqvc-lmegy-qae",
+      "proposal_id": null,
+      "registry_version": 52681,
+      "reward_mode": "RewardToAccount",
+      "timestamp_seconds": 1755153534,
+      "updated_at": "2025-08-14T16:30:03.796879",
+      "xdr_conversion_rate": {
+        "timestamp_seconds": 1755129600,
+        "xdr_permyriad_per_icp": 40502
+      }
+    },
+    {
+      "amount_e8s": 1432640580712,
+      "details": {
+        "to_account": "f7a0c5e8dd57389f941a9d2d84223c48606b1dabe5cfbe892ceb2030a26859bb"
+      },
+      "id": 6423,
+      "maximum_node_provider_rewards_e8s": 10000000000000,
+      "minimum_xdr_permyriad_per_icp": 10000,
+      "node_provider": "r3yjn-kthmg-pfgmb-2fngg-5c7d7-t6kqg-wi37r-j7gy6-iee64-kjdja-jae",
+      "proposal_id": null,
+      "registry_version": 52681,
+      "reward_mode": "RewardToAccount",
+      "timestamp_seconds": 1755153534,
+      "updated_at": "2025-08-14T16:30:03.798681",
+      "xdr_conversion_rate": {
+        "timestamp_seconds": 1755129600,
+        "xdr_permyriad_per_icp": 40502
+      }
+    },
+    {
+      "amount_e8s": 541185509357,
+      "details": {
+        "to_account": "396d317acf1b6a1af9ab82b1c997b6c8bdfc693966a07405773b0dffaae96307"
+      },
+      "id": 6427,
+      "maximum_node_provider_rewards_e8s": 10000000000000,
+      "minimum_xdr_permyriad_per_icp": 10000,
+      "node_provider": "7uioy-xitfw-yqcko-5gpya-3lpsw-dw7zt-dyyyf-wfqif-jvi76-fdbkg-cqe",
+      "proposal_id": null,
+      "registry_version": 52681,
+      "reward_mode": "RewardToAccount",
+      "timestamp_seconds": 1755153534,
+      "updated_at": "2025-08-14T16:30:03.804424",
+      "xdr_conversion_rate": {
+        "timestamp_seconds": 1755129600,
+        "xdr_permyriad_per_icp": 40502
+      }
+    },
+    {
+      "amount_e8s": 287787185817,
+      "details": {
+        "to_account": "d308be4018242aa0dbfd2a9738664c1503d3e8bd3daf08ef4da1e793043b2fa8"
+      },
+      "id": 6430,
+      "maximum_node_provider_rewards_e8s": 10000000000000,
+      "minimum_xdr_permyriad_per_icp": 10000,
+      "node_provider": "eybf4-6t6bb-unfb2-h2hhn-rrfi2-cd2vs-phksn-jdmbn-i463m-4lzds-vqe",
+      "proposal_id": null,
+      "registry_version": 52681,
+      "reward_mode": "RewardToAccount",
+      "timestamp_seconds": 1755153534,
+      "updated_at": "2025-08-14T16:30:03.809239",
+      "xdr_conversion_rate": {
+        "timestamp_seconds": 1755129600,
+        "xdr_permyriad_per_icp": 40502
+      }
+    },
+    {
+      "amount_e8s": 0,
+      "details": {
+        "to_account": "cf88e70fb272c34ea62ed9c3a58856fbbf19b504ec057313df092ae4589f9aed"
+      },
+      "id": 6436,
+      "maximum_node_provider_rewards_e8s": 10000000000000,
+      "minimum_xdr_permyriad_per_icp": 10000,
+      "node_provider": "jz47c-irtey-dr2nb-wienh-emhaz-jo6ua-gsbho-t2z5j-l7kbf-5i7p5-5ae",
+      "proposal_id": null,
+      "registry_version": 52681,
+      "reward_mode": "RewardToAccount",
+      "timestamp_seconds": 1755153534,
+      "updated_at": "2025-08-14T16:30:03.812968",
+      "xdr_conversion_rate": {
+        "timestamp_seconds": 1755129600,
+        "xdr_permyriad_per_icp": 40502
+      }
+    },
+    {
+      "amount_e8s": 214762515431,
+      "details": {
+        "to_account": "75ea14366bebf6f3b5e0710e40472df5627f7b8918ab3fca856b7b8185943750"
+      },
+      "id": 6439,
+      "maximum_node_provider_rewards_e8s": 10000000000000,
+      "minimum_xdr_permyriad_per_icp": 10000,
+      "node_provider": "4fedi-eu6ue-nd7ts-vnof5-hzg66-hgzl7-liy5n-3otyp-h7ipw-owycg-uae",
+      "proposal_id": null,
+      "registry_version": 52681,
+      "reward_mode": "RewardToAccount",
+      "timestamp_seconds": 1755153534,
+      "updated_at": "2025-08-14T16:30:03.814983",
+      "xdr_conversion_rate": {
+        "timestamp_seconds": 1755129600,
+        "xdr_permyriad_per_icp": 40502
+      }
+    },
+    {
+      "amount_e8s": 556305397264,
+      "details": {
+        "to_account": "99540104d7593d3de9d678ffd28e986132f60e243830d449f3b87df333bccf1a"
+      },
+      "id": 6443,
+      "maximum_node_provider_rewards_e8s": 10000000000000,
+      "minimum_xdr_permyriad_per_icp": 10000,
+      "node_provider": "zy4m7-z5mhs-zfkpl-zlsjl-blrbx-mvvmq-5z4zu-mf7eq-hhv7o-ezfro-3ae",
+      "proposal_id": null,
+      "registry_version": 52681,
+      "reward_mode": "RewardToAccount",
+      "timestamp_seconds": 1755153534,
+      "updated_at": "2025-08-14T16:30:03.817987",
+      "xdr_conversion_rate": {
+        "timestamp_seconds": 1755129600,
+        "xdr_permyriad_per_icp": 40502
+      }
+    },
+    {
+      "amount_e8s": 266418942274,
+      "details": {
+        "to_account": "b58f9f91bfedc15bc3f1e558bd61fcc1f80d87ffcbe5d301477eb15b33685bcf"
+      },
+      "id": 6446,
+      "maximum_node_provider_rewards_e8s": 10000000000000,
+      "minimum_xdr_permyriad_per_icp": 10000,
+      "node_provider": "4r6qy-tljxg-slziw-zoteo-pboxh-vlctz-hkv2d-7zior-u3pxm-mmuxb-cae",
+      "proposal_id": null,
+      "registry_version": 52681,
+      "reward_mode": "RewardToAccount",
+      "timestamp_seconds": 1755153534,
+      "updated_at": "2025-08-14T16:30:03.820070",
+      "xdr_conversion_rate": {
+        "timestamp_seconds": 1755129600,
+        "xdr_permyriad_per_icp": 40502
+      }
+    },
+    {
+      "amount_e8s": 266418942274,
+      "details": {
+        "to_account": "2d01674727849a34007ec1d86d3c23e70025e8be9964f5192df2aa3bbbfd25b7"
+      },
+      "id": 6451,
+      "maximum_node_provider_rewards_e8s": 10000000000000,
+      "minimum_xdr_permyriad_per_icp": 10000,
+      "node_provider": "dhywe-eouw6-hstpj-ahsnw-xnjxq-cmqks-47mrg-nnncb-3sr5d-rac6m-nae",
+      "proposal_id": null,
+      "registry_version": 52681,
+      "reward_mode": "RewardToAccount",
+      "timestamp_seconds": 1755153534,
+      "updated_at": "2025-08-14T16:30:03.823268",
+      "xdr_conversion_rate": {
+        "timestamp_seconds": 1755129600,
+        "xdr_permyriad_per_icp": 40502
+      }
+    },
+    {
+      "amount_e8s": 0,
+      "details": {
+        "to_account": "18f00dadb7f363a5eec19a835bedb4c8a879f2089699c77e6a0325400622ad6d"
+      },
+      "id": 6454,
+      "maximum_node_provider_rewards_e8s": 10000000000000,
+      "minimum_xdr_permyriad_per_icp": 10000,
+      "node_provider": "amsdj-4ss2k-wwcae-kroro-ippwx-lcro4-ysoha-uqlvc-3267j-vt3fy-yqe",
+      "proposal_id": null,
+      "registry_version": 52681,
+      "reward_mode": "RewardToAccount",
+      "timestamp_seconds": 1755153534,
+      "updated_at": "2025-08-14T16:30:03.825100",
+      "xdr_conversion_rate": {
+        "timestamp_seconds": 1755129600,
+        "xdr_permyriad_per_icp": 40502
+      }
+    },
+    {
+      "amount_e8s": 197598335884,
+      "details": {
+        "to_account": "8257bd8f5a01f52d6f6847ce331dceac11fe97a426b5f9dd6a815150bc77491b"
+      },
+      "id": 6458,
+      "maximum_node_provider_rewards_e8s": 10000000000000,
+      "minimum_xdr_permyriad_per_icp": 10000,
+      "node_provider": "eatbv-nlydd-n655c-g7j7p-gnmpz-pszdg-6e6et-veobv-ftz2y-4m752-vqe",
+      "proposal_id": null,
+      "registry_version": 52681,
+      "reward_mode": "RewardToAccount",
+      "timestamp_seconds": 1755153534,
+      "updated_at": "2025-08-14T16:30:03.827728",
+      "xdr_conversion_rate": {
+        "timestamp_seconds": 1755129600,
+        "xdr_permyriad_per_icp": 40502
+      }
+    },
+    {
+      "amount_e8s": 0,
+      "details": {
+        "to_account": "a56577f858c2f629ad30d6e2790d4e9f8fe46fde924b56e7ce32588641deead6"
+      },
+      "id": 6461,
+      "maximum_node_provider_rewards_e8s": 10000000000000,
+      "minimum_xdr_permyriad_per_icp": 10000,
+      "node_provider": "j2tnr-f5tmm-afnyl-762n7-o272x-ji2xi-bcpld-ihimy-fw52d-2zqov-xae",
+      "proposal_id": null,
+      "registry_version": 52681,
+      "reward_mode": "RewardToAccount",
+      "timestamp_seconds": 1755153534,
+      "updated_at": "2025-08-14T16:30:03.830323",
+      "xdr_conversion_rate": {
+        "timestamp_seconds": 1755129600,
+        "xdr_permyriad_per_icp": 40502
+      }
+    },
+    {
+      "amount_e8s": 0,
+      "details": {
+        "to_account": "3a2ec378efa8ffb869e505e64a29bdab7665b49a277d1aa84337fd55421bf543"
+      },
+      "id": 6467,
+      "maximum_node_provider_rewards_e8s": 10000000000000,
+      "minimum_xdr_permyriad_per_icp": 10000,
+      "node_provider": "6ryfx-xszlo-xpvyj-b7vx6-m4erk-zwdkc-5lzfw-fty7k-arl66-uc3jk-nae",
+      "proposal_id": null,
+      "registry_version": 52681,
+      "reward_mode": "RewardToAccount",
+      "timestamp_seconds": 1755153534,
+      "updated_at": "2025-08-14T16:30:03.835662",
+      "xdr_conversion_rate": {
+        "timestamp_seconds": 1755129600,
+        "xdr_permyriad_per_icp": 40502
+      }
+    },
+    {
+      "amount_e8s": 0,
+      "details": {
+        "to_account": "d7abfd0d026b601683b69b45d0d2acfe28de125f6dc0ffd77ccc210f88bfaa37"
+      },
+      "id": 6470,
+      "maximum_node_provider_rewards_e8s": 10000000000000,
+      "minimum_xdr_permyriad_per_icp": 10000,
+      "node_provider": "kn4u4-unhbe-qwud4-ki6lq-o4try-6l2gv-yrxmg-vw6st-fmlss-nsztj-7qe",
+      "proposal_id": null,
+      "registry_version": 52681,
+      "reward_mode": "RewardToAccount",
+      "timestamp_seconds": 1755153534,
+      "updated_at": "2025-08-14T16:30:03.837331",
+      "xdr_conversion_rate": {
+        "timestamp_seconds": 1755129600,
+        "xdr_permyriad_per_icp": 40502
+      }
+    },
+    {
+      "amount_e8s": 0,
+      "details": {
+        "to_account": "0f5019b47cfe5953f0b797f76853f6df7fa2151eb3d4517de313f01a85b8eaf8"
+      },
+      "id": 6473,
+      "maximum_node_provider_rewards_e8s": 10000000000000,
+      "minimum_xdr_permyriad_per_icp": 10000,
+      "node_provider": "znw2p-4cx6u-ocqls-277iu-2lkir-xjy7g-4s3sj-sjy6j-mtlay-rnnra-yqe",
+      "proposal_id": null,
+      "registry_version": 52681,
+      "reward_mode": "RewardToAccount",
+      "timestamp_seconds": 1755153534,
+      "updated_at": "2025-08-14T16:30:03.838953",
+      "xdr_conversion_rate": {
+        "timestamp_seconds": 1755129600,
+        "xdr_permyriad_per_icp": 40502
+      }
+    },
+    {
+      "amount_e8s": 0,
+      "details": {
+        "to_account": "dd3891a1ed55390f24a55d2ff373f2582a3413c67285f1a1c79b99739ff7b105"
+      },
+      "id": 6474,
+      "maximum_node_provider_rewards_e8s": 10000000000000,
+      "minimum_xdr_permyriad_per_icp": 10000,
+      "node_provider": "2cfu2-qyug6-y4cme-lvj3c-6fs65-cbti4-ea6ig-nkaoj-fsbte-7n5gp-wae",
+      "proposal_id": null,
+      "registry_version": 52681,
+      "reward_mode": "RewardToAccount",
+      "timestamp_seconds": 1755153534,
+      "updated_at": "2025-08-14T16:30:03.839627",
+      "xdr_conversion_rate": {
+        "timestamp_seconds": 1755129600,
+        "xdr_permyriad_per_icp": 40502
+      }
+    },
+    {
+      "amount_e8s": 648875309861,
+      "details": {
+        "to_account": "6826718e36a82485cfd2897c3b246980033a920ec1c562865d491e05a7dc7549"
+      },
+      "id": 6477,
+      "maximum_node_provider_rewards_e8s": 10000000000000,
+      "minimum_xdr_permyriad_per_icp": 10000,
+      "node_provider": "w4buy-lgwzr-pccs7-huzhh-qqnws-rns75-iaoox-jolrm-xs2ra-vdu3o-2qe",
+      "proposal_id": null,
+      "registry_version": 52681,
+      "reward_mode": "RewardToAccount",
+      "timestamp_seconds": 1755153534,
+      "updated_at": "2025-08-14T16:30:03.847990",
+      "xdr_conversion_rate": {
+        "timestamp_seconds": 1755129600,
+        "xdr_permyriad_per_icp": 40502
+      }
+    },
+    {
+      "amount_e8s": 694089180781,
+      "details": {
+        "to_account": "8a48a35632575eb043429d6ac04d4f6301ef10b26fc185dd5e113b7781cc7b08"
+      },
+      "id": 6478,
+      "maximum_node_provider_rewards_e8s": 10000000000000,
+      "minimum_xdr_permyriad_per_icp": 10000,
+      "node_provider": "dodsd-rsjlg-sgekb-gr6mi-l6fck-tscwk-4jzgl-fwk4q-ncoyu-ulx53-aqe",
+      "proposal_id": null,
+      "registry_version": 52681,
+      "reward_mode": "RewardToAccount",
+      "timestamp_seconds": 1755153534,
+      "updated_at": "2025-08-14T16:30:03.848535",
+      "xdr_conversion_rate": {
+        "timestamp_seconds": 1755129600,
+        "xdr_permyriad_per_icp": 40502
+      }
+    },
+    {
+      "amount_e8s": 1407189768406,
+      "details": {
+        "to_account": "b88d083cc67905ba6e0d3de425c51c7e64082560aaf2ab6cd209e198dfb9bc90"
+      },
+      "id": 6480,
+      "maximum_node_provider_rewards_e8s": 10000000000000,
+      "minimum_xdr_permyriad_per_icp": 10000,
+      "node_provider": "rpfvr-s3kuw-xdqrr-pvuuj-hc7hl-olytw-yxlie-fmr74-sr572-6gdqx-iqe",
+      "proposal_id": null,
+      "registry_version": 52681,
+      "reward_mode": "RewardToAccount",
+      "timestamp_seconds": 1755153534,
+      "updated_at": "2025-08-14T16:30:03.849677",
+      "xdr_conversion_rate": {
+        "timestamp_seconds": 1755129600,
+        "xdr_permyriad_per_icp": 40502
+      }
+    },
+    {
+      "amount_e8s": 694089180781,
+      "details": {
+        "to_account": "349fd5eea4dffaed0d1164a8dbb8fb5911650ee27f0130bde2e38eca0f3a0288"
+      },
+      "id": 6481,
+      "maximum_node_provider_rewards_e8s": 10000000000000,
+      "minimum_xdr_permyriad_per_icp": 10000,
+      "node_provider": "ss6oe-fm7b2-b5r57-y3x74-omrz5-d5pgy-5iwtw-4aew5-aqj3l-6ydra-wqe",
+      "proposal_id": null,
+      "registry_version": 52681,
+      "reward_mode": "RewardToAccount",
+      "timestamp_seconds": 1755153534,
+      "updated_at": "2025-08-14T16:30:03.850223",
+      "xdr_conversion_rate": {
+        "timestamp_seconds": 1755129600,
+        "xdr_permyriad_per_icp": 40502
+      }
+    },
+    {
+      "amount_e8s": 1100241963359,
+      "details": {
+        "to_account": "6e6ce80077713e32ec25a5c08070bc3db9ca3cbb0a4c9ccd1cf43fa50fcfcc59"
+      },
+      "id": 6401,
+      "maximum_node_provider_rewards_e8s": 10000000000000,
+      "minimum_xdr_permyriad_per_icp": 10000,
+      "node_provider": "rbn2y-6vfsb-gv35j-4cyvy-pzbdu-e5aum-jzjg6-5b4n5-vuguf-ycubq-zae",
+      "proposal_id": null,
+      "registry_version": 52681,
+      "reward_mode": "RewardToAccount",
+      "timestamp_seconds": 1755153534,
+      "updated_at": "2025-08-14T16:30:03.777922",
+      "xdr_conversion_rate": {
+        "timestamp_seconds": 1755129600,
+        "xdr_permyriad_per_icp": 40502
+      }
+    },
+    {
+      "amount_e8s": 694089180781,
+      "details": {
+        "to_account": "e9224b1a4e0ebe81129df37f3d74e9f6c1d1a0c16280c84021987e567e3a809b"
+      },
+      "id": 6485,
+      "maximum_node_provider_rewards_e8s": 10000000000000,
+      "minimum_xdr_permyriad_per_icp": 10000,
+      "node_provider": "2dgp4-h57n4-a4kgx-n4uun-huo3a-wbdlc-m57wd-jtkuh-g5vcc-fcbby-6qe",
+      "proposal_id": null,
+      "registry_version": 52681,
+      "reward_mode": "RewardToAccount",
+      "timestamp_seconds": 1755153534,
+      "updated_at": "2025-08-14T16:30:03.852528",
+      "xdr_conversion_rate": {
+        "timestamp_seconds": 1755129600,
+        "xdr_permyriad_per_icp": 40502
+      }
+    },
+    {
+      "amount_e8s": 737296923608,
+      "details": {
+        "to_account": "e54f7c9cc939dfd6e9fccda41536e00a01b38316429bfc88a3c5e64e858c272d"
+      },
+      "id": 6487,
+      "maximum_node_provider_rewards_e8s": 10000000000000,
+      "minimum_xdr_permyriad_per_icp": 10000,
+      "node_provider": "g7dkt-aapqq-j3hqt-xtiys-pwapz-idulp-nwagd-zibqm-caxa4-gc23t-3qe",
+      "proposal_id": null,
+      "registry_version": 52681,
+      "reward_mode": "RewardToAccount",
+      "timestamp_seconds": 1755153534,
+      "updated_at": "2025-08-14T16:30:03.853609",
+      "xdr_conversion_rate": {
+        "timestamp_seconds": 1755129600,
+        "xdr_permyriad_per_icp": 40502
+      }
+    },
+    {
+      "amount_e8s": 0,
+      "details": {
+        "to_account": "5d06f09abeb95f2a1c08c2131ae8da6e7a934d90ccdc9254041932075b1df194"
+      },
+      "id": 6488,
+      "maximum_node_provider_rewards_e8s": 10000000000000,
+      "minimum_xdr_permyriad_per_icp": 10000,
+      "node_provider": "dwka6-vtbfw-c6h7z-zwr5o-togu7-d5md2-qlji5-we6m3-rsub6-ikhxp-2ae",
+      "proposal_id": null,
+      "registry_version": 52681,
+      "reward_mode": "RewardToAccount",
+      "timestamp_seconds": 1755153534,
+      "updated_at": "2025-08-14T16:30:03.854146",
+      "xdr_conversion_rate": {
+        "timestamp_seconds": 1755129600,
+        "xdr_permyriad_per_icp": 40502
+      }
+    },
+    {
+      "amount_e8s": 1279640511579,
+      "details": {
+        "to_account": "d4c760b433f777364eaafde71d47bb7153110378033599c4571221e5643afd3d"
+      },
+      "id": 6398,
+      "maximum_node_provider_rewards_e8s": 10000000000000,
+      "minimum_xdr_permyriad_per_icp": 10000,
+      "node_provider": "6nbcy-kprg6-ax3db-kh3cz-7jllk-oceyh-jznhs-riguq-fvk6z-6tsds-rqe",
+      "proposal_id": null,
+      "registry_version": 52681,
+      "reward_mode": "RewardToAccount",
+      "timestamp_seconds": 1755153534,
+      "updated_at": "2025-08-14T16:30:03.765370",
+      "xdr_conversion_rate": {
+        "timestamp_seconds": 1755129600,
+        "xdr_permyriad_per_icp": 40502
+      }
+    },
+    {
+      "amount_e8s": 1111648807466,
+      "details": {
+        "to_account": "e4d0ed219953f7179f972446706f57bae03b6d5c17e84b1794591b066590dd06"
+      },
+      "id": 6400,
+      "maximum_node_provider_rewards_e8s": 10000000000000,
+      "minimum_xdr_permyriad_per_icp": 10000,
+      "node_provider": "wwdbq-xuqhf-eydzu-oyl7p-ga565-zm7s7-yrive-ozgsy-zzgh3-qwb3j-cae",
+      "proposal_id": null,
+      "registry_version": 52681,
+      "reward_mode": "RewardToAccount",
+      "timestamp_seconds": 1755153534,
+      "updated_at": "2025-08-14T16:30:03.777365",
+      "xdr_conversion_rate": {
+        "timestamp_seconds": 1755129600,
+        "xdr_permyriad_per_icp": 40502
+      }
+    },
+    {
+      "amount_e8s": 1178015900449,
+      "details": {
+        "to_account": "820d21432aa9960c2c437a67f64113603ae06d8dcc337e4dea8b21b5ad30bcea"
+      },
+      "id": 6399,
+      "maximum_node_provider_rewards_e8s": 10000000000000,
+      "minimum_xdr_permyriad_per_icp": 10000,
+      "node_provider": "7ryes-jnj73-bsyu4-lo6h7-lbxk5-x4ien-lylws-5qwzl-hxd5f-xjh3w-mqe",
+      "proposal_id": null,
+      "registry_version": 52681,
+      "reward_mode": "RewardToAccount",
+      "timestamp_seconds": 1755153534,
+      "updated_at": "2025-08-14T16:30:03.774829",
+      "xdr_conversion_rate": {
+        "timestamp_seconds": 1755129600,
+        "xdr_permyriad_per_icp": 40502
+      }
+    },
+    {
+      "amount_e8s": 0,
+      "details": {
+        "to_account": "da3c63406f6fdc7d039dd9dd18093799735e344b933b8c552f7dd4288499273e"
+      },
+      "id": 6472,
+      "maximum_node_provider_rewards_e8s": 10000000000000,
+      "minimum_xdr_permyriad_per_icp": 10000,
+      "node_provider": "7ne6c-3ahs2-76so4-te6hs-oq4mv-zhz4c-pqj2b-rxjmq-q56vn-tvpgj-2ae",
+      "proposal_id": null,
+      "registry_version": 52681,
+      "reward_mode": "RewardToAccount",
+      "timestamp_seconds": 1755153534,
+      "updated_at": "2025-08-14T16:30:03.838424",
+      "xdr_conversion_rate": {
+        "timestamp_seconds": 1755129600,
+        "xdr_permyriad_per_icp": 40502
+      }
+    },
+    {
+      "amount_e8s": 1041133771171,
+      "details": {
+        "to_account": "edc9fbf743fcf5c1be79ff92f9c7e44165868d2932eb82f3d9b98cab16edeec2"
+      },
+      "id": 6403,
+      "maximum_node_provider_rewards_e8s": 10000000000000,
+      "minimum_xdr_permyriad_per_icp": 10000,
+      "node_provider": "izmhk-lpjum-uo4oy-lviba-yctpc-arg4b-2ywim-vgoiu-gqaj2-gskmw-2qe",
+      "proposal_id": null,
+      "registry_version": 52681,
+      "reward_mode": "RewardToAccount",
+      "timestamp_seconds": 1755153534,
+      "updated_at": "2025-08-14T16:30:03.779019",
+      "xdr_conversion_rate": {
+        "timestamp_seconds": 1755129600,
+        "xdr_permyriad_per_icp": 40502
+      }
+    },
+    {
+      "amount_e8s": 1202607278652,
+      "details": {
+        "to_account": "2355bf4177d0acc4c8da71ac7651b528914473f6f86533f267621d08916c3d5a"
+      },
+      "id": 6404,
+      "maximum_node_provider_rewards_e8s": 10000000000000,
+      "minimum_xdr_permyriad_per_icp": 10000,
+      "node_provider": "sixix-2nyqd-t2k2v-vlsyz-dssko-ls4hl-hyij4-y7mdp-ja6cj-nsmpf-yae",
+      "proposal_id": null,
+      "registry_version": 52681,
+      "reward_mode": "RewardToAccount",
+      "timestamp_seconds": 1755153534,
+      "updated_at": "2025-08-14T16:30:03.779660",
+      "xdr_conversion_rate": {
+        "timestamp_seconds": 1755129600,
+        "xdr_permyriad_per_icp": 40502
+      }
+    },
+    {
+      "amount_e8s": 347044590390,
+      "details": {
+        "to_account": "048f732e4a022422eec98fef88737e61d9abc64ea89c0d1438540f11b93fbdc1"
+      },
+      "id": 6406,
+      "maximum_node_provider_rewards_e8s": 10000000000000,
+      "minimum_xdr_permyriad_per_icp": 10000,
+      "node_provider": "sqhxa-h6ili-qkwup-ohzwn-yofnm-vvnp5-kxdhg-saabw-rvua3-xp325-zqe",
+      "proposal_id": null,
+      "registry_version": 52681,
+      "reward_mode": "RewardToAccount",
+      "timestamp_seconds": 1755153534,
+      "updated_at": "2025-08-14T16:30:03.781521",
+      "xdr_conversion_rate": {
+        "timestamp_seconds": 1755129600,
+        "xdr_permyriad_per_icp": 40502
+      }
+    },
+    {
+      "amount_e8s": 733494642239,
+      "details": {
+        "to_account": "7202d9009745c45b325886895dfbfe41b23ca42f9e4b4b4e45b9473e2d7adb50"
+      },
+      "id": 6407,
+      "maximum_node_provider_rewards_e8s": 10000000000000,
+      "minimum_xdr_permyriad_per_icp": 10000,
+      "node_provider": "wdnqm-clqti-im5yf-iapio-avjom-kyppl-xuiza-oaz6z-smmts-52wyg-5ae",
+      "proposal_id": null,
+      "registry_version": 52681,
+      "reward_mode": "RewardToAccount",
+      "timestamp_seconds": 1755153534,
+      "updated_at": "2025-08-14T16:30:03.782111",
+      "xdr_conversion_rate": {
+        "timestamp_seconds": 1755129600,
+        "xdr_permyriad_per_icp": 40502
+      }
+    },
+    {
+      "amount_e8s": 741099204977,
+      "details": {
+        "to_account": "c96ec32c30364d3b9720bef7873e1a0dbc731faaf7576e24f2a5b87d5b03fa46"
+      },
+      "id": 6410,
+      "maximum_node_provider_rewards_e8s": 10000000000000,
+      "minimum_xdr_permyriad_per_icp": 10000,
+      "node_provider": "ks7ow-zvs7i-ratdk-azq34-zio2b-gbekj-qjicg-pfhp3-ovhgu-k5qql-dae",
+      "proposal_id": null,
+      "registry_version": 52681,
+      "reward_mode": "RewardToAccount",
+      "timestamp_seconds": 1755153534,
+      "updated_at": "2025-08-14T16:30:03.785051",
+      "xdr_conversion_rate": {
+        "timestamp_seconds": 1755129600,
+        "xdr_permyriad_per_icp": 40502
+      }
+    },
+    {
+      "amount_e8s": 1178015900449,
+      "details": {
+        "to_account": "64860a52c81cb7e8820e954f082a48897aaea4b9601e11ee3a5a09276d95fc9d"
+      },
+      "id": 6411,
+      "maximum_node_provider_rewards_e8s": 10000000000000,
+      "minimum_xdr_permyriad_per_icp": 10000,
+      "node_provider": "6r5lw-l7db7-uwixn-iw5en-yy55y-ilbtq-e6gcv-g22r2-j3g6q-y37jk-jqe",
+      "proposal_id": null,
+      "registry_version": 52681,
+      "reward_mode": "RewardToAccount",
+      "timestamp_seconds": 1755153534,
+      "updated_at": "2025-08-14T16:30:03.785773",
+      "xdr_conversion_rate": {
+        "timestamp_seconds": 1755129600,
+        "xdr_permyriad_per_icp": 40502
+      }
+    },
+    {
+      "amount_e8s": 0,
+      "details": {
+        "to_account": "178bef572dcfe2c4dc1986944c27d8853d699c141c83a7f278a62c1b71b5047b"
+      },
+      "id": 6413,
+      "maximum_node_provider_rewards_e8s": 10000000000000,
+      "minimum_xdr_permyriad_per_icp": 10000,
+      "node_provider": "usau7-upgoh-sg464-6qnso-lud42-nxho6-ith26-a2jhq-q5bgy-ajeou-4ae",
+      "proposal_id": null,
+      "registry_version": 52681,
+      "reward_mode": "RewardToAccount",
+      "timestamp_seconds": 1755153534,
+      "updated_at": "2025-08-14T16:30:03.786876",
+      "xdr_conversion_rate": {
+        "timestamp_seconds": 1755129600,
+        "xdr_permyriad_per_icp": 40502
+      }
+    },
+    {
+      "amount_e8s": 1126166609056,
+      "details": {
+        "to_account": "6a1f1bff646ec1c69ae7112aee1414aca8cc1dd242e3d221b83049a852ad18e6"
+      },
+      "id": 6414,
+      "maximum_node_provider_rewards_e8s": 10000000000000,
+      "minimum_xdr_permyriad_per_icp": 10000,
+      "node_provider": "bvcsg-3od6r-jnydw-eysln-aql7w-td5zn-ay5m6-sibd2-jzojt-anwag-mqe",
+      "proposal_id": null,
+      "registry_version": 52681,
+      "reward_mode": "RewardToAccount",
+      "timestamp_seconds": 1755153534,
+      "updated_at": "2025-08-14T16:30:03.787358",
+      "xdr_conversion_rate": {
+        "timestamp_seconds": 1755129600,
+        "xdr_permyriad_per_icp": 40502
+      }
+    },
+    {
+      "amount_e8s": 710955737988,
+      "details": {
+        "to_account": "a5c6a5e8ff363a8cf4f83becbea95435e70fc5f42a4a3d2317e5ed7bdb992953"
+      },
+      "id": 6418,
+      "maximum_node_provider_rewards_e8s": 10000000000000,
+      "minimum_xdr_permyriad_per_icp": 10000,
+      "node_provider": "ulyfm-vkxtj-o42dg-e4nam-l4tzf-37wci-ggntw-4ma7y-d267g-ywxi6-iae",
+      "proposal_id": null,
+      "registry_version": 52681,
+      "reward_mode": "RewardToAccount",
+      "timestamp_seconds": 1755153534,
+      "updated_at": "2025-08-14T16:30:03.795733",
+      "xdr_conversion_rate": {
+        "timestamp_seconds": 1755129600,
+        "xdr_permyriad_per_icp": 40502
+      }
+    },
+    {
+      "amount_e8s": 64762952446,
+      "details": {
+        "to_account": "3b1e147224933ddfc4748230541de16e3de186e092000c7271d7c7d3466a22eb"
+      },
+      "id": 6419,
+      "maximum_node_provider_rewards_e8s": 10000000000000,
+      "minimum_xdr_permyriad_per_icp": 10000,
+      "node_provider": "7ws2n-wqorv-vmo4m-5e222-n42c3-hk43s-ei3kp-4hpbn-xlkzo-jgv7i-tqe",
+      "proposal_id": null,
+      "registry_version": 52681,
+      "reward_mode": "RewardToAccount",
+      "timestamp_seconds": 1755153534,
+      "updated_at": "2025-08-14T16:30:03.796307",
+      "xdr_conversion_rate": {
+        "timestamp_seconds": 1755129600,
+        "xdr_permyriad_per_icp": 40502
+      }
+    },
+    {
+      "amount_e8s": 74216705347,
+      "details": {
+        "to_account": "29e187194bf47bf70901f123191b7930b456e810fe73904bac649b4c018f7d4a"
+      },
+      "id": 6421,
+      "maximum_node_provider_rewards_e8s": 10000000000000,
+      "minimum_xdr_permyriad_per_icp": 10000,
+      "node_provider": "hzqcb-iiagd-4erjo-qn7rq-syqro-zztl6-cpble-atnkd-2c6bg-bxjoa-qae",
+      "proposal_id": null,
+      "registry_version": 52681,
+      "reward_mode": "RewardToAccount",
+      "timestamp_seconds": 1755153534,
+      "updated_at": "2025-08-14T16:30:03.797448",
+      "xdr_conversion_rate": {
+        "timestamp_seconds": 1755129600,
+        "xdr_permyriad_per_icp": 40502
+      }
+    },
+    {
+      "amount_e8s": 986805555281,
+      "details": {
+        "to_account": "be21066714ab62ae87b9e65234ecb844c155ad39612f54d938e7617503450741"
+      },
+      "id": 6422,
+      "maximum_node_provider_rewards_e8s": 10000000000000,
+      "minimum_xdr_permyriad_per_icp": 10000,
+      "node_provider": "unqqg-no4b2-vbyad-ytik2-t3vly-3e57q-aje2t-sjb5l-bd4ke-chggn-uqe",
+      "proposal_id": null,
+      "registry_version": 52681,
+      "reward_mode": "RewardToAccount",
+      "timestamp_seconds": 1755153534,
+      "updated_at": "2025-08-14T16:30:03.798013",
+      "xdr_conversion_rate": {
+        "timestamp_seconds": 1755129600,
+        "xdr_permyriad_per_icp": 40502
+      }
+    },
+    {
+      "amount_e8s": 582912071008,
+      "details": {
+        "to_account": "2faa9a049cb36c1fd55b06f31a1feaa14494db615677b9cfae845aabcf5e5949"
+      },
+      "id": 6425,
+      "maximum_node_provider_rewards_e8s": 10000000000000,
+      "minimum_xdr_permyriad_per_icp": 10000,
+      "node_provider": "ihbuj-erwnc-tkjux-tqtnv-zkoar-uniy2-sk2go-xfpkc-znbb4-seukm-wqe",
+      "proposal_id": null,
+      "registry_version": 52681,
+      "reward_mode": "RewardToAccount",
+      "timestamp_seconds": 1755153534,
+      "updated_at": "2025-08-14T16:30:03.802731",
+      "xdr_conversion_rate": {
+        "timestamp_seconds": 1755129600,
+        "xdr_permyriad_per_icp": 40502
+      }
+    },
+    {
+      "amount_e8s": 0,
+      "details": {
+        "to_account": "b76f4c20d5c01973bbc0b06d71cd18966741fc6aa315f34c4f1819e0a9079d7f"
+      },
+      "id": 6426,
+      "maximum_node_provider_rewards_e8s": 10000000000000,
+      "minimum_xdr_permyriad_per_icp": 10000,
+      "node_provider": "xo7ih-nswlt-hbq3n-v5ixi-etu7j-sasg6-fjf4p-zx6or-cc7c3-pnh7t-2ae",
+      "proposal_id": null,
+      "registry_version": 52681,
+      "reward_mode": "RewardToAccount",
+      "timestamp_seconds": 1755153534,
+      "updated_at": "2025-08-14T16:30:03.803631",
+      "xdr_conversion_rate": {
+        "timestamp_seconds": 1755129600,
+        "xdr_permyriad_per_icp": 40502
+      }
+    },
+    {
+      "amount_e8s": 251492210261,
+      "details": {
+        "to_account": "f69c482f3845d07c374e44bf18b266ee4aca732d521cac70ae9e242d20a038a3"
+      },
+      "id": 6428,
+      "maximum_node_provider_rewards_e8s": 10000000000000,
+      "minimum_xdr_permyriad_per_icp": 10000,
+      "node_provider": "g2ax6-jrkmb-3zuh3-jibtb-q5xoq-njrgo-5utbc-j2o7g-zfq2w-yyhky-dqe",
+      "proposal_id": null,
+      "registry_version": 52681,
+      "reward_mode": "RewardToAccount",
+      "timestamp_seconds": 1755153534,
+      "updated_at": "2025-08-14T16:30:03.805229",
+      "xdr_conversion_rate": {
+        "timestamp_seconds": 1755129600,
+        "xdr_permyriad_per_icp": 40502
+      }
+    },
+    {
+      "amount_e8s": 524445928596,
+      "details": {
+        "to_account": "e7f2700aec3eb245ebb6b51d1f217f4fb09c99840da7d0372264fdfa6647bb81"
+      },
+      "id": 6429,
+      "maximum_node_provider_rewards_e8s": 10000000000000,
+      "minimum_xdr_permyriad_per_icp": 10000,
+      "node_provider": "nmdd6-rouxw-55leh-wcbkn-kejit-njvje-p4s6e-v64d3-nlbjb-vipul-mae",
+      "proposal_id": null,
+      "registry_version": 52681,
+      "reward_mode": "RewardToAccount",
+      "timestamp_seconds": 1755153534,
+      "updated_at": "2025-08-14T16:30:03.806389",
+      "xdr_conversion_rate": {
+        "timestamp_seconds": 1755129600,
+        "xdr_permyriad_per_icp": 40502
+      }
+    },
+    {
+      "amount_e8s": 344394523727,
+      "details": {
+        "to_account": "aacc97740e8b8529bbbfb2c0f1dd170d405cbe1b6c3edac4e117e5478710554c"
+      },
+      "id": 6434,
+      "maximum_node_provider_rewards_e8s": 10000000000000,
+      "minimum_xdr_permyriad_per_icp": 10000,
+      "node_provider": "4jjya-hlyyc-s766p-fd6gr-d6tvv-vo3ah-j5ptx-i73gw-mwgyd-rw6w2-rae",
+      "proposal_id": null,
+      "registry_version": 52681,
+      "reward_mode": "RewardToAccount",
+      "timestamp_seconds": 1755153534,
+      "updated_at": "2025-08-14T16:30:03.811664",
+      "xdr_conversion_rate": {
+        "timestamp_seconds": 1755129600,
+        "xdr_permyriad_per_icp": 40502
+      }
+    },
+    {
+      "amount_e8s": 415914214112,
+      "details": {
+        "to_account": "4fbefbd1c2e147159fdf2986fb9f34735d225aa265658f575c05750cd6a24a24"
+      },
+      "id": 6435,
+      "maximum_node_provider_rewards_e8s": 10000000000000,
+      "minimum_xdr_permyriad_per_icp": 10000,
+      "node_provider": "cp5ib-twnmx-h4dvd-isef2-tu44u-kb2ka-fise5-m4hta-hnxoq-k45mm-hqe",
+      "proposal_id": null,
+      "registry_version": 52681,
+      "reward_mode": "RewardToAccount",
+      "timestamp_seconds": 1755153534,
+      "updated_at": "2025-08-14T16:30:03.812328",
+      "xdr_conversion_rate": {
+        "timestamp_seconds": 1755129600,
+        "xdr_permyriad_per_icp": 40502
+      }
+    },
+    {
+      "amount_e8s": 388033578588,
+      "details": {
+        "to_account": "831b5d20299642a83c138e83e79749b448bf74cfe3ce4023fd508c948498baac"
+      },
+      "id": 6437,
+      "maximum_node_provider_rewards_e8s": 10000000000000,
+      "minimum_xdr_permyriad_per_icp": 10000,
+      "node_provider": "fwnmn-zn7yt-5jaia-fkxlr-dzwyu-keguq-npfxq-mc72w-exeae-n5thj-oae",
+      "proposal_id": null,
+      "registry_version": 52681,
+      "reward_mode": "RewardToAccount",
+      "timestamp_seconds": 1755153534,
+      "updated_at": "2025-08-14T16:30:03.813777",
+      "xdr_conversion_rate": {
+        "timestamp_seconds": 1755129600,
+        "xdr_permyriad_per_icp": 40502
+      }
+    },
+    {
+      "amount_e8s": 302258303293,
+      "details": {
+        "to_account": "3b9290f1385c87fa4547748e2f58708a211a485b466f55482bdbdb742593ae4a"
+      },
+      "id": 6438,
+      "maximum_node_provider_rewards_e8s": 10000000000000,
+      "minimum_xdr_permyriad_per_icp": 10000,
+      "node_provider": "mme7u-zxs3z-jq3un-fbaly-nllcz-toct2-l2kp3-larrb-gti4r-u2bmo-dae",
+      "proposal_id": null,
+      "registry_version": 52681,
+      "reward_mode": "RewardToAccount",
+      "timestamp_seconds": 1755153534,
+      "updated_at": "2025-08-14T16:30:03.814333",
+      "xdr_conversion_rate": {
+        "timestamp_seconds": 1755129600,
+        "xdr_permyriad_per_icp": 40502
+      }
+    },
+    {
+      "amount_e8s": 168502170263,
+      "details": {
+        "to_account": "85f0815fdea97b8868ba665d30c59370d4ae5aa35547961724ae74dedeadf50a"
+      },
+      "id": 6441,
+      "maximum_node_provider_rewards_e8s": 10000000000000,
+      "minimum_xdr_permyriad_per_icp": 10000,
+      "node_provider": "i3cfo-s2tgu-qe5ym-wk7e6-y7ura-pptgu-kevuf-2feh7-z4enq-5hz4s-mqe",
+      "proposal_id": null,
+      "registry_version": 52681,
+      "reward_mode": "RewardToAccount",
+      "timestamp_seconds": 1755153534,
+      "updated_at": "2025-08-14T16:30:03.816338",
+      "xdr_conversion_rate": {
+        "timestamp_seconds": 1755129600,
+        "xdr_permyriad_per_icp": 40502
+      }
+    },
+    {
+      "amount_e8s": 302258303293,
+      "details": {
+        "to_account": "1821ff3f4a043e2fd5f8279c9adfe1aecd05064fc1d8c556c3348888ea28570b"
+      },
+      "id": 6442,
+      "maximum_node_provider_rewards_e8s": 10000000000000,
+      "minimum_xdr_permyriad_per_icp": 10000,
+      "node_provider": "py2kr-ipr2p-ryh66-x3a3v-5ts6u-7rfhf-alkna-ueffh-hz5ox-lt6du-qqe",
+      "proposal_id": null,
+      "registry_version": 52681,
+      "reward_mode": "RewardToAccount",
+      "timestamp_seconds": 1755153534,
+      "updated_at": "2025-08-14T16:30:03.817093",
+      "xdr_conversion_rate": {
+        "timestamp_seconds": 1755129600,
+        "xdr_permyriad_per_icp": 40502
+      }
+    },
+    {
+      "amount_e8s": 713829186213,
+      "details": {
+        "to_account": "251f1a6147d4b33772360770d502724de897b3cd3e25ee883ea512a9111907a5"
+      },
+      "id": 6444,
+      "maximum_node_provider_rewards_e8s": 10000000000000,
+      "minimum_xdr_permyriad_per_icp": 10000,
+      "node_provider": "64xe5-tx2s3-4gjmj-pnozr-fejw2-77y5y-rhcjk-glnmx-62brf-qin5q-pqe",
+      "proposal_id": null,
+      "registry_version": 52681,
+      "reward_mode": "RewardToAccount",
+      "timestamp_seconds": 1755153534,
+      "updated_at": "2025-08-14T16:30:03.818770",
+      "xdr_conversion_rate": {
+        "timestamp_seconds": 1755129600,
+        "xdr_permyriad_per_icp": 40502
+      }
+    },
+    {
+      "amount_e8s": 69918828699,
+      "details": {
+        "to_account": "9b441d4716615ce0774f65a5a91ebce56a94f0284b2f602f86b16cff915d5767"
+      },
+      "id": 6445,
+      "maximum_node_provider_rewards_e8s": 10000000000000,
+      "minimum_xdr_permyriad_per_icp": 10000,
+      "node_provider": "trxbq-wy5xi-3y27q-bkpaf-mhi2m-puexs-yatgt-nhwiy-dh6jy-rolw5-zqe",
+      "proposal_id": null,
+      "registry_version": 52681,
+      "reward_mode": "RewardToAccount",
+      "timestamp_seconds": 1755153534,
+      "updated_at": "2025-08-14T16:30:03.819418",
+      "xdr_conversion_rate": {
+        "timestamp_seconds": 1755129600,
+        "xdr_permyriad_per_icp": 40502
+      }
+    },
+    {
+      "amount_e8s": 266418942274,
+      "details": {
+        "to_account": "1b47b5c38650803e3140853ba635398530a90620726eaa8cba7488a59227d954"
+      },
+      "id": 6449,
+      "maximum_node_provider_rewards_e8s": 10000000000000,
+      "minimum_xdr_permyriad_per_icp": 10000,
+      "node_provider": "3oqw6-vmpk2-mlwlx-52z5x-e3p7u-fjlcw-yxc34-lf2zq-6ub2f-v63hk-lae",
+      "proposal_id": null,
+      "registry_version": 52681,
+      "reward_mode": "RewardToAccount",
+      "timestamp_seconds": 1755153534,
+      "updated_at": "2025-08-14T16:30:03.821998",
+      "xdr_conversion_rate": {
+        "timestamp_seconds": 1755129600,
+        "xdr_permyriad_per_icp": 40502
+      }
+    },
+    {
+      "amount_e8s": 286385420473,
+      "details": {
+        "to_account": "cff3c9a85cb1f96f2a10c8327d2589a7043dfd54c347c658bf9e0a8d4d66fd90"
+      },
+      "id": 6450,
+      "maximum_node_provider_rewards_e8s": 10000000000000,
+      "minimum_xdr_permyriad_per_icp": 10000,
+      "node_provider": "cgmhq-c4zja-yov4u-zeyao-64ua5-idlhb-ezcgr-cultv-3vqjs-dhwo7-rqe",
+      "proposal_id": null,
+      "registry_version": 52681,
+      "reward_mode": "RewardToAccount",
+      "timestamp_seconds": 1755153534,
+      "updated_at": "2025-08-14T16:30:03.822643",
+      "xdr_conversion_rate": {
+        "timestamp_seconds": 1755129600,
+        "xdr_permyriad_per_icp": 40502
+      }
+    },
+    {
+      "amount_e8s": 266418942274,
+      "details": {
+        "to_account": "ec725e63cd370f7722764518922cd1562ac2c102fbb228a599efdd8aacc94bee"
+      },
+      "id": 6452,
+      "maximum_node_provider_rewards_e8s": 10000000000000,
+      "minimum_xdr_permyriad_per_icp": 10000,
+      "node_provider": "diyay-s4rfq-xnx23-zczwi-nptra-5254n-e4zn6-p7tqe-vqhzr-sd4gd-bqe",
+      "proposal_id": null,
+      "registry_version": 52681,
+      "reward_mode": "RewardToAccount",
+      "timestamp_seconds": 1755153534,
+      "updated_at": "2025-08-14T16:30:03.823872",
+      "xdr_conversion_rate": {
+        "timestamp_seconds": 1755129600,
+        "xdr_permyriad_per_icp": 40502
+      }
+    },
+    {
+      "amount_e8s": 0,
+      "details": {
+        "to_account": "95349fc895c228a179e5658a65a4010286eb58ddfc97200ffc7cc52bf9f0764f"
+      },
+      "id": 6453,
+      "maximum_node_provider_rewards_e8s": 10000000000000,
+      "minimum_xdr_permyriad_per_icp": 10000,
+      "node_provider": "33aps-ovxje-mwpux-cy2hh-f2qwp-5tzxs-2edbb-gblfn-ev5pv-cfnvj-pqe",
+      "proposal_id": null,
+      "registry_version": 52681,
+      "reward_mode": "RewardToAccount",
+      "timestamp_seconds": 1755153534,
+      "updated_at": "2025-08-14T16:30:03.824491",
+      "xdr_conversion_rate": {
+        "timestamp_seconds": 1755129600,
+        "xdr_permyriad_per_icp": 40502
+      }
+    },
+    {
+      "amount_e8s": 0,
+      "details": {
+        "to_account": "44bcdc816d085f4aaf2b44e48f09f3c4986b406c117a3fb2c0791b43f483eb6c"
+      },
+      "id": 6456,
+      "maximum_node_provider_rewards_e8s": 10000000000000,
+      "minimum_xdr_permyriad_per_icp": 10000,
+      "node_provider": "qsdw4-ao5ye-6rtq4-y3zhm-icjbj-lutd2-sbejz-4ajqz-pcflr-xrhsg-jae",
+      "proposal_id": null,
+      "registry_version": 52681,
+      "reward_mode": "RewardToAccount",
+      "timestamp_seconds": 1755153534,
+      "updated_at": "2025-08-14T16:30:03.826301",
+      "xdr_conversion_rate": {
+        "timestamp_seconds": 1755129600,
+        "xdr_permyriad_per_icp": 40502
+      }
+    },
+    {
+      "amount_e8s": 0,
+      "details": {
+        "to_account": "1fd2e516726dba3f1b5120f5cc15a3f8e0cfd1ab3dd5cc513ca58ab255240f55"
+      },
+      "id": 6457,
+      "maximum_node_provider_rewards_e8s": 10000000000000,
+      "minimum_xdr_permyriad_per_icp": 10000,
+      "node_provider": "veamq-6zmtx-dtdky-ctoun-gokvu-cr6zm-ffsky-dz35w-e2euw-zvv7e-vae",
+      "proposal_id": null,
+      "registry_version": 52681,
+      "reward_mode": "RewardToAccount",
+      "timestamp_seconds": 1755153534,
+      "updated_at": "2025-08-14T16:30:03.827102",
+      "xdr_conversion_rate": {
+        "timestamp_seconds": 1755129600,
+        "xdr_permyriad_per_icp": 40502
+      }
+    },
+    {
+      "amount_e8s": 101059979754,
+      "details": {
+        "to_account": "87f7b98581f2877dae740c1ca3d1bdd66783c03836baa1d59e1408c626c51b21"
+      },
+      "id": 6459,
+      "maximum_node_provider_rewards_e8s": 10000000000000,
+      "minimum_xdr_permyriad_per_icp": 10000,
+      "node_provider": "pa5mu-yxsey-b4yrk-bodka-dhjnm-a3nx4-w2grw-3b766-ddr6e-nupu4-pqe",
+      "proposal_id": null,
+      "registry_version": 52681,
+      "reward_mode": "RewardToAccount",
+      "timestamp_seconds": 1755153534,
+      "updated_at": "2025-08-14T16:30:03.828758",
+      "xdr_conversion_rate": {
+        "timestamp_seconds": 1755129600,
+        "xdr_permyriad_per_icp": 40502
+      }
+    },
+    {
+      "amount_e8s": 219280178756,
+      "details": {
+        "to_account": "e74f1c7de0a8a2cc8284d082a131974568e7c14b5bf129716e5baedb7042e987"
+      },
+      "id": 6460,
+      "maximum_node_provider_rewards_e8s": 10000000000000,
+      "minimum_xdr_permyriad_per_icp": 10000,
+      "node_provider": "otzuu-dldzs-avvu2-qwowd-hdj73-aocy7-lacgi-carzj-m6f2r-ffluy-fae",
+      "proposal_id": null,
+      "registry_version": 52681,
+      "reward_mode": "RewardToAccount",
+      "timestamp_seconds": 1755153534,
+      "updated_at": "2025-08-14T16:30:03.829558",
+      "xdr_conversion_rate": {
+        "timestamp_seconds": 1755129600,
+        "xdr_permyriad_per_icp": 40502
+      }
+    },
+    {
+      "amount_e8s": 1417227235438,
+      "details": {
+        "to_account": "33f777364eaafde71d47bb7153110378033599c4571221e5643afd3d"
+      },
+      "id": 6304,
+      "maximum_node_provider_rewards_e8s": 10000000000000,
+      "minimum_xdr_permyriad_per_icp": 10000,
+      "node_provider": "6nbcy-kprg6-ax3db-kh3cz-7jllk-oceyh-jznhs-riguq-fvk6z-6tsds-rqe",
+      "proposal_id": null,
       "registry_version": 51990,
       "reward_mode": "RewardToAccount",
       "timestamp_seconds": 1752523734,
-      "updated_at": "2025-07-15T04:30:02.953682",
+      "updated_at": "2025-07-15T04:30:02.937315",
       "xdr_conversion_rate": {
         "timestamp_seconds": 1752451200,
         "xdr_permyriad_per_icp": 36570
@@ -592,131 +1808,17 @@
     {
       "amount_e8s": 1304675963904,
       "details": {
-        "to_account": "ef8be46ea0c92591a9087b90cee923bd08dd237968093bdc72a794f6"
+        "to_account": "2aa9960c2c437a67f64113603ae06d8dcc337e4dea8b21b5ad30bcea"
       },
-      "id": 6314,
+      "id": 6305,
       "maximum_node_provider_rewards_e8s": 10000000000000,
       "minimum_xdr_permyriad_per_icp": 10000,
-      "node_provider": "ucjqj-jmbj3-rs4aq-ekzpw-ltjs3-zrcma-t6r3t-m5wxc-j5yrj-unwoj-mae",
+      "node_provider": "7ryes-jnj73-bsyu4-lo6h7-lbxk5-x4ien-lylws-5qwzl-hxd5f-xjh3w-mqe",
       "proposal_id": null,
       "registry_version": 51990,
       "reward_mode": "RewardToAccount",
       "timestamp_seconds": 1752523734,
-      "updated_at": "2025-07-15T04:30:02.957465",
-      "xdr_conversion_rate": {
-        "timestamp_seconds": 1752451200,
-        "xdr_permyriad_per_icp": 36570
-      }
-    },
-    {
-      "amount_e8s": 1323051681706,
-      "details": {
-        "to_account": "8f27e2a008f8518e85db88793a9ff73238edfbc7da02b4438813e83d"
-      },
-      "id": 6318,
-      "maximum_node_provider_rewards_e8s": 10000000000000,
-      "minimum_xdr_permyriad_per_icp": 10000,
-      "node_provider": "wdjjk-blh44-lxm74-ojj43-rvgf4-j5rie-nm6xs-xvnuv-j3ptn-25t4v-6ae",
-      "proposal_id": null,
-      "registry_version": 51990,
-      "reward_mode": "RewardToAccount",
-      "timestamp_seconds": 1752523734,
-      "updated_at": "2025-07-15T04:30:02.962088",
-      "xdr_conversion_rate": {
-        "timestamp_seconds": 1752451200,
-        "xdr_permyriad_per_icp": 36570
-      }
-    },
-    {
-      "amount_e8s": 1249548810500,
-      "details": {
-        "to_account": "8b75f16dacf2a0a216ca1f746d3ab235cecc64f1300175b80df0fcd3"
-      },
-      "id": 6321,
-      "maximum_node_provider_rewards_e8s": 10000000000000,
-      "minimum_xdr_permyriad_per_icp": 10000,
-      "node_provider": "7at4h-nhtvt-a4s55-jigss-wr2ha-ysxkn-e6w7x-7ggnm-qd3d5-ry66r-cae",
-      "proposal_id": null,
-      "registry_version": 51990,
-      "reward_mode": "RewardToAccount",
-      "timestamp_seconds": 1752523734,
-      "updated_at": "2025-07-15T04:30:02.965831",
-      "xdr_conversion_rate": {
-        "timestamp_seconds": 1752451200,
-        "xdr_permyriad_per_icp": 36570
-      }
-    },
-    {
-      "amount_e8s": 543873943122,
-      "details": {
-        "to_account": "45eb9882779c28d97c260639e134bd9fc4c72ea2d75a04a8ba97dd3b"
-      },
-      "id": 6326,
-      "maximum_node_provider_rewards_e8s": 10000000000000,
-      "minimum_xdr_permyriad_per_icp": 10000,
-      "node_provider": "kos24-5xact-6aror-uofg2-tnvt6-dq3bk-c2c5z-jtptt-jbqvc-lmegy-qae",
-      "proposal_id": null,
-      "registry_version": 51990,
-      "reward_mode": "RewardToAccount",
-      "timestamp_seconds": 1752523734,
-      "updated_at": "2025-07-15T04:30:02.971615",
-      "xdr_conversion_rate": {
-        "timestamp_seconds": 1752451200,
-        "xdr_permyriad_per_icp": 36570
-      }
-    },
-    {
-      "amount_e8s": 1586677845228,
-      "details": {
-        "to_account": "dd57389f941a9d2d84223c48606b1dabe5cfbe892ceb2030a26859bb"
-      },
-      "id": 6329,
-      "maximum_node_provider_rewards_e8s": 10000000000000,
-      "minimum_xdr_permyriad_per_icp": 10000,
-      "node_provider": "r3yjn-kthmg-pfgmb-2fngg-5c7d7-t6kqg-wi37r-j7gy6-iee64-kjdja-jae",
-      "proposal_id": null,
-      "registry_version": 51990,
-      "reward_mode": "RewardToAccount",
-      "timestamp_seconds": 1752523734,
-      "updated_at": "2025-07-15T04:30:02.975897",
-      "xdr_conversion_rate": {
-        "timestamp_seconds": 1752451200,
-        "xdr_permyriad_per_icp": 36570
-      }
-    },
-    {
-      "amount_e8s": 599373680612,
-      "details": {
-        "to_account": "cf1b6a1af9ab82b1c997b6c8bdfc693966a07405773b0dffaae96307"
-      },
-      "id": 6333,
-      "maximum_node_provider_rewards_e8s": 10000000000000,
-      "minimum_xdr_permyriad_per_icp": 10000,
-      "node_provider": "7uioy-xitfw-yqcko-5gpya-3lpsw-dw7zt-dyyyf-wfqif-jvi76-fdbkg-cqe",
-      "proposal_id": null,
-      "registry_version": 51990,
-      "reward_mode": "RewardToAccount",
-      "timestamp_seconds": 1752523734,
-      "updated_at": "2025-07-15T04:30:02.980459",
-      "xdr_conversion_rate": {
-        "timestamp_seconds": 1752451200,
-        "xdr_permyriad_per_icp": 36570
-      }
-    },
-    {
-      "amount_e8s": 318730013672,
-      "details": {
-        "to_account": "18242aa0dbfd2a9738664c1503d3e8bd3daf08ef4da1e793043b2fa8"
-      },
-      "id": 6336,
-      "maximum_node_provider_rewards_e8s": 10000000000000,
-      "minimum_xdr_permyriad_per_icp": 10000,
-      "node_provider": "eybf4-6t6bb-unfb2-h2hhn-rrfi2-cd2vs-phksn-jdmbn-i463m-4lzds-vqe",
-      "proposal_id": null,
-      "registry_version": 51990,
-      "reward_mode": "RewardToAccount",
-      "timestamp_seconds": 1752523734,
-      "updated_at": "2025-07-15T04:30:02.984029",
+      "updated_at": "2025-07-15T04:30:02.946281",
       "xdr_conversion_rate": {
         "timestamp_seconds": 1752451200,
         "xdr_permyriad_per_icp": 36570
@@ -725,378 +1827,17 @@
     {
       "amount_e8s": 0,
       "details": {
-        "to_account": "b272c34ea62ed9c3a58856fbbf19b504ec057313df092ae4589f9aed"
+        "to_account": "7ab06da82c72a488b2e90af86a671b14fcc76eab5c3773abb1517f0c"
       },
-      "id": 6342,
+      "id": 6397,
       "maximum_node_provider_rewards_e8s": 10000000000000,
       "minimum_xdr_permyriad_per_icp": 10000,
-      "node_provider": "jz47c-irtey-dr2nb-wienh-emhaz-jo6ua-gsbho-t2z5j-l7kbf-5i7p5-5ae",
+      "node_provider": "gtdcl-kijoz-5fk3p-acmop-gmocy-nhpeq-a5fay-7q5ol-4lmdk-ldz4m-aqe",
       "proposal_id": null,
       "registry_version": 51990,
       "reward_mode": "RewardToAccount",
       "timestamp_seconds": 1752523734,
-      "updated_at": "2025-07-15T04:30:02.993417",
-      "xdr_conversion_rate": {
-        "timestamp_seconds": 1752451200,
-        "xdr_permyriad_per_icp": 36570
-      }
-    },
-    {
-      "amount_e8s": 237853743505,
-      "details": {
-        "to_account": "6bebf6f3b5e0710e40472df5627f7b8918ab3fca856b7b8185943750"
-      },
-      "id": 6345,
-      "maximum_node_provider_rewards_e8s": 10000000000000,
-      "minimum_xdr_permyriad_per_icp": 10000,
-      "node_provider": "4fedi-eu6ue-nd7ts-vnof5-hzg66-hgzl7-liy5n-3otyp-h7ipw-owycg-uae",
-      "proposal_id": null,
-      "registry_version": 51990,
-      "reward_mode": "RewardToAccount",
-      "timestamp_seconds": 1752523734,
-      "updated_at": "2025-07-15T04:30:02.998356",
-      "xdr_conversion_rate": {
-        "timestamp_seconds": 1752451200,
-        "xdr_permyriad_per_icp": 36570
-      }
-    },
-    {
-      "amount_e8s": 616119256220,
-      "details": {
-        "to_account": "d7593d3de9d678ffd28e986132f60e243830d449f3b87df333bccf1a"
-      },
-      "id": 6349,
-      "maximum_node_provider_rewards_e8s": 10000000000000,
-      "minimum_xdr_permyriad_per_icp": 10000,
-      "node_provider": "zy4m7-z5mhs-zfkpl-zlsjl-blrbx-mvvmq-5z4zu-mf7eq-hhv7o-ezfro-3ae",
-      "proposal_id": null,
-      "registry_version": 51990,
-      "reward_mode": "RewardToAccount",
-      "timestamp_seconds": 1752523734,
-      "updated_at": "2025-07-15T04:30:03.002982",
-      "xdr_conversion_rate": {
-        "timestamp_seconds": 1752451200,
-        "xdr_permyriad_per_icp": 36570
-      }
-    },
-    {
-      "amount_e8s": 295064260322,
-      "details": {
-        "to_account": "bfedc15bc3f1e558bd61fcc1f80d87ffcbe5d301477eb15b33685bcf"
-      },
-      "id": 6352,
-      "maximum_node_provider_rewards_e8s": 10000000000000,
-      "minimum_xdr_permyriad_per_icp": 10000,
-      "node_provider": "4r6qy-tljxg-slziw-zoteo-pboxh-vlctz-hkv2d-7zior-u3pxm-mmuxb-cae",
-      "proposal_id": null,
-      "registry_version": 51990,
-      "reward_mode": "RewardToAccount",
-      "timestamp_seconds": 1752523734,
-      "updated_at": "2025-07-15T04:30:03.010314",
-      "xdr_conversion_rate": {
-        "timestamp_seconds": 1752451200,
-        "xdr_permyriad_per_icp": 36570
-      }
-    },
-    {
-      "amount_e8s": 295064260322,
-      "details": {
-        "to_account": "27849a34007ec1d86d3c23e70025e8be9964f5192df2aa3bbbfd25b7"
-      },
-      "id": 6357,
-      "maximum_node_provider_rewards_e8s": 10000000000000,
-      "minimum_xdr_permyriad_per_icp": 10000,
-      "node_provider": "dhywe-eouw6-hstpj-ahsnw-xnjxq-cmqks-47mrg-nnncb-3sr5d-rac6m-nae",
-      "proposal_id": null,
-      "registry_version": 51990,
-      "reward_mode": "RewardToAccount",
-      "timestamp_seconds": 1752523734,
-      "updated_at": "2025-07-15T04:30:03.024036",
-      "xdr_conversion_rate": {
-        "timestamp_seconds": 1752451200,
-        "xdr_permyriad_per_icp": 36570
-      }
-    },
-    {
-      "amount_e8s": 0,
-      "details": {
-        "to_account": "b7f363a5eec19a835bedb4c8a879f2089699c77e6a0325400622ad6d"
-      },
-      "id": 6360,
-      "maximum_node_provider_rewards_e8s": 10000000000000,
-      "minimum_xdr_permyriad_per_icp": 10000,
-      "node_provider": "amsdj-4ss2k-wwcae-kroro-ippwx-lcro4-ysoha-uqlvc-3267j-vt3fy-yqe",
-      "proposal_id": null,
-      "registry_version": 51990,
-      "reward_mode": "RewardToAccount",
-      "timestamp_seconds": 1752523734,
-      "updated_at": "2025-07-15T04:30:03.027491",
-      "xdr_conversion_rate": {
-        "timestamp_seconds": 1752451200,
-        "xdr_permyriad_per_icp": 36570
-      }
-    },
-    {
-      "amount_e8s": 218844074377,
-      "details": {
-        "to_account": "5a01f52d6f6847ce331dceac11fe97a426b5f9dd6a815150bc77491b"
-      },
-      "id": 6364,
-      "maximum_node_provider_rewards_e8s": 10000000000000,
-      "minimum_xdr_permyriad_per_icp": 10000,
-      "node_provider": "eatbv-nlydd-n655c-g7j7p-gnmpz-pszdg-6e6et-veobv-ftz2y-4m752-vqe",
-      "proposal_id": null,
-      "registry_version": 51990,
-      "reward_mode": "RewardToAccount",
-      "timestamp_seconds": 1752523734,
-      "updated_at": "2025-07-15T04:30:03.031963",
-      "xdr_conversion_rate": {
-        "timestamp_seconds": 1752451200,
-        "xdr_permyriad_per_icp": 36570
-      }
-    },
-    {
-      "amount_e8s": 0,
-      "details": {
-        "to_account": "a56577f858c2f629ad30d6e2790d4e9f8fe46fde924b56e7ce32588641deead6"
-      },
-      "id": 6367,
-      "maximum_node_provider_rewards_e8s": 10000000000000,
-      "minimum_xdr_permyriad_per_icp": 10000,
-      "node_provider": "j2tnr-f5tmm-afnyl-762n7-o272x-ji2xi-bcpld-ihimy-fw52d-2zqov-xae",
-      "proposal_id": null,
-      "registry_version": 51990,
-      "reward_mode": "RewardToAccount",
-      "timestamp_seconds": 1752523734,
-      "updated_at": "2025-07-15T04:30:03.035321",
-      "xdr_conversion_rate": {
-        "timestamp_seconds": 1752451200,
-        "xdr_permyriad_per_icp": 36570
-      }
-    },
-    {
-      "amount_e8s": 0,
-      "details": {
-        "to_account": "efa8ffb869e505e64a29bdab7665b49a277d1aa84337fd55421bf543"
-      },
-      "id": 6373,
-      "maximum_node_provider_rewards_e8s": 10000000000000,
-      "minimum_xdr_permyriad_per_icp": 10000,
-      "node_provider": "6ryfx-xszlo-xpvyj-b7vx6-m4erk-zwdkc-5lzfw-fty7k-arl66-uc3jk-nae",
-      "proposal_id": null,
-      "registry_version": 51990,
-      "reward_mode": "RewardToAccount",
-      "timestamp_seconds": 1752523734,
-      "updated_at": "2025-07-15T04:30:03.055975",
-      "xdr_conversion_rate": {
-        "timestamp_seconds": 1752451200,
-        "xdr_permyriad_per_icp": 36570
-      }
-    },
-    {
-      "amount_e8s": 0,
-      "details": {
-        "to_account": "026b601683b69b45d0d2acfe28de125f6dc0ffd77ccc210f88bfaa37"
-      },
-      "id": 6376,
-      "maximum_node_provider_rewards_e8s": 10000000000000,
-      "minimum_xdr_permyriad_per_icp": 10000,
-      "node_provider": "kn4u4-unhbe-qwud4-ki6lq-o4try-6l2gv-yrxmg-vw6st-fmlss-nsztj-7qe",
-      "proposal_id": null,
-      "registry_version": 51990,
-      "reward_mode": "RewardToAccount",
-      "timestamp_seconds": 1752523734,
-      "updated_at": "2025-07-15T04:30:03.064103",
-      "xdr_conversion_rate": {
-        "timestamp_seconds": 1752451200,
-        "xdr_permyriad_per_icp": 36570
-      }
-    },
-    {
-      "amount_e8s": 0,
-      "details": {
-        "to_account": "7cfe5953f0b797f76853f6df7fa2151eb3d4517de313f01a85b8eaf8"
-      },
-      "id": 6379,
-      "maximum_node_provider_rewards_e8s": 10000000000000,
-      "minimum_xdr_permyriad_per_icp": 10000,
-      "node_provider": "znw2p-4cx6u-ocqls-277iu-2lkir-xjy7g-4s3sj-sjy6j-mtlay-rnnra-yqe",
-      "proposal_id": null,
-      "registry_version": 51990,
-      "reward_mode": "RewardToAccount",
-      "timestamp_seconds": 1752523734,
-      "updated_at": "2025-07-15T04:30:03.067538",
-      "xdr_conversion_rate": {
-        "timestamp_seconds": 1752451200,
-        "xdr_permyriad_per_icp": 36570
-      }
-    },
-    {
-      "amount_e8s": 0,
-      "details": {
-        "to_account": "ed55390f24a55d2ff373f2582a3413c67285f1a1c79b99739ff7b105"
-      },
-      "id": 6380,
-      "maximum_node_provider_rewards_e8s": 10000000000000,
-      "minimum_xdr_permyriad_per_icp": 10000,
-      "node_provider": "2cfu2-qyug6-y4cme-lvj3c-6fs65-cbti4-ea6ig-nkaoj-fsbte-7n5gp-wae",
-      "proposal_id": null,
-      "registry_version": 51990,
-      "reward_mode": "RewardToAccount",
-      "timestamp_seconds": 1752523734,
-      "updated_at": "2025-07-15T04:30:03.068646",
-      "xdr_conversion_rate": {
-        "timestamp_seconds": 1752451200,
-        "xdr_permyriad_per_icp": 36570
-      }
-    },
-    {
-      "amount_e8s": 434891987968,
-      "details": {
-        "to_account": "36a82485cfd2897c3b246980033a920ec1c562865d491e05a7dc7549"
-      },
-      "id": 6383,
-      "maximum_node_provider_rewards_e8s": 10000000000000,
-      "minimum_xdr_permyriad_per_icp": 10000,
-      "node_provider": "w4buy-lgwzr-pccs7-huzhh-qqnws-rns75-iaoox-jolrm-xs2ra-vdu3o-2qe",
-      "proposal_id": null,
-      "registry_version": 51990,
-      "reward_mode": "RewardToAccount",
-      "timestamp_seconds": 1752523734,
-      "updated_at": "2025-07-15T04:30:03.073846",
-      "xdr_conversion_rate": {
-        "timestamp_seconds": 1752451200,
-        "xdr_permyriad_per_icp": 36570
-      }
-    },
-    {
-      "amount_e8s": 768717528028,
-      "details": {
-        "to_account": "32575eb043429d6ac04d4f6301ef10b26fc185dd5e113b7781cc7b08"
-      },
-      "id": 6384,
-      "maximum_node_provider_rewards_e8s": 10000000000000,
-      "minimum_xdr_permyriad_per_icp": 10000,
-      "node_provider": "dodsd-rsjlg-sgekb-gr6mi-l6fck-tscwk-4jzgl-fwk4q-ncoyu-ulx53-aqe",
-      "proposal_id": null,
-      "registry_version": 51990,
-      "reward_mode": "RewardToAccount",
-      "timestamp_seconds": 1752523734,
-      "updated_at": "2025-07-15T04:30:03.076039",
-      "xdr_conversion_rate": {
-        "timestamp_seconds": 1752451200,
-        "xdr_permyriad_per_icp": 36570
-      }
-    },
-    {
-      "amount_e8s": 1558490566037,
-      "details": {
-        "to_account": "c67905ba6e0d3de425c51c7e64082560aaf2ab6cd209e198dfb9bc90"
-      },
-      "id": 6386,
-      "maximum_node_provider_rewards_e8s": 10000000000000,
-      "minimum_xdr_permyriad_per_icp": 10000,
-      "node_provider": "rpfvr-s3kuw-xdqrr-pvuuj-hc7hl-olytw-yxlie-fmr74-sr572-6gdqx-iqe",
-      "proposal_id": null,
-      "registry_version": 51990,
-      "reward_mode": "RewardToAccount",
-      "timestamp_seconds": 1752523734,
-      "updated_at": "2025-07-15T04:30:03.078322",
-      "xdr_conversion_rate": {
-        "timestamp_seconds": 1752451200,
-        "xdr_permyriad_per_icp": 36570
-      }
-    },
-    {
-      "amount_e8s": 768717528028,
-      "details": {
-        "to_account": "a4dffaed0d1164a8dbb8fb5911650ee27f0130bde2e38eca0f3a0288"
-      },
-      "id": 6387,
-      "maximum_node_provider_rewards_e8s": 10000000000000,
-      "minimum_xdr_permyriad_per_icp": 10000,
-      "node_provider": "ss6oe-fm7b2-b5r57-y3x74-omrz5-d5pgy-5iwtw-4aew5-aqj3l-6ydra-wqe",
-      "proposal_id": null,
-      "registry_version": 51990,
-      "reward_mode": "RewardToAccount",
-      "timestamp_seconds": 1752523734,
-      "updated_at": "2025-07-15T04:30:03.079478",
-      "xdr_conversion_rate": {
-        "timestamp_seconds": 1752451200,
-        "xdr_permyriad_per_icp": 36570
-      }
-    },
-    {
-      "amount_e8s": 1218539786710,
-      "details": {
-        "to_account": "77713e32ec25a5c08070bc3db9ca3cbb0a4c9ccd1cf43fa50fcfcc59"
-      },
-      "id": 6307,
-      "maximum_node_provider_rewards_e8s": 10000000000000,
-      "minimum_xdr_permyriad_per_icp": 10000,
-      "node_provider": "rbn2y-6vfsb-gv35j-4cyvy-pzbdu-e5aum-jzjg6-5b4n5-vuguf-ycubq-zae",
-      "proposal_id": null,
-      "registry_version": 51990,
-      "reward_mode": "RewardToAccount",
-      "timestamp_seconds": 1752523734,
-      "updated_at": "2025-07-15T04:30:02.948848",
-      "xdr_conversion_rate": {
-        "timestamp_seconds": 1752451200,
-        "xdr_permyriad_per_icp": 36570
-      }
-    },
-    {
-      "amount_e8s": 768717528028,
-      "details": {
-        "to_account": "4e0ebe81129df37f3d74e9f6c1d1a0c16280c84021987e567e3a809b"
-      },
-      "id": 6391,
-      "maximum_node_provider_rewards_e8s": 10000000000000,
-      "minimum_xdr_permyriad_per_icp": 10000,
-      "node_provider": "2dgp4-h57n4-a4kgx-n4uun-huo3a-wbdlc-m57wd-jtkuh-g5vcc-fcbby-6qe",
-      "proposal_id": null,
-      "registry_version": 51990,
-      "reward_mode": "RewardToAccount",
-      "timestamp_seconds": 1752523734,
-      "updated_at": "2025-07-15T04:30:03.084580",
-      "xdr_conversion_rate": {
-        "timestamp_seconds": 1752451200,
-        "xdr_permyriad_per_icp": 36570
-      }
-    },
-    {
-      "amount_e8s": 816570959803,
-      "details": {
-        "to_account": "c939dfd6e9fccda41536e00a01b38316429bfc88a3c5e64e858c272d"
-      },
-      "id": 6393,
-      "maximum_node_provider_rewards_e8s": 10000000000000,
-      "minimum_xdr_permyriad_per_icp": 10000,
-      "node_provider": "g7dkt-aapqq-j3hqt-xtiys-pwapz-idulp-nwagd-zibqm-caxa4-gc23t-3qe",
-      "proposal_id": null,
-      "registry_version": 51990,
-      "reward_mode": "RewardToAccount",
-      "timestamp_seconds": 1752523734,
-      "updated_at": "2025-07-15T04:30:03.086857",
-      "xdr_conversion_rate": {
-        "timestamp_seconds": 1752451200,
-        "xdr_permyriad_per_icp": 36570
-      }
-    },
-    {
-      "amount_e8s": 0,
-      "details": {
-        "to_account": "beb95f2a1c08c2131ae8da6e7a934d90ccdc9254041932075b1df194"
-      },
-      "id": 6394,
-      "maximum_node_provider_rewards_e8s": 10000000000000,
-      "minimum_xdr_permyriad_per_icp": 10000,
-      "node_provider": "dwka6-vtbfw-c6h7z-zwr5o-togu7-d5md2-qlji5-we6m3-rsub6-ikhxp-2ae",
-      "proposal_id": null,
-      "registry_version": 51990,
-      "reward_mode": "RewardToAccount",
-      "timestamp_seconds": 1752523734,
-      "updated_at": "2025-07-15T04:30:03.088008",
+      "updated_at": "2025-07-15T04:30:03.091150",
       "xdr_conversion_rate": {
         "timestamp_seconds": 1752451200,
         "xdr_permyriad_per_icp": 36570
@@ -1124,783 +1865,42 @@
     {
       "amount_e8s": 0,
       "details": {
-        "to_account": "7ab06da82c72a488b2e90af86a671b14fcc76eab5c3773abb1517f0c"
+        "to_account": "beb95f2a1c08c2131ae8da6e7a934d90ccdc9254041932075b1df194"
       },
-      "id": 6397,
+      "id": 6394,
       "maximum_node_provider_rewards_e8s": 10000000000000,
       "minimum_xdr_permyriad_per_icp": 10000,
-      "node_provider": "gtdcl-kijoz-5fk3p-acmop-gmocy-nhpeq-a5fay-7q5ol-4lmdk-ldz4m-aqe",
+      "node_provider": "dwka6-vtbfw-c6h7z-zwr5o-togu7-d5md2-qlji5-we6m3-rsub6-ikhxp-2ae",
       "proposal_id": null,
       "registry_version": 51990,
       "reward_mode": "RewardToAccount",
       "timestamp_seconds": 1752523734,
-      "updated_at": "2025-07-15T04:30:03.091150",
+      "updated_at": "2025-07-15T04:30:03.088008",
       "xdr_conversion_rate": {
         "timestamp_seconds": 1752451200,
         "xdr_permyriad_per_icp": 36570
       }
     },
     {
-      "amount_e8s": 1304675963904,
-      "details": {
-        "to_account": "2aa9960c2c437a67f64113603ae06d8dcc337e4dea8b21b5ad30bcea"
-      },
-      "id": 6305,
-      "maximum_node_provider_rewards_e8s": 10000000000000,
-      "minimum_xdr_permyriad_per_icp": 10000,
-      "node_provider": "7ryes-jnj73-bsyu4-lo6h7-lbxk5-x4ien-lylws-5qwzl-hxd5f-xjh3w-mqe",
-      "proposal_id": null,
-      "registry_version": 51990,
-      "reward_mode": "RewardToAccount",
-      "timestamp_seconds": 1752523734,
-      "updated_at": "2025-07-15T04:30:02.946281",
-      "xdr_conversion_rate": {
-        "timestamp_seconds": 1752451200,
-        "xdr_permyriad_per_icp": 36570
-      }
-    },
-    {
-      "amount_e8s": 1417227235438,
-      "details": {
-        "to_account": "33f777364eaafde71d47bb7153110378033599c4571221e5643afd3d"
-      },
-      "id": 6304,
-      "maximum_node_provider_rewards_e8s": 10000000000000,
-      "minimum_xdr_permyriad_per_icp": 10000,
-      "node_provider": "6nbcy-kprg6-ax3db-kh3cz-7jllk-oceyh-jznhs-riguq-fvk6z-6tsds-rqe",
-      "proposal_id": null,
-      "registry_version": 51990,
-      "reward_mode": "RewardToAccount",
-      "timestamp_seconds": 1752523734,
-      "updated_at": "2025-07-15T04:30:02.937315",
-      "xdr_conversion_rate": {
-        "timestamp_seconds": 1752451200,
-        "xdr_permyriad_per_icp": 36570
-      }
-    },
-    {
-      "amount_e8s": 1153076292042,
-      "details": {
-        "to_account": "43fcf5c1be79ff92f9c7e44165868d2932eb82f3d9b98cab16edeec2"
-      },
-      "id": 6309,
-      "maximum_node_provider_rewards_e8s": 10000000000000,
-      "minimum_xdr_permyriad_per_icp": 10000,
-      "node_provider": "izmhk-lpjum-uo4oy-lviba-yctpc-arg4b-2ywim-vgoiu-gqaj2-gskmw-2qe",
-      "proposal_id": null,
-      "registry_version": 51990,
-      "reward_mode": "RewardToAccount",
-      "timestamp_seconds": 1752523734,
-      "updated_at": "2025-07-15T04:30:02.951321",
-      "xdr_conversion_rate": {
-        "timestamp_seconds": 1752451200,
-        "xdr_permyriad_per_icp": 36570
-      }
-    },
-    {
-      "amount_e8s": 1331911402789,
-      "details": {
-        "to_account": "77d0acc4c8da71ac7651b528914473f6f86533f267621d08916c3d5a"
-      },
-      "id": 6310,
-      "maximum_node_provider_rewards_e8s": 10000000000000,
-      "minimum_xdr_permyriad_per_icp": 10000,
-      "node_provider": "sixix-2nyqd-t2k2v-vlsyz-dssko-ls4hl-hyij4-y7mdp-ja6cj-nsmpf-yae",
-      "proposal_id": null,
-      "registry_version": 51990,
-      "reward_mode": "RewardToAccount",
-      "timestamp_seconds": 1752523734,
-      "updated_at": "2025-07-15T04:30:02.952497",
-      "xdr_conversion_rate": {
-        "timestamp_seconds": 1752451200,
-        "xdr_permyriad_per_icp": 36570
-      }
-    },
-    {
-      "amount_e8s": 384358764014,
-      "details": {
-        "to_account": "4a022422eec98fef88737e61d9abc64ea89c0d1438540f11b93fbdc1"
-      },
-      "id": 6312,
-      "maximum_node_provider_rewards_e8s": 10000000000000,
-      "minimum_xdr_permyriad_per_icp": 10000,
-      "node_provider": "sqhxa-h6ili-qkwup-ohzwn-yofnm-vvnp5-kxdhg-saabw-rvua3-xp325-zqe",
-      "proposal_id": null,
-      "registry_version": 51990,
-      "reward_mode": "RewardToAccount",
-      "timestamp_seconds": 1752523734,
-      "updated_at": "2025-07-15T04:30:02.954877",
-      "xdr_conversion_rate": {
-        "timestamp_seconds": 1752451200,
-        "xdr_permyriad_per_icp": 36570
-      }
-    },
-    {
-      "amount_e8s": 783347005742,
-      "details": {
-        "to_account": "9745c45b325886895dfbfe41b23ca42f9e4b4b4e45b9473e2d7adb50"
-      },
-      "id": 6313,
-      "maximum_node_provider_rewards_e8s": 10000000000000,
-      "minimum_xdr_permyriad_per_icp": 10000,
-      "node_provider": "wdnqm-clqti-im5yf-iapio-avjom-kyppl-xuiza-oaz6z-smmts-52wyg-5ae",
-      "proposal_id": null,
-      "registry_version": 51990,
-      "reward_mode": "RewardToAccount",
-      "timestamp_seconds": 1752523734,
-      "updated_at": "2025-07-15T04:30:02.956073",
-      "xdr_conversion_rate": {
-        "timestamp_seconds": 1752451200,
-        "xdr_permyriad_per_icp": 36570
-      }
-    },
-    {
-      "amount_e8s": 820782061799,
-      "details": {
-        "to_account": "30364d3b9720bef7873e1a0dbc731faaf7576e24f2a5b87d5b03fa46"
-      },
-      "id": 6316,
-      "maximum_node_provider_rewards_e8s": 10000000000000,
-      "minimum_xdr_permyriad_per_icp": 10000,
-      "node_provider": "ks7ow-zvs7i-ratdk-azq34-zio2b-gbekj-qjicg-pfhp3-ovhgu-k5qql-dae",
-      "proposal_id": null,
-      "registry_version": 51990,
-      "reward_mode": "RewardToAccount",
-      "timestamp_seconds": 1752523734,
-      "updated_at": "2025-07-15T04:30:02.959766",
-      "xdr_conversion_rate": {
-        "timestamp_seconds": 1752451200,
-        "xdr_permyriad_per_icp": 36570
-      }
-    },
-    {
-      "amount_e8s": 1304675963904,
-      "details": {
-        "to_account": "c81cb7e8820e954f082a48897aaea4b9601e11ee3a5a09276d95fc9d"
-      },
-      "id": 6317,
-      "maximum_node_provider_rewards_e8s": 10000000000000,
-      "minimum_xdr_permyriad_per_icp": 10000,
-      "node_provider": "6r5lw-l7db7-uwixn-iw5en-yy55y-ilbtq-e6gcv-g22r2-j3g6q-y37jk-jqe",
-      "proposal_id": null,
-      "registry_version": 51990,
-      "reward_mode": "RewardToAccount",
-      "timestamp_seconds": 1752523734,
-      "updated_at": "2025-07-15T04:30:02.960943",
-      "xdr_conversion_rate": {
-        "timestamp_seconds": 1752451200,
-        "xdr_permyriad_per_icp": 36570
-      }
-    },
-    {
-      "amount_e8s": 0,
-      "details": {
-        "to_account": "2dcfe2c4dc1986944c27d8853d699c141c83a7f278a62c1b71b5047b"
-      },
-      "id": 6319,
-      "maximum_node_provider_rewards_e8s": 10000000000000,
-      "minimum_xdr_permyriad_per_icp": 10000,
-      "node_provider": "usau7-upgoh-sg464-6qnso-lud42-nxho6-ith26-a2jhq-q5bgy-ajeou-4ae",
-      "proposal_id": null,
-      "registry_version": 51990,
-      "reward_mode": "RewardToAccount",
-      "timestamp_seconds": 1752523734,
-      "updated_at": "2025-07-15T04:30:02.963253",
-      "xdr_conversion_rate": {
-        "timestamp_seconds": 1752451200,
-        "xdr_permyriad_per_icp": 36570
-      }
-    },
-    {
-      "amount_e8s": 1247251845775,
-      "details": {
-        "to_account": "646ec1c69ae7112aee1414aca8cc1dd242e3d221b83049a852ad18e6"
-      },
-      "id": 6320,
-      "maximum_node_provider_rewards_e8s": 10000000000000,
-      "minimum_xdr_permyriad_per_icp": 10000,
-      "node_provider": "bvcsg-3od6r-jnydw-eysln-aql7w-td5zn-ay5m6-sibd2-jzojt-anwag-mqe",
-      "proposal_id": null,
-      "registry_version": 51990,
-      "reward_mode": "RewardToAccount",
-      "timestamp_seconds": 1752523734,
-      "updated_at": "2025-07-15T04:30:02.964701",
-      "xdr_conversion_rate": {
-        "timestamp_seconds": 1752451200,
-        "xdr_permyriad_per_icp": 36570
-      }
-    },
-    {
-      "amount_e8s": 787397574514,
-      "details": {
-        "to_account": "ff363a8cf4f83becbea95435e70fc5f42a4a3d2317e5ed7bdb992953"
-      },
-      "id": 6324,
-      "maximum_node_provider_rewards_e8s": 10000000000000,
-      "minimum_xdr_permyriad_per_icp": 10000,
-      "node_provider": "ulyfm-vkxtj-o42dg-e4nam-l4tzf-37wci-ggntw-4ma7y-d267g-ywxi6-iae",
-      "proposal_id": null,
-      "registry_version": 51990,
-      "reward_mode": "RewardToAccount",
-      "timestamp_seconds": 1752523734,
-      "updated_at": "2025-07-15T04:30:02.969331",
-      "xdr_conversion_rate": {
-        "timestamp_seconds": 1752451200,
-        "xdr_permyriad_per_icp": 36570
-      }
-    },
-    {
-      "amount_e8s": 71726253759,
-      "details": {
-        "to_account": "24933ddfc4748230541de16e3de186e092000c7271d7c7d3466a22eb"
-      },
-      "id": 6325,
-      "maximum_node_provider_rewards_e8s": 10000000000000,
-      "minimum_xdr_permyriad_per_icp": 10000,
-      "node_provider": "7ws2n-wqorv-vmo4m-5e222-n42c3-hk43s-ei3kp-4hpbn-xlkzo-jgv7i-tqe",
-      "proposal_id": null,
-      "registry_version": 51990,
-      "reward_mode": "RewardToAccount",
-      "timestamp_seconds": 1752523734,
-      "updated_at": "2025-07-15T04:30:02.970489",
-      "xdr_conversion_rate": {
-        "timestamp_seconds": 1752451200,
-        "xdr_permyriad_per_icp": 36570
-      }
-    },
-    {
-      "amount_e8s": 82196472518,
-      "details": {
-        "to_account": "4bf47bf70901f123191b7930b456e810fe73904bac649b4c018f7d4a"
-      },
-      "id": 6327,
-      "maximum_node_provider_rewards_e8s": 10000000000000,
-      "minimum_xdr_permyriad_per_icp": 10000,
-      "node_provider": "hzqcb-iiagd-4erjo-qn7rq-syqro-zztl6-cpble-atnkd-2c6bg-bxjoa-qae",
-      "proposal_id": null,
-      "registry_version": 51990,
-      "reward_mode": "RewardToAccount",
-      "timestamp_seconds": 1752523734,
-      "updated_at": "2025-07-15T04:30:02.972763",
-      "xdr_conversion_rate": {
-        "timestamp_seconds": 1752451200,
-        "xdr_permyriad_per_icp": 36570
-      }
-    },
-    {
-      "amount_e8s": 1092906715887,
-      "details": {
-        "to_account": "14ab62ae87b9e65234ecb844c155ad39612f54d938e7617503450741"
-      },
-      "id": 6328,
-      "maximum_node_provider_rewards_e8s": 10000000000000,
-      "minimum_xdr_permyriad_per_icp": 10000,
-      "node_provider": "unqqg-no4b2-vbyad-ytik2-t3vly-3e57q-aje2t-sjb5l-bd4ke-chggn-uqe",
-      "proposal_id": null,
-      "registry_version": 51990,
-      "reward_mode": "RewardToAccount",
-      "timestamp_seconds": 1752523734,
-      "updated_at": "2025-07-15T04:30:02.974615",
-      "xdr_conversion_rate": {
-        "timestamp_seconds": 1752451200,
-        "xdr_permyriad_per_icp": 36570
-      }
-    },
-    {
-      "amount_e8s": 645586674870,
-      "details": {
-        "to_account": "9cb36c1fd55b06f31a1feaa14494db615677b9cfae845aabcf5e5949"
-      },
-      "id": 6331,
-      "maximum_node_provider_rewards_e8s": 10000000000000,
-      "minimum_xdr_permyriad_per_icp": 10000,
-      "node_provider": "ihbuj-erwnc-tkjux-tqtnv-zkoar-uniy2-sk2go-xfpkc-znbb4-seukm-wqe",
-      "proposal_id": null,
-      "registry_version": 51990,
-      "reward_mode": "RewardToAccount",
-      "timestamp_seconds": 1752523734,
-      "updated_at": "2025-07-15T04:30:02.978180",
-      "xdr_conversion_rate": {
-        "timestamp_seconds": 1752451200,
-        "xdr_permyriad_per_icp": 36570
-      }
-    },
-    {
-      "amount_e8s": 0,
-      "details": {
-        "to_account": "d5c01973bbc0b06d71cd18966741fc6aa315f34c4f1819e0a9079d7f"
-      },
-      "id": 6332,
-      "maximum_node_provider_rewards_e8s": 10000000000000,
-      "minimum_xdr_permyriad_per_icp": 10000,
-      "node_provider": "xo7ih-nswlt-hbq3n-v5ixi-etu7j-sasg6-fjf4p-zx6or-cc7c3-pnh7t-2ae",
-      "proposal_id": null,
-      "registry_version": 51990,
-      "reward_mode": "RewardToAccount",
-      "timestamp_seconds": 1752523734,
-      "updated_at": "2025-07-15T04:30:02.979336",
-      "xdr_conversion_rate": {
-        "timestamp_seconds": 1752451200,
-        "xdr_permyriad_per_icp": 36570
-      }
-    },
-    {
-      "amount_e8s": 278532608695,
-      "details": {
-        "to_account": "3845d07c374e44bf18b266ee4aca732d521cac70ae9e242d20a038a3"
-      },
-      "id": 6334,
-      "maximum_node_provider_rewards_e8s": 10000000000000,
-      "minimum_xdr_permyriad_per_icp": 10000,
-      "node_provider": "g2ax6-jrkmb-3zuh3-jibtb-q5xoq-njrgo-5utbc-j2o7g-zfq2w-yyhky-dqe",
-      "proposal_id": null,
-      "registry_version": 51990,
-      "reward_mode": "RewardToAccount",
-      "timestamp_seconds": 1752523734,
-      "updated_at": "2025-07-15T04:30:02.981583",
-      "xdr_conversion_rate": {
-        "timestamp_seconds": 1752451200,
-        "xdr_permyriad_per_icp": 36570
-      }
-    },
-    {
-      "amount_e8s": 580834263057,
-      "details": {
-        "to_account": "ec3eb245ebb6b51d1f217f4fb09c99840da7d0372264fdfa6647bb81"
-      },
-      "id": 6335,
-      "maximum_node_provider_rewards_e8s": 10000000000000,
-      "minimum_xdr_permyriad_per_icp": 10000,
-      "node_provider": "nmdd6-rouxw-55leh-wcbkn-kejit-njvje-p4s6e-v64d3-nlbjb-vipul-mae",
-      "proposal_id": null,
-      "registry_version": 51990,
-      "reward_mode": "RewardToAccount",
-      "timestamp_seconds": 1752523734,
-      "updated_at": "2025-07-15T04:30:02.982717",
-      "xdr_conversion_rate": {
-        "timestamp_seconds": 1752451200,
-        "xdr_permyriad_per_icp": 36570
-      }
-    },
-    {
-      "amount_e8s": 381423762646,
-      "details": {
-        "to_account": "0e8b8529bbbfb2c0f1dd170d405cbe1b6c3edac4e117e5478710554c"
-      },
-      "id": 6340,
-      "maximum_node_provider_rewards_e8s": 10000000000000,
-      "minimum_xdr_permyriad_per_icp": 10000,
-      "node_provider": "4jjya-hlyyc-s766p-fd6gr-d6tvv-vo3ah-j5ptx-i73gw-mwgyd-rw6w2-rae",
-      "proposal_id": null,
-      "registry_version": 51990,
-      "reward_mode": "RewardToAccount",
-      "timestamp_seconds": 1752523734,
-      "updated_at": "2025-07-15T04:30:02.991116",
-      "xdr_conversion_rate": {
-        "timestamp_seconds": 1752451200,
-        "xdr_permyriad_per_icp": 36570
-      }
-    },
-    {
-      "amount_e8s": 460633237626,
-      "details": {
-        "to_account": "c2e147159fdf2986fb9f34735d225aa265658f575c05750cd6a24a24"
-      },
-      "id": 6341,
-      "maximum_node_provider_rewards_e8s": 10000000000000,
-      "minimum_xdr_permyriad_per_icp": 10000,
-      "node_provider": "cp5ib-twnmx-h4dvd-isef2-tu44u-kb2ka-fise5-m4hta-hnxoq-k45mm-hqe",
-      "proposal_id": null,
-      "registry_version": 51990,
-      "reward_mode": "RewardToAccount",
-      "timestamp_seconds": 1752523734,
-      "updated_at": "2025-07-15T04:30:02.992241",
-      "xdr_conversion_rate": {
-        "timestamp_seconds": 1752451200,
-        "xdr_permyriad_per_icp": 36570
-      }
-    },
-    {
-      "amount_e8s": 429754881050,
-      "details": {
-        "to_account": "299642a83c138e83e79749b448bf74cfe3ce4023fd508c948498baac"
-      },
-      "id": 6343,
-      "maximum_node_provider_rewards_e8s": 10000000000000,
-      "minimum_xdr_permyriad_per_icp": 10000,
-      "node_provider": "fwnmn-zn7yt-5jaia-fkxlr-dzwyu-keguq-npfxq-mc72w-exeae-n5thj-oae",
-      "proposal_id": null,
-      "registry_version": 51990,
-      "reward_mode": "RewardToAccount",
-      "timestamp_seconds": 1752523734,
-      "updated_at": "2025-07-15T04:30:02.995463",
-      "xdr_conversion_rate": {
-        "timestamp_seconds": 1752451200,
-        "xdr_permyriad_per_icp": 36570
-      }
-    },
-    {
-      "amount_e8s": 334757063166,
-      "details": {
-        "to_account": "385c87fa4547748e2f58708a211a485b466f55482bdbdb742593ae4a"
-      },
-      "id": 6344,
-      "maximum_node_provider_rewards_e8s": 10000000000000,
-      "minimum_xdr_permyriad_per_icp": 10000,
-      "node_provider": "mme7u-zxs3z-jq3un-fbaly-nllcz-toct2-l2kp3-larrb-gti4r-u2bmo-dae",
-      "proposal_id": null,
-      "registry_version": 51990,
-      "reward_mode": "RewardToAccount",
-      "timestamp_seconds": 1752523734,
-      "updated_at": "2025-07-15T04:30:02.997236",
-      "xdr_conversion_rate": {
-        "timestamp_seconds": 1752451200,
-        "xdr_permyriad_per_icp": 36570
-      }
-    },
-    {
-      "amount_e8s": 186619494120,
-      "details": {
-        "to_account": "dea97b8868ba665d30c59370d4ae5aa35547961724ae74dedeadf50a"
-      },
-      "id": 6347,
-      "maximum_node_provider_rewards_e8s": 10000000000000,
-      "minimum_xdr_permyriad_per_icp": 10000,
-      "node_provider": "i3cfo-s2tgu-qe5ym-wk7e6-y7ura-pptgu-kevuf-2feh7-z4enq-5hz4s-mqe",
-      "proposal_id": null,
-      "registry_version": 51990,
-      "reward_mode": "RewardToAccount",
-      "timestamp_seconds": 1752523734,
-      "updated_at": "2025-07-15T04:30:03.000660",
-      "xdr_conversion_rate": {
-        "timestamp_seconds": 1752451200,
-        "xdr_permyriad_per_icp": 36570
-      }
-    },
-    {
-      "amount_e8s": 334757063166,
-      "details": {
-        "to_account": "4a043e2fd5f8279c9adfe1aecd05064fc1d8c556c3348888ea28570b"
-      },
-      "id": 6348,
-      "maximum_node_provider_rewards_e8s": 10000000000000,
-      "minimum_xdr_permyriad_per_icp": 10000,
-      "node_provider": "py2kr-ipr2p-ryh66-x3a3v-5ts6u-7rfhf-alkna-ueffh-hz5ox-lt6du-qqe",
-      "proposal_id": null,
-      "registry_version": 51990,
-      "reward_mode": "RewardToAccount",
-      "timestamp_seconds": 1752523734,
-      "updated_at": "2025-07-15T04:30:03.001840",
-      "xdr_conversion_rate": {
-        "timestamp_seconds": 1752451200,
-        "xdr_permyriad_per_icp": 36570
-      }
-    },
-    {
-      "amount_e8s": 790579975389,
-      "details": {
-        "to_account": "47d4b33772360770d502724de897b3cd3e25ee883ea512a9111907a5"
-      },
-      "id": 6350,
-      "maximum_node_provider_rewards_e8s": 10000000000000,
-      "minimum_xdr_permyriad_per_icp": 10000,
-      "node_provider": "64xe5-tx2s3-4gjmj-pnozr-fejw2-77y5y-rhcjk-glnmx-62brf-qin5q-pqe",
-      "proposal_id": null,
-      "registry_version": 51990,
-      "reward_mode": "RewardToAccount",
-      "timestamp_seconds": 1752523734,
-      "updated_at": "2025-07-15T04:30:03.008035",
-      "xdr_conversion_rate": {
-        "timestamp_seconds": 1752451200,
-        "xdr_permyriad_per_icp": 36570
-      }
-    },
-    {
-      "amount_e8s": 77436488925,
-      "details": {
-        "to_account": "16615ce0774f65a5a91ebce56a94f0284b2f602f86b16cff915d5767"
-      },
-      "id": 6351,
-      "maximum_node_provider_rewards_e8s": 10000000000000,
-      "minimum_xdr_permyriad_per_icp": 10000,
-      "node_provider": "trxbq-wy5xi-3y27q-bkpaf-mhi2m-puexs-yatgt-nhwiy-dh6jy-rolw5-zqe",
-      "proposal_id": null,
-      "registry_version": 51990,
-      "reward_mode": "RewardToAccount",
-      "timestamp_seconds": 1752523734,
-      "updated_at": "2025-07-15T04:30:03.009162",
-      "xdr_conversion_rate": {
-        "timestamp_seconds": 1752451200,
-        "xdr_permyriad_per_icp": 36570
-      }
-    },
-    {
-      "amount_e8s": 295064260322,
-      "details": {
-        "to_account": "8650803e3140853ba635398530a90620726eaa8cba7488a59227d954"
-      },
-      "id": 6355,
-      "maximum_node_provider_rewards_e8s": 10000000000000,
-      "minimum_xdr_permyriad_per_icp": 10000,
-      "node_provider": "3oqw6-vmpk2-mlwlx-52z5x-e3p7u-fjlcw-yxc34-lf2zq-6ub2f-v63hk-lae",
-      "proposal_id": null,
-      "registry_version": 51990,
-      "reward_mode": "RewardToAccount",
-      "timestamp_seconds": 1752523734,
-      "updated_at": "2025-07-15T04:30:03.016010",
-      "xdr_conversion_rate": {
-        "timestamp_seconds": 1752451200,
-        "xdr_permyriad_per_icp": 36570
-      }
-    },
-    {
-      "amount_e8s": 317177530762,
-      "details": {
-        "to_account": "5cb1f96f2a10c8327d2589a7043dfd54c347c658bf9e0a8d4d66fd90"
-      },
-      "id": 6356,
-      "maximum_node_provider_rewards_e8s": 10000000000000,
-      "minimum_xdr_permyriad_per_icp": 10000,
-      "node_provider": "cgmhq-c4zja-yov4u-zeyao-64ua5-idlhb-ezcgr-cultv-3vqjs-dhwo7-rqe",
-      "proposal_id": null,
-      "registry_version": 51990,
-      "reward_mode": "RewardToAccount",
-      "timestamp_seconds": 1752523734,
-      "updated_at": "2025-07-15T04:30:03.017141",
-      "xdr_conversion_rate": {
-        "timestamp_seconds": 1752451200,
-        "xdr_permyriad_per_icp": 36570
-      }
-    },
-    {
-      "amount_e8s": 295064260322,
-      "details": {
-        "to_account": "cd370f7722764518922cd1562ac2c102fbb228a599efdd8aacc94bee"
-      },
-      "id": 6358,
-      "maximum_node_provider_rewards_e8s": 10000000000000,
-      "minimum_xdr_permyriad_per_icp": 10000,
-      "node_provider": "diyay-s4rfq-xnx23-zczwi-nptra-5254n-e4zn6-p7tqe-vqhzr-sd4gd-bqe",
-      "proposal_id": null,
-      "registry_version": 51990,
-      "reward_mode": "RewardToAccount",
-      "timestamp_seconds": 1752523734,
-      "updated_at": "2025-07-15T04:30:03.025188",
-      "xdr_conversion_rate": {
-        "timestamp_seconds": 1752451200,
-        "xdr_permyriad_per_icp": 36570
-      }
-    },
-    {
-      "amount_e8s": 0,
-      "details": {
-        "to_account": "95c228a179e5658a65a4010286eb58ddfc97200ffc7cc52bf9f0764f"
-      },
-      "id": 6359,
-      "maximum_node_provider_rewards_e8s": 10000000000000,
-      "minimum_xdr_permyriad_per_icp": 10000,
-      "node_provider": "33aps-ovxje-mwpux-cy2hh-f2qwp-5tzxs-2edbb-gblfn-ev5pv-cfnvj-pqe",
-      "proposal_id": null,
-      "registry_version": 51990,
-      "reward_mode": "RewardToAccount",
-      "timestamp_seconds": 1752523734,
-      "updated_at": "2025-07-15T04:30:03.026312",
-      "xdr_conversion_rate": {
-        "timestamp_seconds": 1752451200,
-        "xdr_permyriad_per_icp": 36570
-      }
-    },
-    {
-      "amount_e8s": 0,
-      "details": {
-        "to_account": "6d085f4aaf2b44e48f09f3c4986b406c117a3fb2c0791b43f483eb6c"
-      },
-      "id": 6362,
-      "maximum_node_provider_rewards_e8s": 10000000000000,
-      "minimum_xdr_permyriad_per_icp": 10000,
-      "node_provider": "qsdw4-ao5ye-6rtq4-y3zhm-icjbj-lutd2-sbejz-4ajqz-pcflr-xrhsg-jae",
-      "proposal_id": null,
-      "registry_version": 51990,
-      "reward_mode": "RewardToAccount",
-      "timestamp_seconds": 1752523734,
-      "updated_at": "2025-07-15T04:30:03.029702",
-      "xdr_conversion_rate": {
-        "timestamp_seconds": 1752451200,
-        "xdr_permyriad_per_icp": 36570
-      }
-    },
-    {
-      "amount_e8s": 0,
-      "details": {
-        "to_account": "726dba3f1b5120f5cc15a3f8e0cfd1ab3dd5cc513ca58ab255240f55"
-      },
-      "id": 6363,
-      "maximum_node_provider_rewards_e8s": 10000000000000,
-      "minimum_xdr_permyriad_per_icp": 10000,
-      "node_provider": "veamq-6zmtx-dtdky-ctoun-gokvu-cr6zm-ffsky-dz35w-e2euw-zvv7e-vae",
-      "proposal_id": null,
-      "registry_version": 51990,
-      "reward_mode": "RewardToAccount",
-      "timestamp_seconds": 1752523734,
-      "updated_at": "2025-07-15T04:30:03.030824",
-      "xdr_conversion_rate": {
-        "timestamp_seconds": 1752451200,
-        "xdr_permyriad_per_icp": 36570
-      }
-    },
-    {
-      "amount_e8s": 111925931091,
-      "details": {
-        "to_account": "81f2877dae740c1ca3d1bdd66783c03836baa1d59e1408c626c51b21"
-      },
-      "id": 6365,
-      "maximum_node_provider_rewards_e8s": 10000000000000,
-      "minimum_xdr_permyriad_per_icp": 10000,
-      "node_provider": "pa5mu-yxsey-b4yrk-bodka-dhjnm-a3nx4-w2grw-3b766-ddr6e-nupu4-pqe",
-      "proposal_id": null,
-      "registry_version": 51990,
-      "reward_mode": "RewardToAccount",
-      "timestamp_seconds": 1752523734,
-      "updated_at": "2025-07-15T04:30:03.033085",
-      "xdr_conversion_rate": {
-        "timestamp_seconds": 1752451200,
-        "xdr_permyriad_per_icp": 36570
-      }
-    },
-    {
-      "amount_e8s": 242857145200,
-      "details": {
-        "to_account": "e0a8a2cc8284d082a131974568e7c14b5bf129716e5baedb7042e987"
-      },
-      "id": 6366,
-      "maximum_node_provider_rewards_e8s": 10000000000000,
-      "minimum_xdr_permyriad_per_icp": 10000,
-      "node_provider": "otzuu-dldzs-avvu2-qwowd-hdj73-aocy7-lacgi-carzj-m6f2r-ffluy-fae",
-      "proposal_id": null,
-      "registry_version": 51990,
-      "reward_mode": "RewardToAccount",
-      "timestamp_seconds": 1752523734,
-      "updated_at": "2025-07-15T04:30:03.034194",
-      "xdr_conversion_rate": {
-        "timestamp_seconds": 1752451200,
-        "xdr_permyriad_per_icp": 36570
-      }
-    },
-    {
-      "amount_e8s": 1148512830978,
-      "details": {
-        "to_account": "9953f7179f972446706f57bae03b6d5c17e84b1794591b066590dd06"
-      },
-      "id": 6212,
-      "maximum_node_provider_rewards_e8s": 10000000000000,
-      "minimum_xdr_permyriad_per_icp": 10000,
-      "node_provider": "wwdbq-xuqhf-eydzu-oyl7p-ga565-zm7s7-yrive-ozgsy-zzgh3-qwb3j-cae",
-      "proposal_id": null,
-      "registry_version": 51102,
-      "reward_mode": "RewardToAccount",
-      "timestamp_seconds": 1749893934,
-      "updated_at": "2025-06-14T16:30:03.935397",
-      "xdr_conversion_rate": {
-        "timestamp_seconds": 1749859200,
-        "xdr_permyriad_per_icp": 39202
-      }
-    },
-    {
-      "amount_e8s": 1322075404316,
-      "details": {
-        "to_account": "33f777364eaafde71d47bb7153110378033599c4571221e5643afd3d"
-      },
-      "id": 6210,
-      "maximum_node_provider_rewards_e8s": 10000000000000,
-      "minimum_xdr_permyriad_per_icp": 10000,
-      "node_provider": "6nbcy-kprg6-ax3db-kh3cz-7jllk-oceyh-jznhs-riguq-fvk6z-6tsds-rqe",
-      "proposal_id": null,
-      "registry_version": 51102,
-      "reward_mode": "RewardToAccount",
-      "timestamp_seconds": 1749893934,
-      "updated_at": "2025-06-14T16:30:03.927786",
-      "xdr_conversion_rate": {
-        "timestamp_seconds": 1749859200,
-        "xdr_permyriad_per_icp": 39202
-      }
-    },
-    {
-      "amount_e8s": 1217080761185,
-      "details": {
-        "to_account": "2aa9960c2c437a67f64113603ae06d8dcc337e4dea8b21b5ad30bcea"
-      },
-      "id": 6211,
-      "maximum_node_provider_rewards_e8s": 10000000000000,
-      "minimum_xdr_permyriad_per_icp": 10000,
-      "node_provider": "7ryes-jnj73-bsyu4-lo6h7-lbxk5-x4ien-lylws-5qwzl-hxd5f-xjh3w-mqe",
-      "proposal_id": null,
-      "registry_version": 51102,
-      "reward_mode": "RewardToAccount",
-      "timestamp_seconds": 1749893934,
-      "updated_at": "2025-06-14T16:30:03.934333",
-      "xdr_conversion_rate": {
-        "timestamp_seconds": 1749859200,
-        "xdr_permyriad_per_icp": 39202
-      }
-    },
-    {
-      "amount_e8s": 1136727717973,
-      "details": {
-        "to_account": "77713e32ec25a5c08070bc3db9ca3cbb0a4c9ccd1cf43fa50fcfcc59"
-      },
-      "id": 6213,
-      "maximum_node_provider_rewards_e8s": 10000000000000,
-      "minimum_xdr_permyriad_per_icp": 10000,
-      "node_provider": "rbn2y-6vfsb-gv35j-4cyvy-pzbdu-e5aum-jzjg6-5b4n5-vuguf-ycubq-zae",
-      "proposal_id": null,
-      "registry_version": 51102,
-      "reward_mode": "RewardToAccount",
-      "timestamp_seconds": 1749893934,
-      "updated_at": "2025-06-14T16:30:03.936394",
-      "xdr_conversion_rate": {
-        "timestamp_seconds": 1749859200,
-        "xdr_permyriad_per_icp": 39202
-      }
-    },
-    {
-      "amount_e8s": 761746849650,
+      "amount_e8s": 816570959803,
       "details": {
         "to_account": "c939dfd6e9fccda41536e00a01b38316429bfc88a3c5e64e858c272d"
       },
-      "id": 6301,
+      "id": 6393,
       "maximum_node_provider_rewards_e8s": 10000000000000,
       "minimum_xdr_permyriad_per_icp": 10000,
       "node_provider": "g7dkt-aapqq-j3hqt-xtiys-pwapz-idulp-nwagd-zibqm-caxa4-gc23t-3qe",
       "proposal_id": null,
-      "registry_version": 51102,
+      "registry_version": 51990,
       "reward_mode": "RewardToAccount",
-      "timestamp_seconds": 1749893934,
-      "updated_at": "2025-06-14T16:30:04.019809",
+      "timestamp_seconds": 1752523734,
+      "updated_at": "2025-07-15T04:30:03.086857",
       "xdr_conversion_rate": {
-        "timestamp_seconds": 1749859200,
-        "xdr_permyriad_per_icp": 39202
-      }
-    },
-    {
-      "amount_e8s": 378909239324,
-      "details": {
-        "to_account": "4637d28a89b1a64004c757e5f853826b98949a741fd4b2045957fb14"
-      },
-      "id": 6300,
-      "maximum_node_provider_rewards_e8s": 10000000000000,
-      "minimum_xdr_permyriad_per_icp": 10000,
-      "node_provider": "acqus-l4yyc-h44lw-grfxw-h7jqf-mtvt3-huwmj-4s372-sc5db-5nsfr-2ae",
-      "proposal_id": null,
-      "registry_version": 51102,
-      "reward_mode": "RewardToAccount",
-      "timestamp_seconds": 1749893934,
-      "updated_at": "2025-06-14T16:30:04.018837",
-      "xdr_conversion_rate": {
-        "timestamp_seconds": 1749859200,
-        "xdr_permyriad_per_icp": 39202
+        "timestamp_seconds": 1752451200,
+        "xdr_permyriad_per_icp": 36570
       }
     }
   ],
-  "max_reward_node_provider_index": 5230,
-  "total_reward_node_providers": 5230
+  "max_reward_node_provider_index": 5324,
+  "total_reward_node_providers": 5324
 }
