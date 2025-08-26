@@ -28,7 +28,6 @@ use std::str::FromStr;
 use std::sync::Arc;
 use std::time::Duration;
 use ic_node_rewards_canister_api::DayUtc;
-use ic_node_rewards_canister_api::monthly_rewards::{GetNodeProvidersMonthlyXdrRewardsRequest, GetNodeProvidersMonthlyXdrRewardsResponse};
 use telemetry::QueryCallMeasurement;
 
 const HOUR_IN_SECONDS: u64 = 60 * 60;
@@ -70,10 +69,11 @@ fn post_upgrade() {
 // The frequency of regular registry syncs.  This is set to 1 hour to avoid
 // making too many requests.  Before meaningful calculations are made, however, the
 // registry data should be updated.
-const SYNC_INTERVAL_SECONDS: Duration = Duration::from_secs(60 * 60); // 1 hour
+const SYNC_INTERVAL_SECONDS: Duration = Duration::from_secs(60 * 60 * 4); // 4 hour
+const TELEMETRY_SYNC_INTERVAL_SECONDS: Duration = Duration::from_secs(DAY_IN_SECONDS);
 
 fn schedule_timers() {
-    ic_cdk_timers::set_timer(SYNC_INTERVAL_SECONDS, move || {
+    ic_cdk_timers::set_timer_interval(SYNC_INTERVAL_SECONDS, move || {
         spawn(async move {
             telemetry::PROMETHEUS_METRICS.with_borrow_mut(|m| m.mark_last_sync_start());
             let mut instruction_counter = telemetry::InstructionCounter::default();
@@ -99,7 +99,16 @@ fn schedule_timers() {
             });
         });
     });
+
+    ic_cdk_timers::set_timer_interval(TELEMETRY_SYNC_INTERVAL_SECONDS, move || {
+        for np in NODE_PROVIDERS_USED_DURING_CALCULATION_MEASUREMENT {
+            ic_cdk_timers::set_timer(TELEMETRY_SYNC_INTERVAL_SECONDS, || {
+                measure_get_node_provider_rewards_calculation_query(np)
+            });
+        }
+    });
 }
+
 
 /// Get the beginning of this hour (if now is None) or the beginning of the hour
 /// for the passed date/time.
@@ -128,27 +137,15 @@ fn today_at_midnight(now: Option<DateTime<Utc>>) -> DateTime<Utc> {
 ///
 /// * supplied date/time: 2025-04-30T03:01:00
 /// * returned interval: (2025-02-28T00:00:00 -- 2025-04-30T00:00:00)
-fn get_n_months_rewards_period(now: Option<DateTime<Utc>>, months: u32) -> RewardPeriodArgs {
+fn get_n_months_rewards_period(now: Option<DateTime<Utc>>, months: u32) -> (DayUtc, DayUtc) {
     let midnite = today_at_midnight(now).sub(Days::new(1));
     let ago = midnite.checked_sub_months(Months::new(months)).expect("UTC dates cannot have a nonexistent or unambiguous date after we subtract months, because UTC dates do not have daylight savings time, and there is no way this could be out of range.  See checked_sub_months() documentation.");
-    RewardPeriodArgs {
-        start_ts: ago.timestamp_nanos_opt().unwrap() as u64,
-        end_ts: midnite.timestamp_nanos_opt().unwrap() as u64,
-    }
+
+    let start_day = DayUtc::from(ago.timestamp_nanos_opt().unwrap() as u64);
+    let end_day = DayUtc::from(midnite.timestamp_nanos_opt().unwrap() as u64);
+    (start_day, end_day)
 }
 
-/// Compute the duration left until either today or tomorrow at 1AM (whichever is earliest).
-fn time_left_for_next_1am(now: Option<DateTime<Utc>>) -> std::time::Duration {
-    let really_now = now.unwrap_or(DateTime::from_timestamp_nanos(ic_cdk::api::time().try_into().unwrap()));
-    let today_midnight_utc = today_at_midnight(Some(really_now));
-    let tomorrow_1am = today_midnight_utc
-        .checked_add_days(Days::new(1))
-        .expect("Tomorrow in UTC always exists.")
-        .add(chrono::Duration::hours(1));
-    (tomorrow_1am - really_now)
-        .to_std()
-        .expect("Tomorrow 1AM minus right now should never be out of range.")
-}
 
 fn measure_query_call<Q, O, E>(f: Q) -> QueryCallMeasurement
 where
@@ -169,13 +166,22 @@ where
 
 fn measure_get_node_provider_rewards_calculation_query(provider_id_s: &'static str) {
     // The argument is statically-lifetimed because all callers use static strings.
-    let reward_period = get_n_months_rewards_period(None, 1);
+    let (from, to) = get_n_months_rewards_period(None, 1);
     let args = GetNodeProviderRewardsCalculationRequest {
         provider_id: ic_base_types::PrincipalId::from_str(provider_id_s).expect("The provider ID is a well-known ID.  This should never fail.").0,
-        from: DayUtc::from(reward_period.start_ts),
-        to: DayUtc::from(reward_period.end_ts),
+        from,
+        to,
     };
-    let measurement = measure_query_call(move || get_node_provider_rewards_calculation_v1(args).rewards.ok_or("Failed to get rewards"));
+    let measurement = measure_query_call(move || {
+        let response = get_node_provider_rewards_calculation_v1(args);
+        match response.rewards {
+            Some(rewards) => {Ok(rewards)}
+            None => {
+                ic_cdk::println!("error {}", response.error.unwrap());
+                Err("No rewards calculated".to_string())
+            }
+        }
+    });
     telemetry::PROMETHEUS_METRICS.with_borrow_mut(|m| {
         m.record_node_provider_rewards_calculation_method(provider_id_s, measurement);
     });
