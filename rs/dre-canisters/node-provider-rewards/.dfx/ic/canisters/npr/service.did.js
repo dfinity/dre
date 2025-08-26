@@ -67,10 +67,11 @@ export const idlFactory = ({ IDL }) => {
     'num_blocks_failed' : IDL.Opt(IDL.Nat64),
   });
   const Assigned = IDL.Record({ 'node_metrics' : IDL.Opt(NodeMetricsDaily) });
-  const NodeStatus = IDL.Variant({
+  const Status = IDL.Variant({
     'Unassigned' : Unassigned,
     'Assigned' : Assigned,
   });
+  const NodeStatus = IDL.Record({ 'status' : IDL.Opt(Status) });
   const DailyResults = IDL.Record({
     'day' : IDL.Opt(DayUtcOpt),
     'rewards_reduction_percent' : IDL.Opt(Decimal),

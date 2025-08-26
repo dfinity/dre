@@ -107,7 +107,7 @@ type DayUtc = record {
   value: nat64;
 };
 
-type DayUtcText = record {
+type DayUtcOpt = record {
     value: opt nat64;
 };
 
@@ -132,13 +132,18 @@ type Unassigned = record {
   extrapolated_fr_percent: opt Decimal;
 };
 
-type NodeStatus = variant {
+type Status = variant {
   Assigned: Assigned;
   Unassigned: Unassigned;
 };
 
+type NodeStatus = record {
+  status: opt Status;
+};
+
+
 type DailyResults = record {
-  day: opt DayUtcText;
+  day: opt DayUtcOpt;
   node_status: opt NodeStatus;
   performance_multiplier_percent: opt Decimal;
   rewards_reduction_percent: opt Decimal;
@@ -162,7 +167,7 @@ type BaseRewards = record {
 };
 
 type DailyBaseRewardsType3 = record {
-  day: opt DayUtcText;
+  day: opt DayUtcOpt;
   region: opt text;
   nodes_count: opt nat64;
   avg_rewards_xdr_permyriad: opt Decimal;

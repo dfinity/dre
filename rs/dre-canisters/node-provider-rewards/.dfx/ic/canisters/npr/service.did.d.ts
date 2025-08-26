@@ -98,8 +98,7 @@ export interface NodeResultsDeprecated {
   'rewards_reduction' : Percent,
   'dc_id' : string,
 }
-export type NodeStatus = { 'Unassigned' : Unassigned } |
-  { 'Assigned' : Assigned };
+export interface NodeStatus { 'status' : [] | [Status] }
 export type Percent = number;
 export type PrincipalId = Principal;
 export interface RewardPeriodArgs { 'start_ts' : bigint, 'end_ts' : bigint }
@@ -108,6 +107,8 @@ export interface RewardsCalculatorResults {
   'results_by_node' : Array<[NodeId, NodeResultsDeprecated]>,
   'rewards_total' : XDRPermyriad,
 }
+export type Status = { 'Unassigned' : Unassigned } |
+  { 'Assigned' : Assigned };
 export type SubnetId = PrincipalId;
 export interface Unassigned { 'extrapolated_fr_percent' : [] | [Decimal] }
 export type XDRPermyriad = number;

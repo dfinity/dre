@@ -102,6 +102,7 @@ type GetNodeProvidersRewardsResponse = variant {
     Err : text;
 };
 
+// New types for v1 of the Node Provider Rewards Calculation API
 
 type DayUtc = record {
   value: nat64;
@@ -132,10 +133,15 @@ type Unassigned = record {
   extrapolated_fr_percent: opt Decimal;
 };
 
-type NodeStatus = variant {
+type Status = variant {
   Assigned: Assigned;
   Unassigned: Unassigned;
 };
+
+type NodeStatus = record {
+  status: opt Status;
+};
+
 
 type DailyResults = record {
   day: opt DayUtcOpt;
