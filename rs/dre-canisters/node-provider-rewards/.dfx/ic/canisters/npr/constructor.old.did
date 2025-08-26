@@ -22,7 +22,7 @@ type NodeProviderRewardsCalculationArgs = record {
     reward_period: RewardPeriodArgs;
 };
 
-type NodeMetricsDaily = record {
+type NodeMetricsDailyDeprecated = record {
     day: DayUTC;
     subnet_assigned: SubnetId;
     /// Subnet Assigned Failure Rate.
@@ -44,14 +44,14 @@ type NodeMetricsDaily = record {
     relative_fr: Percent;
 };
 
-type NodeResults = record {
+type NodeResultsDeprecated = record {
     node_type: text;
     region: text;
     dc_id: text;
     rewardable_from: DayUTC;
     rewardable_to: DayUTC;
     rewardable_days: nat64;
-    daily_metrics: vec NodeMetricsDaily;
+    daily_metrics: vec NodeMetricsDailyDeprecated;
     /// Average Relative Failure Rate (`ARFR`).
     ///
     /// Average of `RFR` for the entire reward period.
@@ -85,14 +85,14 @@ type NodeResults = record {
 };
 
 type RewardsCalculatorResults = record {
-    results_by_node: vec record { NodeId; NodeResults };
+    results_by_node: vec record { NodeId; NodeResultsDeprecated };
     /// Extrapolated failure rate used as replacement for days when the node is unassigned
     extrapolated_fr: Percent;
     /// Rewards Total
     /// The total rewards for the entire reward period computed as sum of the `AR`
     rewards_total: XDRPermyriad;
 };
-type GetNodeProviderRewardsCalculationResponse = variant {
+type GetNodeProviderRewardsCalculationResponseDeprecated = variant {
     Ok : RewardsCalculatorResults;
     Err : text;
 };
@@ -102,67 +102,97 @@ type GetNodeProvidersRewardsResponse = variant {
     Err : text;
 };
 
-type NodeMetricsDailyV1 = record {
-    subnet_assigned: SubnetId;
-    subnet_assigned_fr: Percent;
-    num_blocks_proposed: nat64;
-    num_blocks_failed: nat64;
-    original_fr: Percent;
-    relative_fr: Percent;
+
+type DayUtc = record {
+  value: nat64;
 };
 
-type NodeStatusV1 = variant {
-  Assigned: record {
-    /// Same as before
-    node_metrics: NodeMetricsDailyV1;
-  };
-  Unassigned: record {
-    /// This is the only extrapolation that we do
-    /// Every day the extrapolated failure rate is the average
-    /// of the relative failure rates of the nodes assigned on that day
-    extrapolated_fr: Percent;
-  };
+type DayUtcText = record {
+    value: opt nat64;
 };
 
-type DailyResultsV1 = record {
-  node_status: NodeStatusV1;
-  /// Same as v0 but now daily
-  performance_multiplier: Percent;
-  /// Same as v0 but now daily
-  rewards_reduction: Percent;
-  /// Same as v0 but now daily
-  base_rewards: XDRPermyriad;
-  /// Same as v0 but now daily
-  adjusted_rewards: XDRPermyriad;
+type Decimal = record {
+  human_readable: opt text;
 };
 
-type NodeResultsV1 = record {
-  /// Same as v0
-  node_reward_type: text;
-  /// Same as v0
-  region: text;
-  /// Same as v0
-  dc_id: text;
-  /// Daily results for the node
-  daily_results: vec record { DayUTC; DailyResultsV1 };
+type NodeMetricsDaily = record {
+  subnet_assigned: opt PrincipalId;
+  subnet_assigned_fr_percent: opt Decimal;
+  num_blocks_proposed: opt nat64;
+  num_blocks_failed: opt nat64;
+  original_fr_percent: opt Decimal;
+  relative_fr_percent: opt Decimal;
 };
 
-type RewardsCalculatorResultsV1 = record {
-  results_by_node: vec record { NodeId; NodeResultsV1 };
-  computation_log: text;
-  rewards_total: XDRPermyriad;
+type Assigned = record {
+  node_metrics: opt NodeMetricsDaily;
 };
 
-type GetNodeProviderRewardsCalculationResponseV1 = variant {
-    Ok : RewardsCalculatorResultsV1;
-    Err : text;
+type Unassigned = record {
+  extrapolated_fr_percent: opt Decimal;
+};
+
+type NodeStatus = variant {
+  Assigned: Assigned;
+  Unassigned: Unassigned;
+};
+
+type DailyResults = record {
+  day: opt DayUtcText;
+  node_status: opt NodeStatus;
+  performance_multiplier_percent: opt Decimal;
+  rewards_reduction_percent: opt Decimal;
+  base_rewards_xdr_permyriad: opt Decimal;
+  adjusted_rewards_xdr_permyriad: opt Decimal;
+};
+
+type NodeResults = record {
+  node_id: opt PrincipalId;
+  node_reward_type: opt text;
+  region: opt text;
+  dc_id: opt text;
+  daily_results: vec DailyResults;
+};
+
+type BaseRewards = record {
+  monthly_xdr_permyriad: opt Decimal;
+  daily_xdr_permyriad: opt Decimal;
+  node_reward_type: opt text;
+  region: opt text;
+};
+
+type DailyBaseRewardsType3 = record {
+  day: opt DayUtcText;
+  region: opt text;
+  nodes_count: opt nat64;
+  avg_rewards_xdr_permyriad: opt Decimal;
+  avg_coefficient_percent: opt Decimal;
+  value_xdr_permyriad: opt Decimal;
+};
+
+type NodeProviderRewards = record {
+  rewards_total_xdr_permyriad: opt nat64;
+  base_rewards: vec BaseRewards;
+  base_rewards_type3: vec DailyBaseRewardsType3;
+  nodes_results: vec NodeResults;
+};
+
+type GetNodeProviderRewardsCalculationRequest = record {
+  from: DayUtc;
+  to: DayUtc;
+  provider_id: principal;
+};
+
+type GetNodeProviderRewardsCalculationResponse = record {
+  rewards: opt NodeProviderRewards;
+  error: opt text;
 };
 
 
 service : {
     get_node_providers_rewards : (RewardPeriodArgs) -> (GetNodeProvidersRewardsResponse) query;
-    get_node_provider_rewards_calculation : (NodeProviderRewardsCalculationArgs) -> (GetNodeProviderRewardsCalculationResponse) query;
-    get_node_provider_rewards_calculation_v1 : (NodeProviderRewardsCalculationArgs) -> (GetNodeProviderRewardsCalculationResponseV1) query;
+    get_node_provider_rewards_calculation : (NodeProviderRewardsCalculationArgs) -> (GetNodeProviderRewardsCalculationResponseDeprecated) query;
+    get_node_provider_rewards_calculation_v1 : (GetNodeProviderRewardsCalculationRequest) -> (GetNodeProviderRewardsCalculationResponse) query;
 }
 
 

@@ -1,1 +1,1 @@
-pub mod endpoints;
+pub mod endpoints_deprecated;

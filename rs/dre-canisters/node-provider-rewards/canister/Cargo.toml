@@ -19,6 +19,7 @@ ic-cdk-timers = { workspace = true }
 ic-cdk-macros = { workspace = true }
 ic-base-types = { workspace = true }
 ic-stable-structures = { workspace = true }
+ic-node-rewards-canister-api = { workspace = true }
 candid = { workspace = true }
 ic-node-rewards-canister = { workspace = true }
 ic-nervous-system-common = { workspace = true }

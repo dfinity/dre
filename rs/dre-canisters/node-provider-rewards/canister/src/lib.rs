@@ -10,14 +10,13 @@ use ic_node_rewards_canister::canister::NodeRewardsCanister;
 use ic_node_rewards_canister::registry_querier::RegistryQuerier;
 use ic_node_rewards_canister::storage::{RegistryStoreStableMemoryBorrower, METRICS_MANAGER};
 use ic_node_rewards_canister::telemetry;
+use ic_node_rewards_canister_api::provider_rewards_calculation::{GetNodeProviderRewardsCalculationRequest, GetNodeProviderRewardsCalculationResponse};
+use ic_node_rewards_canister_api::providers_rewards::{GetNodeProvidersRewardsRequest, GetNodeProvidersRewardsResponse, NodeProvidersRewards};
 use ic_protobuf::registry::node_rewards::v2::NodeRewardsTable;
 use ic_registry_canister_client::{get_decoded_value, CanisterRegistryClient, StableCanisterRegistryClient};
 use ic_registry_keys::NODE_REWARDS_TABLE_KEY;
-use node_provider_rewards_api::endpoints::{
-    NodeProviderRewardsCalculationArgs, NodeProvidersRewards, RewardPeriodArgs, RewardsCalculatorResults, RewardsCalculatorResultsV1,
-};
-use rewards_calculation::rewards_calculator::{calculate_rewards, RewardsCalculatorInput};
-use rewards_calculation::rewards_calculator_results::NodeProviderResults;
+use node_provider_rewards_api::endpoints_deprecated::{NodeProviderRewardsCalculationArgs, RewardPeriodArgs, RewardsCalculatorResults};
+use rewards_calculation::rewards_calculator::RewardsCalculatorInput;
 use rewards_calculation::types::RewardPeriod;
 use rewards_calculation_deprecated::rewards_calculator::builder::RewardsCalculatorBuilder;
 use rewards_calculation_deprecated::rewards_calculator::AlgoVersion;
@@ -28,6 +27,8 @@ use std::ops::{Add, Sub};
 use std::str::FromStr;
 use std::sync::Arc;
 use std::time::Duration;
+use ic_node_rewards_canister_api::DayUtc;
+use ic_node_rewards_canister_api::monthly_rewards::{GetNodeProvidersMonthlyXdrRewardsRequest, GetNodeProvidersMonthlyXdrRewardsResponse};
 use telemetry::QueryCallMeasurement;
 
 const HOUR_IN_SECONDS: u64 = 60 * 60;
@@ -166,21 +167,15 @@ where
     (success, instructions, response_size_bytes)
 }
 
-fn measure_get_node_providers_rewards_query() {
-    let reward_period = get_n_months_rewards_period(None, 2);
-    let measurement = measure_query_call(move || get_node_providers_rewards(reward_period));
-    telemetry::PROMETHEUS_METRICS.with_borrow_mut(|m| {
-        m.record_node_provider_rewards_method(measurement);
-    });
-}
-
 fn measure_get_node_provider_rewards_calculation_query(provider_id_s: &'static str) {
     // The argument is statically-lifetimed because all callers use static strings.
-    let args = NodeProviderRewardsCalculationArgs {
-        provider_id: ic_base_types::PrincipalId::from_str(provider_id_s).expect("The provider ID is a well-known ID.  This should never fail."),
-        reward_period: get_n_months_rewards_period(None, 1),
+    let reward_period = get_n_months_rewards_period(None, 1);
+    let args = GetNodeProviderRewardsCalculationRequest {
+        provider_id: ic_base_types::PrincipalId::from_str(provider_id_s).expect("The provider ID is a well-known ID.  This should never fail.").0,
+        from: DayUtc::from(reward_period.start_ts),
+        to: DayUtc::from(reward_period.end_ts),
     };
-    let measurement = measure_query_call(move || get_node_provider_rewards_calculation_v1(args));
+    let measurement = measure_query_call(move || get_node_provider_rewards_calculation_v1(args).rewards.ok_or("Failed to get rewards"));
     telemetry::PROMETHEUS_METRICS.with_borrow_mut(|m| {
         m.record_node_provider_rewards_calculation_method(provider_id_s, measurement);
     });
@@ -194,8 +189,26 @@ fn http_request(request: HttpRequest) -> HttpResponse {
     }
 }
 
+#[query]
+#[candid_method(query)]
+fn get_node_provider_rewards_calculation_v1(request: GetNodeProviderRewardsCalculationRequest) -> GetNodeProviderRewardsCalculationResponse {
+    NodeRewardsCanister::get_node_provider_rewards_calculation::<RegistryStoreStableMemoryBorrower>(
+        &CANISTER, request,
+    )
+}
+
+#[update]
+#[candid_method(update)]
+async fn get_node_providers_rewards(request: GetNodeProvidersRewardsRequest) -> GetNodeProvidersRewardsResponse {
+    NodeRewardsCanister::get_node_providers_rewards::<RegistryStoreStableMemoryBorrower>(&CANISTER, request).await
+}
+
+// Deprecated method for backwards compatibility
+
 fn rewards_calculator(reward_period: RewardPeriodArgs) -> Result<RewardsCalculatorInput, String> {
-    let reward_period = RewardPeriod::new(reward_period.start_ts, reward_period.end_ts).map_err(|err| err.to_string())?;
+    let start_day = DayUtc::from(reward_period.start_ts);
+    let end_day = DayUtc::from(reward_period.end_ts);
+    let reward_period = RewardPeriod::new(start_day.into(), end_day.into()).map_err(|err| err.to_string())?;
     let metrics_manager = METRICS_MANAGER.with(|m| m.clone());
     let registry_store = REGISTRY_STORE.with(|m| m.clone());
 
@@ -207,7 +220,7 @@ fn rewards_calculator(reward_period: RewardPeriodArgs) -> Result<RewardsCalculat
         .into_iter()
         .collect();
     let provider_rewardable_nodes =
-        RegistryQuerier::get_rewardable_nodes_per_provider::<RegistryStoreStableMemoryBorrower>(&REGISTRY_STORE, reward_period.clone())
+        RegistryQuerier::get_rewardable_nodes_per_provider::<RegistryStoreStableMemoryBorrower>(&*registry_store, start_day.into(), end_day.into())
             .map_err(|err| format!("Failed to get rewardable nodes per provider: {}", err))?;
 
     Ok(RewardsCalculatorInput {
@@ -218,38 +231,6 @@ fn rewards_calculator(reward_period: RewardPeriodArgs) -> Result<RewardsCalculat
     })
 }
 
-#[query]
-#[candid_method(query)]
-fn get_node_provider_rewards_calculation_v1(args: NodeProviderRewardsCalculationArgs) -> Result<NodeProviderResults, String> {
-    let mut input = rewards_calculator(args.reward_period)?;
-    let provider_rewardables = input.provider_rewardable_nodes.remove(&args.provider_id).ok_or("Provider not found")?;
-    input.provider_rewardable_nodes.clear();
-    input.provider_rewardable_nodes.insert(args.provider_id, provider_rewardables);
-
-    let provider_rewards_calculation = calculate_rewards(input)
-        .map_err(|err| err.to_string())?
-        .provider_results
-        .remove(&args.provider_id)
-        .ok_or("Provider not found")?;
-
-    Ok(provider_rewards_calculation)
-}
-
-#[query]
-#[candid_method(query)]
-fn get_node_providers_rewards(args: RewardPeriodArgs) -> Result<NodeProvidersRewards, String> {
-    let input = rewards_calculator(args)?;
-    let rewards_per_provider = calculate_rewards(input)
-        .map_err(|err| err.to_string())?
-        .provider_results
-        .into_iter()
-        .map(|(provider_id, rewards_calculation)| (provider_id, rewards_calculation.rewards_total))
-        .collect::<BTreeMap<_, _>>();
-
-    Ok(NodeProvidersRewards { rewards_per_provider })
-}
-
-// Deprecated method for backwards compatibility
 #[query]
 #[candid_method(query)]
 fn get_node_provider_rewards_calculation(args: NodeProviderRewardsCalculationArgs) -> Result<RewardsCalculatorResults, String> {

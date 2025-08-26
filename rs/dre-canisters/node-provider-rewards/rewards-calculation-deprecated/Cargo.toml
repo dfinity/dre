@@ -15,7 +15,7 @@ rust_decimal = { workspace = true }
 rust_decimal_macros = { workspace = true }
 ic-protobuf = { workspace = true }
 rewards-calculation = { workspace = true }
-ic-cdk = { version = "^0.17.2" }
+ic-cdk = { version = "^0.18.7" }
 candid = { workspace = true }
 
 [dev-dependencies]

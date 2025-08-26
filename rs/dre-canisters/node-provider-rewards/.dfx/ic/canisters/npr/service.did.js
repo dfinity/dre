@@ -13,7 +13,7 @@ export const idlFactory = ({ IDL }) => {
   const XDRPermyriad = IDL.Float64;
   const DayUTC = IDL.Text;
   const SubnetId = PrincipalId;
-  const NodeMetricsDaily = IDL.Record({
+  const NodeMetricsDailyDeprecated = IDL.Record({
     'day' : DayUTC,
     'subnet_assigned' : SubnetId,
     'original_fr' : Percent,
@@ -22,13 +22,13 @@ export const idlFactory = ({ IDL }) => {
     'num_blocks_failed' : IDL.Nat64,
     'relative_fr' : Percent,
   });
-  const NodeResults = IDL.Record({
+  const NodeResultsDeprecated = IDL.Record({
     'region' : IDL.Text,
     'avg_extrapolated_fr' : Percent,
     'performance_multiplier' : Percent,
     'node_type' : IDL.Text,
     'base_rewards_per_month' : XDRPermyriad,
-    'daily_metrics' : IDL.Vec(NodeMetricsDaily),
+    'daily_metrics' : IDL.Vec(NodeMetricsDailyDeprecated),
     'adjusted_rewards' : XDRPermyriad,
     'rewardable_to' : DayUTC,
     'base_rewards' : XDRPermyriad,
@@ -40,46 +40,75 @@ export const idlFactory = ({ IDL }) => {
   });
   const RewardsCalculatorResults = IDL.Record({
     'extrapolated_fr' : Percent,
-    'results_by_node' : IDL.Vec(IDL.Tuple(NodeId, NodeResults)),
+    'results_by_node' : IDL.Vec(IDL.Tuple(NodeId, NodeResultsDeprecated)),
     'rewards_total' : XDRPermyriad,
   });
-  const GetNodeProviderRewardsCalculationResponse = IDL.Variant({
+  const GetNodeProviderRewardsCalculationResponseDeprecated = IDL.Variant({
     'Ok' : RewardsCalculatorResults,
     'Err' : IDL.Text,
   });
-  const NodeMetricsDailyV1 = IDL.Record({
-    'subnet_assigned' : SubnetId,
-    'original_fr' : Percent,
-    'num_blocks_proposed' : IDL.Nat64,
-    'subnet_assigned_fr' : Percent,
-    'num_blocks_failed' : IDL.Nat64,
-    'relative_fr' : Percent,
+  const DayUtc = IDL.Record({ 'value' : IDL.Nat64 });
+  const GetNodeProviderRewardsCalculationRequest = IDL.Record({
+    'to' : DayUtc,
+    'from' : DayUtc,
+    'provider_id' : IDL.Principal,
   });
-  const NodeStatusV1 = IDL.Variant({
-    'Unassigned' : IDL.Record({ 'extrapolated_fr' : Percent }),
-    'Assigned' : IDL.Record({ 'node_metrics' : NodeMetricsDailyV1 }),
+  const DayUtcOpt = IDL.Record({ 'value' : IDL.Opt(IDL.Nat64) });
+  const Decimal = IDL.Record({ 'human_readable' : IDL.Opt(IDL.Text) });
+  const Unassigned = IDL.Record({
+    'extrapolated_fr_percent' : IDL.Opt(Decimal),
   });
-  const DailyResultsV1 = IDL.Record({
-    'performance_multiplier' : Percent,
-    'node_status' : NodeStatusV1,
-    'adjusted_rewards' : XDRPermyriad,
-    'base_rewards' : XDRPermyriad,
-    'rewards_reduction' : Percent,
+  const NodeMetricsDaily = IDL.Record({
+    'subnet_assigned' : IDL.Opt(PrincipalId),
+    'original_fr_percent' : IDL.Opt(Decimal),
+    'num_blocks_proposed' : IDL.Opt(IDL.Nat64),
+    'subnet_assigned_fr_percent' : IDL.Opt(Decimal),
+    'relative_fr_percent' : IDL.Opt(Decimal),
+    'num_blocks_failed' : IDL.Opt(IDL.Nat64),
   });
-  const NodeResultsV1 = IDL.Record({
-    'region' : IDL.Text,
-    'daily_results' : IDL.Vec(IDL.Tuple(DayUTC, DailyResultsV1)),
-    'node_reward_type' : IDL.Text,
-    'dc_id' : IDL.Text,
+  const Assigned = IDL.Record({ 'node_metrics' : IDL.Opt(NodeMetricsDaily) });
+  const NodeStatus = IDL.Variant({
+    'Unassigned' : Unassigned,
+    'Assigned' : Assigned,
   });
-  const RewardsCalculatorResultsV1 = IDL.Record({
-    'results_by_node' : IDL.Vec(IDL.Tuple(NodeId, NodeResultsV1)),
-    'computation_log' : IDL.Text,
-    'rewards_total' : XDRPermyriad,
+  const DailyResults = IDL.Record({
+    'day' : IDL.Opt(DayUtcOpt),
+    'rewards_reduction_percent' : IDL.Opt(Decimal),
+    'node_status' : IDL.Opt(NodeStatus),
+    'base_rewards_xdr_permyriad' : IDL.Opt(Decimal),
+    'adjusted_rewards_xdr_permyriad' : IDL.Opt(Decimal),
+    'performance_multiplier_percent' : IDL.Opt(Decimal),
   });
-  const GetNodeProviderRewardsCalculationResponseV1 = IDL.Variant({
-    'Ok' : RewardsCalculatorResultsV1,
-    'Err' : IDL.Text,
+  const NodeResults = IDL.Record({
+    'region' : IDL.Opt(IDL.Text),
+    'node_id' : IDL.Opt(PrincipalId),
+    'daily_results' : IDL.Vec(DailyResults),
+    'node_reward_type' : IDL.Opt(IDL.Text),
+    'dc_id' : IDL.Opt(IDL.Text),
+  });
+  const BaseRewards = IDL.Record({
+    'region' : IDL.Opt(IDL.Text),
+    'daily_xdr_permyriad' : IDL.Opt(Decimal),
+    'node_reward_type' : IDL.Opt(IDL.Text),
+    'monthly_xdr_permyriad' : IDL.Opt(Decimal),
+  });
+  const DailyBaseRewardsType3 = IDL.Record({
+    'day' : IDL.Opt(DayUtcOpt),
+    'region' : IDL.Opt(IDL.Text),
+    'value_xdr_permyriad' : IDL.Opt(Decimal),
+    'nodes_count' : IDL.Opt(IDL.Nat64),
+    'avg_coefficient_percent' : IDL.Opt(Decimal),
+    'avg_rewards_xdr_permyriad' : IDL.Opt(Decimal),
+  });
+  const NodeProviderRewards = IDL.Record({
+    'rewards_total_xdr_permyriad' : IDL.Opt(IDL.Nat64),
+    'nodes_results' : IDL.Vec(NodeResults),
+    'base_rewards' : IDL.Vec(BaseRewards),
+    'base_rewards_type3' : IDL.Vec(DailyBaseRewardsType3),
+  });
+  const GetNodeProviderRewardsCalculationResponse = IDL.Record({
+    'error' : IDL.Opt(IDL.Text),
+    'rewards' : IDL.Opt(NodeProviderRewards),
   });
   const NodeProvidersRewards = IDL.Record({
     'rewards_per_provider' : IDL.Vec(IDL.Tuple(PrincipalId, XDRPermyriad)),
@@ -91,12 +120,12 @@ export const idlFactory = ({ IDL }) => {
   return IDL.Service({
     'get_node_provider_rewards_calculation' : IDL.Func(
         [NodeProviderRewardsCalculationArgs],
-        [GetNodeProviderRewardsCalculationResponse],
+        [GetNodeProviderRewardsCalculationResponseDeprecated],
         ['query'],
       ),
     'get_node_provider_rewards_calculation_v1' : IDL.Func(
-        [NodeProviderRewardsCalculationArgs],
-        [GetNodeProviderRewardsCalculationResponseV1],
+        [GetNodeProviderRewardsCalculationRequest],
+        [GetNodeProviderRewardsCalculationResponse],
         ['query'],
       ),
     'get_node_providers_rewards' : IDL.Func(
