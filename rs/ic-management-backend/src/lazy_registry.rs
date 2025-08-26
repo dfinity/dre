@@ -38,7 +38,7 @@ use crate::health::HealthStatusQuerier;
 use crate::node_labels;
 use crate::proposal::ProposalAgent;
 use crate::public_dashboard::query_ic_dashboard_list;
-use crate::registry::{DFINITY_DCS, NNS_SUBNET_NAME};
+use crate::registry::{DFINITY, NNS_SUBNET_NAME};
 
 const KNOWN_SUBNETS: &[(&str, &str)] = &[
     (
@@ -492,7 +492,6 @@ impl LazyRegistry for LazyRegistryImpl {
 
             let node_entries = get_family_entries::<NodeRecord>(self)?;
             let versioned_node_entries = get_family_entries_versioned::<NodeRecord>(self)?;
-            let dfinity_dcs = DFINITY_DCS.split(' ').map(|dc| dc.to_string().to_lowercase()).collect::<IndexSet<_>>();
             let api_boundary_nodes = get_family_entries::<ApiBoundaryNodeRecord>(self)?;
             let guests = self.node_labels().await?;
             let operators = self.operators().await?;
@@ -510,18 +509,12 @@ impl LazyRegistry for LazyRegistryImpl {
 
                     let principal = PrincipalId::from_str(p).expect("Invalid node principal id");
                     let ip_addr = Self::node_ip_addr(nr);
-                    let dc_name = operator
-                        .clone()
-                        .map(|op| match op.datacenter {
-                            Some(dc) => dc.name.to_lowercase(),
-                            None => "".to_string(),
-                        })
-                        .unwrap_or_default();
+                    let dfinity_owned = operator.as_ref().map(|op| op.provider.name.as_ref().is_some_and(|name| name.eq(DFINITY)));
                     (
                         principal,
                         Node {
                             principal,
-                            dfinity_owned: Some(dfinity_dcs.contains(&dc_name) || guest.as_ref().map(|g| g.dfinity_owned).unwrap_or_default()),
+                            dfinity_owned,
                             ip_addr: Some(ip_addr),
                             hostname: guest
                                 .as_ref()

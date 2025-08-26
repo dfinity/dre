@@ -60,7 +60,7 @@ use ic_registry_client_helpers::subnet::SubnetListRegistry;
 
 pub const NNS_SUBNET_NAME: &str = "NNS";
 
-pub const DFINITY_DCS: &str = "zh2 sh1 se1";
+pub const DFINITY: &str = "DFINITY Stiftung";
 
 pub struct RegistryState {
     network: Network,
@@ -244,11 +244,6 @@ impl RegistryState {
 
     pub fn update_node_labels_guests(&mut self, node_label_guests: Vec<Guest>) {
         self.node_labels_guests = node_label_guests;
-        if !self.network.is_mainnet() {
-            for g in &mut self.node_labels_guests {
-                g.dfinity_owned = true;
-            }
-        }
     }
 
     /// This function could be split to add to the startup speed
@@ -448,7 +443,6 @@ impl RegistryState {
 
     fn update_nodes(&mut self) -> Result<()> {
         let node_entries = self.local_registry.get_family_entries_versioned::<NodeRecord>()?;
-        let dfinity_dcs = DFINITY_DCS.split(' ').map(|dc| dc.to_string().to_lowercase()).collect::<HashSet<_>>();
         let api_boundary_nodes: IndexMap<String, ApiBoundaryNodeRecord> = self.local_registry.get_family_entries()?;
 
         self.nodes = node_entries
@@ -465,15 +459,12 @@ impl RegistryState {
                     .expect("missing operator referenced by a node");
                 let principal = PrincipalId::from_str(p).expect("invalid node principal id");
                 let ip_addr = node_ip_addr(nr);
-                let dc_name: String = match &operator.datacenter {
-                    Some(dc) => dc.name.to_lowercase(),
-                    None => String::new(),
-                };
+                let dfinity_owned = operator.provider.name.as_ref().is_some_and(|name| name.eq(DFINITY));
                 (
                     principal,
                     Node {
                         principal,
-                        dfinity_owned: Some(dfinity_dcs.contains(&dc_name) || guest.as_ref().map(|g| g.dfinity_owned).unwrap_or_default()),
+                        dfinity_owned: Some(dfinity_owned),
                         ip_addr: Some(ip_addr),
                         hostname: guest
                             .as_ref()
