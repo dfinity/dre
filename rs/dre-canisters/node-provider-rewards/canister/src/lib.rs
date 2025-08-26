@@ -73,7 +73,7 @@ fn post_upgrade() {
 const SYNC_INTERVAL_SECONDS: Duration = Duration::from_secs(60 * 60); // 1 hour
 
 fn schedule_timers() {
-    ic_cdk_timers::set_timer(Duration::from_secs(0), move || {
+    ic_cdk_timers::set_timer(SYNC_INTERVAL_SECONDS, move || {
         spawn(async move {
             telemetry::PROMETHEUS_METRICS.with_borrow_mut(|m| m.mark_last_sync_start());
             let mut instruction_counter = telemetry::InstructionCounter::default();
