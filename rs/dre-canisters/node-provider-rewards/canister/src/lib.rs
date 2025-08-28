@@ -71,8 +71,7 @@ fn post_upgrade() {
 // The frequency of regular registry syncs.  This is set to 1 hour to avoid
 // making too many requests.  Before meaningful calculations are made, however, the
 // registry data should be updated.
-const SYNC_INTERVAL_SECONDS: Duration = Duration::from_secs(60 * 60 * 5); // 4 hour
-
+const SYNC_INTERVAL_SECONDS: Duration = Duration::from_secs(60*60*2); // 4 hour
 fn schedule_timers() {
     ic_cdk_timers::set_timer_interval(SYNC_INTERVAL_SECONDS, move || {
         spawn(async move {
@@ -98,15 +97,13 @@ fn schedule_timers() {
             telemetry::PROMETHEUS_METRICS.with_borrow_mut(|m| {
                 m.record_last_sync_instructions(instruction_counter.sum(), registry_sync_instructions, metrics_sync_instructions)
             });
-        });
-    });
 
-    ic_cdk_timers::set_timer_interval(SYNC_INTERVAL_SECONDS, move || {
-        for np in NODE_PROVIDERS_USED_DURING_CALCULATION_MEASUREMENT {
-            ic_cdk_timers::set_timer(SYNC_INTERVAL_SECONDS, || {
-                measure_get_node_provider_rewards_calculation_query(np)
-            });
-        }
+            for np in NODE_PROVIDERS_USED_DURING_CALCULATION_MEASUREMENT {
+                ic_cdk_timers::set_timer(SYNC_INTERVAL_SECONDS, || {
+                    measure_get_node_provider_rewards_calculation_query(np)
+                });
+            }
+        });
     });
 }
 
@@ -220,7 +217,7 @@ fn _get_nodes_fr_by_subnet(request: RewardPeriodArgs) -> Result<Vec<SubnetNodesF
             from_nanos: request.start_ts,
             to_nanos: request.end_ts,
         };
-    canister.calculate_rewards::<RegistryStoreStableMemoryBorrower>(request)
+    canister.calculate_rewards::<RegistryStoreStableMemoryBorrower>(request, None)
     })?;
 
     let results = rewards_calculation
