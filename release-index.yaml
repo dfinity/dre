@@ -8,6 +8,12 @@
 #         rc_name: <reference RC name>
 #         name: <version name>
 releases:
+  - rc_name: rc--2025-08-28_03-17
+    versions:
+      - name: base
+        version: 84a268e93a909a6827d76ad794411b161c839a12
+      - name: snapshot-feature
+        version: 91732387a03c7c82bdaea6f78d7f8321cc8cb559
   - rc_name: rc--2025-08-21_03-19
     versions:
       - name: base
