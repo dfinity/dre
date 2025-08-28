@@ -27,6 +27,7 @@ ic-nervous-system-canisters = { workspace = true }
 ic-protobuf = { workspace = true }
 ic-registry-canister-client = { workspace = true }
 ic-registry-keys = { workspace = true }
+ic-node-rewards-canister-protobuf = { workspace = true }
 ic-types = { workspace = true }
 itertools = { workspace = true }
 mockall = { workspace = true }

@@ -1,4 +1,4 @@
-use candid::{candid_method, encode_one, CandidType};
+use candid::{candid_method, encode_one, CandidType, Principal};
 use chrono::Months;
 use chrono::{DateTime, Days, Timelike, Utc};
 use ic_cdk::spawn;
@@ -8,7 +8,7 @@ use ic_nervous_system_canisters::registry::RegistryCanister;
 use ic_nervous_system_common::serve_metrics;
 use ic_node_rewards_canister::canister::NodeRewardsCanister;
 use ic_node_rewards_canister::registry_querier::RegistryQuerier;
-use ic_node_rewards_canister::storage::{RegistryStoreStableMemoryBorrower, METRICS_MANAGER};
+use ic_node_rewards_canister::storage::{stable_btreemap_init, RegistryStoreStableMemoryBorrower, METRICS_MANAGER, VM};
 use ic_node_rewards_canister::telemetry;
 use ic_node_rewards_canister_api::provider_rewards_calculation::{GetNodeProviderRewardsCalculationRequest, GetNodeProviderRewardsCalculationResponse};
 use ic_node_rewards_canister_api::providers_rewards::{GetNodeProvidersRewardsRequest, GetNodeProvidersRewardsResponse, NodeProvidersRewards};
@@ -17,7 +17,7 @@ use ic_registry_canister_client::{get_decoded_value, CanisterRegistryClient, Sta
 use ic_registry_keys::NODE_REWARDS_TABLE_KEY;
 use node_provider_rewards_api::endpoints_deprecated::{NodeProviderRewardsCalculationArgs, RewardPeriodArgs, RewardsCalculatorResults};
 use rewards_calculation::rewards_calculator::RewardsCalculatorInput;
-use rewards_calculation::types::RewardPeriod;
+use rewards_calculation::types::{DayUtc, RewardPeriod};
 use rewards_calculation_deprecated::rewards_calculator::builder::RewardsCalculatorBuilder;
 use rewards_calculation_deprecated::rewards_calculator::AlgoVersion;
 use rewards_calculation_deprecated::types::{DayEnd, ProviderRewardableNodes};
@@ -27,8 +27,10 @@ use std::ops::{Add, Sub};
 use std::str::FromStr;
 use std::sync::Arc;
 use std::time::Duration;
-use ic_node_rewards_canister_api::DayUtc;
+use itertools::Itertools;
+use rewards_calculation::rewards_calculator_results::NodeStatus;
 use telemetry::QueryCallMeasurement;
+use node_provider_rewards_api::endpoints::{GetNodesFRBySubnet, NodeDailyFR, SubnetNodesFR};
 
 const HOUR_IN_SECONDS: u64 = 60 * 60;
 const DAY_IN_SECONDS: u64 = HOUR_IN_SECONDS * 24;
@@ -69,8 +71,7 @@ fn post_upgrade() {
 // The frequency of regular registry syncs.  This is set to 1 hour to avoid
 // making too many requests.  Before meaningful calculations are made, however, the
 // registry data should be updated.
-const SYNC_INTERVAL_SECONDS: Duration = Duration::from_secs(60 * 60 * 4); // 4 hour
-const TELEMETRY_SYNC_INTERVAL_SECONDS: Duration = Duration::from_secs(DAY_IN_SECONDS);
+const SYNC_INTERVAL_SECONDS: Duration = Duration::from_secs(60 * 60 * 5); // 4 hour
 
 fn schedule_timers() {
     ic_cdk_timers::set_timer_interval(SYNC_INTERVAL_SECONDS, move || {
@@ -100,9 +101,9 @@ fn schedule_timers() {
         });
     });
 
-    ic_cdk_timers::set_timer_interval(TELEMETRY_SYNC_INTERVAL_SECONDS, move || {
+    ic_cdk_timers::set_timer_interval(SYNC_INTERVAL_SECONDS, move || {
         for np in NODE_PROVIDERS_USED_DURING_CALCULATION_MEASUREMENT {
-            ic_cdk_timers::set_timer(TELEMETRY_SYNC_INTERVAL_SECONDS, || {
+            ic_cdk_timers::set_timer(SYNC_INTERVAL_SECONDS, || {
                 measure_get_node_provider_rewards_calculation_query(np)
             });
         }
@@ -169,15 +170,16 @@ fn measure_get_node_provider_rewards_calculation_query(provider_id_s: &'static s
     let (from, to) = get_n_months_rewards_period(None, 1);
     let args = GetNodeProviderRewardsCalculationRequest {
         provider_id: ic_base_types::PrincipalId::from_str(provider_id_s).expect("The provider ID is a well-known ID.  This should never fail.").0,
-        from,
-        to,
+        from_nanos: from.get(),
+        to_nanos: to.get(),
+        historical: false,
     };
     let measurement = measure_query_call(move || {
         let response = get_node_provider_rewards_calculation_v1(args);
-        match response.rewards {
-            Some(rewards) => {Ok(rewards)}
-            None => {
-                ic_cdk::println!("error {}", response.error.unwrap());
+        match response {
+            Ok(rewards) => {Ok(rewards)}
+            Err(error) => {
+                ic_cdk::println!("error {}", error);
                 Err("No rewards calculated".to_string())
             }
         }
@@ -193,6 +195,75 @@ fn http_request(request: HttpRequest) -> HttpResponse {
         "/metrics" => serve_metrics(|encoder| telemetry::PROMETHEUS_METRICS.with(|m| m.borrow().encode_metrics(encoder))),
         _ => HttpResponseBuilder::not_found().build(),
     }
+}
+
+#[query]
+#[candid_method(query)]
+fn get_subnets_list() -> Vec<Principal> {
+    _get_subnets_list()
+}
+fn _get_subnets_list() -> Vec<Principal> {
+    let metrics_manager = CANISTER.with(|canister| canister.borrow().get_metrics_manager());
+    let metrics = metrics_manager.subnets_metrics.borrow();
+    metrics.iter().map(|(k, _v)| k.subnet_id.unwrap().0).collect()
+}
+
+#[query]
+#[candid_method(query)]
+fn get_nodes_fr_by_subnet(request: RewardPeriodArgs) -> GetNodesFRBySubnet {
+    _get_nodes_fr_by_subnet(request)
+}
+
+fn _get_nodes_fr_by_subnet(request: RewardPeriodArgs) -> Result<Vec<SubnetNodesFR>, String> {
+    let rewards_calculation = CANISTER.with_borrow(|canister| {
+        let request = GetNodeProvidersRewardsRequest {
+            from_nanos: request.start_ts,
+            to_nanos: request.end_ts,
+        };
+    canister.calculate_rewards::<RegistryStoreStableMemoryBorrower>(request)
+    })?;
+
+    let results = rewards_calculation
+    .provider_results
+        .into_values()
+        .flat_map(|r| {
+            r.nodes_results.into_iter().flat_map(|nr| {
+                let node_id = nr.node_id.clone();
+                nr.daily_results.into_iter()
+                    .filter_map(move |dr| {
+                        match dr.node_status {
+                            NodeStatus::Assigned { node_metrics } => {
+                                Some((node_metrics.subnet_assigned, node_metrics.subnet_assigned_fr, node_id, dr.day.into(), node_metrics.relative_fr))
+                            }
+                            _ => {
+                                None
+                            }
+                        }
+                    })
+            })
+        })
+        .sorted()
+        .chunk_by( |(subnet_id, subnet_fr, _, _, _)| (*subnet_id, *subnet_fr))
+        .into_iter()
+        .map(|((subnet_id, subnet_fr), group)| {
+            let mut nodes_daily_fr = BTreeMap::new();
+            for (_,_,node_id, day, relative_fr) in group {
+                nodes_daily_fr.entry(node_id).or_insert_with(Vec::new).push((day, relative_fr.into()));
+            }
+            let nodes_daily_fr = nodes_daily_fr.into_iter().map(|(node_id, daily_relative_fr)| {
+                NodeDailyFR {
+                    node_id: node_id.get().0,
+                    daily_relative_fr
+                }
+            }).collect();
+            SubnetNodesFR {
+                subnet_id: subnet_id.get().0,
+                subnet_fr: subnet_fr.into(),
+                nodes_daily_fr
+            }
+        }).collect();
+
+    Ok(results)
 }
 
 #[query]

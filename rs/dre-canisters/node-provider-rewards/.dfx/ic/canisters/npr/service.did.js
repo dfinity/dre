@@ -47,19 +47,19 @@ export const idlFactory = ({ IDL }) => {
     'Ok' : RewardsCalculatorResults,
     'Err' : IDL.Text,
   });
-  const DayUtc = IDL.Record({ 'value' : IDL.Nat64 });
   const GetNodeProviderRewardsCalculationRequest = IDL.Record({
-    'to' : DayUtc,
-    'from' : DayUtc,
     'provider_id' : IDL.Principal,
+    'historical' : IDL.Bool,
+    'to_nanos' : IDL.Nat64,
+    'from_nanos' : IDL.Nat64,
   });
-  const DayUtcOpt = IDL.Record({ 'value' : IDL.Opt(IDL.Nat64) });
+  const DayUtc = IDL.Record({ 'value' : IDL.Opt(IDL.Nat64) });
   const Decimal = IDL.Record({ 'human_readable' : IDL.Opt(IDL.Text) });
   const Unassigned = IDL.Record({
     'extrapolated_fr_percent' : IDL.Opt(Decimal),
   });
   const NodeMetricsDaily = IDL.Record({
-    'subnet_assigned' : IDL.Opt(PrincipalId),
+    'subnet_assigned' : IDL.Opt(IDL.Principal),
     'original_fr_percent' : IDL.Opt(Decimal),
     'num_blocks_proposed' : IDL.Opt(IDL.Nat64),
     'subnet_assigned_fr_percent' : IDL.Opt(Decimal),
@@ -73,7 +73,7 @@ export const idlFactory = ({ IDL }) => {
   });
   const NodeStatus = IDL.Record({ 'status' : IDL.Opt(Status) });
   const DailyResults = IDL.Record({
-    'day' : IDL.Opt(DayUtcOpt),
+    'day' : IDL.Opt(DayUtc),
     'rewards_reduction_percent' : IDL.Opt(Decimal),
     'node_status' : IDL.Opt(NodeStatus),
     'base_rewards_xdr_permyriad' : IDL.Opt(Decimal),
@@ -82,7 +82,7 @@ export const idlFactory = ({ IDL }) => {
   });
   const NodeResults = IDL.Record({
     'region' : IDL.Opt(IDL.Text),
-    'node_id' : IDL.Opt(PrincipalId),
+    'node_id' : IDL.Opt(IDL.Principal),
     'daily_results' : IDL.Vec(DailyResults),
     'node_reward_type' : IDL.Opt(IDL.Text),
     'dc_id' : IDL.Opt(IDL.Text),
@@ -94,7 +94,7 @@ export const idlFactory = ({ IDL }) => {
     'monthly_xdr_permyriad' : IDL.Opt(Decimal),
   });
   const DailyBaseRewardsType3 = IDL.Record({
-    'day' : IDL.Opt(DayUtcOpt),
+    'day' : IDL.Opt(DayUtc),
     'region' : IDL.Opt(IDL.Text),
     'value_xdr_permyriad' : IDL.Opt(Decimal),
     'nodes_count' : IDL.Opt(IDL.Nat64),
@@ -107,15 +107,28 @@ export const idlFactory = ({ IDL }) => {
     'base_rewards' : IDL.Vec(BaseRewards),
     'base_rewards_type3' : IDL.Vec(DailyBaseRewardsType3),
   });
-  const GetNodeProviderRewardsCalculationResponse = IDL.Record({
-    'error' : IDL.Opt(IDL.Text),
-    'rewards' : IDL.Opt(NodeProviderRewards),
+  const GetNodeProviderRewardsCalculationResponse = IDL.Variant({
+    'Ok' : NodeProviderRewards,
+    'Err' : IDL.Text,
   });
   const NodeProvidersRewards = IDL.Record({
     'rewards_per_provider' : IDL.Vec(IDL.Tuple(PrincipalId, XDRPermyriad)),
   });
   const GetNodeProvidersRewardsResponse = IDL.Variant({
     'Ok' : NodeProvidersRewards,
+    'Err' : IDL.Text,
+  });
+  const NodeDailyFR = IDL.Record({
+    'node_id' : IDL.Principal,
+    'daily_relative_fr' : IDL.Vec(IDL.Tuple(DayUtc, Decimal)),
+  });
+  const SubnetNodesFR = IDL.Record({
+    'subnet_fr' : Decimal,
+    'subnet_id' : IDL.Principal,
+    'nodes_daily_fr' : IDL.Vec(NodeDailyFR),
+  });
+  const GetNodesFRBySubnet = IDL.Variant({
+    'Ok' : IDL.Vec(SubnetNodesFR),
     'Err' : IDL.Text,
   });
   return IDL.Service({
@@ -134,6 +147,12 @@ export const idlFactory = ({ IDL }) => {
         [GetNodeProvidersRewardsResponse],
         ['query'],
       ),
+    'get_nodes_fr_by_subnet' : IDL.Func(
+        [RewardPeriodArgs],
+        [GetNodesFRBySubnet],
+        ['query'],
+      ),
+    'get_subnets_list' : IDL.Func([], [IDL.Vec(SubnetId)], ['query']),
   });
 };
 export const init = ({ IDL }) => { return []; };

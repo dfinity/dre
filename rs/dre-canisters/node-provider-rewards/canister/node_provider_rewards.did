@@ -104,20 +104,12 @@ type GetNodeProvidersRewardsResponse = variant {
 
 // New types for v1 of the Node Provider Rewards Calculation API
 
-type DayUtc = record {
-  value: nat64;
-};
-
-type DayUtcOpt = record {
-    value: opt nat64;
-};
-
 type Decimal = record {
   human_readable: opt text;
 };
 
 type NodeMetricsDaily = record {
-  subnet_assigned: opt PrincipalId;
+  subnet_assigned: opt principal;
   subnet_assigned_fr_percent: opt Decimal;
   num_blocks_proposed: opt nat64;
   num_blocks_failed: opt nat64;
@@ -142,9 +134,12 @@ type NodeStatus = record {
   status: opt Status;
 };
 
+type DayUtc = record {
+  value: opt nat64;
+};
 
 type DailyResults = record {
-  day: opt DayUtcOpt;
+  day: opt DayUtc;
   node_status: opt NodeStatus;
   performance_multiplier_percent: opt Decimal;
   rewards_reduction_percent: opt Decimal;
@@ -153,7 +148,7 @@ type DailyResults = record {
 };
 
 type NodeResults = record {
-  node_id: opt PrincipalId;
+  node_id: opt principal;
   node_reward_type: opt text;
   region: opt text;
   dc_id: opt text;
@@ -168,7 +163,7 @@ type BaseRewards = record {
 };
 
 type DailyBaseRewardsType3 = record {
-  day: opt DayUtcOpt;
+  day: opt DayUtc;
   region: opt text;
   nodes_count: opt nat64;
   avg_rewards_xdr_permyriad: opt Decimal;
@@ -184,22 +179,35 @@ type NodeProviderRewards = record {
 };
 
 type GetNodeProviderRewardsCalculationRequest = record {
-  from: DayUtc;
-  to: DayUtc;
+  from_nanos: nat64;
+  to_nanos: nat64;
   provider_id: principal;
+  historical: bool;
 };
 
-type GetNodeProviderRewardsCalculationResponse = record {
-  rewards: opt NodeProviderRewards;
-  error: opt text;
+type GetNodeProviderRewardsCalculationResponse = variant { Ok : NodeProviderRewards; Err : text };
+
+type NodeDailyFR = record {
+  node_id: principal;
+  daily_relative_fr: vec record {
+    0: DayUtc;
+    1: Decimal;
+  };
 };
 
+type SubnetNodesFR = record {
+  subnet_id: principal;
+  subnet_fr: Decimal;
+  nodes_daily_fr: vec NodeDailyFR;
+};
+
+
+type GetNodesFRBySubnet = variant { Ok : vec SubnetNodesFR; Err : text };
 
 service : {
     get_node_providers_rewards : (RewardPeriodArgs) -> (GetNodeProvidersRewardsResponse) query;
     get_node_provider_rewards_calculation : (NodeProviderRewardsCalculationArgs) -> (GetNodeProviderRewardsCalculationResponseDeprecated) query;
     get_node_provider_rewards_calculation_v1 : (GetNodeProviderRewardsCalculationRequest) -> (GetNodeProviderRewardsCalculationResponse) query;
+    get_subnets_list: () -> (vec SubnetId) query;
+    get_nodes_fr_by_subnet : (RewardPeriodArgs) -> (GetNodesFRBySubnet) query;
 }
-
-
-

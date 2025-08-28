@@ -1,9 +1,6 @@
 (record {
     provider_id = principal "r3yjn-kthmg-pfgmb-2fngg-5c7d7-t6kqg-wi37r-j7gy6-iee64-kjdja-jae";
-    from = record {
-        value = 1749195068000000000;
-    };
-    to = record {
-        value = 1751787068000000000;
-    };
+    from_nanos = 1749195068000000000;
+    to_nanos = 1751787068000000000;
+    historical = false;
 })

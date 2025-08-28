@@ -10,7 +10,7 @@ export interface BaseRewards {
   'monthly_xdr_permyriad' : [] | [Decimal],
 }
 export interface DailyBaseRewardsType3 {
-  'day' : [] | [DayUtcOpt],
+  'day' : [] | [DayUtc],
   'region' : [] | [string],
   'value_xdr_permyriad' : [] | [Decimal],
   'nodes_count' : [] | [bigint],
@@ -18,7 +18,7 @@ export interface DailyBaseRewardsType3 {
   'avg_rewards_xdr_permyriad' : [] | [Decimal],
 }
 export interface DailyResults {
-  'day' : [] | [DayUtcOpt],
+  'day' : [] | [DayUtc],
   'rewards_reduction_percent' : [] | [Decimal],
   'node_status' : [] | [NodeStatus],
   'base_rewards_xdr_permyriad' : [] | [Decimal],
@@ -26,27 +26,33 @@ export interface DailyResults {
   'performance_multiplier_percent' : [] | [Decimal],
 }
 export type DayUTC = string;
-export interface DayUtc { 'value' : bigint }
-export interface DayUtcOpt { 'value' : [] | [bigint] }
+export interface DayUtc { 'value' : [] | [bigint] }
 export interface Decimal { 'human_readable' : [] | [string] }
 export interface GetNodeProviderRewardsCalculationRequest {
-  'to' : DayUtc,
-  'from' : DayUtc,
   'provider_id' : Principal,
+  'historical' : boolean,
+  'to_nanos' : bigint,
+  'from_nanos' : bigint,
 }
-export interface GetNodeProviderRewardsCalculationResponse {
-  'error' : [] | [string],
-  'rewards' : [] | [NodeProviderRewards],
-}
+export type GetNodeProviderRewardsCalculationResponse = {
+    'Ok' : NodeProviderRewards
+  } |
+  { 'Err' : string };
 export type GetNodeProviderRewardsCalculationResponseDeprecated = {
     'Ok' : RewardsCalculatorResults
   } |
   { 'Err' : string };
 export type GetNodeProvidersRewardsResponse = { 'Ok' : NodeProvidersRewards } |
   { 'Err' : string };
+export type GetNodesFRBySubnet = { 'Ok' : Array<SubnetNodesFR> } |
+  { 'Err' : string };
+export interface NodeDailyFR {
+  'node_id' : Principal,
+  'daily_relative_fr' : Array<[DayUtc, Decimal]>,
+}
 export type NodeId = PrincipalId;
 export interface NodeMetricsDaily {
-  'subnet_assigned' : [] | [PrincipalId],
+  'subnet_assigned' : [] | [Principal],
   'original_fr_percent' : [] | [Decimal],
   'num_blocks_proposed' : [] | [bigint],
   'subnet_assigned_fr_percent' : [] | [Decimal],
@@ -77,7 +83,7 @@ export interface NodeProvidersRewards {
 }
 export interface NodeResults {
   'region' : [] | [string],
-  'node_id' : [] | [PrincipalId],
+  'node_id' : [] | [Principal],
   'daily_results' : Array<DailyResults>,
   'node_reward_type' : [] | [string],
   'dc_id' : [] | [string],
@@ -110,6 +116,11 @@ export interface RewardsCalculatorResults {
 export type Status = { 'Unassigned' : Unassigned } |
   { 'Assigned' : Assigned };
 export type SubnetId = PrincipalId;
+export interface SubnetNodesFR {
+  'subnet_fr' : Decimal,
+  'subnet_id' : Principal,
+  'nodes_daily_fr' : Array<NodeDailyFR>,
+}
 export interface Unassigned { 'extrapolated_fr_percent' : [] | [Decimal] }
 export type XDRPermyriad = number;
 export interface _SERVICE {
@@ -125,6 +136,11 @@ export interface _SERVICE {
     [RewardPeriodArgs],
     GetNodeProvidersRewardsResponse
   >,
+  'get_nodes_fr_by_subnet' : ActorMethod<
+    [RewardPeriodArgs],
+    GetNodesFRBySubnet
+  >,
+  'get_subnets_list' : ActorMethod<[], Array<SubnetId>>,
 }
 export declare const idlFactory: IDL.InterfaceFactory;
 export declare const init: (args: { IDL: typeof IDL }) => IDL.Type[];
