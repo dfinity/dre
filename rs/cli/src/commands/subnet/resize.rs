@@ -29,10 +29,9 @@ pub struct Resize {
     #[clap(long, num_args(1..))]
     pub only: Vec<String>,
 
-    /// Force the inclusion of the provided nodes for replacement,
-    /// regardless of the decentralization
-    #[clap(long, num_args(1..))]
-    pub include: Vec<PrincipalId>,
+    /// Add specific nodes to the subnet. Fails if a node is unavailable/unhealthy.
+    #[clap(long = "add-nodes", num_args(1..), visible_aliases = &["add", "add-node", "add-node-id", "add-node-ids"])]
+    pub add_nodes: Vec<PrincipalId>,
 
     /// Motivation for replacing custom nodes
     #[clap(long, short, aliases = [ "summary" ])]
@@ -64,7 +63,7 @@ impl ExecutableCommand for Resize {
                     remove: self.remove,
                     exclude: self.exclude.clone().into(),
                     only: self.only.clone().into(),
-                    include: self.include.clone().into(),
+                    add_nodes: self.add_nodes.clone().into(),
                 },
                 self.motivation.clone(),
                 &runner.health_of_nodes().await?,

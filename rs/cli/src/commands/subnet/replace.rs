@@ -10,15 +10,16 @@ use crate::{auth::AuthRequirement, exe::ExecutableCommand, subnet_manager::Subne
 
 #[derive(Args, Debug)]
 pub struct Replace {
-    /// Set of custom nodes to be replaced
-    #[clap(long, short, num_args(1..), visible_aliases = &["node", "nodes", "node-id", "node-ids"])]
+    /// Specific node IDs to remove from the subnet
+    #[clap(long = "remove-nodes", short, num_args(1..), visible_aliases = &["nodes", "node", "node-id", "node-ids", "remove", "remove-node", "remove-nodes", "remove-node-id", "remove-node-ids"])]
     pub nodes: Vec<PrincipalId>,
 
     /// Do not replace unhealthy nodes
     #[clap(long)]
     pub no_heal: bool,
 
-    #[clap(long, short, help = r#"How many nodes to try replacing in the subnet to improve decentralization?"#)]
+    /// Number of nodes to replace (system will pick which to optimize decentralization)
+    #[clap(long = "replace-count", short, visible_aliases = &["optimize", "optimise", "optimize-count"])]
     pub optimize: Option<usize>,
 
     /// Motivation for replacing custom nodes
@@ -33,10 +34,9 @@ pub struct Replace {
     #[clap(long, num_args(1..))]
     pub only: Vec<String>,
 
-    /// Force the inclusion of the provided nodes for replacement, regardless
-    /// of the decentralization coefficients
-    #[clap(long, num_args(1..))]
-    pub include: Vec<PrincipalId>,
+    /// Add specific nodes to the subnet. Fails if a node is unavailable/unhealthy.
+    #[clap(long = "add-nodes", num_args(1..), visible_aliases = &["add", "add-node", "add-node-id", "add-node-ids"])]
+    pub add_nodes: Vec<PrincipalId>,
 
     /// The ID of the subnet.
     #[clap(long, short, alias = "subnet-id")]
@@ -68,7 +68,7 @@ impl ExecutableCommand for Replace {
                 self.optimize,
                 self.exclude.clone().into(),
                 self.only.clone(),
-                self.include.clone().into(),
+                self.add_nodes.clone().into(),
                 &all_nodes,
             )
             .await?;

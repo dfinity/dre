@@ -113,7 +113,6 @@ fn test_node_labels() {
                 datacenter: "test-dc".to_string(),
                 ipv6: "::1".parse().unwrap(),
                 name: "test-label".to_string(),
-                dfinity_owned: false,
             }])
             .should_succeed(),
     ];
