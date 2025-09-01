@@ -20,7 +20,7 @@ jobs:
     container: ghcr.io/dfinity/dre/actions-runner:6413f2909a49329ecbf5371ee7ddf07a9799b625
     name: Check changed release index files
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Run checks for release index
         run: |
           rye sync

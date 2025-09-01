@@ -12,7 +12,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Wait for running jobs
-        uses: lewagon/wait-on-check-action@v1.3.4
+        uses: lewagon/wait-on-check-action@v1.4.0
         with:
           ref: ${{ github.ref }}
           running-workflow-name: Wait for required jobs to complete or be skipped

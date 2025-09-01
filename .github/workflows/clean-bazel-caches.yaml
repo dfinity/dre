@@ -18,7 +18,7 @@ jobs:
       matrix:
         runner: [1, 2, 3, 4] # We currently have 4 runners, adjust this number if more runners are added
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           fetch-depth: 1
 
