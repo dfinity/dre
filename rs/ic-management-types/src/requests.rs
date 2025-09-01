@@ -7,7 +7,7 @@ pub struct SubnetCreateRequest {
     pub size: usize,
     pub exclude: Option<Vec<String>>,
     pub only: Option<Vec<String>>,
-    pub include: Option<Vec<PrincipalId>>,
+    pub add_nodes: Option<Vec<PrincipalId>>,
 }
 
 #[derive(Serialize, Deserialize)]
@@ -17,7 +17,7 @@ pub struct SubnetResizeRequest {
     pub remove: usize,
     pub exclude: Option<Vec<String>>,
     pub only: Option<Vec<String>>,
-    pub include: Option<Vec<PrincipalId>>,
+    pub add_nodes: Option<Vec<PrincipalId>>,
 }
 
 #[derive(Serialize, Deserialize)]

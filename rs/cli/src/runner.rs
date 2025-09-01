@@ -137,11 +137,32 @@ impl Runner {
         let all_nodes = self.registry.nodes().await?.values().cloned().collect_vec();
         let health_of_nodes = self.health_of_nodes().await?;
 
+        // Validate explicit add-nodes first to fail fast with reasons
+        if let Some(add_nodes) = request.add_nodes.as_ref() {
+            let available_nodes = self.registry.available_nodes().await?;
+            let available_set: std::collections::HashSet<PrincipalId> = available_nodes.into_iter().map(|n| n.principal).collect();
+
+            let mut errors: Vec<String> = vec![];
+            for pid in add_nodes {
+                if !available_set.contains(pid) {
+                    errors.push(format!("{} not available for assignment (not in available nodes)", pid));
+                }
+                match health_of_nodes.get(pid) {
+                    Some(HealthStatus::Healthy) => {}
+                    Some(status) => errors.push(format!("{} is not healthy: {:?}", pid, status)),
+                    None => errors.push(format!("{} has unknown health status", pid)),
+                }
+            }
+            if !errors.is_empty() {
+                anyhow::bail!(format!("Provided add-nodes failed validation:\n{}", errors.join("\n")));
+            }
+        }
+
         let subnet_creation_data = self
             .registry
             .create_subnet(
                 request.size,
-                request.include.clone().unwrap_or_default(),
+                request.add_nodes.clone().unwrap_or_default(),
                 request.exclude.clone().unwrap_or_default(),
                 request.only.clone().unwrap_or_default(),
                 &health_of_nodes,
