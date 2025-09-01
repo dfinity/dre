@@ -15,11 +15,11 @@ use crate::{
 pub struct Resize {
     /// Number of nodes to be added
     #[clap(long, default_value = "0")]
-    pub add: usize,
+    pub add_count: usize,
 
     /// Number of nodes to be removed
     #[clap(long, default_value = "0")]
-    pub remove: usize,
+    pub remove_count: usize,
 
     /// Features or Node IDs to exclude from the available nodes pool
     #[clap(long, num_args(1..))]
@@ -59,8 +59,8 @@ impl ExecutableCommand for Resize {
             .subnet_resize(
                 SubnetResizeRequest {
                     subnet: self.id,
-                    add: self.add,
-                    remove: self.remove,
+                    add: self.add_count,
+                    remove: self.remove_count,
                     exclude: self.exclude.clone().into(),
                     only: self.only.clone().into(),
                     add_nodes: self.add_nodes.clone().into(),
