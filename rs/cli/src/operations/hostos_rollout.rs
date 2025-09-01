@@ -699,6 +699,7 @@ pub mod test {
                     node_allowance: 23933,
                     datacenter: None,
                     rewardable_nodes: BTreeMap::new(),
+                    max_rewardable_nodes: BTreeMap::new(),
                     ipv6: "".to_string(),
                 },
                 cached_features: OnceLock::new(),
@@ -713,6 +714,7 @@ pub mod test {
                 is_api_boundary_node,
                 chip_id: None,
                 public_ipv4_config: None,
+                node_reward_type: None,
             };
             n.insert(node.principal, node);
         }

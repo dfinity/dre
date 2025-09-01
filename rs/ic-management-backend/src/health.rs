@@ -36,12 +36,7 @@ fn parse_health_overrides() -> Vec<(String, HealthStatus)> {
     }
 }
 
-fn maybe_override_status(
-    status: HealthStatus,
-    node_id_str: &str,
-    dc_id_lower: Option<&str>,
-    overrides: &[(String, HealthStatus)],
-) -> HealthStatus {
+fn maybe_override_status(status: HealthStatus, node_id_str: &str, dc_id_lower: Option<&str>, overrides: &[(String, HealthStatus)]) -> HealthStatus {
     let node_key = node_id_str.to_lowercase();
     if let Some((_, s)) = overrides.iter().find(|(k, _)| k == &node_key) {
         return s.clone();
