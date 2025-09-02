@@ -72,7 +72,7 @@ fn parse_replace_remove_and_count() {
     let Subcommands::Replace(r) = s.subcommands else {
         panic!("expected replace")
     };
-    assert_eq!(r.nodes.len(), 2);
+    assert_eq!(r.remove_nodes.len(), 2);
 
     let args = [
         "--id",
@@ -102,4 +102,37 @@ fn parse_replace_remove_and_count() {
         panic!("expected replace")
     };
     assert_eq!(r.optimize, Some(2));
+}
+
+#[test]
+fn parse_replace_id_and_add_nodes_aliases() {
+    let args = [
+        "--id",
+        &PrincipalId::new_subnet_test_id(1).to_string(),
+        "--motivation",
+        "m",
+        "--add-nodes",
+        &id(1).to_string(),
+        &id(2).to_string(),
+    ];
+    let s = Subnet::parse_from(["subnet"].into_iter().chain(["replace"]).chain(args));
+    let Subcommands::Replace(r) = s.subcommands else {
+        panic!("expected replace")
+    };
+    assert_eq!(r.add_nodes.len(), 2);
+
+    let args = [
+        "--id",
+        &PrincipalId::new_subnet_test_id(1).to_string(),
+        "--motivation",
+        "m",
+        "--add",
+        &id(1).to_string(),
+        &id(2).to_string(),
+    ];
+    let s = Subnet::parse_from(["subnet"].into_iter().chain(["replace"]).chain(args));
+    let Subcommands::Replace(r) = s.subcommands else {
+        panic!("expected replace")
+    };
+    assert_eq!(r.add_nodes.len(), 2);
 }

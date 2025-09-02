@@ -26,7 +26,7 @@ pub struct Create {
     #[clap(long, num_args(1..))]
     pub only: Vec<String>,
 
-    #[clap(long = "add-nodes", num_args(1..), help = r#"Add the provided nodes to the subnet. Fails if a node is unavailable/unhealthy."#, visible_aliases = &["add", "add-node", "add-node-id", "add-node-ids"])]
+    #[clap(long, num_args(1..), help = r#"Add the provided nodes to the subnet. Fails if a node is unavailable/unhealthy."#, visible_aliases = &["add", "add-node", "add-node-id", "add-node-ids"])]
     pub add_nodes: Vec<PrincipalId>,
 
     /// Motivation for replacing custom nodes
