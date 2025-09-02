@@ -51,16 +51,16 @@ impl SubnetChangeRequest {
         change_new
     }
 
-    pub fn including_from_available<T: Identifies<Node>>(self, nodes: Vec<T>) -> Self {
-        Self {
-            include_nodes: self
-                .available_nodes
+    pub fn adding_from_available<T: Identifies<Node>>(self, nodes: Vec<T>) -> Self {
+        let mut include_nodes = self.include_nodes.clone();
+        include_nodes.extend(
+            self.available_nodes
                 .iter()
                 .filter(|node| nodes.iter().match_any(node))
                 .cloned()
                 .collect_vec(),
-            ..self
-        }
+        );
+        Self { include_nodes, ..self }
     }
 
     pub fn excluding_from_available<T: Identifies<Node>>(self, nodes: Vec<T>) -> Self {

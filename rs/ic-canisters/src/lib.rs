@@ -11,6 +11,7 @@ use ic_base_types::PrincipalId;
 use ic_transport_types::SubnetMetrics;
 use parallel_hardware_identity::ParallelHardwareIdentity;
 use serde::Deserialize;
+use serde::Serialize;
 use std::path::PathBuf;
 use std::str::FromStr;
 use std::time::Duration;
@@ -29,6 +30,34 @@ pub mod sns_wasm;
 pub struct IcAgentCanisterClient {
     pub agent: Agent,
     pub nns_url: Url,
+}
+
+#[derive(Clone, Serialize)]
+pub struct CanisterVersion {
+    pub stringified_hash: String,
+}
+
+pub(crate) async fn canister_version(url: Url, canister_id: Principal) -> anyhow::Result<CanisterVersion> {
+    let client = reqwest::Client::builder()
+        .use_rustls_tls()
+        .timeout(Duration::from_secs(30))
+        .build()
+        .expect("Could not create HTTP client.");
+    let canister_agent = Agent::builder()
+        .with_http_client(client)
+        .with_url(url)
+        .with_verify_query_signatures(false)
+        .build()?;
+
+    canister_agent.fetch_root_key().await?;
+
+    let governance_canister_build = std::str::from_utf8(&canister_agent.read_state_canister_metadata(canister_id, "git_commit_id").await?)?
+        .trim()
+        .to_string();
+
+    Ok(CanisterVersion {
+        stringified_hash: governance_canister_build,
+    })
 }
 
 impl IcAgentCanisterClient {

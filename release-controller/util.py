@@ -283,6 +283,8 @@ class DefaultSubcommandArgParser(argparse.ArgumentParser):
         self,
         arg_strings: list[str],
         namespace: argparse.Namespace,
+        *args: typing.Any,
+        **kwargs: typing.Any,
     ) -> tuple[argparse.Namespace, list[str]]:
         in_args = set(arg_strings)
         d_sp = self.__default_subparser
@@ -298,6 +300,6 @@ class DefaultSubcommandArgParser(argparse.ArgumentParser):
                 # insert default in first position, this implies no
                 # global options without a sub_parsers specified
                 arg_strings = [d_sp] + arg_strings
-        return super(DefaultSubcommandArgParser, self)._parse_known_args(  # type: ignore
-            arg_strings, namespace
+        return super(DefaultSubcommandArgParser, self)._parse_known_args(
+            arg_strings, namespace, *args, **kwargs
         )

@@ -14,6 +14,41 @@ use url::Url;
 
 use crate::prometheus;
 
+fn parse_health_overrides() -> Vec<(String, HealthStatus)> {
+    match std::env::var("DRE_OVERRIDE_HEALTH") {
+        Ok(v) if !v.trim().is_empty() => v
+            .split(',')
+            .filter_map(|entry| {
+                let mut parts = entry.split(':');
+                let key = parts.next()?.trim().to_lowercase();
+                let val = parts.next()?.trim().to_lowercase();
+                let status = match val.as_str() {
+                    "healthy" => HealthStatus::Healthy,
+                    "degraded" => HealthStatus::Degraded,
+                    "dead" => HealthStatus::Dead,
+                    "unknown" => HealthStatus::Unknown,
+                    _ => return None,
+                };
+                Some((key, status))
+            })
+            .collect(),
+        _ => vec![],
+    }
+}
+
+fn maybe_override_status(status: HealthStatus, node_id_str: &str, dc_id_lower: Option<&str>, overrides: &[(String, HealthStatus)]) -> HealthStatus {
+    let node_key = node_id_str.to_lowercase();
+    if let Some((_, s)) = overrides.iter().find(|(k, _)| k == &node_key) {
+        return s.clone();
+    }
+    if let Some(dc) = dc_id_lower {
+        if let Some((_, s)) = overrides.iter().find(|(k, _)| k == dc) {
+            return s.clone();
+        }
+    }
+    status
+}
+
 pub struct HealthClient {
     implementation: HealthStatusQuerierImplementations,
     local_cache: Option<PathBuf>,
@@ -39,12 +74,20 @@ impl HealthStatusQuerier for HealthClient {
                 // Should load from local cache
                 (true, Some(path)) => {
                     let contents = fs_err::read_to_string(&path)?;
-                    serde_json::from_str(&contents)
-                        .map_err(|e| anyhow::anyhow!("Failed to deserialize from local cache on path `{}` due to: {:?}", path.display(), e))
+                    let mut nodes: Vec<ShortNodeInfo> = serde_json::from_str(&contents)
+                        .map_err(|e| anyhow::anyhow!("Failed to deserialize from local cache on path `{}` due to: {:?}", path.display(), e))?;
+                    let overrides = parse_health_overrides();
+                    if !overrides.is_empty() {
+                        for n in &mut nodes {
+                            let node_id_str = n.node_id.to_string();
+                            n.status = maybe_override_status(n.status.clone(), &node_id_str, None, &overrides);
+                        }
+                    }
+                    Ok(nodes)
                 }
                 // Runing online
                 (false, local_cache) => {
-                    let nodes = match &self.implementation {
+                    let mut nodes = match &self.implementation {
                         HealthStatusQuerierImplementations::Dashboard(public_dashboard_health_client) => {
                             public_dashboard_health_client.get_all_nodes().await?
                         }
@@ -55,6 +98,13 @@ impl HealthStatusQuerier for HealthClient {
                         let contents = serde_json::to_string_pretty(&nodes)?;
                         fs_err::write(&path, &contents)
                             .map_err(|e| anyhow::anyhow!("Failed to update local cache on path `{}` due to: {:?}", path.display(), e))?;
+                    }
+                    let overrides = parse_health_overrides();
+                    if !overrides.is_empty() {
+                        for n in &mut nodes {
+                            let node_id_str = n.node_id.to_string();
+                            n.status = maybe_override_status(n.status.clone(), &node_id_str, None, &overrides);
+                        }
                     }
                     Ok(nodes)
                 }
@@ -150,6 +200,7 @@ impl PublicDashboardHealthClient {
         };
 
         let mut response = vec![];
+        let overrides = parse_health_overrides();
 
         let nodes = match nodes.as_array() {
             None => return Err(anyhow::anyhow!("Unexpected data contract. Couldn't parse response as array")),
@@ -203,6 +254,13 @@ impl PublicDashboardHealthClient {
             };
 
             let status = if node_dc == "mn2" { HealthStatus::Healthy } else { status };
+
+            // Apply overrides by dc_id or node id
+            let status = if overrides.is_empty() {
+                status
+            } else {
+                maybe_override_status(status, &node_id.to_string(), Some(&node_dc.to_lowercase()), &overrides)
+            };
 
             let maybe_subnet = match node.get("subnet_id") {
                 None => None,
@@ -264,6 +322,7 @@ impl PrometheusHealthClient {
 impl PrometheusHealthClient {
     fn get_all_nodes(&self) -> BoxFuture<'_, anyhow::Result<Vec<ShortNodeInfo>>> {
         Box::pin(async move {
+            let overrides = parse_health_overrides();
             let ic_name = self.network.legacy_name();
             let query_up = Selector::new().metric("up").eq("ic", ic_name.as_str()).eq("job", "replica");
 
@@ -296,6 +355,11 @@ impl PrometheusHealthClient {
                             }
                         } else {
                             HealthStatus::Dead
+                        };
+                        let status = if overrides.is_empty() {
+                            status
+                        } else {
+                            maybe_override_status(status, &id.to_string(), None, &overrides)
                         };
                         ShortNodeInfo {
                             node_id: id,

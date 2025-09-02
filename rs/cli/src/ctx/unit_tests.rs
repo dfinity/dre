@@ -7,7 +7,7 @@ use crate::{
     cordoned_feature_fetcher::MockCordonedFeatureFetcher,
     store::FALLBACK_IC_ADMIN_VERSION,
 };
-use ic_canisters::{governance::governance_canister_version, parallel_hardware_identity::KeyIdVec};
+use ic_canisters::{parallel_hardware_identity::KeyIdVec, registry::registry_canister_version};
 use ic_management_backend::health::MockHealthStatusQuerier;
 use ic_management_types::Network;
 use itertools::Itertools;
@@ -62,7 +62,7 @@ impl<'a> AdminVersionTestScenario<'a> {
     fn new(name: &'static str) -> Self {
         Self {
             name,
-            version: IcAdminVersion::FromGovernance,
+            version: IcAdminVersion::FromRegistry,
             should_delete_status_file: false,
             should_contain: None,
         }
@@ -92,12 +92,12 @@ fn init_tests_ic_admin_version() {
     let runtime = tokio::runtime::Runtime::new().unwrap();
     let version_on_s3 = "e47293c0bd7f39540245913f7f75be3d6863183c";
     let mainnet = Network::mainnet_unchecked().unwrap();
-    let governance_version = runtime.block_on(governance_canister_version(&mainnet.nns_urls)).unwrap();
+    let registry_version = runtime.block_on(registry_canister_version(mainnet.get_nns_urls()[0].clone())).unwrap();
 
     let tests = &[
-        AdminVersionTestScenario::new("match governance canister")
+        AdminVersionTestScenario::new("match registry canister")
             .delete_status_file()
-            .should_contain(&governance_version.stringified_hash),
+            .should_contain(&registry_version.stringified_hash),
         AdminVersionTestScenario::new("use default version")
             .version(IcAdminVersion::Fallback)
             .should_contain(FALLBACK_IC_ADMIN_VERSION),

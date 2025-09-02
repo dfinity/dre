@@ -1,5 +1,5 @@
 use flate2::bufread::GzDecoder;
-use ic_canisters::governance::governance_canister_version;
+use ic_canisters::registry::registry_canister_version;
 use ic_management_backend::{
     health::{HealthClient, HealthStatusQuerier},
     lazy_registry::{LazyRegistry, LazyRegistryImpl},
@@ -210,7 +210,7 @@ impl Store {
             IcAdminVersion::Fallback => self.init_ic_admin(FALLBACK_IC_ADMIN_VERSION, network, neuron).await,
             IcAdminVersion::Strict(ver) => self.init_ic_admin(ver, network, neuron).await,
             // This is the most probable way of running
-            IcAdminVersion::FromGovernance => {
+            IcAdminVersion::FromRegistry => {
                 let mut status_file = fs_err::File::open(&self.ic_admin_status_file()?)?;
                 let elapsed = status_file.metadata()?.modified()?.elapsed().unwrap_or_default();
 
@@ -242,12 +242,12 @@ impl Store {
                     // Check should be performed
                     (false, _) => {
                         info!("Checking for new ic-admin version");
-                        let govn_canister_version = governance_canister_version(network.get_nns_urls()).await?;
+                        let registry_version = registry_canister_version(network.get_nns_urls()[0].clone()).await?;
                         debug!(
-                            "Using ic-admin matching the version of governance canister, version: {}",
-                            govn_canister_version.stringified_hash
+                            "Using ic-admin matching the version of registry canister, version: {}",
+                            registry_version.stringified_hash
                         );
-                        let version = match govn_canister_version.stringified_hash.as_str() {
+                        let version = match registry_version.stringified_hash.as_str() {
                             // This usually happens on testnets deployed
                             // from the HEAD of branch
                             "0000000000000000000000000000000000000000" => FALLBACK_IC_ADMIN_VERSION,

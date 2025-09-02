@@ -643,7 +643,6 @@ pub struct Guest {
     pub datacenter: String,
     pub ipv6: Ipv6Addr,
     pub name: String,
-    pub dfinity_owned: bool,
 }
 
 #[derive(Clone, Serialize, Deserialize, PartialEq, Hash, Eq)]
@@ -662,7 +661,6 @@ impl From<FactsDBGuest> for Guest {
             datacenter: g.physical_system.split('.').nth(1).expect("invalid physical system name").to_string(),
             ipv6: g.ipv6,
             name: g.physical_system.split('.').next().expect("invalid physical system name").to_string(),
-            dfinity_owned: g.node_type.contains("dfinity"),
         }
     }
 }

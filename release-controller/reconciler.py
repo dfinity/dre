@@ -190,6 +190,17 @@ def version_package_urls(version: str, os_kind: OsKind) -> list[str]:
     ]
 
 
+def version_launch_measurements(version: str, os_kind: OsKind) -> str:
+    if os_kind is not GUESTOS:
+        raise ValueError("Host OS launch measurements still not supported.")
+
+    v = "guest-os"
+
+    # TODO: should have some rotation between dfinity.systems and dfinity.network
+    #       in case one or the other isn't reachable.
+    return f"https://download.dfinity.systems/ic/{version}/{v}/update-img/launch-measurements.json"
+
+
 def version_package_checksum(version: str, os_kind: OsKind) -> str:
     v = "host-os" if os_kind == HOSTOS else "guest-os"
     hashurl = f"https://download.dfinity.systems/ic/{version}/{v}/update-img/SHA256SUMS"
@@ -216,6 +227,18 @@ def version_package_checksum(version: str, os_kind: OsKind) -> str:
             )
 
     return checksum
+
+
+def fetch_launch_measurements(version: str, os_kind: OsKind) -> bytes:
+    url = version_launch_measurements(version, os_kind)
+
+    logger = LOGGER.getChild("fetch_launch_measurements")
+    logger.debug("fetching launch measurements from %s", url)
+
+    response = requests.get(url, timeout=10)
+    response.raise_for_status()
+
+    return response.content
 
 
 class ActiveVersionProvider(typing.Protocol):
@@ -673,6 +696,7 @@ class Reconciler:
 
                     urls = version_package_urls(release_commit, v.os_kind)
                     unelect_versions = []
+
                     if v.is_base:
                         # Only do this work when:
                         #
@@ -698,6 +722,7 @@ class Reconciler:
                             revlogger.info(
                                 "Currently elected GuestOS versions: %s", blessed
                             )
+
                         elif v.os_kind == HOSTOS:
                             active = list(
                                 # Use the versions of HostOS registered as active on nodes
@@ -733,6 +758,15 @@ class Reconciler:
                             unelect_versions,
                         )
 
+                    if v.os_kind == GUESTOS:
+                        launch_measurements = fetch_launch_measurements(
+                            release_commit, v.os_kind
+                        )
+                    else:
+                        # TODO: support this once the HOSTOS launch measurements
+                        #       are added to ic-admin.
+                        launch_measurements = None
+
                     try:
                         proposal_id = self.dre.propose_to_revise_elected_os_versions(
                             changelog=changelog,
@@ -742,6 +776,7 @@ class Reconciler:
                             unelect_versions=unelect_versions,
                             package_checksum=checksum,
                             package_urls=urls,
+                            launch_measurements=launch_measurements,
                         )
                         success = prop.record_submission(proposal_id)
                         revlogger.info("%s", success)
@@ -989,6 +1024,7 @@ def oneoff() -> None:
         unelect_versions=[],
         package_checksum=version_package_checksum(version, GUESTOS),
         package_urls=version_package_urls(version, GUESTOS),
+        launch_measurements=None,
     )
 
 

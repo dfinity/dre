@@ -100,6 +100,12 @@ impl DreContext {
             true => Network::new_unchecked(args.network.clone(), &args.nns_urls)?,
         };
 
+        // Propagate health overrides to backend via env var for health client implementations
+        if !args.override_health.is_empty() {
+            let overrides = args.override_health.join(",");
+            std::env::set_var("DRE_OVERRIDE_HEALTH", overrides);
+        }
+
         Self::new(
             network.clone(),
             args.auth_opts.clone(),
