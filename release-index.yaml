@@ -14,6 +14,8 @@ releases:
         version: 9152ba15ab6cc3c12eb407e13f8ee483a1d5723c
       - name: snapshot-downloads
         version: c6d90cb33f3d47f808aaaf227a1678cb812d74a2
+      - name: threshold-store
+        version: ab62c6ec1c3b5f492df53c05bb0bf5f2eb6298ba
   - rc_name: rc--2025-08-28_03-17
     versions:
       - name: base
