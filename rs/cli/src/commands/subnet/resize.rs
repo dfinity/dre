@@ -70,7 +70,7 @@ impl ExecutableCommand for Resize {
             )
             .await?;
 
-        let runner_proposal = match runner.propose_subnet_change(&subnet_change_response, false).await? {
+        let runner_proposal = match runner.propose_subnet_change(&subnet_change_response).await? {
             Some(runner_proposal) => runner_proposal,
             None => return Ok(()),
         };

@@ -14,12 +14,13 @@ use crate::{
     artifact_downloader::{ArtifactDownloader, ArtifactDownloaderImpl},
     auth::{AuthOpts, AuthRequirement, Neuron},
     cordoned_feature_fetcher::CordonedFeatureFetcher,
-    exe::{args::GlobalArgs, args::IcAdminVersion},
+    exe::args::{GlobalArgs, IcAdminVersion},
     governance::GovernanceCanisterProposalExecutor,
     ic_admin::{IcAdmin, IcAdminImpl, IcAdminProposalExecutor},
     runner::Runner,
     store::Store,
     subnet_manager::SubnetManager,
+    target_topology::{TargetTopology, TargetTopologyOption},
 };
 
 #[cfg(test)]
@@ -131,6 +132,10 @@ impl DreContext {
 
     pub fn is_offline(&self) -> bool {
         self.store.is_offline()
+    }
+
+    pub async fn target_topology(&self, target_topology_option: TargetTopologyOption) -> anyhow::Result<TargetTopology> {
+        TargetTopology::from_option(target_topology_option, self.store.clone()).await
     }
 
     pub async fn registry(&self) -> Arc<dyn LazyRegistry> {

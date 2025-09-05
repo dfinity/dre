@@ -203,6 +203,7 @@ url = "2.5.4"
 wiremock = "0.6.4"
 human_bytes = "0.4"
 mockall = "0.13.1"
+csv = "1.3.1"
 
 # dre-canisters dependencies
 ic-cdk = { version = "^0.17.2" }

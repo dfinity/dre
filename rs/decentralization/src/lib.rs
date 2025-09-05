@@ -7,7 +7,7 @@ pub mod subnets;
 use indexmap::IndexMap;
 use itertools::Itertools;
 use network::SubnetChange;
-use std::fmt::{Display, Formatter};
+use std::fmt::{Display, Formatter, Write};
 
 use ic_base_types::PrincipalId;
 use ic_management_types::{HealthStatus, Node, NodeFeature};
@@ -83,6 +83,68 @@ impl SubnetChangeResponse {
             ..self
         }
     }
+
+    pub fn write_details<W: Write>(&self, f: &mut W) -> std::fmt::Result {
+        writeln!(f, "\n\n# Details\n\nNodes removed:")?;
+        for node_id in &self.node_ids_removed {
+            let health = self
+                .health_of_nodes
+                .get(node_id)
+                .map(|h| h.to_string().to_lowercase())
+                .unwrap_or("unknown".to_string());
+            writeln!(f, "- `{}` [health: {}]", node_id, health).expect("write failed");
+        }
+        writeln!(f, "\nNodes added:")?;
+        for node_id in &self.node_ids_added {
+            let health = self
+                .health_of_nodes
+                .get(node_id)
+                .map(|h| h.to_string().to_lowercase())
+                .unwrap_or("unknown".to_string());
+            writeln!(f, "- `{}` [health: {}]", node_id, health).expect("write failed");
+        }
+
+        Ok(())
+    }
+
+    pub fn write_attribute_table<W: Write>(&self, f: &mut W) -> std::fmt::Result {
+        let rows = self.feature_diff.values().map(|diff| diff.len()).max().unwrap_or(0);
+        let mut table = tabular::Table::new(&self.feature_diff.keys().map(|_| "    {:<}  {:>}").collect::<Vec<_>>().join(""));
+        table.add_row(
+            self.feature_diff
+                .keys()
+                .fold(tabular::Row::new(), |acc, k| acc.with_cell(k.to_string()).with_cell("")),
+        );
+        table.add_row(
+            self.feature_diff
+                .keys()
+                .fold(tabular::Row::new(), |acc, k| acc.with_cell("-".repeat(k.to_string().len())).with_cell("")),
+        );
+        for i in 0..rows {
+            table.add_row(self.feature_diff.values().fold(tabular::Row::new(), |acc, v| {
+                let (value, change) = v
+                    .iter()
+                    .sorted()
+                    .nth(i)
+                    .map(|(k, (before, after))| {
+                        (
+                            k.to_string(),
+                            match before.cmp(after) {
+                                std::cmp::Ordering::Equal => format!("{}", before),
+                                std::cmp::Ordering::Greater => format!("{} -> {}", before, after),
+                                std::cmp::Ordering::Less => format!("{} -> {}", before, after),
+                            },
+                        )
+                    })
+                    .unwrap_or_default();
+                acc.with_cell(value).with_cell(change)
+            }));
+        }
+
+        writeln!(f, "\n\n```\n{}```", table)?;
+
+        Ok(())
+    }
 }
 
 impl Display for SubnetChangeResponse {
@@ -147,59 +209,9 @@ impl Display for SubnetChangeResponse {
             }
         }
 
-        writeln!(f, "\n\n# Details\n\nNodes removed:")?;
-        for node_id in &self.node_ids_removed {
-            let health = self
-                .health_of_nodes
-                .get(node_id)
-                .map(|h| h.to_string().to_lowercase())
-                .unwrap_or("unknown".to_string());
-            writeln!(f, "- `{}` [health: {}]", node_id, health).expect("write failed");
-        }
-        writeln!(f, "\nNodes added:")?;
-        for node_id in &self.node_ids_added {
-            let health = self
-                .health_of_nodes
-                .get(node_id)
-                .map(|h| h.to_string().to_lowercase())
-                .unwrap_or("unknown".to_string());
-            writeln!(f, "- `{}` [health: {}]", node_id, health).expect("write failed");
-        }
+        self.write_details(f)?;
 
-        let rows = self.feature_diff.values().map(|diff| diff.len()).max().unwrap_or(0);
-        let mut table = tabular::Table::new(&self.feature_diff.keys().map(|_| "    {:<}  {:>}").collect::<Vec<_>>().join(""));
-        table.add_row(
-            self.feature_diff
-                .keys()
-                .fold(tabular::Row::new(), |acc, k| acc.with_cell(k.to_string()).with_cell("")),
-        );
-        table.add_row(
-            self.feature_diff
-                .keys()
-                .fold(tabular::Row::new(), |acc, k| acc.with_cell("-".repeat(k.to_string().len())).with_cell("")),
-        );
-        for i in 0..rows {
-            table.add_row(self.feature_diff.values().fold(tabular::Row::new(), |acc, v| {
-                let (value, change) = v
-                    .iter()
-                    .sorted()
-                    .nth(i)
-                    .map(|(k, (before, after))| {
-                        (
-                            k.to_string(),
-                            match before.cmp(after) {
-                                std::cmp::Ordering::Equal => format!("{}", before),
-                                std::cmp::Ordering::Greater => format!("{} -> {}", before, after),
-                                std::cmp::Ordering::Less => format!("{} -> {}", before, after),
-                            },
-                        )
-                    })
-                    .unwrap_or_default();
-                acc.with_cell(value).with_cell(change)
-            }));
-        }
-
-        writeln!(f, "\n\n```\n{}```", table)?;
+        self.write_attribute_table(f)?;
 
         Ok(())
     }
