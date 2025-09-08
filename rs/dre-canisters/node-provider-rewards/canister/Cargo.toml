@@ -44,4 +44,4 @@ serde_cbor = "0.11.2"
 
 [dev-dependencies]
 tokio = { workspace = true }
-prost = "0.13.5"
+prost = "0.14.1"
