@@ -1,3 +1,4 @@
+#![allow(deprecated)]
 use crate::metrics_types::{KeyRange, SubnetIdKey, SubnetMetricsKeyStored, SubnetMetricsValueStored};
 use crate::DAY_IN_SECONDS;
 use async_trait::async_trait;
