@@ -249,7 +249,7 @@ impl TryFrom<ProposalInfo> for Proposal {
                             }
                             ic_nns_governance::pb::v1::NnsFunction::SubnetRentalRequest => {
                                 serde_json::to_value(Decode!(a.payload.as_slice(), SubnetRentalRequest)?)?
-                            }
+                            }  
                         }
                     }
                 }
@@ -265,6 +265,8 @@ impl TryFrom<ProposalInfo> for Proposal {
                 Action::InstallCode(a) => serde_json::to_value(a)?,
                 Action::StopOrStartCanister(a) => serde_json::to_value(a)?,
                 Action::UpdateCanisterSettings(a) => serde_json::to_value(a)?,
+                Action::DeregisterKnownNeuron(a) => serde_json::to_value(a)?,
+                Action::FulfillSubnetRentalRequest(a) => serde_json::to_value(a)?,
             },
         })
     }
