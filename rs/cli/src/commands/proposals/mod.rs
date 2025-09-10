@@ -249,7 +249,7 @@ impl TryFrom<ProposalInfo> for Proposal {
                             }
                             ic_nns_governance::pb::v1::NnsFunction::SubnetRentalRequest => {
                                 serde_json::to_value(Decode!(a.payload.as_slice(), SubnetRentalRequest)?)?
-                            }  
+                            }
                         }
                     }
                 }
