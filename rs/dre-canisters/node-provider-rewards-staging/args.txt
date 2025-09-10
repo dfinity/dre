@@ -1,0 +1,4 @@
+(record {
+    from_day_timestamp_nanos = 1749195068000000000;
+    to_day_timestamp_nanos = 1753083068000000000;
+})
