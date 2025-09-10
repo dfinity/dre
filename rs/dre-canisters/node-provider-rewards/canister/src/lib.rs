@@ -1,3 +1,4 @@
+#![allow(deprecated)]
 use crate::storage::{METRICS_MANAGER, REGISTRY_STORE};
 use candid::{candid_method, encode_one, CandidType};
 use chrono::Months;
