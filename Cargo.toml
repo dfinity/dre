@@ -200,7 +200,7 @@ thiserror = "2.0.16"
 tokio = { version = "1.47.1", features = ["full"] }
 tokio-util = "0.7.16"
 url = "2.5.7"
-wiremock = "0.6.4"
+wiremock = "=0.6.4"
 human_bytes = "0.4"
 mockall = "0.13.1"
 

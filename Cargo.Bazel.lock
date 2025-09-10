@@ -1,5 +1,5 @@
 {
-  "checksum": "f886299ae84418d429f8fac877032d34f9a481add9c340f20e685646cbffdcba",
+  "checksum": "be886dffa77eacfbe8acd00c9f29b7413da1e756e588e9fe7d09ea4aeb6563df",
   "crates": {
     "actix-codec 0.5.2": {
       "name": "actix-codec",
@@ -7799,7 +7799,7 @@
           "selects": {
             "cfg(windows)": [
               {
-                "id": "windows-sys 0.48.0",
+                "id": "windows-sys 0.59.0",
                 "target": "windows_sys"
               }
             ]
@@ -10903,14 +10903,14 @@
       ],
       "license_file": "LICENSE-APACHE"
     },
-    "deadpool 0.12.3": {
+    "deadpool 0.10.0": {
       "name": "deadpool",
-      "version": "0.12.3",
+      "version": "0.10.0",
       "package_url": "https://github.com/bikeshedder/deadpool",
       "repository": {
         "Http": {
-          "url": "https://static.crates.io/crates/deadpool/0.12.3/download",
-          "sha256": "0be2b1d1d6ec8d846f05e137292d0b89133caf95ef33695424c09568bdd39b1b"
+          "url": "https://static.crates.io/crates/deadpool/0.10.0/download",
+          "sha256": "fb84100978c1c7b37f09ed3ce3e5f843af02c2a2c431bae5b19230dad2c1b490"
         }
       },
       "targets": [
@@ -10934,6 +10934,7 @@
         ],
         "crate_features": {
           "common": [
+            "async-trait",
             "default",
             "managed",
             "unmanaged"
@@ -10947,11 +10948,7 @@
               "target": "deadpool_runtime"
             },
             {
-              "id": "lazy_static 1.5.0",
-              "target": "lazy_static"
-            },
-            {
-              "id": "num_cpus 1.16.0",
+              "id": "num_cpus 1.17.0",
               "target": "num_cpus"
             },
             {
@@ -10961,8 +10958,17 @@
           ],
           "selects": {}
         },
-        "edition": "2021",
-        "version": "0.12.3"
+        "edition": "2018",
+        "proc_macro_deps": {
+          "common": [
+            {
+              "id": "async-trait 0.1.89",
+              "target": "async_trait"
+            }
+          ],
+          "selects": {}
+        },
+        "version": "0.10.0"
       },
       "license": "MIT OR Apache-2.0",
       "license_ids": [
@@ -17023,45 +17029,6 @@
         ],
         "edition": "2021",
         "version": "0.5.0"
-      },
-      "license": "MIT OR Apache-2.0",
-      "license_ids": [
-        "Apache-2.0",
-        "MIT"
-      ],
-      "license_file": "LICENSE-APACHE"
-    },
-    "hermit-abi 0.3.9": {
-      "name": "hermit-abi",
-      "version": "0.3.9",
-      "package_url": "https://github.com/hermit-os/hermit-rs",
-      "repository": {
-        "Http": {
-          "url": "https://static.crates.io/crates/hermit-abi/0.3.9/download",
-          "sha256": "d231dfb89cfffdbc30e7fc41579ed6066ad03abda9e567ccafae602b97ec5024"
-        }
-      },
-      "targets": [
-        {
-          "Library": {
-            "crate_name": "hermit_abi",
-            "crate_root": "src/lib.rs",
-            "srcs": {
-              "allow_empty": true,
-              "include": [
-                "**/*.rs"
-              ]
-            }
-          }
-        }
-      ],
-      "library_target_name": "hermit_abi",
-      "common_attrs": {
-        "compile_data_glob": [
-          "**"
-        ],
-        "edition": "2021",
-        "version": "0.3.9"
       },
       "license": "MIT OR Apache-2.0",
       "license_ids": [
@@ -24383,7 +24350,7 @@
         "deps_dev": {
           "common": [
             {
-              "id": "wiremock 0.6.5",
+              "id": "wiremock 0.6.4",
               "target": "wiremock"
             }
           ],
@@ -38302,14 +38269,14 @@
       ],
       "license_file": "LICENSE-APACHE"
     },
-    "num_cpus 1.16.0": {
+    "num_cpus 1.17.0": {
       "name": "num_cpus",
-      "version": "1.16.0",
+      "version": "1.17.0",
       "package_url": "https://github.com/seanmonstar/num_cpus",
       "repository": {
         "Http": {
-          "url": "https://static.crates.io/crates/num_cpus/1.16.0/download",
-          "sha256": "4161fcb6d602d4d2081af7c3a45852d875a03dd337a6bfdd6e06407b61342a43"
+          "url": "https://static.crates.io/crates/num_cpus/1.17.0/download",
+          "sha256": "91df4bbde75afed763b708b7eee1e8e7651e02d97f6d5dd763e89367e957b23b"
         }
       },
       "targets": [
@@ -38342,14 +38309,14 @@
             ],
             "cfg(target_os = \"hermit\")": [
               {
-                "id": "hermit-abi 0.3.9",
+                "id": "hermit-abi 0.5.2",
                 "target": "hermit_abi"
               }
             ]
           }
         },
         "edition": "2015",
-        "version": "1.16.0"
+        "version": "1.17.0"
       },
       "license": "MIT OR Apache-2.0",
       "license_ids": [
@@ -42927,7 +42894,7 @@
         "deps": {
           "common": [
             {
-              "id": "heck 0.4.1",
+              "id": "heck 0.5.0",
               "target": "heck"
             },
             {
@@ -50792,7 +50759,7 @@
         "deps": {
           "common": [
             {
-              "id": "heck 0.4.1",
+              "id": "heck 0.5.0",
               "target": "heck"
             },
             {
@@ -58044,7 +58011,7 @@
           "selects": {
             "cfg(windows)": [
               {
-                "id": "windows-sys 0.48.0",
+                "id": "windows-sys 0.59.0",
                 "target": "windows_sys"
               }
             ]
@@ -58462,12 +58429,8 @@
             "Win32",
             "Win32_Foundation",
             "Win32_Globalization",
-            "Win32_Storage",
-            "Win32_Storage_FileSystem",
             "Win32_System",
             "Win32_System_Com",
-            "Win32_System_Console",
-            "Win32_System_SystemInformation",
             "Win32_UI",
             "Win32_UI_Shell",
             "default"
@@ -60602,14 +60565,14 @@
       ],
       "license_file": "LICENSE-MIT"
     },
-    "wiremock 0.6.5": {
+    "wiremock 0.6.4": {
       "name": "wiremock",
-      "version": "0.6.5",
+      "version": "0.6.4",
       "package_url": "https://github.com/LukeMathWalker/wiremock-rs",
       "repository": {
         "Http": {
-          "url": "https://static.crates.io/crates/wiremock/0.6.5/download",
-          "sha256": "08db1edfb05d9b3c1542e521aea074442088292f00b5f28e435c714a98f85031"
+          "url": "https://static.crates.io/crates/wiremock/0.6.4/download",
+          "sha256": "a2b8b99d4cdbf36b239a9532e31fe4fb8acc38d1897c1761e161550a7dc78e6a"
         }
       },
       "targets": [
@@ -60642,7 +60605,7 @@
               "target": "base64"
             },
             {
-              "id": "deadpool 0.12.3",
+              "id": "deadpool 0.10.0",
               "target": "deadpool"
             },
             {
@@ -60696,8 +60659,17 @@
           ],
           "selects": {}
         },
-        "edition": "2024",
-        "version": "0.6.5"
+        "edition": "2018",
+        "proc_macro_deps": {
+          "common": [
+            {
+              "id": "async-trait 0.1.89",
+              "target": "async_trait"
+            }
+          ],
+          "selects": {}
+        },
+        "version": "0.6.4"
       },
       "license": "MIT/Apache-2.0",
       "license_ids": [
@@ -62587,7 +62559,7 @@
     "actix-rt 2.11.0",
     "assert_cmd 2.0.17",
     "maplit 1.0.2",
-    "wiremock 0.6.5"
+    "wiremock 0.6.4"
   ],
   "unused_patches": [
     {
