@@ -2207,6 +2207,7 @@ dependencies = [
  "keyring",
  "log",
  "mockall",
+ "node-provider-rewards-api",
  "pretty_env_logger",
  "prost",
  "regex",
@@ -3344,6 +3345,7 @@ dependencies = [
  "ic-utils 0.39.3",
  "icrc-ledger-types",
  "log",
+ "node-provider-rewards-api",
  "prost",
  "reqwest",
  "serde",
@@ -6591,6 +6593,7 @@ dependencies = [
  "rust_decimal",
  "rust_decimal_macros",
  "serde",
+ "tabled",
 ]
 
 [[package]]
