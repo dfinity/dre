@@ -8,6 +8,14 @@
 #         rc_name: <reference RC name>
 #         name: <version name>
 releases:
+  - rc_name: rc--2025-09-11_03-15
+    versions:
+      - name: base
+        version: a299620cd5e73ed21b415f2ebe3da0bb43a3649d
+      - name: canister-env-vars
+        version: cf1ef976fe18d402f61345af07c0f75c1f86dc25
+      - name: inmem-canister-sks
+        version: c25143850963143c9ee6bec77fe8ccf8306a4949
   - rc_name: rc--2025-09-04_03-11
     versions:
       - name: base
