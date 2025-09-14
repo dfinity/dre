@@ -1,5 +1,5 @@
 use crate::rewards_calculator_results::{DayUTC, NodeMetricsDaily, RewardCalculatorError, RewardsCalculatorResults, XDRPermyriad};
-pub use crate::types::{NodeMetricsDailyRaw, ProviderRewardableNodes, Region, RewardPeriod, SubnetMetricsDailyKey};
+use crate::types::{NodeMetricsDailyRaw, ProviderRewardableNodes, Region, RewardPeriod, SubnetMetricsDailyKey};
 use ic_base_types::{NodeId, PrincipalId};
 use ic_protobuf::registry::node::v1::NodeRewardType;
 use ic_protobuf::registry::node_rewards::v2::NodeRewardsTable;
