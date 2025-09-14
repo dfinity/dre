@@ -17,25 +17,31 @@ ic-http-types = { workspace = true }
 ic-cdk = { workspace = true }
 ic-cdk-timers = { workspace = true }
 ic-cdk-macros = { workspace = true }
-ic-base-types = { workspace = true }
 ic-stable-structures = { workspace = true }
-ic-node-rewards-canister-api = { workspace = true }
 candid = { workspace = true }
-ic-node-rewards-canister = { workspace = true }
-ic-nervous-system-common = { workspace = true }
+serde = { workspace = true }
+ic-interfaces-registry = { workspace = true }
+ic-registry-keys = { workspace = true }
+futures = { workspace = true }
+indexmap = { workspace = true }
+ic-base-types = { workspace = true }
+ic-dummy-getrandom-for-wasm = { workspace = true }
+ic-management-canister-types-private = { workspace = true }
+ic-metrics-encoder = { workspace = true }
 ic-nervous-system-canisters = { workspace = true }
+ic-nervous-system-common = { workspace = true }
+ic-nervous-system-runtime = { workspace = true }
+ic-nns-constants = { workspace = true }
+ic-registry-transport = { workspace = true }
 ic-protobuf = { workspace = true }
 ic-registry-canister-client = { workspace = true }
-ic-registry-keys = { workspace = true }
-ic-node-rewards-canister-protobuf = { workspace = true }
 ic-types = { workspace = true }
 itertools = { workspace = true }
 mockall = { workspace = true }
 rewards-calculation = { workspace = true }
-rewards-calculation-deprecated = { workspace = true }
 node-provider-rewards-api = { workspace = true }
 serde_cbor = "0.11.2"
-ic-dummy-getrandom-for-wasm = { workspace = true }
+
 [dev-dependencies]
 tokio = { workspace = true }
 prost = "0.13.5"

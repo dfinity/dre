@@ -5,7 +5,6 @@ use std::{
     sync::Arc,
 };
 
-use ic_sys::fs::Clobber;
 use service_discovery::{job_types::JobType, TargetGroup};
 
 use crate::{config_builder::Config, config_updater::ConfigUpdater, filters::TargetGroupFilter, vector_config_structure::VectorConfigBuilder};
@@ -52,7 +51,7 @@ impl ConfigWriter {
 
         let vector_config = vector_config_builder.build(filtered_target_groups, job);
 
-        ic_sys::fs::write_atomically(target_path.as_path(), Clobber::Yes, |f| {
+        ic_sys::fs::write_atomically(target_path.as_path(), |f| {
             serde_json::to_writer_pretty(f, &vector_config)
                 .map_err(|e| std::io::Error::new(std::io::ErrorKind::Other, format!("Serialization error: {:?}", e)))
         })?;
@@ -70,7 +69,7 @@ impl ConfigUpdater for ConfigWriter {
         debug!(self.log, "Targets changed, proceeding with regenerating config");
         let target_path = self.base_directory.join(format!("{}.json", config.name()));
 
-        ic_sys::fs::write_atomically(target_path.as_path(), Clobber::Yes, |f| {
+        ic_sys::fs::write_atomically(target_path.as_path(), |f| {
             serde_json::to_writer_pretty(f, &config)
                 .map_err(|e| std::io::Error::new(std::io::ErrorKind::Other, format!("Serialization error: {:?}", e)))
         })?;

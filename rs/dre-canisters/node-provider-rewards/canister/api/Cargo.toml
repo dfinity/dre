@@ -10,14 +10,15 @@ license.workspace = true
 [dependencies]
 ic-base-types = { workspace = true }
 rust_decimal = { workspace = true }
-rewards-calculation-deprecated = { workspace = true }
+rust_decimal_macros = { workspace = true }
 rewards-calculation = { workspace = true }
-ic-node-rewards-canister-protobuf = { workspace = true }
-ic-nervous-system-proto = { workspace = true }
 candid = { workspace = true }
 serde = { workspace = true }
+
+itertools = { workspace = true }
 chrono = { version = "0.4.41", default-features = false, features = [
     "alloc",
+    "clock",
     "serde",
 ] }
 
