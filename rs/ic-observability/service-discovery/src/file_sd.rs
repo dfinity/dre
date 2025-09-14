@@ -7,6 +7,8 @@ use std::{
     sync::{Arc, RwLock},
 };
 
+use ic_sys::fs::Clobber;
+
 use super::TargetGroup;
 use crate::{job_types::JobType, service_discovery_record::ServiceDiscoveryRecord};
 
@@ -44,7 +46,7 @@ impl FileSd {
         let target_path = job_path.join("ic_service_discovery.json");
 
         let targets: Vec<_> = p8s_target_groups.clone().into_iter().map(ServiceDiscoveryRecord::from).collect();
-        ic_sys::fs::write_atomically(target_path.as_path(), |f| {
+        ic_sys::fs::write_atomically(target_path.as_path(), Clobber::Yes, |f| {
             serde_json::to_writer_pretty(f, &targets)
                 .map_err(|e| std::io::Error::new(std::io::ErrorKind::Other, format!("Serialization error: {:?}", e)))
         })?;
