@@ -48,7 +48,7 @@ export interface NodeMetricsDaily {
   'num_blocks_failed' : [] | [bigint],
 }
 export interface NodeProviderRewards {
-  'rewards_total_xdr_permyriad' : [] | [bigint],
+  'rewards_total_xdr_permyriad' : [] | [Decimal],
   'nodes_results' : Array<NodeResults>,
   'base_rewards' : Array<BaseRewards>,
   'base_rewards_type3' : Array<BaseRewardsType3>,

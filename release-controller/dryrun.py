@@ -250,6 +250,7 @@ class DRECli(dre_cli.DRECli):
         unelect_versions: list[str],
         package_checksum: str,
         package_urls: list[str],
+        launch_measurements: typing.Optional[bytes],
         dry_run: bool = False,
     ) -> int:
         super().propose_to_revise_elected_os_versions(
@@ -260,6 +261,7 @@ class DRECli(dre_cli.DRECli):
             unelect_versions,
             package_checksum,
             package_urls,
+            launch_measurements,
             dry_run=True,
         )
         # Now mock the proposal ID using an integer derived from the version.
@@ -285,6 +287,19 @@ class MockSlackAnnouncer(object):
 def oneoff_dre_place_proposal() -> None:
     changelog = "Fake changelog"
     dre = DRECli()
+    measurements = {
+        "guest_launch_measurements": [
+            {
+                "measurement": list(os.urandom(48)),
+                "metadata": {
+                    "kernel_cmdline": "some command line that is linked to this measaurement",
+                },
+            }
+        ]
+    }
+
+    measurementbytes = json.dumps(measurements).encode()
+
     dre.propose_to_revise_elected_os_versions(
         changelog=changelog,
         version="0" * 40,
@@ -293,6 +308,7 @@ def oneoff_dre_place_proposal() -> None:
         unelect_versions=[],
         package_checksum="0" * 40,
         package_urls=["https://doesntmatter.com/"],
+        launch_measurements=measurementbytes,
     )
 
 

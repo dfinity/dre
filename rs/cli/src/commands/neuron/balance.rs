@@ -19,7 +19,8 @@ impl ExecutableCommand for Balance {
         let neuron_id = ctx.neuron_id().unwrap_or(neuron.neuron_id);
         let neuron_info = governance.get_neuron_info(neuron_id).await?;
 
-        println!("{}", neuron_info.stake_e8s / 10_u64.pow(8));
+        println!("Staked: {} ICP", (neuron_info.stake_e8s as f64) / (10_u64.pow(8) as f64));
+        println!("Voting power: {}", (neuron_info.voting_power as f64) / (10_u64.pow(8) as f64));
         Ok(())
     }
 }

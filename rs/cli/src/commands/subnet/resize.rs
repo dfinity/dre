@@ -15,11 +15,11 @@ use crate::{
 pub struct Resize {
     /// Number of nodes to be added
     #[clap(long, default_value = "0")]
-    pub add: usize,
+    pub add_count: usize,
 
     /// Number of nodes to be removed
     #[clap(long, default_value = "0")]
-    pub remove: usize,
+    pub remove_count: usize,
 
     /// Features or Node IDs to exclude from the available nodes pool
     #[clap(long, num_args(1..))]
@@ -29,10 +29,9 @@ pub struct Resize {
     #[clap(long, num_args(1..))]
     pub only: Vec<String>,
 
-    /// Force the inclusion of the provided nodes for replacement,
-    /// regardless of the decentralization
-    #[clap(long, num_args(1..))]
-    pub include: Vec<PrincipalId>,
+    /// Add specific nodes to the subnet. Fails if a node is unavailable/unhealthy.
+    #[clap(long = "add-nodes", num_args(1..), visible_aliases = &["add", "add-node", "add-node-id", "add-node-ids"])]
+    pub add_nodes: Vec<PrincipalId>,
 
     /// Motivation for replacing custom nodes
     #[clap(long, short, aliases = [ "summary" ])]
@@ -60,11 +59,11 @@ impl ExecutableCommand for Resize {
             .subnet_resize(
                 SubnetResizeRequest {
                     subnet: self.id,
-                    add: self.add,
-                    remove: self.remove,
+                    add: self.add_count,
+                    remove: self.remove_count,
                     exclude: self.exclude.clone().into(),
                     only: self.only.clone().into(),
-                    include: self.include.clone().into(),
+                    add_nodes: self.add_nodes.clone().into(),
                 },
                 self.motivation.clone(),
                 &runner.health_of_nodes().await?,

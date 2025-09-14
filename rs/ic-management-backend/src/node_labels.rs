@@ -3,8 +3,6 @@ use std::path::PathBuf;
 use ic_management_types::Guest;
 use log::info;
 
-use crate::registry::DFINITY_DCS;
-
 pub async fn query_guests(network: &String, local_cache: Option<PathBuf>, offline: bool) -> anyhow::Result<Vec<Guest>> {
     if offline {
         match local_cache {
@@ -71,7 +69,6 @@ pub fn parse_data(contents: String) -> anyhow::Result<Vec<Guest>> {
                 datacenter: dc.to_string(),
                 ipv6: ip.parse().unwrap(),
                 name: format!("{}-{}", dc, label),
-                dfinity_owned: DFINITY_DCS.contains(dc),
             }
         })
         .collect())

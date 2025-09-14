@@ -8,6 +8,7 @@ use decentralization::{
     network::{DecentralizedSubnet, SubnetQueryBy},
     SubnetChangeResponse,
 };
+use futures::TryFutureExt;
 use ic_management_backend::health::HealthStatusQuerier;
 use ic_management_backend::lazy_registry::LazyRegistry;
 use ic_management_types::HealthStatus;
@@ -108,6 +109,38 @@ impl SubnetManager {
         Ok(converted)
     }
 
+    pub(crate) async fn validate_nodes_available_and_healthy(&self, nodes: &[PrincipalId]) -> anyhow::Result<()> {
+        if nodes.is_empty() {
+            return Ok(());
+        }
+
+        let (available_nodes, healths) = futures_util::future::try_join(
+            self.registry_instance.available_nodes().map_err(anyhow::Error::from),
+            self.health_client.nodes(),
+        )
+        .await?;
+
+        let available_set: std::collections::HashSet<PrincipalId> = available_nodes.into_iter().map(|n| n.principal).collect();
+
+        let mut errors: Vec<String> = vec![];
+        for pid in nodes {
+            if !available_set.contains(pid) {
+                errors.push(format!("{} not available for assignment (not in available nodes)", pid));
+            }
+            match healths.get(pid) {
+                Some(HealthStatus::Healthy) => {}
+                Some(status) => errors.push(format!("{} is not healthy: {:?}", pid, status)),
+                None => errors.push(format!("{} has unknown health status", pid)),
+            }
+        }
+
+        if errors.is_empty() {
+            Ok(())
+        } else {
+            anyhow::bail!(format!("Provided add-nodes failed validation:\n{}", errors.join("\n")))
+        }
+    }
+
     /// Simulates replacement of nodes in a subnet.
     /// There are multiple ways to replace nodes. For instance:
     ///    1. Setting `heal` to `true` in the request to replace unhealthy nodes
@@ -134,13 +167,16 @@ impl SubnetManager {
             vec![]
         };
 
+        // Validate explicit additions first to fail fast with reasons
+        self.validate_nodes_available_and_healthy(&include.clone().unwrap_or_default()).await?;
+
         let subnet_change_request = self
             .registry_instance
             .modify_subnet_nodes(subnet_query_by.clone())
             .await?
             .excluding_from_available(exclude.clone().unwrap_or_default())
-            .including_from_available(only.clone())
-            .including_from_available(include.clone().unwrap_or_default());
+            .adding_from_available(only.clone())
+            .adding_from_available(include.clone().unwrap_or_default());
 
         let mut node_ids_unhealthy = HashSet::new();
         if heal {
@@ -198,12 +234,16 @@ impl SubnetManager {
         let all_nodes = registry.nodes().await?.values().cloned().collect_vec();
         let mut motivations = vec![];
 
+        // Validate explicit additions first to fail fast with reasons
+        self.validate_nodes_available_and_healthy(&request.add_nodes.clone().unwrap_or_default())
+            .await?;
+
         let change = registry
             .modify_subnet_nodes(SubnetQueryBy::SubnetId(request.subnet))
             .await?
             .excluding_from_available(request.exclude.clone().unwrap_or_default())
-            .including_from_available(request.only.clone().unwrap_or_default())
-            .including_from_available(request.include.clone().unwrap_or_default())
+            .adding_from_available(request.only.clone().unwrap_or_default())
+            .adding_from_available(request.add_nodes.clone().unwrap_or_default())
             .resize(
                 request.add,
                 request.remove,

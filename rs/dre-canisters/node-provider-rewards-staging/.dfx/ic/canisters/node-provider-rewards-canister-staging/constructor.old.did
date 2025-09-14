@@ -46,7 +46,7 @@ type NodeMetricsDaily = record {
   num_blocks_failed : opt nat64;
 };
 type NodeProviderRewards = record {
-  rewards_total_xdr_permyriad : opt nat64;
+  rewards_total_xdr_permyriad : opt Decimal;
   nodes_results : vec NodeResults;
   base_rewards : vec BaseRewards;
   base_rewards_type3 : vec BaseRewardsType3;
@@ -80,7 +80,7 @@ type NodeStatus = variant {
 service : {
   get_node_provider_rewards_calculation : (
       GetNodeProviderRewardsCalculationRequest,
-    ) -> (GetNodeProviderRewardsCalculationResponse) query;
+    ) -> (GetNodeProviderRewardsCalculationResponse);
   get_node_providers_monthly_xdr_rewards : (
       GetNodeProvidersMonthlyXdrRewardsRequest,
     ) -> (GetNodeProvidersMonthlyXdrRewardsResponse);

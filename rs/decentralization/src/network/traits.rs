@@ -32,7 +32,7 @@ pub trait TopologyManager: SubnetQuerier + AvailableNodesQuerier + Sync {
     fn create_subnet<'a>(
         &'a self,
         size: usize,
-        include_nodes: Vec<PrincipalId>,
+        add_nodes: Vec<PrincipalId>,
         exclude_nodes: Vec<String>,
         only_nodes: Vec<String>,
         health_of_nodes: &'a IndexMap<PrincipalId, HealthStatus>,
@@ -44,9 +44,9 @@ pub trait TopologyManager: SubnetQuerier + AvailableNodesQuerier + Sync {
                 available_nodes: self.available_nodes().await?,
                 ..Default::default()
             }
-            .including_from_available(include_nodes)
+            .adding_from_available(add_nodes)
             .excluding_from_available(exclude_nodes)
-            .including_from_available(only_nodes)
+            .adding_from_available(only_nodes)
             .resize(size, 0, 0, health_of_nodes, cordoned_features, all_nodes)
         })
     }

@@ -42,7 +42,7 @@ export const idlFactory = ({ IDL }) => {
     'avg_rewards_xdr_permyriad' : IDL.Opt(Decimal),
   });
   const NodeProviderRewards = IDL.Record({
-    'rewards_total_xdr_permyriad' : IDL.Opt(IDL.Nat64),
+    'rewards_total_xdr_permyriad' : IDL.Opt(Decimal),
     'nodes_results' : IDL.Vec(NodeResults),
     'base_rewards' : IDL.Vec(BaseRewards),
     'base_rewards_type3' : IDL.Vec(BaseRewardsType3),

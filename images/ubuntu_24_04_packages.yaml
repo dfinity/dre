@@ -11,11 +11,11 @@ version: 1
 
 sources:
   - channel: noble main
-    url: https://snapshot.ubuntu.com/ubuntu/20250424T000000Z
+    url: https://snapshot.ubuntu.com/ubuntu/20250826T000000Z
   - channel: noble-security main
-    url: https://snapshot.ubuntu.com/ubuntu/20250424T000000Z
+    url: https://snapshot.ubuntu.com/ubuntu/20250826T000000Z
   - channel: noble-updates main
-    url: https://snapshot.ubuntu.com/ubuntu/20250424T000000Z
+    url: https://snapshot.ubuntu.com/ubuntu/20250826T000000Z
   - channel: llvm-toolchain-noble-20 main
     url: https://apt.llvm.org/noble/
 
