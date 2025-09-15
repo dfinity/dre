@@ -19,3 +19,4 @@ pub(crate) mod update_unassigned_nodes;
 pub mod upgrade;
 pub(crate) mod version;
 pub(crate) mod vote;
+pub(crate) mod node_rewards;
