@@ -15,7 +15,7 @@ use ic_nns_governance::pb::v1::NodeProvider as PbNodeProvider;
 use ic_nns_governance::pb::v1::Proposal;
 use ic_nns_governance_api::manage_neuron_response::Command as CommandResponse;
 use ic_nns_governance_api::manage_neuron_response::MakeProposalResponse;
-use ic_nns_governance_api::ListNodeProvidersResponse;
+use ic_nns_governance_api::{DateRangeFilter, ListNodeProviderRewardsRequest, ListNodeProviderRewardsResponse, ListNodeProvidersResponse, MonthlyNodeProviderRewards};
 use ic_nns_governance_api::ManageNeuronResponse;
 use ic_nns_governance_api::{ListNeurons, ListProposalInfoResponse, NeuronInfo, ProposalInfo};
 use ic_nns_governance_api::{ListNeuronsResponse, Neuron};
@@ -216,6 +216,15 @@ impl GovernanceCanisterWrapper {
             .await?;
         let node_providers = response.node_providers.into_iter().map(PbNodeProvider::from).collect();
         Ok(node_providers)
+    }
+
+    pub async fn list_node_provider_rewards(&self, date_filter: Option<DateRangeFilter>) -> anyhow::Result<Vec<MonthlyNodeProviderRewards>> {
+        let response = self
+            .query::<ListNodeProviderRewardsResponse>("list_node_provider_rewards", candid::encode_one(ListNodeProviderRewardsRequest{
+                date_filter,
+            })?)
+            .await?;
+        Ok(response.rewards)
     }
 
     async fn query<T>(&self, method_name: &str, args: Vec<u8>) -> anyhow::Result<T>
