@@ -82,7 +82,7 @@ export const idlFactory = ({ IDL }) => {
     'get_node_provider_rewards_calculation' : IDL.Func(
         [GetNodeProviderRewardsCalculationRequest],
         [GetNodeProviderRewardsCalculationResponse],
-        [],
+        ['query'],
       ),
     'get_node_providers_monthly_xdr_rewards' : IDL.Func(
         [GetNodeProvidersMonthlyXdrRewardsRequest],

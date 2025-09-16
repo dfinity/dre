@@ -53,23 +53,6 @@ fn post_upgrade() {
 }
 
 fn schedule_timers() {
-    REWARDABLE_NODES_CACHE.with(|cache| {
-        let first_reg = cache.borrow().first_key_value().unwrap().0.registry_version;
-        let first_key_remove = RewardableNodesKey {
-            registry_version: first_reg,
-            provider_id: None
-        };
-        let last_key_remove = RewardableNodesKey {
-            registry_version: first_reg,
-            provider_id: Some(MAX_PRINCIPAL_ID)
-        };
-        let keys = cache.borrow().range(first_key_remove..=last_key_remove)
-            .map(|x| x.0).collect_vec();
-
-        for key_remove in keys {
-            cache.borrow_mut().remove(&key_remove);
-        }
-    });
     DailySyncTask::new(&CANISTER, &METRICS_REGISTRY).schedule(&METRICS_REGISTRY);
 }
 
@@ -93,7 +76,7 @@ async fn get_node_providers_rewards(
     NodeRewardsCanister::get_node_providers_rewards(&CANISTER, request)
 }
 
-#[update]
+#[query]
 fn get_node_provider_rewards_calculation(
     request: GetNodeProviderRewardsCalculationRequest,
 ) -> GetNodeProviderRewardsCalculationResponse {

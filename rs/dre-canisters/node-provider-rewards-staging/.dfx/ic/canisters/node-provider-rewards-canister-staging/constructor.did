@@ -80,7 +80,7 @@ type NodeStatus = variant {
 service : () -> {
   get_node_provider_rewards_calculation : (
       GetNodeProviderRewardsCalculationRequest,
-    ) -> (GetNodeProviderRewardsCalculationResponse);
+    ) -> (GetNodeProviderRewardsCalculationResponse) query;
   get_node_providers_monthly_xdr_rewards : (
       GetNodeProvidersMonthlyXdrRewardsRequest,
     ) -> (GetNodeProvidersMonthlyXdrRewardsResponse);
