@@ -22,7 +22,6 @@ use crate::exe::impl_executable_command_for_enums;
 use clap::Parser;
 use clap::{Args, CommandFactory};
 use clap_complete::{generate, Shell};
-use crate::commands::node_rewards::NodeRewards;
 
 #[derive(Parser, Debug)]
 #[clap(version = env!("CARGO_PKG_VERSION"), about, author)]
@@ -34,7 +33,7 @@ pub struct MainCommand {
     pub subcommands: Subcommands,
 }
 
-impl_executable_command_for_enums! { MainCommand, DerToPrincipal, Network, Subnet, Get, Propose, UpdateUnassignedNodes, Version, NodeMetrics, NodeRewards, HostOs, Nodes, ApiBoundaryNodes, Vote, Registry, Firewall, Upgrade, Proposals, Completions, Qualify, UpdateDefaultSubnets, Neuron, Governance }
+impl_executable_command_for_enums! { MainCommand, DerToPrincipal, Network, Subnet, Get, Propose, UpdateUnassignedNodes, Version, NodeMetrics, HostOs, Nodes, ApiBoundaryNodes, Vote, Registry, Firewall, Upgrade, Proposals, Completions, Qualify, UpdateDefaultSubnets, Neuron, Governance }
 
 #[derive(Args, Debug)]
 pub struct Completions {
