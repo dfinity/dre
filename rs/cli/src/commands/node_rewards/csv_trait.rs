@@ -1,36 +1,75 @@
 use anyhow::Result;
 use csv::Writer;
-use ic_node_rewards_canister_api::provider_rewards_calculation::{DayUtc, NodeProviderRewardsDaily};
-use ic_types::PrincipalId;
 use log::info;
-use rewards_calculation::types::DayUtc as RewardsDayUtc;
 use rust_decimal::prelude::ToPrimitive;
 use rust_decimal::Decimal;
 use std::{collections::BTreeMap, fs};
+use ic_base_types::PrincipalId;
+use rewards_calculation::performance_based_algorithm::results::NodeProviderRewards;
+use rewards_calculation::types::DayUtc;
 
 /// Trait for generating CSV files from node rewards data
 pub trait CsvGenerator {
-    /// Generate CSV files for the given daily rewards data
-    async fn generate_csv_files(&self, daily_rewards: &[NodeProviderRewardsDaily], output_dir: &str) -> Result<()> {
-        // Create output directory
-        fs::create_dir_all(output_dir).unwrap();
-        info!("Created output directory: {}", output_dir);
+    /// Generate CSV files split by provider
+    async fn generate_csv_files_by_provider(&self, provider_data: &[(PrincipalId, Vec<NodeProviderRewards>)], output_dir: &str) -> Result<()> {
+        // Create rewards directory with start_day_to_end_day format
+        let rewards_dir = self.create_rewards_directory(
+            output_dir,
+            &provider_data.iter().flat_map(|(_, rewards)| rewards.clone()).collect::<Vec<_>>(),
+        )?;
+        info!("Created rewards directory: {}", rewards_dir);
 
-        // Generate CSV files
-        self.create_base_rewards_csv(output_dir, daily_rewards)?;
-        self.create_base_rewards_type3_csv(output_dir, daily_rewards)?;
-        self.create_rewards_summary_csv(output_dir, daily_rewards)?;
-        self.create_node_metrics_csv(output_dir, daily_rewards)?;
+        // Generate CSV files for each provider separately
+        for (provider_id, daily_rewards) in provider_data {
+            let provider_dir = format!("{}/{}", rewards_dir, provider_id);
+            fs::create_dir_all(&provider_dir).unwrap();
+            info!("Created provider directory: {}", provider_dir);
+
+            self.create_base_rewards_csv(&provider_dir, daily_rewards)?;
+            self.create_base_rewards_type3_csv(&provider_dir, daily_rewards)?;
+            self.create_rewards_summary_csv(&provider_dir, daily_rewards)?;
+            self.create_node_metrics_csv(&provider_dir, daily_rewards)?;
+        }
 
         Ok(())
     }
 
+    /// Create rewards directory with start_day_to_end_day format
+    fn create_rewards_directory(&self, output_dir: &str, daily_rewards: &[NodeProviderRewards]) -> Result<String> {
+        // Get the date range from daily rewards
+        let (start_day, end_day) = self.get_date_range(daily_rewards);
+
+        // Create directory name in format: rewards_start_day_to_end_day
+        let dir_name = format!("rewards_{}_to_{}", start_day, end_day);
+        let rewards_dir = format!("{}/{}", output_dir, dir_name);
+
+        // Create the directory
+        fs::create_dir_all(&rewards_dir).unwrap();
+
+        Ok(rewards_dir)
+    }
+
+    /// Get the date range from daily rewards
+    fn get_date_range(&self, daily_rewards: &[NodeProviderRewards]) -> (String, String) {
+        if daily_rewards.is_empty() {
+            return ("unknown".to_string(), "unknown".to_string());
+        }
+
+        let mut days: Vec<DayUtc> = daily_rewards
+            .iter()
+            .filter_map(|reward| reward.day_utc.as_ref().map(|day| RCDayUtc::from_nanos(day.value.unwrap())))
+            .collect();
+
+        days.sort();
+
+        let start_day = days.first().unwrap().to_string();
+        let end_day = days.last().unwrap().to_string();
+
+        (start_day, end_day)
+    }
+
     /// Convert daily rewards to CSV format
-    async fn convert_daily_rewards_to_csv(
-        &self,
-        daily_rewards: &[NodeProviderRewardsDaily],
-        provider_id: PrincipalId,
-    ) -> Result<String> {
+    async fn convert_daily_rewards_to_csv(&self, daily_rewards: &[NodeProviderRewards], provider_id: PrincipalId) -> Result<String> {
         let mut csv_data = "Day,Provider ID,XDRPermyriad Rewards,Node Count,Avg Rewards XDRPermyriad,Avg Coefficient %\n".to_string();
 
         // CSV rows
@@ -82,7 +121,7 @@ pub trait CsvGenerator {
     }
 
     /// Create base rewards CSV file
-    fn create_base_rewards_csv(&self, output_dir: &str, daily_rewards: &[NodeProviderRewardsDaily]) -> Result<()> {
+    fn create_base_rewards_csv(&self, output_dir: &str, daily_rewards: &[NodeProviderRewards]) -> Result<()> {
         let filename = format!("{}/base_rewards.csv", output_dir);
 
         let mut wtr = Writer::from_path(&filename).unwrap();
@@ -116,7 +155,7 @@ pub trait CsvGenerator {
     }
 
     /// Create base rewards type3 CSV file
-    fn create_base_rewards_type3_csv(&self, output_dir: &str, daily_rewards: &[NodeProviderRewardsDaily]) -> Result<()> {
+    fn create_base_rewards_type3_csv(&self, output_dir: &str, daily_rewards: &[NodeProviderRewards]) -> Result<()> {
         let filename = format!("{}/base_rewards_type3.csv", output_dir);
 
         let mut wtr = Writer::from_path(&filename).unwrap();
@@ -162,7 +201,7 @@ pub trait CsvGenerator {
     }
 
     /// Create rewards summary CSV file
-    fn create_rewards_summary_csv(&self, output_dir: &str, daily_rewards: &[NodeProviderRewardsDaily]) -> Result<()> {
+    fn create_rewards_summary_csv(&self, output_dir: &str, daily_rewards: &[NodeProviderRewards]) -> Result<()> {
         let filename = format!("{}/rewards_summary.csv", output_dir);
 
         let mut wtr = Writer::from_path(&filename).unwrap();
@@ -210,7 +249,7 @@ pub trait CsvGenerator {
     }
 
     /// Create node metrics CSV file
-    fn create_node_metrics_csv(&self, output_dir: &str, daily_rewards: &[NodeProviderRewardsDaily]) -> Result<()> {
+    fn create_node_metrics_csv(&self, output_dir: &str, daily_rewards: &[NodeProviderRewards]) -> Result<()> {
         // Collect all unique nodes across all days
         let mut nodes_data: BTreeMap<String, Vec<(RewardsDayUtc, String, String, String, String, Decimal)>> = BTreeMap::new();
 
