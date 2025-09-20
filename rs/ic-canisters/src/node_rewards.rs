@@ -1,8 +1,10 @@
 use std::str::FromStr;
 
-use candid::Principal;
-use ic_node_rewards_canister_api::provider_rewards_calculation::{GetNodeProviderRewardsCalculationRequest, GetNodeProviderRewardsCalculationResponse, DailyResults, DayUtc};
 use crate::IcAgentCanisterClient;
+use candid::Principal;
+use ic_node_rewards_canister_api::provider_rewards_calculation::{
+    DailyResults, DayUtc, GetNodeProviderRewardsCalculationRequest, GetNodeProviderRewardsCalculationResponse,
+};
 
 const NODE_METRICS_CANISTER: &str = "uuew5-iiaaa-aaaaa-qbx4q-cai";
 
@@ -27,7 +29,7 @@ impl NodeRewardsCanisterWrapper {
                 &Principal::from_str(NODE_METRICS_CANISTER).map_err(anyhow::Error::from)?,
                 "get_node_provider_rewards_calculation",
                 candid::encode_one(GetNodeProviderRewardsCalculationRequest {
-                    day_timestamp_nanos: day.value.unwrap()
+                    day_timestamp_nanos: day.value.unwrap(),
                 })?,
             )
             .await?

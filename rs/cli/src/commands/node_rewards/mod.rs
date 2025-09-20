@@ -1,4 +1,4 @@
-use std::collections::BTreeMap;
+use crate::commands::node_rewards::csv_generator::CsvGenerator;
 use crate::{auth::AuthRequirement, exe::args::GlobalArgs, exe::ExecutableCommand};
 use clap::Args;
 use futures_util::future::join_all;
@@ -9,13 +9,13 @@ use log::info;
 use rewards_calculation::performance_based_algorithm::results::{DailyResults, NodeProviderRewards};
 use rewards_calculation::types::DayUtc;
 use rust_decimal::Decimal;
+use std::collections::BTreeMap;
 use tabled::{
     settings::{object::Rows, Alignment, Modify, Style, Width},
     Table, Tabled,
 };
-use crate::commands::node_rewards::csv_trait::CsvGenerator;
 
-mod csv_trait;
+mod csv_generator;
 #[derive(Tabled)]
 struct ProviderComparison {
     #[tabled(rename = "Provider")]
@@ -38,9 +38,10 @@ struct ProviderData {
     governance_icp: Decimal,
     nrc_xdr_permyriad: Decimal,
     governance_xdr_permyriad: Decimal,
-    difference: Decimal,
+    difference_icp: Decimal,
+    difference_xdr_permyriad: Decimal,
     underperforming_nodes: Vec<String>,
-    daily_rewards: Vec<NodeProviderRewards>,
+    daily_rewards: Vec<(DayUtc, NodeProviderRewards)>,
 }
 
 #[derive(Args, Debug)]
@@ -81,18 +82,25 @@ impl NodeRewards {
         let node_rewards_client_ref = &node_rewards_client;
         println!("Fetching node rewards for all providers from NRC from {} to {}...", start_day, end_day);
 
-        let responses: Vec<anyhow::Result<DailyResults>> = join_all(start_day.days_until(&end_day).unwrap().into_iter().map(|day| async move {
-            node_rewards_client_ref.get_rewards_daily(&day.into()).await.map( |result| result.into())
-        })).await;
+        // Collect days so we can preserve the association day -> response
+        let days: Vec<DayUtc> = start_day.days_until(&end_day).unwrap().into_iter().collect();
+
+        let responses: Vec<anyhow::Result<DailyResults>> = join_all(days.iter().map(|day| async move {
+            node_rewards_client_ref
+                .get_rewards_daily(&(*day).into())
+                .await
+                .map(|result| result.into())
+        }))
+        .await;
 
         let mut provider_results = BTreeMap::new();
 
-        for response in responses {
+        for (day, response) in days.into_iter().zip(responses.into_iter()) {
             match response {
                 Ok(daily_results) => {
-                    for (provider_id, daily_rewards) in daily_results.provider_results {
+                    for (provider_id, provider_rewards) in daily_results.provider_results {
                         let rewards = provider_results.entry(provider_id).or_insert_with(Vec::new);
-                        rewards.push(daily_rewards);
+                        rewards.push((day, provider_rewards));
                     }
                 }
                 Err(e) => {
@@ -103,19 +111,15 @@ impl NodeRewards {
 
         let mut provider_daily_data = Vec::new();
 
-
         for (provider_id, daily_rewards) in provider_results {
-            let nrc_xdr_permyriad = daily_rewards
-                .iter()
-                .cloned()
-                .map(|reward| reward.rewards_total)
-                .sum();
+            let nrc_xdr_permyriad: Decimal = daily_rewards.iter().map(|(_, reward)| reward.rewards_total).sum();
             let nrc_icp = nrc_xdr_permyriad / xdr_permyriad_per_icp;
-            let principal: PrincipalId = PrincipalId::from(provider_id.0); 
+            let principal: PrincipalId = provider_id.to_string().parse().unwrap();
 
             let governance_icp = Decimal::from(gov_rewards_map.remove(&principal).unwrap()) / Decimal::from(100_000_000); // Convert e8s to ICP
             let governance_xdr_permyriad = governance_icp * xdr_permyriad_per_icp; // Convert ICP to XDRPermyriad
-            let difference = nrc_icp - governance_icp;
+            let difference_icp = nrc_icp - governance_icp;
+            let difference_xdr_permyriad = nrc_xdr_permyriad - governance_xdr_permyriad;
             let underperforming_nodes = self.collect_underperforming_nodes(&daily_rewards);
 
             provider_daily_data.push(ProviderData {
@@ -124,21 +128,22 @@ impl NodeRewards {
                 nrc_icp,
                 governance_icp,
                 governance_xdr_permyriad,
-                difference,
+                difference_icp,
+                difference_xdr_permyriad,
                 underperforming_nodes,
                 daily_rewards,
             });
         }
 
-        // Sort by decreasing percentage difference
+        // Sort by decreasing percentage difference (always relative to NRC, in ICP)
         provider_daily_data.sort_by(|a, b| {
-            let a_percent = if a.governance_icp > Decimal::ZERO {
-                a.difference / a.governance_icp * Decimal::from(100)
+            let a_percent = if a.nrc_icp > Decimal::ZERO {
+                a.difference_icp / a.nrc_icp * Decimal::from(100)
             } else {
                 Decimal::ZERO
             };
-            let b_percent = if b.governance_icp > Decimal::ZERO {
-                b.difference / b.governance_icp * Decimal::from(100)
+            let b_percent = if b.nrc_icp > Decimal::ZERO {
+                b.difference_icp / b.nrc_icp * Decimal::from(100)
             } else {
                 Decimal::ZERO
             };
@@ -149,22 +154,15 @@ impl NodeRewards {
     }
 
     /// Collect underperforming nodes for a provider
-    fn collect_underperforming_nodes(&self, daily_rewards: &[NodeProviderRewards]) -> Vec<String> {
+    fn collect_underperforming_nodes(&self, daily_rewards: &[(DayUtc, NodeProviderRewards)]) -> Vec<String> {
         let mut underperforming_nodes = Vec::new();
-        for daily_reward in daily_rewards {
-            
-            daily_reward.
-            if let Some(node_provider_rewards) = &daily_reward {
-                let node_results = &node_provider_rewards.nodes_results;
-                for node_result in node_results {
-                    let multiplier = Decimal::try_from(node_result.performance_multiplier_percent.as_ref().unwrap().clone()).unwrap();
-                    if multiplier < Decimal::from(1) {
-                        if let Some(node_id) = &node_result.node_id {
-                            let node_id_str = node_id.to_string();
-                            let node_prefix = node_id_str.split('-').next().unwrap_or(&node_id_str);
-                            underperforming_nodes.push(node_prefix.to_string());
-                        }
-                    }
+        for (_, rewards) in daily_rewards {
+            for node_result in &rewards.nodes_results {
+                let multiplier = node_result.performance_multiplier;
+                if multiplier < Decimal::from(1) {
+                    let node_id_str = node_result.node_id.to_string();
+                    let node_prefix = node_id_str.split('-').next().unwrap_or(&node_id_str).to_string();
+                    underperforming_nodes.push(node_prefix);
                 }
             }
         }
@@ -181,14 +179,14 @@ impl NodeRewards {
             let provider_id_str = provider.provider_id.to_string();
             let provider_prefix = Self::get_provider_prefix(&provider_id_str);
 
-            // Calculate percentage difference
-            let base_value = if provider.difference >= Decimal::ZERO {
-                provider.governance_icp
+            // Calculate percentage difference always relative to NRC, but display in selected unit
+            let (diff_value, base_value) = if xdr_permyriad {
+                (provider.difference_xdr_permyriad, provider.nrc_xdr_permyriad)
             } else {
-                provider.nrc_icp
+                (provider.difference_icp, provider.nrc_icp)
             };
             let percent_diff = if base_value > Decimal::ZERO {
-                provider.difference / base_value * Decimal::from(100)
+                diff_value / base_value * Decimal::from(100)
             } else {
                 Decimal::ZERO
             };
@@ -208,13 +206,13 @@ impl NodeRewards {
                 (
                     format!("{:.0}", provider.nrc_xdr_permyriad),
                     format!("{:.0}", provider.governance_xdr_permyriad),
-                    format!("{:.0}", provider.difference),
+                    format!("{:.0}", provider.difference_xdr_permyriad),
                 )
             } else {
                 (
                     format!("{:.0}", provider.nrc_icp),
                     format!("{:.0}", provider.governance_icp),
-                    format!("{:.0}", provider.difference),
+                    format!("{:.0}", provider.difference_icp),
                 )
             };
 
@@ -271,7 +269,7 @@ impl ExecutableCommand for NodeRewards {
 
         if let Some(ref output_dir) = self.csv_output_path {
             // Prepare provider data for CSV generation
-            let provider_csv_data: Vec<(PrincipalId, Vec<NodeProviderRewards>)> = provider_data
+            let provider_csv_data: Vec<(PrincipalId, Vec<(DayUtc, NodeProviderRewards)>)> = provider_data
                 .iter()
                 .map(|provider| (provider.provider_id, provider.daily_rewards.clone()))
                 .collect();
