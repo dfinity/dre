@@ -26,7 +26,6 @@ pub trait CsvGenerator {
         for (provider_id, daily_rewards) in provider_data {
             let provider_dir = format!("{}/{}", rewards_dir, provider_id);
             fs::create_dir_all(&provider_dir).unwrap();
-            info!("Created provider directory: {}", provider_dir);
 
             self.create_base_rewards_csv(&provider_dir, daily_rewards)?;
             self.create_base_rewards_type3_csv(&provider_dir, daily_rewards)?;
