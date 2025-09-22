@@ -77,10 +77,10 @@ pub trait CsvGenerator {
         for (day, rewards) in daily_rewards {
             let day_str = day.to_string();
             for base_reward in &rewards.base_rewards {
-                wtr.write_record(&[
+                wtr.write_record([
                     &day_str,
-                    &base_reward.monthly.to_string(),
-                    &base_reward.daily.to_string(),
+                    &base_reward.monthly.trunc().to_string(),
+                    &base_reward.daily.trunc().to_string(),
                     &base_reward.node_reward_type.to_string(),
                     &base_reward.region,
                 ])
@@ -112,11 +112,11 @@ pub trait CsvGenerator {
             for base_reward_type3 in &rewards.base_rewards_type3 {
                 wtr.write_record(&[
                     &day_str,
-                    &base_reward_type3.value.to_string(),
+                    &base_reward_type3.value.trunc().to_string(),
                     &base_reward_type3.region,
                     &base_reward_type3.nodes_count.to_string(),
-                    &base_reward_type3.avg_rewards.to_string(),
-                    &base_reward_type3.avg_coefficient.to_string(),
+                    &base_reward_type3.avg_rewards.trunc().to_string(),
+                    &base_reward_type3.avg_coefficient.trunc().to_string(),
                 ])
                 .unwrap();
             }
@@ -135,6 +135,7 @@ pub trait CsvGenerator {
             "day_utc",
             "rewards_total_xdr_permyriad",
             "nodes_in_registry",
+            "assigned_nodes",
             "underperforming_nodes_count",
             "underperforming_nodes",
         ])
@@ -144,6 +145,19 @@ pub trait CsvGenerator {
             let day_str = day.to_string();
             let total_rewards = rewards.rewards_total;
             let nodes_in_registry = rewards.nodes_results.len();
+
+            // Count assigned nodes
+            let assigned_count = rewards
+                .nodes_results
+                .iter()
+                .filter(|node_result| {
+                    matches!(
+                        node_result.node_status,
+                        rewards_calculation::performance_based_algorithm::results::NodeStatus::Assigned { .. }
+                    )
+                })
+                .count();
+
             let mut underperf_prefixes: Vec<String> = rewards
                 .nodes_results
                 .iter()
@@ -160,8 +174,9 @@ pub trait CsvGenerator {
 
             wtr.write_record(&[
                 &day_str,
-                &total_rewards.to_string(),
+                &total_rewards.trunc().to_string(),
                 &nodes_in_registry.to_string(),
+                &assigned_count.to_string(),
                 &underperforming_nodes_count.to_string(),
                 &underperforming_nodes,
             ])
@@ -277,10 +292,10 @@ pub trait CsvGenerator {
                         &node_result.region,
                         &node_result.dc_id,
                         &status_str,
-                        &node_result.performance_multiplier.to_string(),
-                        &node_result.rewards_reduction.to_string(),
-                        &node_result.base_rewards.to_string(),
-                        &node_result.adjusted_rewards.to_string(),
+                        &node_result.performance_multiplier.trunc().to_string(),
+                        &node_result.rewards_reduction.trunc().to_string(),
+                        &node_result.base_rewards.trunc().to_string(),
+                        &node_result.adjusted_rewards.trunc().to_string(),
                         &subnet_assigned,
                         &subnet_assigned_fr,
                         &num_blocks_proposed,
@@ -298,10 +313,10 @@ pub trait CsvGenerator {
                     node_result.region.clone(),
                     node_result.dc_id.clone(),
                     status_str,
-                    node_result.performance_multiplier.to_string(),
-                    node_result.rewards_reduction.to_string(),
-                    node_result.base_rewards.to_string(),
-                    node_result.adjusted_rewards.to_string(),
+                    node_result.performance_multiplier.trunc().to_string(),
+                    node_result.rewards_reduction.trunc().to_string(),
+                    node_result.base_rewards.trunc().to_string(),
+                    node_result.adjusted_rewards.trunc().to_string(),
                     subnet_assigned,
                     subnet_assigned_fr,
                     num_blocks_proposed,

@@ -1,9 +1,8 @@
 use crate::commands::node_rewards::csv_generator::CsvGenerator;
 use crate::{auth::AuthRequirement, exe::args::GlobalArgs, exe::ExecutableCommand};
-use clap::Args;
+use clap::{Args, Subcommand};
 use futures_util::future::join_all;
 use ic_base_types::PrincipalId;
-use ic_canisters::governance::GovernanceCanisterWrapper;
 use ic_canisters::node_rewards::NodeRewardsCanisterWrapper;
 use log::info;
 use rewards_calculation::performance_based_algorithm::results::{DailyResults, NodeProviderRewards};
@@ -16,6 +15,33 @@ use tabled::{
 };
 
 mod csv_generator;
+mod ongoing;
+mod past_rewards;
+
+#[derive(Subcommand, Debug, Clone)]
+pub enum NodeRewardsMode {
+    /// Show ongoing rewards from the latest governance snapshot timestamp to yesterday
+    Ongoing {
+        /// If set, write detailed CSVs to this directory
+        #[arg(long)]
+        csv_detailed_output_path: Option<String>,
+
+        /// Filter to a single provider (full principal or provider prefix)
+        #[arg(long)]
+        provider_id: Option<String>,
+    },
+    /// Show past rewards for a given month (YYYY-MM) and compare with governance
+    PastRewards {
+        /// Month in format YYYY-MM
+        month: String,
+        /// If set, write detailed CSVs to this directory
+        #[arg(long)]
+        csv_detailed_output_path: Option<String>,
+        /// Filter to a single provider (full principal or provider prefix)
+        #[arg(long)]
+        provider_id: Option<String>,
+    },
+}
 #[derive(Tabled)]
 struct ProviderComparison {
     #[tabled(rename = "Provider")]
@@ -35,10 +61,8 @@ struct ProviderComparison {
 struct ProviderData {
     provider_id: PrincipalId,
     nrc_icp: Decimal,
-    governance_icp: Decimal,
     nrc_xdr_permyriad: Decimal,
     governance_xdr_permyriad: Decimal,
-    difference_icp: Decimal,
     difference_xdr_permyriad: Decimal,
     underperforming_nodes: Vec<String>,
     daily_rewards: Vec<(DayUtc, NodeProviderRewards)>,
@@ -46,111 +70,15 @@ struct ProviderData {
 
 #[derive(Args, Debug)]
 pub struct NodeRewards {
-    /// Optional path to generate CSV files. If not provided, only console output will be shown.
-    #[arg(long)]
-    pub csv_output_path: Option<String>,
-
-    /// Display results in XDRPermyriad instead of ICP
-    #[arg(long)]
-    pub xdr_permyriad: bool,
+    /// Subcommand mode: ongoing or past-rewards <month>
+    #[command(subcommand)]
+    pub mode: NodeRewardsMode,
 }
 
 impl NodeRewards {
     /// Get provider prefix from full provider ID
     fn get_provider_prefix(provider_id: &str) -> &str {
         provider_id.split('-').next().unwrap_or(provider_id)
-    }
-
-    async fn _execute(&self, canister_agent: ic_canisters::IcAgentCanisterClient) -> anyhow::Result<Vec<ProviderData>, anyhow::Error> {
-        let node_rewards_client: NodeRewardsCanisterWrapper = canister_agent.clone().into();
-        let governance_client: GovernanceCanisterWrapper = canister_agent.into();
-
-        let mut gov_rewards = governance_client.list_node_provider_rewards(None).await?.into_iter();
-        let last_rewards = gov_rewards.next().unwrap();
-        let mut gov_rewards_map = last_rewards
-            .rewards
-            .into_iter()
-            .map(|rewards| (rewards.node_provider.unwrap().id.unwrap(), rewards.amount_e8s))
-            .collect::<BTreeMap<_, _>>();
-
-        // Fetch node rewards for all providers from NRC concurrently
-        let month_before_ts = gov_rewards.next().unwrap().timestamp;
-        let start_day = DayUtc::from_secs(month_before_ts);
-        let end_day = DayUtc::from_secs(last_rewards.timestamp).previous_day();
-
-        let xdr_permyriad_per_icp: Decimal = last_rewards.xdr_conversion_rate.unwrap().xdr_permyriad_per_icp.unwrap().into();
-        let node_rewards_client_ref = &node_rewards_client;
-        println!("Fetching node rewards for all providers from NRC from {} to {}...", start_day, end_day);
-
-        // Collect days so we can preserve the association day -> response
-        let days: Vec<DayUtc> = start_day.days_until(&end_day).unwrap().into_iter().collect();
-
-        let responses: Vec<anyhow::Result<DailyResults>> = join_all(days.iter().map(|day| async move {
-            node_rewards_client_ref
-                .get_rewards_daily(&(*day).into())
-                .await
-                .map(|result| result.into())
-        }))
-        .await;
-
-        let mut provider_results = BTreeMap::new();
-
-        for (day, response) in days.into_iter().zip(responses.into_iter()) {
-            match response {
-                Ok(daily_results) => {
-                    for (provider_id, provider_rewards) in daily_results.provider_results {
-                        let rewards = provider_results.entry(provider_id).or_insert_with(Vec::new);
-                        rewards.push((day, provider_rewards));
-                    }
-                }
-                Err(e) => {
-                    println!("Error fetching node rewards for provider: {}", e);
-                }
-            }
-        }
-
-        let mut provider_daily_data = Vec::new();
-
-        for (provider_id, daily_rewards) in provider_results {
-            let nrc_xdr_permyriad: Decimal = daily_rewards.iter().map(|(_, reward)| reward.rewards_total).sum();
-            let nrc_icp = nrc_xdr_permyriad / xdr_permyriad_per_icp;
-            let principal: PrincipalId = provider_id.to_string().parse().unwrap();
-
-            let governance_icp = Decimal::from(gov_rewards_map.remove(&principal).unwrap()) / Decimal::from(100_000_000); // Convert e8s to ICP
-            let governance_xdr_permyriad = governance_icp * xdr_permyriad_per_icp; // Convert ICP to XDRPermyriad
-            let difference_icp = nrc_icp - governance_icp;
-            let difference_xdr_permyriad = nrc_xdr_permyriad - governance_xdr_permyriad;
-            let underperforming_nodes = self.collect_underperforming_nodes(&daily_rewards);
-
-            provider_daily_data.push(ProviderData {
-                provider_id: principal,
-                nrc_xdr_permyriad,
-                nrc_icp,
-                governance_icp,
-                governance_xdr_permyriad,
-                difference_icp,
-                difference_xdr_permyriad,
-                underperforming_nodes,
-                daily_rewards,
-            });
-        }
-
-        // Sort by decreasing percentage difference (always relative to NRC, in ICP)
-        provider_daily_data.sort_by(|a, b| {
-            let a_percent = if a.nrc_icp > Decimal::ZERO {
-                a.difference_icp / a.nrc_icp * Decimal::from(100)
-            } else {
-                Decimal::ZERO
-            };
-            let b_percent = if b.nrc_icp > Decimal::ZERO {
-                b.difference_icp / b.nrc_icp * Decimal::from(100)
-            } else {
-                Decimal::ZERO
-            };
-            b_percent.partial_cmp(&a_percent).unwrap_or(std::cmp::Ordering::Equal)
-        });
-
-        Ok(provider_daily_data)
     }
 
     /// Collect underperforming nodes for a provider
@@ -172,19 +100,15 @@ impl NodeRewards {
     }
 
     /// Display the comparison table
-    async fn display_comparison_table(&self, provider_data: &[ProviderData], xdr_permyriad: bool) -> anyhow::Result<()> {
+    async fn display_comparison_table(&self, provider_data: &[ProviderData]) -> anyhow::Result<()> {
         // Create table data
         let mut table_data = Vec::new();
         for provider in provider_data {
             let provider_id_str = provider.provider_id.to_string();
             let provider_prefix = Self::get_provider_prefix(&provider_id_str);
 
-            // Calculate percentage difference always relative to NRC, but display in selected unit
-            let (diff_value, base_value) = if xdr_permyriad {
-                (provider.difference_xdr_permyriad, provider.nrc_xdr_permyriad)
-            } else {
-                (provider.difference_icp, provider.nrc_icp)
-            };
+            // Calculate percentage difference always relative to NRC, always display in XDRPermyriad
+            let (diff_value, base_value) = (provider.difference_xdr_permyriad, provider.nrc_xdr_permyriad);
             let percent_diff = if base_value > Decimal::ZERO {
                 diff_value / base_value * Decimal::from(100)
             } else {
@@ -202,19 +126,12 @@ impl NodeRewards {
                 }
             };
 
-            let (nrc_display, governance_display, difference_display) = if xdr_permyriad {
-                (
-                    format!("{:.0}", provider.nrc_xdr_permyriad),
-                    format!("{:.0}", provider.governance_xdr_permyriad),
-                    format!("{:.0}", provider.difference_xdr_permyriad),
-                )
-            } else {
-                (
-                    format!("{:.0}", provider.nrc_icp),
-                    format!("{:.0}", provider.governance_icp),
-                    format!("{:.0}", provider.difference_icp),
-                )
-            };
+            // Always display in XDRPermyriad with truncated decimals
+            let (nrc_display, governance_display, difference_display) = (
+                format!("{:.0}", provider.nrc_xdr_permyriad),
+                format!("{:.0}", provider.governance_xdr_permyriad),
+                format!("{:.0}", provider.difference_xdr_permyriad),
+            );
 
             table_data.push(ProviderComparison {
                 provider: provider_prefix.to_string(),
@@ -227,13 +144,12 @@ impl NodeRewards {
         }
 
         // Create and display table
-        let unit_label = if xdr_permyriad { "XDRPermyriad" } else { "ICP" };
         println!("\n=== NODE REWARDS COMPARISON: NRC vs GOVERNANCE ===");
-        println!("Unit: {} | Sorted by decreasing percentage difference", unit_label);
+        println!("Unit: XDRPermyriad | Sorted by decreasing percentage difference");
         println!("\nLegend:");
-        println!("• NRC: Node Rewards Canister rewards");
-        println!("• Governance: Governance rewards from NNS");
-        println!("• Difference: NRC - Governance");
+        println!("• NRC: Node Rewards Canister rewards (XDRPermyriad)");
+        println!("• Governance: Governance rewards from NNS (XDRPermyriad)");
+        println!("• Difference: NRC - Governance (XDRPermyriad)");
         println!("• % Diff: (Difference / Base Value) × 100%");
         println!();
 
@@ -265,19 +181,224 @@ impl ExecutableCommand for NodeRewards {
         let (_, canister_agent) = ctx.create_ic_agent_canister_client().await?;
         info!("Started action...");
 
-        let provider_data = self._execute(canister_agent).await?;
+        // Run the selected subcommand
+        let mut provider_data = match &self.mode {
+            NodeRewardsMode::Ongoing { .. } => ongoing::run(canister_agent.clone(), self).await?,
+            NodeRewardsMode::PastRewards { month, .. } => past_rewards::run(canister_agent.clone(), self, month).await?,
+        };
 
-        if let Some(ref output_dir) = self.csv_output_path {
-            // Prepare provider data for CSV generation
+        // Resolve subcommand options
+        let (csv_path_opt, provider_filter_opt, show_comparison) = match &self.mode {
+            NodeRewardsMode::Ongoing {
+                csv_detailed_output_path: csv_detailed_output,
+                provider_id,
+            } => (csv_detailed_output.as_ref(), provider_id.as_ref(), false),
+            NodeRewardsMode::PastRewards {
+                csv_detailed_output_path: csv_detailed_output,
+                provider_id,
+                ..
+            } => (csv_detailed_output.as_ref(), provider_id.as_ref(), true),
+        };
+
+        // Apply provider filter if any (match full principal or provider prefix)
+        if let Some(filter) = provider_filter_opt {
+            provider_data.retain(|p| {
+                let full = p.provider_id.to_string();
+                let prefix = Self::get_provider_prefix(&full);
+                full == *filter || prefix == filter
+            });
+        }
+
+        if let Some(output_dir) = csv_path_opt {
             let provider_csv_data: Vec<(PrincipalId, Vec<(DayUtc, NodeProviderRewards)>)> = provider_data
                 .iter()
                 .map(|provider| (provider.provider_id, provider.daily_rewards.clone()))
                 .collect();
-
             self.generate_csv_files_by_provider(&provider_csv_data, output_dir).await?;
+        } else {
+            // Print rewards_summary-like view to console
+            self.print_rewards_summary_console(&provider_data)?;
         }
-        self.display_comparison_table(&provider_data, self.xdr_permyriad).await?;
 
+        if show_comparison {
+            self.display_comparison_table(&provider_data).await?;
+        }
+
+        Ok(())
+    }
+}
+
+// ================================================================================================
+// Shared data fetching and aggregation
+// ================================================================================================
+async fn fetch_and_aggregate(
+    node_rewards_client: &NodeRewardsCanisterWrapper,
+    start_day: DayUtc,
+    end_day: DayUtc,
+    xdr_permyriad_per_icp: Decimal,
+    mut gov_rewards_map: BTreeMap<PrincipalId, u64>,
+    collect_underperf: impl Fn(&[(DayUtc, NodeProviderRewards)]) -> Vec<String>,
+) -> anyhow::Result<Vec<ProviderData>> {
+    println!("Fetching node rewards for all providers from NRC from {} to {}...", start_day, end_day);
+
+    let days: Vec<DayUtc> = start_day.days_until(&end_day).unwrap().into_iter().collect();
+    let responses: Vec<anyhow::Result<DailyResults>> = join_all(
+        days.iter()
+            .map(|day| async move { node_rewards_client.get_rewards_daily(&(*day).into()).await.map(|result| result.into()) }),
+    )
+    .await;
+
+    let mut provider_results = BTreeMap::new();
+    for (day, response) in days.into_iter().zip(responses.into_iter()) {
+        match response {
+            Ok(daily_results) => {
+                for (provider_id, provider_rewards) in daily_results.provider_results {
+                    let rewards = provider_results.entry(provider_id).or_insert_with(Vec::new);
+                    rewards.push((day, provider_rewards));
+                }
+            }
+            Err(e) => {
+                println!("Error fetching node rewards for provider: {}", e);
+            }
+        }
+    }
+
+    let mut provider_daily_data = Vec::new();
+    for (provider_id, daily_rewards) in provider_results {
+        let nrc_xdr_permyriad: Decimal = daily_rewards.iter().map(|(_, reward)| reward.rewards_total).sum();
+        let nrc_icp = nrc_xdr_permyriad / xdr_permyriad_per_icp;
+        let principal: PrincipalId = provider_id.to_string().parse().unwrap();
+
+        let governance_icp = Decimal::from(gov_rewards_map.remove(&principal).unwrap_or(0u64)) / Decimal::from(100_000_000);
+        let governance_xdr_permyriad = governance_icp * xdr_permyriad_per_icp;
+        let difference_xdr_permyriad = nrc_xdr_permyriad - governance_xdr_permyriad;
+        let underperforming_nodes = collect_underperf(&daily_rewards);
+
+        provider_daily_data.push(ProviderData {
+            provider_id: principal,
+            nrc_xdr_permyriad,
+            nrc_icp,
+            governance_xdr_permyriad,
+            difference_xdr_permyriad,
+            underperforming_nodes,
+            daily_rewards,
+        });
+    }
+
+    provider_daily_data.sort_by(|a, b| {
+        let a_percent = if a.nrc_icp > Decimal::ZERO {
+            a.difference_xdr_permyriad / a.nrc_icp * Decimal::from(100)
+        } else {
+            Decimal::ZERO
+        };
+        let b_percent = if b.nrc_icp > Decimal::ZERO {
+            b.difference_xdr_permyriad / b.nrc_icp * Decimal::from(100)
+        } else {
+            Decimal::ZERO
+        };
+        b_percent.partial_cmp(&a_percent).unwrap_or(std::cmp::Ordering::Equal)
+    });
+
+    Ok(provider_daily_data)
+}
+
+impl NodeRewards {
+    fn print_rewards_summary_console(&self, provider_data: &[ProviderData]) -> anyhow::Result<()> {
+        use tabled::settings::{object::Rows, Alignment, Modify, Style, Width};
+        use tabled::{Table, Tabled};
+
+        #[derive(Tabled)]
+        struct DailyRewardSummary {
+            #[tabled(rename = "Day")]
+            day: String,
+            #[tabled(rename = "Rewards")]
+            rewards: String,
+            #[tabled(rename = "Nodes")]
+            nodes: usize,
+            #[tabled(rename = "Assigned")]
+            assigned_count: usize,
+            #[tabled(rename = "Underperf")]
+            underperf_count: usize,
+            #[tabled(rename = "Underperf Nodes")]
+            underperf_nodes: String,
+        }
+
+        println!("\n=== DAILY REWARDS SUMMARY ===");
+        println!("Unit: XDRPermyriad per day");
+        println!("\nLegend:");
+        println!("• Day: UTC day (YYYY-MM-DD)");
+        println!("• Rewards: NRC rewards for the provider on that day (XDRPermyriad)");
+        println!("• Nodes: Nodes found in registry on that day");
+        println!("• Assigned: Nodes assigned to a subnet on that day");
+        println!("• Underperf: Nodes with performance multiplier < 1 on that day");
+        println!("• Underperf Nodes: Comma-separated underperforming node IDs (prefixes)");
+        println!();
+
+        for provider in provider_data {
+            let provider_id_str = provider.provider_id.to_string();
+            let provider_prefix = Self::get_provider_prefix(&provider_id_str);
+            println!("\n=== Provider: {} ===", provider_prefix);
+
+            let mut table_data = Vec::new();
+            for (day, rewards) in &provider.daily_rewards {
+                let day_str = day.to_string();
+                let total_rewards = rewards.rewards_total.trunc();
+                let nodes_in_registry = rewards.nodes_results.len();
+
+                // Count assigned nodes
+                let assigned_count = rewards
+                    .nodes_results
+                    .iter()
+                    .filter(|node_result| {
+                        matches!(
+                            node_result.node_status,
+                            rewards_calculation::performance_based_algorithm::results::NodeStatus::Assigned { .. }
+                        )
+                    })
+                    .count();
+
+                let mut underperf_prefixes: Vec<String> = rewards
+                    .nodes_results
+                    .iter()
+                    .filter(|node_result| node_result.performance_multiplier < Decimal::from(1))
+                    .map(|node_result| {
+                        let node_id_str = node_result.node_id.to_string();
+                        node_id_str.split('-').next().unwrap_or(&node_id_str).to_string()
+                    })
+                    .collect();
+                underperf_prefixes.sort();
+                underperf_prefixes.dedup();
+                let underperforming_nodes_count = underperf_prefixes.len();
+                let underperforming_nodes = if underperf_prefixes.is_empty() {
+                    "None".to_string()
+                } else {
+                    let nodes_str = underperf_prefixes.join(", ");
+                    if nodes_str.len() > 30 {
+                        format!("{}...", &nodes_str[..27])
+                    } else {
+                        nodes_str
+                    }
+                };
+
+                table_data.push(DailyRewardSummary {
+                    day: day_str,
+                    rewards: total_rewards.to_string(),
+                    nodes: nodes_in_registry,
+                    assigned_count,
+                    underperf_count: underperforming_nodes_count,
+                    underperf_nodes: underperforming_nodes,
+                });
+            }
+
+            let mut table = Table::new(table_data);
+            table
+                .with(Style::ascii())
+                .with(Modify::new(Rows::new(0..1)).with(Alignment::center()))
+                .with(Modify::new(Rows::new(1..)).with(Alignment::left()))
+                .with(Width::wrap(100).keep_words(true));
+
+            println!("{}", table);
+        }
         Ok(())
     }
 }
