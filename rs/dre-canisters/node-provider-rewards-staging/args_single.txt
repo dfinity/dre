@@ -1,4 +1,4 @@
 (record {
     from_day_timestamp_nanos = 1752451200000000000;
-    to_day_timestamp_nanos = 1756712859000000000;
+    to_day_timestamp_nanos = 1752451200000000000;
 })

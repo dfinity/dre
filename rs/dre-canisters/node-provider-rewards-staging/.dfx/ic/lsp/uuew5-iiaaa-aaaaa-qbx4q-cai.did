@@ -8,18 +8,20 @@ type BaseRewardsType3 = record {
   region : opt text;
   value_xdr_permyriad : opt Decimal;
   nodes_count : opt nat64;
-  avg_coefficient_percent : opt Decimal;
+  avg_coefficient : opt Decimal;
   avg_rewards_xdr_permyriad : opt Decimal;
+};
+type DailyResults = record {
+  subnets_fr : vec record { principal; Decimal };
+  provider_results : vec record { principal; NodeProviderRewards };
 };
 type DayUtc = record { value : opt nat64 };
 type Decimal = record { human_readable : opt text };
 type GetNodeProviderRewardsCalculationRequest = record {
-  from_day_timestamp_nanos : nat64;
-  to_day_timestamp_nanos : nat64;
-  provider_id : principal;
+  day_timestamp_nanos : nat64;
 };
 type GetNodeProviderRewardsCalculationResponse = variant {
-  Ok : vec NodeProviderRewardsDaily;
+  Ok : DailyResults;
   Err : text;
 };
 type GetNodeProvidersMonthlyXdrRewardsRequest = record {
@@ -39,21 +41,17 @@ type GetNodeProvidersRewardsResponse = variant {
 };
 type NodeMetricsDaily = record {
   subnet_assigned : opt principal;
-  original_fr_percent : opt Decimal;
+  original_fr : opt Decimal;
   num_blocks_proposed : opt nat64;
-  subnet_assigned_fr_percent : opt Decimal;
-  relative_fr_percent : opt Decimal;
+  subnet_assigned_fr : opt Decimal;
   num_blocks_failed : opt nat64;
+  relative_fr : opt Decimal;
 };
 type NodeProviderRewards = record {
   rewards_total_xdr_permyriad : opt Decimal;
   nodes_results : vec NodeResults;
   base_rewards : vec BaseRewards;
   base_rewards_type3 : vec BaseRewardsType3;
-};
-type NodeProviderRewardsDaily = record {
-  node_provider_rewards : opt NodeProviderRewards;
-  day_utc : opt DayUtc;
 };
 type NodeProvidersMonthlyXdrRewards = record {
   registry_version : opt nat64;
@@ -64,17 +62,17 @@ type NodeProvidersRewards = record {
 };
 type NodeResults = record {
   region : opt text;
-  rewards_reduction_percent : opt Decimal;
+  performance_multiplier : opt Decimal;
   node_id : opt principal;
   node_status : opt NodeStatus;
   base_rewards_xdr_permyriad : opt Decimal;
   node_reward_type : opt text;
+  rewards_reduction : opt Decimal;
   adjusted_rewards_xdr_permyriad : opt Decimal;
-  performance_multiplier_percent : opt Decimal;
   dc_id : opt text;
 };
 type NodeStatus = variant {
-  Unassigned : record { extrapolated_fr_percent : opt Decimal };
+  Unassigned : record { extrapolated_fr : opt Decimal };
   Assigned : record { node_metrics : opt NodeMetricsDaily };
 };
 service : {

@@ -1,5 +1,3 @@
 (record {
-    provider_id = principal "bvcsg-3od6r-jnydw-eysln-aql7w-td5zn-ay5m6-sibd2-jzojt-anwag-mqe";
-    from_day_timestamp_nanos = 1752451200000000000;
-    to_day_timestamp_nanos = 1756712859000000000;
+    day_timestamp_nanos = 1752451200000000000;
 })

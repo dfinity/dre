@@ -18,19 +18,8 @@ ic-nervous-system-canisters = {  path = "../../../../../pietro.di.marco/Rustrove
 ic-node-rewards-canister = { path = "../../../../../pietro.di.marco/RustroverProjects/ic/rs/node_rewards/canister" }
 ic-node-rewards-canister-api = {  path = "../../../../../pietro.di.marco/RustroverProjects/ic/rs/node_rewards/canister/api" }
 ic-registry-canister-client = {  path = "../../../../../pietro.di.marco/RustroverProjects/ic/rs/registry/canister-client" }
-ic-nervous-system-timer-task = {  path = "../../../../../pietro.di.marco/RustroverProjects/ic/rs/nervous_system/timer_task" }
 
-candid = "0.10.14"
-itertools = "0.13.0"
-prost = "0.13"
-rust_decimal = "1.37.2"
-rust_decimal_macros = "1.37.1"
-serde = { version = "1.0", features = ["derive"] }
-tokio = { version = "1.46.1", features = ["full"] }
-mockall = "0.13.1"
+candid = "0.10.19"
+itertools = "0.14.0"
 ic-cdk = { version = "^0.18.7" }
 ic-cdk-timers = { version = "^0.12.2" }
-ic-cdk-macros = { version = "^0.18.7" }
-ic-stable-structures = "0.6.9"
-rewards-calculation-deprecated = { path = "node-provider-rewards/rewards-calculation-deprecated" }
-node-provider-rewards-api = { path = "node-provider-rewards/canister/api" }

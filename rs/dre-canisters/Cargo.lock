@@ -289,9 +289,9 @@ dependencies = [
 
 [[package]]
 name = "candid"
-version = "0.10.17"
+version = "0.10.19"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "eaac522d18020d5fbc8320ecb12a9b13b2137ae31133da2d42fa256a825507c4"
+checksum = "3ea81e16df186fae1979175058f05dfbfac6e2fdf3b161edcbdc440ef09232cf"
 dependencies = [
  "anyhow",
  "binread",
@@ -312,9 +312,9 @@ dependencies = [
 
 [[package]]
 name = "candid_derive"
-version = "0.10.17"
+version = "0.10.19"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8a1b4fddbd462182050989068d53604a91a3d0f117c3c8316c6818023df00add"
+checksum = "2e6d499625531c41f474e55160a40313b33d002262ddaae40cade71bcc3bc75a"
 dependencies = [
  "lazy_static",
  "proc-macro2",
@@ -1338,6 +1338,8 @@ dependencies = [
  "candid",
  "ic-base-types",
  "ic-nervous-system-proto",
+ "rewards-calculation",
+ "rust_decimal",
  "serde",
 ]
 
@@ -1621,6 +1623,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "itertools"
+version = "0.14.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "2b192c782037fadd9cfa75548310488aabdbf3d2da73885b31bd0abd03351285"
+dependencies = [
+ "either",
+]
+
+[[package]]
 name = "itoa"
 version = "1.0.15"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1775,12 +1786,12 @@ dependencies = [
  "candid",
  "getrandom 0.2.16",
  "ic-cdk",
+ "ic-cdk-timers",
  "ic-nervous-system-canisters",
- "ic-nervous-system-timer-task",
  "ic-node-rewards-canister",
  "ic-node-rewards-canister-api",
  "ic-registry-canister-client",
- "itertools 0.13.0",
+ "itertools 0.14.0",
 ]
 
 [[package]]
@@ -2225,6 +2236,7 @@ dependencies = [
  "chrono",
  "ic-base-types",
  "ic-protobuf",
+ "ic-types",
  "itertools 0.12.1",
  "maplit",
  "rust_decimal",
