@@ -12,8 +12,8 @@ RUN apt-get update && \
     libssl-dev zlib1g-dev libbz2-dev libreadline-dev libsqlite3-dev libffi-dev liblzma-dev libncurses5-dev libncursesw5-dev \
     xz-utils tk-dev libffi-dev liblzma-dev python-openssl protobuf-compiler libdbus-1-dev softhsm2 libsofthsm2 opensc -y
 
-RUN curl -L https://ziglang.org/download/0.16.0/zig-linux-x86_64-0.16.0.tar.xz | tar -xJ && \
-    mv zig-linux-x86_64-0.16.0 /zig
+RUN curl -L https://ziglang.org/download/0.15.1/zig-x86_64-linux-0.15.1.tar.xz | tar -xJ && \
+    mv zig-x86_64-linux-0.15.1 /zig
 ENV PATH="$PATH:/zig"
 
 RUN curl -L https://github.com/roblabla/MacOSX-SDKs/releases/download/16.2/MacOSX16.2.sdk.tar.xz | tar xJ
