@@ -12,26 +12,12 @@ RUN apt-get update && \
     libssl-dev zlib1g-dev libbz2-dev libreadline-dev libsqlite3-dev libffi-dev liblzma-dev libncurses5-dev libncursesw5-dev \
     xz-utils tk-dev libffi-dev liblzma-dev python-openssl protobuf-compiler libdbus-1-dev softhsm2 libsofthsm2 opensc -y
 
-RUN curl -L https://ziglang.org/download/0.13.0/zig-linux-x86_64-0.13.0.tar.xz | tar -xJ && \
-    mv zig-linux-x86_64-0.13.0 /zig
+RUN curl -L https://ziglang.org/download/0.16.0/zig-linux-x86_64-0.16.0.tar.xz | tar -xJ && \
+    mv zig-linux-x86_64-0.16.0 /zig
 ENV PATH="$PATH:/zig"
 
-RUN curl -L https://github.com/roblabla/MacOSX-SDKs/releases/download/13.3/MacOSX13.3.sdk.tar.xz | tar xJ
-ENV SDKROOT=/MacOSX13.3.sdk/
-
-RUN mkdir -p openssl && \
-    curl -o openssl/openssl-1.1.1w.tar.gz -L https://www.openssl.org/source/old/1.1.1/openssl-1.1.1w.tar.gz && \
-    tar -xzvf openssl/openssl-1.1.1w.tar.gz -C openssl && \
-    cd openssl/openssl-1.1.1w && \
-    ./config && \
-    make && \
-    make install
-RUN ln -s /usr/local/lib/libssl.so.1.1 /usr/lib64/libssl.so.1.1 && \
-    ln -s /usr/local/lib/libssl.so.1.1 /usr/lib/libssl.so.1.1 && \
-    ln -s /usr/local/lib/libcrypto.so.1.1 /usr/lib64/libcrypto.so.1.1 && \
-    ln -s /usr/local/lib/libcrypto.so.1.1 /usr/lib/libcrypto.so.1.1 && \
-    rm -rf openssl
-
+RUN curl -L https://github.com/roblabla/MacOSX-SDKs/releases/download/16.2/MacOSX16.2.sdk.tar.xz | tar xJ
+ENV SDKROOT=/MacOSX16.2.sdk/
 
 ENV RYE_HOME="/opt/rye"
 ENV PATH="$RYE_HOME/shims:$PATH"
@@ -100,4 +86,4 @@ ENV PATH="/home/runner/.cargo/bin:$PATH"
 ENV PATH="$PATH:/home/runner/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/lib/rustlib/x86_64-unknown-linux-gnu/bin/"
 ENV CARGO_TARGET_X86_64_APPLE_DARWIN_LINKER=rust-lld
 
-RUN cargo install --quiet cargo-zigbuild && rustup toolchain install 1.85.0 && cargo +1.85.0 install git-cliff
+RUN cargo install --quiet cargo-zigbuild && rustup toolchain install 1.86.0 && cargo +1.86.0 install git-cliff
