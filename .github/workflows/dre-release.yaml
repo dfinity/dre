@@ -1,8 +1,10 @@
 name: Release DRE binary
 on:
   push:
-    # tags:
-    #   - "v*"
+    tags:
+      - "v*"
+  pull_request:
+  workflow_dispatch:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
@@ -35,8 +37,21 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Determine Rust toolchain from rust-toolchain.toml
+        id: rust
+        run: |
+          set -euo pipefail
+          ver=$(awk -F\" '/^channel =/ {print $2}' rust-toolchain.toml)
+          if [ -z "$ver" ]; then
+            echo "Failed to parse Rust toolchain channel from rust-toolchain.toml" >&2
+            exit 1
+          fi
+          echo "toolchain=$ver" >> "$GITHUB_OUTPUT"
+
       - name: Set up Rust toolchain
         uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: ${{ steps.rust.outputs.toolchain }}
 
       - name: Build dre (x86_64-apple-darwin)
         run: |
@@ -58,8 +73,21 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Determine Rust toolchain from rust-toolchain.toml
+        id: rust
+        run: |
+          set -euo pipefail
+          ver=$(awk -F\" '/^channel =/ {print $2}' rust-toolchain.toml)
+          if [ -z "$ver" ]; then
+            echo "Failed to parse Rust toolchain channel from rust-toolchain.toml" >&2
+            exit 1
+          fi
+          echo "toolchain=$ver" >> "$GITHUB_OUTPUT"
+
       - name: Set up Rust toolchain
         uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: ${{ steps.rust.outputs.toolchain }}
 
       - name: Build dre (aarch64-apple-darwin)
         run: |
