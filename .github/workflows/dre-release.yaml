@@ -3,7 +3,7 @@ on:
   push:
     tags:
       - "v*"
-  pull_request:
+  pull_request: # TODO: Remove this before merging; We should only allow releases to be triggered by tags
   workflow_dispatch:
 
 concurrency:
