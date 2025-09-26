@@ -16,8 +16,8 @@ RUN curl -L https://ziglang.org/download/0.15.1/zig-x86_64-linux-0.15.1.tar.xz |
     mv zig-x86_64-linux-0.15.1 /zig
 ENV PATH="$PATH:/zig"
 
-RUN curl -L https://github.com/roblabla/MacOSX-SDKs/releases/download/16.2/MacOSX16.2.sdk.tar.xz | tar xJ
-ENV SDKROOT=/MacOSX16.2.sdk/
+RUN curl -L https://github.com/roblabla/MacOSX-SDKs/releases/download/macosx14.5/MacOSX14.5.sdk.tar.xz | tar xJ
+ENV SDKROOT=/MacOSX14.5.sdk/
 
 ENV RYE_HOME="/opt/rye"
 ENV PATH="$RYE_HOME/shims:$PATH"

@@ -53,6 +53,16 @@ jobs:
         with:
           toolchain: ${{ steps.rust.outputs.toolchain }}
 
+      - name: Install protoc (protobuf) and export env
+        run: |
+          set -euo pipefail
+          brew update
+          brew install protobuf
+          prefix=$(brew --prefix protobuf)
+          echo "PROTOC=$prefix/bin/protoc" >> "$GITHUB_ENV"
+          echo "PROTOC_INCLUDE=$prefix/include" >> "$GITHUB_ENV"
+          "$prefix/bin/protoc" --version
+
       - name: Build dre (x86_64-apple-darwin)
         run: |
           set -euo pipefail
@@ -88,6 +98,16 @@ jobs:
         uses: dtolnay/rust-toolchain@master
         with:
           toolchain: ${{ steps.rust.outputs.toolchain }}
+
+      - name: Install protoc (protobuf) and export env
+        run: |
+          set -euo pipefail
+          brew update
+          brew install protobuf
+          prefix=$(brew --prefix protobuf)
+          echo "PROTOC=$prefix/bin/protoc" >> "$GITHUB_ENV"
+          echo "PROTOC_INCLUDE=$prefix/include" >> "$GITHUB_ENV"
+          "$prefix/bin/protoc" --version
 
       - name: Build dre (aarch64-apple-darwin)
         run: |
