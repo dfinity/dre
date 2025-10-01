@@ -307,17 +307,39 @@ bazel run //release-controller:commit-annotator \
 
 ### Generate release notes locally
 
-Release notes can be generated locally, using the following command:
+Release notes can be generated locally using several approaches:
+
+#### Method 1: Using Bazel with specific RC names
 
 ```sh
 PREV_RC=rc--2025-03-27_03-14-base
 PREV_COMMIT=3ae3649a2366aaca83404b692fc58e4c6e604a25
 CURR_RC=rc--2025-04-03_03-15
 CURR_COMMIT=68fc31a141b25f842f078c600168d8211339f422
-bazel run //release-controller:release-notes -- \
-   $PREV_RC $PREV_COMMIT $CURR_RC $CURR_COMMIT \
-  --verbose
+bazel run //release-controller:release-notes -- $PREV_RC $PREV_COMMIT $CURR_RC $CURR_COMMIT --verbose --commit-annotator=local
 ```
+
+#### Method 2: Using Bazel with generic names and local commit annotator
+
+```sh
+bazel run //release-controller:release-notes -- prev bf0d4d1b8cb6c0c19a5afa1454ada014847aa5c6 curr 07c01746ee3fa7700eb0eb781a7c26a53f989b1a --commit-annotator=local
+```
+
+#### Method 3: Using Rye (Python environment)
+
+First, ensure your Python environment is set up:
+
+```sh
+rye sync
+```
+
+Then run the release notes script directly:
+
+```sh
+rye run python3 release-controller/release_notes.py prev bf0d4d1b8cb6c0c19a5afa1454ada014847aa5c6 curr 07c01746ee3fa7700eb0eb781a7c26a53f989b1a --commit-annotator=local
+```
+
+#### Commit Annotator Options
 
 The form of the command above requires you to run a commit annotator in
 parallel.  If you want to use the internal commit annotator that does not
