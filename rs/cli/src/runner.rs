@@ -1253,7 +1253,7 @@ To build and verify the IC-OS {artifact_name} disk image, after installing curl 
 
 ```
 # From https://github.com/dfinity/ic#verifying-releases
-curl -fsSL https://raw.githubusercontent.com/dfinity/ic/master/ci/tools/repro-check | python3 - -c {version} {artifact_str}
+curl -fsSL https://raw.githubusercontent.com/dfinity/ic/{version}/ci/tools/repro-check | python3 - -c {version} {artifact_str}
 ```
 
 The two SHA256 sums printed above from a) the downloaded CDN image and b) the locally built image,
