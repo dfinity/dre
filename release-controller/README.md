@@ -316,9 +316,7 @@ PREV_RC=rc--2025-03-27_03-14-base
 PREV_COMMIT=3ae3649a2366aaca83404b692fc58e4c6e604a25
 CURR_RC=rc--2025-04-03_03-15
 CURR_COMMIT=68fc31a141b25f842f078c600168d8211339f422
-bazel run //release-controller:release-notes -- \
-   $PREV_RC $PREV_COMMIT $CURR_RC $CURR_COMMIT \
-  --verbose
+bazel run //release-controller:release-notes -- $PREV_RC $PREV_COMMIT $CURR_RC $CURR_COMMIT --verbose --commit-annotator=local
 ```
 
 #### Method 2: Using Bazel with generic names and local commit annotator
