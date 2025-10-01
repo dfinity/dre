@@ -407,6 +407,6 @@ bazel build //release-controller/...
 ### Maintenance
 
 The container image currently used by release controller components
-is an Ubuntu 24.04 image built by Bazel.  Refer to [BUILD.bazel](./BUILD.bazel)
-and [../images/BUILD.bazel](../images/BUILD.bazel) for instructions
+is an Ubuntu 24.04 image built by Bazel.  Refer to [BUILD.bazel](https://github.com/dfinity/dre/blob/main/release-controller/BUILD.bazel)
+and [images/BUILD.bazel](https://github.com/dfinity/dre/blob/main/images/BUILD.bazel) for instructions
 on how to maintain and update the images.
