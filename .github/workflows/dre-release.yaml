@@ -71,7 +71,7 @@ jobs:
       - name: Update tags in code
         shell: bash
         run: |
-          rye run python bin/mk-release.py ${{ steps.tag.outputs.tag }}
+          uv run python bin/mk-release.py ${{ steps.tag.outputs.tag }}
 
       - name: Build artifacts
         shell: bash

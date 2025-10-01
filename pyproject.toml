@@ -4,8 +4,9 @@ version = "0.6.6"
 description = ""
 authors = [{ name = "DRE Team", email = "dept-DRE@dfinity.org" }]
 readme = "README.md"
-# Note: You should add dependencies with `rye add <dependency>`
-# Or to add dev-dependencies: `rye add --dev <dependency>`
+requires-python = ">=3.12"
+# Note: You should add dependencies with `uv add <dependency>`
+# Or to add dev-dependencies: `uv add --group dev <dependency>`
 # This will ensure that the dependency is added to the correct section and also updates the corresponding lock file(s).
 dependencies = [
     "requests>=2.32.3",
@@ -60,10 +61,14 @@ dependencies = [
     "filelock==3.18.0",
 ]
 
-[tool.rye]
+[tool.uv]
+package = false                  # This is a special mode in which the package itself is not installed, but only the dependencies are.
+
+[tool.uv.pip]
 universal = true                 # The dependency resolver will attempt to generate a resolution that's valid on all platforms, operating systems, and architectures, rather than a resolution that's specific to the current platform.
-virtual = true                   # This is a special mode in which the package itself is not installed, but only the dependencies are.
-dev-dependencies = ["black>=24"]
+
+[dependency-groups]
+dev = ["black>=24"]
 
 [tool.black]
 line-length = 120

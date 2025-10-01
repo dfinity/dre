@@ -33,14 +33,14 @@ RUN ln -s /usr/local/lib/libssl.so.1.1 /usr/lib64/libssl.so.1.1 && \
     rm -rf openssl
 
 
-ENV RYE_HOME="/opt/rye"
-ENV PATH="$RYE_HOME/shims:$PATH"
+ENV UV_HOME="/opt/uv"
+ENV PATH="$UV_HOME/bin:$PATH"
 
-RUN curl -sSf https://rye.astral.sh/get | RYE_NO_AUTO_INSTALL=1 RYE_INSTALL_OPTION="--yes" bash
+RUN curl -LsSf https://astral.sh/uv/install.sh | sh
 
-COPY pyproject.toml requirements.lock requirements-dev.lock .python-version README.md ./
+COPY pyproject.toml uv.lock .python-version README.md ./
 
-RUN rye sync --no-dev --no-lock
+RUN uv sync --no-dev
 
 # Runner user
 RUN adduser --disabled-password --gecos "" --uid $RUNNER_UID runner \
@@ -89,7 +89,7 @@ USER runner
 WORKDIR /home/runner
 SHELL [ "/bin/bash", "-c" ]
 
-RUN source /opt/rye/env
+RUN source /opt/uv/env
 
 COPY rust-toolchain.toml /usr/src/rust-toolchain.toml
 
