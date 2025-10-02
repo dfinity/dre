@@ -1149,7 +1149,7 @@ dependencies = [
 
 [[package]]
 name = "canister-log-fetcher"
-version = "0.6.6"
+version = "0.6.7"
 dependencies = [
  "anyhow",
  "clap",
@@ -1392,7 +1392,7 @@ dependencies = [
 
 [[package]]
 name = "config-writer-common"
-version = "0.6.6"
+version = "0.6.7"
 dependencies = [
  "crossbeam",
  "crossbeam-channel",
@@ -1869,7 +1869,7 @@ checksum = "092966b41edc516079bdf31ec78a2e0588d1d0c08f78b91d8307215928642b2b"
 
 [[package]]
 name = "decentralization"
-version = "0.6.6"
+version = "0.6.7"
 dependencies = [
  "actix-web",
  "ahash 0.8.12",
@@ -2155,7 +2155,7 @@ checksum = "1435fa1053d8b2fbbe9be7e97eca7f33d37b28409959813daefc1446a14247f1"
 
 [[package]]
 name = "dre"
-version = "0.6.6"
+version = "0.6.7"
 dependencies = [
  "actix-rt",
  "ahash 0.8.12",
@@ -2672,7 +2672,7 @@ dependencies = [
 
 [[package]]
 name = "general-testnet-service-discovery"
-version = "0.6.6"
+version = "0.6.7"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -3248,7 +3248,7 @@ version = "0.9.0"
 source = "git+https://github.com/dfinity/ic.git?rev=ebed5d4228b71477738316ae3d5274672eae369e#ebed5d4228b71477738316ae3d5274672eae369e"
 dependencies = [
  "candid",
- "ic-error-types 0.2.0 (git+https://github.com/dfinity/ic.git?rev=ebed5d4228b71477738316ae3d5274672eae369e)",
+ "ic-error-types 0.2.0",
  "ic-interfaces-adapter-client",
  "ic-protobuf",
  "serde",
@@ -3318,7 +3318,7 @@ dependencies = [
 
 [[package]]
 name = "ic-canisters"
-version = "0.6.6"
+version = "0.6.7"
 dependencies = [
  "anyhow",
  "backoff",
@@ -3363,7 +3363,7 @@ dependencies = [
  "ic-canonical-state-tree-hash",
  "ic-certification-version",
  "ic-crypto-tree-hash",
- "ic-error-types 0.2.0 (git+https://github.com/dfinity/ic.git?rev=ebed5d4228b71477738316ae3d5274672eae369e)",
+ "ic-error-types 0.2.0",
  "ic-protobuf",
  "ic-registry-routing-table",
  "ic-registry-subnet-type",
@@ -3399,7 +3399,7 @@ dependencies = [
  "candid",
  "ic-cdk-executor",
  "ic-cdk-macros",
- "ic-error-types 0.2.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "ic-error-types 0.2.0",
  "ic-management-canister-types",
  "ic0",
  "serde",
@@ -4033,7 +4033,7 @@ source = "git+https://github.com/dfinity/ic.git?rev=ebed5d4228b71477738316ae3d52
 dependencies = [
  "ic-base-types",
  "ic-crypto-interfaces-sig-verification",
- "ic-error-types 0.2.0 (git+https://github.com/dfinity/ic.git?rev=ebed5d4228b71477738316ae3d5274672eae369e)",
+ "ic-error-types 0.2.0",
  "ic-heap-bytes",
  "ic-interfaces-state-manager",
  "ic-management-canister-types-private",
@@ -4149,7 +4149,7 @@ dependencies = [
 
 [[package]]
 name = "ic-management-backend"
-version = "0.6.6"
+version = "0.6.7"
 dependencies = [
  "actix-rt",
  "actix-web",
@@ -4225,7 +4225,7 @@ dependencies = [
  "ic-base-types",
  "ic-btc-interface",
  "ic-btc-replica-types",
- "ic-error-types 0.2.0 (git+https://github.com/dfinity/ic.git?rev=ebed5d4228b71477738316ae3d5274672eae369e)",
+ "ic-error-types 0.2.0",
  "ic-protobuf",
  "ic-utils 0.9.0",
  "num-traits",
@@ -4238,7 +4238,7 @@ dependencies = [
 
 [[package]]
 name = "ic-management-types"
-version = "0.6.6"
+version = "0.6.7"
 dependencies = [
  "actix-web",
  "ahash 0.8.12",
@@ -4327,7 +4327,7 @@ dependencies = [
  "dfn_candid",
  "dfn_core",
  "ic-base-types",
- "ic-error-types 0.2.0 (git+https://github.com/dfinity/ic.git?rev=ebed5d4228b71477738316ae3d5274672eae369e)",
+ "ic-error-types 0.2.0",
  "ic-ledger-core",
  "ic-management-canister-types-private",
  "ic-nervous-system-canisters",
@@ -4758,7 +4758,7 @@ source = "git+https://github.com/dfinity/ic.git?rev=ebed5d4228b71477738316ae3d52
 dependencies = [
  "candid",
  "ic-node-rewards-canister-protobuf",
- "rewards-calculation 0.9.0",
+ "rewards-calculation 0.9.0 (git+https://github.com/dfinity/ic.git?rev=ebed5d4228b71477738316ae3d5274672eae369e)",
  "serde",
 ]
 
@@ -4773,7 +4773,7 @@ dependencies = [
  "ic-nervous-system-proto",
  "ic-stable-structures",
  "prost",
- "rewards-calculation 0.9.0",
+ "rewards-calculation 0.9.0 (git+https://github.com/dfinity/ic.git?rev=ebed5d4228b71477738316ae3d5274672eae369e)",
  "serde",
 ]
 
@@ -4785,7 +4785,7 @@ dependencies = [
  "bincode",
  "candid",
  "erased-serde 0.3.31",
- "ic-error-types 0.2.0 (git+https://github.com/dfinity/ic.git?rev=ebed5d4228b71477738316ae3d5274672eae369e)",
+ "ic-error-types 0.2.0",
  "prost",
  "serde",
  "serde_json",
@@ -5056,7 +5056,7 @@ dependencies = [
  "ic-certification-version",
  "ic-config",
  "ic-crypto-sha2",
- "ic-error-types 0.2.0 (git+https://github.com/dfinity/ic.git?rev=ebed5d4228b71477738316ae3d5274672eae369e)",
+ "ic-error-types 0.2.0",
  "ic-interfaces",
  "ic-limits",
  "ic-logger",
@@ -5472,7 +5472,7 @@ dependencies = [
  "ic-crypto-internal-types",
  "ic-crypto-sha2",
  "ic-crypto-tree-hash",
- "ic-error-types 0.2.0 (git+https://github.com/dfinity/ic.git?rev=ebed5d4228b71477738316ae3d5274672eae369e)",
+ "ic-error-types 0.2.0",
  "ic-heap-bytes",
  "ic-limits",
  "ic-management-canister-types-private",
@@ -6268,7 +6268,7 @@ checksum = "34080505efa8e45a4b816c349525ebe327ceaa8559756f0356cba97ef3bf7432"
 
 [[package]]
 name = "log-fetcher"
-version = "0.6.6"
+version = "0.6.7"
 dependencies = [
  "anyhow",
  "clap",
@@ -6284,7 +6284,7 @@ dependencies = [
 
 [[package]]
 name = "log-noise-filter-backend"
-version = "0.6.6"
+version = "0.6.7"
 dependencies = [
  "axum 0.8.4",
  "clap",
@@ -6299,7 +6299,7 @@ dependencies = [
 
 [[package]]
 name = "log-noise-filter-downloader"
-version = "0.6.6"
+version = "0.6.7"
 dependencies = [
  "anyhow",
  "clap",
@@ -6489,7 +6489,7 @@ checksum = "defc4c55412d89136f966bbb339008b474350e5e6e78d2714439c386b3137a03"
 
 [[package]]
 name = "multiservice-discovery"
-version = "0.6.6"
+version = "0.6.7"
 dependencies = [
  "anyhow",
  "assert_cmd",
@@ -6528,7 +6528,7 @@ dependencies = [
 
 [[package]]
 name = "multiservice-discovery-downloader"
-version = "0.6.6"
+version = "0.6.7"
 dependencies = [
  "clap",
  "crossbeam",
@@ -6550,7 +6550,7 @@ dependencies = [
 
 [[package]]
 name = "multiservice-discovery-shared"
-version = "0.6.6"
+version = "0.6.7"
 dependencies = [
  "erased-serde 0.4.6",
  "ic-sns-wasm",
@@ -6581,13 +6581,13 @@ dependencies = [
 
 [[package]]
 name = "node-provider-rewards-api"
-version = "0.6.6"
+version = "0.6.7"
 dependencies = [
  "candid",
  "chrono",
  "ic-base-types",
  "itertools 0.13.0",
- "rewards-calculation 0.6.6",
+ "rewards-calculation 0.6.7",
  "rust_decimal",
  "rust_decimal_macros",
  "serde",
@@ -6595,7 +6595,7 @@ dependencies = [
 
 [[package]]
 name = "node-provider-rewards-canister"
-version = "0.6.6"
+version = "0.6.7"
 dependencies = [
  "async-trait",
  "candid",
@@ -6625,7 +6625,7 @@ dependencies = [
  "mockall",
  "node-provider-rewards-api",
  "prost",
- "rewards-calculation 0.6.6",
+ "rewards-calculation 0.6.7",
  "serde",
  "serde_cbor",
  "tokio",
@@ -6766,7 +6766,7 @@ dependencies = [
 
 [[package]]
 name = "obs-canister-clients"
-version = "0.6.6"
+version = "0.6.7"
 dependencies = [
  "candid",
  "ic-agent 0.39.3",
@@ -7395,7 +7395,7 @@ dependencies = [
 
 [[package]]
 name = "prometheus-config-updater"
-version = "0.6.6"
+version = "0.6.7"
 dependencies = [
  "anyhow",
  "base64 0.22.1",
@@ -7929,7 +7929,7 @@ dependencies = [
 
 [[package]]
 name = "rewards-calculation"
-version = "0.6.6"
+version = "0.6.7"
 dependencies = [
  "chrono",
  "ic-base-types",
@@ -8480,7 +8480,7 @@ dependencies = [
 
 [[package]]
 name = "service-discovery"
-version = "0.6.6"
+version = "0.6.7"
 dependencies = [
  "anyhow",
  "crossbeam",
@@ -8613,7 +8613,7 @@ dependencies = [
 
 [[package]]
 name = "slack-notifications"
-version = "0.6.6"
+version = "0.6.7"
 dependencies = [
  "anyhow",
  "candid",
@@ -8738,7 +8738,7 @@ dependencies = [
 
 [[package]]
 name = "sns-downloader"
-version = "0.6.6"
+version = "0.6.7"
 dependencies = [
  "clap",
  "crossbeam",
@@ -9494,7 +9494,7 @@ dependencies = [
 
 [[package]]
 name = "trustworthy-node-metrics-types"
-version = "0.6.6"
+version = "0.6.7"
 dependencies = [
  "candid",
  "dfn_core",
@@ -10443,3 +10443,4 @@ dependencies = [
 name = "ic0"
 version = "0.23.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
+
