@@ -34,9 +34,6 @@ sudo ln -s /usr/local/homebrew/Cellar/openssl@3/3.0.8 /usr/local/opt/openssl@3
 cargo install --git https://github.com/dfinity/dre.git dre
 ```
 
-Make sure you have `libssl.so.1.1` on your system (Ubuntu 22.04 and later
-will not carry it).  See below under *Troubleshooting* to get that going.
-
 ## Usage
 
 ```shell
@@ -45,27 +42,3 @@ dre --help
 
 ## Troubleshooting
 
-If you get an error like (observed on ubuntu 22.04)
-
-``` shell
-...ic-admin: error while loading shared libraries: libssl.so.1.1: cannot open shared object file: No such file or directory
-```
-
-you will need to install libssl 1.1.x. A simple solution is to install it from source directly from the OpenSSL website
-https://www.openssl.org/source/.
-
-Once downloaded and extracted, you can install it by running
-
-``` shell
-./config
-make
-make test
-sudo make install
-# The following adds the libraries to your system
-# path, where Cargo will look for them.
-sudo ln -s /usr/local/lib/libssl.so.1.1  /usr/lib/libssl.so.1.1
-sudo ln -s /usr/local/lib/libcrypto.so.1.1 /usr/lib/libcrypto.so.1.1
-# If you would rather not modify anything under /usr,
-# you can instead set the LD_LIBRARY_PATH= variable
-# to /usr/local in your ~/.bashrc.
-```
