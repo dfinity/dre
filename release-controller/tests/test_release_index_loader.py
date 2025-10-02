@@ -106,7 +106,7 @@ To build and verify the IC-OS GuestOS disk image, after installing curl if neces
 
 ```
 # From https://github.com/dfinity/ic#verifying-releases
-curl -fsSL https://raw.githubusercontent.com/dfinity/ic/35bfcadd0f2a474057e42393917b8b3ac269627a/ci/tools/repro-check | python3 - -c 35bfcadd0f2a474057e42393917b8b3ac269627a --guestos
+curl -fsSL https://raw.githubusercontent.com/dfinity/ic/35bfcadd0f2a474057e42393917b8b3ac269627a/ci/scripts/repro-check | python3 - -c 35bfcadd0f2a474057e42393917b8b3ac269627a --guestos
 ```
 
 The two SHA256 sums printed above from a) the downloaded CDN image and b) the locally built image, must be identical, and must match the SHA256 from the payload of the NNS proposal.
