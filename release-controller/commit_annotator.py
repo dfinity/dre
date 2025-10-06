@@ -25,7 +25,7 @@ from commit_annotation import (
 from git_repo import GitRepo
 from datetime import datetime
 from util import conventional_logging, resolve_binary, DefaultSubcommandArgParser
-from watchdog import Watchdog
+from process_watchdog import Watchdog
 
 from const import (
     OsKind,

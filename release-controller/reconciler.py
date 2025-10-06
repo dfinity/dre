@@ -42,7 +42,7 @@ from commit_annotation import (
     NotReady,
 )
 from util import version_name, conventional_logging, sha256sum_http_response
-from watchdog import Watchdog
+from process_watchdog import Watchdog
 
 
 # It is safe to delete releases from this list once

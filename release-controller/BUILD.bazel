@@ -131,8 +131,8 @@ py_library (
 )
 
 py_library (
-    name = "watchdog",
-    srcs = ["watchdog.py"],
+    name = "process_watchdog",
+    srcs = ["process_watchdog.py"],
     tags = ["typecheck"],
 )
 
@@ -181,7 +181,7 @@ py_binary(
     main = "reconciler.py",
     srcs = ["reconciler.py", "slack_announce.py"],
     tags = ["typecheck"],
-    deps = ["dre_cli", "public_dashboard", "publish_notes", "forum", "watchdog", "prometheus", "release_notes_composer", "release_index_loader", "dryrun"] + [
+    deps = ["dre_cli", "public_dashboard", "publish_notes", "forum", "process_watchdog", "prometheus", "release_notes_composer", "release_index_loader", "dryrun"] + [
         requirement("pydiscourse"),
         requirement("requests"),
         requirement("types-requests"),
@@ -196,14 +196,14 @@ py_binary(
 py_binary(
     name = "commit-annotator",
     main = "commit_annotator.py",
-    srcs = ["commit_annotator.py", "watchdog.py"],
+    srcs = ["commit_annotator.py"],
     tags = ["typecheck"],
     env = env,
     data = [":bazelisk", ":target_determinator"],
-    deps = [
+    deps = ["commit_annotation", "process_watchdog"] + [
         requirement("prometheus-client"),
         requirement("tenacity"),
-    ] + ["commit_annotation"],
+    ],
 )
 
 py_library (
