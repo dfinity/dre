@@ -1,3 +1,4 @@
+import difflib
 import logging
 import os
 from typing import cast, Callable, TypedDict, Protocol
@@ -192,12 +193,24 @@ class ReleaseCandidateForumTopic:
                     # log the complete URL of the post
                     self._logger.debug("Post up to date: %s.", self.post_to_url(post))
                     continue
-                elif post["can_edit"]:
-                    self._logger.info("Updating post %s.", post_id)
-                    self.client.update_post(post_id=post_id, content=content_expected)  # type: ignore
                 else:
-                    self._logger.warning("Post %s is not editable.  Ignoring.", post_id)
+                    old = post["raw"].splitlines(True)
+                    new = content_expected.splitlines(True)
+                    difference = difflib.unified_diff(old, new)
+                    self._logger.info("Post %s differs:", post_id)
+                    for line in difference:
+                        self._logger.info("  %s", line.rstrip())
+                    if post["can_edit"]:
+                        self._logger.info("Updating post %s.", post_id)
+                        self.client.update_post(
+                            post_id=post_id, content=content_expected
+                        )  # type: ignore
+                    else:
+                        self._logger.warning(
+                            "Post %s is not editable.  Ignoring.", post_id
+                        )
             else:
+                self._logger.debug("Creating new post.")
                 self.client.create_post(  # type: ignore
                     topic_id=self.topic_id,
                     content=_post_template(
