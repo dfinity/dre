@@ -16,13 +16,6 @@ from release_index_loader import StaticReleaseLoader
 from tests.fixtures import ic_repo as ic_repo
 
 
-class AmnesiacReconcilerState(ReconcilerState):
-    """Reconciler state that uses a temporary directory for storage."""
-
-    def __init__(self) -> None:
-        super().__init__()
-
-
 class MockDashboard(DashboardAPI):
     """Reconciler state that uses static proposal data."""
 
@@ -117,7 +110,7 @@ def _defaults_for_test(
     dryrun.StubDiscourseClient,
     dryrun.ForumClient,
     dryrun.ReleaseNotesClient,
-    AmnesiacReconcilerState,
+    ReconcilerState,
     MockActiveVersionProvider,
     dryrun.DRECli,
     dryrun.MockSlackAnnouncer,
@@ -130,7 +123,7 @@ def _defaults_for_test(
         discourse_client,
         dryrun.ForumClient(discourse_client),
         dryrun.ReleaseNotesClient(),
-        AmnesiacReconcilerState(),
+        ReconcilerState(),
         MockActiveVersionProvider(),
         dryrun.DRECli(),
         dryrun.MockSlackAnnouncer(),
