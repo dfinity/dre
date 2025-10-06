@@ -750,6 +750,11 @@ class Reconciler:
                             revlogger.info(
                                 "Currently elected HostOS versions: %s", blessed
                             )
+                        else:
+                            # Appease the almighty type checker gods.
+                            active = []
+                            blessed = set()
+                            assert 0, "not reached"
 
                         unelect_versions.extend(
                             versions_to_unelect(
