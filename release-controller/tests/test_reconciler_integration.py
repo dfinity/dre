@@ -196,26 +196,28 @@ def test_reconciler_publishes_tentative_changelog_when_changelog_not_yet_approve
         )
         reconciler.reconcile()
 
+        guestos_post = d.topics[1]["post_stream"]["posts"][0]
+        hostos_post = d.topics[1]["post_stream"]["posts"][1]
         # First published draft is for GuestOS.
-        assert d.topics[1]["post_stream"]["posts"][0]["cooked"].startswith(
+        assert guestos_post["cooked"].startswith(
             "We're preparing [a new IC "
             "release](https://github.com/dfinity/ic/tree/release-2025-10-12_01-01-base).\n"
             "\n"
             "The following is a **draft** of the list of changes since the last GuestOS "
             "release:\n"
             "\n"
-        ), d.topics[1]["post_stream"]["posts"][0]["cooked"]
+        ), guestos_post["cooked"]
         # Second published draft is for HostOS.
-        assert d.topics[1]["post_stream"]["posts"][1]["cooked"].startswith(
+        assert hostos_post["cooked"].startswith(
             "We're preparing [a new IC "
             "release](https://github.com/dfinity/ic/tree/release-2025-10-12_01-01-base).\n"
             "\n"
             "The following is a **draft** of the list of changes since the last HostOS "
             "release:\n"
             "\n"
-        ), d.topics[1]["post_stream"]["posts"][1]["cooked"]
+        ), hostos_post["cooked"]
 
-        expected_hostos_release_notes = """We're preparing [a new IC release](https://github.com/dfinity/ic/tree/release-2025-10-12_01-01-base).
+        expected_guestos_release_notes = """We're preparing [a new IC release](https://github.com/dfinity/ic/tree/release-2025-10-12_01-01-base).
 
 The following is a **draft** of the list of changes since the last GuestOS release:
 
@@ -279,7 +281,4 @@ To see a full list of commits added since last release, compare the revisions on
 * [`fd628eccb`](https://github.com/dfinity/ic/commit/fd628eccb) Interface(ICRC-Ledger): endpoint that disables icrc3 in the test ledger ([#7041](https://github.com/dfinity/ic/pull/7041))
 * [`c027ae49c`](https://github.com/dfinity/ic/commit/c027ae49c) Interface,Node: duplicate kill_start_test into a long and short version ([#7060](https://github.com/dfinity/ic/pull/7060))
 """
-        assert (
-            d.topics[1]["post_stream"]["posts"][0]["cooked"]
-            == expected_hostos_release_notes
-        )
+        assert guestos_post["cooked"] == expected_guestos_release_notes
