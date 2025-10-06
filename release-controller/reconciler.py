@@ -561,6 +561,7 @@ class Reconciler:
                 if markdown_file := self.notes_client.markdown_file(
                     release_commit, v.os_kind
                 ):
+                    gdoc = None
                     revlogger.info("Has release notes in editor.  Going to next phase.")
                 else:
                     revlogger.info("No release notes found in editor.  Creating.")
@@ -636,7 +637,11 @@ class Reconciler:
                         os_kind=v.os_kind,
                     )
 
-            if "SLACK_WEBHOOK_URL" in os.environ and needs_announce:
+            if (
+                "SLACK_WEBHOOK_URL" in os.environ
+                and needs_announce
+                and gdoc is not None
+            ):
                 with phase("release notes announcement"):
                     # This should have never been in the Google Docs code.
                     revlogger.info("Announcing release notes")
