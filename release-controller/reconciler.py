@@ -25,7 +25,11 @@ from github import Github
 from google_docs import ReleaseNotesClient, ReleaseNotesClientProtocol
 from prometheus import ICPrometheus
 from prometheus_client import start_http_server, Gauge
-from publish_notes import PublishNotesClient, PublishNotesClientProtocol
+from publish_notes import (
+    PublishNotesClient,
+    PublishNotesClientProtocol,
+    post_process_release_notes,
+)
 from pydiscourse import DiscourseClient
 from release_index_loader import DevReleaseLoader
 from release_index_loader import GitReleaseLoader
@@ -258,11 +262,13 @@ Phase = (
     | typing.Literal["release notes pull request"]
     | typing.Literal["proposal submission"]
     | typing.Literal["forum post update"]
+    | typing.Literal["forum post draft"]
 )
 PHASES: list[Phase] = [
     "forum post creation",
     "release notes preparation",
     "release notes announcement",
+    "forum post draft",
     "release notes pull request",
     "proposal submission",
     "forum post update",
@@ -300,6 +306,7 @@ class VersionState(object):
     has_release_notes_submitted_as_pr: bool | Failed = False
     has_proposal: bool | Failed = False
     forum_post_updated: bool | Failed = False
+    forum_post_drafted: bool | Failed = False
 
     def __init__(
         self,
@@ -366,6 +373,8 @@ class VersionState(object):
             self.has_proposal = val
         elif self.current_phase == "forum post update":
             self.forum_post_updated = val
+        elif self.current_phase == "forum post draft":
+            self.forum_post_drafted = val
         else:
             assert 0, "phase not reached %s" % self.current_phase
         LAST_CYCLE_SUCCESSFUL.labels(
@@ -614,7 +623,7 @@ class Reconciler:
                     # so the client needs to provide an interface to do
                     # this.
                     try:
-                        content = prepare_release_notes(
+                        markdown_file = prepare_release_notes(
                             request,
                             self.ic_repo,
                             self.change_determinator_factory(),
@@ -633,7 +642,7 @@ class Reconciler:
                     gdoc, needs_announce = self.notes_client.ensure(
                         release_tag=release_tag,
                         release_commit=release_commit,
-                        content=content,
+                        content=markdown_file,
                         os_kind=v.os_kind,
                     )
 
@@ -665,11 +674,35 @@ class Reconciler:
                 if not changelog:
                     revlogger.debug("No changelog ready for proposal submission.")
                     p.incomplete()
-                    continue
                 else:
                     revlogger.info(
                         "The changelog is now ready for proposal submission."
                     )
+
+            if not changelog:
+                if isinstance(prop, reconciler_state.NoProposal):
+                    # Forum post should only be updated with a draft if there
+                    # is no proposal yet.  Otherwise this should not execute.
+                    with phase("forum post draft"):
+                        rclogger.debug(
+                            "Updating previously-created forum post with draft of changelog."
+                        )
+                        draft_notes = post_process_release_notes(markdown_file)
+                        draft_notes_start = draft_notes.lower().find("# release notes")
+                        assert draft_notes_start > 0
+                        draft_notes = draft_notes[draft_notes_start:]
+
+                        def draft_proposal_summary(
+                            version: str, os_kind: OsKind, security_fix: bool
+                        ) -> str | None:
+                            return draft_notes
+
+                        rc_forum_topic.update(
+                            summary_retriever=draft_proposal_summary,
+                            proposal_id_retriever=self.state.version_proposal,
+                        )
+                # There is no changelog, so it's not yet time to submit a proposal.
+                continue
 
             with phase("proposal submission"):
                 if isinstance(prop, reconciler_state.SubmittedProposal):
@@ -804,7 +837,7 @@ class Reconciler:
                 )
 
         if versions:
-            logger.info("Iteration completed. %s releases processed.", len(versions))
+            logger.info("Iteration completed. %s versions processed.", len(versions))
 
 
 dre_repo = "dfinity/dre"

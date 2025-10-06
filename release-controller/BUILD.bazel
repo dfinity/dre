@@ -245,8 +245,14 @@ genrule(
     tags = ["no-sandbox"] + ["manual"],
 )
 
-medium_tests = ["tests/test_release_notes.py", "tests/test_reconciler.py"]
-medium_tests_deps = ["release-controller", "commit_annotation", "release_notes_composer"] + [
+integration_tests = ["tests/test_reconciler_integration.py"]
+integration_tests_deps = ["release-controller"] + [
+    requirement("pygithub"),
+    requirement("pydantic-yaml"),
+]
+
+medium_tests = ["tests/test_release_notes.py"]
+medium_tests_deps = ["release-controller"] + [
     requirement("pygithub"),
     requirement("pydantic-yaml"),
 ]
@@ -255,8 +261,8 @@ medium_tests_deps = ["release-controller", "commit_annotation", "release_notes_c
 large_tests = ["tests/test_commit_annotator.py"]
 large_tests_deps = ["commit-annotator"]
 
-small_tests = glob(["tests/test_*.py"], exclude=large_tests + medium_tests)
-small_tests_deps = ["forum", "publish_notes", "release_index_loader", "dryrun"] + [
+small_tests = glob(["tests/test_*.py"], exclude=large_tests + medium_tests + integration_tests)
+small_tests_deps = ["forum", "publish_notes", "release_index", "release_index_loader", "dryrun", "git_repo"] + [
     requirement("httpretty"),
 ]
 
@@ -284,10 +290,16 @@ small_tests_deps = ["forum", "publish_notes", "release_index_loader", "dryrun"] 
                 requirement("filelock"),
             ] + group["deps"],
             env_inherit = ["HOME"],
-            size = group["test_size"],
+            size = "large" if group["test_size"] == "integration" else group["test_size"],
         )
     ]
     for group in [
+        {
+            "targets": integration_tests,
+            "data": glob(["tests/test_data/*"]),
+            "deps": integration_tests_deps,
+            "test_size": "integration",
+        },
         {
             "targets": small_tests + medium_tests,
             "data": glob(["tests/test_data/*"]),
