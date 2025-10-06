@@ -104,21 +104,24 @@ The annotator has a bonus mode to manually annotate failing commits.  See below 
 
 ### reconciler
 
-Reconciler is responsible for generating release notes (1), publishing them as google docs and sending a notification to #eng-release Slack channel (2), creating a GitHub PR to publish notes (3), placing the proposal for electing a version (4) and creating and updating forum post (5).
+Reconciler is responsible for:
 
-1. generating release notes
-  Done by release_notes.py. You can manually run the script for debugging purposes.
+1. generating a draft of the release notes
+  Done by release_notes.py. See *Generate release notes locally* in this document for manual release notes generation.
 
-2. google docs publish
-  Done by google_docs.py. You can run the program manually to debug issues. Change the `main()` function to your needs.
+2. making a forum post with the release notes draft
+  The draft release notes generated in step (1) are published as a post to a Discourse thread (which will be created if necessary).
 
-3. creating a GitHub PR to publish notes
-  Done by publish_notes.py. It's not recommended to run this manually. Instead, if you have an issue, try to create a unit test to resolve the issue. You can download the Google Doc you're having problems with to use it in your test. See tests that use `release-controller/test_data/b0ade55f7e8999e2842fe3f49df163ba224b71a2.docx`.
+3. Google Docs publish
+  Done by google_docs.py. The draft of the release notes is published to Google Docs for internal engineering review.
 
-4. placing the proposal for electing a version
+4. creating a GitHub PR to publish notes
+  Done by publish_notes.py once the notes are ready for review according to the content of the respective Google Doc. It's not recommended to run this manually. Instead, if you have an issue, try to create a unit test to resolve the issue. You can download the Google Doc you're having problems with to use it in your test. See tests that use `release-controller/test_data/b0ade55f7e8999e2842fe3f49df163ba224b71a2.docx`.
+
+5. placing the proposal for electing a version
   Done by dre_cli.py / reconciler.py. There should be a logs for the command that was run if you want to debug any issues with it.
 
-5. forum post update
+6. forum post update
   Done by forum.py. You can run the program manually to debug issues. Change the `main()` function to your needs.
 
   It's important to note that forum logic depends on finding alredy created blog posts by querying posts from authenticated user (@DRETeam). For those reasons, it won't be able to find manually created posts by other users.

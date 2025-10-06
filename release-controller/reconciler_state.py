@@ -14,7 +14,7 @@ class ProposalState(object):
     def __init__(
         self, version_id: str, os_kind: OsKind, state_store: "ReconcilerState"
     ):
-        self._os_kind = os_kind
+        self._os_kind: OsKind = os_kind
         self._version_id = version_id
         self._store = state_store
 
@@ -119,11 +119,11 @@ class ReconcilerState:
     ) -> None:
         replica_version_proposals, hostos_version_proposals = known_proposal_retriever()
         for os_kind, version_to_proposal in [
-            (typing.cast(OsKind, GUESTOS), replica_version_proposals),
-            (typing.cast(OsKind, HOSTOS), hostos_version_proposals),
+            (GUESTOS, replica_version_proposals),
+            (HOSTOS, hostos_version_proposals),
         ]:
             for version, proposal in version_to_proposal.items():
-                p = self.version_proposal(version, os_kind)
+                p = self.version_proposal(version, typing.cast(OsKind, os_kind))
                 if not isinstance(p, SubmittedProposal):
                     self._logger.debug(
                         "Preemptively recording submission of %s proposal %s for version %s",

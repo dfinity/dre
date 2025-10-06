@@ -25,7 +25,7 @@ from commit_annotation import (
 from git_repo import GitRepo
 from datetime import datetime
 from util import conventional_logging, resolve_binary, DefaultSubcommandArgParser
-from watchdog import Watchdog
+from process_watchdog import Watchdog
 
 from const import (
     OsKind,
@@ -116,7 +116,7 @@ def target_determinator(
             "-before-query-error-behavior=fatal",
             "-delete-cached-worktree",
             "-bazel-opts=" + " ".join(shlex.quote(x) for x in BAZEL_OPTS),
-            f"-bazel={resolve_binary("bazel")}",
+            f"-bazel={resolve_binary('bazel')}",
             "--targets",
             bazel_targets,
             parent_object,

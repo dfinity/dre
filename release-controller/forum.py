@@ -21,7 +21,10 @@ def _post_template(
     | reconciler_state.SubmittedProposal,
 ) -> str:
     if isinstance(proposal, reconciler_state.NoProposal):
-        return f"We're preparing [a new IC release](https://github.com/dfinity/ic/tree/{version_name}). The changelog will be announced soon."
+        ret = f"We're preparing [a new IC release](https://github.com/dfinity/ic/tree/{version_name})."
+        if changelog:
+            ret += f"\n\nThe following is a **draft** of the list of changes since the last {os_kind} release:\n\n{changelog}"
+        return ret
 
     elif isinstance(proposal, reconciler_state.DREMalfunction):
         return (
@@ -59,7 +62,7 @@ class ReleaseCandidateForumPost:
         self.version_name = version_name
         self.changelog = changelog
         self.proposal = proposal
-        self.os_kind = os_kind
+        self.os_kind: OsKind = os_kind
         self.security_fix = security_fix
 
 
