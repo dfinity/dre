@@ -45,7 +45,7 @@ Optional but recommended:
 - `--title "Proposal to modify firewall rules"` (defaults to that value if omitted)
 - `--forum-post-link <URL|discourse|ask|omit>`
 - `--dry-run` to simulate; rerun without it to submit
-- `--yes` to skip the confirmation prompt when not in dry-run
+- `--yes` to skip the confirmation prompt, if desired
 
 What happens:
 1. The tool fetches the current rules for the given scope and opens your `$EDITOR` with a JSON document.
@@ -122,8 +122,7 @@ dre firewall \
   --rules-scope global \
   --title "Allow the DFINITY observability stack to remotely attest SEV-protected nodes" \
   --summary "We propose to allow the DFINITY observability stack to access the remote attestation endpoint on TCP port 19523. This access is essential for monitoring and attesting SEV-protected nodes. It allows the DFINITY observability stack to periodically fetch an attestation report and verify it. For details, see: <FORUM POST URL>" \
-  --forum-post-link <FORUM POST URL> \
-  --yes
+  --forum <FORUM POST URL>
 ```
 
 ## Tips
