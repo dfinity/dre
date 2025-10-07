@@ -14,7 +14,7 @@ Helpful globals you can pass to any command:
 - `-y, --yes` to auto-confirm
 - `--forum-post-link <URL|discourse|ask|omit>` to control forum posting
 
-See `dre --help` and the Authentication Options in the main README for details.
+See `dre firewall --help` and the Authentication Options in the main README for details.
 
 ## Scopes
 Rules are stored per scope. The command accepts exactly these scope strings:
