@@ -47,7 +47,7 @@ The NNS proposal is here: [IC NNS Proposal 1](https://dashboard.internetcomputer
 Here is a summary of the changes since the last GuestOS release:
 
 release notes for version test1...
-"""
+""".rstrip()
     expected_post_1 = {
         "raw": raw,
         "cooked": raw,
@@ -68,7 +68,7 @@ The NNS proposal is here: [IC NNS Proposal 2](https://dashboard.internetcomputer
 Here is a summary of the changes since the last HostOS release:
 
 release notes for version test1...
-"""
+""".rstrip()
     expected_post_2 = {
         "raw": raw,
         "cooked": raw,
@@ -89,7 +89,7 @@ The NNS proposal is here: [IC NNS Proposal 3](https://dashboard.internetcomputer
 Here is a summary of the changes since the last GuestOS release:
 
 release notes for version test2...
-"""
+""".rstrip()
     expected_post_3 = {
         "raw": raw,
         "cooked": raw,

@@ -1,7 +1,7 @@
 import difflib
 import logging
 import os
-from typing import cast, Callable, TypedDict, Protocol
+from typing import cast, Callable, TypedDict, Protocol, ParamSpec
 
 from dotenv import load_dotenv
 from pydiscourse import DiscourseClient
@@ -12,7 +12,19 @@ from const import OsKind, GUESTOS, HOSTOS
 
 LOGGER = logging.getLogger(__name__)
 
+P = ParamSpec("P")
 
+
+def trim_end_whitespace(f: Callable[P, str]) -> Callable[P, str]:
+    """Make any function that returns string strip the end whitespace of its return value."""
+
+    def inner(*args: P.args, **kwargs: P.kwargs) -> str:
+        return f(*args, **kwargs).rstrip()
+
+    return inner
+
+
+@trim_end_whitespace
 def _post_template(
     changelog: str | None,
     version_name: str,
@@ -21,6 +33,18 @@ def _post_template(
     | reconciler_state.DREMalfunction
     | reconciler_state.SubmittedProposal,
 ) -> str:
+    """
+    Produces a release post for Discourse based on the inputs.
+
+    To developers, an **important** note:
+
+    Always make sure that the value returned by this post does not have any
+    ending carriage returns.  Otherwise release controller always attempts
+    to update posts spuriously on startup, since Discourse eats up carriage
+    returns at the end of the post.
+
+    Thus we have a decorator to ensure this.
+    """
     if isinstance(proposal, reconciler_state.NoProposal):
         ret = f"We're preparing [a new IC release](https://github.com/dfinity/ic/tree/{version_name})."
         if changelog:
@@ -42,8 +66,7 @@ The NNS proposal is here: [IC NNS Proposal {proposal.proposal_id}](https://dashb
 
 Here is a summary of the changes since the last {os_kind} release:
 
-{changelog}
-"""
+{changelog}"""
 
 
 class ReleaseCandidateForumPost:

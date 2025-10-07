@@ -273,5 +273,5 @@ To see a full list of commits added since last release, compare the revisions on
 * [`7c84f99be`](https://github.com/dfinity/ic/commit/7c84f99be) Execution,Interface: Systest for migration canister ([#7004](https://github.com/dfinity/ic/pull/7004))
 * [`fd628eccb`](https://github.com/dfinity/ic/commit/fd628eccb) Interface(ICRC-Ledger): endpoint that disables icrc3 in the test ledger ([#7041](https://github.com/dfinity/ic/pull/7041))
 * [`c027ae49c`](https://github.com/dfinity/ic/commit/c027ae49c) Interface,Node: duplicate kill_start_test into a long and short version ([#7060](https://github.com/dfinity/ic/pull/7060))
-"""
+""".rstrip()
         assert guestos_post["cooked"] == expected_guestos_release_notes
