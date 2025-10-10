@@ -543,12 +543,18 @@ class Reconciler:
             commit_id: str, os_kind: OsKind, security_fix: bool
         ) -> str | None:
             """
-            If a version/OS has a draft associated with it, return it instead of
-            no release notes at all.
+            If a version/OS has release notes, return them.
+            Else fall back to a prepared draft if any exists.
             """
-            return drafts.get(f"{commit_id}-{os_kind}") or self.loader.proposal_summary(
+            return self.loader.proposal_summary(
                 commit_id, os_kind, security_fix
-            )
+            ) or drafts.get(f"{commit_id}-{os_kind}")
+
+        def save_draft(v: VersionState, content: str) -> None:
+            drafts[f"{v.git_revision}-{v.os_kind}"] = content
+
+        def has_draft(v: VersionState) -> bool:
+            return f"{v.git_revision}-{v.os_kind}" in drafts
 
         for v in versions:
             rclogger = logger.getChild(f"{v.rc_name}")
@@ -819,12 +825,7 @@ class Reconciler:
                     p.incomplete()
 
             with phase("forum post draft"):
-                draft_key = f"{v.git_revision}-{v.os_kind}"
-                if draft_key in drafts and changelog:
-                    # Forum post should only be updated with a draft if there
-                    # is no changelog yet.  Otherwise use the actual changelog.
-                    del drafts[draft_key]
-                elif not changelog and draft_key not in drafts:
+                if not has_draft(v):
                     rclogger.debug("Creating draft of changelog.")
                     draft = post_process_release_notes(markdown_file)
                     draft_start = draft.lower().find("# release notes for")
@@ -838,7 +839,7 @@ class Reconciler:
                             f"Could not find title in draft notes: {draft}"
                         )
                         draft = draft[draft_start + 1 :]
-                    drafts[draft_key] = draft
+                    save_draft(v, draft)
 
             with phase("forum post draft"):
                 draft_key = f"{v.git_revision}-{v.os_kind}"
