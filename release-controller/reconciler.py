@@ -689,7 +689,9 @@ class Reconciler:
                         )
                         draft_notes = post_process_release_notes(markdown_file)
                         draft_notes_start = draft_notes.lower().find("# release notes")
-                        assert draft_notes_start > 0
+                        assert draft_notes_start > 0, (
+                            f"Could not find title in draft notes: {draft_notes}"
+                        )
                         draft_notes = draft_notes[draft_notes_start:]
 
                         def draft_proposal_summary(
