@@ -200,18 +200,17 @@ def check_number_of_changes(changelog: str) -> int:
     num_changes = 0
     found_beginning = False
     for line in changelog.splitlines():
-        LOGGER.debug("Processing line whole: %s", line)
         if not found_beginning and line.startswith(BEGINNING_MARKER):
             found_beginning = True
             continue
 
         if found_beginning:
-            LOGGER.debug("Processing line: %s", line)
             if line.startswith(ENDING_MARKER):
                 break
             if line.startswith("*"):
                 num_changes += 1
 
+    LOGGER.debug("Found %s changes", num_changes)
     return num_changes
 
 
