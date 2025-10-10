@@ -692,7 +692,7 @@ class Reconciler:
                         "The changelog is now ready for proposal submission."
                     )
 
-            with phase("proposal submission"):
+            with phase("proposal submission") as p:
                 if isinstance(prop, reconciler_state.SubmittedProposal):
                     revlogger.info(
                         "%s.  We do not need to submit a proposal, but"
@@ -815,6 +815,8 @@ class Reconciler:
                         fail = prop.record_malfunction()
                         revlogger.error("%s", fail)
                         raise
+                else:
+                    p.incomplete()
 
             with phase("forum post draft"):
                 draft_key = f"{v.git_revision}-{v.os_kind}"
