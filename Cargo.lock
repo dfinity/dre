@@ -1820,6 +1820,19 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "04d2cd9c18b9f454ed67da600630b021a8a80bf33f8c95896ab33aaf1c26b728"
 
 [[package]]
+name = "dashmap"
+version = "5.5.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "978747c1d849a7d2ee5e8adc0159961c48fb7e5db2f06af6723b80123bb53856"
+dependencies = [
+ "cfg-if",
+ "hashbrown 0.14.5",
+ "lock_api",
+ "once_cell",
+ "parking_lot_core",
+]
+
+[[package]]
 name = "data-encoding"
 version = "2.7.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2162,6 +2175,7 @@ dependencies = [
  "anyhow",
  "async-recursion",
  "backon",
+ "base64 0.22.1",
  "candid",
  "chrono",
  "clap",
@@ -2179,6 +2193,7 @@ dependencies = [
  "fs-err",
  "futures",
  "futures-util",
+ "hex",
  "human_bytes",
  "humantime",
  "ic-base-types",
@@ -2195,6 +2210,7 @@ dependencies = [
  "ic-nns-governance",
  "ic-nns-governance-api",
  "ic-protobuf",
+ "ic-registry-common-proto",
  "ic-registry-keys",
  "ic-registry-local-registry",
  "ic-registry-subnet-type",
@@ -2217,6 +2233,7 @@ dependencies = [
  "serde",
  "serde_json",
  "serde_yaml",
+ "serial_test",
  "sha2 0.10.9",
  "shlex",
  "spinners",
@@ -3248,7 +3265,7 @@ version = "0.9.0"
 source = "git+https://github.com/dfinity/ic.git?rev=ebed5d4228b71477738316ae3d5274672eae369e#ebed5d4228b71477738316ae3d5274672eae369e"
 dependencies = [
  "candid",
- "ic-error-types 0.2.0",
+ "ic-error-types 0.2.0 (git+https://github.com/dfinity/ic.git?rev=ebed5d4228b71477738316ae3d5274672eae369e)",
  "ic-interfaces-adapter-client",
  "ic-protobuf",
  "serde",
@@ -3363,7 +3380,7 @@ dependencies = [
  "ic-canonical-state-tree-hash",
  "ic-certification-version",
  "ic-crypto-tree-hash",
- "ic-error-types 0.2.0",
+ "ic-error-types 0.2.0 (git+https://github.com/dfinity/ic.git?rev=ebed5d4228b71477738316ae3d5274672eae369e)",
  "ic-protobuf",
  "ic-registry-routing-table",
  "ic-registry-subnet-type",
@@ -3399,7 +3416,7 @@ dependencies = [
  "candid",
  "ic-cdk-executor",
  "ic-cdk-macros",
- "ic-error-types 0.2.0",
+ "ic-error-types 0.2.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "ic-management-canister-types",
  "ic0",
  "serde",
@@ -4033,7 +4050,7 @@ source = "git+https://github.com/dfinity/ic.git?rev=ebed5d4228b71477738316ae3d52
 dependencies = [
  "ic-base-types",
  "ic-crypto-interfaces-sig-verification",
- "ic-error-types 0.2.0",
+ "ic-error-types 0.2.0 (git+https://github.com/dfinity/ic.git?rev=ebed5d4228b71477738316ae3d5274672eae369e)",
  "ic-heap-bytes",
  "ic-interfaces-state-manager",
  "ic-management-canister-types-private",
@@ -4225,7 +4242,7 @@ dependencies = [
  "ic-base-types",
  "ic-btc-interface",
  "ic-btc-replica-types",
- "ic-error-types 0.2.0",
+ "ic-error-types 0.2.0 (git+https://github.com/dfinity/ic.git?rev=ebed5d4228b71477738316ae3d5274672eae369e)",
  "ic-protobuf",
  "ic-utils 0.9.0",
  "num-traits",
@@ -4327,7 +4344,7 @@ dependencies = [
  "dfn_candid",
  "dfn_core",
  "ic-base-types",
- "ic-error-types 0.2.0",
+ "ic-error-types 0.2.0 (git+https://github.com/dfinity/ic.git?rev=ebed5d4228b71477738316ae3d5274672eae369e)",
  "ic-ledger-core",
  "ic-management-canister-types-private",
  "ic-nervous-system-canisters",
@@ -4758,7 +4775,7 @@ source = "git+https://github.com/dfinity/ic.git?rev=ebed5d4228b71477738316ae3d52
 dependencies = [
  "candid",
  "ic-node-rewards-canister-protobuf",
- "rewards-calculation 0.9.0 (git+https://github.com/dfinity/ic.git?rev=ebed5d4228b71477738316ae3d5274672eae369e)",
+ "rewards-calculation 0.9.0",
  "serde",
 ]
 
@@ -4773,7 +4790,7 @@ dependencies = [
  "ic-nervous-system-proto",
  "ic-stable-structures",
  "prost",
- "rewards-calculation 0.9.0 (git+https://github.com/dfinity/ic.git?rev=ebed5d4228b71477738316ae3d5274672eae369e)",
+ "rewards-calculation 0.9.0",
  "serde",
 ]
 
@@ -4785,7 +4802,7 @@ dependencies = [
  "bincode",
  "candid",
  "erased-serde 0.3.31",
- "ic-error-types 0.2.0",
+ "ic-error-types 0.2.0 (git+https://github.com/dfinity/ic.git?rev=ebed5d4228b71477738316ae3d5274672eae369e)",
  "prost",
  "serde",
  "serde_json",
@@ -5056,7 +5073,7 @@ dependencies = [
  "ic-certification-version",
  "ic-config",
  "ic-crypto-sha2",
- "ic-error-types 0.2.0",
+ "ic-error-types 0.2.0 (git+https://github.com/dfinity/ic.git?rev=ebed5d4228b71477738316ae3d5274672eae369e)",
  "ic-interfaces",
  "ic-limits",
  "ic-logger",
@@ -5472,7 +5489,7 @@ dependencies = [
  "ic-crypto-internal-types",
  "ic-crypto-sha2",
  "ic-crypto-tree-hash",
- "ic-error-types 0.2.0",
+ "ic-error-types 0.2.0 (git+https://github.com/dfinity/ic.git?rev=ebed5d4228b71477738316ae3d5274672eae369e)",
  "ic-heap-bytes",
  "ic-limits",
  "ic-management-canister-types-private",
@@ -8479,6 +8496,31 @@ dependencies = [
 ]
 
 [[package]]
+name = "serial_test"
+version = "2.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0e56dd856803e253c8f298af3f4d7eb0ae5e23a737252cd90bb4f3b435033b2d"
+dependencies = [
+ "dashmap",
+ "futures",
+ "lazy_static",
+ "log",
+ "parking_lot",
+ "serial_test_derive",
+]
+
+[[package]]
+name = "serial_test_derive"
+version = "2.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "91d129178576168c589c9ec973feedf7d3126c01ac2bf08795109aa35b69fb8f"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn 2.0.106",
+]
+
+[[package]]
 name = "service-discovery"
 version = "0.6.7"
 dependencies = [
@@ -10438,9 +10480,3 @@ dependencies = [
  "cc",
  "pkg-config",
 ]
-
-[[patch.unused]]
-name = "ic0"
-version = "0.23.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-
