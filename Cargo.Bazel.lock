@@ -1,5 +1,5 @@
 {
-  "checksum": "1ad44051fdab3020717ead2412f104d2309e44c90a9a4fea6dd4b6a375a18ba8",
+  "checksum": "4a2bcbd43338a9a0c33b03fa028db4119525bbfe24bd3194f8ce12b7c3d342d2",
   "crates": {
     "actix-codec 0.5.2": {
       "name": "actix-codec",
@@ -10734,6 +10734,69 @@
       ],
       "license_file": "LICENSE-APACHE"
     },
+    "dashmap 5.5.3": {
+      "name": "dashmap",
+      "version": "5.5.3",
+      "package_url": "https://github.com/xacrimon/dashmap",
+      "repository": {
+        "Http": {
+          "url": "https://static.crates.io/crates/dashmap/5.5.3/download",
+          "sha256": "978747c1d849a7d2ee5e8adc0159961c48fb7e5db2f06af6723b80123bb53856"
+        }
+      },
+      "targets": [
+        {
+          "Library": {
+            "crate_name": "dashmap",
+            "crate_root": "src/lib.rs",
+            "srcs": {
+              "allow_empty": true,
+              "include": [
+                "**/*.rs"
+              ]
+            }
+          }
+        }
+      ],
+      "library_target_name": "dashmap",
+      "common_attrs": {
+        "compile_data_glob": [
+          "**"
+        ],
+        "deps": {
+          "common": [
+            {
+              "id": "cfg-if 1.0.3",
+              "target": "cfg_if"
+            },
+            {
+              "id": "hashbrown 0.14.5",
+              "target": "hashbrown"
+            },
+            {
+              "id": "lock_api 0.4.12",
+              "target": "lock_api"
+            },
+            {
+              "id": "once_cell 1.21.3",
+              "target": "once_cell"
+            },
+            {
+              "id": "parking_lot_core 0.9.10",
+              "target": "parking_lot_core"
+            }
+          ],
+          "selects": {}
+        },
+        "edition": "2018",
+        "version": "5.5.3"
+      },
+      "license": "MIT",
+      "license_ids": [
+        "MIT"
+      ],
+      "license_file": "LICENSE"
+    },
     "data-encoding 2.7.0": {
       "name": "data-encoding",
       "version": "2.7.0",
@@ -12749,6 +12812,10 @@
               "target": "backon"
             },
             {
+              "id": "base64 0.22.1",
+              "target": "base64"
+            },
+            {
               "id": "candid 0.10.18",
               "target": "candid"
             },
@@ -12817,6 +12884,10 @@
               "target": "futures_util"
             },
             {
+              "id": "hex 0.4.3",
+              "target": "hex"
+            },
+            {
               "id": "human_bytes 0.4.3",
               "target": "human_bytes"
             },
@@ -12867,6 +12938,10 @@
             {
               "id": "ic-protobuf 0.9.0",
               "target": "ic_protobuf"
+            },
+            {
+              "id": "ic-registry-common-proto 0.9.0",
+              "target": "ic_registry_common_proto"
             },
             {
               "id": "ic-registry-keys 0.9.0",
@@ -13000,6 +13075,10 @@
             {
               "id": "actix-rt 2.11.0",
               "target": "actix_rt"
+            },
+            {
+              "id": "serial_test 2.0.0",
+              "target": "serial_test"
             }
           ],
           "selects": {}
@@ -49232,6 +49311,149 @@
       ],
       "license_file": "LICENSE-APACHE"
     },
+    "serial_test 2.0.0": {
+      "name": "serial_test",
+      "version": "2.0.0",
+      "package_url": "https://github.com/palfrey/serial_test/",
+      "repository": {
+        "Http": {
+          "url": "https://static.crates.io/crates/serial_test/2.0.0/download",
+          "sha256": "0e56dd856803e253c8f298af3f4d7eb0ae5e23a737252cd90bb4f3b435033b2d"
+        }
+      },
+      "targets": [
+        {
+          "Library": {
+            "crate_name": "serial_test",
+            "crate_root": "src/lib.rs",
+            "srcs": {
+              "allow_empty": true,
+              "include": [
+                "**/*.rs"
+              ]
+            }
+          }
+        }
+      ],
+      "library_target_name": "serial_test",
+      "common_attrs": {
+        "compile_data_glob": [
+          "**"
+        ],
+        "crate_features": {
+          "common": [
+            "async",
+            "default",
+            "futures",
+            "log",
+            "logging"
+          ],
+          "selects": {}
+        },
+        "deps": {
+          "common": [
+            {
+              "id": "dashmap 5.5.3",
+              "target": "dashmap"
+            },
+            {
+              "id": "futures 0.3.31",
+              "target": "futures"
+            },
+            {
+              "id": "lazy_static 1.5.0",
+              "target": "lazy_static"
+            },
+            {
+              "id": "log 0.4.28",
+              "target": "log"
+            },
+            {
+              "id": "parking_lot 0.12.3",
+              "target": "parking_lot"
+            }
+          ],
+          "selects": {}
+        },
+        "edition": "2018",
+        "proc_macro_deps": {
+          "common": [
+            {
+              "id": "serial_test_derive 2.0.0",
+              "target": "serial_test_derive"
+            }
+          ],
+          "selects": {}
+        },
+        "version": "2.0.0"
+      },
+      "license": "MIT",
+      "license_ids": [
+        "MIT"
+      ],
+      "license_file": "LICENSE"
+    },
+    "serial_test_derive 2.0.0": {
+      "name": "serial_test_derive",
+      "version": "2.0.0",
+      "package_url": "https://github.com/palfrey/serial_test/",
+      "repository": {
+        "Http": {
+          "url": "https://static.crates.io/crates/serial_test_derive/2.0.0/download",
+          "sha256": "91d129178576168c589c9ec973feedf7d3126c01ac2bf08795109aa35b69fb8f"
+        }
+      },
+      "targets": [
+        {
+          "ProcMacro": {
+            "crate_name": "serial_test_derive",
+            "crate_root": "src/lib.rs",
+            "srcs": {
+              "allow_empty": true,
+              "include": [
+                "**/*.rs"
+              ]
+            }
+          }
+        }
+      ],
+      "library_target_name": "serial_test_derive",
+      "common_attrs": {
+        "compile_data_glob": [
+          "**"
+        ],
+        "crate_features": {
+          "common": [
+            "async"
+          ],
+          "selects": {}
+        },
+        "deps": {
+          "common": [
+            {
+              "id": "proc-macro2 1.0.101",
+              "target": "proc_macro2"
+            },
+            {
+              "id": "quote 1.0.40",
+              "target": "quote"
+            },
+            {
+              "id": "syn 2.0.106",
+              "target": "syn"
+            }
+          ],
+          "selects": {}
+        },
+        "edition": "2018",
+        "version": "2.0.0"
+      },
+      "license": "MIT",
+      "license_ids": [
+        "MIT"
+      ],
+      "license_file": "LICENSE"
+    },
     "service-discovery 0.6.7": {
       "name": "service-discovery",
       "version": "0.6.7",
@@ -62559,13 +62781,8 @@
     "actix-rt 2.11.0",
     "assert_cmd 2.0.17",
     "maplit 1.0.2",
+    "serial_test 2.0.0",
     "wiremock 0.6.4"
   ],
-  "unused_patches": [
-    {
-      "name": "ic0",
-      "version": "0.23.0",
-      "source": "registry+https://github.com/rust-lang/crates.io-index"
-    }
-  ]
+  "unused_patches": []
 }
