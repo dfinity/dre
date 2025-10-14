@@ -1,4 +1,9 @@
-(record {
-    from_day_timestamp_nanos = 1752451200000000000;
-    to_day_timestamp_nanos = 1752451200000000000;
-})
+(
+  record {
+    day = record {
+      day = opt (13 : nat32);
+      month = opt (10 : nat32);
+      year = opt (2_025 : nat32);
+    };
+  },
+)

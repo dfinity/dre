@@ -18,7 +18,7 @@ ic-nervous-system-canisters = {  path = "../../../../../pietro.di.marco/Rustrove
 ic-node-rewards-canister = { path = "../../../../../pietro.di.marco/RustroverProjects/ic/rs/node_rewards/canister" }
 ic-node-rewards-canister-api = {  path = "../../../../../pietro.di.marco/RustroverProjects/ic/rs/node_rewards/canister/api" }
 ic-registry-canister-client = {  path = "../../../../../pietro.di.marco/RustroverProjects/ic/rs/registry/canister-client" }
-
+ic-nervous-system-timer-task = {  path = "../../../../../pietro.di.marco/RustroverProjects/ic/rs/nervous_system/timer_task" }
 candid = "0.10.19"
 itertools = "0.14.0"
 ic-cdk = { version = "^0.18.7" }

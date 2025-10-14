@@ -16,6 +16,7 @@ ic-node-rewards-canister-api = { workspace = true }
 ic-node-rewards-canister = { workspace = true }
 ic-nervous-system-canisters = { workspace = true }
 ic-registry-canister-client = { workspace = true }
+ic-nervous-system-timer-task = { workspace = true }
 itertools = { workspace = true }
 candid = { workspace = true }
 ic-cdk-timers = "0.12.2"

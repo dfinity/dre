@@ -1,58 +1,4 @@
 export const idlFactory = ({ IDL }) => {
-  const GetNodeProviderRewardsCalculationRequest = IDL.Record({
-    'day_timestamp_nanos' : IDL.Nat64,
-  });
-  const Decimal = IDL.Record({ 'human_readable' : IDL.Opt(IDL.Text) });
-  const NodeMetricsDaily = IDL.Record({
-    'subnet_assigned' : IDL.Opt(IDL.Principal),
-    'original_fr' : IDL.Opt(Decimal),
-    'num_blocks_proposed' : IDL.Opt(IDL.Nat64),
-    'subnet_assigned_fr' : IDL.Opt(Decimal),
-    'num_blocks_failed' : IDL.Opt(IDL.Nat64),
-    'relative_fr' : IDL.Opt(Decimal),
-  });
-  const NodeStatus = IDL.Variant({
-    'Unassigned' : IDL.Record({ 'extrapolated_fr' : IDL.Opt(Decimal) }),
-    'Assigned' : IDL.Record({ 'node_metrics' : IDL.Opt(NodeMetricsDaily) }),
-  });
-  const NodeResults = IDL.Record({
-    'region' : IDL.Opt(IDL.Text),
-    'performance_multiplier' : IDL.Opt(Decimal),
-    'node_id' : IDL.Opt(IDL.Principal),
-    'node_status' : IDL.Opt(NodeStatus),
-    'base_rewards_xdr_permyriad' : IDL.Opt(Decimal),
-    'node_reward_type' : IDL.Opt(IDL.Text),
-    'rewards_reduction' : IDL.Opt(Decimal),
-    'adjusted_rewards_xdr_permyriad' : IDL.Opt(Decimal),
-    'dc_id' : IDL.Opt(IDL.Text),
-  });
-  const BaseRewards = IDL.Record({
-    'region' : IDL.Opt(IDL.Text),
-    'daily_xdr_permyriad' : IDL.Opt(Decimal),
-    'node_reward_type' : IDL.Opt(IDL.Text),
-    'monthly_xdr_permyriad' : IDL.Opt(Decimal),
-  });
-  const BaseRewardsType3 = IDL.Record({
-    'region' : IDL.Opt(IDL.Text),
-    'value_xdr_permyriad' : IDL.Opt(Decimal),
-    'nodes_count' : IDL.Opt(IDL.Nat64),
-    'avg_coefficient' : IDL.Opt(Decimal),
-    'avg_rewards_xdr_permyriad' : IDL.Opt(Decimal),
-  });
-  const NodeProviderRewards = IDL.Record({
-    'rewards_total_xdr_permyriad' : IDL.Opt(Decimal),
-    'nodes_results' : IDL.Vec(NodeResults),
-    'base_rewards' : IDL.Vec(BaseRewards),
-    'base_rewards_type3' : IDL.Vec(BaseRewardsType3),
-  });
-  const DailyResults = IDL.Record({
-    'subnets_fr' : IDL.Vec(IDL.Tuple(IDL.Principal, Decimal)),
-    'provider_results' : IDL.Vec(IDL.Tuple(IDL.Principal, NodeProviderRewards)),
-  });
-  const GetNodeProviderRewardsCalculationResponse = IDL.Variant({
-    'Ok' : DailyResults,
-    'Err' : IDL.Text,
-  });
   const GetNodeProvidersMonthlyXdrRewardsRequest = IDL.Record({
     'registry_version' : IDL.Opt(IDL.Nat64),
   });
@@ -64,9 +10,14 @@ export const idlFactory = ({ IDL }) => {
     'error' : IDL.Opt(IDL.Text),
     'rewards' : IDL.Opt(NodeProvidersMonthlyXdrRewards),
   });
+  const DateUtc = IDL.Record({
+    'day' : IDL.Opt(IDL.Nat32),
+    'month' : IDL.Opt(IDL.Nat32),
+    'year' : IDL.Opt(IDL.Nat32),
+  });
   const GetNodeProvidersRewardsRequest = IDL.Record({
-    'from_day_timestamp_nanos' : IDL.Nat64,
-    'to_day_timestamp_nanos' : IDL.Nat64,
+    'to_day' : DateUtc,
+    'from_day' : DateUtc,
   });
   const NodeProvidersRewards = IDL.Record({
     'rewards_xdr_permyriad' : IDL.Vec(IDL.Tuple(IDL.Principal, IDL.Nat64)),
@@ -75,12 +26,64 @@ export const idlFactory = ({ IDL }) => {
     'Ok' : NodeProvidersRewards,
     'Err' : IDL.Text,
   });
+  const GetNodeProvidersRewardsCalculationRequest = IDL.Record({
+    'day' : DateUtc,
+  });
+  const NodeTypeRegionBaseRewards = IDL.Record({
+    'region' : IDL.Opt(IDL.Text),
+    'daily_xdr_permyriad' : IDL.Opt(IDL.Nat64),
+    'node_reward_type' : IDL.Opt(IDL.Text),
+    'monthly_xdr_permyriad' : IDL.Opt(IDL.Nat64),
+  });
+  const NodeMetricsDaily = IDL.Record({
+    'subnet_assigned' : IDL.Opt(IDL.Principal),
+    'original_fr_percent' : IDL.Opt(IDL.Float64),
+    'num_blocks_proposed' : IDL.Opt(IDL.Nat64),
+    'subnet_assigned_fr_percent' : IDL.Opt(IDL.Float64),
+    'relative_fr_percent' : IDL.Opt(IDL.Float64),
+    'num_blocks_failed' : IDL.Opt(IDL.Nat64),
+  });
+  const DailyNodeFailureRate = IDL.Variant({
+    'SubnetMember' : IDL.Record({ 'node_metrics' : IDL.Opt(NodeMetricsDaily) }),
+    'NonSubnetMember' : IDL.Record({
+      'extrapolated_fr_percent' : IDL.Opt(IDL.Float64),
+    }),
+  });
+  const DailyNodeRewards = IDL.Record({
+    'region' : IDL.Opt(IDL.Text),
+    'rewards_reduction_percent' : IDL.Opt(IDL.Float64),
+    'node_id' : IDL.Opt(IDL.Principal),
+    'daily_node_fr' : IDL.Opt(DailyNodeFailureRate),
+    'base_rewards_xdr_permyriad' : IDL.Opt(IDL.Nat64),
+    'node_reward_type' : IDL.Opt(IDL.Text),
+    'adjusted_rewards_xdr_permyriad' : IDL.Opt(IDL.Nat64),
+    'performance_multiplier_percent' : IDL.Opt(IDL.Float64),
+    'dc_id' : IDL.Opt(IDL.Text),
+  });
+  const Type3BaseRewards = IDL.Record({
+    'region' : IDL.Opt(IDL.Text),
+    'daily_xdr_permyriad' : IDL.Opt(IDL.Nat64),
+    'nodes_count' : IDL.Opt(IDL.Nat64),
+    'avg_coefficient_percent' : IDL.Opt(IDL.Float64),
+    'avg_rewards_xdr_permyriad' : IDL.Opt(IDL.Nat64),
+  });
+  const DailyNodeProviderRewards = IDL.Record({
+    'rewards_total_xdr_permyriad' : IDL.Opt(IDL.Nat64),
+    'base_rewards' : IDL.Vec(NodeTypeRegionBaseRewards),
+    'daily_nodes_rewards' : IDL.Vec(DailyNodeRewards),
+    'base_rewards_type3' : IDL.Vec(Type3BaseRewards),
+  });
+  const DailyResults = IDL.Record({
+    'subnets_fr' : IDL.Vec(IDL.Tuple(IDL.Principal, IDL.Float64)),
+    'provider_results' : IDL.Vec(
+      IDL.Tuple(IDL.Principal, DailyNodeProviderRewards)
+    ),
+  });
+  const GetNodeProvidersRewardsCalculationResponse = IDL.Variant({
+    'Ok' : DailyResults,
+    'Err' : IDL.Text,
+  });
   return IDL.Service({
-    'get_node_provider_rewards_calculation' : IDL.Func(
-        [GetNodeProviderRewardsCalculationRequest],
-        [GetNodeProviderRewardsCalculationResponse],
-        ['query'],
-      ),
     'get_node_providers_monthly_xdr_rewards' : IDL.Func(
         [GetNodeProvidersMonthlyXdrRewardsRequest],
         [GetNodeProvidersMonthlyXdrRewardsResponse],
@@ -90,6 +93,11 @@ export const idlFactory = ({ IDL }) => {
         [GetNodeProvidersRewardsRequest],
         [GetNodeProvidersRewardsResponse],
         [],
+      ),
+    'get_node_providers_rewards_calculation' : IDL.Func(
+        [GetNodeProvidersRewardsCalculationRequest],
+        [GetNodeProvidersRewardsCalculationResponse],
+        ['query'],
       ),
   });
 };
