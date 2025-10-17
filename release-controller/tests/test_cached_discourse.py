@@ -1,8 +1,9 @@
 from __future__ import annotations
 
 from typing import Any, cast
+from _pytest.monkeypatch import MonkeyPatch
 
-from cached_discourse import CachedDiscourse  # type: ignore
+from cached_discourse import CachedDiscourse
 
 
 class StubClient:
@@ -11,13 +12,13 @@ class StubClient:
         self.api_username = "user"
         self.calls: list[tuple[str, tuple[Any, ...], dict[str, Any]]] = []
 
-    def _get(self, path: str, *, page: int) -> dict:
+    def _get(self, path: str, *, page: int) -> dict[str, Any]:
         self.calls.append(("_get", (path,), {"page": page}))
         # Return a page-specific payload so cache hits are observable
         return {"path": path, "page": page, "posts": [page]}
 
 
-def test_topic_page_caches_and_invalidates(monkeypatch) -> None:
+def test_topic_page_caches_and_invalidates(monkeypatch: MonkeyPatch) -> None:
     stub = StubClient()
     cd = CachedDiscourse(cast(Any, stub), ttl_seconds=60)
 
@@ -41,12 +42,15 @@ def test_topic_page_caches_and_invalidates(monkeypatch) -> None:
     assert stub.calls[-1] == ("_get", ("/t/123.json",), {"page": 1})
 
 
-def test_topic_page_ttl_expiration(monkeypatch) -> None:
+def test_topic_page_ttl_expiration(monkeypatch: MonkeyPatch) -> None:
     stub = StubClient()
     cd = CachedDiscourse(cast(Any, stub), ttl_seconds=10)
 
     # Freeze time by monkeypatching time module inside instance
-    import cached_discourse as mod  # type: ignore
+    import importlib
+    from typing import Any as _Any
+
+    mod = cast(_Any, importlib.import_module("cached_discourse"))
 
     t = {"now": 1000.0}
 
@@ -55,7 +59,7 @@ def test_topic_page_ttl_expiration(monkeypatch) -> None:
 
     # Patch time.time used by CachedDiscourse
     orig_time = mod.time.time
-    mod.time.time = fake_time  # type: ignore
+    monkeypatch.setattr(mod.time, "time", fake_time)
     try:
         _ = cd.topic_page(321, 0)
         first_call = len(stub.calls)
@@ -68,4 +72,4 @@ def test_topic_page_ttl_expiration(monkeypatch) -> None:
         _ = cd.topic_page(321, 0)
         assert len(stub.calls) == first_call + 1
     finally:
-        mod.time.time = orig_time  # type: ignore
+        monkeypatch.setattr(mod.time, "time", orig_time)
