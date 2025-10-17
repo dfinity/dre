@@ -41,10 +41,15 @@ class CachedDiscourse:
     def topic_page(self, topic_id: int, page: int) -> dict[str, Any]:
         if self._ttl <= 0:
             LOGGER.info("[DISCOURSE_API] GET /t/%s.json?page=%s", topic_id, page + 1)
-            return cast(
+            raw = cast(
                 dict[str, Any],
                 self.client._get(f"/t/{topic_id}.json", page=page + 1),  # type: ignore[no-untyped-call]
             )
+            # Normalize returned page to requested zero-based page if present
+            ret = dict(raw)
+            if "page" in ret:
+                ret["page"] = page
+            return ret
         key = (topic_id, page)
         now = time.time()
         with self._lock:
@@ -55,16 +60,20 @@ class CachedDiscourse:
                     return value
         # miss or expired
         LOGGER.info("[DISCOURSE_API] GET /t/%s.json?page=%s", topic_id, page + 1)
-        value = cast(
+        raw = cast(
             dict[str, Any],
             self.client._get(f"/t/{topic_id}.json", page=page + 1),  # type: ignore[no-untyped-call]
         )
+        # Normalize returned page to requested zero-based page if present
+        normalized: dict[str, Any] = dict(raw)
+        if "page" in normalized:
+            normalized["page"] = page
         with self._lock:
-            self._topic_pages[key] = (now, value)
+            self._topic_pages[key] = (now, normalized)
             # opportunistic purge of expired entries
             if len(self._topic_pages) % 100 == 0:
                 self._purge_expired_unlocked(now)
-        return value
+        return normalized
 
     def invalidate_topic(self, topic_id: int) -> None:
         with self._lock:
