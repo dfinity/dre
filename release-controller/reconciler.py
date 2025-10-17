@@ -29,7 +29,9 @@ from publish_notes import (
     PublishNotesClient,
     PublishNotesClientProtocol,
     post_process_release_notes,
+    check_number_of_changes,
 )
+from release_index_loader import _verify_release_instructions
 from pydiscourse import DiscourseClient
 from release_index_loader import DevReleaseLoader
 from release_index_loader import GitReleaseLoader
@@ -562,7 +564,18 @@ class Reconciler:
             # 3) Final fallback to Google Docs (editor) contents if present
             gdocs_markdown = self.notes_client.markdown_file(commit_id, os_kind)
             if gdocs_markdown:
-                return post_process_release_notes(gdocs_markdown)
+                processed = post_process_release_notes(gdocs_markdown)
+                # Normalize to the main section only, like the publisher path
+                rn_start = processed.lower().find("release notes")
+                if rn_start != -1:
+                    processed = processed[rn_start:]
+                # Only use fallback if there are actual changes to publish
+                if check_number_of_changes(processed) == 0:
+                    return None
+                # Align with GH content by appending verification instructions
+                return processed + _verify_release_instructions(
+                    commit_id, os_kind, security_fix
+                )
             return None
 
         def save_draft(v: VersionState, content: str) -> None:
