@@ -29,9 +29,7 @@ from publish_notes import (
     PublishNotesClient,
     PublishNotesClientProtocol,
     post_process_release_notes,
-    check_number_of_changes,
 )
-from release_index_loader import _verify_release_instructions
 from pydiscourse import DiscourseClient
 from release_index_loader import DevReleaseLoader
 from release_index_loader import GitReleaseLoader
@@ -564,18 +562,19 @@ class Reconciler:
             # 3) Final fallback to Google Docs (editor) contents if present
             gdocs_markdown = self.notes_client.markdown_file(commit_id, os_kind)
             if gdocs_markdown:
-                processed = post_process_release_notes(gdocs_markdown)
-                # Normalize to the main section only, like the publisher path
-                rn_start = processed.lower().find("release notes")
-                if rn_start != -1:
-                    processed = processed[rn_start:]
-                # Only use fallback if there are actual changes to publish
-                if check_number_of_changes(processed) == 0:
-                    return None
-                # Align with GH content by appending verification instructions
-                return processed + _verify_release_instructions(
-                    commit_id, os_kind, security_fix
-                )
+                # Reuse the exact draft construction logic from the 'forum post draft' phase
+                draft = post_process_release_notes(gdocs_markdown)
+                draft_start = draft.lower().find("# release notes for")
+                if draft_start > 0:
+                    draft = draft[draft_start:]
+                else:
+                    # Handle variant where title is underlined instead of '#'
+                    draft_start = draft.lower().find("\nrelease notes for")
+                    assert draft_start > 0, (
+                        f"Could not find title in draft notes: {draft}"
+                    )
+                    draft = draft[draft_start + 1 :]
+                return draft
             return None
 
         def save_draft(v: VersionState, content: str) -> None:
