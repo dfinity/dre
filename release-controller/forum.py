@@ -253,8 +253,13 @@ class ReleaseCandidateForumTopic:
                                 url,
                                 content_expected,
                             )
-                            # Fail fast so the operator notices and fixes it
-                            raise
+                            # Do not abort the entire reconcile cycle:
+                            # proceed to next post and allow other work to continue.
+                            self._logger.warning(
+                                "Proceeding without automatic update for post %s due to earlier error; manual action required.",
+                                post_id,
+                            )
+                            continue
                         # Ensure there is ALWAYS a log when an update occurs
                         self._logger.info(
                             "Post %s updated => URL %s",
