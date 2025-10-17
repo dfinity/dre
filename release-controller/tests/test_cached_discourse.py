@@ -12,7 +12,8 @@ class StubClient:
         self.api_username = "user"
         self.calls: list[tuple[str, tuple[Any, ...], dict[str, Any]]] = []
 
-    def _get(self, path: str, *, page: int) -> dict[str, Any]:
+    def _get(self, path: str, *, page: int, **kwargs: Any) -> dict[str, Any]:
+        # Ignore extra kwargs like include_raw to mirror real client flexibility
         self.calls.append(("_get", (path,), {"page": page}))
         # Return a page-specific payload so cache hits are observable
         return {"path": path, "page": page, "posts": [page]}

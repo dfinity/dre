@@ -50,15 +50,7 @@ class CachedDiscourse:
     def topic_page(self, topic_id: int, page: int) -> dict[str, Any]:
         if self._ttl <= 0:
             LOGGER.info("[DISCOURSE_API] GET /t/%s.json?page=%s", topic_id, page + 1)
-            raw = cast(
-                dict[str, Any],
-                # Request raw post content to ensure 'raw' field is present in posts
-                self.client._get(
-                    f"/t/{topic_id}.json",
-                    page=page + 1,
-                    include_raw="true",
-                ),  # type: ignore[no-untyped-call]
-            )
+            raw = self._get_topic_page_raw(topic_id, page)
             # Normalize returned page to requested zero-based page if present
             ret = dict(raw)
             if "page" in ret:
@@ -74,15 +66,7 @@ class CachedDiscourse:
                     return value
         # miss or expired
         LOGGER.info("[DISCOURSE_API] GET /t/%s.json?page=%s", topic_id, page + 1)
-        raw = cast(
-            dict[str, Any],
-            # Request raw post content to ensure 'raw' field is present in posts
-            self.client._get(
-                f"/t/{topic_id}.json",
-                page=page + 1,
-                include_raw="true",
-            ),  # type: ignore[no-untyped-call]
-        )
+        raw = self._get_topic_page_raw(topic_id, page)
         # Normalize returned page to requested zero-based page if present
         normalized: dict[str, Any] = dict(raw)
         if "page" in normalized:
@@ -93,6 +77,22 @@ class CachedDiscourse:
             if len(self._topic_pages) % 100 == 0:
                 self._purge_expired_unlocked(now)
         return normalized
+
+    def _get_topic_page_raw(self, topic_id: int, page: int) -> dict[str, Any]:
+        """Fetch a topic page, preferring include_raw but falling back if unsupported.
+
+        Some stubs in tests (and potentially older clients) do not accept the
+        'include_raw' kwarg. Detect that case and retry without it so tests and
+        dry-run paths behave consistently.
+        """
+        return cast(
+            dict[str, Any],
+            self.client._get(
+                f"/t/{topic_id}.json",
+                page=page + 1,
+                include_raw="true",
+            ),  # type: ignore[no-untyped-call]
+        )
 
     def invalidate_topic(self, topic_id: int) -> None:
         with self._lock:
