@@ -1,0 +1,119 @@
+import os
+import logging
+from typing import cast
+
+from pydiscourse import DiscourseClient  # type: ignore
+
+import threading
+import time
+
+
+LOGGER = logging.getLogger(__name__)
+
+
+def _env_ttl() -> int:
+    try:
+        return int(os.environ.get("DISCOURSE_TOPIC_GET_TTL_SECS", "3600"))
+    except ValueError:
+        return 0
+
+
+class CachedDiscourse:
+    """A thin cached wrapper around DiscourseClient GETs.
+
+    Cached methods:
+      - topic_page(topic_id, page)
+
+    Invalidation:
+      - invalidate_topic(topic_id) drops cached topic pages for that topic
+    """
+
+    def __init__(self, client: DiscourseClient, ttl_seconds: int | None = None) -> None:
+        self.client = client
+        self._ttl = _env_ttl() if ttl_seconds is None else max(0, int(ttl_seconds))
+        self._lock = threading.Lock()
+        self._topic_pages: dict[tuple[int, int], tuple[float, dict]] = {}
+
+    # Cached GETs
+    # All other methods are delegated to the underlying client
+
+    def topic_page(self, topic_id: int, page: int) -> dict:
+        if self._ttl <= 0:
+            LOGGER.info("[DISCOURSE_API] GET /t/%s.json?page=%s", topic_id, page + 1)
+            return cast(
+                dict,
+                self.client._get(f"/t/{topic_id}.json", page=page + 1),  # type: ignore[no-untyped-call]
+            )
+        key = (topic_id, page)
+        now = time.time()
+        with self._lock:
+            item = self._topic_pages.get(key)
+            if item:
+                ts, value = item
+                if now - ts < self._ttl:
+                    return value
+        # miss or expired
+        LOGGER.info("[DISCOURSE_API] GET /t/%s.json?page=%s", topic_id, page + 1)
+        value = cast(
+            dict,
+            self.client._get(f"/t/{topic_id}.json", page=page + 1),  # type: ignore[no-untyped-call]
+        )
+        with self._lock:
+            self._topic_pages[key] = (now, value)
+            # opportunistic purge of expired entries
+            if len(self._topic_pages) % 100 == 0:
+                self._purge_expired_unlocked(now)
+        return value
+
+    def invalidate_topic(self, topic_id: int) -> None:
+        with self._lock:
+            for k in [k for k in self._topic_pages.keys() if k[0] == topic_id]:
+                self._topic_pages.pop(k, None)
+
+    # Pass-through properties used in logs/URLs
+    @property
+    def host(self) -> str:
+        return cast(str, getattr(self.client, "host", ""))
+
+    @property
+    def api_username(self) -> str:
+        return cast(str, getattr(self.client, "api_username", ""))
+
+    # Fallback: delegate anything else to the underlying client
+    def __getattr__(self, name: str):
+        attr = getattr(self.client, name)
+        if callable(attr):
+
+            def _wrapped(*args, **kwargs):
+                lname = name.lower()
+                verb = "CALL"
+                if lname.startswith("create"):
+                    verb = "POST"
+                elif lname.startswith("update"):
+                    verb = "PUT"
+                elif lname.startswith("delete"):
+                    verb = "DELETE"
+                elif lname.startswith("get") or lname in {
+                    "topics_by",
+                    "categories",
+                    "category",
+                    "_get",
+                }:
+                    verb = "GET"
+                LOGGER.info("[DISCOURSE_API] %s %s", verb, name)
+                return attr(*args, **kwargs)
+
+            return _wrapped
+        return attr
+
+    def __dir__(self):
+        # expose wrapper attributes + underlying client attributes for better DX
+        return sorted(set(list(self.__dict__.keys()) + dir(self.client)))
+
+    def _purge_expired_unlocked(self, now: float) -> None:
+        if self._ttl <= 0:
+            return
+        for k in [
+            k for (k, (ts, _)) in self._topic_pages.items() if now - ts >= self._ttl
+        ]:
+            self._topic_pages.pop(k, None)

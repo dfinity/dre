@@ -1,12 +1,11 @@
 import difflib
 import logging
 import os
-import threading
-import time
 from typing import cast, Callable, TypedDict, Protocol, ParamSpec
 
 from dotenv import load_dotenv
 from pydiscourse import DiscourseClient
+from cached_discourse import CachedDiscourse
 from release_index import Release, Version
 from util import version_name
 import reconciler_state
@@ -15,54 +14,6 @@ from const import OsKind, GUESTOS, HOSTOS
 LOGGER = logging.getLogger(__name__)
 
 P = ParamSpec("P")
-
-
-# Simple in-process TTL cache to reduce Discourse GETs for topics
-_TOPIC_GET_CACHE_LOCK = threading.Lock()
-_TOPIC_GET_CACHE: dict[tuple[int, int], tuple[float, dict]] = {}
-
-
-def _get_topic_page_with_cache(
-    client: DiscourseClient, topic_id: int, page: int
-) -> dict:
-    """Return topic page possibly from cache, honoring DISCOURSE_TOPIC_GET_TTL_SECS.
-
-    The TTL is applied per (topic_id, page). Set DISCOURSE_TOPIC_GET_TTL_SECS=0 to disable.
-    """
-    try:
-        # Discourse limits API requests to 20 requests per minute and 2880 per day.
-        # https://github.com/discourse/discourse/blob/main/config/discourse_defaults.conf#L251-L252
-        # By default, cache last-known page contents for 1 hour to avoid rate limiting.
-        ttl_secs = int(os.environ.get("DISCOURSE_TOPIC_GET_TTL_SECS", "3600"))
-    except ValueError:
-        # If the environment variable is not a valid integer, disable caching.
-        LOGGER.warning(
-            "DISCOURSE_TOPIC_GET_TTL_SECS is not a valid integer, disabling caching."
-        )
-        ttl_secs = 0
-
-    if ttl_secs <= 0:
-        return cast(
-            dict,
-            client._get(f"/t/{topic_id}.json", page=page + 1),  # type: ignore[no-untyped-call]
-        )
-
-    cache_key = (topic_id, page)
-    now = time.time()
-    with _TOPIC_GET_CACHE_LOCK:
-        cached = _TOPIC_GET_CACHE.get(cache_key)
-        if cached is not None:
-            ts, topic = cached
-            if now - ts < ttl_secs:
-                return topic
-
-    topic = cast(
-        dict,
-        client._get(f"/t/{topic_id}.json", page=page + 1),  # type: ignore[no-untyped-call]
-    )
-    with _TOPIC_GET_CACHE_LOCK:
-        _TOPIC_GET_CACHE[cache_key] = (now, topic)
-    return topic
 
 
 def trim_end_whitespace(f: Callable[P, str]) -> Callable[P, str]:
@@ -180,12 +131,12 @@ class ReleaseCandidateForumTopic:
         self._logger = LOGGER.getChild(self.__class__.__name__)
         self.posts_count = 1
         self.release = release
-        self.client = client
+        self.client = CachedDiscourse(client)
         self.nns_proposal_discussions_category_id = nns_proposal_discussions_category_id
         topic = next(
             (
                 t
-                for t in client.topics_by(self.client.api_username)  # type: ignore[no-untyped-call]
+                for t in self.client.topics_by()
                 if self.release.rc_name in t.get("title", "")
             ),
             None,
@@ -210,9 +161,9 @@ class ReleaseCandidateForumTopic:
         results = [
             post
             for page in range((self.posts_count - 1) // 20 + 1)
-            for post in _get_topic_page_with_cache(self.client, self.topic_id, page)[
-                "post_stream"
-            ]["posts"]
+            for post in self.client.topic_page(self.topic_id, page)["post_stream"][
+                "posts"
+            ]
             if post["yours"]
         ]
         if not results:
@@ -260,7 +211,8 @@ class ReleaseCandidateForumTopic:
                     proposal=p.proposal,
                     os_kind=p.os_kind,
                 )
-                post = cast(Post, self.client.post_by_id(post_id))  # type: ignore
+                # Reuse the already-fetched post from the cache
+                post = cast(Post, created_posts[i])
                 old = post["raw"].rstrip()
                 new = content_expected.rstrip()
                 if old == new:
@@ -290,6 +242,7 @@ class ReleaseCandidateForumTopic:
                             post_id,
                             self.post_to_url(post),
                         )
+                        self.client.invalidate_topic(self.topic_id)
                     else:
                         self._logger.warning(
                             "Post %s NOT editable. Skipping update => URL %s",
@@ -351,13 +304,13 @@ class ReleaseCandidateForumClient:
                 "id"
             ]
         else:
-            self.nns_proposal_discussions_category_id = self.discourse_client.category(
+            self.nns_proposal_discussions_category_id = self.discourse_client.category(  # type: ignore[no-untyped-call]
                 76
-            )[  # type: ignore[no-untyped-call]
+            )[
                 "category"
-            ][  # hardcoded category id, seems like "include_subcategories" is not working
+            ][
                 "id"
-            ]
+            ]  # hardcoded category id, seems like "include_subcategories" is not working
 
     def get_or_create(self, release: Release) -> ReleaseCandidateForumTopic:
         """Get or create a forum topic for the given release."""
