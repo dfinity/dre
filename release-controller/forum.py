@@ -1,6 +1,8 @@
 import difflib
 import logging
 import os
+import threading
+import time
 from typing import cast, Callable, TypedDict, Protocol, ParamSpec
 
 from dotenv import load_dotenv
@@ -13,6 +15,54 @@ from const import OsKind, GUESTOS, HOSTOS
 LOGGER = logging.getLogger(__name__)
 
 P = ParamSpec("P")
+
+
+# Simple in-process TTL cache to reduce Discourse GETs for topics
+_TOPIC_GET_CACHE_LOCK = threading.Lock()
+_TOPIC_GET_CACHE: dict[tuple[int, int], tuple[float, dict]] = {}
+
+
+def _get_topic_page_with_cache(
+    client: DiscourseClient, topic_id: int, page: int
+) -> dict:
+    """Return topic page possibly from cache, honoring DISCOURSE_TOPIC_GET_TTL_SECS.
+
+    The TTL is applied per (topic_id, page). Set DISCOURSE_TOPIC_GET_TTL_SECS=0 to disable.
+    """
+    try:
+        # Discourse limits API requests to 20 requests per minute and 2880 per day.
+        # https://github.com/discourse/discourse/blob/main/config/discourse_defaults.conf#L251-L252
+        # By default, cache last-known page contents for 1 hour to avoid rate limiting.
+        ttl_secs = int(os.environ.get("DISCOURSE_TOPIC_GET_TTL_SECS", "3600"))
+    except ValueError:
+        # If the environment variable is not a valid integer, disable caching.
+        LOGGER.warning(
+            "DISCOURSE_TOPIC_GET_TTL_SECS is not a valid integer, disabling caching."
+        )
+        ttl_secs = 0
+
+    if ttl_secs <= 0:
+        return cast(
+            dict,
+            client._get(f"/t/{topic_id}.json", page=page + 1),  # type: ignore[no-untyped-call]
+        )
+
+    cache_key = (topic_id, page)
+    now = time.time()
+    with _TOPIC_GET_CACHE_LOCK:
+        cached = _TOPIC_GET_CACHE.get(cache_key)
+        if cached is not None:
+            ts, topic = cached
+            if now - ts < ttl_secs:
+                return topic
+
+    topic = cast(
+        dict,
+        client._get(f"/t/{topic_id}.json", page=page + 1),  # type: ignore[no-untyped-call]
+    )
+    with _TOPIC_GET_CACHE_LOCK:
+        _TOPIC_GET_CACHE[cache_key] = (now, topic)
+    return topic
 
 
 def trim_end_whitespace(f: Callable[P, str]) -> Callable[P, str]:
@@ -160,10 +210,9 @@ class ReleaseCandidateForumTopic:
         results = [
             post
             for page in range((self.posts_count - 1) // 20 + 1)
-            for post in cast(
-                Topic,
-                self.client._get(f"/t/{self.topic_id}.json", page=page + 1),  # type: ignore[no-untyped-call]
-            )["post_stream"]["posts"]
+            for post in _get_topic_page_with_cache(self.client, self.topic_id, page)[
+                "post_stream"
+            ]["posts"]
             if post["yours"]
         ]
         if not results:
@@ -212,25 +261,40 @@ class ReleaseCandidateForumTopic:
                     os_kind=p.os_kind,
                 )
                 post = cast(Post, self.client.post_by_id(post_id))  # type: ignore
-                if post["raw"] == content_expected:
+                old = post["raw"].rstrip()
+                new = content_expected.rstrip()
+                if old == new:
                     # log the complete URL of the post
                     self._logger.debug("Post up to date: %s.", self.post_to_url(post))
                     continue
                 else:
-                    old = post["raw"].splitlines(True)
-                    new = content_expected.splitlines(True)
-                    difference = difflib.unified_diff(old, new)
-                    self._logger.info("Post %s differs:", post_id)
-                    for line in difference:
-                        self._logger.info("  %s", line.rstrip())
+                    self._logger.info(
+                        "Post %s differs (URL: %s):", post_id, self.post_to_url(post)
+                    )
+                    difference = difflib.unified_diff(
+                        old.splitlines(True), new.splitlines(True)
+                    )
+                    self._logger.info("  📝 DIFF:\n%s", "".join(difference))
                     if post["can_edit"]:
-                        self._logger.info("Updating post %s.", post_id)
+                        self._logger.info(
+                            "Post %s updating => URL %s",
+                            post_id,
+                            self.post_to_url(post),
+                        )
                         self.client.update_post(
                             post_id=post_id, content=content_expected
                         )  # type: ignore
+                        # Ensure there is ALWAYS a log when an update occurs
+                        self._logger.info(
+                            "Post %s updated => URL %s",
+                            post_id,
+                            self.post_to_url(post),
+                        )
                     else:
                         self._logger.warning(
-                            "Post %s is not editable.  Ignoring.", post_id
+                            "Post %s NOT editable. Skipping update => URL %s",
+                            post_id,
+                            self.post_to_url(post),
                         )
             else:
                 self._logger.debug("Creating new post.")
