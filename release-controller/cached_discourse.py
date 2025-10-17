@@ -18,6 +18,13 @@ def _env_ttl() -> int:
         return 0
 
 
+def _env_write_timeout() -> int:
+    try:
+        return int(os.environ.get("DISCOURSE_WRITE_TIMEOUT_SECS", "20"))
+    except ValueError:
+        return 20
+
+
 class CachedDiscourse:
     """A thin cached wrapper around DiscourseClient GETs.
 
@@ -34,6 +41,8 @@ class CachedDiscourse:
         self._lock = threading.Lock()
         # key: (topic_id, page) -> (timestamp, payload)
         self._topic_pages: dict[tuple[int, int], tuple[float, dict[str, Any]]] = {}
+        # Fail-fast timeout for write operations (POST/PUT/DELETE)
+        self._write_timeout_seconds = _env_write_timeout()
 
     # Cached GETs
     # All other methods are delegated to the underlying client
@@ -43,7 +52,12 @@ class CachedDiscourse:
             LOGGER.info("[DISCOURSE_API] GET /t/%s.json?page=%s", topic_id, page + 1)
             raw = cast(
                 dict[str, Any],
-                self.client._get(f"/t/{topic_id}.json", page=page + 1),  # type: ignore[no-untyped-call]
+                # Request raw post content to ensure 'raw' field is present in posts
+                self.client._get(
+                    f"/t/{topic_id}.json",
+                    page=page + 1,
+                    include_raw="true",
+                ),  # type: ignore[no-untyped-call]
             )
             # Normalize returned page to requested zero-based page if present
             ret = dict(raw)
@@ -62,7 +76,12 @@ class CachedDiscourse:
         LOGGER.info("[DISCOURSE_API] GET /t/%s.json?page=%s", topic_id, page + 1)
         raw = cast(
             dict[str, Any],
-            self.client._get(f"/t/{topic_id}.json", page=page + 1),  # type: ignore[no-untyped-call]
+            # Request raw post content to ensure 'raw' field is present in posts
+            self.client._get(
+                f"/t/{topic_id}.json",
+                page=page + 1,
+                include_raw="true",
+            ),  # type: ignore[no-untyped-call]
         )
         # Normalize returned page to requested zero-based page if present
         normalized: dict[str, Any] = dict(raw)
@@ -111,6 +130,34 @@ class CachedDiscourse:
                 }:
                     verb = "GET"
                 LOGGER.info("[DISCOURSE_API] %s %s", verb, name)
+                # For write operations, execute with a timeout so we don't block for hours
+                if verb in {"POST", "PUT", "DELETE"}:
+                    result_container: dict[str, Any] = {}
+                    error_container: dict[str, BaseException] = {}
+
+                    def _invoke() -> None:
+                        try:
+                            result_container["result"] = attr(*args, **kwargs)
+                        except BaseException as e:  # propagate any exception
+                            error_container["error"] = e
+
+                    t = threading.Thread(target=_invoke, daemon=True)
+                    t.start()
+                    t.join(self._write_timeout_seconds)
+                    if t.is_alive():
+                        LOGGER.error(
+                            "[DISCOURSE_API] %s %s timed out after %ss",
+                            verb,
+                            name,
+                            self._write_timeout_seconds,
+                        )
+                        raise TimeoutError(
+                            f"Discourse {verb} {name} timed out after {self._write_timeout_seconds}s"
+                        )
+                    if "error" in error_container:
+                        raise error_container["error"]
+                    return result_container.get("result")
+                # For reads, just delegate
                 return attr(*args, **kwargs)
 
             return _wrapped
