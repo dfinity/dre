@@ -1,8 +1,8 @@
 import os
 import logging
-from typing import cast
+from typing import Any, cast
 
-from pydiscourse import DiscourseClient  # type: ignore
+from pydiscourse import DiscourseClient
 
 import threading
 import time
@@ -32,16 +32,17 @@ class CachedDiscourse:
         self.client = client
         self._ttl = _env_ttl() if ttl_seconds is None else max(0, int(ttl_seconds))
         self._lock = threading.Lock()
-        self._topic_pages: dict[tuple[int, int], tuple[float, dict]] = {}
+        # key: (topic_id, page) -> (timestamp, payload)
+        self._topic_pages: dict[tuple[int, int], tuple[float, dict[str, Any]]] = {}
 
     # Cached GETs
     # All other methods are delegated to the underlying client
 
-    def topic_page(self, topic_id: int, page: int) -> dict:
+    def topic_page(self, topic_id: int, page: int) -> dict[str, Any]:
         if self._ttl <= 0:
             LOGGER.info("[DISCOURSE_API] GET /t/%s.json?page=%s", topic_id, page + 1)
             return cast(
-                dict,
+                dict[str, Any],
                 self.client._get(f"/t/{topic_id}.json", page=page + 1),  # type: ignore[no-untyped-call]
             )
         key = (topic_id, page)
@@ -55,7 +56,7 @@ class CachedDiscourse:
         # miss or expired
         LOGGER.info("[DISCOURSE_API] GET /t/%s.json?page=%s", topic_id, page + 1)
         value = cast(
-            dict,
+            dict[str, Any],
             self.client._get(f"/t/{topic_id}.json", page=page + 1),  # type: ignore[no-untyped-call]
         )
         with self._lock:
@@ -80,11 +81,11 @@ class CachedDiscourse:
         return cast(str, getattr(self.client, "api_username", ""))
 
     # Fallback: delegate anything else to the underlying client
-    def __getattr__(self, name: str):
+    def __getattr__(self, name: str) -> Any:
         attr = getattr(self.client, name)
         if callable(attr):
 
-            def _wrapped(*args, **kwargs):
+            def _wrapped(*args: Any, **kwargs: Any) -> Any:
                 lname = name.lower()
                 verb = "CALL"
                 if lname.startswith("create"):
@@ -106,7 +107,7 @@ class CachedDiscourse:
             return _wrapped
         return attr
 
-    def __dir__(self):
+    def __dir__(self) -> list[str]:
         # expose wrapper attributes + underlying client attributes for better DX
         return sorted(set(list(self.__dict__.keys()) + dir(self.client)))
 

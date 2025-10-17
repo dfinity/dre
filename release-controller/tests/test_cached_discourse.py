@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Any, cast
 
-from release_controller.cached_discourse import CachedDiscourse  # type: ignore
+from cached_discourse import CachedDiscourse  # type: ignore
 
 
 class StubClient:
@@ -46,7 +46,7 @@ def test_topic_page_ttl_expiration(monkeypatch) -> None:
     cd = CachedDiscourse(cast(Any, stub), ttl_seconds=10)
 
     # Freeze time by monkeypatching time module inside instance
-    import release_controller.cached_discourse as mod  # type: ignore
+    import cached_discourse as mod  # type: ignore
 
     t = {"now": 1000.0}
 

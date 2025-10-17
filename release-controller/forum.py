@@ -136,7 +136,7 @@ class ReleaseCandidateForumTopic:
         topic = next(
             (
                 t
-                for t in self.client.topics_by()
+                for t in self.client.topics_by(self.client.api_username)
                 if self.release.rc_name in t.get("title", "")
             ),
             None,
@@ -212,7 +212,7 @@ class ReleaseCandidateForumTopic:
                     os_kind=p.os_kind,
                 )
                 # Reuse the already-fetched post from the cache
-                post = cast(Post, created_posts[i])
+                post = created_posts[i]
                 old = post["raw"].rstrip()
                 new = content_expected.rstrip()
                 if old == new:
@@ -235,7 +235,7 @@ class ReleaseCandidateForumTopic:
                         )
                         self.client.update_post(
                             post_id=post_id, content=content_expected
-                        )  # type: ignore
+                        )
                         # Ensure there is ALWAYS a log when an update occurs
                         self._logger.info(
                             "Post %s updated => URL %s",
@@ -251,7 +251,7 @@ class ReleaseCandidateForumTopic:
                         )
             else:
                 self._logger.debug("Creating new post.")
-                self.client.create_post(  # type: ignore
+                self.client.create_post(
                     topic_id=self.topic_id,
                     content=_post_template(
                         version_name=p.version_name,
@@ -266,7 +266,7 @@ class ReleaseCandidateForumTopic:
         post_index = [
             i for i, v in enumerate(self.release.versions) if v.version == version
         ][0]
-        post = self.client.post_by_id(post_id=self.created_posts()[post_index]["id"])  # type: ignore[no-untyped-call]
+        post = self.client.post_by_id(post_id=self.created_posts()[post_index]["id"])
         if not post:
             raise RuntimeError("failed to find post")
         return self.post_to_url(post)
@@ -278,7 +278,7 @@ class ReleaseCandidateForumTopic:
 
     def add_version(self, content: str) -> None:
         """Add a new version to the topic."""
-        self.client.create_post(  # type: ignore[no-untyped-call]
+        self.client.create_post(
             topic_id=self.topic_id,
             content=content,
         )
