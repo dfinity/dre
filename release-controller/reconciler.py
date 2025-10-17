@@ -543,12 +543,39 @@ class Reconciler:
             commit_id: str, os_kind: OsKind, security_fix: bool
         ) -> str | None:
             """
-            If a version/OS has release notes, return them.
-            Else fall back to a prepared draft if any exists.
+            Resolution order for forum post content:
+              1) GitHub-published changelog (via ReleaseLoader)
+              2) In-memory draft prepared earlier in this run
+              3) Google Docs content (fallback), post-processed
             """
-            return self.loader.proposal_summary(
-                commit_id, os_kind, security_fix
-            ) or drafts.get(f"{commit_id}-{os_kind}")
+            # 1) Prefer the published changelog in the repo if available
+            gh_summary = self.loader.proposal_summary(commit_id, os_kind, security_fix)
+            if gh_summary:
+                return gh_summary
+
+            # 2) Fallback to any prepared draft content in-memory
+            draft_key = f"{commit_id}-{os_kind}"
+            draft_summary = drafts.get(draft_key)
+            if draft_summary:
+                return draft_summary
+
+            # 3) Final fallback to Google Docs (editor) contents if present
+            gdocs_markdown = self.notes_client.markdown_file(commit_id, os_kind)
+            if gdocs_markdown:
+                # Reuse the exact draft construction logic from the 'forum post draft' phase
+                draft = post_process_release_notes(gdocs_markdown)
+                draft_start = draft.lower().find("# release notes for")
+                if draft_start > 0:
+                    draft = draft[draft_start:]
+                else:
+                    # Handle variant where title is underlined instead of '#'
+                    draft_start = draft.lower().find("\nrelease notes for")
+                    assert draft_start > 0, (
+                        f"Could not find title in draft notes: {draft}"
+                    )
+                    draft = draft[draft_start + 1 :]
+                return draft
+            return None
 
         def save_draft(v: VersionState, content: str) -> None:
             drafts[f"{v.git_revision}-{v.os_kind}"] = content

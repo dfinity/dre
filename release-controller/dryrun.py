@@ -138,7 +138,7 @@ class StubDiscourseClient(object):
             )
         self._persist()
 
-    def _get(self, api_url: str, page: int) -> forum.Topic:
+    def _get(self, api_url: str, page: int, **_: object) -> forum.Topic:
         topic_id = int(api_url.split("/")[2].split(".")[0])
         if page > 1:
             raise RuntimeError("Mock DiscourseClient class does not support pages > 2")

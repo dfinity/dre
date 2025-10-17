@@ -233,9 +233,33 @@ class ReleaseCandidateForumTopic:
                             post_id,
                             self.post_to_url(post),
                         )
-                        self.client.update_post(
-                            post_id=post_id, content=content_expected
-                        )
+                        try:
+                            self.client.update_post(
+                                post_id=post_id, content=content_expected
+                            )
+                        except Exception:
+                            # Log full content and actionable recovery steps for operators
+                            url = self.post_to_url(post)
+                            self._logger.exception(
+                                "Post %s update FAILED => URL %s", post_id, url
+                            )
+                            self._logger.error(
+                                "MANUAL ACTION REQUIRED: Update the forum post content to proceed.\n"
+                                "Step 1: Open the post URL: %s\n"
+                                "Step 2: Click the ... at the bottom right of the post to open the edit (pencil) icon. Click the Markdown icon far left.\n"
+                                "Step 3: Replace the entire content with the NEW CONTENT below.\n"
+                                "Step 4: Save the post. The reconciler will detect the change on the next run.\n"
+                                "NEW CONTENT START\n%s\nNEW CONTENT END",
+                                url,
+                                content_expected,
+                            )
+                            # Do not abort the entire reconcile cycle:
+                            # proceed to next post and allow other work to continue.
+                            self._logger.warning(
+                                "Proceeding without automatic update for post %s due to earlier error; manual action required.",
+                                post_id,
+                            )
+                            continue
                         # Ensure there is ALWAYS a log when an update occurs
                         self._logger.info(
                             "Post %s updated => URL %s",
@@ -248,6 +272,18 @@ class ReleaseCandidateForumTopic:
                             "Post %s NOT editable. Skipping update => URL %s",
                             post_id,
                             self.post_to_url(post),
+                        )
+                        # Provide manual recovery instructions with full content
+                        self._logger.warning(
+                            "MANUAL ACTION REQUIRED: You do not have permission to edit this post automatically. "
+                            "Please update it manually to proceed.\n"
+                            "Step 1: Open the post URL: %s\n"
+                            "Step 2: Click the ... at the bottom right of the post to open the edit (pencil) icon. Click the Markdown icon far left.\n"
+                            "Step 3: Replace the entire content with the NEW CONTENT below.\n"
+                            "Step 4: Save the post. The reconciler will detect the change on the next run.\n"
+                            "NEW CONTENT START\n%s\nNEW CONTENT END",
+                            self.post_to_url(post),
+                            content_expected,
                         )
             else:
                 self._logger.debug("Creating new post.")
