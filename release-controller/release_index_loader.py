@@ -73,7 +73,7 @@ class ReleaseLoader:
             )
             return open(version_changelog_path, "r").read()
         self._logger.debug(
-            "Changelog for %s %s is not ready for proposal; it does not exist yet.",
+            "Changelog is not yet ready for %s proposal for version %s.",
             os_kind,
             version,
         )

@@ -5,6 +5,7 @@ from typing import cast, Callable, TypedDict, Protocol, ParamSpec
 
 from dotenv import load_dotenv
 from pydiscourse import DiscourseClient
+from cached_discourse import CachedDiscourse
 from release_index import Release, Version
 from util import version_name
 import reconciler_state
@@ -130,12 +131,12 @@ class ReleaseCandidateForumTopic:
         self._logger = LOGGER.getChild(self.__class__.__name__)
         self.posts_count = 1
         self.release = release
-        self.client = client
+        self.client = CachedDiscourse(client)
         self.nns_proposal_discussions_category_id = nns_proposal_discussions_category_id
         topic = next(
             (
                 t
-                for t in client.topics_by(self.client.api_username)  # type: ignore[no-untyped-call]
+                for t in self.client.topics_by(self.client.api_username)
                 if self.release.rc_name in t.get("title", "")
             ),
             None,
@@ -160,10 +161,9 @@ class ReleaseCandidateForumTopic:
         results = [
             post
             for page in range((self.posts_count - 1) // 20 + 1)
-            for post in cast(
-                Topic,
-                self.client._get(f"/t/{self.topic_id}.json", page=page + 1),  # type: ignore[no-untyped-call]
-            )["post_stream"]["posts"]
+            for post in self.client.topic_page(self.topic_id, page)["post_stream"][
+                "posts"
+            ]
             if post["yours"]
         ]
         if not results:
@@ -211,30 +211,47 @@ class ReleaseCandidateForumTopic:
                     proposal=p.proposal,
                     os_kind=p.os_kind,
                 )
-                post = cast(Post, self.client.post_by_id(post_id))  # type: ignore
-                if post["raw"] == content_expected:
+                # Reuse the already-fetched post from the cache
+                post = created_posts[i]
+                old = post["raw"].rstrip()
+                new = content_expected.rstrip()
+                if old == new:
                     # log the complete URL of the post
                     self._logger.debug("Post up to date: %s.", self.post_to_url(post))
                     continue
                 else:
-                    old = post["raw"].splitlines(True)
-                    new = content_expected.splitlines(True)
-                    difference = difflib.unified_diff(old, new)
-                    self._logger.info("Post %s differs:", post_id)
-                    for line in difference:
-                        self._logger.info("  %s", line.rstrip())
+                    self._logger.info(
+                        "Post %s differs (URL: %s):", post_id, self.post_to_url(post)
+                    )
+                    difference = difflib.unified_diff(
+                        old.splitlines(True), new.splitlines(True)
+                    )
+                    self._logger.info("  📝 DIFF:\n%s", "".join(difference))
                     if post["can_edit"]:
-                        self._logger.info("Updating post %s.", post_id)
+                        self._logger.info(
+                            "Post %s updating => URL %s",
+                            post_id,
+                            self.post_to_url(post),
+                        )
                         self.client.update_post(
                             post_id=post_id, content=content_expected
-                        )  # type: ignore
+                        )
+                        # Ensure there is ALWAYS a log when an update occurs
+                        self._logger.info(
+                            "Post %s updated => URL %s",
+                            post_id,
+                            self.post_to_url(post),
+                        )
+                        self.client.invalidate_topic(self.topic_id)
                     else:
                         self._logger.warning(
-                            "Post %s is not editable.  Ignoring.", post_id
+                            "Post %s NOT editable. Skipping update => URL %s",
+                            post_id,
+                            self.post_to_url(post),
                         )
             else:
                 self._logger.debug("Creating new post.")
-                self.client.create_post(  # type: ignore
+                self.client.create_post(
                     topic_id=self.topic_id,
                     content=_post_template(
                         version_name=p.version_name,
@@ -249,7 +266,7 @@ class ReleaseCandidateForumTopic:
         post_index = [
             i for i, v in enumerate(self.release.versions) if v.version == version
         ][0]
-        post = self.client.post_by_id(post_id=self.created_posts()[post_index]["id"])  # type: ignore[no-untyped-call]
+        post = self.client.post_by_id(post_id=self.created_posts()[post_index]["id"])
         if not post:
             raise RuntimeError("failed to find post")
         return self.post_to_url(post)
@@ -261,7 +278,7 @@ class ReleaseCandidateForumTopic:
 
     def add_version(self, content: str) -> None:
         """Add a new version to the topic."""
-        self.client.create_post(  # type: ignore[no-untyped-call]
+        self.client.create_post(
             topic_id=self.topic_id,
             content=content,
         )
@@ -287,13 +304,13 @@ class ReleaseCandidateForumClient:
                 "id"
             ]
         else:
-            self.nns_proposal_discussions_category_id = self.discourse_client.category(
+            self.nns_proposal_discussions_category_id = self.discourse_client.category(  # type: ignore[no-untyped-call]
                 76
-            )[  # type: ignore[no-untyped-call]
+            )[
                 "category"
-            ][  # hardcoded category id, seems like "include_subcategories" is not working
+            ][
                 "id"
-            ]
+            ]  # hardcoded category id, seems like "include_subcategories" is not working
 
     def get_or_create(self, release: Release) -> ReleaseCandidateForumTopic:
         """Get or create a forum topic for the given release."""

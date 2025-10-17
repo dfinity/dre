@@ -166,7 +166,7 @@ class PublishNotesClient:
         release_notes_start = changelog.find("Release Notes")
         if release_notes_start == -1:
             raise ValueError(
-                "Could not find release notes section for version %s" % version
+                f"{os_kind}: Could not find release notes section for version {version}"
             )
 
         # Attempt to find NO text between the Review checklist sentence and the Release notes headline.
@@ -175,11 +175,18 @@ class PublishNotesClient:
         # because all teams elected to not review the changelog, then this should immediately succeed
         # and the reconciler (which calls this code) should proceed immediately with publishing the
         # post-processed changelog (from Google Drive) to Github.
-        if not re.match(
-            r"^Review checklist=+Please cross(\\|)-out your team once you finished the review\s*$",
-            changelog[:release_notes_start].replace("\n", ""),
-        ):
-            logger.info("Release notes not yet ready")
+        intro_raw = changelog[:release_notes_start]
+        # Ready only if there are no remaining non-crossed reviewer bullets
+        remaining_bullets = [
+            ln for ln in intro_raw.splitlines() if re.match(r"^\s*[-*]\s", ln)
+        ]
+        if remaining_bullets:
+            logger.info(
+                "%s: Release notes not yet ready for version %s", os_kind, version
+            )
+            logger.info("Intro section lines before 'Release Notes for':")
+            for idx, line in enumerate(intro_raw.splitlines(), start=1):
+                logger.info("  %02d| %s", idx, line)
             return
 
         changelog = changelog[release_notes_start:]
@@ -188,7 +195,6 @@ class PublishNotesClient:
                 "Release notes for version %s contain no commits that would be published"
                 % version
             )
-            return
         # TODO: parse markdown to check formatting is correct
         self.ensure_published(version=version, changelog=changelog, os_kind=os_kind)
 
