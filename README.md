@@ -35,6 +35,7 @@ DRE provides a powerful set of tools and services:
 - **DRE CLI Tool**: Command-line interface for interacting with IC infrastructure
   - Available as a pre-built binary on [GitHub Releases](https://github.com/dfinity/dre/releases)
   - Examples available in [NNS proposals documentation](nns-proposals.md)
+  - Registry versions dump docs: [registry-versions.md](docs/registry-versions.md)
 
 - **DRE Dashboard**: Comprehensive monitoring and management interface
   - Frontend and backend components

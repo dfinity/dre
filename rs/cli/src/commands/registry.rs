@@ -1,5 +1,6 @@
 use crate::ctx::DreContext;
 use crate::{auth::AuthRequirement, exe::args::GlobalArgs, exe::ExecutableCommand};
+use base64::{engine::general_purpose::STANDARD as BASE64, Engine as _};
 use clap::Args;
 use ic_canisters::governance::GovernanceCanisterWrapper;
 use ic_canisters::IcAgentCanisterClient;
@@ -20,6 +21,7 @@ use icp_ledger::AccountIdentifier;
 use indexmap::IndexMap;
 use itertools::Itertools;
 use log::{info, warn};
+use prost::Message;
 use regex::Regex;
 use serde::Serialize;
 use serde_json::Value;
@@ -39,7 +41,18 @@ use std::{
     dre registry --filter rewards_correct!=true              # Entries for which rewardable_nodes != total_up_nodes
     dre registry --filter "node_type=type1"                              # Entries where node_type == "type1"
     dre registry -o registry.json --filter "subnet_id startswith tdb26"  # Write to file and filter by subnet_id
-    dre registry -o registry.json --filter "node_id contains h5zep"      # Write to file and filter by node_id"#)]
+    dre registry -o registry.json --filter "node_id contains h5zep"      # Write to file and filter by node_id
+
+  Registry versions/records dump:
+    dre registry --dump-version 12345                                    # Dump a single registry version in JSON format (flat list of records)
+    dre registry --dump-version-range                                    # Dump ALL versions (same as 0 -1)
+    dre registry --dump-version-range 0 -1                               # Dump range by index [from..to], Python-style indexing
+    dre registry --dump-version-range -5 -1                              # Dump last 5 versions
+
+  Notes:
+    - Values are best-effort decoded by key; unknown bytes are shown as {"bytes_base64": "..."}.
+    - For known protobuf records, embedded byte arrays are compacted to base64 strings for readability.
+"#)]
 pub struct Registry {
     /// Output file (default is stdout)
     #[clap(short = 'o', long)]
@@ -52,6 +65,22 @@ pub struct Registry {
     /// Specify the height for the registry
     #[clap(long, visible_aliases = ["registry-height", "version"])]
     pub height: Option<u64>,
+
+    /// Dump raw registry version (flat list of {version,key,value})
+    #[clap(long, value_name = "VERSION", conflicts_with_all = ["filters", "dump_version_range"], visible_aliases = ["json-version", "dump-version-json", "dump-json-version"])]
+    pub dump_version: Option<i64>,
+
+    /// Dump raw registry versions in range by index; defaults to 0 -1 if no args
+    #[clap(
+        long = "dump-version-range",
+        num_args(0..=2),
+        value_names = ["FROM", "TO"],
+        allow_hyphen_values = true,
+        conflicts_with_all = ["filters", "dump_version"],
+        visible_aliases = ["dump-version-range-json", "dump-json-version-range", "json-version-range"],
+        help = "Index-based range over available versions. Negative indexes allowed (Python-style). If omitted, defaults to 0 -1."
+    )]
+    pub dump_version_range: Option<Vec<i64>>,
 }
 
 #[derive(Debug, Clone)]
@@ -101,11 +130,18 @@ impl ExecutableCommand for Registry {
             None => Box::new(std::io::stdout()),
         };
 
-        let registry = self.get_registry(ctx).await?;
+        // Versions/records mode
+        if self.dump_version.is_some() || self.dump_version_range.is_some() {
+            let json_value = self.dump_versions_json(ctx).await?;
+            serde_json::to_writer_pretty(writer, &json_value)?;
+            return Ok(());
+        }
 
+        // Friendly aggregated registry view (default)
+        let registry = self.get_registry(ctx).await?;
         let mut serde_value = serde_json::to_value(registry)?;
         self.filters.iter().for_each(|filter| {
-            filter_json_value(&mut serde_value, &filter.key, &filter.value, &filter.comparison);
+            let _ = filter_json_value(&mut serde_value, &filter.key, &filter.value, &filter.comparison);
         });
 
         serde_json::to_writer_pretty(writer, &serde_value)?;
@@ -116,6 +152,141 @@ impl ExecutableCommand for Registry {
     fn validate(&self, _args: &GlobalArgs, _cmd: &mut clap::Command) {}
 }
 
+impl Registry {
+    pub(crate) async fn dump_versions_json(&self, ctx: DreContext) -> anyhow::Result<serde_json::Value> {
+        use ic_registry_common_proto::pb::local_store::v1::ChangelogEntry as PbChangelogEntry;
+
+        // Ensure local registry is initialized/synced to have content available
+        // (no-op in offline mode)
+        let _ = ctx.registry_with_version(None).await;
+
+        let base_dirs = local_registry_dirs_for_ctx(&ctx)?;
+
+        // Walk all .pb files recursively across candidates; stop at first non-empty
+        let entries = load_first_available_entries(&base_dirs)?;
+
+        // Apply version filters
+        let mut entries_sorted = entries;
+        entries_sorted.sort_by_key(|(v, _)| *v);
+        let versions_sorted: Vec<u64> = entries_sorted.iter().map(|(v, _)| *v).collect();
+
+        // Select versions
+        let selected_versions = select_versions(self.dump_version, self.dump_version_range.clone(), &versions_sorted)?;
+
+        // Build flat list of records
+        let entries_map: std::collections::HashMap<u64, PbChangelogEntry> = entries_sorted.into_iter().collect();
+        let out = flatten_version_records(&selected_versions, &entries_map);
+        Ok(serde_json::to_value(out)?)
+    }
+}
+
+// Helper: collect candidate base dirs
+fn local_registry_dirs_for_ctx(ctx: &DreContext) -> anyhow::Result<Vec<std::path::PathBuf>> {
+    let mut base_dirs = vec![dirs::cache_dir()
+        .ok_or_else(|| anyhow::anyhow!("Couldn't find cache dir for dre-store"))?
+        .join("dre-store")
+        .join("local_registry")
+        .join(&ctx.network().name)];
+    if let Ok(override_dir) = std::env::var("DRE_LOCAL_REGISTRY_DIR_OVERRIDE") {
+        base_dirs.insert(0, std::path::PathBuf::from(override_dir));
+    }
+    base_dirs.push(std::path::PathBuf::from("/tmp/dre-test-store/local_registry").join(&ctx.network().name));
+    Ok(base_dirs)
+}
+
+fn load_first_available_entries(
+    base_dirs: &[std::path::PathBuf],
+) -> anyhow::Result<Vec<(u64, ic_registry_common_proto::pb::local_store::v1::ChangelogEntry)>> {
+    use ic_registry_common_proto::pb::local_store::v1::ChangelogEntry as PbChangelogEntry;
+    use std::ffi::OsStr;
+
+    let mut entries: Vec<(u64, PbChangelogEntry)> = Vec::new();
+    for base_dir in base_dirs.iter() {
+        let mut local: Vec<(u64, PbChangelogEntry)> = Vec::new();
+        collect_pb_files(base_dir, &mut |path| {
+            if path.extension() == Some(OsStr::new("pb")) {
+                if let Some(v) = extract_version_from_registry_path(base_dir, path) {
+                    let bytes = std::fs::read(path).unwrap_or_else(|_| panic!("Failed reading {}", path.display()));
+                    let entry = PbChangelogEntry::decode(bytes.as_slice()).unwrap_or_else(|_| panic!("Failed decoding {}", path.display()));
+                    local.push((v, entry));
+                }
+            }
+        })?;
+        if !local.is_empty() {
+            entries = local;
+            break;
+        }
+    }
+    if entries.is_empty() {
+        anyhow::bail!("No registry versions found in local store");
+    }
+    Ok(entries)
+}
+
+fn select_versions(registry_version: Option<i64>, range: Option<Vec<i64>>, versions_sorted: &[u64]) -> anyhow::Result<Vec<u64>> {
+    if let Some(v) = registry_version {
+        let v_u = u64::try_from(v).map_err(|_| anyhow::anyhow!("registry version must be >= 0"))?;
+        return if versions_sorted.contains(&v_u) {
+            Ok(vec![v_u])
+        } else {
+            anyhow::bail!(format!("version {v_u} not found in local store"))
+        };
+    }
+    let n = versions_sorted.len();
+    let args = range.unwrap_or_default();
+    let (from_idx_i, to_idx_i) = match args.as_slice() {
+        [] => (0i64, -1i64),
+        [from] => (*from, -1),
+        [from, to] => (*from, *to),
+        _ => unreachable!(),
+    };
+    if n == 0 {
+        return Ok(vec![]);
+    }
+    let norm = |idx: i64| -> usize {
+        if idx < 0 {
+            let j = (n as i64) + idx;
+            if j < 0 {
+                0
+            } else {
+                j.min(n as i64 - 1) as usize
+            }
+        } else {
+            (idx as usize).min(n - 1)
+        }
+    };
+    let mut a = norm(from_idx_i);
+    let mut b = norm(to_idx_i);
+    if a > b {
+        std::mem::swap(&mut a, &mut b);
+    }
+    Ok(versions_sorted[a..=b].to_vec())
+}
+
+fn flatten_version_records(
+    selected_versions: &[u64],
+    entries_map: &std::collections::HashMap<u64, ic_registry_common_proto::pb::local_store::v1::ChangelogEntry>,
+) -> Vec<VersionRecord> {
+    use ic_registry_common_proto::pb::local_store::v1::MutationType;
+    let mut out: Vec<VersionRecord> = Vec::new();
+    for v in selected_versions {
+        if let Some(entry) = entries_map.get(v) {
+            for km in entry.key_mutations.iter() {
+                let value_json = match km.mutation_type() {
+                    MutationType::Unset => Value::Null,
+                    MutationType::Set => decode_value_to_json(&km.key, &km.value),
+                    _ => Value::Null,
+                };
+                out.push(VersionRecord {
+                    version: *v,
+                    key: km.key.clone(),
+                    value: value_json,
+                });
+            }
+        }
+    }
+    out
+}
 impl Registry {
     async fn get_registry(&self, ctx: DreContext) -> anyhow::Result<RegistryDump> {
         let local_registry = ctx.registry_with_version(self.height).await;
@@ -166,6 +337,143 @@ impl Registry {
             node_providers: get_node_providers(&local_registry, ctx.network(), ctx.is_offline(), self.height.is_none()).await?,
         })
     }
+}
+
+#[derive(Debug, Serialize)]
+struct VersionRecord {
+    version: u64,
+    key: String,
+    value: Value,
+}
+
+fn extract_version_from_registry_path(base_dir: &std::path::Path, full_path: &std::path::Path) -> Option<u64> {
+    // Registry path ends with .../<10 hex>/<2 hex>/<2 hex>/<5 hex>.pb
+    // We reconstruct the hex by concatenating the four segments (without slashes) and parse as hex u64.
+    let rel = full_path.strip_prefix(base_dir).ok()?;
+    let parts: Vec<_> = rel.iter().map(|s| s.to_string_lossy()).collect();
+    if parts.len() < 4 {
+        return None;
+    }
+    let last = parts[parts.len() - 1].trim_end_matches(".pb");
+    let seg3 = &parts[parts.len() - 2];
+    let seg2 = &parts[parts.len() - 3];
+    let seg1 = &parts[parts.len() - 4];
+    let hex = format!("{}{}{}{}", seg1, seg2, seg3, last);
+    u64::from_str_radix(&hex, 16).ok()
+}
+
+/// Best-effort decode of registry value bytes into JSON. Falls back to hex when unknown.
+/// This can be extended to specific types in the future, if needed
+fn decode_value_to_json(key: &str, bytes: &[u8]) -> Value {
+    // Known families where we can decode via protobuf types pulled from workspace crates.
+    // Use key prefixes to route decoding. Keep minimal and practical.
+    if key.starts_with(ic_registry_keys::DATA_CENTER_KEY_PREFIX) {
+        if let Ok(rec) = ic_protobuf::registry::dc::v1::DataCenterRecord::decode(bytes) {
+            return normalize_protobuf_json(serde_json::to_value(&rec).unwrap_or(Value::Null));
+        }
+    } else if key.starts_with(ic_registry_keys::NODE_OPERATOR_RECORD_KEY_PREFIX) {
+        if let Ok(rec) = ic_protobuf::registry::node_operator::v1::NodeOperatorRecord::decode(bytes) {
+            return normalize_protobuf_json(serde_json::to_value(&rec).unwrap_or(Value::Null));
+        }
+    } else if key.starts_with(ic_registry_keys::NODE_RECORD_KEY_PREFIX) {
+        if let Ok(rec) = ic_protobuf::registry::node::v1::NodeRecord::decode(bytes) {
+            return normalize_protobuf_json(serde_json::to_value(&rec).unwrap_or(Value::Null));
+        }
+    } else if key.starts_with(ic_registry_keys::SUBNET_RECORD_KEY_PREFIX) {
+        if let Ok(rec) = ic_protobuf::registry::subnet::v1::SubnetRecord::decode(bytes) {
+            return normalize_protobuf_json(serde_json::to_value(&rec).unwrap_or(Value::Null));
+        }
+    } else if key.starts_with(ic_registry_keys::REPLICA_VERSION_KEY_PREFIX) {
+        if let Ok(rec) = ic_protobuf::registry::replica_version::v1::ReplicaVersionRecord::decode(bytes) {
+            return normalize_protobuf_json(serde_json::to_value(&rec).unwrap_or(Value::Null));
+        }
+    } else if key.starts_with(ic_registry_keys::HOSTOS_VERSION_KEY_PREFIX) {
+        if let Ok(rec) = ic_protobuf::registry::hostos_version::v1::HostosVersionRecord::decode(bytes) {
+            return normalize_protobuf_json(serde_json::to_value(&rec).unwrap_or(Value::Null));
+        }
+    } else if key == ic_registry_keys::NODE_REWARDS_TABLE_KEY {
+        if let Ok(rec) = ic_protobuf::registry::node_rewards::v2::NodeRewardsTable::decode(bytes) {
+            return normalize_protobuf_json(serde_json::to_value(&rec).unwrap_or(Value::Null));
+        }
+    } else if key.starts_with(ic_registry_keys::API_BOUNDARY_NODE_RECORD_KEY_PREFIX) {
+        if let Ok(rec) = ic_protobuf::registry::api_boundary_node::v1::ApiBoundaryNodeRecord::decode(bytes) {
+            return normalize_protobuf_json(serde_json::to_value(&rec).unwrap_or(Value::Null));
+        }
+    } else if key == "unassigned_nodes_config" {
+        if let Ok(rec) = ic_protobuf::registry::unassigned_nodes_config::v1::UnassignedNodesConfigRecord::decode(bytes) {
+            return normalize_protobuf_json(serde_json::to_value(&rec).unwrap_or(Value::Null));
+        }
+    } else if key == "blessed_replica_versions" {
+        if let Ok(rec) = ic_protobuf::registry::replica_version::v1::BlessedReplicaVersions::decode(bytes) {
+            return normalize_protobuf_json(serde_json::to_value(&rec).unwrap_or(Value::Null));
+        }
+    }
+
+    // Fallback: base64 for compactness
+    let s = BASE64.encode(bytes);
+    if bytes.len() <= 29 {
+        if let Ok(p) = ic_types::PrincipalId::try_from(bytes.to_vec()) {
+            return serde_json::json!({ "bytes_base64": s, "principal": p.to_string() });
+        }
+    }
+    serde_json::json!({ "bytes_base64": s })
+}
+
+/// Recursively convert protobuf-derived JSON so byte arrays become base64 strings
+fn normalize_protobuf_json(mut v: Value) -> Value {
+    match &mut v {
+        Value::Array(arr) => {
+            for e in arr.iter_mut() {
+                *e = normalize_protobuf_json(std::mem::take(e));
+            }
+        }
+        Value::Object(map) => {
+            for (_, vv) in map.iter_mut() {
+                *vv = normalize_protobuf_json(std::mem::take(vv));
+            }
+        }
+        Value::Number(_) | Value::String(_) | Value::Bool(_) | Value::Null => {}
+    }
+
+    // Replace array of small integers (likely bytes) with base64 when appropriate
+    if let Value::Array(arr) = &v {
+        if !arr.is_empty()
+            && arr
+                .iter()
+                .all(|x| matches!(x, Value::Number(n) if n.as_u64().is_some() && n.as_u64().unwrap() <= 255))
+        {
+            let mut buf = Vec::with_capacity(arr.len());
+            for x in arr {
+                if let Value::Number(n) = x {
+                    buf.push(n.as_u64().unwrap() as u8);
+                }
+            }
+            let s = BASE64.encode(&buf);
+            if buf.len() <= 29 {
+                if let Ok(p) = ic_types::PrincipalId::try_from(buf) {
+                    return serde_json::json!({"bytes_base64": s, "principal": p.to_string()});
+                }
+            }
+            return serde_json::json!({ "bytes_base64": s });
+        }
+    }
+    v
+}
+
+fn collect_pb_files<F: FnMut(&std::path::Path)>(base: &std::path::Path, visitor: &mut F) -> anyhow::Result<()> {
+    if !base.exists() {
+        return Ok(());
+    }
+    for entry in fs_err::read_dir(base)? {
+        let entry = entry?;
+        let path = entry.path();
+        if path.is_dir() {
+            collect_pb_files(&path, visitor)?;
+        } else {
+            visitor(&path);
+        }
+    }
+    Ok(())
 }
 
 fn get_elected_guest_os_versions(local_registry: &Arc<dyn LazyRegistry>) -> anyhow::Result<Vec<ReplicaVersionRecord>> {
