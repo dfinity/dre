@@ -245,14 +245,16 @@ fn select_versions(versions: Option<Vec<i64>>, versions_sorted: &[u64]) -> anyho
         return Ok(vec![]);
     }
     let norm_index = |idx: i64| -> usize {
-        if idx < 0 {
-            let j = (n as i64) + idx; // Python-style negative from end
-            j.clamp(0, n as i64) as usize
-        } else if idx == 0 {
-            0
-        } else {
-            // Treat positive indices as 1-based positions since registry records are 1-based; convert to zero-based
-            ((idx - 1) as usize).clamp(0, n)
+        match idx {
+            i if i < 0 => {
+                let j = (n as i64) + i; // Python-style negative from end
+                j.clamp(0, n as i64) as usize
+            }
+            0 => 0,
+            i => {
+                // Treat positive indices as 1-based positions since registry records are 1-based; convert to zero-based
+                ((i - 1) as usize).clamp(0, n)
+            }
         }
     };
     let a = from_opt.map(norm_index).unwrap_or(0);
