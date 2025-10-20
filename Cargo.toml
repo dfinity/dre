@@ -139,7 +139,7 @@ cycles-minting-canister = { git = "https://github.com/dfinity/ic.git", rev = "eb
 ic-icrc1-test-utils = { git = "https://github.com/dfinity/ic.git", rev = "ebed5d4228b71477738316ae3d5274672eae369e" }
 rosetta-core = { git = "https://github.com/dfinity/ic.git", rev = "ebed5d4228b71477738316ae3d5274672eae369e" }
 icp-ledger = { git = "https://github.com/dfinity/ic.git", rev = "ebed5d4228b71477738316ae3d5274672eae369e" }
-icrc-ledger-types = { git = "https://github.com/dfinity/ic.git",rev = "ebed5d4228b71477738316ae3d5274672eae369e"  }
+icrc-ledger-types = { git = "https://github.com/dfinity/ic.git", rev = "ebed5d4228b71477738316ae3d5274672eae369e" }
 ic-metrics-encoder = "1.1.1"
 ic-transport-types = "0.39.3"
 ic-utils = "0.39.3"
@@ -221,6 +221,3 @@ indexmap = { version = "2.11.1", features = ["serde"] }
 # Makes flamegraphs and backtraces more readable.
 # https://doc.rust-lang.org/cargo/reference/manifest.html#the-profile-sections
 debug = true
-
-[patch.'https://github.com/dfinity/cdk-rs.git']
-ic0 = "0.23.0"

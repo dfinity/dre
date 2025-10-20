@@ -6,6 +6,7 @@ mod add_nodes;
 mod args_parse;
 mod health_client;
 mod node_labels;
+mod registry_versions;
 mod replace;
 mod update_unassigned_nodes;
 mod version;
