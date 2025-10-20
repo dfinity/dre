@@ -44,10 +44,10 @@ use std::{
     dre registry -o registry.json --filter "node_id contains h5zep"      # Write to file and filter by node_id
 
   Registry versions/records dump:
-    dre registry --dump-version 12345                                    # Dump a single registry version in JSON format (flat list of records)
-    dre registry --dump-version-range                                    # Dump ALL versions (same as 0 -1)
-    dre registry --dump-version-range 0 -1                               # Dump range by index [from..to], Python-style indexing
-    dre registry --dump-version-range -5 -1                              # Dump last 5 versions
+    dre registry --dump-versions                                         # Dump ALL versions (Python slicing semantics, end-exclusive)
+    dre registry --dump-versions 0                                       # Same as above (from start to end)
+    dre registry --dump-versions -5                                      # Last 5 versions (from -5 to end)
+    dre registry --dump-versions -5 -1                                   # Last 4 versions (excludes last)
 
   Notes:
     - Values are best-effort decoded by key; unknown bytes are shown as {"bytes_base64": "..."}.
@@ -222,33 +222,29 @@ fn load_first_available_entries(
 fn select_versions(versions: Option<Vec<i64>>, versions_sorted: &[u64]) -> anyhow::Result<Vec<u64>> {
     let n = versions_sorted.len();
     let args = versions.unwrap_or_default();
-    let (from_idx_i, to_idx_i) = match args.as_slice() {
-        [] => (0i64, -1i64),
-        [from] => (*from, -1),
-        [from, to] => (*from, *to),
+    let (from_opt, to_opt): (Option<i64>, Option<i64>) = match args.as_slice() {
+        [] => (None, None),
+        [from] => (Some(*from), None),
+        [from, to] => (Some(*from), Some(*to)),
         _ => unreachable!(),
     };
     if n == 0 {
         return Ok(vec![]);
     }
-    let norm = |idx: i64| -> usize {
+    let norm_index = |idx: i64| -> usize {
         if idx < 0 {
             let j = (n as i64) + idx;
-            if j < 0 {
-                0
-            } else {
-                j.min(n as i64 - 1) as usize
-            }
+            j.clamp(0, n as i64) as usize
         } else {
-            (idx as usize).min(n - 1)
+            (idx as usize).clamp(0, n)
         }
     };
-    let a = norm(from_idx_i);
-    let b = norm(to_idx_i);
-    if a > b {
+    let a = from_opt.map(norm_index).unwrap_or(0);
+    let b = to_opt.map(norm_index).unwrap_or(n);
+    if a >= b {
         return Ok(vec![]);
     }
-    Ok(versions_sorted[a..=b].to_vec())
+    Ok(versions_sorted[a..b].to_vec())
 }
 
 fn flatten_version_records(

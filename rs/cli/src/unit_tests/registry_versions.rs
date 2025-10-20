@@ -104,7 +104,7 @@ async fn dump_versions_outputs_records_sorted() {
         output: None,
         filters: vec![],
         height: None,
-        dump_versions: Some(vec![2, 2]),
+        dump_versions: Some(vec![-1]),
     };
     let j2 = cmd_v2.dump_versions_json(ctx).await.unwrap();
     let a2 = j2.as_array().unwrap();
@@ -243,12 +243,12 @@ async fn dump_versions_rejects_reversed_range() {
         Arc::new(MockHealthStatusQuerier::new()),
     );
 
-    // Valid negative range: last 2
+    // Valid negative range: last 2 (end-exclusive)
     let ok_cmd = Registry {
         output: None,
         filters: vec![],
         height: None,
-        dump_versions: Some(vec![-2, -1]),
+        dump_versions: Some(vec![-2, None.unwrap_or_default()]),
     };
     let ok_json = ok_cmd.dump_versions_json(ctx.clone()).await.unwrap();
     let ok_arr = ok_json.as_array().unwrap();
