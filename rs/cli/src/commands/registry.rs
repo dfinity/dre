@@ -66,21 +66,17 @@ pub struct Registry {
     #[clap(long, visible_aliases = ["registry-height", "version"])]
     pub height: Option<u64>,
 
-    /// Dump raw registry version (flat list of {version,key,value})
-    #[clap(long, value_name = "VERSION", conflicts_with_all = ["filters", "dump_version_range"], visible_aliases = ["json-version", "dump-version-json", "dump-json-version"])]
-    pub dump_version: Option<i64>,
-
     /// Dump raw registry versions in range by index; defaults to 0 -1 if no args
     #[clap(
-        long = "dump-version-range",
+        long = "dump-versions",
         num_args(0..=2),
         value_names = ["FROM", "TO"],
         allow_hyphen_values = true,
-        conflicts_with_all = ["filters", "dump_version"],
-        visible_aliases = ["dump-version-range-json", "dump-json-version-range", "json-version-range"],
+        conflicts_with_all = ["filters"],
+        visible_aliases = ["dump-version", "dump-versions-json", "dump-json-versions", "json-versions"],
         help = "Index-based range over available versions. Negative indexes allowed (Python-style). If omitted, defaults to 0 -1."
     )]
-    pub dump_version_range: Option<Vec<i64>>,
+    pub dump_versions: Option<Vec<i64>>,
 }
 
 #[derive(Debug, Clone)]
@@ -131,7 +127,7 @@ impl ExecutableCommand for Registry {
         };
 
         // Versions/records mode
-        if self.dump_version.is_some() || self.dump_version_range.is_some() {
+        if self.dump_versions.is_some() {
             let json_value = self.dump_versions_json(ctx).await?;
             serde_json::to_writer_pretty(writer, &json_value)?;
             return Ok(());
@@ -171,7 +167,7 @@ impl Registry {
         let versions_sorted: Vec<u64> = entries_sorted.iter().map(|(v, _)| *v).collect();
 
         // Select versions
-        let selected_versions = select_versions(self.dump_version, self.dump_version_range.clone(), &versions_sorted)?;
+        let selected_versions = select_versions(self.dump_versions.clone(), &versions_sorted)?;
 
         // Build flat list of records
         let entries_map: std::collections::HashMap<u64, PbChangelogEntry> = entries_sorted.into_iter().collect();
@@ -223,17 +219,9 @@ fn load_first_available_entries(
     Ok(entries)
 }
 
-fn select_versions(registry_version: Option<i64>, range: Option<Vec<i64>>, versions_sorted: &[u64]) -> anyhow::Result<Vec<u64>> {
-    if let Some(v) = registry_version {
-        let v_u = u64::try_from(v).map_err(|_| anyhow::anyhow!("registry version must be >= 0"))?;
-        return if versions_sorted.contains(&v_u) {
-            Ok(vec![v_u])
-        } else {
-            anyhow::bail!(format!("version {v_u} not found in local store"))
-        };
-    }
+fn select_versions(versions: Option<Vec<i64>>, versions_sorted: &[u64]) -> anyhow::Result<Vec<u64>> {
     let n = versions_sorted.len();
-    let args = range.unwrap_or_default();
+    let args = versions.unwrap_or_default();
     let (from_idx_i, to_idx_i) = match args.as_slice() {
         [] => (0i64, -1i64),
         [from] => (*from, -1),
@@ -255,10 +243,10 @@ fn select_versions(registry_version: Option<i64>, range: Option<Vec<i64>>, versi
             (idx as usize).min(n - 1)
         }
     };
-    let mut a = norm(from_idx_i);
-    let mut b = norm(to_idx_i);
+    let a = norm(from_idx_i);
+    let b = norm(to_idx_i);
     if a > b {
-        std::mem::swap(&mut a, &mut b);
+        return Ok(vec![]);
     }
     Ok(versions_sorted[a..=b].to_vec())
 }

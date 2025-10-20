@@ -92,8 +92,7 @@ async fn dump_versions_outputs_records_sorted() {
         output: None,
         filters: vec![],
         height: None,
-        dump_version: Some(1),
-        dump_version_range: None,
+        dump_versions: None,
     };
     let j1 = cmd_v1.dump_versions_json(ctx.clone()).await.unwrap();
     let a1 = j1.as_array().unwrap();
@@ -105,8 +104,7 @@ async fn dump_versions_outputs_records_sorted() {
         output: None,
         filters: vec![],
         height: None,
-        dump_version: Some(2),
-        dump_version_range: None,
+        dump_versions: Some(vec![2, 2]),
     };
     let j2 = cmd_v2.dump_versions_json(ctx).await.unwrap();
     let a2 = j2.as_array().unwrap();
@@ -168,10 +166,104 @@ async fn list_versions_only_outputs_numbers() {
         output: None,
         filters: vec![],
         height: None,
-        dump_version: None,
-        dump_version_range: Some(vec![0, -1]),
+        dump_versions: Some(vec![0, -1]),
     };
     let json = cmd.dump_versions_json(ctx).await.unwrap();
     let arr = json.as_array().unwrap();
     assert!(arr.iter().any(|e| e["version"] == 42));
+}
+
+#[tokio::test]
+#[serial]
+async fn dump_versions_rejects_reversed_range() {
+    // Arrange: write under the test fallback path used by implementation
+    let base = std::path::PathBuf::from("/tmp/dre-test-store/local_registry/mainnet/t_reversed_range");
+    std::env::set_var("DRE_LOCAL_REGISTRY_DIR_OVERRIDE", &base);
+
+    // Create a few versions
+    write_version(
+        &base,
+        10,
+        vec![PbKeyMutation {
+            key: "a".into(),
+            value: vec![1],
+            mutation_type: MutationType::Set as i32,
+        }],
+    );
+    write_version(
+        &base,
+        20,
+        vec![PbKeyMutation {
+            key: "b".into(),
+            value: vec![2],
+            mutation_type: MutationType::Set as i32,
+        }],
+    );
+    write_version(
+        &base,
+        30,
+        vec![PbKeyMutation {
+            key: "c".into(),
+            value: vec![3],
+            mutation_type: MutationType::Set as i32,
+        }],
+    );
+
+    let mut ic_admin = MockIcAdmin::new();
+    ic_admin.expect_simulate_proposal().returning(|_, _| Box::pin(async { Ok(()) }));
+    let mut git = MockLazyGit::new();
+    git.expect_guestos_releases().returning(|| {
+        Box::pin(ok(Arc::new(ic_management_types::ArtifactReleases::new(
+            ic_management_types::Artifact::GuestOs,
+        ))))
+    });
+    let mut registry = MockLazyRegistry::new();
+    registry.expect_subnets().returning(|| Box::pin(ok(Arc::new(indexmap::IndexMap::new()))));
+    registry
+        .expect_unassigned_nodes_replica_version()
+        .returning(|| Box::pin(ok(Arc::new("some_ver".to_string()))));
+    let mut proposal_agent = MockProposalAgent::new();
+    proposal_agent
+        .expect_list_open_elect_replica_proposals()
+        .returning(|| Box::pin(ok(vec![])));
+    let mut artifact_downloader = MockArtifactDownloader::new();
+    artifact_downloader
+        .expect_download_images_and_validate_sha256()
+        .returning(|_, _, _| Box::pin(async { Ok((vec![], String::new())) }));
+
+    let ctx = get_mocked_ctx(
+        Network::mainnet_unchecked().unwrap(),
+        Neuron::anonymous_neuron(),
+        Arc::new(registry),
+        Arc::new(ic_admin),
+        Arc::new(git),
+        Arc::new(proposal_agent),
+        Arc::new(artifact_downloader),
+        Arc::new(MockCordonedFeatureFetcher::new()),
+        Arc::new(MockHealthStatusQuerier::new()),
+    );
+
+    // Valid negative range: last 2
+    let ok_cmd = Registry {
+        output: None,
+        filters: vec![],
+        height: None,
+        dump_versions: Some(vec![-2, -1]),
+    };
+    let ok_json = ok_cmd.dump_versions_json(ctx.clone()).await.unwrap();
+    let ok_arr = ok_json.as_array().unwrap();
+    assert!(ok_arr
+        .iter()
+        .all(|e| e["version"].as_u64().unwrap() == 20 || e["version"].as_u64().unwrap() == 30));
+
+    // Reversed negative range should yield empty
+    let bad_cmd = Registry {
+        output: None,
+        filters: vec![],
+        height: None,
+        dump_versions: Some(vec![-1, -5]),
+    };
+    let empty = bad_cmd.dump_versions_json(ctx).await.unwrap();
+    let empty_arr = empty.as_array().unwrap();
+    assert!(empty_arr.is_empty(), "expected empty result for reversed range [-1, -5]");
 }
