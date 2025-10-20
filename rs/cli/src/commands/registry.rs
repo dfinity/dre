@@ -44,10 +44,17 @@ use std::{
     dre registry -o registry.json --filter "node_id contains h5zep"      # Write to file and filter by node_id
 
   Registry versions/records dump:
-    dre registry --dump-versions                                         # Dump ALL versions (Python slicing semantics, end-exclusive)
+    dre registry --dump-versions                                         # Dump ALL versions (Python slicing, end-exclusive)
     dre registry --dump-versions 0                                       # Same as above (from start to end)
     dre registry --dump-versions -5                                      # Last 5 versions (from -5 to end)
     dre registry --dump-versions -5 -1                                   # Last 4 versions (excludes last)
+
+  Indexing semantics (important!):
+    - Python slicing with end-exclusive semantics
+    - Positive indices are 1-based positions (since registry records are 1-based)
+    - 0 means start (same as omitting FROM)
+    - Negative indices count from the end (-1 is last)
+    - Reversed ranges yield empty results
 
   Notes:
     - Values are best-effort decoded by key; unknown bytes are shown as {"bytes_base64": "..."}.
@@ -219,6 +226,12 @@ fn load_first_available_entries(
     Ok(entries)
 }
 
+// Slicing semantics:
+// - Python-like, end-exclusive
+// - Positive indices are 1-based positions (since registry records are 1-based)
+// - 0 means start (same as omitting FROM)
+// - Negative indices are from the end (-1 is last)
+// - Reversed ranges yield empty results
 fn select_versions(versions: Option<Vec<i64>>, versions_sorted: &[u64]) -> anyhow::Result<Vec<u64>> {
     let n = versions_sorted.len();
     let args = versions.unwrap_or_default();
@@ -233,10 +246,13 @@ fn select_versions(versions: Option<Vec<i64>>, versions_sorted: &[u64]) -> anyho
     }
     let norm_index = |idx: i64| -> usize {
         if idx < 0 {
-            let j = (n as i64) + idx;
+            let j = (n as i64) + idx; // Python-style negative from end
             j.clamp(0, n as i64) as usize
+        } else if idx == 0 {
+            0
         } else {
-            (idx as usize).clamp(0, n)
+            // Treat positive indices as 1-based positions since registry records are 1-based; convert to zero-based
+            ((idx - 1) as usize).clamp(0, n)
         }
     };
     let a = from_opt.map(norm_index).unwrap_or(0);

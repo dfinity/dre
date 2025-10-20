@@ -7,21 +7,30 @@ This document describes how to use the DRE CLI to inspect Internet Computer Prot
 - Dump a single version (flat list of records):
 
 ```bash
-dre registry --dump-version 50000 | jq
+dre registry --dump-version 50000 50001 | jq
 # aliases: --json-version
 ```
 
-- Dump a range of versions using Python-style indexing (inclusive), where -1 is the last version:
+- Dump a range of versions using Python-style indexing (end-exclusive), where -1 is the last index and omitted end means "to the end":
 
 ```bash
-dre registry --dump-version-range -5 -1 > last5.json
-# aliases: --json-version-range
+dre registry --dump-versions -5 > last5.json
+# Indexing semantics (Python slicing, end-exclusive):
+#   - positive indices are 1-based positions (registry is 1-based)
+#   - 0 means start (same as omitting FROM)
+#   - negative indices count from end (-1 is last)
+#   - reversed ranges yield empty results
+# Examples:
+#   -5      -> last 5
+#   -5 -1   -> last 4 (excludes the very last)
+#   -1      -> last 1
+#   0       -> all (from record 0 to the end)
 ```
 
 - Dump ALL versions (warning: large):
 
 ```bash
-dre registry --dump-version-range > all.json
+dre registry --dump-versions > all.json
 ```
 
 ## Output Shape

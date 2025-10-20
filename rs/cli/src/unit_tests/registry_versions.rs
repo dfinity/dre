@@ -248,7 +248,7 @@ async fn dump_versions_rejects_reversed_range() {
         output: None,
         filters: vec![],
         height: None,
-        dump_versions: Some(vec![-2, None.unwrap_or_default()]),
+        dump_versions: Some(vec![-2]),
     };
     let ok_json = ok_cmd.dump_versions_json(ctx.clone()).await.unwrap();
     let ok_arr = ok_json.as_array().unwrap();

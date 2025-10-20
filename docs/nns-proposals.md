@@ -117,11 +117,15 @@ Use the DRE CLI to dump raw registry versions, either a single version or a rang
 # One version
 dre registry --dump-version 12345 | jq
 
-# Range: Python-style indexing (inclusive), -1 is last
-dre registry --dump-version-range -5 -1 > last5.json
+# Range: Python-style indexing (end-exclusive). Indexing semantics:
+# - Positive indices are 1-based positions (registry is 1-based)
+# - 0 means start (same as omitting FROM)
+# - Negative indices count from end (-1 is last)
+# - Reversed ranges yield empty results
+dre registry --dump-versions -5 > last5.json
 
 # All versions (large output)
-dre registry --dump-version-range > all.json
+dre registry --dump-versions > all.json
 ```
 
 Each output element is a single registry record at a registry version with best-effort decoded value. Unknown byte blobs are shown compactly using base64 as `{ "bytes_base64": "..." }`. For short byte arrays the tool may also add a `principal` string.
