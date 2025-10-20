@@ -42,14 +42,14 @@ actix-web = { version = "4.11.0", default-features = false, features = [
 ] }
 actix-rt = "2.11.0"
 ahash = "0.8.12"
-anyhow = "1.0.99"
+anyhow = "1.0.100"
 async-recursion = "1.1.1"
 async-trait = "0.1.89"
-axum-otel-metrics = "0.10.0"
-axum = "0.8.4"
+axum-otel-metrics = "0.12.0"
+axum = "0.8.6"
 backoff = { version = "0.4.0", features = ["tokio"] }
-backon = "1.5.2"
-candid = "0.10.18"
+backon = "1.6.0"
+candid = "0.10.20"
 chrono = { version = "0.4.42", features = ["serde"] }
 clap-num = "1.2"
 clap = { version = "4.5", features = [
@@ -64,35 +64,35 @@ clap = { version = "4.5", features = [
     "string",
     "cargo",
 ] }
-clap_complete = "4.5.57"
-colored = "2.2.0"
-comfy-table = "7.2.0"
+clap_complete = "4.5.59"
+colored = "3.0.0"
+comfy-table = "7.2.1"
 assert_cmd = "2.0.17"
 crossbeam = "0.8.4"
 crossbeam-channel = "0.5.15"
-cryptoki = "0.7.0"
+cryptoki = "0.10.0"
 custom_error = "1.9.2"
 decentralization = { path = "rs/decentralization" }
 trustworthy-node-metrics-types = { path = "rs/dre-canisters/trustworthy-node-metrics/src/trustworthy-node-metrics-types" }
-dialoguer = "0.11.0"
-dirs = "5.0.1"
+dialoguer = "0.12.0"
+dirs = "6.0.0"
 dotenv = "0.15.0"
 base64 = "0.22.1"
 edit = "0.1.5"
 env_logger = "0.11.8"
-erased-serde = "0.4.6"
-flate2 = "1.1.2"
-fs-err = "3.1.1"
+erased-serde = "0.4.8"
+flate2 = "1.1.4"
+fs-err = "3.1.3"
 fs2 = "0.4.3"
 function_name = "0.3"
 futures = "0.3.31"
 futures-util = "0.3.31"
 hex = "0.4.3"
-humantime = "2.2.0"
+humantime = "2.3.0"
 humantime-serde = "1.1.1"
-ic-agent = "0.39.3"
-octocrab = "0.41.2"
-self_update = { version = "0.41.0", default-features = false, features = [
+ic-agent = "0.40.1"
+octocrab = "0.47.0"
+self_update = { version = "0.42.0", default-features = false, features = [
     "archive-tar",
     "rustls",
 ] }
@@ -141,9 +141,9 @@ rosetta-core = { git = "https://github.com/dfinity/ic.git", rev = "ebed5d4228b71
 icp-ledger = { git = "https://github.com/dfinity/ic.git", rev = "ebed5d4228b71477738316ae3d5274672eae369e" }
 icrc-ledger-types = { git = "https://github.com/dfinity/ic.git",rev = "ebed5d4228b71477738316ae3d5274672eae369e"  }
 ic-metrics-encoder = "1.1.1"
-ic-transport-types = "0.39.3"
-ic-utils = "0.39.3"
-itertools = "0.13.0"
+ic-transport-types = "0.40.1"
+ic-utils = "0.44.2"
+itertools = "0.14.0"
 keyring = { version = "3.6.3", features = [
     "apple-native",
     "sync-secret-service",
@@ -152,19 +152,19 @@ lazy_static = "1.5.0"
 log = "0.4.28"
 lru = "0.12.5"
 num-traits = "0.2"
-opentelemetry = { version = "0.28", features = ["metrics"] }
-opentelemetry_sdk = "0.28"
-opentelemetry-prometheus = "0.28"
+opentelemetry = { version = "0.30", features = ["metrics"] }
+opentelemetry_sdk = "0.30"
+opentelemetry-prometheus = "0.29"
 pretty_assertions = "1.4.1"
 pretty_env_logger = "0.5.0"
 prometheus-http-query = { version = "0.8.3", default-features = false, features = [
     "rustls-tls-webpki-roots",
 ] }
-prometheus = { version = "0.13.4", features = ["process"] }
-prost = "0.13"
+prometheus = { version = "0.14.0", features = ["process"] }
+prost = "0.14"
 rand = { version = "0.9.2", features = ["std_rng"] }
-rand_seeder = "0.3.0"
-regex = "1.11.2"
+rand_seeder = "0.4.0"
+regex = "1.12.2"
 registry-canister = { git = "https://github.com/dfinity/ic.git", rev = "ebed5d4228b71477738316ae3d5274672eae369e" }
 reqwest = { version = "0.12", default-features = false, features = [
     "rustls-tls-webpki-roots",
@@ -172,10 +172,10 @@ reqwest = { version = "0.12", default-features = false, features = [
 ] }
 retry = "2.1.0"
 rstest = { version = "0.23.0", default-features = false }
-rust_decimal = "1.37.2"
-rust_decimal_macros = "1.37.1"
+rust_decimal = "1.39.0"
+rust_decimal_macros = "1.39.0"
 serde = { version = "1.0", features = ["derive"] }
-serde_json = { version = "1.0.143", default-features = false, features = [
+serde_json = { version = "1.0.145", default-features = false, features = [
     "preserve_order",
 ] }
 serde_yaml = "0.9.34"
@@ -184,23 +184,23 @@ sha2 = "0.10.9"
 simple_asn1 = "0.6.3"
 slog-async = { version = "2.8.0", features = ["nested-values"] }
 slog-term = "2.9.2"
-slog = { version = "2.7.0", features = [
+slog = { version = "2.8.2", features = [
     "max_level_trace",
     "nested-values",
     "release_max_level_debug",
     "release_max_level_trace",
 ] }
 spinners = "4.1.1"
-strum = { version = "0.26.3", features = ["derive"] }
-strum_macros = "0.26.4"
-tabled = "0.18.0"
+strum = { version = "0.27.2", features = ["derive"] }
+strum_macros = "0.27.2"
+tabled = "0.20.0"
 tabular = "0.2"
-tempfile = "3.22.0"
-thiserror = "2.0.16"
-tokio = { version = "1.47.1", features = ["full"] }
+tempfile = "3.23.0"
+thiserror = "2.0.17"
+tokio = { version = "1.48.0", features = ["full"] }
 tokio-util = "0.7.16"
 url = "2.5.7"
-wiremock = "=0.6.4"
+wiremock = "=0.6.5"
 human_bytes = "0.4"
 mockall = "0.13.1"
 
@@ -208,13 +208,13 @@ mockall = "0.13.1"
 ic-cdk = { version = "^0.18.7" }
 ic-cdk-timers = { version = "^0.12.2" }
 ic-cdk-macros = { version = "^0.18.7" }
-ic-stable-structures = "0.6.9"
+ic-stable-structures = "0.7.2"
 dfn_core = { git = "https://github.com/dfinity/ic.git", rev = "ebed5d4228b71477738316ae3d5274672eae369e" }
 rewards-calculation = { path = "rs/dre-canisters/node-provider-rewards/rewards-calculation" }
 node-provider-rewards-api = { path = "rs/dre-canisters/node-provider-rewards/canister/api" }
 
 # dre-airflow deps, should be replaced with dre-airflow once
-indexmap = { version = "2.11.1", features = ["serde"] }
+indexmap = { version = "2.12.0", features = ["serde"] }
 
 [profile.release]
 # Add debug information to the release build (does NOT reduce the level of optimization!)
