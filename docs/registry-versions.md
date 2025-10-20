@@ -4,11 +4,10 @@ This document describes how to use the DRE CLI to inspect Internet Computer Prot
 
 ## Commands
 
-- Dump a single version (flat list of records):
+- Dump a single version 50000 (flat list of records):
 
 ```bash
-dre registry --dump-version 50000 50001 | jq
-# aliases: --json-version
+dre registry --dump-versions 50000 50001 | jq
 ```
 
 - Dump a range of versions using Python-style indexing (end-exclusive), where -1 is the last index and omitted end means "to the end":
