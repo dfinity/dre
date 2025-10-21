@@ -1,5 +1,5 @@
-use chrono::DateTime;
 use super::{fetch_and_aggregate, NodeRewards, ProviderData};
+use chrono::DateTime;
 use ic_canisters::governance::GovernanceCanisterWrapper;
 use ic_canisters::node_rewards::NodeRewardsCanisterWrapper;
 
@@ -18,12 +18,8 @@ pub async fn run(canister_agent: ic_canisters::IcAgentCanisterClient, cmd: &Node
         .ok_or_else(|| anyhow::anyhow!("Invalid yesterday midnight"))?
         .and_utc()
         .timestamp();
-    let start_day = DateTime::from_timestamp(last_rewards.timestamp as i64, 0)
-        .unwrap()
-        .date_naive();
-    let end_day = DateTime::from_timestamp(end_ts, 0)
-        .unwrap()
-        .date_naive();
+    let start_day = DateTime::from_timestamp(last_rewards.timestamp as i64, 0).unwrap().date_naive();
+    let end_day = DateTime::from_timestamp(end_ts, 0).unwrap().date_naive();
 
     // Governance map and conversion
     let gov_map = last_rewards
@@ -32,12 +28,7 @@ pub async fn run(canister_agent: ic_canisters::IcAgentCanisterClient, cmd: &Node
         .into_iter()
         .map(|r| (r.node_provider.unwrap().id.unwrap(), r.amount_e8s as u64))
         .collect();
-    let xdr_permyriad_per_icp: u64 = last_rewards
-        .xdr_conversion_rate
-        .clone()
-        .unwrap()
-        .xdr_permyriad_per_icp
-        .unwrap();
+    let xdr_permyriad_per_icp: u64 = last_rewards.xdr_conversion_rate.clone().unwrap().xdr_permyriad_per_icp.unwrap();
 
     fetch_and_aggregate(&node_rewards_client, start_day, end_day, xdr_permyriad_per_icp, gov_map, |daily| {
         cmd.collect_underperforming_nodes(daily)
