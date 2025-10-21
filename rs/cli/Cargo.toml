@@ -73,7 +73,6 @@ prost = { workspace = true }
 regex = { workspace = true }
 registry-canister = { workspace = true }
 reqwest = { workspace = true }
-rewards-calculation = { workspace = true }
 rosetta-core.workspace = true
 self_update = { workspace = true }
 serde = { workspace = true }

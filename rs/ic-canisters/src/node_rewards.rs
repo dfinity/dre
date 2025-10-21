@@ -3,10 +3,11 @@ use std::str::FromStr;
 use crate::IcAgentCanisterClient;
 use candid::Principal;
 use ic_node_rewards_canister_api::provider_rewards_calculation::{
-    DailyResults, DayUtc, GetNodeProviderRewardsCalculationRequest, GetNodeProviderRewardsCalculationResponse,
+    DailyResults, 
+    DateUtc, GetNodeProvidersRewardsCalculationRequest, GetNodeProvidersRewardsCalculationResponse,
 };
 
-const NODE_METRICS_CANISTER: &str = "uuew5-iiaaa-aaaaa-qbx4q-cai";
+const NODE_METRICS_CANISTER: &str = "sgymv-uiaaa-aaaaa-aaaia-cai";
 
 pub struct NodeRewardsCanisterWrapper {
     agent: IcAgentCanisterClient,
@@ -23,13 +24,13 @@ impl NodeRewardsCanisterWrapper {
         Self { agent }
     }
 
-    pub async fn get_rewards_daily(&self, day: &DayUtc) -> anyhow::Result<DailyResults> {
+    pub async fn get_rewards_daily(&self, day: DateUtc) -> anyhow::Result<DailyResults> {
         self.agent
-            .query::<GetNodeProviderRewardsCalculationResponse>(
+            .query::<GetNodeProvidersRewardsCalculationResponse>(
                 &Principal::from_str(NODE_METRICS_CANISTER).map_err(anyhow::Error::from)?,
-                "get_node_provider_rewards_calculation",
-                candid::encode_one(GetNodeProviderRewardsCalculationRequest {
-                    day_timestamp_nanos: day.value.unwrap(),
+                "get_node_providers_rewards_calculation",
+                candid::encode_one(GetNodeProvidersRewardsCalculationRequest {
+                    day,
                 })?,
             )
             .await?

@@ -1,10 +1,9 @@
 use anyhow::Result;
 use csv::Writer;
 use ic_base_types::PrincipalId;
+use ic_node_rewards_canister_api::provider_rewards_calculation::{DailyNodeFailureRate, DailyNodeProviderRewards};
+use ic_node_rewards_canister_api::DateUtc;
 use log::info;
-use rewards_calculation::performance_based_algorithm::results::NodeProviderRewards;
-use rewards_calculation::types::DayUtc;
-use rust_decimal::Decimal;
 use std::{collections::BTreeMap, fs};
 
 /// Trait for generating CSV files from node rewards data
@@ -12,7 +11,7 @@ pub trait CsvGenerator {
     /// Generate CSV files split by provider
     async fn generate_csv_files_by_provider(
         &self,
-        provider_data: &[(PrincipalId, Vec<(DayUtc, NodeProviderRewards)>)],
+        provider_data: &[(PrincipalId, Vec<(DateUtc, DailyNodeProviderRewards)>)],
         output_dir: &str,
     ) -> Result<()> {
         // Create rewards directory with start_day_to_end_day format
@@ -37,7 +36,7 @@ pub trait CsvGenerator {
     }
 
     /// Create rewards directory with start_day_to_end_day format
-    fn create_rewards_directory(&self, output_dir: &str, daily_rewards: &[(DayUtc, NodeProviderRewards)]) -> Result<String> {
+    fn create_rewards_directory(&self, output_dir: &str, daily_rewards: &[(DateUtc, DailyNodeProviderRewards)]) -> Result<String> {
         // Get the date range from daily rewards
         let (start_day, end_day) = self.get_date_range(daily_rewards);
 
@@ -52,12 +51,12 @@ pub trait CsvGenerator {
     }
 
     /// Get the date range from daily rewards
-    fn get_date_range(&self, daily_rewards: &[(DayUtc, NodeProviderRewards)]) -> (String, String) {
+    fn get_date_range(&self, daily_rewards: &[(DateUtc, DailyNodeProviderRewards)]) -> (String, String) {
         if daily_rewards.is_empty() {
             return ("unknown".to_string(), "unknown".to_string());
         }
 
-        let mut days: Vec<DayUtc> = daily_rewards.iter().map(|(day, _)| *day).collect();
+        let mut days: Vec<DateUtc> = daily_rewards.iter().map(|(day, _)| *day).collect();
         days.sort();
 
         let start_day = days.first().unwrap().to_string();
@@ -67,7 +66,7 @@ pub trait CsvGenerator {
     }
 
     /// Create base rewards CSV file
-    fn create_base_rewards_csv(&self, output_dir: &str, daily_rewards: &[(DayUtc, NodeProviderRewards)]) -> Result<()> {
+    fn create_base_rewards_csv(&self, output_dir: &str, daily_rewards: &[(DateUtc, DailyNodeProviderRewards)]) -> Result<()> {
         let filename = format!("{}/base_rewards.csv", output_dir);
 
         let mut wtr = Writer::from_path(&filename).unwrap();
@@ -79,10 +78,10 @@ pub trait CsvGenerator {
             for base_reward in &rewards.base_rewards {
                 wtr.write_record([
                     &day_str,
-                    &base_reward.monthly.trunc().to_string(),
-                    &base_reward.daily.trunc().to_string(),
-                    &base_reward.node_reward_type.to_string(),
-                    &base_reward.region,
+                    &base_reward.monthly_xdr_permyriad.unwrap_or(0).to_string(),
+                    &base_reward.daily_xdr_permyriad.unwrap_or(0).to_string(),
+                    &base_reward.node_reward_type.as_ref().unwrap_or(&String::new()),
+                    &base_reward.region.as_ref().unwrap_or(&String::new()),
                 ])
                 .unwrap();
             }
@@ -93,7 +92,7 @@ pub trait CsvGenerator {
     }
 
     /// Create base rewards type3 CSV file
-    fn create_base_rewards_type3_csv(&self, output_dir: &str, daily_rewards: &[(DayUtc, NodeProviderRewards)]) -> Result<()> {
+    fn create_base_rewards_type3_csv(&self, output_dir: &str, daily_rewards: &[(DateUtc, DailyNodeProviderRewards)]) -> Result<()> {
         let filename = format!("{}/base_rewards_type3.csv", output_dir);
 
         let mut wtr = Writer::from_path(&filename).unwrap();
@@ -112,11 +111,11 @@ pub trait CsvGenerator {
             for base_reward_type3 in &rewards.base_rewards_type3 {
                 wtr.write_record(&[
                     &day_str,
-                    &base_reward_type3.value.trunc().to_string(),
-                    &base_reward_type3.region,
-                    &base_reward_type3.nodes_count.to_string(),
-                    &base_reward_type3.avg_rewards.trunc().to_string(),
-                    &base_reward_type3.avg_coefficient.trunc().to_string(),
+                    &base_reward_type3.daily_xdr_permyriad.unwrap_or(0).to_string(),
+                    &base_reward_type3.region.as_ref().unwrap_or(&String::new()),
+                    &base_reward_type3.nodes_count.unwrap_or(0).to_string(),
+                    &base_reward_type3.avg_rewards_xdr_permyriad.unwrap_or(0).to_string(),
+                    &base_reward_type3.avg_coefficient_percent.unwrap_or(0.0).to_string(),
                 ])
                 .unwrap();
             }
@@ -127,7 +126,7 @@ pub trait CsvGenerator {
     }
 
     /// Create rewards summary CSV file
-    fn create_rewards_summary_csv(&self, output_dir: &str, daily_rewards: &[(DayUtc, NodeProviderRewards)]) -> Result<()> {
+    fn create_rewards_summary_csv(&self, output_dir: &str, daily_rewards: &[(DateUtc, DailyNodeProviderRewards)]) -> Result<()> {
         let filename = format!("{}/rewards_summary.csv", output_dir);
 
         let mut wtr = Writer::from_path(&filename).unwrap();
@@ -143,27 +142,22 @@ pub trait CsvGenerator {
 
         for (day, rewards) in daily_rewards {
             let day_str = day.to_string();
-            let total_rewards = rewards.rewards_total;
-            let nodes_in_registry = rewards.nodes_results.len();
+            let total_rewards = rewards.rewards_total_xdr_permyriad.unwrap_or(0);
+            let nodes_in_registry = rewards.daily_nodes_rewards.len();
 
             // Count assigned nodes
             let assigned_count = rewards
-                .nodes_results
+                .daily_nodes_rewards
                 .iter()
-                .filter(|node_result| {
-                    matches!(
-                        node_result.node_status,
-                        rewards_calculation::performance_based_algorithm::results::NodeStatus::Assigned { .. }
-                    )
-                })
+                .filter(|node_result| matches!(node_result.daily_node_fr, Some(DailyNodeFailureRate::SubnetMember { .. })))
                 .count();
 
             let mut underperf_prefixes: Vec<String> = rewards
-                .nodes_results
+                .daily_nodes_rewards
                 .iter()
-                .filter(|node_result| node_result.performance_multiplier < Decimal::from(1))
+                .filter(|node_result| node_result.performance_multiplier_percent.unwrap_or(100.0) < 100.0)
                 .map(|node_result| {
-                    let node_id_str = node_result.node_id.to_string();
+                    let node_id_str = node_result.node_id.unwrap().to_string();
                     node_id_str.split('-').next().unwrap_or(&node_id_str).to_string()
                 })
                 .collect();
@@ -174,7 +168,7 @@ pub trait CsvGenerator {
 
             wtr.write_record(&[
                 &day_str,
-                &total_rewards.trunc().to_string(),
+                &total_rewards.to_string(),
                 &nodes_in_registry.to_string(),
                 &assigned_count.to_string(),
                 &underperforming_nodes_count.to_string(),
@@ -188,7 +182,7 @@ pub trait CsvGenerator {
     }
 
     /// Create node metrics CSV files: by day and by node
-    fn create_node_metrics_csv(&self, output_dir: &str, daily_rewards: &[(DayUtc, NodeProviderRewards)]) -> Result<()> {
+    fn create_node_metrics_csv(&self, output_dir: &str, daily_rewards: &[(DateUtc, DailyNodeProviderRewards)]) -> Result<()> {
         // Writers for the two views
         let filename_day = format!("{}/node_metrics_by_day.csv", output_dir);
         let filename_node = format!("{}/node_metrics_by_node.csv", output_dir);
@@ -246,8 +240,8 @@ pub trait CsvGenerator {
 
         for (day, rewards) in daily_rewards {
             let day_str = day.to_string();
-            for node_result in &rewards.nodes_results {
-                // Flatten NodeStatus/NodeMetricsDaily
+            for node_result in &rewards.daily_nodes_rewards {
+                // Flatten DailyNodeFailureRate/NodeMetricsDaily
                 let (
                     status_str,
                     subnet_assigned,
@@ -257,21 +251,18 @@ pub trait CsvGenerator {
                     original_fr,
                     relative_fr,
                     extrapolated_fr,
-                ) = match &node_result.node_status {
-                    rewards_calculation::performance_based_algorithm::results::NodeStatus::Assigned { node_metrics } => {
-                        let m = node_metrics;
-                        (
-                            "Assigned".to_string(),
-                            m.subnet_assigned.to_string(),
-                            m.subnet_assigned_fr.to_string(),
-                            m.num_blocks_proposed.to_string(),
-                            m.num_blocks_failed.to_string(),
-                            m.original_fr.to_string(),
-                            m.relative_fr.to_string(),
-                            String::new(),
-                        )
-                    }
-                    rewards_calculation::performance_based_algorithm::results::NodeStatus::Unassigned { extrapolated_fr } => (
+                ) = match &node_result.daily_node_fr {
+                    Some(DailyNodeFailureRate::SubnetMember { node_metrics: Some(m) }) => (
+                        "Assigned".to_string(),
+                        m.subnet_assigned.map(|s| s.to_string()).unwrap_or_default(),
+                        m.subnet_assigned_fr_percent.map(|f| f.to_string()).unwrap_or_default(),
+                        m.num_blocks_proposed.map(|n| n.to_string()).unwrap_or_default(),
+                        m.num_blocks_failed.map(|n| n.to_string()).unwrap_or_default(),
+                        m.original_fr_percent.map(|f| f.to_string()).unwrap_or_default(),
+                        m.relative_fr_percent.map(|f| f.to_string()).unwrap_or_default(),
+                        String::new(),
+                    ),
+                    Some(DailyNodeFailureRate::NonSubnetMember { extrapolated_fr_percent }) => (
                         "Unassigned".to_string(),
                         String::new(),
                         String::new(),
@@ -279,7 +270,17 @@ pub trait CsvGenerator {
                         String::new(),
                         String::new(),
                         String::new(),
-                        extrapolated_fr.to_string(),
+                        extrapolated_fr_percent.map(|f| f.to_string()).unwrap_or_default(),
+                    ),
+                    _ => (
+                        "Unknown".to_string(),
+                        String::new(),
+                        String::new(),
+                        String::new(),
+                        String::new(),
+                        String::new(),
+                        String::new(),
+                        String::new(),
                     ),
                 };
 
@@ -287,15 +288,15 @@ pub trait CsvGenerator {
                 wtr_day
                     .write_record(&[
                         &day_str,
-                        &node_result.node_id.to_string(),
-                        &node_result.node_reward_type.to_string(),
-                        &node_result.region,
-                        &node_result.dc_id,
+                        &node_result.node_id.map(|id| id.to_string()).unwrap_or_default(),
+                        &node_result.node_reward_type.as_ref().unwrap_or(&String::new()),
+                        &node_result.region.as_ref().unwrap_or(&String::new()),
+                        &node_result.dc_id.as_ref().unwrap_or(&String::new()),
                         &status_str,
-                        &node_result.performance_multiplier.trunc().to_string(),
-                        &node_result.rewards_reduction.trunc().to_string(),
-                        &node_result.base_rewards.trunc().to_string(),
-                        &node_result.adjusted_rewards.trunc().to_string(),
+                        &node_result.performance_multiplier_percent.unwrap_or(0.0).to_string(),
+                        &node_result.rewards_reduction_percent.unwrap_or(0.0).to_string(),
+                        &node_result.base_rewards_xdr_permyriad.unwrap_or(0).to_string(),
+                        &node_result.adjusted_rewards_xdr_permyriad.unwrap_or(0).to_string(),
                         &subnet_assigned,
                         &subnet_assigned_fr,
                         &num_blocks_proposed,
@@ -307,24 +308,27 @@ pub trait CsvGenerator {
                     .unwrap();
 
                 // Collect row for by-node (omit node_id here, we'll prepend it when writing)
-                by_node.entry(node_result.node_id.to_string()).or_insert_with(Vec::new).push(vec![
-                    day_str.clone(),
-                    node_result.node_reward_type.to_string(),
-                    node_result.region.clone(),
-                    node_result.dc_id.clone(),
-                    status_str,
-                    node_result.performance_multiplier.trunc().to_string(),
-                    node_result.rewards_reduction.trunc().to_string(),
-                    node_result.base_rewards.trunc().to_string(),
-                    node_result.adjusted_rewards.trunc().to_string(),
-                    subnet_assigned,
-                    subnet_assigned_fr,
-                    num_blocks_proposed,
-                    num_blocks_failed,
-                    original_fr,
-                    relative_fr,
-                    extrapolated_fr,
-                ]);
+                by_node
+                    .entry(node_result.node_id.map(|id| id.to_string()).unwrap_or_default())
+                    .or_insert_with(Vec::new)
+                    .push(vec![
+                        day_str.clone(),
+                        node_result.node_reward_type.as_ref().unwrap_or(&String::new()).to_string(),
+                        node_result.region.as_ref().unwrap_or(&String::new()).to_string(),
+                        node_result.dc_id.as_ref().unwrap_or(&String::new()).to_string(),
+                        status_str,
+                        node_result.performance_multiplier_percent.unwrap_or(0.0).to_string(),
+                        node_result.rewards_reduction_percent.unwrap_or(0.0).to_string(),
+                        node_result.base_rewards_xdr_permyriad.unwrap_or(0).to_string(),
+                        node_result.adjusted_rewards_xdr_permyriad.unwrap_or(0).to_string(),
+                        subnet_assigned,
+                        subnet_assigned_fr,
+                        num_blocks_proposed,
+                        num_blocks_failed,
+                        original_fr,
+                        relative_fr,
+                        extrapolated_fr,
+                    ]);
             }
         }
 

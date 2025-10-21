@@ -2,8 +2,6 @@ use super::{fetch_and_aggregate, NodeRewards, ProviderData};
 use chrono::{DateTime, Datelike};
 use ic_canisters::governance::GovernanceCanisterWrapper;
 use ic_canisters::node_rewards::NodeRewardsCanisterWrapper;
-use rewards_calculation::types::DayUtc;
-use rust_decimal::Decimal;
 
 pub async fn run(
     canister_agent: ic_canisters::IcAgentCanisterClient,
@@ -30,9 +28,14 @@ pub async fn run(
     let prev = gov_list
         .get(i + 1)
         .ok_or_else(|| anyhow::anyhow!("Previous governance snapshot not found for {}", month))?;
+    
+    let start_day = DateTime::from_timestamp(prev.timestamp as i64, 0)
+        .unwrap()
+        .date_naive();
+    let end_day = DateTime::from_timestamp(last.timestamp as i64, 0)
+        .unwrap()
+        .date_naive();
 
-    let start_day = DayUtc::from_secs(prev.timestamp);
-    let end_day = DayUtc::from_secs(last.timestamp).previous_day();
 
     let gov_map = last
         .rewards
@@ -40,13 +43,12 @@ pub async fn run(
         .into_iter()
         .map(|r| (r.node_provider.unwrap().id.unwrap(), r.amount_e8s))
         .collect();
-    let xdr_permyriad_per_icp: Decimal = last
+    let xdr_permyriad_per_icp: u64 = last
         .xdr_conversion_rate
         .clone()
         .unwrap()
         .xdr_permyriad_per_icp
-        .unwrap()
-        .into();
+        .unwrap();
 
     fetch_and_aggregate(
         &node_rewards_client,

@@ -1,12 +1,13 @@
 use crate::commands::node_rewards::csv_generator::CsvGenerator;
 use crate::{auth::AuthRequirement, exe::args::GlobalArgs, exe::ExecutableCommand};
+use chrono::NaiveDate;
 use clap::{Args, Subcommand};
 use futures_util::future::join_all;
 use ic_base_types::PrincipalId;
 use ic_canisters::node_rewards::NodeRewardsCanisterWrapper;
+use ic_node_rewards_canister_api::provider_rewards_calculation::{DailyNodeProviderRewards, DailyResults};
+use ic_node_rewards_canister_api::DateUtc;
 use log::info;
-use rewards_calculation::performance_based_algorithm::results::{DailyResults, NodeProviderRewards};
-use rewards_calculation::types::DayUtc;
 use rust_decimal::Decimal;
 use std::collections::BTreeMap;
 use tabled::{
@@ -65,7 +66,7 @@ struct ProviderData {
     governance_xdr_permyriad: Decimal,
     difference_xdr_permyriad: Decimal,
     underperforming_nodes: Vec<String>,
-    daily_rewards: Vec<(DayUtc, NodeProviderRewards)>,
+    daily_rewards: Vec<(DateUtc, DailyNodeProviderRewards)>,
 }
 
 #[derive(Args, Debug)]
@@ -82,13 +83,13 @@ impl NodeRewards {
     }
 
     /// Collect underperforming nodes for a provider
-    fn collect_underperforming_nodes(&self, daily_rewards: &[(DayUtc, NodeProviderRewards)]) -> Vec<String> {
+    fn collect_underperforming_nodes(&self, daily_rewards: &[(DateUtc, DailyNodeProviderRewards)]) -> Vec<String> {
         let mut underperforming_nodes = Vec::new();
         for (_, rewards) in daily_rewards {
-            for node_result in &rewards.nodes_results {
-                let multiplier = node_result.performance_multiplier;
-                if multiplier < Decimal::from(1) {
-                    let node_id_str = node_result.node_id.to_string();
+            for node_result in &rewards.daily_nodes_rewards {
+                let multiplier_percent = node_result.performance_multiplier_percent.unwrap_or(100.0);
+                if multiplier_percent < 100.0 {
+                    let node_id_str = node_result.node_id.unwrap().to_string();
                     let node_prefix = node_id_str.split('-').next().unwrap_or(&node_id_str).to_string();
                     underperforming_nodes.push(node_prefix);
                 }
@@ -210,7 +211,7 @@ impl ExecutableCommand for NodeRewards {
         }
 
         if let Some(output_dir) = csv_path_opt {
-            let provider_csv_data: Vec<(PrincipalId, Vec<(DayUtc, NodeProviderRewards)>)> = provider_data
+            let provider_csv_data: Vec<(PrincipalId, Vec<(DateUtc, DailyNodeProviderRewards)>)> = provider_data
                 .iter()
                 .map(|provider| (provider.provider_id, provider.daily_rewards.clone()))
                 .collect();
@@ -233,20 +234,21 @@ impl ExecutableCommand for NodeRewards {
 // ================================================================================================
 async fn fetch_and_aggregate(
     node_rewards_client: &NodeRewardsCanisterWrapper,
-    start_day: DayUtc,
-    end_day: DayUtc,
-    xdr_permyriad_per_icp: Decimal,
+    start_day: NaiveDate,
+    end_day: NaiveDate,
+    xdr_permyriad_per_icp: u64,
     mut gov_rewards_map: BTreeMap<PrincipalId, u64>,
-    collect_underperf: impl Fn(&[(DayUtc, NodeProviderRewards)]) -> Vec<String>,
+    collect_underperf: impl Fn(&[(DateUtc, DailyNodeProviderRewards)]) -> Vec<String>,
 ) -> anyhow::Result<Vec<ProviderData>> {
     println!("Fetching node rewards for all providers from NRC from {} to {}...", start_day, end_day);
 
-    let days: Vec<DayUtc> = start_day.days_until(&end_day).unwrap().into_iter().collect();
-    let responses: Vec<anyhow::Result<DailyResults>> = join_all(
-        days.iter()
-            .map(|day| async move { node_rewards_client.get_rewards_daily(&(*day).into()).await.map(|result| result.into()) }),
-    )
-    .await;
+    let days: Vec<DateUtc> = start_day
+        .iter_days()
+        .take_while(|day| day <= &end_day)
+        .map(|day| DateUtc::from(day))
+        .collect();
+    let responses: Vec<anyhow::Result<DailyResults>> =
+        join_all(days.iter().map(|day| async move { node_rewards_client.get_rewards_daily(*day).await })).await;
 
     let mut provider_results = BTreeMap::new();
     for (day, response) in days.into_iter().zip(responses.into_iter()) {
@@ -265,19 +267,20 @@ async fn fetch_and_aggregate(
 
     let mut provider_daily_data = Vec::new();
     for (provider_id, daily_rewards) in provider_results {
-        let nrc_xdr_permyriad: Decimal = daily_rewards.iter().map(|(_, reward)| reward.rewards_total).sum();
-        let nrc_icp = nrc_xdr_permyriad / xdr_permyriad_per_icp;
+        let nrc_xdr_permyriad: u64 = daily_rewards.iter().map(|(_, reward)| reward.rewards_total_xdr_permyriad.unwrap()).sum();
+        let nrc_icp = Decimal::from(nrc_xdr_permyriad) / Decimal::from(xdr_permyriad_per_icp);
         let principal: PrincipalId = provider_id.to_string().parse().unwrap();
 
         let governance_icp = Decimal::from(gov_rewards_map.remove(&principal).unwrap_or(0u64)) / Decimal::from(100_000_000);
-        let governance_xdr_permyriad = governance_icp * xdr_permyriad_per_icp;
-        let difference_xdr_permyriad = nrc_xdr_permyriad - governance_xdr_permyriad;
+        let governance_xdr_permyriad = governance_icp * Decimal::from(xdr_permyriad_per_icp);
+        let nrc_xdr_permyriad_decimal = Decimal::from(nrc_xdr_permyriad);
+        let difference_xdr_permyriad = nrc_xdr_permyriad_decimal - governance_xdr_permyriad;
         let underperforming_nodes = collect_underperf(&daily_rewards);
 
         provider_daily_data.push(ProviderData {
             provider_id: principal,
-            nrc_xdr_permyriad,
             nrc_icp,
+            nrc_xdr_permyriad: nrc_xdr_permyriad_decimal,
             governance_xdr_permyriad,
             difference_xdr_permyriad,
             underperforming_nodes,
@@ -342,27 +345,27 @@ impl NodeRewards {
             let mut table_data = Vec::new();
             for (day, rewards) in &provider.daily_rewards {
                 let day_str = day.to_string();
-                let total_rewards = rewards.rewards_total.trunc();
-                let nodes_in_registry = rewards.nodes_results.len();
+                let total_rewards = rewards.rewards_total_xdr_permyriad.unwrap_or(0);
+                let nodes_in_registry = rewards.daily_nodes_rewards.len();
 
                 // Count assigned nodes
                 let assigned_count = rewards
-                    .nodes_results
+                    .daily_nodes_rewards
                     .iter()
                     .filter(|node_result| {
                         matches!(
-                            node_result.node_status,
-                            rewards_calculation::performance_based_algorithm::results::NodeStatus::Assigned { .. }
+                            node_result.daily_node_fr,
+                            Some(ic_node_rewards_canister_api::provider_rewards_calculation::DailyNodeFailureRate::SubnetMember { .. })
                         )
                     })
                     .count();
 
                 let mut underperf_prefixes: Vec<String> = rewards
-                    .nodes_results
+                    .daily_nodes_rewards
                     .iter()
-                    .filter(|node_result| node_result.performance_multiplier < Decimal::from(1))
+                    .filter(|node_result| node_result.performance_multiplier_percent.unwrap_or(100.0) < 100.0)
                     .map(|node_result| {
-                        let node_id_str = node_result.node_id.to_string();
+                        let node_id_str = node_result.node_id.unwrap().to_string();
                         node_id_str.split('-').next().unwrap_or(&node_id_str).to_string()
                     })
                     .collect();
