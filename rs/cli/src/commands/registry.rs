@@ -870,7 +870,9 @@ async fn get_node_providers(
                         Some(dc) => dc.name.clone(),
                         None => "Unknown".to_string(),
                     })
-                    .counts_by(|dc_name| dc_name),
+                    .counts_by(|dc_name| dc_name)
+                    .into_iter()
+                    .collect(),
                 name: provider.name.clone().unwrap_or("Unknown".to_string()),
             }
         })
@@ -1001,7 +1003,7 @@ struct NodeProvider {
     reward_account: String,
     total_nodes: usize,
     nodes_in_subnet: usize,
-    nodes_per_dc: HashMap<String, usize>,
+    nodes_per_dc: BTreeMap<String, usize>,
 }
 
 #[derive(Debug, Clone)]
