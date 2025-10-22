@@ -255,7 +255,6 @@ impl TryFrom<ProposalInfo> for Proposal {
                                 serde_json::to_value(Decode!(a.payload.as_slice(), SetSubnetOperationalLevelPayload)?)?
                             }
                             _ => {
-                                println!("Unknown NNS function: {:?}", a.nns_function);
                                 serde_json::json!({})
                             }
                         }
