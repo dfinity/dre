@@ -58,6 +58,6 @@ fn from_str_to_log(value: &str) -> Level {
         "warning" => Level::Warning,
         "trace" => Level::Trace,
         "debug" => Level::Debug,
-        _ => panic!("Unsupported level: {}", value),
+        _ => panic!("Unsupported level: {value}"),
     }
 }

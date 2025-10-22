@@ -16,7 +16,7 @@ pub async fn delete_criteria(
         }
         Err(missing) => {
             warn!(state.logger, "Failed to delete criteria"; "indexes" => ?missing);
-            Err((StatusCode::NOT_FOUND, format!("Missing indexes: {:?}", missing)))
+            Err((StatusCode::NOT_FOUND, format!("Missing indexes: {missing:?}")))
         }
     }
 }
