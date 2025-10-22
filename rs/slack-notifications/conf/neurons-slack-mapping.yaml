@@ -47,8 +47,8 @@
   slack_id: U01GTFM9FUJ # Alexandra Zapuc
 - neuron_id: 54
   slack_id: U02RZR7PDK4 # Björn Assmann
-- neuron_id: 55
-  slack_id: U02UZQSG468 # Maximilian Summe
+# - neuron_id: 55
+#   slack_id:
 - neuron_id: 56
   slack_id: U07QU79GX0T # Thomas Gladdines
 - neuron_id: 57
