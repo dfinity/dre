@@ -18,6 +18,7 @@ use ic_sns_wasm::pb::v1::{AddWasmRequest, InsertUpgradePathEntriesRequest, Updat
 use list::List;
 use pending::Pending;
 use registry_canister::mutations::do_remove_node_operators::RemoveNodeOperatorsPayload;
+use registry_canister::mutations::do_set_subnet_operational_level::SetSubnetOperationalLevelPayload;
 use registry_canister::mutations::{
     complete_canister_migration::CompleteCanisterMigrationPayload,
     do_add_api_boundary_nodes::AddApiBoundaryNodesPayload,
@@ -249,6 +250,13 @@ impl TryFrom<ProposalInfo> for Proposal {
                             }
                             ic_nns_governance::pb::v1::NnsFunction::SubnetRentalRequest => {
                                 serde_json::to_value(Decode!(a.payload.as_slice(), SubnetRentalRequest)?)?
+                            }
+                            ic_nns_governance::pb::v1::NnsFunction::SetSubnetOperationalLevel => {
+                                serde_json::to_value(Decode!(a.payload.as_slice(), SetSubnetOperationalLevelPayload)?)?
+                            }
+                            _ => {
+                                println!("Unknown NNS function: {:?}", a.nns_function);
+                                serde_json::json!({})
                             }
                         }
                     }

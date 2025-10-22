@@ -260,7 +260,7 @@ impl ProposalAgentImpl {
                                 // Topic::NodeAdmin,
                                 Topic::ParticipantManagement,
                                 // Topic::SubnetManagement,
-                                Topic::NetworkCanisterManagement,
+                                Topic::ApplicationCanisterManagement,
                                 Topic::Kyc,
                                 Topic::NodeProviderRewards,
                                 Topic::SnsAndCommunityFund,
