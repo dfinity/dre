@@ -104,11 +104,7 @@ impl RegistryCanisterWrapper {
         let Some(content) = decoded_resp.content else {
             return Err(anyhow::anyhow!("No content found in get_value response"));
         };
-        let dechunkified = dechunkify_get_value_response_content(
-            content,
-            self,
-        )
-        .await?;
+        let dechunkified = dechunkify_get_value_response_content(content, self).await?;
 
         Ok(dechunkified)
     }
