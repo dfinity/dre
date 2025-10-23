@@ -357,7 +357,6 @@ mod tests {
             std::env::set_var("SLACK_CHANNEL_PROPOSALS_INTERNAL", "#nns-proposals-test-internal");
             std::env::set_var("SLACK_CHANNEL_PROPOSALS_EXTERNAL", "#nns-proposals-test-external");
         }
-
         let message_groups = MessageGroups::try_from(proposals).unwrap().message_groups;
         assert_eq!(message_groups.len(), 1);
         assert_eq!(message_groups[0].slack_channel.as_ref().unwrap(), "#nns-proposals-test-internal");

@@ -141,7 +141,7 @@ cycles-minting-canister = { git = "https://github.com/dfinity/ic.git", rev = "44
 ic-icrc1-test-utils = { git = "https://github.com/dfinity/ic.git", rev = "44e6a4830a03f05101a33d7baeb1f92c5c8093bc" }
 rosetta-core = { git = "https://github.com/dfinity/ic.git", rev = "44e6a4830a03f05101a33d7baeb1f92c5c8093bc" }
 icp-ledger = { git = "https://github.com/dfinity/ic.git", rev = "44e6a4830a03f05101a33d7baeb1f92c5c8093bc" }
-icrc-ledger-types = { git = "https://github.com/dfinity/ic.git",rev = "44e6a4830a03f05101a33d7baeb1f92c5c8093bc"  }
+icrc-ledger-types = { git = "https://github.com/dfinity/ic.git", rev = "44e6a4830a03f05101a33d7baeb1f92c5c8093bc" }
 ic-metrics-encoder = "1.1.1"
 ic-transport-types = "0.39.3"
 ic-utils = "0.39.3"
@@ -212,7 +212,7 @@ ic-cdk-timers = { version = "^0.12.2" }
 ic-cdk-macros = { version = "^0.18.7" }
 ic-stable-structures = "0.6.9"
 dfn_core = { git = "https://github.com/dfinity/ic.git", rev = "44e6a4830a03f05101a33d7baeb1f92c5c8093bc" }
-rewards-calculation = { git = "https://github.com/dfinity/ic.git", rev = "47a847466979332fe642e43e837bd6c10d2d0f3b" }
+rewards-calculation = { path = "rs/dre-canisters/node-provider-rewards/rewards-calculation" }
 node-provider-rewards-api = { path = "rs/dre-canisters/node-provider-rewards/canister/api" }
 ic-node-rewards-canister-api = { git = "https://github.com/dfinity/ic.git", rev = "44e6a4830a03f05101a33d7baeb1f92c5c8093bc" }
 
