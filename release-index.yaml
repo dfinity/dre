@@ -8,12 +8,10 @@
 #         rc_name: <reference RC name>
 #         name: <version name>
 releases:
-  - rc_name: rc--2025-10-17_03-17
+  - rc_name: rc--2025-10-23_03-18
     versions:
       - name: base
-        version: 286295f0397521cd59ca7792df446c57379204fa
-      - name: sev-prep
-        version: 575bcd0954e9d00066fd465223b755bda645edd6
+        version: 44e6a4830a03f05101a33d7baeb1f92c5c8093bc
   - rc_name: rc--2025-10-09_03-15
     versions:
       - name: base
