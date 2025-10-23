@@ -1,5 +1,5 @@
 {
-  "checksum": "38f9aa3a2c0d9c583cf1b7b2b90bb3cbc802370a7eb9d96233c82ae1d2c4fc20",
+  "checksum": "c12b2fae161145fbffb5a6ebc2289128452e65bd801a9ac6921680fe56d60a3a",
   "crates": {
     "actix-codec 0.5.2": {
       "name": "actix-codec",
@@ -37575,10 +37575,6 @@
               "target": "itertools"
             },
             {
-              "id": "rewards-calculation 0.9.0",
-              "target": "rewards_calculation"
-            },
-            {
               "id": "rust_decimal 1.37.2",
               "target": "rust_decimal"
             },
@@ -37732,10 +37728,6 @@
             {
               "id": "node-provider-rewards-canister 0.6.8",
               "target": "build_script_build"
-            },
-            {
-              "id": "rewards-calculation 0.9.0",
-              "target": "rewards_calculation"
             },
             {
               "id": "serde 1.0.219",
@@ -62887,7 +62879,6 @@
     "registry-canister 0.9.0",
     "reqwest 0.12.15",
     "retry 2.1.0",
-    "rewards-calculation 0.9.0",
     "rosetta-core 0.9.0",
     "rust_decimal 1.37.2",
     "rust_decimal_macros 1.37.1",
