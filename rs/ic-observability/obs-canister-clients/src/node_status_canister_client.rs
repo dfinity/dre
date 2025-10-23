@@ -19,6 +19,7 @@ pub enum NodeStatusCanisterError {
     Unknown(String),
 }
 
+#[allow(dead_code)]
 #[derive(CandidType, Default)]
 struct Argument {}
 
