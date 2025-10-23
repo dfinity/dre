@@ -34,7 +34,7 @@ pub struct MonthlyNodeProviderRewardsStored {
 const MAX_VALUE_SIZE: u32 = 20000;
 
 impl Storable for MonthlyNodeProviderRewardsStored {
-    fn to_bytes(&self) -> std::borrow::Cow<[u8]> {
+    fn to_bytes(&self) -> std::borrow::Cow<'_, [u8]> {
         Cow::Owned(Encode!(self).unwrap())
     }
 
@@ -58,7 +58,7 @@ pub struct NodeProviderRewardableKey {
 const MAX_VALUE_SIZE_REWARDABLE_NODES: u32 = 300;
 
 impl Storable for NodeProviderRewardableKey {
-    fn to_bytes(&self) -> std::borrow::Cow<[u8]> {
+    fn to_bytes(&self) -> std::borrow::Cow<'_, [u8]> {
         Cow::Owned(Encode!(self).unwrap())
     }
 
@@ -84,7 +84,7 @@ pub struct NodeMetricsStored {
 const MAX_VALUE_SIZE_BYTES_NODE_METRICS: u32 = 102;
 
 impl Storable for NodeMetricsStored {
-    fn to_bytes(&self) -> std::borrow::Cow<[u8]> {
+    fn to_bytes(&self) -> std::borrow::Cow<'_, [u8]> {
         Cow::Owned(Encode!(self).unwrap())
     }
 
@@ -106,7 +106,7 @@ pub struct NodeRewardRatesStored {
 const MAX_VALUE_SIZE_BYTES_REWARD_RATES: u32 = 200;
 
 impl Storable for NodeRewardRatesStored {
-    fn to_bytes(&self) -> std::borrow::Cow<[u8]> {
+    fn to_bytes(&self) -> std::borrow::Cow<'_, [u8]> {
         Cow::Owned(Encode!(self).unwrap())
     }
 
@@ -127,7 +127,7 @@ pub struct NodeMetadataStored {
 }
 
 impl Storable for NodeMetadataStored {
-    fn to_bytes(&self) -> std::borrow::Cow<[u8]> {
+    fn to_bytes(&self) -> std::borrow::Cow<'_, [u8]> {
         Cow::Owned(Encode!(self).unwrap())
     }
 
@@ -150,7 +150,7 @@ pub struct RegistryKey {
 const MAX_VALUE_SIZE_BYTES_REGISTRY_KEY: u32 = 200;
 
 impl Storable for RegistryKey {
-    fn to_bytes(&self) -> std::borrow::Cow<[u8]> {
+    fn to_bytes(&self) -> std::borrow::Cow<'_, [u8]> {
         Cow::Owned(Encode!(self).unwrap())
     }
 
@@ -177,7 +177,7 @@ pub struct NodeMetadataStoredV2 {
 const MAX_VALUE_SIZE_BYTES_NODE_METADATA: u32 = 400;
 
 impl Storable for NodeMetadataStoredV2 {
-    fn to_bytes(&self) -> std::borrow::Cow<[u8]> {
+    fn to_bytes(&self) -> std::borrow::Cow<'_, [u8]> {
         Cow::Owned(Encode!(self).unwrap())
     }
 
