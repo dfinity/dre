@@ -72,7 +72,7 @@ impl From<SubnetMetricsKeyStored> for SubnetMetricsDailyKey {
 }
 
 impl Storable for SubnetMetricsKeyStored {
-    fn to_bytes(&self) -> Cow<[u8]> {
+    fn to_bytes(&self) -> Cow<'_, [u8]> {
         Cow::Owned(serde_cbor::to_vec(self).unwrap())
     }
 
@@ -141,7 +141,7 @@ impl From<SubnetMetricsValueStored> for Vec<NodeMetricsDailyRaw> {
 }
 
 impl Storable for SubnetMetricsValueStored {
-    fn to_bytes(&self) -> Cow<[u8]> {
+    fn to_bytes(&self) -> Cow<'_, [u8]> {
         Cow::Owned(serde_cbor::to_vec(self).unwrap())
     }
 
