@@ -279,8 +279,10 @@ mod tests {
     #[test]
     fn grouping_into_1_message() {
         let proposals = vec![gen_test_proposal(1000, 40, "summary", 5), gen_test_proposal(1001, 40, "summary", 5)];
-        std::env::set_var("SLACK_URL", "http://localhost");
-        std::env::set_var("SLACK_CHANNEL_PROPOSALS_INTERNAL", "#nns-proposals-test-internal");
+        unsafe {
+            std::env::set_var("SLACK_URL", "http://localhost");
+            std::env::set_var("SLACK_CHANNEL_PROPOSALS_INTERNAL", "#nns-proposals-test-internal");
+        }
         let message_groups = MessageGroups::try_from(proposals).unwrap().message_groups;
         assert_eq!(message_groups.len(), 1);
         let msg1 = &message_groups[0];
@@ -292,8 +294,10 @@ mod tests {
     #[test]
     fn grouping_into_2_message() {
         let proposals = vec![gen_test_proposal(1000, 40, "summary 1", 5), gen_test_proposal(1001, 40, "summary 2", 5)];
-        std::env::set_var("SLACK_URL", "http://localhost");
-        std::env::set_var("SLACK_CHANNEL_PROPOSALS_INTERNAL", "#nns-proposals-test-internal");
+        unsafe {
+            std::env::set_var("SLACK_URL", "http://localhost");
+            std::env::set_var("SLACK_CHANNEL_PROPOSALS_INTERNAL", "#nns-proposals-test-internal");
+        }
         let message_groups = MessageGroups::try_from(proposals).unwrap().message_groups;
         assert_eq!(message_groups.len(), 2);
         assert_eq!(message_groups[0].slack_channel.as_ref().unwrap(), "#nns-proposals-test-internal");
@@ -310,9 +314,11 @@ mod tests {
             gen_test_proposal(1000, 40, "summary 1", 5),
             gen_test_proposal(1001, 40, "summary 1", 4), // Motion proposal --> external channel
         ];
-        std::env::set_var("SLACK_URL", "http://localhost");
-        std::env::set_var("SLACK_CHANNEL_PROPOSALS_INTERNAL", "#nns-proposals-test-internal");
-        std::env::set_var("SLACK_CHANNEL_PROPOSALS_EXTERNAL", "#nns-proposals-test-external");
+        unsafe {
+            std::env::set_var("SLACK_URL", "http://localhost");
+            std::env::set_var("SLACK_CHANNEL_PROPOSALS_INTERNAL", "#nns-proposals-test-internal");
+            std::env::set_var("SLACK_CHANNEL_PROPOSALS_EXTERNAL", "#nns-proposals-test-external");
+        }
         let message_groups = MessageGroups::try_from(proposals).unwrap().message_groups;
         assert_eq!(message_groups.len(), 2);
         assert_eq!(message_groups[0].slack_channel.as_ref().unwrap(), "#nns-proposals-test-internal");
@@ -326,9 +332,11 @@ mod tests {
     #[test]
     fn mention_trusted_neurons() {
         let proposals = vec![gen_test_proposal(1000, 40, "summary 1", 5), gen_test_proposal(1001, 80, "summary 1", 7)];
-        std::env::set_var("SLACK_URL", "http://localhost");
-        std::env::set_var("SLACK_CHANNEL_PROPOSALS_INTERNAL", "#nns-proposals-test-internal");
-        std::env::set_var("SLACK_CHANNEL_PROPOSALS_EXTERNAL", "#nns-proposals-test-external");
+        unsafe {
+            std::env::set_var("SLACK_URL", "http://localhost");
+            std::env::set_var("SLACK_CHANNEL_PROPOSALS_INTERNAL", "#nns-proposals-test-internal");
+            std::env::set_var("SLACK_CHANNEL_PROPOSALS_EXTERNAL", "#nns-proposals-test-external");
+        }
         let message_groups = MessageGroups::try_from(proposals).unwrap().message_groups;
         assert_eq!(message_groups.len(), 2);
         assert_eq!(message_groups[0].slack_channel.as_ref().unwrap(), "#nns-proposals-test-internal");
@@ -344,9 +352,12 @@ mod tests {
     #[test]
     fn mention_devrel() {
         let proposals = vec![gen_test_proposal(1000, 40, "summary 1", Topic::SnsAndCommunityFund.into())];
-        std::env::set_var("SLACK_URL", "http://localhost");
-        std::env::set_var("SLACK_CHANNEL_PROPOSALS_INTERNAL", "#nns-proposals-test-internal");
-        std::env::set_var("SLACK_CHANNEL_PROPOSALS_EXTERNAL", "#nns-proposals-test-external");
+        unsafe {
+            std::env::set_var("SLACK_URL", "http://localhost");
+            std::env::set_var("SLACK_CHANNEL_PROPOSALS_INTERNAL", "#nns-proposals-test-internal");
+            std::env::set_var("SLACK_CHANNEL_PROPOSALS_EXTERNAL", "#nns-proposals-test-external");
+        }
+
         let message_groups = MessageGroups::try_from(proposals).unwrap().message_groups;
         assert_eq!(message_groups.len(), 1);
         assert_eq!(message_groups[0].slack_channel.as_ref().unwrap(), "#nns-proposals-test-internal");

@@ -13,7 +13,7 @@ pub struct ArtifactDownloaderImpl {}
 
 #[automock]
 // automock complains without the explicit allow below
-#[allow(elided_named_lifetimes)]
+#[allow(mismatched_lifetime_syntaxes)]
 pub trait ArtifactDownloader: Sync + Send {
     fn get_s3_cdn_image_url<'a>(&'a self, version: &'a str, s3_subdir: &'a str) -> String {
         format!(
