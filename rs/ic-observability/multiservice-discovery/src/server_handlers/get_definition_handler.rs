@@ -10,8 +10,8 @@ pub(super) async fn get_definitions(State(supervisor): State<Server>) -> Result<
     let definitions = supervisor.supervisor.definitions.lock().await;
 
     let list = definitions
-        .iter()
-        .map(|(_, d)| {
+        .values()
+        .map(|d| {
             let x = &d.definition;
             x.into()
         })

@@ -843,14 +843,13 @@ impl TargetFilterSpec {
         if self.operator_id.is_some() || self.node_provider_id.is_some() || self.subnet_id.is_some() {
             return false;
         };
-        let d = match &self.dc_id {
+        match &self.dc_id {
             None => true,
             Some(dc_id) => match b.custom_labels.get("dc") {
                 Some(b_dc_id) => *b_dc_id == *dc_id,
                 None => "" == dc_id.as_str(),
             },
-        };
-        d
+        }
     }
 
     pub fn matches_ic(&self, ic_name: &String) -> bool {
