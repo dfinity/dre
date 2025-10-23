@@ -28,8 +28,8 @@ members = [
 resolver = "2"
 
 [workspace.package]
-version = "0.6.7"
-edition = "2021"
+version = "0.6.8"
+edition = "2024"
 authors = ["IC Decentralized Reliability Engineering (DRE) Team"]
 description = "Tooling for managing the Internet Computer"
 documentation = "https://github.com/dfinity/dre/"
