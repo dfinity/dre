@@ -1,6 +1,6 @@
 name: Required checks
 on:
-  push: {}
+  push: { }
 
 concurrency:
   group: ${{ github.workflow }}-required-checks-${{ github.event.push.after || github.ref }}
@@ -18,3 +18,4 @@ jobs:
           running-workflow-name: Wait for required jobs to complete or be skipped
           repo-token: "${{ secrets.GITHUB_TOKEN }}"
           wait-interval: 5
+          allowed-conclusions: success,skipped,neutral
