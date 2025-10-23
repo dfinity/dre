@@ -128,6 +128,7 @@ pub struct SubnetRequest {
     id: String,
 }
 
+#[allow(dead_code)]
 #[derive(Deserialize, Serialize)]
 pub struct NewSubnet {
     size: i32,
