@@ -14,7 +14,7 @@ jobs:
       labels: dre-runner-custom
     container: ghcr.io/dfinity/dre/actions-runner:6413f2909a49329ecbf5371ee7ddf07a9799b625
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: "☁️ Setup runner"
         uses: ./.github/workflows/manage-runner-pre
@@ -31,7 +31,7 @@ jobs:
     needs: [test]
     runs-on: macos-14
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           fetch-depth: 0
 
@@ -106,7 +106,7 @@ jobs:
       packages: write
       pages: write
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           fetch-tags: true
           fetch-depth: 0
@@ -151,7 +151,7 @@ jobs:
           cp --dereference bazel-out/k8-opt/bin/rs/cli/dre release/artifacts/dre-x86_64-unknown-linux
 
       - name: Download macOS x86_64 artifact
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v5
         with:
           name: dre-x86_64-apple-darwin
           path: release/artifacts/
@@ -161,7 +161,7 @@ jobs:
         run: mv release/artifacts/dre release/artifacts/dre-x86_64-apple-darwin
 
       - name: Download macOS aarch64 artifact
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v5
         with:
           name: dre-aarch64-apple-darwin
           path: release/artifacts/
@@ -177,7 +177,7 @@ jobs:
 
       - name: "🆕 📢 Prepare release"
         # v0.1.15
-        uses: softprops/action-gh-release@72f2c25fcb47643c292f7107632f7a47c1df5cd8
+        uses: softprops/action-gh-release@6da8fa9354ddfdc4aeace5fc48d7f679b5214090
         id: release
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
