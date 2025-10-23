@@ -1,15 +1,15 @@
 use super::Server;
-use crate::definition::{api_boundary_nodes_target_dtos_from_definitions, RunningDefinition};
+use crate::definition::{RunningDefinition, api_boundary_nodes_target_dtos_from_definitions};
 use crate::{
-    definition::{boundary_nodes_from_definitions, ic_node_target_dtos_from_definitions},
     TargetFilterSpec,
+    definition::{boundary_nodes_from_definitions, ic_node_target_dtos_from_definitions},
 };
 use axum::{
     extract::{Query, State},
     http::header,
     http::{HeaderMap, StatusCode},
 };
-use multiservice_discovery_shared::builders::prometheus_config_structure::{map_target_group, PrometheusStaticConfig};
+use multiservice_discovery_shared::builders::prometheus_config_structure::{PrometheusStaticConfig, map_target_group};
 use std::collections::BTreeMap;
 
 pub fn serialize_definitions_to_prometheus_config(definitions: BTreeMap<String, RunningDefinition>, filters: TargetFilterSpec) -> (usize, String) {

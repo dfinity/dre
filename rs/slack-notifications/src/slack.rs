@@ -9,14 +9,14 @@ use log::info;
 use regex::Regex;
 use reqwest::IntoUrl;
 use serde::Serialize;
-use serde_json::{json, Value};
+use serde_json::{Value, json};
 use std::collections::HashSet;
 use std::convert::TryFrom;
 
 const TRUSTED_NEURONS_TAG: &str = "<!subteam^S0200F4EYLF>";
 const DEVREL_TAG: &str = "<!subteam^S04AHQT37RQ>";
 const RELEASE_TEAM_TAG: &str = ""; // Can be changed to the following to mention @release-engs on each proposal:
-                                   // "<!subteam^S02CF4KKZ7U>";
+// "<!subteam^S02CF4KKZ7U>";
 const DRDRE_TAG: &str = "<!subteam^S05GPUNS7EX>";
 const RELEASE_AUTOMATION_NEURON_ID: u64 = 80;
 const MAX_SUMMARY_LENGTH: usize = 2048;

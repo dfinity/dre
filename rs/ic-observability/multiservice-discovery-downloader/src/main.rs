@@ -6,7 +6,7 @@ use futures_util::FutureExt;
 use humantime::parse_duration;
 use regex::Regex;
 use service_discovery::shutdown_signal;
-use slog::{info, o, Drain, Logger};
+use slog::{Drain, Logger, info, o};
 use tokio::runtime::Runtime;
 use url::Url;
 

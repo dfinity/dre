@@ -4,8 +4,8 @@ use clap::Args;
 use ic_types::PrincipalId;
 
 use crate::{
-    auth::get_automation_neuron_default_path,
     auth::AuthRequirement,
+    auth::get_automation_neuron_default_path,
     exe::ExecutableCommand,
     forum::ForumPostKind,
     submitter::{SubmissionParameters, Submitter},

@@ -21,7 +21,7 @@ use crate::commands::subnet::Subnet;
 use crate::exe::impl_executable_command_for_enums;
 use clap::Parser;
 use clap::{Args, CommandFactory};
-use clap_complete::{generate, Shell};
+use clap_complete::{Shell, generate};
 
 #[derive(Parser, Debug)]
 #[clap(version = env!("CARGO_PKG_VERSION"), about, author)]

@@ -14,10 +14,10 @@ use ic_protobuf::registry::crypto::v1::PublicKey;
 use ic_registry_client::client::{RegistryVersion, ThresholdSigPublicKey};
 use ic_registry_client_fake::FakeRegistryClient;
 use ic_registry_common_proto::pb::local_store::v1::{ChangelogEntry as PbChangelogEntry, KeyMutation as PbKeyMutation, MutationType};
-use ic_registry_keys::{make_crypto_threshold_signing_pubkey_key, ROOT_SUBNET_ID_KEY};
+use ic_registry_keys::{ROOT_SUBNET_ID_KEY, make_crypto_threshold_signing_pubkey_key};
 use ic_registry_local_store::{Changelog, ChangelogEntry, KeyMutation, LocalStoreImpl};
 use ic_registry_nns_data_provider::registry::RegistryCanister;
-use slog::{debug, error, info, warn, Logger};
+use slog::{Logger, debug, error, info, warn};
 use std::fmt::{Display, Formatter};
 use url::Url;
 

@@ -1,4 +1,4 @@
-use crate::{auth::AuthRequirement, exe::args::GlobalArgs, exe::ExecutableCommand};
+use crate::{auth::AuthRequirement, exe::ExecutableCommand, exe::args::GlobalArgs};
 use clap::Args;
 use ic_canisters::governance::GovernanceCanisterWrapper;
 use ic_nns_common::pb::v1::ProposalId;

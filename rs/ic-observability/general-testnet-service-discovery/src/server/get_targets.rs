@@ -1,4 +1,4 @@
-use axum::{extract::State, http::StatusCode, Json};
+use axum::{Json, extract::State, http::StatusCode};
 use multiservice_discovery_shared::contracts::journald_target::JournaldTarget;
 
 use crate::{storage::Storage, supervisor::TargetSupervisor};

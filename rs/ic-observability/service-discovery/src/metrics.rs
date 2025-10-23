@@ -1,6 +1,6 @@
 use ic_metrics::{
-    buckets::{add_bucket, decimal_buckets},
     MetricsRegistry,
+    buckets::{add_bucket, decimal_buckets},
 };
 use prometheus::{Histogram, IntCounterVec, IntGaugeVec};
 

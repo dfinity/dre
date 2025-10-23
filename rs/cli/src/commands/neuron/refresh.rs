@@ -1,7 +1,7 @@
 use clap::Args;
 use ic_canisters::governance::GovernanceCanisterWrapper;
 
-use crate::{auth::AuthRequirement, exe::args::GlobalArgs, exe::ExecutableCommand};
+use crate::{auth::AuthRequirement, exe::ExecutableCommand, exe::args::GlobalArgs};
 
 #[derive(Args, Debug)]
 pub struct Refresh {}

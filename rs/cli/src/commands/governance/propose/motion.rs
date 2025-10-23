@@ -6,8 +6,8 @@ use tokio::io::AsyncReadExt;
 
 use crate::{
     auth::AuthRequirement,
-    exe::args::GlobalArgs,
     exe::ExecutableCommand,
+    exe::args::GlobalArgs,
     forum::ForumPostKind,
     submitter::{SubmissionParameters, Submitter},
     util::{extract_title_and_text, utf8},

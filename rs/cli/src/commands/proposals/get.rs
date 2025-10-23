@@ -2,8 +2,8 @@ use clap::Args;
 use ic_canisters::governance::GovernanceCanisterWrapper;
 
 use crate::auth::AuthRequirement;
-use crate::exe::args::GlobalArgs;
 use crate::exe::ExecutableCommand;
+use crate::exe::args::GlobalArgs;
 
 #[derive(Args, Debug)]
 pub struct Get {

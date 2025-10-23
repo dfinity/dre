@@ -3,7 +3,7 @@ use std::{
     time::{Duration, Instant},
 };
 
-use crate::{metrics::Metrics, IcServiceDiscoveryImpl};
+use crate::{IcServiceDiscoveryImpl, metrics::Metrics};
 use crossbeam::select;
 use crossbeam_channel::{Receiver, Sender};
 use slog::{info, warn};

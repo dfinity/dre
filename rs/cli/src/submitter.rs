@@ -77,9 +77,9 @@ impl Submitter {
                         // Here we would ask the forum post code to delete the post since
                         // the submission has failed... that is, if we had that feature.
                         warn!(
-                        "Forum post {} may have been created for this proposal, but proposal submission failed.  Please delete the forum post if necessary, as it now serves no purpose.",
-                        forum_post_url
-                    );
+                            "Forum post {} may have been created for this proposal, but proposal submission failed.  Please delete the forum post if necessary, as it now serves no purpose.",
+                            forum_post_url
+                        );
                     };
                     Err(e)
                 }

@@ -160,11 +160,7 @@ fn parse_journal_entry(entry_lines: &[Vec<u8>]) -> Option<JournalEntry> {
             .push((name, JournalField::Binary(String::from_utf8_lossy(&multiline).to_string())))
     }
 
-    if entry.fields.is_empty() {
-        None
-    } else {
-        Some(entry)
-    }
+    if entry.fields.is_empty() { None } else { Some(entry) }
 }
 
 fn parse_normal(data: &[u8]) -> Option<(String, JournalField)> {

@@ -6,7 +6,7 @@ use std::{
 
 use ic_types::{NodeId, PrincipalId, SubnetId};
 use serde::{Deserialize, Serialize};
-use service_discovery::{job_types::JobType, TargetGroup};
+use service_discovery::{TargetGroup, job_types::JobType};
 
 use super::DataContract;
 

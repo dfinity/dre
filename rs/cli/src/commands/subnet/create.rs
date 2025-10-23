@@ -1,4 +1,4 @@
-use clap::{error::ErrorKind, Args};
+use clap::{Args, error::ErrorKind};
 
 use crate::exe::args::GlobalArgs;
 use ic_management_types::requests::SubnetCreateRequest;

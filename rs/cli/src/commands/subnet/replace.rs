@@ -1,4 +1,4 @@
-use clap::{error::ErrorKind, Args};
+use clap::{Args, error::ErrorKind};
 
 use decentralization::network::SubnetQueryBy;
 use ic_types::PrincipalId;

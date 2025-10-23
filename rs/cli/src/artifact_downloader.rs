@@ -1,7 +1,7 @@
 #![allow(async_fn_in_trait)]
 use std::{fs::File, io::Write, path::Path};
 
-use futures::{future::BoxFuture, stream, StreamExt};
+use futures::{StreamExt, future::BoxFuture, stream};
 use ic_management_types::Artifact;
 use itertools::Itertools;
 use log::{info, warn};
@@ -105,7 +105,7 @@ pub trait ArtifactDownloader: Sync + Send {
                     return Err(anyhow::anyhow!(
                         "Unable to download the update image from none of the following URLs: {}",
                         update_urls.join(", ")
-                    ))
+                    ));
                 }
                 1 => {
                     let hash = hashes_unique.into_iter().next().unwrap();
@@ -116,7 +116,7 @@ pub trait ArtifactDownloader: Sync + Send {
                     return Err(anyhow::anyhow!(
                         "Update images do not have the same hash: {:?}",
                         hash_and_valid_urls.iter().map(|(h, u)| format!("{}  {}", h, u)).join("\n")
-                    ))
+                    ));
                 }
             };
             let update_urls = hash_and_valid_urls.into_iter().map(|(_, u)| u.clone()).collect::<Vec<String>>();

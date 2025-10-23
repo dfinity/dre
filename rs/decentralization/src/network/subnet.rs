@@ -589,7 +589,9 @@ impl DecentralizedSubnet {
                                 business_rules_log.join("\n"),
                                 if how_many_nodes > 1 {
                                     "Business rules analysis is calculated on each operation. Typically only the last operation is relevant, although this may depend on the case."
-                                } else { "" }
+                                } else {
+                                    ""
+                                }
                             ));
                         } else {
                             comment = None;

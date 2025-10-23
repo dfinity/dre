@@ -1,6 +1,6 @@
 use std::path::Path;
 
-use ic_registry_local_store::{compact_delta_to_changelog, Changelog, LocalStoreImpl, LocalStoreWriter};
+use ic_registry_local_store::{Changelog, LocalStoreImpl, LocalStoreWriter, compact_delta_to_changelog};
 
 pub fn get_mainnet_delta_6d_c1() -> Changelog {
     compact_delta_to_changelog(ic_registry_local_store_artifacts::MAINNET_DELTA_00_6D_C1)

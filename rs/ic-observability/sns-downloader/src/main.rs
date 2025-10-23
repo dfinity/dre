@@ -3,10 +3,10 @@ use std::{path::PathBuf, time::Duration};
 use clap::{ArgAction, Parser};
 use downloader_loop::run_downloader_loop;
 use humantime::parse_duration;
-use slog::{info, o, Drain, Logger};
+use slog::{Drain, Logger, info, o};
 use tokio::{
     runtime::Runtime,
-    signal::unix::{signal, SignalKind},
+    signal::unix::{SignalKind, signal},
 };
 use url::Url;
 

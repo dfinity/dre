@@ -7,20 +7,20 @@ use multiservice_discovery_shared::filters::ic_name_regex_filter::IcNameRegexFil
 use multiservice_discovery_shared::filters::node_regex_id_filter::NodeIDRegexFilter;
 use multiservice_discovery_shared::filters::{TargetGroupFilter, TargetGroupFilterList};
 use multiservice_discovery_shared::{
-    builders::{log_vector_config_structure::VectorConfigBuilderImpl, prometheus_config_structure::PrometheusConfigBuilder, ConfigBuilder},
+    builders::{ConfigBuilder, log_vector_config_structure::VectorConfigBuilderImpl, prometheus_config_structure::PrometheusConfigBuilder},
     contracts::target::TargetDto,
 };
 use serde_json::Value;
 use service_discovery::job_types::JobType;
-use slog::{debug, info, warn, Logger};
+use slog::{Logger, debug, info, warn};
 use std::path::PathBuf;
 use std::{
     collections::hash_map::DefaultHasher,
     hash::{Hash, Hasher},
 };
 
-use crate::log_subtype::Subtype;
 use crate::CliArgs;
+use crate::log_subtype::Subtype;
 
 pub async fn run_downloader_loop(logger: Logger, cli: CliArgs, stop_signal: Receiver<()>) {
     let interval = crossbeam::channel::tick(cli.poll_interval);

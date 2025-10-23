@@ -4,10 +4,10 @@ use crate::pin::ask::AskEveryTimePinHandler;
 use crate::pin::keyring::PlatformKeyringPinHandler;
 use clap::Args as ClapArgs;
 use clap_num::maybe_hex;
-use dialoguer::{console::Term, theme::ColorfulTheme, Select};
-use ic_canisters::governance::GovernanceCanisterWrapper;
-use ic_canisters::parallel_hardware_identity::{hsm_key_id_to_int, KeyIdVec, ParallelHardwareIdentity};
+use dialoguer::{Select, console::Term, theme::ColorfulTheme};
 use ic_canisters::IcAgentCanisterClient;
+use ic_canisters::governance::GovernanceCanisterWrapper;
+use ic_canisters::parallel_hardware_identity::{KeyIdVec, ParallelHardwareIdentity, hsm_key_id_to_int};
 use ic_icrc1_test_utils::KeyPairGenerator;
 use ic_management_types::Network;
 use itertools::Itertools;
@@ -263,11 +263,7 @@ impl Neuron {
     }
 
     pub fn maybe_proposer(&self) -> Option<String> {
-        if self.include_proposer {
-            Some(self.neuron_id.to_string())
-        } else {
-            None
-        }
+        if self.include_proposer { Some(self.neuron_id.to_string()) } else { None }
     }
 
     pub fn anonymous_neuron() -> Self {

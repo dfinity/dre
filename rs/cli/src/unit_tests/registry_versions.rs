@@ -252,9 +252,11 @@ async fn dump_versions_rejects_reversed_range() {
     };
     let ok_json = ok_cmd.dump_versions_json(ctx.clone()).await.unwrap();
     let ok_arr = ok_json.as_array().unwrap();
-    assert!(ok_arr
-        .iter()
-        .all(|e| e["version"].as_u64().unwrap() == 20 || e["version"].as_u64().unwrap() == 30));
+    assert!(
+        ok_arr
+            .iter()
+            .all(|e| e["version"].as_u64().unwrap() == 20 || e["version"].as_u64().unwrap() == 30)
+    );
 
     // Reversed negative range should yield empty
     let bad_cmd = Registry {

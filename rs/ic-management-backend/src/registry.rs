@@ -4,12 +4,12 @@ use crate::node_labels;
 use crate::proposal::{self, ProposalAgent, SubnetUpdateProposal, UpdateUnassignedNodesProposal};
 use crate::public_dashboard::query_ic_dashboard_list;
 use decentralization::network::{AvailableNodesQuerier, NodesConverter, SubnetQuerier, SubnetQueryBy};
-use futures::future::BoxFuture;
 use futures::TryFutureExt;
+use futures::future::BoxFuture;
 use ic_base_types::NodeId;
 use ic_base_types::{RegistryVersion, SubnetId};
-use ic_canisters::registry::RegistryCanisterWrapper;
 use ic_canisters::IcAgentCanisterClient;
+use ic_canisters::registry::RegistryCanisterWrapper;
 use ic_interfaces_registry::{RegistryClient, RegistryValue, ZERO_REGISTRY_VERSION};
 use ic_management_types::{
     Artifact, ArtifactReleases, Datacenter, DatacenterOwner, Guest, Network, NetworkError, Node, NodeProviderDetails, NodeProvidersResponse,
@@ -25,12 +25,12 @@ use ic_registry_client::client::ThresholdSigPublicKey;
 use ic_registry_client_fake::FakeRegistryClient;
 use ic_registry_client_helpers::node::NodeRegistry;
 use ic_registry_common_proto::pb::local_store::v1::{ChangelogEntry as PbChangelogEntry, KeyMutation as PbKeyMutation, MutationType};
-use ic_registry_keys::{
-    make_blessed_replica_versions_key, HOSTOS_VERSION_KEY_PREFIX, NODE_OPERATOR_RECORD_KEY_PREFIX, NODE_RECORD_KEY_PREFIX,
-    REPLICA_VERSION_KEY_PREFIX, SUBNET_RECORD_KEY_PREFIX,
-};
-use ic_registry_keys::{make_crypto_threshold_signing_pubkey_key, ROOT_SUBNET_ID_KEY};
 use ic_registry_keys::{API_BOUNDARY_NODE_RECORD_KEY_PREFIX, DATA_CENTER_KEY_PREFIX};
+use ic_registry_keys::{
+    HOSTOS_VERSION_KEY_PREFIX, NODE_OPERATOR_RECORD_KEY_PREFIX, NODE_RECORD_KEY_PREFIX, REPLICA_VERSION_KEY_PREFIX, SUBNET_RECORD_KEY_PREFIX,
+    make_blessed_replica_versions_key,
+};
+use ic_registry_keys::{ROOT_SUBNET_ID_KEY, make_crypto_threshold_signing_pubkey_key};
 use ic_registry_local_registry::LocalRegistry;
 use ic_registry_local_store::{Changelog, ChangelogEntry, KeyMutation, LocalStoreImpl};
 use ic_registry_nns_data_provider::registry::RegistryCanister;
@@ -50,7 +50,7 @@ use std::path::{Path, PathBuf};
 use std::str::FromStr;
 use std::sync::{Arc, OnceLock};
 use tokio::sync::RwLock;
-use tokio::time::{sleep, Duration};
+use tokio::time::{Duration, sleep};
 use url::Url;
 extern crate env_logger;
 

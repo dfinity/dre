@@ -6,7 +6,7 @@ use std::{
 
 use clap::Parser;
 use handlers::WholeState;
-use slog::{info, o, warn, Drain, Level, Logger};
+use slog::{Drain, Level, Logger, info, o, warn};
 
 use crate::handlers::Server;
 

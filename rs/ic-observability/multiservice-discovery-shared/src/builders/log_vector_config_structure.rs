@@ -3,11 +3,11 @@ use std::collections::{BTreeSet, HashMap};
 use ic_types::PrincipalId;
 use serde::Serialize;
 
-use service_discovery::{job_types::JobType, TargetGroup};
+use service_discovery::{TargetGroup, job_types::JobType};
 
+use crate::builders::ConfigBuilder;
 use crate::builders::vector_config_enriched::VectorSource;
 use crate::builders::vector_config_enriched::VectorTransform;
-use crate::builders::ConfigBuilder;
 use crate::contracts::journald_target::JournaldTarget;
 use crate::contracts::target::TargetDto;
 
@@ -186,7 +186,7 @@ mod tests {
     use std::net::SocketAddr;
 
     use ic_types::PrincipalId;
-    use serde_json::{json, Value};
+    use serde_json::{Value, json};
 
     use service_discovery::job_types::JobType;
     use service_discovery::job_types::NodeOS;

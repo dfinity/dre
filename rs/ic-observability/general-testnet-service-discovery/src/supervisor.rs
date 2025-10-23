@@ -8,7 +8,7 @@ use std::{
 
 use chrono::{DateTime, Utc};
 use multiservice_discovery_shared::contracts::journald_target::JournaldTarget;
-use slog::{info, warn, Logger};
+use slog::{Logger, info, warn};
 use tokio::{net::TcpStream, runtime::Handle, sync::Mutex, task::JoinHandle};
 use tokio_util::sync::CancellationToken;
 

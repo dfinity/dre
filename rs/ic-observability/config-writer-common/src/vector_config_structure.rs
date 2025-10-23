@@ -5,7 +5,7 @@ use std::{
 
 use erased_serde::serialize_trait_object;
 use serde::Serialize;
-use service_discovery::{job_types::JobType, TargetGroup};
+use service_discovery::{TargetGroup, job_types::JobType};
 
 pub trait VectorConfigBuilder {
     fn build(&self, target_groups: BTreeSet<TargetGroup>, job: JobType) -> VectorConfigEnriched;

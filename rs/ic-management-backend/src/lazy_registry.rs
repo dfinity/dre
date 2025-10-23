@@ -22,8 +22,8 @@ use ic_protobuf::registry::{
 use ic_registry_client_helpers::node::NodeRegistry;
 use ic_registry_client_helpers::{node::NodeRecord, node_operator::NodeOperatorRecord};
 use ic_registry_keys::{
-    make_firewall_rules_record_key, FirewallRulesScope, API_BOUNDARY_NODE_RECORD_KEY_PREFIX, DATA_CENTER_KEY_PREFIX, HOSTOS_VERSION_KEY_PREFIX,
-    NODE_OPERATOR_RECORD_KEY_PREFIX, NODE_RECORD_KEY_PREFIX, NODE_REWARDS_TABLE_KEY, REPLICA_VERSION_KEY_PREFIX, SUBNET_RECORD_KEY_PREFIX,
+    API_BOUNDARY_NODE_RECORD_KEY_PREFIX, DATA_CENTER_KEY_PREFIX, FirewallRulesScope, HOSTOS_VERSION_KEY_PREFIX, NODE_OPERATOR_RECORD_KEY_PREFIX,
+    NODE_RECORD_KEY_PREFIX, NODE_REWARDS_TABLE_KEY, REPLICA_VERSION_KEY_PREFIX, SUBNET_RECORD_KEY_PREFIX, make_firewall_rules_record_key,
 };
 use ic_registry_local_registry::LocalRegistry;
 use ic_registry_subnet_type::SubnetType;

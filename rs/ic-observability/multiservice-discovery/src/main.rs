@@ -10,7 +10,7 @@ use humantime::parse_duration;
 use ic_management_types::Network;
 use opentelemetry::global;
 use service_discovery::shutdown_signal;
-use slog::{error, info, o, Drain, Logger};
+use slog::{Drain, Logger, error, info, o};
 use tokio::runtime::Runtime;
 use tokio::sync::oneshot::{self};
 use url::Url;
@@ -19,8 +19,8 @@ use definition::{Definition, DefinitionsSupervisor, StartMode};
 
 use crate::definition::{RunningDefinition, TargetFilterSpec, TestDefinition};
 use crate::metrics::{MSDMetrics, RunningDefinitionsMetrics};
-use crate::server_handlers::export_prometheus_config_handler::serialize_definitions_to_prometheus_config;
 use crate::server_handlers::Server;
+use crate::server_handlers::export_prometheus_config_handler::serialize_definitions_to_prometheus_config;
 
 mod definition;
 mod metrics;

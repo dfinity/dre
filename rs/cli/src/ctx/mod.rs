@@ -1,6 +1,6 @@
 use std::{cell::RefCell, rc::Rc, sync::Arc};
 
-use ic_canisters::{governance::GovernanceCanisterWrapper, IcAgentCanisterClient};
+use ic_canisters::{IcAgentCanisterClient, governance::GovernanceCanisterWrapper};
 use ic_management_backend::{
     health::HealthStatusQuerier,
     lazy_git::LazyGit,

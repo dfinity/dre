@@ -9,7 +9,7 @@ use log::info;
 use spinners::{Spinner, Spinners};
 
 use crate::auth::AuthRequirement;
-use crate::exe::{args::GlobalArgs, ExecutableCommand};
+use crate::exe::{ExecutableCommand, args::GlobalArgs};
 use crate::{
     confirm::{ConfirmationModeOptions, HowToProceed},
     desktop_notify::DesktopNotifier,

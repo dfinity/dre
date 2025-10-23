@@ -1,5 +1,5 @@
 use std::{
-    collections::{hash_map::DefaultHasher, BTreeMap},
+    collections::{BTreeMap, hash_map::DefaultHasher},
     hash::{Hash, Hasher},
     path::PathBuf,
     time::Duration,
@@ -8,7 +8,7 @@ use std::{
 use log_noise_filter_backend::handlers::WholeState;
 use reqwest::Client;
 use serde::Serialize;
-use slog::{info, warn, Logger};
+use slog::{Logger, info, warn};
 use tokio::{io::AsyncWriteExt, select};
 use url::Url;
 

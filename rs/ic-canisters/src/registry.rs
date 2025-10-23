@@ -12,9 +12,8 @@ use ic_registry_canister_api::{Chunk, GetChunkRequest};
 use ic_registry_keys::make_crypto_threshold_signing_pubkey_key;
 use ic_registry_nns_data_provider::registry::RegistryCanister;
 use ic_registry_transport::{
-    dechunkify_get_value_response_content,
+    GetChunk, dechunkify_get_value_response_content,
     pb::v1::{HighCapacityRegistryGetValueResponse, RegistryGetLatestVersionResponse, RegistryGetValueRequest},
-    GetChunk,
 };
 use ic_types::crypto::threshold_sig::ThresholdSigPublicKey;
 use prost::Message;

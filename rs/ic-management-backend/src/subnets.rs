@@ -1,6 +1,6 @@
 use decentralization::{
-    network::{DecentralizedSubnet, SubnetChange},
     SubnetChangeResponse,
+    network::{DecentralizedSubnet, SubnetChange},
 };
 use ic_base_types::PrincipalId;
 use ic_management_types::{Node, TopologyChangeProposal};

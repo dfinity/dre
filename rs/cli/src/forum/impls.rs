@@ -6,12 +6,12 @@ use std::{
     time::Duration,
 };
 
-use futures::{future::BoxFuture, FutureExt};
+use futures::{FutureExt, future::BoxFuture};
 use ic_types::PrincipalId;
 use itertools::Itertools;
 use log::{info, warn};
 use reqwest::{Client, Method};
-use serde::{de::DeserializeOwned, Deserialize};
+use serde::{Deserialize, de::DeserializeOwned};
 use serde_json::json;
 use url::Url;
 
@@ -224,7 +224,9 @@ impl ForumPostHandler for Discourse {
         let try_call = async move {
             let res = match kind {
                 ForumPostKind::Generic => {
-                    warn!("Discourse does not support creating forum posts for this kind of proposal.  Please create a post yourself and supply the link for it to be updated afterwards.");
+                    warn!(
+                        "Discourse does not support creating forum posts for this kind of proposal.  Please create a post yourself and supply the link for it to be updated afterwards."
+                    );
                     let poast = self.request_from_user_topic_or_post().await?;
                     Ok(DiscoursePost {
                         client,
@@ -239,11 +241,11 @@ impl ForumPostHandler for Discourse {
                             Ok(p) => p,
                             Err(e) => {
                                 return Err(anyhow::anyhow!(
-                                "Subnet {} not found in the specified subnet topic map file {} (error: {}). Don't know where to create a forum post",
-                                subnet_id.to_string(),
-                                path.display(),
-                                e
-                            ))
+                                    "Subnet {} not found in the specified subnet topic map file {} (error: {}). Don't know where to create a forum post",
+                                    subnet_id.to_string(),
+                                    path.display(),
+                                    e
+                                ));
                             }
                         },
                         None => get_subnet_topics_map(),
@@ -719,6 +721,9 @@ mod tests {
             })
             .unwrap();
 
-        assert_eq!(link.to_string(), "https://forum.dfinity.org/new-topic?title=Test+automatic+forum+post+creation&body=Test+content&category=NNS+proposal+discussions&tags=tag1%2Ctag2")
+        assert_eq!(
+            link.to_string(),
+            "https://forum.dfinity.org/new-topic?title=Test+automatic+forum+post+creation&body=Test+content&category=NNS+proposal+discussions&tags=tag1%2Ctag2"
+        )
     }
 }

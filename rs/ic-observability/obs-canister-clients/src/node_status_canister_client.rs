@@ -2,7 +2,7 @@ use std::time::Duration;
 
 use candid::{CandidType, Decode, Encode};
 use ic_agent::agent::CallResponse;
-use ic_agent::{export::Principal, identity::AnonymousIdentity, Agent};
+use ic_agent::{Agent, export::Principal, identity::AnonymousIdentity};
 use rand::seq::IndexedRandom;
 use serde::Deserialize;
 use url::Url;

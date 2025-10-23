@@ -1,6 +1,6 @@
 #![allow(deprecated)]
 use crate::storage::{METRICS_MANAGER, REGISTRY_STORE};
-use candid::{candid_method, encode_one, CandidType};
+use candid::{CandidType, candid_method, encode_one};
 use chrono::Months;
 use chrono::{DateTime, Days, Duration, Timelike, Utc};
 use ic_cdk_macros::*;

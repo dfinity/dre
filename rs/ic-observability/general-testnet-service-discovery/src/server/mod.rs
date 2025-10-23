@@ -1,12 +1,12 @@
 use std::net::{IpAddr, Ipv4Addr, SocketAddr};
 
 use axum::{
+    Router,
     http::StatusCode,
     routing::{get, post},
-    Router,
 };
 use axum_otel_metrics::HttpMetricsLayer;
-use slog::{info, Logger};
+use slog::{Logger, info};
 use tokio_util::sync::CancellationToken;
 
 use crate::supervisor::TargetSupervisor;

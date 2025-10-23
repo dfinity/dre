@@ -1,8 +1,8 @@
 use candid::{CandidType, Decode, Encode, Principal};
 use ic_base_types::{NodeId, PrincipalId, SubnetId};
 use ic_management_canister_types_private::NodeMetrics;
-use ic_stable_structures::storable::Bound;
 use ic_stable_structures::Storable;
+use ic_stable_structures::storable::Bound;
 use rewards_calculation::types::{NodeMetricsDailyRaw, SubnetMetricsDailyKey, UnixTsNanos};
 use serde::{Deserialize, Serialize};
 use std::borrow::Cow;

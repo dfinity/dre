@@ -5,7 +5,7 @@ use dfn_core::api::PrincipalId;
 use ic_management_canister_types_private::NodeMetricsHistoryResponse;
 use ic_nns_governance_api::MonthlyNodeProviderRewards;
 use ic_protobuf::registry::node_rewards::v2::{NodeRewardRate, NodeRewardRates};
-use ic_stable_structures::{storable::Bound, Storable};
+use ic_stable_structures::{Storable, storable::Bound};
 use serde::Serialize;
 
 pub type SubnetNodeMetricsHistory = (PrincipalId, Vec<NodeMetricsHistoryResponse>);

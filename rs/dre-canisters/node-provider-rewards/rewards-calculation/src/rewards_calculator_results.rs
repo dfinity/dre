@@ -1,4 +1,4 @@
-use crate::types::{DayEnd, Region, RewardPeriod, RewardPeriodError, UnixTsNanos, NANOS_PER_DAY};
+use crate::types::{DayEnd, NANOS_PER_DAY, Region, RewardPeriod, RewardPeriodError, UnixTsNanos};
 use ic_base_types::{NodeId, PrincipalId, SubnetId};
 use ic_protobuf::registry::node::v1::NodeRewardType;
 use rust_decimal::Decimal;

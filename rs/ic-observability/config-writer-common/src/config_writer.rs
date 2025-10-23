@@ -6,10 +6,10 @@ use std::{
 };
 
 use ic_sys::fs::Clobber;
-use service_discovery::{job_types::JobType, TargetGroup};
+use service_discovery::{TargetGroup, job_types::JobType};
 
 use crate::{config_builder::Config, config_updater::ConfigUpdater, filters::TargetGroupFilter, vector_config_structure::VectorConfigBuilder};
-use slog::{debug, Logger};
+use slog::{Logger, debug};
 
 #[derive(Debug)]
 pub struct ConfigWriter {

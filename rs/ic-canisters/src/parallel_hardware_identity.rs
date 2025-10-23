@@ -7,18 +7,17 @@ use cryptoki::{
     session::UserType,
     slot::{Slot, SlotInfo, TokenInfo},
 };
-use ic_agent::{agent::EnvelopeContent, export::Principal, identity::Delegation, Identity, Signature};
+use ic_agent::{Identity, Signature, agent::EnvelopeContent, export::Principal, identity::Delegation};
 use log::error;
 use log::info;
 use log::{debug, warn};
 use sha2::{
-    digest::{generic_array::GenericArray, OutputSizeUser},
     Digest, Sha256,
+    digest::{OutputSizeUser, generic_array::GenericArray},
 };
 use simple_asn1::{
-    from_der, oid, to_der,
     ASN1Block::{BitString, ObjectIdentifier, OctetString, Sequence},
-    ASN1DecodeErr, ASN1EncodeErr,
+    ASN1DecodeErr, ASN1EncodeErr, from_der, oid, to_der,
 };
 use std::io::Cursor;
 use std::{error::Error, sync::Mutex};
@@ -500,7 +499,10 @@ impl ParallelHardwareIdentity {
             (Some(_), true) => {
                 // If the PIN HAS been supplied as a parameter, it is likely that the
                 // supplied PIN will cause the HSM to get locked.  Abort in this case.
-                return Err(HardwareIdentityError::UserPinRequired(format!("The PIN for the token stored in slot {} is at its last try; to protect your HSM from getting locked due to an incorrect PIN specified as a parameter, you must manually enter the PIN", sess.slot)));
+                return Err(HardwareIdentityError::UserPinRequired(format!(
+                    "The PIN for the token stored in slot {} is at its last try; to protect your HSM from getting locked due to an incorrect PIN specified as a parameter, you must manually enter the PIN",
+                    sess.slot
+                )));
             }
             (None, final_try) => {
                 let tentative_pin = memory.retrieve(

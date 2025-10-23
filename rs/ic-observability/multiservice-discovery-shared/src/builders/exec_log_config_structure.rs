@@ -6,9 +6,9 @@ use serde::Serialize;
 use crate::contracts::target::TargetDto;
 
 use super::{
+    ConfigBuilder,
     log_vector_config_structure::VectorRemapTransform,
     vector_config_enriched::{VectorConfigEnriched, VectorSource, VectorTransform},
-    ConfigBuilder,
 };
 
 #[derive(Debug, Clone)]

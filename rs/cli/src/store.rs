@@ -224,7 +224,7 @@ impl Store {
                 let version = match (self.offline, version_from_file) {
                     // Running offline mode, no ic-admin present.
                     (true, version_from_file) if version_from_file.is_empty() => {
-                        return Err(anyhow::anyhow!("No ic-admin version found and offline mode is specified"))
+                        return Err(anyhow::anyhow!("No ic-admin version found and offline mode is specified"));
                     }
                     // Running offline mode and ic-admin version is present.
                     (true, version_from_file) => {

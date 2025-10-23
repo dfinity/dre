@@ -2,7 +2,7 @@ use std::path::PathBuf;
 
 use clap::Parser;
 use download_loop::download_loop;
-use slog::{info, o, Drain, Level, Logger};
+use slog::{Drain, Level, Logger, info, o};
 use url::Url;
 
 mod download_loop;
