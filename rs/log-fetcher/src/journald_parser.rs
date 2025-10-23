@@ -75,9 +75,11 @@ pub fn parse_journal_entries_new(body: &[u8]) -> Vec<JournalEntry> {
         }
     }
     // Check if there's an entry at the end of the body
-    if !current_entry.is_empty() && let Some(entry) = parse_journal_entry(&current_entry) {
-            entries.push(entry);
-        }
+    if !current_entry.is_empty()
+        && let Some(entry) = parse_journal_entry(&current_entry)
+    {
+        entries.push(entry);
+    }
 
     entries
 }
@@ -104,10 +106,11 @@ pub fn _parse_journal_entries(body: &[u8]) -> Vec<JournalEntry> {
     }
 
     // Check if there's an entry at the end of the body
-    if !current_entry.is_empty() && let Some(entry) = parse_journal_entry(&current_entry) {
+    if !current_entry.is_empty()
+        && let Some(entry) = parse_journal_entry(&current_entry)
+    {
         entries.push(entry);
     }
-
 
     entries
 }
