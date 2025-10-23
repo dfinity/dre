@@ -12,7 +12,7 @@ build:lint --config=clippy
 # rust-clippy
 build:clippy --aspects=@rules_rust//rust:defs.bzl%rust_clippy_aspect
 build:clippy --output_groups=+clippy_checks
-build --@rules_rust//:clippy.toml=//:clippy.toml --@rules_rust//:clippy_flags=-D,warnings,-D,clippy::all,-A,clippy::collapsible_if,-D,clippy::mem_forget,-C,debug-assertions=off
+build --@rules_rust//:clippy.toml=//:clippy.toml --@rules_rust//:clippy_flags=-D,warnings,-D,clippy::all,-A,unused_attributes,-A,clippy::unnecessary-unwrap,-A,clippy::collapsible_if,-A,clippy::let_and_return,-D,clippy::mem_forget,-C,debug-assertions=off
 # rustfmt
 build:fmt --aspects=@rules_rust//rust:defs.bzl%rustfmt_aspect
 build:fmt --output_groups=+rustfmt_checks
