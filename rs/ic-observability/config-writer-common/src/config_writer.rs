@@ -53,8 +53,7 @@ impl ConfigWriter {
         let vector_config = vector_config_builder.build(filtered_target_groups, job);
 
         ic_sys::fs::write_atomically(target_path.as_path(), Clobber::Yes, |f| {
-            serde_json::to_writer_pretty(f, &vector_config)
-                .map_err(|e| std::io::Error::other(format!("Serialization error: {:?}", e)))
+            serde_json::to_writer_pretty(f, &vector_config).map_err(|e| std::io::Error::other(format!("Serialization error: {:?}", e)))
         })?;
         self.last_targets.insert(job.to_string(), target_groups);
         Ok(())
@@ -71,8 +70,7 @@ impl ConfigUpdater for ConfigWriter {
         let target_path = self.base_directory.join(format!("{}.json", config.name()));
 
         ic_sys::fs::write_atomically(target_path.as_path(), Clobber::Yes, |f| {
-            serde_json::to_writer_pretty(f, &config)
-                .map_err(|e| std::io::Error::other(format!("Serialization error: {:?}", e)))
+            serde_json::to_writer_pretty(f, &config).map_err(|e| std::io::Error::other(format!("Serialization error: {:?}", e)))
         })?;
         Ok(())
     }
