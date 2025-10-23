@@ -31,7 +31,9 @@ async fn dump_versions_outputs_records_sorted() {
     // Arrange: write under the test fallback path used by implementation
     // Constrain lookup to only our test dir
     let base = std::path::PathBuf::from("/tmp/dre-test-store/local_registry/mainnet/t_dump_sorted");
-    std::env::set_var("DRE_LOCAL_REGISTRY_DIR_OVERRIDE", &base);
+    unsafe {
+        std::env::set_var("DRE_LOCAL_REGISTRY_DIR_OVERRIDE", &base);
+    }
 
     write_version(
         &base,
@@ -117,7 +119,9 @@ async fn dump_versions_outputs_records_sorted() {
 #[serial]
 async fn list_versions_only_outputs_numbers() {
     let base = std::path::PathBuf::from("/tmp/dre-test-store/local_registry/mainnet/t_list_only");
-    std::env::set_var("DRE_LOCAL_REGISTRY_DIR_OVERRIDE", &base);
+    unsafe {
+        std::env::set_var("DRE_LOCAL_REGISTRY_DIR_OVERRIDE", &base);
+    }
     write_version(
         &base,
         42,
@@ -178,7 +182,9 @@ async fn list_versions_only_outputs_numbers() {
 async fn dump_versions_rejects_reversed_range() {
     // Arrange: write under the test fallback path used by implementation
     let base = std::path::PathBuf::from("/tmp/dre-test-store/local_registry/mainnet/t_reversed_range");
-    std::env::set_var("DRE_LOCAL_REGISTRY_DIR_OVERRIDE", &base);
+    unsafe {
+        std::env::set_var("DRE_LOCAL_REGISTRY_DIR_OVERRIDE", &base);
+    }
 
     // Create a few versions
     write_version(
@@ -252,9 +258,11 @@ async fn dump_versions_rejects_reversed_range() {
     };
     let ok_json = ok_cmd.dump_versions_json(ctx.clone()).await.unwrap();
     let ok_arr = ok_json.as_array().unwrap();
-    assert!(ok_arr
-        .iter()
-        .all(|e| e["version"].as_u64().unwrap() == 20 || e["version"].as_u64().unwrap() == 30));
+    assert!(
+        ok_arr
+            .iter()
+            .all(|e| e["version"].as_u64().unwrap() == 20 || e["version"].as_u64().unwrap() == 30)
+    );
 
     // Reversed negative range should yield empty
     let bad_cmd = Registry {

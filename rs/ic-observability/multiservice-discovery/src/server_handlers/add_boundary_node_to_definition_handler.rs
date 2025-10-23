@@ -1,13 +1,13 @@
+use axum::Json;
 use axum::extract::State;
 use axum::http::StatusCode;
-use axum::Json;
 use slog::warn;
 use std::error::Error;
 use std::fmt::{Display, Error as FmtError, Formatter};
 
 use crate::server_handlers::dto::BoundaryNodeDto;
 
-use super::{bad_request, not_found, ok, Server};
+use super::{Server, bad_request, not_found, ok};
 
 #[derive(Debug)]
 
@@ -40,7 +40,7 @@ pub(super) async fn add_boundary_node(
                 binding.log,
                 format!("Couldn't find definition: '{}'", ic_name),
                 DefinitionNotFound { ic_name },
-            )
+            );
         }
     };
 

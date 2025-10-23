@@ -159,11 +159,7 @@ impl HostosRollout {
                         NodeAssignment::Unassigned
                     },
                     if let Some(dfinity_owned) = node.dfinity_owned {
-                        if dfinity_owned {
-                            NodeOwner::Dfinity
-                        } else {
-                            NodeOwner::Others
-                        }
+                        if dfinity_owned { NodeOwner::Dfinity } else { NodeOwner::Others }
                     } else {
                         NodeOwner::Others
                     },
@@ -370,13 +366,7 @@ impl HostosRollout {
             "CANDIDATES SELECTION FROM {} HEALTHY NODES FOR {} {} {}",
             nodes_health
                 .iter()
-                .filter_map(|(principal, status)| {
-                    if *status == HealthStatus::Healthy {
-                        Some(principal)
-                    } else {
-                        None
-                    }
-                })
+                .filter_map(|(principal, status)| { if *status == HealthStatus::Healthy { Some(principal) } else { None } })
                 .count(),
             update_group.maybe_number_nodes.unwrap_or_default(),
             update_group.node_group.owner,

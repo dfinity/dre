@@ -1,8 +1,8 @@
 use std::net::SocketAddr;
 use std::{path::PathBuf, sync::Arc, time::Duration};
 
-use anyhow::{bail, Result};
-use base64::{engine::general_purpose as b64, Engine as _};
+use anyhow::{Result, bail};
+use base64::{Engine as _, engine::general_purpose as b64};
 use clap::Parser;
 use config_writer_common::config_writer::ConfigWriter;
 use config_writer_common::filters::{NodeIDRegexFilter, TargetGroupFilter, TargetGroupFilterList};
@@ -16,8 +16,8 @@ use regex::Regex;
 use service_discovery::job_types::{JobType, NodeOS};
 use service_discovery::registry_sync::sync_local_registry;
 use service_discovery::shutdown_signal;
-use service_discovery::{metrics::Metrics, poll_loop::make_poll_loop, IcServiceDiscoveryImpl};
-use slog::{info, o, warn, Drain, Logger};
+use service_discovery::{IcServiceDiscoveryImpl, metrics::Metrics, poll_loop::make_poll_loop};
+use slog::{Drain, Logger, info, o, warn};
 use url::Url;
 
 use crate::custom_filters::OldMachinesFilter;

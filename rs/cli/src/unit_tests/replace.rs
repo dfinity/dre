@@ -1,8 +1,8 @@
 use std::sync::Arc;
 
 use decentralization::{
-    network::{CordonedFeature, DecentralizedSubnet},
     SubnetChangeResponse,
+    network::{CordonedFeature, DecentralizedSubnet},
 };
 use ic_management_backend::{health::MockHealthStatusQuerier, lazy_registry::MockLazyRegistry};
 use ic_management_types::{Node, NodeFeature, NodeFeatures};

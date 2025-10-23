@@ -7,7 +7,7 @@
 //!
 #![allow(clippy::await_holding_lock, clippy::result_large_err)]
 use std::{
-    collections::{btree_map::Entry, BTreeMap, BTreeSet},
+    collections::{BTreeMap, BTreeSet, btree_map::Entry},
     net::SocketAddr,
     path::{Path, PathBuf},
     sync::{Arc, RwLock},
@@ -29,9 +29,9 @@ use job_types::JobType;
 use regex::Regex;
 use serde::{Deserialize, Serialize};
 use slog::info;
-use slog::{warn, Logger};
+use slog::{Logger, warn};
 use thiserror::Error;
-use tokio::signal::unix::{signal, SignalKind};
+use tokio::signal::unix::{SignalKind, signal};
 
 pub mod file_sd;
 pub mod job_types;

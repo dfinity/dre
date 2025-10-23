@@ -3,6 +3,7 @@ use std::collections::HashMap;
 use std::sync::Arc;
 
 use ahash::AHashMap;
+use decentralization::SubnetChangeResponse;
 use decentralization::network::CordonedFeature;
 use decentralization::network::DecentralizedSubnet;
 use decentralization::network::NetworkHealRequest;
@@ -10,9 +11,8 @@ use decentralization::network::SubnetChange;
 use decentralization::network::SubnetChangeRequest;
 use decentralization::network::SubnetQueryBy;
 use decentralization::subnets::NodesRemover;
-use decentralization::SubnetChangeResponse;
-use futures::future::try_join3;
 use futures::TryFutureExt;
+use futures::future::try_join3;
 use futures_util::future::try_join;
 use ic_management_backend::health::HealthStatusQuerier;
 use ic_management_backend::lazy_git::LazyGit;
@@ -450,7 +450,10 @@ impl Runner {
             .map(|p| p.to_string().split('-').next().unwrap().to_string())
             .collect::<Vec<_>>();
         println!("Will submit proposal to update the following nodes: {:?}", nodes_short);
-        println!("You will be able to follow the upgrade progress at https://grafana.mainnet.dfinity.network/explore?orgId=1&left=%7B%22datasource%22:%22PE62C54679EC3C073%22,%22queries%22:%5B%7B%22refId%22:%22A%22,%22datasource%22:%7B%22type%22:%22prometheus%22,%22uid%22:%22PE62C54679EC3C073%22%7D,%22editorMode%22:%22code%22,%22expr%22:%22hostos_version%7Bic_node%3D~%5C%22{}%5C%22%7D%5Cn%22,%22legendFormat%22:%22__auto%22,%22range%22:true,%22instant%22:true%7D%5D,%22range%22:%7B%22from%22:%22now-1h%22,%22to%22:%22now%22%7D%7D", nodes_short.iter().map(|n| n.to_string() + ".%2B").join("%7C"));
+        println!(
+            "You will be able to follow the upgrade progress at https://grafana.mainnet.dfinity.network/explore?orgId=1&left=%7B%22datasource%22:%22PE62C54679EC3C073%22,%22queries%22:%5B%7B%22refId%22:%22A%22,%22datasource%22:%7B%22type%22:%22prometheus%22,%22uid%22:%22PE62C54679EC3C073%22%7D,%22editorMode%22:%22code%22,%22expr%22:%22hostos_version%7Bic_node%3D~%5C%22{}%5C%22%7D%5Cn%22,%22legendFormat%22:%22__auto%22,%22range%22:true,%22instant%22:true%7D%5D,%22range%22:%7B%22from%22:%22now-1h%22,%22to%22:%22now%22%7D%7D",
+            nodes_short.iter().map(|n| n.to_string() + ".%2B").join("%7C")
+        );
 
         Ok(IcAdminProposal::new(
             IcAdminProposalCommand::DeployHostosToSomeNodes {
@@ -705,21 +708,25 @@ impl Runner {
                     Some(if ensure_assigned {
                         let np = node.operator.provider.principal.to_string();
                         let np_short = np.split_once('-').unwrap().0;
-                        format!("The node operator `{}` (under NP [{}](https://dashboard.internetcomputer.org/provider/{})) has {} nodes in total but currently does not have active nodes in any subnet. To gain insights into the stability of the nodes of this node operator, we propose to add one of the operator's nodes to subnet {}.",
-                                node.operator.principal.to_string().split_once('-').unwrap().0,
-                                np_short,
-                                np,
-                                Self::num_nodes_per_operator(all_nodes, &node.operator.principal),
-                                subnet_id_short)
+                        format!(
+                            "The node operator `{}` (under NP [{}](https://dashboard.internetcomputer.org/provider/{})) has {} nodes in total but currently does not have active nodes in any subnet. To gain insights into the stability of the nodes of this node operator, we propose to add one of the operator's nodes to subnet {}.",
+                            node.operator.principal.to_string().split_once('-').unwrap().0,
+                            np_short,
+                            np,
+                            Self::num_nodes_per_operator(all_nodes, &node.operator.principal),
+                            subnet_id_short
+                        )
                     } else {
                         let np = node.operator.provider.principal.to_string();
                         let np_short = np.split_once('-').unwrap().0;
-                        format!("The node operator {} (under NP [{}](https://dashboard.internetcomputer.org/provider/{})) has {} nodes in total and currently has all nodes assigned to subnets. We propose to remove one of the operator's nodes from subnet {} to allow optimization of the overall network topology. The removal of the node from the subnet does not worsen subnet decentralization, and may allow the node to be assigned to subnet where it would improve decentralization.",
-                                node.operator.principal.to_string().split_once('-').unwrap().0,
-                                np_short,
-                                np,
-                                Self::num_nodes_per_operator(all_nodes, &node.operator.principal),
-                                subnet_id_short)
+                        format!(
+                            "The node operator {} (under NP [{}](https://dashboard.internetcomputer.org/provider/{})) has {} nodes in total and currently has all nodes assigned to subnets. We propose to remove one of the operator's nodes from subnet {} to allow optimization of the overall network topology. The removal of the node from the subnet does not worsen subnet decentralization, and may allow the node to be assigned to subnet where it would improve decentralization.",
+                            node.operator.principal.to_string().split_once('-').unwrap().0,
+                            np_short,
+                            np,
+                            Self::num_nodes_per_operator(all_nodes, &node.operator.principal),
+                            subnet_id_short
+                        )
                     }),
                 );
 

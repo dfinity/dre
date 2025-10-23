@@ -1,8 +1,8 @@
 use std::{collections::BTreeMap, hash::Hash, net::SocketAddr, path::PathBuf, sync::Arc};
 
 use axum::{
-    routing::{delete, get, post, put},
     Router,
+    routing::{delete, get, post, put},
 };
 use criteria::{delete_criteria::delete_criteria, get_criteria::get_criteria, post_criteria::update};
 
@@ -10,7 +10,7 @@ use get_all::get_all;
 use rate::{get_rate::get_rate, put_rate::put_rate};
 use regex::Regex;
 use serde::{Deserialize, Serialize};
-use slog::{warn, Logger};
+use slog::{Logger, warn};
 use tokio::sync::Mutex;
 
 pub(crate) mod criteria;

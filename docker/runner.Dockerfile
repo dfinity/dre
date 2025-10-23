@@ -86,4 +86,4 @@ ENV PATH="/home/runner/.cargo/bin:$PATH"
 ENV PATH="$PATH:/home/runner/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/lib/rustlib/x86_64-unknown-linux-gnu/bin/"
 ENV CARGO_TARGET_X86_64_APPLE_DARWIN_LINKER=rust-lld
 
-RUN cargo install --quiet cargo-zigbuild && rustup toolchain install 1.86.0 && cargo +1.86.0 install git-cliff
+RUN cargo install --quiet cargo-zigbuild && rustup toolchain install 1.90.0 && cargo +1.90.0 install git-cliff

@@ -1,7 +1,7 @@
 use super::*;
 use crate::{
-    subnets::{subnets_with_business_rules_violations, unhealthy_with_nodes},
     SubnetChangeResponse,
+    subnets::{subnets_with_business_rules_violations, unhealthy_with_nodes},
 };
 use log::{info, warn};
 use std::{cmp::Ordering, collections::BTreeSet};

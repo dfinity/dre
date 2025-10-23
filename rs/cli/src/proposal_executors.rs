@@ -1,7 +1,7 @@
 use std::fmt::{self, Debug, Display};
 
 use futures::future::BoxFuture;
-use ic_nns_governance_api::{manage_neuron_response::MakeProposalResponse, MakeProposalRequest};
+use ic_nns_governance_api::{MakeProposalRequest, manage_neuron_response::MakeProposalResponse};
 use regex::Regex;
 use url::Url;
 
@@ -68,7 +68,7 @@ impl TryFrom<MakeProposalResponse> for ProposalResponseWithId {
             (None, None) => {
                 return Err(anyhow::anyhow!(
                     "Proposal submission failed; no failure message was provided by the governance canister."
-                ))
+                ));
             }
         };
         Ok(Self(propid))

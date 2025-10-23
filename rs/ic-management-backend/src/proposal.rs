@@ -7,10 +7,10 @@ use candid::{Decode, Encode};
 use futures::future::BoxFuture;
 use futures_util::future::try_join_all;
 use ic_agent::Agent;
-use ic_management_types::filter_map_nns_function_proposals;
 use ic_management_types::UpdateElectedHostosVersionsProposal;
 use ic_management_types::UpdateElectedReplicaVersionsProposal;
 use ic_management_types::UpdateNodesHostosVersionsProposal;
+use ic_management_types::filter_map_nns_function_proposals;
 use ic_management_types::{TopologyChangePayload, TopologyChangeProposal};
 use ic_nns_governance::pb::v1::{ListProposalInfo, ProposalStatus, Topic};
 use ic_nns_governance_api::proposal::Action;
@@ -260,7 +260,7 @@ impl ProposalAgentImpl {
                                 // Topic::NodeAdmin,
                                 Topic::ParticipantManagement,
                                 // Topic::SubnetManagement,
-                                Topic::NetworkCanisterManagement,
+                                Topic::ApplicationCanisterManagement,
                                 Topic::Kyc,
                                 Topic::NodeProviderRewards,
                                 Topic::SnsAndCommunityFund,

@@ -2,7 +2,7 @@ use std::path::PathBuf;
 
 use clap::Parser;
 use download_loop::download_loop;
-use slog::{info, o, Drain, Level, Logger};
+use slog::{Drain, Level, Logger, info, o};
 use url::Url;
 
 mod download_loop;
@@ -58,6 +58,6 @@ fn from_str_to_log(value: &str) -> Level {
         "warning" => Level::Warning,
         "trace" => Level::Trace,
         "debug" => Level::Debug,
-        _ => panic!("Unsupported level: {}", value),
+        _ => panic!("Unsupported level: {value}"),
     }
 }

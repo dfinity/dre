@@ -1,11 +1,11 @@
 use std::path::PathBuf;
 
 use multiservice_discovery_shared::contracts::journald_target::JournaldTarget;
-use slog::{error, info, warn, Logger};
+use slog::{Logger, error, info, warn};
 use tokio::{runtime::Handle, task::JoinHandle};
 use tokio_util::sync::CancellationToken;
 
-use super::{in_memory::InMemoryStorage, Storage};
+use super::{Storage, in_memory::InMemoryStorage};
 
 #[derive(Clone)]
 pub struct FileStorage {

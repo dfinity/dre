@@ -1,10 +1,10 @@
 use std::{
-    collections::{btree_map::Entry, BTreeMap},
+    collections::{BTreeMap, btree_map::Entry},
     str::FromStr,
     sync::Arc,
 };
 
-use clap::{error::ErrorKind, Args};
+use clap::{Args, error::ErrorKind};
 use ic_canisters::{
     management::{NodeMetricsHistoryResponse, WalletCanisterWrapper},
     node_metrics::NodeMetricsCanisterWrapper,
@@ -14,7 +14,7 @@ use ic_types::{CanisterId, PrincipalId};
 use itertools::Itertools;
 use log::{info, warn};
 
-use crate::{auth::AuthRequirement, exe::args::GlobalArgs, exe::ExecutableCommand};
+use crate::{auth::AuthRequirement, exe::ExecutableCommand, exe::args::GlobalArgs};
 
 type CLINodeMetrics = BTreeMap<PrincipalId, Vec<NodeMetricsHistoryResponse>>;
 

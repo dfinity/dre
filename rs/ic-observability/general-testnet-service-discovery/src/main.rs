@@ -4,8 +4,8 @@ use axum_otel_metrics::HttpMetricsLayerBuilder;
 use clap::Parser;
 use metrics::Metrics;
 use server::Server;
-use slog::{info, o, Drain, Logger};
-use storage::{file::FileStorage, in_memory::InMemoryStorage, Storage};
+use slog::{Drain, Logger, info, o};
+use storage::{Storage, file::FileStorage, in_memory::InMemoryStorage};
 use supervisor::TargetSupervisor;
 use tokio_util::sync::CancellationToken;
 

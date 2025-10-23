@@ -15,7 +15,7 @@ use tempfile::NamedTempFile;
 use crate::{
     auth::AuthRequirement,
     ctx::DreContext,
-    exe::{args::GlobalArgs, ExecutableCommand},
+    exe::{ExecutableCommand, args::GlobalArgs},
     forum::ForumPostKind,
     ic_admin::{IcAdminProposal, IcAdminProposalCommand, IcAdminProposalOptions},
     proposal_executors::{ProducesProposalResult, ProposalResponseWithId, RunnableViaIcAdmin},

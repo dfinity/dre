@@ -1,6 +1,6 @@
+use axum::Json;
 use axum::extract::State;
 use axum::http::StatusCode;
-use axum::Json;
 
 use crate::server_handlers::dto::DefinitionDto;
 
@@ -10,8 +10,8 @@ pub(super) async fn get_definitions(State(supervisor): State<Server>) -> Result<
     let definitions = supervisor.supervisor.definitions.lock().await;
 
     let list = definitions
-        .iter()
-        .map(|(_, d)| {
+        .values()
+        .map(|d| {
             let x = &d.definition;
             x.into()
         })

@@ -3,7 +3,7 @@ use std::{collections::BTreeSet, sync::Arc};
 use crossbeam::select;
 use crossbeam_channel::Receiver;
 use service_discovery::metrics::Metrics;
-use service_discovery::{job_types::JobType, IcServiceDiscovery, TargetGroup};
+use service_discovery::{IcServiceDiscovery, TargetGroup, job_types::JobType};
 use slog::{info, warn};
 
 use crate::{config_builder::ConfigBuilder, config_updater::ConfigUpdater, filters::TargetGroupFilter};

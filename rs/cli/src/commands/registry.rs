@@ -1,9 +1,9 @@
 use crate::ctx::DreContext;
-use crate::{auth::AuthRequirement, exe::args::GlobalArgs, exe::ExecutableCommand};
-use base64::{engine::general_purpose::STANDARD as BASE64, Engine as _};
+use crate::{auth::AuthRequirement, exe::ExecutableCommand, exe::args::GlobalArgs};
+use base64::{Engine as _, engine::general_purpose::STANDARD as BASE64};
 use clap::Args;
-use ic_canisters::governance::GovernanceCanisterWrapper;
 use ic_canisters::IcAgentCanisterClient;
+use ic_canisters::governance::GovernanceCanisterWrapper;
 use ic_management_backend::{health::HealthStatusQuerier, lazy_registry::LazyRegistry};
 use ic_management_types::{HealthStatus, Network, Operator};
 use ic_protobuf::registry::node::v1::NodeRewardType;
@@ -112,7 +112,10 @@ impl FromStr for Filter {
 
             Ok(Self { key, value, comparison })
         } else {
-            anyhow::bail!("Expected format: `key comparison value` (spaces around the comparison are optional, supported comparison: = != > < >= <= re contains startswith endswith), found {}", s);
+            anyhow::bail!(
+                "Expected format: `key comparison value` (spaces around the comparison are optional, supported comparison: = != > < >= <= re contains startswith endswith), found {}",
+                s
+            );
         }
     }
 }
@@ -185,11 +188,13 @@ impl Registry {
 
 // Helper: collect candidate base dirs
 fn local_registry_dirs_for_ctx(ctx: &DreContext) -> anyhow::Result<Vec<std::path::PathBuf>> {
-    let mut base_dirs = vec![dirs::cache_dir()
-        .ok_or_else(|| anyhow::anyhow!("Couldn't find cache dir for dre-store"))?
-        .join("dre-store")
-        .join("local_registry")
-        .join(&ctx.network().name)];
+    let mut base_dirs = vec![
+        dirs::cache_dir()
+            .ok_or_else(|| anyhow::anyhow!("Couldn't find cache dir for dre-store"))?
+            .join("dre-store")
+            .join("local_registry")
+            .join(&ctx.network().name),
+    ];
     if let Ok(override_dir) = std::env::var("DRE_LOCAL_REGISTRY_DIR_OVERRIDE") {
         base_dirs.insert(0, std::path::PathBuf::from(override_dir));
     }
@@ -1079,33 +1084,21 @@ impl Comparison {
             }
             Comparison::Contains => {
                 if let Value::String(s) = value {
-                    if let Value::String(other) = other {
-                        s.contains(other)
-                    } else {
-                        false
-                    }
+                    if let Value::String(other) = other { s.contains(other) } else { false }
                 } else {
                     false
                 }
             }
             Comparison::StartsWith => {
                 if let Value::String(s) = value {
-                    if let Value::String(other) = other {
-                        s.starts_with(other)
-                    } else {
-                        false
-                    }
+                    if let Value::String(other) = other { s.starts_with(other) } else { false }
                 } else {
                     false
                 }
             }
             Comparison::EndsWith => {
                 if let Value::String(s) = value {
-                    if let Value::String(other) = other {
-                        s.ends_with(other)
-                    } else {
-                        false
-                    }
+                    if let Value::String(other) = other { s.ends_with(other) } else { false }
                 } else {
                     false
                 }

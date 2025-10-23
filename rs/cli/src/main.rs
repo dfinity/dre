@@ -54,13 +54,13 @@ async fn main() -> anyhow::Result<()> {
 
 fn init_logger() {
     match std::env::var("RUST_LOG") {
-        Ok(val) => std::env::set_var("LOG_LEVEL", val),
+        Ok(val) => unsafe { std::env::set_var("LOG_LEVEL", val) },
         Err(_) => {
             if std::env::var("LOG_LEVEL").is_err() {
                 // Default logging level is: info generally, warn for mio and actix_server
                 // You can override defaults by setting environment variables
                 // RUST_LOG or LOG_LEVEL
-                std::env::set_var("LOG_LEVEL", "info,mio::=warn,actix_server::=warn")
+                unsafe { std::env::set_var("RUST_LOG", "info,mio::=warn,actix_server::=warn") }
             }
         }
     }

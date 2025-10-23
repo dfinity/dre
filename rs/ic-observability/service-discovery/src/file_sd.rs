@@ -47,8 +47,7 @@ impl FileSd {
 
         let targets: Vec<_> = p8s_target_groups.clone().into_iter().map(ServiceDiscoveryRecord::from).collect();
         ic_sys::fs::write_atomically(target_path.as_path(), Clobber::Yes, |f| {
-            serde_json::to_writer_pretty(f, &targets)
-                .map_err(|e| std::io::Error::new(std::io::ErrorKind::Other, format!("Serialization error: {:?}", e)))
+            serde_json::to_writer_pretty(f, &targets).map_err(|e| std::io::Error::other(format!("Serialization error: {:?}", e)))
         })?;
         last_targets.insert(job.to_string(), p8s_target_groups);
         Ok(())

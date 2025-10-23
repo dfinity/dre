@@ -2,8 +2,8 @@ use ic_canisters::cycles_minting::CyclesMintingCanisterWrapper;
 use indexmap::IndexMap;
 use std::{collections::BTreeSet, path::PathBuf, sync::Arc};
 
-use crate::{auth::AuthRequirement, exe::args::GlobalArgs, exe::ExecutableCommand};
-use clap::{error::ErrorKind, Args};
+use crate::{auth::AuthRequirement, exe::ExecutableCommand, exe::args::GlobalArgs};
+use clap::{Args, error::ErrorKind};
 use ic_management_types::Subnet;
 use ic_registry_subnet_type::SubnetType;
 use ic_types::PrincipalId;

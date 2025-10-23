@@ -1,20 +1,20 @@
-use crossbeam_channel::unbounded;
 use crossbeam_channel::Receiver;
 use crossbeam_channel::Sender;
+use crossbeam_channel::unbounded;
 use futures_util::future::join_all;
 use ic_registry_client::client::ThresholdSigPublicKey;
-use multiservice_discovery_shared::contracts::target::map_to_target_dto;
 use multiservice_discovery_shared::contracts::target::TargetDto;
+use multiservice_discovery_shared::contracts::target::map_to_target_dto;
 use serde::Deserialize;
 use serde::Serialize;
-use service_discovery::job_types::{JobType, NodeOS};
-use service_discovery::registry_sync::SyncError;
 use service_discovery::IcServiceDiscovery;
 use service_discovery::IcServiceDiscoveryError;
 use service_discovery::TargetGroup;
-use service_discovery::{registry_sync::sync_local_registry, IcServiceDiscoveryImpl};
+use service_discovery::job_types::{JobType, NodeOS};
+use service_discovery::registry_sync::SyncError;
+use service_discovery::{IcServiceDiscoveryImpl, registry_sync::sync_local_registry};
 use slog::error;
-use slog::{debug, info, warn, Logger};
+use slog::{Logger, debug, info, warn};
 use std::collections::BTreeMap;
 use std::collections::BTreeSet;
 use std::collections::HashSet;
@@ -843,14 +843,13 @@ impl TargetFilterSpec {
         if self.operator_id.is_some() || self.node_provider_id.is_some() || self.subnet_id.is_some() {
             return false;
         };
-        let d = match &self.dc_id {
+        match &self.dc_id {
             None => true,
             Some(dc_id) => match b.custom_labels.get("dc") {
                 Some(b_dc_id) => *b_dc_id == *dc_id,
                 None => "" == dc_id.as_str(),
             },
-        };
-        d
+        }
     }
 
     pub fn matches_ic(&self, ic_name: &String) -> bool {

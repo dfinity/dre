@@ -2,7 +2,7 @@ use crate::definition::StopDefinitionError;
 use axum::extract::{Path, State};
 use axum::http::StatusCode;
 
-use super::{forbidden, not_found, Server};
+use super::{Server, forbidden, not_found};
 
 pub(super) async fn delete_definition(Path(name): Path<String>, State(binding): State<Server>) -> Result<String, (StatusCode, String)> {
     match binding.supervisor.stop(vec![name.clone()]).await {

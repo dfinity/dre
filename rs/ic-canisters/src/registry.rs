@@ -1,4 +1,5 @@
 use crate::{CanisterVersion, IcAgentCanisterClient};
+use candid::{Decode, Encode};
 use ic_agent::Agent;
 use ic_base_types::PrincipalId;
 use ic_interfaces_registry::RegistryRecord;
@@ -7,9 +8,13 @@ use ic_protobuf::{
     registry::{crypto::v1::PublicKey, subnet::v1::SubnetListRecord},
     types::v1::SubnetId,
 };
+use ic_registry_canister_api::{Chunk, GetChunkRequest};
 use ic_registry_keys::make_crypto_threshold_signing_pubkey_key;
 use ic_registry_nns_data_provider::registry::RegistryCanister;
-use ic_registry_transport::pb::v1::{RegistryGetLatestVersionResponse, RegistryGetValueRequest, RegistryGetValueResponse};
+use ic_registry_transport::{
+    GetChunk, dechunkify_get_value_response_content,
+    pb::v1::{HighCapacityRegistryGetValueResponse, RegistryGetLatestVersionResponse, RegistryGetValueRequest},
+};
 use ic_types::crypto::threshold_sig::ThresholdSigPublicKey;
 use prost::Message;
 use url::Url;
@@ -91,11 +96,42 @@ impl RegistryCanisterWrapper {
         request.encode(&mut buf)?;
         let response = self.agent.query(&REGISTRY_CANISTER_ID.into(), "get_value").with_arg(buf).call().await?;
 
-        let decoded_resp = RegistryGetValueResponse::decode(&response[..])?;
+        let decoded_resp = HighCapacityRegistryGetValueResponse::decode(&response[..])?;
         if let Some(error) = decoded_resp.error {
             return Err(anyhow::anyhow!(error.reason));
         }
+        let Some(content) = decoded_resp.content else {
+            return Err(anyhow::anyhow!("No content found in get_value response"));
+        };
+        let dechunkified = dechunkify_get_value_response_content(content, self).await?;
 
-        Ok(decoded_resp.value)
+        Ok(dechunkified)
+    }
+}
+
+#[async_trait::async_trait]
+impl GetChunk for RegistryCanisterWrapper {
+    /// Just calls the Registry canister's get_chunk method.
+    async fn get_chunk_without_validation(&self, content_sha256: &[u8]) -> Result<Vec<u8>, String> {
+        fn new_err(cause: impl std::fmt::Debug) -> String {
+            format!("Unable to fetch large registry record: {cause:?}",)
+        }
+
+        // Call get_chunk.
+        let content_sha256 = Some(content_sha256.to_vec());
+        let request = Encode!(&GetChunkRequest { content_sha256 }).map_err(new_err)?;
+        let get_chunk_response: Vec<u8> = self
+            .agent
+            .query(&REGISTRY_CANISTER_ID.into(), "get_chunk")
+            .with_arg(request)
+            .call()
+            .await
+            .map_err(new_err)?;
+
+        // Extract chunk from get_chunk call.
+        let Chunk { content } = Decode!(&get_chunk_response, Result<Chunk, String>)
+            .map_err(new_err)? // unable to decode
+            .map_err(new_err)?; // Registry canister returned Err.
+        content.ok_or_else(|| new_err("content in get_chunk response is null (not even an empty string)"))
     }
 }

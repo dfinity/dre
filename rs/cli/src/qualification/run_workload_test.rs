@@ -11,7 +11,7 @@ use tokio::process::Command;
 use super::{
     comfy_table_util::Table,
     step::Step,
-    util::{StepCtx, REQWEST_TIMEOUT},
+    util::{REQWEST_TIMEOUT, StepCtx},
 };
 
 const IC_WORKLOAD_GENERATOR: &str = "ic-workload-generator";
