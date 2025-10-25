@@ -495,8 +495,13 @@ fn fetch_max_rewardable_nodes(record: &Operator, nodes_in_registry: Vec<Node>) -
     // By default, this uses the types of nodes already registered.
     // Some operators may register more nodes than are currently in the registry.
     // These cases are handled separately as exceptions.
-
     let exceptions: HashMap<PrincipalId, BTreeMap<String, u32>> = [
+        (
+            // Anonstake allowed to register up to 12 type3 nodes, 11 type3 nodes and 1 type3.1 node in the registry
+            // node pdtg7-ohtbm-rxbkj-m5u2y-a2xop-r3p2d-y2p54-xego2-fex5b-lam4a-kae to be removed and registered again
+            "eu5wc-g7r7l-zzy2o-227af-hfvin-orflw-4vdlf-j7gks-n5wrj-zezt7-tqe",
+            BTreeMap::from([(NodeRewardType::Type3.to_string(), 12)]),
+        ),
         (
             // Power Meta Corporation allowed to register up to 5 nodes, 4 in the registry
             "4lbqo-vgpoe-kemak-voout-777uo-kk74n-fnct3-pc4eg-3txi3-7cghf-rqe",
