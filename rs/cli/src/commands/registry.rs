@@ -667,7 +667,7 @@ async fn _get_nodes(
     // Rewardable nodes for all node operators
     let mut rewardable_nodes: IndexMap<PrincipalId, BTreeMap<String, u32>> = node_operators
         .iter()
-        .map(|(k, v)| (*k, v.computed.max_rewardable_nodes.clone()))
+        .map(|(k, v)| (*k, v.computed.max_rewardable_nodes_inferred.clone()))
         .collect();
 
     let nodes = local_registry.nodes().await.map_err(|e| anyhow::anyhow!("Couldn't get nodes: {:?}", e))?;
