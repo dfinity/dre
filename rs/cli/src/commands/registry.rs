@@ -579,7 +579,7 @@ async fn get_node_operators(local_registry: &Arc<dyn LazyRegistry>, network: &Ne
                 .collect();
 
             let nodes_in_registry_count = nodes_in_registry.len() as u64;
-            let max_rewardable_nodes = fetch_max_rewardable_nodes(record, nodes_in_registry);
+            let max_rewardable_nodes_inferred = fetch_max_rewardable_nodes(record, nodes_in_registry);
             let node_allowance_total = record.node_allowance + nodes_in_registry_count;
 
             (
@@ -589,6 +589,7 @@ async fn get_node_operators(local_registry: &Arc<dyn LazyRegistry>, network: &Ne
                     node_provider_principal_id: record.provider.principal,
                     dc_id: record.datacenter.as_ref().map(|d| d.name.to_owned()).unwrap_or_default(),
                     rewardable_nodes: record.rewardable_nodes.clone(),
+                    max_rewardable_nodes: record.max_rewardable_nodes.clone(),
                     node_allowance: record.node_allowance,
                     ipv6: Some(record.ipv6.to_string()),
                     computed: NodeOperatorComputed {
@@ -597,7 +598,7 @@ async fn get_node_operators(local_registry: &Arc<dyn LazyRegistry>, network: &Ne
                         node_allowance_total,
                         total_up_nodes: 0,
                         nodes_health: Default::default(),
-                        max_rewardable_nodes,
+                        max_rewardable_nodes_inferred,
                         nodes_in_subnets,
                         nodes_in_registry: nodes_in_registry_count,
                     },
@@ -963,6 +964,7 @@ struct NodeOperator {
     node_provider_principal_id: PrincipalId,
     dc_id: String,
     rewardable_nodes: BTreeMap<String, u32>,
+    max_rewardable_nodes: BTreeMap<String, u32>,
     node_allowance: u64,
     ipv6: Option<String>,
     computed: NodeOperatorComputed,
@@ -975,7 +977,7 @@ struct NodeOperatorComputed {
     node_allowance_total: u64,
     total_up_nodes: u32,
     nodes_health: IndexMap<String, Vec<PrincipalId>>,
-    max_rewardable_nodes: BTreeMap<String, u32>,
+    max_rewardable_nodes_inferred: BTreeMap<String, u32>,
     nodes_in_subnets: u64,
     nodes_in_registry: u64,
 }
