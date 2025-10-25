@@ -5,7 +5,7 @@ use clap::Args;
 use ic_canisters::IcAgentCanisterClient;
 use ic_canisters::governance::GovernanceCanisterWrapper;
 use ic_management_backend::{health::HealthStatusQuerier, lazy_registry::LazyRegistry};
-use ic_management_types::{HealthStatus, Network, Operator};
+use ic_management_types::{HealthStatus, Network, Node, Operator};
 use ic_protobuf::registry::node::v1::NodeRewardType;
 use ic_protobuf::registry::{
     dc::v1::DataCenterRecord,
@@ -491,54 +491,60 @@ fn get_elected_host_os_versions(local_registry: &Arc<dyn LazyRegistry>) -> anyho
     local_registry.elected_hostos_records()
 }
 
-fn fetch_max_rewardable_count(record: &Operator, nodes_in_registry: u64) -> BTreeMap<String, u32> {
-    let mut exceptions: HashMap<PrincipalId, BTreeMap<String, u32>> = [
+fn fetch_max_rewardable_nodes(record: &Operator, nodes_in_registry: Vec<Node>) -> BTreeMap<String, u32> {
+    // By default, this uses the types of nodes already registered.
+    // Some operators may register more nodes than are currently in the registry.
+    // These cases are handled separately as exceptions.
+
+    let exceptions: HashMap<PrincipalId, BTreeMap<String, u32>> = [
         (
-            "ukji3-ju5bx-ty5r7-qwk4p-eobil-isp26-fsomg-44kwf-j4ew7-ozkqy-wqe",
-            BTreeMap::from([("type3".to_string(), 16), ("type3.1".to_string(), 9)]),
+            // Power Meta Corporation allowed to register up to 5 nodes, 4 in the registry
+            "4lbqo-vgpoe-kemak-voout-777uo-kk74n-fnct3-pc4eg-3txi3-7cghf-rqe",
+            BTreeMap::from([(NodeRewardType::Type3dot1.to_string(), 5)]),
         ),
         (
-            "sm6rh-sldoa-opp4o-d7ckn-y4r2g-eoqhv-nymok-teuto-4e5ep-yt6ky-bqe",
-            BTreeMap::from([("type1.1".to_string(), 1)]),
+            // Giant Leaf, LLC allowed to register up to 14 nodes, 0 in the registry
+            "bmlhw-kinr6-7cyv5-3o3v6-ic6tw-pnzk3-jycod-6d7sw-owaft-3b6k3-kqe",
+            BTreeMap::from([(NodeRewardType::Type1.to_string(), 14)]),
         ),
         (
+            // Icaria Systems Pty Ltd allowed to register up to 18 nodes, 17 in the registry
+            "l5lhp-734i5-tbott-vipvc-vud2f-pfh7r-g3227-tgkdj-4rggm-abc2e-cae",
+            BTreeMap::from([(NodeRewardType::Type3dot1.to_string(), 18)]),
+        ),
+        (
+            // Starbase allowed to register up to 14 nodes
+            // Nodes in the registry 15:  Dead one to be removed
+            "cqjev-4qb7l-xv373-jfmhi-73n3a-cxhst-p6okb-vywwc-a4zbi-6sf3u-bae",
+            BTreeMap::from([(NodeRewardType::Type1dot1.to_string(), 14)]),
+        ),
+        (
+            // InfoObjects allowed to register up to 2 nodes
+            // Nodes in the registry 4: Dead ones to be removed
+            "jtrpk-wokqg-aqmcn-esiq7-fip4e-dl7lv-iwdyj-cu5pm-wbg7i-4jl4t-wae",
+            BTreeMap::from([(NodeRewardType::Type3dot1.to_string(), 2)]),
+        ),
+        (
+            // DFINITY can onboard type0 only (Not rewardables)
             "xph6u-z3z2t-s7hh7-gtlxh-bbgbx-aatlm-eab4o-bsank-nqruh-3ub4q-sae",
-            BTreeMap::from([("type1.1".to_string(), 28)]),
+            BTreeMap::from([(NodeRewardType::Type0.to_string(), 28)]),
         ),
     ]
     .into_iter()
     .map(|(k, v)| (PrincipalId::from_str(k).unwrap(), v))
     .collect::<HashMap<_, _>>();
 
-    if let Some(exception_max_rewardables) = exceptions.remove(&record.principal) {
-        return exception_max_rewardables;
-    }
-    let mut non_zeros_rewardable_nodes = record
-        .rewardable_nodes
-        .clone()
-        .into_iter()
-        .filter(|(_, v)| *v > 0)
-        .collect::<BTreeMap<_, _>>();
-    let nodes_rewards_types_count = non_zeros_rewardable_nodes.values().map(|count| *count as u64).sum::<u64>();
-    let node_allowance_total = record.node_allowance + nodes_in_registry;
-
-    if node_allowance_total == nodes_rewards_types_count {
-        return non_zeros_rewardable_nodes;
-    }
-    if non_zeros_rewardable_nodes.len() == 1 {
-        let (node_rewards_type, node_rewards_type_count) = non_zeros_rewardable_nodes.pop_first().unwrap();
-        let max_rewardable_count = max(node_rewards_type_count, nodes_in_registry as u32);
-        return BTreeMap::from([(node_rewards_type, max_rewardable_count)]);
+    if let Some(exception_max_rewardables) = exceptions.get(&record.principal) {
+        return exception_max_rewardables.clone();
     }
 
-    if nodes_in_registry == 0 {
-        return BTreeMap::new();
+    let mut max_rewardable_count = BTreeMap::new();
+    for node in nodes_in_registry {
+        let node_type = node.node_reward_type.unwrap().to_string();
+        let type_count = max_rewardable_count.entry(node_type).or_insert(0);
+        *type_count += 1;
     }
-    warn!(
-        "Node operator {} has {} nodes in registry with {} node allowance total, but {} reward types!  The rewardable nodes by reward type for this operator are: {:?}",
-        record.principal, nodes_in_registry, node_allowance_total, nodes_rewards_types_count, record.rewardable_nodes
-    );
-    BTreeMap::new()
+    max_rewardable_count
 }
 
 async fn get_node_operators(local_registry: &Arc<dyn LazyRegistry>, network: &Network) -> anyhow::Result<IndexMap<PrincipalId, NodeOperator>> {
@@ -560,9 +566,16 @@ async fn get_node_operators(local_registry: &Arc<dyn LazyRegistry>, network: &Ne
                 .iter()
                 .filter(|(_, value)| value.operator.principal == record.principal && value.subnet_id.is_some())
                 .count() as u64;
-            let nodes_in_registry = all_nodes.iter().filter(|(_, value)| value.operator.principal == record.principal).count() as u64;
-            let max_rewardable_count = fetch_max_rewardable_count(record, nodes_in_registry);
-            let node_allowance_total = record.node_allowance + nodes_in_registry;
+            let nodes_in_registry: Vec<Node> = all_nodes
+                .iter()
+                .clone()
+                .filter(|(_, value)| value.operator.principal == record.principal)
+                .map(|(_, value)| value.clone())
+                .collect();
+
+            let nodes_in_registry_count = nodes_in_registry.len() as u64;
+            let max_rewardable_nodes = fetch_max_rewardable_nodes(record, nodes_in_registry);
+            let node_allowance_total = record.node_allowance + nodes_in_registry_count;
 
             (
                 record.principal,
@@ -579,9 +592,9 @@ async fn get_node_operators(local_registry: &Arc<dyn LazyRegistry>, network: &Ne
                         node_allowance_total,
                         total_up_nodes: 0,
                         nodes_health: Default::default(),
-                        max_rewardable_count,
+                        max_rewardable_nodes,
                         nodes_in_subnets,
-                        nodes_in_registry,
+                        nodes_in_registry: nodes_in_registry_count,
                     },
                 },
             )
@@ -648,7 +661,7 @@ async fn _get_nodes(
     // Rewardable nodes for all node operators
     let mut rewardable_nodes: IndexMap<PrincipalId, BTreeMap<String, u32>> = node_operators
         .iter()
-        .map(|(k, v)| (*k, v.computed.max_rewardable_count.clone()))
+        .map(|(k, v)| (*k, v.computed.max_rewardable_nodes.clone()))
         .collect();
 
     let nodes = local_registry.nodes().await.map_err(|e| anyhow::anyhow!("Couldn't get nodes: {:?}", e))?;
@@ -658,18 +671,8 @@ async fn _get_nodes(
         let rewardable_nodes = rewardable_nodes.get_mut(&node_operator_id);
 
         if let Some(rewardable_nodes) = rewardable_nodes {
-            let table_node_reward_type = match record.node_reward_type.unwrap_or(NodeRewardType::Unspecified) {
-                NodeRewardType::Type0 => "type0",
-                NodeRewardType::Type1 => "type1",
-                NodeRewardType::Type2 => "type2",
-                NodeRewardType::Type3 => "type3",
-                NodeRewardType::Type1dot1 => "type1.1",
-                NodeRewardType::Type3dot1 => "type3.1",
-                NodeRewardType::Unspecified => "unspecified",
-            };
-
             rewardable_nodes
-                .entry(table_node_reward_type.to_string())
+                .entry(record.node_reward_type.unwrap().to_string())
                 .and_modify(|count| *count = count.saturating_sub(1));
         }
     }
@@ -967,7 +970,7 @@ struct NodeOperatorComputed {
     node_allowance_total: u64,
     total_up_nodes: u32,
     nodes_health: IndexMap<String, Vec<PrincipalId>>,
-    max_rewardable_count: BTreeMap<String, u32>,
+    max_rewardable_nodes: BTreeMap<String, u32>,
     nodes_in_subnets: u64,
     nodes_in_registry: u64,
 }
