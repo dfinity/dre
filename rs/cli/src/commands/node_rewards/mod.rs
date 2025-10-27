@@ -187,7 +187,7 @@ impl ExecutableCommand for NodeRewards {
         info!("Started action...");
 
         // Run the selected subcommand
-        let mut provider_data = match &self.mode {
+        let (mut provider_data, subnets_fr_data) = match &self.mode {
             NodeRewardsMode::Ongoing { .. } => ongoing::run(canister_agent.clone(), self).await?,
             NodeRewardsMode::PastRewards { month, .. } => past_rewards::run(canister_agent.clone(), self, month).await?,
         };
@@ -219,7 +219,8 @@ impl ExecutableCommand for NodeRewards {
                 .iter()
                 .map(|provider| (provider.provider_id, provider.daily_rewards.clone()))
                 .collect();
-            self.generate_csv_files_by_provider(&provider_csv_data, output_dir).await?;
+            self.generate_csv_files_by_provider(&provider_csv_data, output_dir, &subnets_fr_data)
+                .await?;
         } else {
             // Print rewards_summary-like view to console
             self.print_rewards_summary_console(&provider_data)?;
@@ -243,7 +244,7 @@ async fn fetch_and_aggregate(
     xdr_permyriad_per_icp: u64,
     mut gov_rewards_map: BTreeMap<PrincipalId, u64>,
     collect_underperf: impl Fn(&[(DateUtc, DailyNodeProviderRewards)]) -> Vec<String>,
-) -> anyhow::Result<Vec<ProviderData>> {
+) -> anyhow::Result<(Vec<ProviderData>, Vec<(DateUtc, String, f64)>)> {
     println!("Fetching node rewards for all providers from NRC from {} to {}...", start_day, end_day);
 
     let days: Vec<DateUtc> = start_day.iter_days().take_while(|day| day <= &end_day).map(DateUtc::from).collect();
@@ -251,12 +252,18 @@ async fn fetch_and_aggregate(
         join_all(days.iter().map(|day| async move { node_rewards_client.get_rewards_daily(*day).await })).await;
 
     let mut provider_results = BTreeMap::new();
+    let mut subnets_fr_data = Vec::new();
+
     for (day, response) in days.into_iter().zip(responses.into_iter()) {
         match response {
             Ok(daily_results) => {
                 for (provider_id, provider_rewards) in daily_results.provider_results {
                     let rewards = provider_results.entry(provider_id).or_insert_with(Vec::new);
                     rewards.push((day, provider_rewards));
+                }
+                // Collect subnets failure rates
+                for (subnet_id, failure_rate) in daily_results.subnets_fr {
+                    subnets_fr_data.push((day, subnet_id.to_string(), failure_rate));
                 }
             }
             Err(e) => {
@@ -300,7 +307,7 @@ async fn fetch_and_aggregate(
         b_percent.partial_cmp(&a_percent).unwrap_or(std::cmp::Ordering::Equal)
     });
 
-    Ok(provider_daily_data)
+    Ok((provider_daily_data, subnets_fr_data))
 }
 
 impl NodeRewards {

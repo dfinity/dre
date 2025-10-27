@@ -1,9 +1,12 @@
-use super::{fetch_and_aggregate, NodeRewards, ProviderData};
+use super::{fetch_and_aggregate, DateUtc, NodeRewards, ProviderData};
 use chrono::DateTime;
 use ic_canisters::governance::GovernanceCanisterWrapper;
 use ic_canisters::node_rewards::NodeRewardsCanisterWrapper;
 
-pub async fn run(canister_agent: ic_canisters::IcAgentCanisterClient, cmd: &NodeRewards) -> anyhow::Result<Vec<ProviderData>> {
+pub async fn run(
+    canister_agent: ic_canisters::IcAgentCanisterClient,
+    cmd: &NodeRewards,
+) -> anyhow::Result<(Vec<ProviderData>, Vec<(DateUtc, String, f64)>)> {
     let node_rewards_client: NodeRewardsCanisterWrapper = canister_agent.clone().into();
     let governance_client: GovernanceCanisterWrapper = canister_agent.into();
 
@@ -26,7 +29,7 @@ pub async fn run(canister_agent: ic_canisters::IcAgentCanisterClient, cmd: &Node
         .rewards
         .clone()
         .into_iter()
-        .map(|r| (r.node_provider.unwrap().id.unwrap(), r.amount_e8s as u64))
+        .map(|r| (r.node_provider.unwrap().id.unwrap(), r.amount_e8s))
         .collect();
     let xdr_permyriad_per_icp: u64 = last_rewards.xdr_conversion_rate.clone().unwrap().xdr_permyriad_per_icp.unwrap();
 

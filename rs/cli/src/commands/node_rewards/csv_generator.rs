@@ -19,6 +19,7 @@ pub trait CsvGenerator {
         &self,
         provider_data: &[(PrincipalId, Vec<(DateUtc, DailyNodeProviderRewards)>)],
         output_dir: &str,
+        subnets_fr_data: &[(DateUtc, String, f64)],
     ) -> Result<()> {
         // Create rewards directory with start_day_to_end_day format
         let rewards_dir = self.create_rewards_directory(
@@ -37,6 +38,9 @@ pub trait CsvGenerator {
             self.create_rewards_summary_csv(&provider_dir, daily_rewards)?;
             self.create_node_metrics_csv(&provider_dir, daily_rewards)?;
         }
+
+        // Generate subnets failure rates CSV in the rewards directory
+        self.create_subnets_failure_rates_csv(&rewards_dir, subnets_fr_data)?;
 
         Ok(())
     }
@@ -377,6 +381,33 @@ pub trait CsvGenerator {
 
         wtr_day.flush().unwrap();
         wtr_node.flush().unwrap();
+        Ok(())
+    }
+
+    /// Create subnets failure rates CSV file
+    fn create_subnets_failure_rates_csv(&self, output_dir: &str, subnets_fr_data: &[(DateUtc, String, f64)]) -> Result<()> {
+        let filename = format!("{}/subnets_failure_rates.csv", output_dir);
+        let mut wtr = Writer::from_path(&filename).unwrap();
+
+        wtr.write_record(&["subnet_id", "day_utc", "failure_rate"]).unwrap();
+
+        // Sort by subnet_id first, then by day_utc
+        let mut sorted_data: Vec<_> = subnets_fr_data.iter().collect();
+        sorted_data.sort_by(|a, b| {
+            let subnet_cmp = a.1.cmp(&b.1);
+            if subnet_cmp == std::cmp::Ordering::Equal {
+                a.0.cmp(&b.0)
+            } else {
+                subnet_cmp
+            }
+        });
+
+        for (day, subnet_id, fr) in sorted_data {
+            let day_str = Self::format_date_utc(*day);
+            wtr.write_record(&[subnet_id, &day_str, &fr.to_string()]).unwrap();
+        }
+
+        wtr.flush().unwrap();
         Ok(())
     }
 }

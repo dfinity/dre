@@ -1,4 +1,4 @@
-use super::{fetch_and_aggregate, NodeRewards, ProviderData};
+use super::{fetch_and_aggregate, DateUtc, NodeRewards, ProviderData};
 use chrono::{DateTime, Datelike};
 use ic_canisters::governance::GovernanceCanisterWrapper;
 use ic_canisters::node_rewards::NodeRewardsCanisterWrapper;
@@ -7,7 +7,7 @@ pub async fn run(
     canister_agent: ic_canisters::IcAgentCanisterClient,
     cmd: &NodeRewards,
     month: &str,
-) -> anyhow::Result<Vec<ProviderData>> {
+) -> anyhow::Result<(Vec<ProviderData>, Vec<(DateUtc, String, f64)>)> {
     let node_rewards_client: NodeRewardsCanisterWrapper = canister_agent.clone().into();
     let governance_client: GovernanceCanisterWrapper = canister_agent.into();
 
@@ -50,7 +50,7 @@ pub async fn run(
         .xdr_permyriad_per_icp
         .unwrap();
 
-    fetch_and_aggregate(
+    let (provider_data, subnets_fr) = fetch_and_aggregate(
         &node_rewards_client,
         start_day,
         end_day,
@@ -58,7 +58,9 @@ pub async fn run(
         gov_map,
         |daily| cmd.collect_underperforming_nodes(daily),
     )
-    .await
+    .await?;
+
+    Ok((provider_data, subnets_fr))
 }
 
 
