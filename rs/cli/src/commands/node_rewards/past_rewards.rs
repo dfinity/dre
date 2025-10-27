@@ -16,8 +16,7 @@ pub async fn run(
     let target = chrono::NaiveDate::parse_from_str(&(month.to_string() + "-01"), "%Y-%m-%d")?;
     let mut idx_in_month: Option<usize> = None;
     for (i, snap) in gov_list.iter().enumerate() {
-        let dt = DateTime::from_timestamp(snap.timestamp as i64, 0)
-            .ok_or_else(|| anyhow::anyhow!("Invalid governance timestamp"))?;
+        let dt = DateTime::from_timestamp(snap.timestamp as i64, 0).ok_or_else(|| anyhow::anyhow!("Invalid governance timestamp"))?;
         if dt.date_naive().year() == target.year() && dt.date_naive().month() == target.month() {
             idx_in_month = Some(i);
             break;
@@ -28,14 +27,9 @@ pub async fn run(
     let prev = gov_list
         .get(i + 1)
         .ok_or_else(|| anyhow::anyhow!("Previous governance snapshot not found for {}", month))?;
-    
-    let start_day = DateTime::from_timestamp(prev.timestamp as i64, 0)
-        .unwrap()
-        .date_naive();
-    let end_day = DateTime::from_timestamp(last.timestamp as i64, 0)
-        .unwrap()
-        .date_naive();
 
+    let start_day = DateTime::from_timestamp(prev.timestamp as i64, 0).unwrap().date_naive();
+    let end_day = DateTime::from_timestamp(last.timestamp as i64, 0).unwrap().date_naive();
 
     let gov_map = last
         .rewards
@@ -43,24 +37,12 @@ pub async fn run(
         .into_iter()
         .map(|r| (r.node_provider.unwrap().id.unwrap(), r.amount_e8s))
         .collect();
-    let xdr_permyriad_per_icp: u64 = last
-        .xdr_conversion_rate
-        .clone()
-        .unwrap()
-        .xdr_permyriad_per_icp
-        .unwrap();
+    let xdr_permyriad_per_icp: u64 = last.xdr_conversion_rate.clone().unwrap().xdr_permyriad_per_icp.unwrap();
 
-    let (provider_data, subnets_fr) = fetch_and_aggregate(
-        &node_rewards_client,
-        start_day,
-        end_day,
-        xdr_permyriad_per_icp,
-        gov_map,
-        |daily| cmd.collect_underperforming_nodes(daily),
-    )
+    let (provider_data, subnets_fr) = fetch_and_aggregate(&node_rewards_client, start_day, end_day, xdr_permyriad_per_icp, gov_map, |daily| {
+        cmd.collect_underperforming_nodes(daily)
+    })
     .await?;
 
     Ok((provider_data, subnets_fr))
 }
-
-
