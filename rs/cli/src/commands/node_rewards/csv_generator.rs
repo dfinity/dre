@@ -8,6 +8,12 @@ use std::{collections::BTreeMap, fs};
 
 /// Trait for generating CSV files from node rewards data
 pub trait CsvGenerator {
+    /// Format DateUtc without the " UTC" suffix
+    fn format_date_utc(date: DateUtc) -> String {
+        let date_str = date.to_string();
+        date_str.strip_suffix(" UTC").unwrap_or(&date_str).to_string()
+    }
+
     /// Generate CSV files split by provider
     async fn generate_csv_files_by_provider(
         &self,
@@ -59,8 +65,8 @@ pub trait CsvGenerator {
         let mut days: Vec<DateUtc> = daily_rewards.iter().map(|(day, _)| *day).collect();
         days.sort();
 
-        let start_day = days.first().unwrap().to_string();
-        let end_day = days.last().unwrap().to_string();
+        let start_day = Self::format_date_utc(days[0]);
+        let end_day = Self::format_date_utc(days[days.len() - 1]);
 
         (start_day, end_day)
     }
@@ -74,7 +80,7 @@ pub trait CsvGenerator {
             .unwrap();
 
         for (day, rewards) in daily_rewards {
-            let day_str = day.to_string();
+            let day_str = Self::format_date_utc(*day);
             for base_reward in &rewards.base_rewards {
                 wtr.write_record([
                     &day_str,
@@ -107,7 +113,7 @@ pub trait CsvGenerator {
         .unwrap();
 
         for (day, rewards) in daily_rewards {
-            let day_str = day.to_string();
+            let day_str = Self::format_date_utc(*day);
             for base_reward_type3 in &rewards.base_rewards_type3 {
                 wtr.write_record(&[
                     &day_str,
@@ -141,7 +147,7 @@ pub trait CsvGenerator {
         .unwrap();
 
         for (day, rewards) in daily_rewards {
-            let day_str = day.to_string();
+            let day_str = Self::format_date_utc(*day);
             let total_rewards = rewards.rewards_total_xdr_permyriad.unwrap_or(0);
             let nodes_in_registry = rewards.daily_nodes_rewards.len();
 
@@ -155,7 +161,7 @@ pub trait CsvGenerator {
             let mut underperf_prefixes: Vec<String> = rewards
                 .daily_nodes_rewards
                 .iter()
-                .filter(|node_result| node_result.performance_multiplier_percent.unwrap_or(100.0) < 100.0)
+                .filter(|node_result| node_result.performance_multiplier_percent.unwrap_or(1.0) < 1.0)
                 .map(|node_result| {
                     let node_id_str = node_result.node_id.unwrap().to_string();
                     node_id_str.split('-').next().unwrap_or(&node_id_str).to_string()
@@ -239,7 +245,7 @@ pub trait CsvGenerator {
             .unwrap();
 
         for (day, rewards) in daily_rewards {
-            let day_str = day.to_string();
+            let day_str = Self::format_date_utc(*day);
             for node_result in &rewards.daily_nodes_rewards {
                 // Flatten DailyNodeFailureRate/NodeMetricsDaily
                 let (

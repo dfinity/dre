@@ -8,7 +8,6 @@ use ic_canisters::node_rewards::NodeRewardsCanisterWrapper;
 use ic_node_rewards_canister_api::provider_rewards_calculation::{DailyNodeProviderRewards, DailyResults};
 use ic_node_rewards_canister_api::DateUtc;
 use log::info;
-use rust_decimal::Decimal;
 use std::collections::BTreeMap;
 use tabled::{
     settings::{object::Rows, Alignment, Modify, Style, Width},
@@ -61,10 +60,9 @@ struct ProviderComparison {
 
 struct ProviderData {
     provider_id: PrincipalId,
-    nrc_icp: Decimal,
-    nrc_xdr_permyriad: Decimal,
-    governance_xdr_permyriad: Decimal,
-    difference_xdr_permyriad: Decimal,
+    nrc_xdr_permyriad: u64,
+    governance_xdr_permyriad: u64,
+    difference_xdr_permyriad: i64,
     underperforming_nodes: Vec<String>,
     daily_rewards: Vec<(DateUtc, DailyNodeProviderRewards)>,
 }
@@ -82,13 +80,19 @@ impl NodeRewards {
         provider_id.split('-').next().unwrap_or(provider_id)
     }
 
+    /// Format DateUtc without the " UTC" suffix
+    fn format_date_utc(date: DateUtc) -> String {
+        let date_str = date.to_string();
+        date_str.strip_suffix(" UTC").unwrap_or(&date_str).to_string()
+    }
+
     /// Collect underperforming nodes for a provider
     fn collect_underperforming_nodes(&self, daily_rewards: &[(DateUtc, DailyNodeProviderRewards)]) -> Vec<String> {
         let mut underperforming_nodes = Vec::new();
         for (_, rewards) in daily_rewards {
             for node_result in &rewards.daily_nodes_rewards {
-                let multiplier_percent = node_result.performance_multiplier_percent.unwrap_or(100.0);
-                if multiplier_percent < 100.0 {
+                let multiplier = node_result.performance_multiplier_percent.unwrap_or(1.0);
+                if multiplier < 1.0 {
                     let node_id_str = node_result.node_id.unwrap().to_string();
                     let node_prefix = node_id_str.split('-').next().unwrap_or(&node_id_str).to_string();
                     underperforming_nodes.push(node_prefix);
@@ -110,10 +114,10 @@ impl NodeRewards {
 
             // Calculate percentage difference always relative to NRC, always display in XDRPermyriad
             let (diff_value, base_value) = (provider.difference_xdr_permyriad, provider.nrc_xdr_permyriad);
-            let percent_diff = if base_value > Decimal::ZERO {
-                diff_value / base_value * Decimal::from(100)
+            let percent_diff = if base_value > 0 {
+                diff_value as f64 / base_value as f64 * 100.0
             } else {
-                Decimal::ZERO
+                0.0
             };
 
             let underperforming_list = if provider.underperforming_nodes.is_empty() {
@@ -127,11 +131,11 @@ impl NodeRewards {
                 }
             };
 
-            // Always display in XDRPermyriad with truncated decimals
+            // Always display in XDRPermyriad
             let (nrc_display, governance_display, difference_display) = (
-                format!("{:.0}", provider.nrc_xdr_permyriad),
-                format!("{:.0}", provider.governance_xdr_permyriad),
-                format!("{:.0}", provider.difference_xdr_permyriad),
+                provider.nrc_xdr_permyriad.to_string(),
+                provider.governance_xdr_permyriad.to_string(),
+                provider.difference_xdr_permyriad.to_string(),
             );
 
             table_data.push(ProviderComparison {
@@ -242,11 +246,7 @@ async fn fetch_and_aggregate(
 ) -> anyhow::Result<Vec<ProviderData>> {
     println!("Fetching node rewards for all providers from NRC from {} to {}...", start_day, end_day);
 
-    let days: Vec<DateUtc> = start_day
-        .iter_days()
-        .take_while(|day| day <= &end_day)
-        .map(|day| DateUtc::from(day))
-        .collect();
+    let days: Vec<DateUtc> = start_day.iter_days().take_while(|day| day <= &end_day).map(DateUtc::from).collect();
     let responses: Vec<anyhow::Result<DailyResults>> =
         join_all(days.iter().map(|day| async move { node_rewards_client.get_rewards_daily(*day).await })).await;
 
@@ -268,18 +268,16 @@ async fn fetch_and_aggregate(
     let mut provider_daily_data = Vec::new();
     for (provider_id, daily_rewards) in provider_results {
         let nrc_xdr_permyriad: u64 = daily_rewards.iter().map(|(_, reward)| reward.rewards_total_xdr_permyriad.unwrap()).sum();
-        let nrc_icp = Decimal::from(nrc_xdr_permyriad) / Decimal::from(xdr_permyriad_per_icp);
         let principal: PrincipalId = provider_id.to_string().parse().unwrap();
 
-        let governance_icp = Decimal::from(gov_rewards_map.remove(&principal).unwrap_or(0u64)) / Decimal::from(100_000_000);
-        let governance_xdr_permyriad = governance_icp * Decimal::from(xdr_permyriad_per_icp);
-        let nrc_xdr_permyriad_decimal = Decimal::from(nrc_xdr_permyriad);
-        let difference_xdr_permyriad = nrc_xdr_permyriad_decimal - governance_xdr_permyriad;
+        let governance_icp = gov_rewards_map.remove(&principal).unwrap_or(0u64) / 100_000_000;
+        let governance_xdr_permyriad = governance_icp * xdr_permyriad_per_icp;
+        let nrc_xdr_permyriad_decimal = nrc_xdr_permyriad;
+        let difference_xdr_permyriad = (nrc_xdr_permyriad_decimal as i64) - (governance_xdr_permyriad as i64);
         let underperforming_nodes = collect_underperf(&daily_rewards);
 
         provider_daily_data.push(ProviderData {
             provider_id: principal,
-            nrc_icp,
             nrc_xdr_permyriad: nrc_xdr_permyriad_decimal,
             governance_xdr_permyriad,
             difference_xdr_permyriad,
@@ -289,15 +287,15 @@ async fn fetch_and_aggregate(
     }
 
     provider_daily_data.sort_by(|a, b| {
-        let a_percent = if a.nrc_icp > Decimal::ZERO {
-            a.difference_xdr_permyriad / a.nrc_icp * Decimal::from(100)
+        let a_percent = if a.nrc_xdr_permyriad > 0 {
+            a.difference_xdr_permyriad as f64 / a.nrc_xdr_permyriad as f64 * 100.0
         } else {
-            Decimal::ZERO
+            0.0
         };
-        let b_percent = if b.nrc_icp > Decimal::ZERO {
-            b.difference_xdr_permyriad / b.nrc_icp * Decimal::from(100)
+        let b_percent = if b.nrc_xdr_permyriad > 0 {
+            b.difference_xdr_permyriad as f64 / b.nrc_xdr_permyriad as f64 * 100.0
         } else {
-            Decimal::ZERO
+            0.0
         };
         b_percent.partial_cmp(&a_percent).unwrap_or(std::cmp::Ordering::Equal)
     });
@@ -314,8 +312,12 @@ impl NodeRewards {
         struct DailyRewardSummary {
             #[tabled(rename = "Day")]
             day: String,
-            #[tabled(rename = "Rewards")]
-            rewards: String,
+            #[tabled(rename = "Base Rewards Total")]
+            base_rewards_total: String,
+            #[tabled(rename = "Adjusted Rewards Total")]
+            adjusted_rewards_total: String,
+            #[tabled(rename = "Adjusted Rewards %")]
+            adjusted_rewards_percent: String,
             #[tabled(rename = "Nodes")]
             nodes: usize,
             #[tabled(rename = "Assigned")]
@@ -330,7 +332,9 @@ impl NodeRewards {
         println!("Unit: XDRPermyriad per day");
         println!("\nLegend:");
         println!("• Day: UTC day (YYYY-MM-DD)");
-        println!("• Rewards: NRC rewards for the provider on that day (XDRPermyriad)");
+        println!("• Base Rewards Total: Sum of base_rewards_xdr_permyriad across all nodes on that day");
+        println!("• Adjusted Rewards Total: Sum of adjusted_rewards_xdr_permyriad across all nodes on that day");
+        println!("• Adjusted Rewards %: (Adjusted Rewards Total / Base Rewards Total) × 100%");
         println!("• Nodes: Nodes found in registry on that day");
         println!("• Assigned: Nodes assigned to a subnet on that day");
         println!("• Underperf: Nodes with performance multiplier < 1 on that day");
@@ -344,9 +348,28 @@ impl NodeRewards {
 
             let mut table_data = Vec::new();
             for (day, rewards) in &provider.daily_rewards {
-                let day_str = day.to_string();
-                let total_rewards = rewards.rewards_total_xdr_permyriad.unwrap_or(0);
+                let day_str = Self::format_date_utc(*day);
                 let nodes_in_registry = rewards.daily_nodes_rewards.len();
+
+                // Sum base and adjusted rewards across all nodes for the day
+                let base_rewards_total: u64 = rewards
+                    .daily_nodes_rewards
+                    .iter()
+                    .map(|n| n.base_rewards_xdr_permyriad.unwrap_or(0))
+                    .sum();
+
+                let adjusted_rewards_total: u64 = rewards
+                    .daily_nodes_rewards
+                    .iter()
+                    .map(|n| n.adjusted_rewards_xdr_permyriad.unwrap_or(0))
+                    .sum();
+
+                // Calculate adjusted rewards percentage
+                let adjusted_rewards_percent = if base_rewards_total > 0 {
+                    format!("{:.2}%", (adjusted_rewards_total as f64 / base_rewards_total as f64) * 100.0)
+                } else {
+                    "N/A".to_string()
+                };
 
                 // Count assigned nodes
                 let assigned_count = rewards
@@ -363,7 +386,7 @@ impl NodeRewards {
                 let mut underperf_prefixes: Vec<String> = rewards
                     .daily_nodes_rewards
                     .iter()
-                    .filter(|node_result| node_result.performance_multiplier_percent.unwrap_or(100.0) < 100.0)
+                    .filter(|node_result| node_result.performance_multiplier_percent.unwrap_or(1.0) < 1.0)
                     .map(|node_result| {
                         let node_id_str = node_result.node_id.unwrap().to_string();
                         node_id_str.split('-').next().unwrap_or(&node_id_str).to_string()
@@ -385,7 +408,9 @@ impl NodeRewards {
 
                 table_data.push(DailyRewardSummary {
                     day: day_str,
-                    rewards: total_rewards.to_string(),
+                    base_rewards_total: base_rewards_total.to_string(),
+                    adjusted_rewards_total: adjusted_rewards_total.to_string(),
+                    adjusted_rewards_percent,
                     nodes: nodes_in_registry,
                     assigned_count,
                     underperf_count: underperforming_nodes_count,
@@ -398,7 +423,7 @@ impl NodeRewards {
                 .with(Style::ascii())
                 .with(Modify::new(Rows::new(0..1)).with(Alignment::center()))
                 .with(Modify::new(Rows::new(1..)).with(Alignment::left()))
-                .with(Width::wrap(100).keep_words(true));
+                .with(Width::wrap(250).keep_words(true));
 
             println!("{}", table);
         }
