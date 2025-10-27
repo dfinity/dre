@@ -138,6 +138,9 @@ pub trait CsvGenerator {
         let mut wtr = Writer::from_path(&filename).unwrap();
         wtr.write_record(&[
             "day_utc",
+            "base_rewards_total",
+            "adjusted_rewards_total",
+            "adjusted_rewards_percent",
             "rewards_total_xdr_permyriad",
             "nodes_in_registry",
             "assigned_nodes",
@@ -148,6 +151,27 @@ pub trait CsvGenerator {
 
         for (day, rewards) in daily_rewards {
             let day_str = Self::format_date_utc(*day);
+
+            // Sum base and adjusted rewards across all nodes for the day
+            let base_rewards_total: u64 = rewards
+                .daily_nodes_rewards
+                .iter()
+                .map(|n| n.base_rewards_xdr_permyriad.unwrap_or(0))
+                .sum();
+
+            let adjusted_rewards_total: u64 = rewards
+                .daily_nodes_rewards
+                .iter()
+                .map(|n| n.adjusted_rewards_xdr_permyriad.unwrap_or(0))
+                .sum();
+
+            // Calculate adjusted rewards percentage
+            let adjusted_rewards_percent = if base_rewards_total > 0 {
+                format!("{:.2}", (adjusted_rewards_total as f64 / base_rewards_total as f64) * 100.0)
+            } else {
+                "N/A".to_string()
+            };
+
             let total_rewards = rewards.rewards_total_xdr_permyriad.unwrap_or(0);
             let nodes_in_registry = rewards.daily_nodes_rewards.len();
 
@@ -174,6 +198,9 @@ pub trait CsvGenerator {
 
             wtr.write_record(&[
                 &day_str,
+                &base_rewards_total.to_string(),
+                &adjusted_rewards_total.to_string(),
+                &adjusted_rewards_percent,
                 &total_rewards.to_string(),
                 &nodes_in_registry.to_string(),
                 &assigned_count.to_string(),
