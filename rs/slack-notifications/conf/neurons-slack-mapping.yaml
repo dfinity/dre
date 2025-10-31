@@ -41,10 +41,10 @@
   slack_id: USJPEC5F0 # Islam El-Ashi
 - neuron_id: 51
   slack_id: U02RFGQHP47 # Daniel Wong
-#- neuron_id: 52
+# - neuron_id: 52
 #  slack_id:
-- neuron_id: 53
-  slack_id: U01GTFM9FUJ # Alexandra Zapuc
+# - neuron_id: 53
+#  slack_id: 
 - neuron_id: 54
   slack_id: U02RZR7PDK4 # Björn Assmann
 # - neuron_id: 55
