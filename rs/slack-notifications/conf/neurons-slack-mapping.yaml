@@ -59,8 +59,8 @@
   slack_id: U02TEQHKV35 # Llorenç Muntaner Perello
 - neuron_id: 60
   slack_id: U08NXN03H19 # Shah Javidi
-- neuron_id: 61
-  slack_id: U04JSKAH6L8 # Manuel Amador
+# - neuron_id: 61
+#  slack_id: 
 - neuron_id: 62
   slack_id: U8ET9T067 # Paul Liu
 - neuron_id: 63
