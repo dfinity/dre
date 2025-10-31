@@ -237,6 +237,13 @@ class ReleaseCandidateForumTopic:
                             self.client.update_post(
                                 post_id=post_id, content=content_expected
                             )
+                            # Ensure there is ALWAYS a log when an update occurs
+                            self._logger.info(
+                                "Post %s updated => URL %s",
+                                post_id,
+                                self.post_to_url(post),
+                            )
+                            self.client.invalidate_topic(self.topic_id)
                         except Exception:
                             # Log full content and actionable recovery steps for operators
                             url = self.post_to_url(post)
@@ -259,14 +266,8 @@ class ReleaseCandidateForumTopic:
                                 "Proceeding without automatic update for post %s due to earlier error; manual action required.",
                                 post_id,
                             )
-                            continue
-                        # Ensure there is ALWAYS a log when an update occurs
-                        self._logger.info(
-                            "Post %s updated => URL %s",
-                            post_id,
-                            self.post_to_url(post),
-                        )
-                        self.client.invalidate_topic(self.topic_id)
+                            self.client.invalidate_topic(self.topic_id)
+                            raise
                     else:
                         self._logger.warning(
                             "Post %s NOT editable. Skipping update => URL %s",
