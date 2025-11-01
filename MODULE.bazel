@@ -26,7 +26,7 @@ types.requirements(
     # rules_python's `pip.parse(...)`.
     pip_requirements = "@python_deps//:requirements.bzl",
     # also legal to pass a `requirements.in` here
-    requirements_txt = "//:requirements-dev.lock",
+    requirements_txt = "//:requirements.lock",
 )
 use_repo(types, "pip_types")
 
