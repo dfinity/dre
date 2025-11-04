@@ -1,5 +1,5 @@
 use super::{fetch_and_aggregate, DateUtc, NodeRewards, ProviderData};
-use chrono::{DateTime, Datelike};
+use chrono::{DateTime, Datelike, Days};
 use ic_canisters::governance::GovernanceCanisterWrapper;
 use ic_canisters::node_rewards::NodeRewardsCanisterWrapper;
 
@@ -29,7 +29,11 @@ pub async fn run(
         .ok_or_else(|| anyhow::anyhow!("Previous governance snapshot not found for {}", month))?;
 
     let start_day = DateTime::from_timestamp(prev.timestamp as i64, 0).unwrap().date_naive();
-    let end_day = DateTime::from_timestamp(last.timestamp as i64, 0).unwrap().date_naive();
+    let end_day = DateTime::from_timestamp(last.timestamp as i64, 0)
+        .unwrap()
+        .date_naive()
+        .checked_sub_days(Days::new(1))
+        .unwrap();
 
     let gov_map = last
         .rewards
