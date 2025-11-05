@@ -13,16 +13,16 @@ use ic_nns_governance::pb::v1::manage_neuron::Command::ClaimOrRefresh as CoR;
 use ic_nns_governance::pb::v1::manage_neuron::NeuronIdOrSubaccount;
 use ic_nns_governance::pb::v1::manage_neuron::RegisterVote;
 use ic_nns_governance::pb::v1::manage_neuron::claim_or_refresh::By;
+use ic_nns_governance_api::DateRangeFilter;
+use ic_nns_governance_api::ListNodeProviderRewardsRequest;
+use ic_nns_governance_api::ListNodeProviderRewardsResponse;
 use ic_nns_governance_api::ListNodeProvidersResponse;
 use ic_nns_governance_api::ManageNeuronResponse;
+use ic_nns_governance_api::MonthlyNodeProviderRewards;
 use ic_nns_governance_api::manage_neuron_response::Command as CommandResponse;
 use ic_nns_governance_api::manage_neuron_response::MakeProposalResponse;
 use ic_nns_governance_api::{ListNeurons, ListProposalInfoResponse, NeuronInfo, ProposalInfo};
 use ic_nns_governance_api::{ListNeuronsResponse, Neuron};
-use ic_nns_governance_api::DateRangeFilter;
-use ic_nns_governance_api::ListNodeProviderRewardsRequest;
-use ic_nns_governance_api::ListNodeProviderRewardsResponse;
-use ic_nns_governance_api::MonthlyNodeProviderRewards;
 use url::Url;
 
 use crate::CanisterVersion;
@@ -224,9 +224,10 @@ impl GovernanceCanisterWrapper {
 
     pub async fn list_node_provider_rewards(&self, date_filter: Option<DateRangeFilter>) -> anyhow::Result<Vec<MonthlyNodeProviderRewards>> {
         let response = self
-            .query::<ListNodeProviderRewardsResponse>("list_node_provider_rewards", candid::encode_one(ListNodeProviderRewardsRequest{
-                date_filter,
-            })?)
+            .query::<ListNodeProviderRewardsResponse>(
+                "list_node_provider_rewards",
+                candid::encode_one(ListNodeProviderRewardsRequest { date_filter })?,
+            )
             .await?;
         Ok(response.rewards)
     }

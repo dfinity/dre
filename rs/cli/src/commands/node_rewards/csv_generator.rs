@@ -2,8 +2,8 @@ use anyhow::Result;
 use chrono::NaiveDate;
 use csv::Writer;
 use ic_base_types::PrincipalId;
-use ic_node_rewards_canister_api::provider_rewards_calculation::{DailyNodeFailureRate, DailyNodeProviderRewards};
 use ic_node_rewards_canister_api::DateUtc;
+use ic_node_rewards_canister_api::provider_rewards_calculation::{DailyNodeFailureRate, DailyNodeProviderRewards};
 use log::info;
 use std::{collections::BTreeMap, fs};
 

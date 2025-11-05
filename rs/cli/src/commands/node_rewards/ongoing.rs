@@ -1,4 +1,4 @@
-use super::{fetch_and_aggregate, DateUtc, NodeRewards, ProviderData};
+use super::{DateUtc, NodeRewards, ProviderData, fetch_and_aggregate};
 use chrono::DateTime;
 use ic_canisters::governance::GovernanceCanisterWrapper;
 use ic_canisters::node_rewards::NodeRewardsCanisterWrapper;

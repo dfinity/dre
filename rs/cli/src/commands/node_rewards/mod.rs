@@ -1,17 +1,17 @@
 use crate::commands::node_rewards::csv_generator::CsvGenerator;
-use crate::{auth::AuthRequirement, exe::args::GlobalArgs, exe::ExecutableCommand};
+use crate::{auth::AuthRequirement, exe::ExecutableCommand, exe::args::GlobalArgs};
 use chrono::NaiveDate;
 use clap::{Args, Subcommand};
 use futures_util::future::join_all;
 use ic_base_types::PrincipalId;
 use ic_canisters::node_rewards::NodeRewardsCanisterWrapper;
-use ic_node_rewards_canister_api::provider_rewards_calculation::{DailyNodeProviderRewards, DailyResults};
 use ic_node_rewards_canister_api::DateUtc;
+use ic_node_rewards_canister_api::provider_rewards_calculation::{DailyNodeProviderRewards, DailyResults};
 use log::info;
 use std::collections::BTreeMap;
 use tabled::{
-    settings::{object::Rows, Alignment, Modify, Style, Width},
     Table, Tabled,
+    settings::{Alignment, Modify, Style, Width, object::Rows},
 };
 
 mod csv_generator;
@@ -124,11 +124,7 @@ impl NodeRewards {
                 "None".to_string()
             } else {
                 let list = provider.underperforming_nodes.join(", ");
-                if list.len() > 50 {
-                    format!("{}...", &list[..47])
-                } else {
-                    list
-                }
+                if list.len() > 50 { format!("{}...", &list[..47]) } else { list }
             };
 
             // Always display in XDRPermyriad
@@ -312,7 +308,7 @@ async fn fetch_and_aggregate(
 
 impl NodeRewards {
     fn print_rewards_summary_console(&self, provider_data: &[ProviderData]) -> anyhow::Result<()> {
-        use tabled::settings::{object::Rows, Alignment, Modify, Style, Width};
+        use tabled::settings::{Alignment, Modify, Style, Width, object::Rows};
         use tabled::{Table, Tabled};
 
         #[derive(Tabled)]
