@@ -104,21 +104,24 @@ The annotator has a bonus mode to manually annotate failing commits.  See below 
 
 ### reconciler
 
-Reconciler is responsible for generating release notes (1), publishing them as google docs and sending a notification to #eng-release Slack channel (2), creating a GitHub PR to publish notes (3), placing the proposal for electing a version (4) and creating and updating forum post (5).
+Reconciler is responsible for:
 
-1. generating release notes
-  Done by release_notes.py. You can manually run the script for debugging purposes.
+1. generating a draft of the release notes
+  Done by release_notes.py. See *Generate release notes locally* in this document for manual release notes generation.
 
-2. google docs publish
-  Done by google_docs.py. You can run the program manually to debug issues. Change the `main()` function to your needs.
+2. making a forum post with the release notes draft
+  The draft release notes generated in step (1) are published as a post to a Discourse thread (which will be created if necessary).
 
-3. creating a GitHub PR to publish notes
-  Done by publish_notes.py. It's not recommended to run this manually. Instead, if you have an issue, try to create a unit test to resolve the issue. You can download the Google Doc you're having problems with to use it in your test. See tests that use `release-controller/test_data/b0ade55f7e8999e2842fe3f49df163ba224b71a2.docx`.
+3. Google Docs publish
+  Done by google_docs.py. The draft of the release notes is published to Google Docs for internal engineering review.
 
-4. placing the proposal for electing a version
+4. creating a GitHub PR to publish notes
+  Done by publish_notes.py once the notes are ready for review according to the content of the respective Google Doc. It's not recommended to run this manually. Instead, if you have an issue, try to create a unit test to resolve the issue. You can download the Google Doc you're having problems with to use it in your test. See tests that use `release-controller/test_data/b0ade55f7e8999e2842fe3f49df163ba224b71a2.docx`.
+
+5. placing the proposal for electing a version
   Done by dre_cli.py / reconciler.py. There should be a logs for the command that was run if you want to debug any issues with it.
 
-5. forum post update
+6. forum post update
   Done by forum.py. You can run the program manually to debug issues. Change the `main()` function to your needs.
 
   It's important to note that forum logic depends on finding alredy created blog posts by querying posts from authenticated user (@DRETeam). For those reasons, it won't be able to find manually created posts by other users.
@@ -307,17 +310,39 @@ bazel run //release-controller:commit-annotator \
 
 ### Generate release notes locally
 
-Release notes can be generated locally, using the following command:
+Release notes can be generated locally using several approaches:
+
+#### Method 1: Using Bazel with specific RC names
 
 ```sh
 PREV_RC=rc--2025-03-27_03-14-base
 PREV_COMMIT=3ae3649a2366aaca83404b692fc58e4c6e604a25
 CURR_RC=rc--2025-04-03_03-15
 CURR_COMMIT=68fc31a141b25f842f078c600168d8211339f422
-bazel run //release-controller:release-notes -- \
-   $PREV_RC $PREV_COMMIT $CURR_RC $CURR_COMMIT \
-  --verbose
+bazel run //release-controller:release-notes -- $PREV_RC $PREV_COMMIT $CURR_RC $CURR_COMMIT --verbose --commit-annotator=local
 ```
+
+#### Method 2: Using Bazel with generic names and local commit annotator
+
+```sh
+bazel run //release-controller:release-notes -- prev bf0d4d1b8cb6c0c19a5afa1454ada014847aa5c6 curr 07c01746ee3fa7700eb0eb781a7c26a53f989b1a --commit-annotator=local
+```
+
+#### Method 3: Using Rye (Python environment)
+
+First, ensure your Python environment is set up:
+
+```sh
+rye sync
+```
+
+Then run the release notes script directly:
+
+```sh
+rye run python3 release-controller/release_notes.py prev bf0d4d1b8cb6c0c19a5afa1454ada014847aa5c6 curr 07c01746ee3fa7700eb0eb781a7c26a53f989b1a --commit-annotator=local
+```
+
+#### Commit Annotator Options
 
 The form of the command above requires you to run a commit annotator in
 parallel.  If you want to use the internal commit annotator that does not
@@ -385,6 +410,6 @@ bazel build //release-controller/...
 ### Maintenance
 
 The container image currently used by release controller components
-is an Ubuntu 24.04 image built by Bazel.  Refer to [BUILD.bazel](./BUILD.bazel)
-and [../images/BUILD.bazel](../images/BUILD.bazel) for instructions
+is an Ubuntu 24.04 image built by Bazel.  Refer to [BUILD.bazel](https://github.com/dfinity/dre/blob/main/release-controller/BUILD.bazel)
+and [images/BUILD.bazel](https://github.com/dfinity/dre/blob/main/images/BUILD.bazel) for instructions
 on how to maintain and update the images.

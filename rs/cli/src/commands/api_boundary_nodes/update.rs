@@ -3,8 +3,8 @@ use ic_types::PrincipalId;
 
 use crate::{
     auth::AuthRequirement,
-    exe::args::GlobalArgs,
     exe::ExecutableCommand,
+    exe::args::GlobalArgs,
     forum::ForumPostKind,
     ic_admin::{self},
     submitter::{SubmissionParameters, Submitter},

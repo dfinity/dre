@@ -4,7 +4,7 @@ use std::{
     time::{SystemTime, UNIX_EPOCH},
 };
 
-use opentelemetry::{global, metrics::AsyncInstrument, KeyValue};
+use opentelemetry::{KeyValue, global, metrics::AsyncInstrument};
 
 const NETWORK: &str = "network";
 const AXUM_APP: &str = "axum_otel_metrics";

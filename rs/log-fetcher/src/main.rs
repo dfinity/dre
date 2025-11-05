@@ -16,7 +16,7 @@ use tokio::select;
 use tokio_util::sync::CancellationToken;
 use url::Url;
 
-use crate::journald_parser::{parse_journal_entries_new, JournalField};
+use crate::journald_parser::{JournalField, parse_journal_entries_new};
 
 mod journald_parser;
 

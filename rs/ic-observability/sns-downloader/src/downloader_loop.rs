@@ -1,12 +1,12 @@
 use crossbeam_channel::Receiver;
-use ic_canisters::sns_wasm::SnsWasmCanister;
 use ic_canisters::IcAgentCanisterClient;
+use ic_canisters::sns_wasm::SnsWasmCanister;
 use multiservice_discovery_shared::builders::sns_canister_config_structure::SnsCanisterConfigStructure;
 use multiservice_discovery_shared::contracts::deployed_sns::Sns;
 use reqwest::Client;
-use slog::{debug, info, warn, Logger};
+use slog::{Logger, debug, info, warn};
 use std::{
-    collections::{hash_map::DefaultHasher, BTreeMap},
+    collections::{BTreeMap, hash_map::DefaultHasher},
     hash::{Hash, Hasher},
 };
 

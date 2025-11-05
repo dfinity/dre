@@ -170,7 +170,11 @@ impl Store {
 
     async fn download_ic_admin(&self, version: &str, path: &PathBuf) -> anyhow::Result<()> {
         let url = if std::env::consts::OS == "macos" {
-            format!("https://download.dfinity.systems/ic/{version}/binaries/x86_64-darwin/ic-admin.gz")
+            let darwin_arch = match std::env::consts::ARCH {
+                "aarch64" => "aarch64-darwin",
+                _ => "x86_64-darwin",
+            };
+            format!("https://download.dfinity.systems/ic/{version}/binaries/{darwin_arch}/ic-admin.gz")
         } else {
             format!("https://download.dfinity.systems/ic/{version}/binaries/x86_64-linux/ic-admin.gz")
         };
@@ -220,7 +224,7 @@ impl Store {
                 let version = match (self.offline, version_from_file) {
                     // Running offline mode, no ic-admin present.
                     (true, version_from_file) if version_from_file.is_empty() => {
-                        return Err(anyhow::anyhow!("No ic-admin version found and offline mode is specified"))
+                        return Err(anyhow::anyhow!("No ic-admin version found and offline mode is specified"));
                     }
                     // Running offline mode and ic-admin version is present.
                     (true, version_from_file) => {

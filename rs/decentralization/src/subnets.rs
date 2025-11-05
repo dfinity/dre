@@ -1,7 +1,7 @@
 use ic_base_types::PrincipalId;
 use ic_management_types::{
-    requests::{NodeRemoval, NodeRemovalReason},
     HealthStatus, Subnet,
+    requests::{NodeRemoval, NodeRemovalReason},
 };
 use indexmap::IndexMap;
 use itertools::Itertools;
@@ -26,11 +26,7 @@ pub fn unhealthy_with_nodes(
                 })
                 .collect::<Vec<_>>();
 
-            if !unhealthy.is_empty() {
-                Some((subnet_id, unhealthy))
-            } else {
-                None
-            }
+            if !unhealthy.is_empty() { Some((subnet_id, unhealthy)) } else { None }
         })
         .collect::<IndexMap<_, _>>()
 }

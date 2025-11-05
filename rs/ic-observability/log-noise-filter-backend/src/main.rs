@@ -6,7 +6,7 @@ use std::{
 
 use clap::Parser;
 use handlers::WholeState;
-use slog::{info, o, warn, Drain, Level, Logger};
+use slog::{Drain, Level, Logger, info, o, warn};
 
 use crate::handlers::Server;
 
@@ -85,6 +85,6 @@ fn from_str_to_log(value: &str) -> Level {
         "warning" => Level::Warning,
         "trace" => Level::Trace,
         "debug" => Level::Debug,
-        _ => panic!("Unsupported level: {}", value),
+        _ => panic!("Unsupported level: {value}"),
     }
 }

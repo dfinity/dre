@@ -3,7 +3,7 @@ use std::collections::{BTreeSet, HashMap};
 use serde::Serialize;
 
 use config_writer_common::vector_config_structure::{VectorConfigBuilder, VectorConfigEnriched, VectorSource, VectorTransform};
-use service_discovery::{job_types::JobType, TargetGroup};
+use service_discovery::{TargetGroup, job_types::JobType};
 use url::Url;
 
 use crate::JobParameters;
@@ -165,8 +165,8 @@ mod tests {
     use config_writer_common::vector_config_structure::VectorConfigBuilder;
     use ic_types::{NodeId, PrincipalId, SubnetId};
     use service_discovery::{
-        job_types::{JobType, NodeOS},
         TargetGroup,
+        job_types::{JobType, NodeOS},
     };
 
     use crate::{Job, JobParameters};

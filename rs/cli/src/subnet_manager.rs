@@ -2,11 +2,11 @@ use core::fmt;
 use std::collections::HashSet;
 use std::sync::Arc;
 
-use anyhow::anyhow;
 use anyhow::Ok;
+use anyhow::anyhow;
 use decentralization::{
-    network::{DecentralizedSubnet, SubnetQueryBy},
     SubnetChangeResponse,
+    network::{DecentralizedSubnet, SubnetQueryBy},
 };
 use futures::TryFutureExt;
 use ic_management_backend::health::HealthStatusQuerier;
@@ -215,9 +215,9 @@ impl SubnetManager {
         }
 
         let motivation = format!(
-                "\n{}\n\nNOTE: The information below is provided for your convenience. Please independently verify the decentralization changes rather than relying solely on this summary.\nCode for calculating replacements is at https://github.com/dfinity/dre/blob/79066127f58c852eaf4adda11610e815a426878c/rs/decentralization/src/network.rs#L912",
-                motivations.iter().map(|s| format!(" - {}", s)).collect::<Vec<String>>().join("\n")
-            );
+            "\n{}\n\nNOTE: The information below is provided for your convenience. Please independently verify the decentralization changes rather than relying solely on this summary.\nCode for calculating replacements is at https://github.com/dfinity/dre/blob/79066127f58c852eaf4adda11610e815a426878c/rs/decentralization/src/network.rs#L912",
+            motivations.iter().map(|s| format!(" - {}", s)).collect::<Vec<String>>().join("\n")
+        );
 
         let change = SubnetChangeResponse::new(&change, &health_of_nodes, Some(motivation));
 
@@ -262,10 +262,10 @@ impl SubnetManager {
         }
 
         let motivation = format!(
-                "{}\n{}\n\nNOTE: The information below is provided for your convenience. Please independently verify the decentralization changes rather than relying solely on this summary.\nCode for calculating replacements is at https://github.com/dfinity/dre/blob/79066127f58c852eaf4adda11610e815a426878c/rs/decentralization/src/network.rs#L912",
-                proposal_motivation,
-                motivations.iter().map(|s| format!(" - {}", s)).collect::<Vec<String>>().join("\n")
-            );
+            "{}\n{}\n\nNOTE: The information below is provided for your convenience. Please independently verify the decentralization changes rather than relying solely on this summary.\nCode for calculating replacements is at https://github.com/dfinity/dre/blob/79066127f58c852eaf4adda11610e815a426878c/rs/decentralization/src/network.rs#L912",
+            proposal_motivation,
+            motivations.iter().map(|s| format!(" - {}", s)).collect::<Vec<String>>().join("\n")
+        );
 
         let change = SubnetChangeResponse::new(&change, health_of_nodes, Some(motivation));
 

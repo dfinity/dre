@@ -1,12 +1,12 @@
+use axum::Json;
 use axum::extract::State;
 use axum::http::StatusCode;
-use axum::Json;
 use futures::future::join_all;
 
 use crate::definition::{Definition, StartMode};
 use crate::server_handlers::dto::{BadDtoError, DefinitionDto};
 
-use super::{bad_request, ok, Server, WebResult};
+use super::{Server, WebResult, bad_request, ok};
 
 pub(super) async fn replace_definitions(State(binding): State<Server>, Json(definitions): Json<Vec<DefinitionDto>>) -> WebResult<String> {
     // Cache old names if we need to remove them from metrics

@@ -5,8 +5,8 @@ use config_writer_common::{
     labels_keys,
 };
 use serde::{Serialize, Serializer};
-use service_discovery::job_types::JobType;
 use service_discovery::TargetGroup;
+use service_discovery::job_types::JobType;
 
 #[derive(Serialize, Debug, Clone, PartialEq, PartialOrd, Ord, Eq)]
 pub struct PrometheusStaticConfig {

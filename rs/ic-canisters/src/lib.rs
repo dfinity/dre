@@ -1,11 +1,11 @@
 use candid::CandidType;
 use candid::Decode;
 use candid::Principal;
+use ic_agent::Agent;
+use ic_agent::Identity;
 use ic_agent::identity::AnonymousIdentity;
 use ic_agent::identity::BasicIdentity;
 use ic_agent::identity::Secp256k1Identity;
-use ic_agent::Agent;
-use ic_agent::Identity;
 use ic_base_types::CanisterId;
 use ic_base_types::PrincipalId;
 use ic_transport_types::SubnetMetrics;

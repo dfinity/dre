@@ -1,7 +1,7 @@
 use std::collections::BTreeSet;
 use std::fmt::Debug;
 
-use service_discovery::{job_types::JobType, TargetGroup};
+use service_discovery::{TargetGroup, job_types::JobType};
 
 pub trait Config: erased_serde::Serialize + Debug {
     fn updated(&self) -> bool;

@@ -1,6 +1,6 @@
 use std::collections::BTreeMap;
 
-use axum::{extract::State, http::StatusCode, Json};
+use axum::{Json, extract::State, http::StatusCode};
 use slog::{info, warn};
 
 use crate::handlers::Server;
@@ -16,7 +16,7 @@ pub async fn delete_criteria(
         }
         Err(missing) => {
             warn!(state.logger, "Failed to delete criteria"; "indexes" => ?missing);
-            Err((StatusCode::NOT_FOUND, format!("Missing indexes: {:?}", missing)))
+            Err((StatusCode::NOT_FOUND, format!("Missing indexes: {missing:?}")))
         }
     }
 }

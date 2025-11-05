@@ -16,7 +16,9 @@ use url::Url;
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
     dotenv().ok();
-    std::env::set_var("RUST_LOG", "info");
+    unsafe {
+        std::env::set_var("RUST_LOG", "info");
+    }
     env_logger::init();
     let args = Cli::parse();
     let target_network = ic_management_types::Network::new(args.network.clone(), &args.nns_urls)

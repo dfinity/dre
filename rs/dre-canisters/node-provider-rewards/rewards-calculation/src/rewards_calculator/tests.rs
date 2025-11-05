@@ -1,7 +1,7 @@
 use super::*;
 use crate::rewards_calculator::builder::RewardsCalculatorBuilder;
 use crate::rewards_calculator_results::RewardsCalculatorResults;
-use crate::types::{NodeMetricsDailyRaw, RewardPeriod, RewardableNode, UnixTsNanos, NANOS_PER_DAY};
+use crate::types::{NANOS_PER_DAY, NodeMetricsDailyRaw, RewardPeriod, RewardableNode, UnixTsNanos};
 use ic_base_types::{NodeId, PrincipalId, SubnetId};
 use ic_protobuf::registry::node_rewards::v2::{NodeRewardRate, NodeRewardRates, NodeRewardsTable};
 use itertools::Itertools;

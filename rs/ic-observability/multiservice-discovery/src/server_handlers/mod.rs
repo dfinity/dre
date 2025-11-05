@@ -2,12 +2,12 @@ use std::fmt::Display;
 use std::path::PathBuf;
 use std::time::Duration;
 
+use axum::Router;
 use axum::http::StatusCode;
 use axum::routing::{delete, get, post, put};
-use axum::Router;
 use axum_otel_metrics::HttpMetricsLayer;
 use prometheus::{Encoder, TextEncoder};
-use slog::{debug, info, Logger};
+use slog::{Logger, debug, info};
 
 use crate::definition::DefinitionsSupervisor;
 use crate::metrics::MSDMetrics;

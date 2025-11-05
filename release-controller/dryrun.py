@@ -1,3 +1,4 @@
+import difflib
 import logging
 import os
 import shutil
@@ -117,19 +118,27 @@ class StubDiscourseClient(object):
     def update_post(self, post_id: int, content: str) -> None:
         post = self.post_by_id(post_id)
         assert post
-        if content != post["raw"]:
-            self._logger.warning(
-                "Updating post %s in topic %s",
-                post["id"],
-                post["topic_id"],
-            )
-            self._logger.warning("* Old content: %r", post["raw"].strip()[:40])
-            self._logger.warning("* New content: %r", content.strip()[:40])
+        old = post["raw"].strip()
+        new = content.strip()
+        # Line-level unified diff (kept) for readability
+        old_lines = old.splitlines(True)
+        new_lines = new.splitlines(True)
+        difference = "".join(difflib.unified_diff(old_lines, new_lines))
+        url = f"{self.host.rstrip('/')}/t/{post['topic_slug']}/{post['topic_id']}/{post['post_number']}"
+        if difference:
+            self._logger.warning("Post %s SIMULATED updating => URL %s", post_id, url)
+            self._logger.warning("  📝 DIFF:\n%s", difference)
             post["raw"] = content
             post["cooked"] = content
+        else:
+            self._logger.warning(
+                "Post %s SIMULATED skipping update (no changes) => URL %s",
+                post_id,
+                url,
+            )
         self._persist()
 
-    def _get(self, api_url: str, page: int) -> forum.Topic:
+    def _get(self, api_url: str, page: int, **_: object) -> forum.Topic:
         topic_id = int(api_url.split("/")[2].split(".")[0])
         if page > 1:
             raise RuntimeError("Mock DiscourseClient class does not support pages > 2")

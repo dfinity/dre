@@ -5,7 +5,7 @@ use serde_json::Value;
 use tokio::task::JoinHandle;
 
 use crate::auth::AuthRequirement;
-use crate::exe::{args::GlobalArgs, ExecutableCommand};
+use crate::exe::{ExecutableCommand, args::GlobalArgs};
 
 #[derive(Args, Debug, Default)]
 pub struct Upgrade {
@@ -91,7 +91,7 @@ impl Upgrade {
                 return Err(anyhow::anyhow!(
                     "{} is not currently not supported for automatic upgrades. Try building the code from source",
                     s
-                ))
+                ));
             }
         };
 

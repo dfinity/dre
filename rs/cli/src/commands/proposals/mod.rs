@@ -9,15 +9,16 @@ use ic_nns_common::types::UpdateIcpXdrConversionRatePayload;
 
 use cycles_minting_canister::SetAuthorizedSubnetworkListArgs;
 use ic_nns_governance::pb::v1::{NnsFunction, ProposalStatus, Topic};
+use ic_nns_governance_api::ProposalInfo;
 use ic_nns_governance_api::bitcoin::BitcoinSetConfigProposal;
 use ic_nns_governance_api::proposal::Action;
 use ic_nns_governance_api::subnet_rental::SubnetRentalRequest;
-use ic_nns_governance_api::ProposalInfo;
 use ic_protobuf::registry::{dc::v1::AddOrRemoveDataCentersProposalPayload, node_rewards::v2::UpdateNodeRewardsTableProposalPayload};
 use ic_sns_wasm::pb::v1::{AddWasmRequest, InsertUpgradePathEntriesRequest, UpdateAllowedPrincipalsRequest, UpdateSnsSubnetListRequest};
 use list::List;
 use pending::Pending;
 use registry_canister::mutations::do_remove_node_operators::RemoveNodeOperatorsPayload;
+use registry_canister::mutations::do_set_subnet_operational_level::SetSubnetOperationalLevelPayload;
 use registry_canister::mutations::{
     complete_canister_migration::CompleteCanisterMigrationPayload,
     do_add_api_boundary_nodes::AddApiBoundaryNodesPayload,
@@ -249,6 +250,12 @@ impl TryFrom<ProposalInfo> for Proposal {
                             }
                             ic_nns_governance::pb::v1::NnsFunction::SubnetRentalRequest => {
                                 serde_json::to_value(Decode!(a.payload.as_slice(), SubnetRentalRequest)?)?
+                            }
+                            ic_nns_governance::pb::v1::NnsFunction::SetSubnetOperationalLevel => {
+                                serde_json::to_value(Decode!(a.payload.as_slice(), SetSubnetOperationalLevelPayload)?)?
+                            }
+                            _ => {
+                                serde_json::json!({})
                             }
                         }
                     }

@@ -27,7 +27,7 @@ const GET_CMD_PREFIX: &str = "get-";
 
 #[automock]
 // automock complains without the explicit allow below
-#[allow(elided_named_lifetimes)]
+#[allow(mismatched_lifetime_syntaxes)]
 pub trait IcAdmin: Send + Sync + Debug {
     fn ic_admin_path(&self) -> Option<String>;
 

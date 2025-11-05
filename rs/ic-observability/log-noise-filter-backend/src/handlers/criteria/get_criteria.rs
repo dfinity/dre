@@ -1,7 +1,7 @@
 use std::collections::BTreeMap;
 
 use axum::http::StatusCode;
-use axum::{extract::State, Json};
+use axum::{Json, extract::State};
 
 use crate::handlers::Server;
 

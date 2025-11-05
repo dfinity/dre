@@ -29,7 +29,7 @@ To build and verify the IC-OS {os_kind} disk image, after installing curl if nec
 
 ```
 # From https://github.com/dfinity/ic#verifying-releases
-curl -fsSL https://raw.githubusercontent.com/dfinity/ic/master/ci/tools/repro-check | python3 - -c {version} --{os_kind.lower()}
+curl -fsSL https://raw.githubusercontent.com/dfinity/ic/{version}/ci/scripts/repro-check | python3 - -c {version} --{os_kind.lower()}
 ```
 
 The two SHA256 sums printed above from a) the downloaded CDN image and b) the locally built image, must be identical, and must match the SHA256 from the payload of the NNS proposal.
@@ -73,7 +73,7 @@ class ReleaseLoader:
             )
             return open(version_changelog_path, "r").read()
         self._logger.debug(
-            "Changelog for %s %s is not ready for proposal; it does not exist yet.",
+            "Changelog is not yet ready for %s proposal for version %s.",
             os_kind,
             version,
         )

@@ -9,6 +9,7 @@ license.workspace = true
 
 [dependencies]
 anyhow = { workspace = true }
+async-trait = { workspace = true }
 byteorder = "1.5.0"
 backoff = { workspace = true }
 candid = { workspace = true }
@@ -39,6 +40,7 @@ ic-registry-keys.workspace = true
 ic-types.workspace = true
 ic-interfaces-registry.workspace = true
 ic-registry-nns-data-provider.workspace = true
+ic-registry-canister-api = { workspace = true }
 icrc-ledger-types.workspace = true
 ic-node-rewards-canister-api = { workspace = true }
 rewards-calculation = { workspace = true }

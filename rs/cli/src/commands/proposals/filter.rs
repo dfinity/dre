@@ -1,4 +1,4 @@
-use crate::{auth::AuthRequirement, exe::args::GlobalArgs, exe::ExecutableCommand};
+use crate::{auth::AuthRequirement, exe::ExecutableCommand, exe::args::GlobalArgs};
 use clap::Args;
 use ic_canisters::governance::GovernanceCanisterWrapper;
 use ic_nns_common::pb::v1::ProposalId;
@@ -128,7 +128,8 @@ pub enum Topic {
     SubnetManagement = 7,
     /// Installing and upgrading “system” canisters that belong to the network.
     /// For example, upgrading the NNS.
-    NetworkCanisterManagement = 8,
+    /// Deprecated: NetworkCanisterManagement = 8,
+    ApplicationCanisterManagement = 8,
     /// Proposals that update KYC information for regulatory purposes,
     /// for example during the initial Genesis distribution of ICP in the
     /// form of neurons.
@@ -182,7 +183,7 @@ impl From<Topic> for TopicUpstream {
             Topic::NodeAdmin => Self::NodeAdmin,
             Topic::ParticipantManagement => Self::ParticipantManagement,
             Topic::SubnetManagement => Self::SubnetManagement,
-            Topic::NetworkCanisterManagement => Self::NetworkCanisterManagement,
+            Topic::ApplicationCanisterManagement => Self::ApplicationCanisterManagement,
             Topic::Kyc => Self::Kyc,
             Topic::NodeProviderRewards => Self::NodeProviderRewards,
             Topic::IcOsVersionDeployment => Self::IcOsVersionDeployment,
@@ -207,7 +208,7 @@ impl From<TopicUpstream> for Topic {
             TopicUpstream::NodeAdmin => Self::NodeAdmin,
             TopicUpstream::ParticipantManagement => Self::ParticipantManagement,
             TopicUpstream::SubnetManagement => Self::SubnetManagement,
-            TopicUpstream::NetworkCanisterManagement => Self::NetworkCanisterManagement,
+            TopicUpstream::ApplicationCanisterManagement => Self::ApplicationCanisterManagement,
             TopicUpstream::Kyc => Self::Kyc,
             TopicUpstream::NodeProviderRewards => Self::NodeProviderRewards,
             TopicUpstream::IcOsVersionDeployment => Self::IcOsVersionDeployment,

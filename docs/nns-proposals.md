@@ -109,6 +109,27 @@ dre registry | jq '.nodes[] | select((.dc_id == "bo1") and (.subnet_id != null))
 ```
 **Explanation**: This command retrieves a dump of the registry, extracts the list of nodes, and selects only those that belong to the `bo1` data center and have a `subnet_id` set (i.e., not null).
 
+#### Dumping raw registry versions (for precise diffs)
+
+Use the DRE CLI to dump raw registry versions, either a single version or a range, for exact inspection of changes:
+
+```bash
+# One version
+dre registry --dump-version 12345 | jq
+
+# Range: Python-style indexing (end-exclusive). Indexing semantics:
+# - Positive indices are 1-based positions (registry is 1-based)
+# - 0 means start (same as omitting FROM)
+# - Negative indices count from end (-1 is last)
+# - Reversed ranges yield empty results
+dre registry --dump-versions -5 > last5.json
+
+# All versions (large output)
+dre registry --dump-versions > all.json
+```
+
+Each output element is a single registry record at a registry version with best-effort decoded value. Unknown byte blobs are shown compactly using base64 as `{ "bytes_base64": "..." }`. For short byte arrays the tool may also add a `principal` string.
+
 <details>
   <summary><i>Click here to see the output of the above command</i></summary>
   ```json

@@ -75,10 +75,10 @@ pub fn parse_journal_entries_new(body: &[u8]) -> Vec<JournalEntry> {
         }
     }
     // Check if there's an entry at the end of the body
-    if !current_entry.is_empty() {
-        if let Some(entry) = parse_journal_entry(&current_entry) {
-            entries.push(entry);
-        }
+    if !current_entry.is_empty()
+        && let Some(entry) = parse_journal_entry(&current_entry)
+    {
+        entries.push(entry);
     }
 
     entries
@@ -106,10 +106,10 @@ pub fn _parse_journal_entries(body: &[u8]) -> Vec<JournalEntry> {
     }
 
     // Check if there's an entry at the end of the body
-    if !current_entry.is_empty() {
-        if let Some(entry) = parse_journal_entry(&current_entry) {
-            entries.push(entry);
-        }
+    if !current_entry.is_empty()
+        && let Some(entry) = parse_journal_entry(&current_entry)
+    {
+        entries.push(entry);
     }
 
     entries
@@ -160,11 +160,7 @@ fn parse_journal_entry(entry_lines: &[Vec<u8>]) -> Option<JournalEntry> {
             .push((name, JournalField::Binary(String::from_utf8_lossy(&multiline).to_string())))
     }
 
-    if entry.fields.is_empty() {
-        None
-    } else {
-        Some(entry)
-    }
+    if entry.fields.is_empty() { None } else { Some(entry) }
 }
 
 fn parse_normal(data: &[u8]) -> Option<(String, JournalField)> {

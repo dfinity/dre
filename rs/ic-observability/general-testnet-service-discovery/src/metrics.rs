@@ -3,7 +3,7 @@ use std::{
     sync::{Arc, RwLock},
 };
 
-use opentelemetry::{global, metrics::AsyncInstrument, KeyValue};
+use opentelemetry::{KeyValue, global, metrics::AsyncInstrument};
 
 #[derive(Clone, Default)]
 pub struct Values {

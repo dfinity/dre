@@ -53,6 +53,7 @@ Comprehensive logging solutions for:
 - [Create a Neuron](create-a-neuron.md)
 - [Set Up Neuron Following](neuron-following-setup.md)
 - [Submit NNS Proposals](nns-proposals.md)
+- [Submit Firewall Change Proposals](firewall-proposals.md)
 - [Run Qualification Tests](qualification/running-qualification.md)
 - [Manage Releases](make-release.md)
 

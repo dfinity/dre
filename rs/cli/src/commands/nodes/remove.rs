@@ -1,5 +1,5 @@
 use crate::exe::args::GlobalArgs;
-use clap::{error::ErrorKind, Args};
+use clap::{Args, error::ErrorKind};
 use decentralization::subnets::NodesRemover;
 
 use crate::{

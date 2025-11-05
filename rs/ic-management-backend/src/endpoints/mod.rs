@@ -5,9 +5,9 @@ pub mod subnet;
 
 use crate::git_ic_repo::IcRepo;
 use crate::health::HealthStatusQuerier;
-use crate::{health, prometheus, proposal, registry, registry::RegistryState, release::list_subnets_release_statuses, release::RolloutBuilder};
+use crate::{health, prometheus, proposal, registry, registry::RegistryState, release::RolloutBuilder, release::list_subnets_release_statuses};
 use actix_web::dev::Service;
-use actix_web::{get, web, App, Error, HttpResponse, HttpServer, Responder, Result};
+use actix_web::{App, Error, HttpResponse, HttpServer, Responder, Result, get, web};
 use decentralization::network::AvailableNodesQuerier;
 use ic_management_types::Network;
 use ic_registry_nns_data_provider::registry::RegistryCanister;
@@ -128,6 +128,7 @@ pub struct SubnetRequest {
     id: String,
 }
 
+#[allow(dead_code)]
 #[derive(Deserialize, Serialize)]
 pub struct NewSubnet {
     size: i32,

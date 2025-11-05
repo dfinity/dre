@@ -1,8 +1,8 @@
-use clap::{error::ErrorKind, Args};
+use clap::{Args, error::ErrorKind};
 
 use crate::auth::AuthRequirement;
-use crate::exe::args::GlobalArgs;
 use crate::exe::ExecutableCommand;
+use crate::exe::args::GlobalArgs;
 use crate::{
     forum::ForumPostKind,
     ic_admin::{IcAdminProposal, IcAdminProposalCommand},

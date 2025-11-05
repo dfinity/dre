@@ -8,7 +8,7 @@ use std::sync::Arc;
 use crossbeam_channel::Receiver;
 use slog::{info, warn};
 
-use service_discovery::{job_types::JobType, IcServiceDiscovery};
+use service_discovery::{IcServiceDiscovery, job_types::JobType};
 
 use crate::config_writer::ConfigWriter;
 use crate::filters::TargetGroupFilter;

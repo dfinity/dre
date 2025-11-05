@@ -25,7 +25,11 @@ from github import Github
 from google_docs import ReleaseNotesClient, ReleaseNotesClientProtocol
 from prometheus import ICPrometheus
 from prometheus_client import start_http_server, Gauge
-from publish_notes import PublishNotesClient, PublishNotesClientProtocol
+from publish_notes import (
+    PublishNotesClient,
+    PublishNotesClientProtocol,
+    post_process_release_notes,
+)
 from pydiscourse import DiscourseClient
 from release_index_loader import DevReleaseLoader
 from release_index_loader import GitReleaseLoader
@@ -42,7 +46,7 @@ from commit_annotation import (
     NotReady,
 )
 from util import version_name, conventional_logging, sha256sum_http_response
-from watchdog import Watchdog
+from process_watchdog import Watchdog
 
 
 # It is safe to delete releases from this list once
@@ -258,11 +262,13 @@ Phase = (
     | typing.Literal["release notes pull request"]
     | typing.Literal["proposal submission"]
     | typing.Literal["forum post update"]
+    | typing.Literal["forum post draft"]
 )
 PHASES: list[Phase] = [
     "forum post creation",
     "release notes preparation",
     "release notes announcement",
+    "forum post draft",
     "release notes pull request",
     "proposal submission",
     "forum post update",
@@ -300,6 +306,7 @@ class VersionState(object):
     has_release_notes_submitted_as_pr: bool | Failed = False
     has_proposal: bool | Failed = False
     forum_post_updated: bool | Failed = False
+    forum_post_drafted: bool | Failed = False
 
     def __init__(
         self,
@@ -366,6 +373,8 @@ class VersionState(object):
             self.has_proposal = val
         elif self.current_phase == "forum post update":
             self.forum_post_updated = val
+        elif self.current_phase == "forum post draft":
+            self.forum_post_drafted = val
         else:
             assert 0, "phase not reached %s" % self.current_phase
         LAST_CYCLE_SUCCESSFUL.labels(
@@ -528,6 +537,52 @@ class Reconciler:
                     "%s. %s-%s (%s)", idx + 1, vv.rc_name, vv.version_name, vv.os_kind
                 )
 
+        drafts: dict[str, str] = {}
+
+        def draft_enabled_summary_retriever(
+            commit_id: str, os_kind: OsKind, security_fix: bool
+        ) -> str | None:
+            """
+            Resolution order for forum post content:
+              1) GitHub-published changelog (via ReleaseLoader)
+              2) In-memory draft prepared earlier in this run
+              3) Google Docs content (fallback), post-processed
+            """
+            # 1) Prefer the published changelog in the repo if available
+            gh_summary = self.loader.proposal_summary(commit_id, os_kind, security_fix)
+            if gh_summary:
+                return gh_summary
+
+            # 2) Fallback to any prepared draft content in-memory
+            draft_key = f"{commit_id}-{os_kind}"
+            draft_summary = drafts.get(draft_key)
+            if draft_summary:
+                return draft_summary
+
+            # 3) Final fallback to Google Docs (editor) contents if present
+            gdocs_markdown = self.notes_client.markdown_file(commit_id, os_kind)
+            if gdocs_markdown:
+                # Reuse the exact draft construction logic from the 'forum post draft' phase
+                draft = post_process_release_notes(gdocs_markdown)
+                draft_start = draft.lower().find("# release notes for")
+                if draft_start > 0:
+                    draft = draft[draft_start:]
+                else:
+                    # Handle variant where title is underlined instead of '#'
+                    draft_start = draft.lower().find("\nrelease notes for")
+                    assert draft_start > 0, (
+                        f"Could not find title in draft notes: {draft}"
+                    )
+                    draft = draft[draft_start + 1 :]
+                return draft
+            return None
+
+        def save_draft(v: VersionState, content: str) -> None:
+            drafts[f"{v.git_revision}-{v.os_kind}"] = content
+
+        def has_draft(v: VersionState) -> bool:
+            return f"{v.git_revision}-{v.os_kind}" in drafts
+
         for v in versions:
             rclogger = logger.getChild(f"{v.rc_name}")
             revlogger = rclogger.getChild(f"{v.version_name}.{v.os_kind}")
@@ -561,6 +616,7 @@ class Reconciler:
                 if markdown_file := self.notes_client.markdown_file(
                     release_commit, v.os_kind
                 ):
+                    gdoc = None
                     revlogger.info("Has release notes in editor.  Going to next phase.")
                 else:
                     revlogger.info("No release notes found in editor.  Creating.")
@@ -613,7 +669,7 @@ class Reconciler:
                     # so the client needs to provide an interface to do
                     # this.
                     try:
-                        content = prepare_release_notes(
+                        markdown_file = prepare_release_notes(
                             request,
                             self.ic_repo,
                             self.change_determinator_factory(),
@@ -632,11 +688,15 @@ class Reconciler:
                     gdoc, needs_announce = self.notes_client.ensure(
                         release_tag=release_tag,
                         release_commit=release_commit,
-                        content=content,
+                        content=markdown_file,
                         os_kind=v.os_kind,
                     )
 
-            if "SLACK_WEBHOOK_URL" in os.environ and needs_announce:
+            if (
+                "SLACK_WEBHOOK_URL" in os.environ
+                and needs_announce
+                and gdoc is not None
+            ):
                 with phase("release notes announcement"):
                     # This should have never been in the Google Docs code.
                     revlogger.info("Announcing release notes")
@@ -660,20 +720,19 @@ class Reconciler:
                 if not changelog:
                     revlogger.debug("No changelog ready for proposal submission.")
                     p.incomplete()
-                    continue
                 else:
                     revlogger.info(
                         "The changelog is now ready for proposal submission."
                     )
 
-            with phase("proposal submission"):
+            with phase("proposal submission") as p:
                 if isinstance(prop, reconciler_state.SubmittedProposal):
                     revlogger.info(
                         "%s.  We do not need to submit a proposal, but"
                         " we will check if forum post needs update.",
                         prop,
                     )
-                else:
+                elif changelog:
                     revlogger.info("Preparing proposal for %s", release_commit)
                     try:
                         checksum = version_package_checksum(release_commit, v.os_kind)
@@ -745,6 +804,11 @@ class Reconciler:
                             revlogger.info(
                                 "Currently elected HostOS versions: %s", blessed
                             )
+                        else:
+                            # Appease the almighty type checker gods.
+                            active = []
+                            blessed = set()
+                            assert 0, "not reached"
 
                         unelect_versions.extend(
                             versions_to_unelect(
@@ -784,17 +848,45 @@ class Reconciler:
                         fail = prop.record_malfunction()
                         revlogger.error("%s", fail)
                         raise
+                else:
+                    p.incomplete()
 
-            with phase("forum post update"):
+            with phase("forum post draft"):
+                if not has_draft(v):
+                    rclogger.debug("Creating draft of changelog.")
+                    draft = post_process_release_notes(markdown_file)
+                    draft_start = draft.lower().find("# release notes for")
+                    if draft_start > 0:
+                        draft = draft[draft_start:]
+                    else:
+                        # Tackle the variant of Markdown generated by self.notes_client.markdown_file, which underlines
+                        # titles rather than prefixing them with '#'.
+                        draft_start = draft.lower().find("\nrelease notes for")
+                        assert draft_start > 0, (
+                            f"Could not find title in draft notes: {draft}"
+                        )
+                        draft = draft[draft_start + 1 :]
+                    save_draft(v, draft)
+
+            try:
                 rclogger.debug("Updating forum posts after processing versions.")
                 # Update the forum posts in case the proposal was created.
                 rc_forum_topic.update(
-                    summary_retriever=self.loader.proposal_summary,
+                    summary_retriever=draft_enabled_summary_retriever,
                     proposal_id_retriever=self.state.version_proposal,
                 )
+                # We don't use a decorator here because we manually handle
+                # the error by ignoring the situation and retrying later.
+                phase.completed("forum post update")
+            except Exception:
+                rclogger.exception(
+                    "Non-fatal error -- could not update the forum posts for this"
+                    " release.  Update will be retried on the next cycle."
+                )
+                phase.failed("forum post update")
 
         if versions:
-            logger.info("Iteration completed. %s releases processed.", len(versions))
+            logger.info("Iteration completed. %s versions processed.", len(versions))
 
 
 dre_repo = "dfinity/dre"

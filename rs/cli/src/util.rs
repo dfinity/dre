@@ -6,15 +6,15 @@ use std::{
 
 use colored::Colorize;
 use dialoguer::Confirm;
-use futures::future::{join_all, BoxFuture};
 use futures::FutureExt;
+use futures::future::{BoxFuture, join_all};
 use log::debug;
 use tokio::io::AsyncWriteExt as TokioAsyncWriteExt;
 use tokio::{
     io::AsyncReadExt as _,
     process::Command,
     sync::Mutex,
-    task::{spawn_blocking, JoinHandle},
+    task::{JoinHandle, spawn_blocking},
 };
 
 /// Convert a vector of bytes to UTF-8, casting the error to an anyhow::Error.

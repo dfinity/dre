@@ -9,7 +9,7 @@ use serde::{Deserialize, Serialize};
 use std::convert::TryFrom;
 use std::io::Write;
 use std::time::SystemTime;
-use tokio::time::{sleep, Duration};
+use tokio::time::{Duration, sleep};
 mod slack;
 use clap::Parser;
 use ic_nns_governance_api::{ListProposalInfoResponse, ProposalInfo};

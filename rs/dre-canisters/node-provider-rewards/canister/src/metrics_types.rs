@@ -1,8 +1,8 @@
 use candid::{CandidType, Decode, Encode, Principal};
 use ic_base_types::{NodeId, PrincipalId, SubnetId};
 use ic_management_canister_types_private::NodeMetrics;
-use ic_stable_structures::storable::Bound;
 use ic_stable_structures::Storable;
+use ic_stable_structures::storable::Bound;
 use rewards_calculation::types::{NodeMetricsDailyRaw, SubnetMetricsDailyKey, UnixTsNanos};
 use serde::{Deserialize, Serialize};
 use std::borrow::Cow;
@@ -31,7 +31,7 @@ fn max_bound_size() {
 #[derive(Clone, Debug, CandidType, Deserialize, PartialEq, Eq, PartialOrd, Ord)]
 pub struct SubnetIdKey(pub SubnetId);
 impl Storable for SubnetIdKey {
-    fn to_bytes(&self) -> std::borrow::Cow<[u8]> {
+    fn to_bytes(&self) -> std::borrow::Cow<'_, [u8]> {
         Cow::Owned(Encode!(self).unwrap())
     }
 
@@ -72,7 +72,7 @@ impl From<SubnetMetricsKeyStored> for SubnetMetricsDailyKey {
 }
 
 impl Storable for SubnetMetricsKeyStored {
-    fn to_bytes(&self) -> Cow<[u8]> {
+    fn to_bytes(&self) -> Cow<'_, [u8]> {
         Cow::Owned(serde_cbor::to_vec(self).unwrap())
     }
 
@@ -141,7 +141,7 @@ impl From<SubnetMetricsValueStored> for Vec<NodeMetricsDailyRaw> {
 }
 
 impl Storable for SubnetMetricsValueStored {
-    fn to_bytes(&self) -> Cow<[u8]> {
+    fn to_bytes(&self) -> Cow<'_, [u8]> {
         Cow::Owned(serde_cbor::to_vec(self).unwrap())
     }
 

@@ -4,8 +4,8 @@ use clap::{Args, ValueEnum};
 
 use crate::{
     auth::AuthRequirement,
-    exe::args::GlobalArgs,
     exe::ExecutableCommand,
+    exe::args::GlobalArgs,
     forum::ForumPostKind,
     operations::hostos_rollout::{NodeGroupUpdate, NumberOfNodes},
     submitter::{SubmissionParameters, Submitter},

@@ -8,6 +8,36 @@
 #         rc_name: <reference RC name>
 #         name: <version name>
 releases:
+  - rc_name: rc--2025-10-30_03-22
+    versions:
+      - name: base
+        version: 199fb796c4a81ac43c6886d21bfa2b66ee3a8cd6
+  - rc_name: rc--2025-10-23_03-18
+    versions:
+      - name: base
+        version: 44e6a4830a03f05101a33d7baeb1f92c5c8093bc
+  - rc_name: rc--2025-10-17_03-17
+    versions:
+      - name: base
+        version: 286295f0397521cd59ca7792df446c57379204fa
+      - name: sev-prep
+        version: 575bcd0954e9d00066fd465223b755bda645edd6
+  - rc_name: rc--2025-10-09_03-15
+    versions:
+      - name: base
+        version: 285897dae3a2cb60c50d9d8dd7327f18c3c372b9
+  - rc_name: rc--2025-10-02_03-13
+    versions:
+      - name: base
+        version: 45657852c1eca6728ff313808db29b47c862ad13
+  - rc_name: rc--2025-09-25_09-52
+    versions:
+      - name: base
+        version: 206b61a8616bc93d36d6a014e5cc8edf1ba256ae
+  - rc_name: rc--2025-09-19_10-17
+    versions:
+      - name: base
+        version: bf0d4d1b8cb6c0c19a5afa1454ada014847aa5c6
   - rc_name: rc--2025-09-11_03-15
     versions:
       - name: base

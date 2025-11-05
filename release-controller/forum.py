@@ -1,9 +1,11 @@
+import difflib
 import logging
 import os
-from typing import cast, Callable, TypedDict, Protocol
+from typing import cast, Callable, TypedDict, Protocol, ParamSpec
 
 from dotenv import load_dotenv
 from pydiscourse import DiscourseClient
+from cached_discourse import CachedDiscourse
 from release_index import Release, Version
 from util import version_name
 import reconciler_state
@@ -11,7 +13,19 @@ from const import OsKind, GUESTOS, HOSTOS
 
 LOGGER = logging.getLogger(__name__)
 
+P = ParamSpec("P")
 
+
+def trim_end_whitespace(f: Callable[P, str]) -> Callable[P, str]:
+    """Make any function that returns string strip the end whitespace of its return value."""
+
+    def inner(*args: P.args, **kwargs: P.kwargs) -> str:
+        return f(*args, **kwargs).rstrip()
+
+    return inner
+
+
+@trim_end_whitespace
 def _post_template(
     changelog: str | None,
     version_name: str,
@@ -20,8 +34,23 @@ def _post_template(
     | reconciler_state.DREMalfunction
     | reconciler_state.SubmittedProposal,
 ) -> str:
+    """
+    Produces a release post for Discourse based on the inputs.
+
+    To developers, an **important** note:
+
+    Always make sure that the value returned by this post does not have any
+    ending carriage returns.  Otherwise release controller always attempts
+    to update posts spuriously on startup, since Discourse eats up carriage
+    returns at the end of the post.
+
+    Thus we have a decorator to ensure this.
+    """
     if isinstance(proposal, reconciler_state.NoProposal):
-        return f"We're preparing [a new IC release](https://github.com/dfinity/ic/tree/{version_name}). The changelog will be announced soon."
+        ret = f"We're preparing [a new IC release](https://github.com/dfinity/ic/tree/{version_name})."
+        if changelog:
+            ret += f"\n\nThe following is a **draft** of the list of changes since the last {os_kind} release:\n\n{changelog}"
+        return ret
 
     elif isinstance(proposal, reconciler_state.DREMalfunction):
         return (
@@ -38,8 +67,7 @@ The NNS proposal is here: [IC NNS Proposal {proposal.proposal_id}](https://dashb
 
 Here is a summary of the changes since the last {os_kind} release:
 
-{changelog}
-"""
+{changelog}"""
 
 
 class ReleaseCandidateForumPost:
@@ -59,7 +87,7 @@ class ReleaseCandidateForumPost:
         self.version_name = version_name
         self.changelog = changelog
         self.proposal = proposal
-        self.os_kind = os_kind
+        self.os_kind: OsKind = os_kind
         self.security_fix = security_fix
 
 
@@ -103,12 +131,12 @@ class ReleaseCandidateForumTopic:
         self._logger = LOGGER.getChild(self.__class__.__name__)
         self.posts_count = 1
         self.release = release
-        self.client = client
+        self.client = CachedDiscourse(client)
         self.nns_proposal_discussions_category_id = nns_proposal_discussions_category_id
         topic = next(
             (
                 t
-                for t in client.topics_by(self.client.api_username)  # type: ignore[no-untyped-call]
+                for t in self.client.topics_by(self.client.api_username)
                 if self.release.rc_name in t.get("title", "")
             ),
             None,
@@ -133,10 +161,9 @@ class ReleaseCandidateForumTopic:
         results = [
             post
             for page in range((self.posts_count - 1) // 20 + 1)
-            for post in cast(
-                Topic,
-                self.client._get(f"/t/{self.topic_id}.json", page=page + 1),  # type: ignore[no-untyped-call]
-            )["post_stream"]["posts"]
+            for post in self.client.topic_page(self.topic_id, page)["post_stream"][
+                "posts"
+            ]
             if post["yours"]
         ]
         if not results:
@@ -184,18 +211,84 @@ class ReleaseCandidateForumTopic:
                     proposal=p.proposal,
                     os_kind=p.os_kind,
                 )
-                post = cast(Post, self.client.post_by_id(post_id))  # type: ignore
-                if post["raw"] == content_expected:
+                # Reuse the already-fetched post from the cache
+                post = created_posts[i]
+                old = post["raw"].rstrip()
+                new = content_expected.rstrip()
+                if old == new:
                     # log the complete URL of the post
                     self._logger.debug("Post up to date: %s.", self.post_to_url(post))
                     continue
-                elif post["can_edit"]:
-                    self._logger.info("Updating post %s.", post_id)
-                    self.client.update_post(post_id=post_id, content=content_expected)  # type: ignore
                 else:
-                    self._logger.warning("Post %s is not editable.  Ignoring.", post_id)
+                    self._logger.info(
+                        "Post %s differs (URL: %s):", post_id, self.post_to_url(post)
+                    )
+                    difference = difflib.unified_diff(
+                        old.splitlines(True), new.splitlines(True)
+                    )
+                    self._logger.info("  📝 DIFF:\n%s", "".join(difference))
+                    if post["can_edit"]:
+                        self._logger.info(
+                            "Post %s updating => URL %s",
+                            post_id,
+                            self.post_to_url(post),
+                        )
+                        try:
+                            self.client.update_post(
+                                post_id=post_id, content=content_expected
+                            )
+                            # Ensure there is ALWAYS a log when an update occurs
+                            self._logger.info(
+                                "Post %s updated => URL %s",
+                                post_id,
+                                self.post_to_url(post),
+                            )
+                            self.client.invalidate_topic(self.topic_id)
+                        except Exception:
+                            # Log full content and actionable recovery steps for operators
+                            url = self.post_to_url(post)
+                            self._logger.exception(
+                                "Post %s update FAILED => URL %s", post_id, url
+                            )
+                            self._logger.error(
+                                "MANUAL ACTION REQUIRED: Update the forum post content to proceed.\n"
+                                "Step 1: Open the post URL: %s\n"
+                                "Step 2: Click the ... at the bottom right of the post to open the edit (pencil) icon. Click the Markdown icon far left.\n"
+                                "Step 3: Replace the entire content with the NEW CONTENT below.\n"
+                                "Step 4: Save the post. The reconciler will detect the change on the next run.\n"
+                                "NEW CONTENT START\n%s\nNEW CONTENT END",
+                                url,
+                                content_expected,
+                            )
+                            # Do not abort the entire reconcile cycle:
+                            # proceed to next post and allow other work to continue.
+                            self._logger.warning(
+                                "Proceeding without automatic update for post %s due to earlier error; manual action required.",
+                                post_id,
+                            )
+                            self.client.invalidate_topic(self.topic_id)
+                            raise
+                    else:
+                        self._logger.warning(
+                            "Post %s NOT editable. Skipping update => URL %s",
+                            post_id,
+                            self.post_to_url(post),
+                        )
+                        # Provide manual recovery instructions with full content
+                        self._logger.warning(
+                            "MANUAL ACTION REQUIRED: You do not have permission to edit this post automatically. "
+                            "Please update it manually to proceed.\n"
+                            "Step 1: Open the post URL: %s\n"
+                            "Step 2: Click the ... at the bottom right of the post to open the edit (pencil) icon. Click the Markdown icon far left.\n"
+                            "Step 3: Replace the entire content with the NEW CONTENT below.\n"
+                            "Step 4: Save the post. The reconciler will detect the change on the next run.\n"
+                            "NEW CONTENT START\n%s\nNEW CONTENT END",
+                            self.post_to_url(post),
+                            content_expected,
+                        )
             else:
-                self.client.create_post(  # type: ignore
+                self._logger.debug("Creating new post.")
+                self.client.create_post(
                     topic_id=self.topic_id,
                     content=_post_template(
                         version_name=p.version_name,
@@ -210,7 +303,7 @@ class ReleaseCandidateForumTopic:
         post_index = [
             i for i, v in enumerate(self.release.versions) if v.version == version
         ][0]
-        post = self.client.post_by_id(post_id=self.created_posts()[post_index]["id"])  # type: ignore[no-untyped-call]
+        post = self.client.post_by_id(post_id=self.created_posts()[post_index]["id"])
         if not post:
             raise RuntimeError("failed to find post")
         return self.post_to_url(post)
@@ -222,7 +315,7 @@ class ReleaseCandidateForumTopic:
 
     def add_version(self, content: str) -> None:
         """Add a new version to the topic."""
-        self.client.create_post(  # type: ignore[no-untyped-call]
+        self.client.create_post(
             topic_id=self.topic_id,
             content=content,
         )
@@ -248,13 +341,13 @@ class ReleaseCandidateForumClient:
                 "id"
             ]
         else:
-            self.nns_proposal_discussions_category_id = self.discourse_client.category(
+            self.nns_proposal_discussions_category_id = self.discourse_client.category(  # type: ignore[no-untyped-call]
                 76
-            )[  # type: ignore[no-untyped-call]
+            )[
                 "category"
-            ][  # hardcoded category id, seems like "include_subcategories" is not working
+            ][
                 "id"
-            ]
+            ]  # hardcoded category id, seems like "include_subcategories" is not working
 
     def get_or_create(self, release: Release) -> ReleaseCandidateForumTopic:
         """Get or create a forum topic for the given release."""

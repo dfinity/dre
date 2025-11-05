@@ -1,6 +1,6 @@
 use super::*;
-use decentralization::network::{DecentralizedSubnet, SubnetChange};
 use decentralization::SubnetChangeResponse;
+use decentralization::network::{DecentralizedSubnet, SubnetChange};
 use ic_base_types::PrincipalId;
 use serde::{Deserialize, Serialize};
 

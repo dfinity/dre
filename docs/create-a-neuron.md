@@ -4,7 +4,7 @@ Follow these steps to create a new neuron for proposal submission.
 
 ## Requirements
 
-- 11 ICP (10 of which are to be staked for the NNS proposal deposit)
+- 26 ICP (25 of which are to be staked for the NNS proposal deposit)
 - Basic understanding of [neurons, staking, and governance proposals](https://internetcomputer.org/docs/current/tokenomics/nns/nns-staking-voting-rewards).
 - Optional [Hardware wallet](https://www.ledger.com/)
 
