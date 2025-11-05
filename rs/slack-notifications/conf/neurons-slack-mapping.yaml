@@ -19,8 +19,8 @@
   slack_id: U0245CNF536 # Luka Skugor
 - neuron_id: 40
   slack_id: URT5Z7VDZ # Sasa Tomic
-- neuron_id: 41
-  slack_id: U014KGJDY56 # Samuel Burri
+# - neuron_id: 41
+#  slack_id: 
 # - neuron_id: 42
 #   slack_id:
 - neuron_id: 43
@@ -57,8 +57,8 @@
   slack_id: U047B65SPB3 # Nikola Milosavljevic
 - neuron_id: 59
   slack_id: U02TEQHKV35 # Llorenç Muntaner Perello
-- neuron_id: 60
-  slack_id: U08NXN03H19 # Shah Javidi
+# - neuron_id: 60
+#  slack_id: 
 # - neuron_id: 61
 #  slack_id: 
 - neuron_id: 62
