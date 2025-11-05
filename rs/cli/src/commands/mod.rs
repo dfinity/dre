@@ -8,6 +8,7 @@ pub mod main_command;
 pub(crate) mod network;
 pub(crate) mod neuron;
 pub(crate) mod node_metrics;
+pub(crate) mod node_rewards;
 pub(crate) mod nodes;
 pub(crate) mod proposals;
 pub(crate) mod propose;

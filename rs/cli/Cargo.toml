@@ -26,6 +26,8 @@ clap-num = { workspace = true }
 colored = { workspace = true }
 comfy-table = { workspace = true }
 cycles-minting-canister = { workspace = true }
+csv = { workspace = true }
+csv_to_table = { workspace = true }
 decentralization = { workspace = true }
 dialoguer = { workspace = true }
 dirs = { workspace = true }
@@ -44,8 +46,11 @@ ic-canisters = { workspace = true }
 ic-icrc1-test-utils.workspace = true
 ic-management-backend = { workspace = true }
 ic-management-types = { workspace = true }
+ic-node-rewards-canister-api = { workspace = true }
 ic-nervous-system-clients = { workspace = true }
+ic-nervous-system-proto = { workspace = true }
 ic-nervous-system-root = { workspace = true }
+rust_decimal = { workspace = true }
 ic-nns-common = { workspace = true }
 ic-nns-constants = { workspace = true }
 ic-nns-governance = { workspace = true }
