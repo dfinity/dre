@@ -91,7 +91,7 @@ impl NodeRewards {
         let mut underperforming_nodes = Vec::new();
         for (_, rewards) in daily_rewards {
             for node_result in &rewards.daily_nodes_rewards {
-                let multiplier = node_result.performance_multiplier_percent.unwrap_or(1.0);
+                let multiplier = node_result.performance_multiplier.unwrap_or(1.0);
                 if multiplier < 1.0 {
                     let node_id_str = node_result.node_id.unwrap().to_string();
                     let node_prefix = node_id_str.split('-').next().unwrap_or(&node_id_str).to_string();
@@ -262,7 +262,7 @@ async fn fetch_and_aggregate(
                     rewards.push((day, provider_rewards));
                 }
                 // Collect subnets failure rates
-                for (subnet_id, failure_rate) in daily_results.subnets_fr {
+                for (subnet_id, failure_rate) in daily_results.subnets_failure_rate {
                     subnets_fr_data.push((day, subnet_id.to_string(), failure_rate));
                 }
             }
@@ -384,7 +384,7 @@ impl NodeRewards {
                     .iter()
                     .filter(|node_result| {
                         matches!(
-                            node_result.daily_node_fr,
+                            node_result.daily_node_failure_rate,
                             Some(ic_node_rewards_canister_api::provider_rewards_calculation::DailyNodeFailureRate::SubnetMember { .. })
                         )
                     })
@@ -393,7 +393,7 @@ impl NodeRewards {
                 let mut underperf_prefixes: Vec<String> = rewards
                     .daily_nodes_rewards
                     .iter()
-                    .filter(|node_result| node_result.performance_multiplier_percent.unwrap_or(1.0) < 1.0)
+                    .filter(|node_result| node_result.performance_multiplier.unwrap_or(1.0) < 1.0)
                     .map(|node_result| {
                         let node_id_str = node_result.node_id.unwrap().to_string();
                         node_id_str.split('-').next().unwrap_or(&node_id_str).to_string()

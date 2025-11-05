@@ -215,7 +215,7 @@ ic-stable-structures = "0.6.9"
 dfn_core = { git = "https://github.com/dfinity/ic.git", rev = "ebed5d4228b71477738316ae3d5274672eae369e" }
 rewards-calculation = { git = "https://github.com/dfinity/ic.git", rev = "47a847466979332fe642e43e837bd6c10d2d0f3b" }
 node-provider-rewards-api = { path = "rs/dre-canisters/node-provider-rewards/canister/api" }
-ic-node-rewards-canister-api = { git = "https://github.com/dfinity/ic.git", rev = "82120869afaca1dee5da0c92c3ca871c451d7dfa" }
+ic-node-rewards-canister-api = { git = "https://github.com/dfinity/ic.git", rev = "79292fb8de8d3a92c56fb928c8bc944fc3660b71" }
 
 # dre-airflow deps, should be replaced with dre-airflow once
 indexmap = { version = "2.11.1", features = ["serde"] }

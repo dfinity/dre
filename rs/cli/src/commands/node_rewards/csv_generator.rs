@@ -125,7 +125,7 @@ pub trait CsvGenerator {
                     &base_reward_type3.region.as_ref().unwrap_or(&String::new()),
                     &base_reward_type3.nodes_count.unwrap_or(0).to_string(),
                     &base_reward_type3.avg_rewards_xdr_permyriad.unwrap_or(0).to_string(),
-                    &base_reward_type3.avg_coefficient_percent.unwrap_or(0.0).to_string(),
+                    &base_reward_type3.avg_coefficient.unwrap_or(0.0).to_string(),
                 ])
                 .unwrap();
             }
@@ -183,13 +183,13 @@ pub trait CsvGenerator {
             let assigned_count = rewards
                 .daily_nodes_rewards
                 .iter()
-                .filter(|node_result| matches!(node_result.daily_node_fr, Some(DailyNodeFailureRate::SubnetMember { .. })))
+                .filter(|node_result| matches!(node_result.daily_node_failure_rate, Some(DailyNodeFailureRate::SubnetMember { .. })))
                 .count();
 
             let mut underperf_prefixes: Vec<String> = rewards
                 .daily_nodes_rewards
                 .iter()
-                .filter(|node_result| node_result.performance_multiplier_percent.unwrap_or(1.0) < 1.0)
+                .filter(|node_result| node_result.performance_multiplier.unwrap_or(1.0) < 1.0)
                 .map(|node_result| {
                     let node_id_str = node_result.node_id.unwrap().to_string();
                     node_id_str.split('-').next().unwrap_or(&node_id_str).to_string()
@@ -288,18 +288,18 @@ pub trait CsvGenerator {
                     original_fr,
                     relative_fr,
                     extrapolated_fr,
-                ) = match &node_result.daily_node_fr {
+                ) = match &node_result.daily_node_failure_rate {
                     Some(DailyNodeFailureRate::SubnetMember { node_metrics: Some(m) }) => (
                         "Assigned".to_string(),
                         m.subnet_assigned.map(|s| s.to_string()).unwrap_or_default(),
-                        m.subnet_assigned_fr_percent.map(|f| f.to_string()).unwrap_or_default(),
+                        m.subnet_assigned_failure_rate.map(|f| f.to_string()).unwrap_or_default(),
                         m.num_blocks_proposed.map(|n| n.to_string()).unwrap_or_default(),
                         m.num_blocks_failed.map(|n| n.to_string()).unwrap_or_default(),
-                        m.original_fr_percent.map(|f| f.to_string()).unwrap_or_default(),
-                        m.relative_fr_percent.map(|f| f.to_string()).unwrap_or_default(),
+                        m.original_failure_rate.map(|f| f.to_string()).unwrap_or_default(),
+                        m.relative_failure_rate.map(|f| f.to_string()).unwrap_or_default(),
                         String::new(),
                     ),
-                    Some(DailyNodeFailureRate::NonSubnetMember { extrapolated_fr_percent }) => (
+                    Some(DailyNodeFailureRate::NonSubnetMember { extrapolated_failure_rate }) => (
                         "Unassigned".to_string(),
                         String::new(),
                         String::new(),
@@ -307,7 +307,7 @@ pub trait CsvGenerator {
                         String::new(),
                         String::new(),
                         String::new(),
-                        extrapolated_fr_percent.map(|f| f.to_string()).unwrap_or_default(),
+                        extrapolated_failure_rate.map(|f| f.to_string()).unwrap_or_default(),
                     ),
                     _ => (
                         "Unknown".to_string(),
@@ -330,8 +330,8 @@ pub trait CsvGenerator {
                         &node_result.region.as_ref().unwrap_or(&String::new()),
                         &node_result.dc_id.as_ref().unwrap_or(&String::new()),
                         &status_str,
-                        &node_result.performance_multiplier_percent.unwrap_or(0.0).to_string(),
-                        &node_result.rewards_reduction_percent.unwrap_or(0.0).to_string(),
+                        &node_result.performance_multiplier.unwrap_or(0.0).to_string(),
+                        &node_result.rewards_reduction.unwrap_or(0.0).to_string(),
                         &node_result.base_rewards_xdr_permyriad.unwrap_or(0).to_string(),
                         &node_result.adjusted_rewards_xdr_permyriad.unwrap_or(0).to_string(),
                         &subnet_assigned,
@@ -354,8 +354,8 @@ pub trait CsvGenerator {
                         node_result.region.as_ref().unwrap_or(&String::new()).to_string(),
                         node_result.dc_id.as_ref().unwrap_or(&String::new()).to_string(),
                         status_str,
-                        node_result.performance_multiplier_percent.unwrap_or(0.0).to_string(),
-                        node_result.rewards_reduction_percent.unwrap_or(0.0).to_string(),
+                        node_result.performance_multiplier.unwrap_or(0.0).to_string(),
+                        node_result.rewards_reduction.unwrap_or(0.0).to_string(),
                         node_result.base_rewards_xdr_permyriad.unwrap_or(0).to_string(),
                         node_result.adjusted_rewards_xdr_permyriad.unwrap_or(0).to_string(),
                         subnet_assigned,
