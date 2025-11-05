@@ -1,5 +1,5 @@
 use super::{fetch_and_aggregate, DateUtc, NodeRewards, ProviderData};
-use chrono::{DateTime, Datelike, Days};
+use chrono::{DateTime, Datelike};
 use ic_canisters::governance::GovernanceCanisterWrapper;
 use ic_canisters::node_rewards::NodeRewardsCanisterWrapper;
 
@@ -7,7 +7,7 @@ pub async fn run(
     canister_agent: ic_canisters::IcAgentCanisterClient,
     cmd: &NodeRewards,
     month: &str,
-) -> anyhow::Result<(Vec<ProviderData>, Vec<(DateUtc, String, f64)>)> {
+) -> anyhow::Result<(chrono::NaiveDate, chrono::NaiveDate, Vec<ProviderData>, Vec<(DateUtc, String, f64)>)> {
     let node_rewards_client: NodeRewardsCanisterWrapper = canister_agent.clone().into();
     let governance_client: GovernanceCanisterWrapper = canister_agent.into();
 
@@ -32,7 +32,7 @@ pub async fn run(
     let end_day = DateTime::from_timestamp(last.timestamp as i64, 0)
         .unwrap()
         .date_naive()
-        .checked_sub_days(Days::new(1))
+        .pred_opt()
         .unwrap();
 
     let gov_map = last
@@ -43,10 +43,11 @@ pub async fn run(
         .collect();
     let xdr_permyriad_per_icp: u64 = last.xdr_conversion_rate.clone().unwrap().xdr_permyriad_per_icp.unwrap();
 
-    let (provider_data, subnets_fr) = fetch_and_aggregate(&node_rewards_client, start_day, end_day, xdr_permyriad_per_icp, gov_map, |daily| {
-        cmd.collect_underperforming_nodes(daily)
-    })
-    .await?;
+    let (start_day, end_day, provider_data, subnets_fr) =
+        fetch_and_aggregate(&node_rewards_client, start_day, end_day, xdr_permyriad_per_icp, gov_map, |daily| {
+            cmd.collect_underperforming_nodes(daily)
+        })
+        .await?;
 
-    Ok((provider_data, subnets_fr))
+    Ok((start_day, end_day, provider_data, subnets_fr))
 }

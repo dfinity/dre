@@ -24,6 +24,7 @@ nav:
       - "Creating a Neuron": create-a-neuron.md
       - "NNS Proposals": nns-proposals.md
       - "Submitting Motion Proposals": nns-motion-proposals.md
+      - "Node Rewards": node-rewards.md
       - "Running Qualification": qualification/running-qualification.md
       - "Release Controller": release.md
       - "Being a DRE": be-dr-dre.md

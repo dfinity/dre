@@ -6,7 +6,7 @@ use ic_canisters::node_rewards::NodeRewardsCanisterWrapper;
 pub async fn run(
     canister_agent: ic_canisters::IcAgentCanisterClient,
     cmd: &NodeRewards,
-) -> anyhow::Result<(Vec<ProviderData>, Vec<(DateUtc, String, f64)>)> {
+) -> anyhow::Result<(chrono::NaiveDate, chrono::NaiveDate, Vec<ProviderData>, Vec<(DateUtc, String, f64)>)> {
     let node_rewards_client: NodeRewardsCanisterWrapper = canister_agent.clone().into();
     let governance_client: GovernanceCanisterWrapper = canister_agent.into();
 
@@ -15,7 +15,7 @@ pub async fn run(
 
     // Range: from latest governance ts to yesterday
     let today = chrono::Utc::now().date_naive();
-    let yesterday = today.pred_opt().ok_or_else(|| anyhow::anyhow!("Cannot compute yesterday"))?;
+    let yesterday = today.pred_opt().unwrap();
     let end_ts = yesterday
         .and_hms_opt(0, 0, 0)
         .ok_or_else(|| anyhow::anyhow!("Invalid yesterday midnight"))?
