@@ -54,7 +54,7 @@ pub trait CsvGenerator {
         let filename = format!("{}/base_rewards.csv", output_dir);
 
         let mut wtr = Writer::from_path(&filename).unwrap();
-        wtr.write_record(&["day_utc", "monthly_xdr_permyriad", "daily_xdr_permyriad", "node_reward_type", "region"])
+        wtr.write_record(["day_utc", "monthly_xdr_permyriad", "daily_xdr_permyriad", "node_reward_type", "region"])
             .unwrap();
 
         for (day, rewards) in daily_rewards {
@@ -64,8 +64,8 @@ pub trait CsvGenerator {
                     &day_str,
                     &base_reward.monthly_xdr_permyriad.unwrap().to_string(),
                     &base_reward.daily_xdr_permyriad.unwrap().to_string(),
-                    &base_reward.node_reward_type.as_ref().unwrap(),
-                    &base_reward.region.as_ref().unwrap(),
+                    base_reward.node_reward_type.as_ref().unwrap(),
+                    base_reward.region.as_ref().unwrap(),
                 ])
                 .unwrap();
             }
@@ -80,7 +80,7 @@ pub trait CsvGenerator {
         let filename = format!("{}/base_rewards_type3.csv", output_dir);
 
         let mut wtr = Writer::from_path(&filename).unwrap();
-        wtr.write_record(&[
+        wtr.write_record([
             "day_utc",
             "value_xdr_permyriad",
             "region",
@@ -93,10 +93,10 @@ pub trait CsvGenerator {
         for (day, rewards) in daily_rewards {
             let day_str = Self::format_date_utc(*day);
             for base_reward_type3 in &rewards.base_rewards_type3 {
-                wtr.write_record(&[
+                wtr.write_record([
                     &day_str,
                     &base_reward_type3.daily_xdr_permyriad.unwrap().to_string(),
-                    &base_reward_type3.region.as_ref().unwrap(),
+                    base_reward_type3.region.as_ref().unwrap(),
                     &base_reward_type3.nodes_count.unwrap().to_string(),
                     &base_reward_type3.avg_rewards_xdr_permyriad.unwrap().to_string(),
                     &base_reward_type3.avg_coefficient.unwrap().to_string(),
@@ -114,7 +114,7 @@ pub trait CsvGenerator {
         let filename = format!("{}/rewards_summary.csv", output_dir);
 
         let mut wtr = Writer::from_path(&filename).unwrap();
-        wtr.write_record(&[
+        wtr.write_record([
             "day_utc",
             "base_rewards_total",
             "adjusted_rewards_total",
@@ -170,7 +170,7 @@ pub trait CsvGenerator {
             let underperforming_nodes_count = underperf_prefixes.len();
             let underperforming_nodes = underperf_prefixes.join(", ");
 
-            wtr.write_record(&[
+            wtr.write_record([
                 &day_str,
                 &base_rewards_total.to_string(),
                 &adjusted_rewards_total.to_string(),
@@ -201,7 +201,7 @@ pub trait CsvGenerator {
         // Headers
         // By day: day first
         wtr_day
-            .write_record(&[
+            .write_record([
                 "day_utc",
                 "node_id",
                 "node_reward_type",
@@ -224,7 +224,7 @@ pub trait CsvGenerator {
 
         // By node: node first
         wtr_node
-            .write_record(&[
+            .write_record([
                 "node_id",
                 "day_utc",
                 "node_reward_type",
@@ -293,12 +293,12 @@ pub trait CsvGenerator {
 
                 // Row for by-day
                 wtr_day
-                    .write_record(&[
+                    .write_record([
                         &day_str,
                         &node_result.node_id.map(|id| id.to_string()).unwrap_or_default(),
-                        &node_result.node_reward_type.as_ref().unwrap(),
-                        &node_result.region.as_ref().unwrap(),
-                        &node_result.dc_id.as_ref().unwrap(),
+                        node_result.node_reward_type.as_ref().unwrap(),
+                        node_result.region.as_ref().unwrap(),
+                        node_result.dc_id.as_ref().unwrap(),
                         &status_str,
                         &node_result.performance_multiplier.unwrap().to_string(),
                         &node_result.rewards_reduction.unwrap().to_string(),
@@ -317,7 +317,7 @@ pub trait CsvGenerator {
                 // Collect row for by-node (omit node_id here, we'll prepend it when writing)
                 by_node
                     .entry(node_result.node_id.map(|id| id.to_string()).unwrap_or_default())
-                    .or_insert_with(Vec::new)
+                    .or_default()
                     .push(vec![
                         day_str.clone(),
                         node_result.node_reward_type.as_ref().unwrap().to_string(),
@@ -359,7 +359,7 @@ pub trait CsvGenerator {
         let filename = format!("{}/subnets_failure_rates.csv", output_dir);
         let mut wtr = Writer::from_path(&filename).unwrap();
 
-        wtr.write_record(&["subnet_id", "day_utc", "failure_rate"]).unwrap();
+        wtr.write_record(["subnet_id", "day_utc", "failure_rate"]).unwrap();
 
         // Sort by subnet_id first, then by day_utc
         let mut sorted_data: Vec<_> = subnets_fr_data.iter().collect();
@@ -374,7 +374,7 @@ pub trait CsvGenerator {
 
         for (day, subnet_id, fr) in sorted_data {
             let day_str = Self::format_date_utc(*day);
-            wtr.write_record(&[subnet_id, &day_str, &fr.to_string()]).unwrap();
+            wtr.write_record([subnet_id, &day_str, &fr.to_string()]).unwrap();
         }
 
         wtr.flush().unwrap();
