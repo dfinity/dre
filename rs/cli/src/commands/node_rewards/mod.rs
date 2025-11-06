@@ -11,7 +11,7 @@ use log::info;
 use std::collections::BTreeMap;
 use tabled::{
     Table, Tabled,
-    settings::{Alignment, Modify, Style, Width, object::Rows},
+    settings::{Alignment, Merge, Modify, Style, Width, object::Rows},
 };
 
 mod csv_generator;
@@ -158,7 +158,8 @@ impl NodeRewards {
         table
             .with(Style::modern())
             .with(Modify::new(Rows::new(0..1)).with(Alignment::center()))
-            .with(Width::wrap(120).keep_words(true));
+            .with(Width::wrap(120).keep_words(true))
+            .with(Merge::vertical());
 
         println!("{}", table);
 
@@ -308,7 +309,7 @@ async fn fetch_and_aggregate(
 
 impl NodeRewards {
     fn print_rewards_summary_console(&self, provider_data: &[ProviderData]) -> anyhow::Result<()> {
-        use tabled::settings::{Alignment, Modify, Style, Width, object::Rows};
+        use tabled::settings::{Alignment, Merge, Modify, Style, Width, object::Rows};
         use tabled::{Table, Tabled};
 
         #[derive(Tabled)]
@@ -422,7 +423,8 @@ impl NodeRewards {
                 .with(Style::ascii())
                 .with(Modify::new(Rows::new(0..1)).with(Alignment::center()))
                 .with(Modify::new(Rows::new(1..)).with(Alignment::left()))
-                .with(Width::wrap(250).keep_words(true));
+                .with(Width::wrap(250).keep_words(true))
+                .with(Merge::vertical());
 
             println!("{}", table);
         }
