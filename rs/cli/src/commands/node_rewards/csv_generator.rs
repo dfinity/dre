@@ -82,11 +82,11 @@ pub trait CsvGenerator {
         let mut wtr = Writer::from_path(&filename).unwrap();
         wtr.write_record([
             "day_utc",
-            "value_xdr_permyriad",
             "region",
             "nodes_count",
             "avg_rewards_xdr_permyriad",
             "avg_coefficient",
+            "daily_xdr_permyriad",
         ])
         .unwrap();
 
@@ -95,11 +95,11 @@ pub trait CsvGenerator {
             for base_reward_type3 in &rewards.base_rewards_type3 {
                 wtr.write_record([
                     &day_str,
-                    &base_reward_type3.daily_xdr_permyriad.unwrap().to_string(),
                     base_reward_type3.region.as_ref().unwrap(),
                     &base_reward_type3.nodes_count.unwrap().to_string(),
                     &base_reward_type3.avg_rewards_xdr_permyriad.unwrap().to_string(),
                     &base_reward_type3.avg_coefficient.unwrap().to_string(),
+                    &base_reward_type3.daily_xdr_permyriad.unwrap().to_string(),
                 ])
                 .unwrap();
             }
