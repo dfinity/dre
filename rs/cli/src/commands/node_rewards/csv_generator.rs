@@ -188,15 +188,19 @@ pub trait CsvGenerator {
         Ok(())
     }
 
-    /// Create node metrics CSV files: by day and by node
+    /// Create node metrics CSV files: by day, by node, and by performance_multiplier
     fn create_node_metrics_csv(&self, output_dir: &str, daily_rewards: &[(DateUtc, DailyNodeProviderRewards)]) -> Result<()> {
-        // Writers for the two views
+        // Writers for the three views
         let filename_day = format!("{}/node_metrics_by_day.csv", output_dir);
         let filename_node = format!("{}/node_metrics_by_node.csv", output_dir);
+        let filename_perf = format!("{}/node_metrics_by_performance_multiplier.csv", output_dir);
         let mut wtr_day = Writer::from_path(&filename_day).unwrap();
         let mut wtr_node = Writer::from_path(&filename_node).unwrap();
+        let mut wtr_perf = Writer::from_path(&filename_perf).unwrap();
         // Collector to group rows by node for the node-centric view
         let mut by_node: BTreeMap<String, Vec<Vec<String>>> = BTreeMap::new();
+        // Collector for performance_multiplier sorted view
+        let mut by_performance: Vec<(f64, DateUtc, Vec<String>)> = Vec::new();
 
         // Headers
         // By day: day first
@@ -226,6 +230,28 @@ pub trait CsvGenerator {
             .write_record([
                 "node_id",
                 "day_utc",
+                "node_reward_type",
+                "region",
+                "dc_id",
+                "node_status",
+                "performance_multiplier",
+                "base_rewards_xdr_permyriad",
+                "adjusted_rewards_xdr_permyriad",
+                "subnet_assigned",
+                "subnet_assigned_failure_rate",
+                "num_blocks_proposed",
+                "num_blocks_failed",
+                "original_failure_rate",
+                "relative_failure_rate",
+                "extrapolated_failure_rate",
+            ])
+            .unwrap();
+
+        // By performance_multiplier: same header as by-day
+        wtr_perf
+            .write_record([
+                "day_utc",
+                "node_id",
                 "node_reward_type",
                 "region",
                 "dc_id",
@@ -320,18 +346,40 @@ pub trait CsvGenerator {
                         node_result.node_reward_type.as_ref().unwrap().to_string(),
                         node_result.region.as_ref().unwrap().to_string(),
                         node_result.dc_id.as_ref().unwrap().to_string(),
-                        status_str,
+                        status_str.clone(),
                         node_result.performance_multiplier.unwrap().to_string(),
                         node_result.base_rewards_xdr_permyriad.unwrap().to_string(),
                         node_result.adjusted_rewards_xdr_permyriad.unwrap().to_string(),
-                        subnet_assigned,
-                        subnet_assigned_fr,
-                        num_blocks_proposed,
-                        num_blocks_failed,
-                        original_fr,
-                        relative_fr,
-                        extrapolated_fr,
+                        subnet_assigned.clone(),
+                        subnet_assigned_fr.clone(),
+                        num_blocks_proposed.clone(),
+                        num_blocks_failed.clone(),
+                        original_fr.clone(),
+                        relative_fr.clone(),
+                        extrapolated_fr.clone(),
                     ]);
+
+                // Collect row for by-performance_multiplier (same format as by-day)
+                let performance_multiplier = node_result.performance_multiplier.unwrap();
+                let perf_row = vec![
+                    day_str.clone(),
+                    node_result.node_id.map(|id| id.to_string()).unwrap_or_default(),
+                    node_result.node_reward_type.as_ref().unwrap().to_string(),
+                    node_result.region.as_ref().unwrap().to_string(),
+                    node_result.dc_id.as_ref().unwrap().to_string(),
+                    status_str.clone(),
+                    performance_multiplier.to_string(),
+                    node_result.base_rewards_xdr_permyriad.unwrap().to_string(),
+                    node_result.adjusted_rewards_xdr_permyriad.unwrap().to_string(),
+                    subnet_assigned.clone(),
+                    subnet_assigned_fr.clone(),
+                    num_blocks_proposed.clone(),
+                    num_blocks_failed.clone(),
+                    original_fr.clone(),
+                    relative_fr.clone(),
+                    extrapolated_fr.clone(),
+                ];
+                by_performance.push((performance_multiplier, *day, perf_row));
             }
         }
 
@@ -345,8 +393,24 @@ pub trait CsvGenerator {
             }
         }
 
+        // Sort by performance_multiplier ascending, then by day
+        by_performance.sort_by(|a, b| {
+            let perf_cmp = a.0.partial_cmp(&b.0).unwrap_or(std::cmp::Ordering::Equal);
+            if perf_cmp == std::cmp::Ordering::Equal {
+                a.1.cmp(&b.1)
+            } else {
+                perf_cmp
+            }
+        });
+
+        // Write sorted-by-performance rows
+        for (_, _, row) in by_performance {
+            wtr_perf.write_record(row).unwrap();
+        }
+
         wtr_day.flush().unwrap();
         wtr_node.flush().unwrap();
+        wtr_perf.flush().unwrap();
         Ok(())
     }
 
