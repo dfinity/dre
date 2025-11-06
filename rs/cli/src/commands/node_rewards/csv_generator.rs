@@ -6,6 +6,8 @@ use ic_node_rewards_canister_api::DateUtc;
 use ic_node_rewards_canister_api::provider_rewards_calculation::{DailyNodeFailureRate, DailyNodeProviderRewards};
 use log::info;
 use std::{collections::BTreeMap, fs};
+use ic_management_types::Provider;
+use crate::commands::node_rewards::{ProviderRewards, SubnetFailureRates};
 
 /// Trait for generating CSV files from node rewards data
 pub trait CsvGenerator {
@@ -18,9 +20,9 @@ pub trait CsvGenerator {
     /// Generate CSV files split by provider
     async fn generate_csv_files_by_provider(
         &self,
-        provider_data: &[(PrincipalId, Vec<(DateUtc, DailyNodeProviderRewards)>)],
+        provider_data: &[ProviderRewards],
         output_dir: &str,
-        subnets_fr_data: &[(DateUtc, String, f64)],
+        subnets_fr_data: &[SubnetFailureRates],
         start_day: NaiveDate,
         end_day: NaiveDate,
     ) -> Result<()> {

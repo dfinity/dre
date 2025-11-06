@@ -1,4 +1,4 @@
-use super::{DateUtc, NodeRewards, ProviderData, fetch_and_aggregate};
+use super::{DateUtc, NodeRewards, ProviderRewards, fetch_and_aggregate};
 use chrono::DateTime;
 use ic_canisters::governance::GovernanceCanisterWrapper;
 use ic_canisters::node_rewards::NodeRewardsCanisterWrapper;
@@ -6,7 +6,7 @@ use ic_canisters::node_rewards::NodeRewardsCanisterWrapper;
 pub async fn run(
     canister_agent: ic_canisters::IcAgentCanisterClient,
     cmd: &NodeRewards,
-) -> anyhow::Result<(chrono::NaiveDate, chrono::NaiveDate, Vec<ProviderData>, Vec<(DateUtc, String, f64)>)> {
+) -> anyhow::Result<(chrono::NaiveDate, chrono::NaiveDate, Vec<ProviderRewards>, Vec<(DateUtc, String, f64)>)> {
     let node_rewards_client: NodeRewardsCanisterWrapper = canister_agent.clone().into();
     let governance_client: GovernanceCanisterWrapper = canister_agent.into();
 
