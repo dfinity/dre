@@ -253,8 +253,6 @@ impl PublicDashboardHealthClient {
                 }
             };
 
-            let status = if node_dc == "mn2" { HealthStatus::Healthy } else { status };
-
             // Apply overrides by dc_id or node id
             let status = if overrides.is_empty() {
                 status
