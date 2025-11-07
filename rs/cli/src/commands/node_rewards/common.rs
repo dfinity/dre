@@ -1,29 +1,32 @@
-use crate::commands::node_rewards::{ProviderRewards, SubnetFailureRates};
-use anyhow::Result;
 use chrono::NaiveDate;
 use csv::Writer;
 use futures_util::future::join_all;
 use ic_base_types::{PrincipalId, SubnetId};
 use ic_canisters::node_rewards::NodeRewardsCanisterWrapper;
-use ic_node_rewards_canister_api::provider_rewards_calculation::{DailyNodeFailureRate, DailyNodeProviderRewards, DailyResults};
 use ic_node_rewards_canister_api::DateUtc;
+use ic_node_rewards_canister_api::provider_rewards_calculation::{DailyNodeFailureRate, DailyNodeProviderRewards, DailyResults};
 use itertools::Itertools;
 use log::info;
 use std::{collections::BTreeMap, fs};
 use tabled::Tabled;
+
 pub struct ProviderRewards {
-    provider_id: PrincipalId,
-    nrc_total_xdr_permyriad: u64,
-    daily_rewards: Vec<(DateUtc, DailyNodeProviderRewards)>,
+    pub provider_id: PrincipalId,
+    pub nrc_total_xdr_permyriad: u64,
+    pub daily_rewards: Vec<(DateUtc, DailyNodeProviderRewards)>,
 }
 
 pub struct SubnetFailureRates {
-    subnet_id: SubnetId,
-    daily_failure_rates: Vec<(DateUtc, f64)>,
+    pub subnet_id: SubnetId,
+    pub daily_failure_rates: Vec<(DateUtc, f64)>,
 }
 
 /// Trait for generating CSV files from node rewards data
 pub trait NodeRewardsCommand {
+    /// Get provider prefix from full principal ID string
+    fn get_provider_prefix(provider_id_str: &str) -> &str {
+        provider_id_str.split('-').next().unwrap_or(provider_id_str)
+    }
     /// Collect underperforming nodes for a provider
     fn collect_underperforming_nodes(&self, daily_rewards: &[(DateUtc, DailyNodeProviderRewards)]) -> Vec<String> {
         let mut underperforming_nodes = Vec::new();
@@ -64,14 +67,14 @@ pub trait NodeRewardsCommand {
                         providers_rewards
                             .entry(provider_id)
                             .and_modify(|results| results.push((day, provider_rewards)))
-                            .or_insert_with(Vec::new);
+                            .or_default();
                     }
 
                     for (subnet_id, failure_rate) in daily_results.subnets_failure_rate {
                         subnets_failure_rates
                             .entry(subnet_id)
                             .and_modify(|failure_rates| failure_rates.push((day, failure_rate)))
-                            .or_insert_with(Vec::new);
+                            .or_default();
                     }
                 }
                 Err(e) => {
@@ -101,7 +104,7 @@ pub trait NodeRewardsCommand {
     }
 
     fn print_rewards_summary_console(&self, provider_data: &[ProviderRewards]) -> anyhow::Result<()> {
-        use tabled::settings::{object::Rows, Alignment, Merge, Modify, Style, Width};
+        use tabled::settings::{Alignment, Merge, Modify, Style, Width, object::Rows};
         use tabled::{Table, Tabled};
 
         #[derive(Tabled)]
@@ -175,17 +178,7 @@ pub trait NodeRewardsCommand {
                     })
                     .count();
 
-                let mut underperf_prefixes: Vec<String> = rewards
-                    .daily_nodes_rewards
-                    .iter()
-                    .filter(|node_result| node_result.performance_multiplier.unwrap() < 1.0)
-                    .map(|node_result| {
-                        let node_id_str = node_result.node_id.unwrap().to_string();
-                        node_id_str.split('-').next().unwrap().to_string()
-                    })
-                    .collect();
-                underperf_prefixes.sort();
-                underperf_prefixes.dedup();
+                let underperf_prefixes = self.collect_underperforming_nodes(&[(*day, rewards.clone())]);
                 let underperforming_nodes_count = underperf_prefixes.len();
                 let underperforming_nodes = if underperf_prefixes.is_empty() {
                     "None".to_string()
@@ -247,7 +240,12 @@ pub trait NodeRewardsCommand {
         info!("Created rewards directory: {}", rewards_dir);
 
         // Generate CSV files for each provider separately
-        for ProviderRewards { provider_id, nrc_total_xdr_permyriad: _, daily_rewards } in providers_data {
+        for ProviderRewards {
+            provider_id,
+            nrc_total_xdr_permyriad: _,
+            daily_rewards,
+        } in providers_data
+        {
             let provider_dir = format!("{}/{}", rewards_dir, provider_id);
             fs::create_dir_all(&provider_dir)?;
 
@@ -268,8 +266,7 @@ pub trait NodeRewardsCommand {
         let filename = format!("{}/base_rewards.csv", output_dir);
 
         let mut wtr = Writer::from_path(&filename).unwrap();
-        wtr.write_record(["day_utc", "monthly_xdr_permyriad", "daily_xdr_permyriad", "node_reward_type", "region"])
-            .unwrap();
+        wtr.write_record(["day_utc", "monthly_xdr_permyriad", "daily_xdr_permyriad", "node_reward_type", "region"])?;
 
         for (day, rewards) in daily_rewards {
             let day_str = Self::format_date_utc(*day);
@@ -281,7 +278,7 @@ pub trait NodeRewardsCommand {
                     base_reward.node_reward_type.as_ref().unwrap(),
                     base_reward.region.as_ref().unwrap(),
                 ])
-                    .unwrap();
+                .unwrap();
             }
         }
 
@@ -337,7 +334,7 @@ pub trait NodeRewardsCommand {
             "underperforming_nodes_count",
             "underperforming_nodes",
         ])
-            .unwrap();
+        .unwrap();
 
         for (day, rewards) in daily_rewards {
             let day_str = Self::format_date_utc(*day);
@@ -393,7 +390,7 @@ pub trait NodeRewardsCommand {
                 &underperforming_nodes_count.to_string(),
                 &underperforming_nodes,
             ])
-                .unwrap();
+            .unwrap();
         }
 
         wtr.flush().unwrap();
@@ -634,8 +631,14 @@ pub trait NodeRewardsCommand {
         wtr.write_record(["subnet_id", "day_utc", "failure_rate"])?;
 
         // Sort by subnet_id first, then by day_utc
-        subnets_fr_data.iter()
-            .flat_map(|subnets_fr| subnets_fr.daily_failure_rates.iter().map(|(date, fr)| (subnets_fr.subnet_id, Self::format_date_utc(*date), *fr)))
+        subnets_fr_data
+            .iter()
+            .flat_map(|subnets_fr| {
+                subnets_fr
+                    .daily_failure_rates
+                    .iter()
+                    .map(|(date, fr)| (subnets_fr.subnet_id, Self::format_date_utc(*date), *fr))
+            })
             .sorted_by(|a, b| {
                 let subnet_cmp = a.1.cmp(&b.1);
                 if subnet_cmp == std::cmp::Ordering::Equal {

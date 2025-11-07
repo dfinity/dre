@@ -1,26 +1,8 @@
-use crate::commands::node_rewards::common::CsvGenerator;
-use crate::{auth::AuthRequirement, exe::args::GlobalArgs, exe::ExecutableCommand};
-use chrono::Datelike;
-use chrono::{DateTime, NaiveDate};
-use clap::{Args, Subcommand};
-use csv::Writer;
-use futures_util::future::join_all;
-use ic_base_types::{PrincipalId, SubnetId};
-use ic_canisters::governance::GovernanceCanisterWrapper;
-use ic_canisters::node_rewards::NodeRewardsCanisterWrapper;
-use ic_node_rewards_canister_api::provider_rewards_calculation::{DailyNodeFailureRate, DailyNodeProviderRewards, DailyResults};
-use ic_node_rewards_canister_api::DateUtc;
-use itertools::Itertools;
-use log::info;
-use std::collections::BTreeMap;
-use std::fs;
-use tabled::{
-    settings::{object::Rows, Alignment, Merge, Modify, Style, Width}, Table,
-    Tabled,
-};
-use crate::commands::node_rewards::NodeRewardsMode::Ongoing;
 use crate::commands::node_rewards::ongoing::OngoingRewardsCommand;
 use crate::commands::node_rewards::past_rewards::PastRewardsCommand;
+use crate::{auth::AuthRequirement, exe::ExecutableCommand, exe::args::GlobalArgs};
+use clap::{Args, Subcommand};
+use log::info;
 
 mod common;
 mod ongoing;
@@ -69,23 +51,17 @@ impl ExecutableCommand for NodeRewards {
         let (_, canister_agent) = ctx.create_ic_agent_canister_client().await?;
         info!("Started action...");
 
-        let node_rewards_client: NodeRewardsCanisterWrapper = canister_agent.clone().into();
-        let governance_client: GovernanceCanisterWrapper = canister_agent.into();
-
-        let mut gov_rewards_list = governance_client.list_node_provider_rewards(None).await?;
         // Run the selected subcommand
-        let (start_date, end_date, maybe_provider_filter, maybe_csv_output_path, maybe_gov_rewards_for_comparison) = match &self.mode {
+        match &self.mode {
             NodeRewardsMode::Ongoing {
                 csv_detailed_output_path,
                 provider_id,
-            } => OngoingRewardsCommand::run(canister_agent, csv_detailed_output_path, provider_id)
+            } => OngoingRewardsCommand::run(canister_agent.clone(), self, csv_detailed_output_path.as_deref(), provider_id.as_deref()).await,
             NodeRewardsMode::PastRewards {
                 month,
                 csv_detailed_output_path,
-                provider_id
-            } => PastRewardsCommand::run(canister_agent, csv_detailed_output_path, provider_id, month)
-        };
-
-        Ok(())
+                provider_id,
+            } => PastRewardsCommand::run(canister_agent.clone(), month, csv_detailed_output_path.as_deref(), provider_id.as_deref()).await,
+        }
     }
 }

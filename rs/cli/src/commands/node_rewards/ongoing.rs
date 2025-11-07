@@ -1,4 +1,4 @@
-use super::{fetch_and_aggregate, DateUtc, NodeRewards, ProviderRewards};
+use crate::commands::node_rewards::NodeRewards;
 use crate::commands::node_rewards::common::NodeRewardsCommand;
 use chrono::DateTime;
 use ic_canisters::governance::GovernanceCanisterWrapper;
@@ -7,12 +7,14 @@ use ic_canisters::node_rewards::NodeRewardsCanisterWrapper;
 pub struct OngoingRewardsCommand;
 
 impl NodeRewardsCommand for OngoingRewardsCommand {}
+
 impl OngoingRewardsCommand {
     pub async fn run(
-        &self,
         canister_agent: ic_canisters::IcAgentCanisterClient,
-        cmd: &NodeRewards,
-    ) -> anyhow::Result<(chrono::NaiveDate, chrono::NaiveDate, Vec<ProviderRewards>, Vec<(DateUtc, String, f64)>)> {
+        _cmd: &NodeRewards,
+        csv_detailed_output_path: Option<&str>,
+        provider_id: Option<&str>,
+    ) -> anyhow::Result<()> {
         let node_rewards_client: NodeRewardsCanisterWrapper = canister_agent.clone().into();
         let governance_client: GovernanceCanisterWrapper = canister_agent.into();
 
@@ -30,30 +32,25 @@ impl OngoingRewardsCommand {
         let start_day = DateTime::from_timestamp(last_rewards.timestamp as i64, 0).unwrap().date_naive();
         let end_day = DateTime::from_timestamp(end_ts, 0).unwrap().date_naive();
 
-        // Governance map and conversion
-        let gov_map = last_rewards
-            .rewards
-            .clone()
-            .into_iter()
-            .map(|r| (r.node_provider.unwrap().id.unwrap(), r.amount_e8s))
-            .collect();
-        let xdr_permyriad_per_icp: u64 = last_rewards.xdr_conversion_rate.clone().unwrap().xdr_permyriad_per_icp.unwrap();
+        let command = OngoingRewardsCommand;
+        let (mut nrc_providers_rewards, subnets_failure_rates) = command.fetch_nrc_rewards(&node_rewards_client, start_day, end_day).await?;
 
-        let (mut nrc_providers_rewards, subnets_failure_rates) = self.fetch_nrc_rewards(&node_rewards_client, start_date, end_date).await?;
-
-        if let Some(provider_filter) = maybe_provider_filter {
+        if let Some(provider_filter) = provider_id {
             nrc_providers_rewards.retain(|p| {
-                let provider_id = p.provider_id.to_string();
-                let prefix = provider_id.split('-').next().unwrap();
-                provider_id == *provider_filter || prefix == provider_filter
+                let provider_id_str = p.provider_id.to_string();
+                let prefix = OngoingRewardsCommand::get_provider_prefix(&provider_id_str);
+                provider_id_str == provider_filter || prefix == provider_filter
             });
         }
 
-        if let Some(output_path) = maybe_csv_output_path {
-            self.generate_csv_files_by_provider(&nrc_providers_rewards, &output_path, &subnets_failure_rates, start_date, end_date)
+        if let Some(output_path) = csv_detailed_output_path {
+            command
+                .generate_csv_files_by_provider(&nrc_providers_rewards, output_path, &subnets_failure_rates, start_day, end_day)
                 .await?;
         } else {
-            self.print_rewards_summary_console(&nrc_providers_rewards)?;
+            command.print_rewards_summary_console(&nrc_providers_rewards)?;
         }
+
+        Ok(())
     }
 }
