@@ -3,8 +3,8 @@ use csv::Writer;
 use futures_util::future::join_all;
 use ic_base_types::{PrincipalId, SubnetId};
 use ic_canisters::node_rewards::NodeRewardsCanisterWrapper;
-use ic_node_rewards_canister_api::DateUtc;
 use ic_node_rewards_canister_api::provider_rewards_calculation::{DailyNodeFailureRate, DailyNodeProviderRewards, DailyResults};
+use ic_node_rewards_canister_api::DateUtc;
 use itertools::Itertools;
 use log::info;
 use std::{collections::BTreeMap, fs};
@@ -66,15 +66,15 @@ pub trait NodeRewardsCommand {
                     for (provider_id, provider_rewards) in daily_results.provider_results {
                         providers_rewards
                             .entry(provider_id)
-                            .and_modify(|results| results.push((day, provider_rewards)))
-                            .or_default();
+                            .or_default()
+                            .push((day, provider_rewards));
                     }
 
                     for (subnet_id, failure_rate) in daily_results.subnets_failure_rate {
                         subnets_failure_rates
                             .entry(subnet_id)
-                            .and_modify(|failure_rates| failure_rates.push((day, failure_rate)))
-                            .or_default();
+                            .or_default()
+                            .push((day, failure_rate));
                     }
                 }
                 Err(e) => {
@@ -104,7 +104,7 @@ pub trait NodeRewardsCommand {
     }
 
     fn print_rewards_summary_console(&self, provider_data: &[ProviderRewards]) -> anyhow::Result<()> {
-        use tabled::settings::{Alignment, Merge, Modify, Style, Width, object::Rows};
+        use tabled::settings::{object::Rows, Alignment, Merge, Modify, Style, Width};
         use tabled::{Table, Tabled};
 
         #[derive(Tabled)]
@@ -278,7 +278,7 @@ pub trait NodeRewardsCommand {
                     base_reward.node_reward_type.as_ref().unwrap(),
                     base_reward.region.as_ref().unwrap(),
                 ])
-                .unwrap();
+                    .unwrap();
             }
         }
 
@@ -334,7 +334,7 @@ pub trait NodeRewardsCommand {
             "underperforming_nodes_count",
             "underperforming_nodes",
         ])
-        .unwrap();
+            .unwrap();
 
         for (day, rewards) in daily_rewards {
             let day_str = Self::format_date_utc(*day);
@@ -390,7 +390,7 @@ pub trait NodeRewardsCommand {
                 &underperforming_nodes_count.to_string(),
                 &underperforming_nodes,
             ])
-            .unwrap();
+                .unwrap();
         }
 
         wtr.flush().unwrap();
