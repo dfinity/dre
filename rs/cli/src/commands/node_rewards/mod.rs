@@ -1,4 +1,4 @@
-use crate::{auth::AuthRequirement, exe::args::GlobalArgs, exe::ExecutableCommand};
+use crate::{auth::AuthRequirement, exe::ExecutableCommand, exe::args::GlobalArgs};
 use anyhow::anyhow;
 use chrono::Datelike;
 use chrono::{DateTime, NaiveDate};
@@ -8,8 +8,8 @@ use futures_util::future::join_all;
 use ic_base_types::{PrincipalId, SubnetId};
 use ic_canisters::governance::GovernanceCanisterWrapper;
 use ic_canisters::node_rewards::NodeRewardsCanisterWrapper;
-use ic_node_rewards_canister_api::provider_rewards_calculation::{DailyNodeFailureRate, DailyNodeProviderRewards, DailyResults};
 use ic_node_rewards_canister_api::DateUtc;
+use ic_node_rewards_canister_api::provider_rewards_calculation::{DailyNodeFailureRate, DailyNodeProviderRewards, DailyResults};
 use itertools::Itertools;
 use log::info;
 use std::cell::RefCell;
@@ -274,7 +274,7 @@ impl NodeRewards {
     }
 
     fn print_daily_summary_console(&self, nrc_data: &NrcData) -> anyhow::Result<()> {
-        use tabled::settings::{object::Rows, Alignment, Merge, Modify, Style, Width};
+        use tabled::settings::{Alignment, Merge, Modify, Style, Width, object::Rows};
         use tabled::{Table, Tabled};
 
         #[derive(Tabled)]
@@ -583,7 +583,7 @@ impl NodeRewards {
                     base_reward.node_reward_type.as_ref().unwrap(),
                     base_reward.region.as_ref().unwrap(),
                 ])
-                    .unwrap();
+                .unwrap();
             }
         }
 
@@ -639,7 +639,7 @@ impl NodeRewards {
             "underperforming_nodes_count",
             "underperforming_nodes",
         ])
-            .unwrap();
+        .unwrap();
 
         for (day, rewards) in daily_rewards {
             let day_str = Self::format_date_utc(*day);
