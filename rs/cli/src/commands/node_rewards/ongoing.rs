@@ -1,5 +1,6 @@
-use crate::commands::node_rewards::NodeRewards;
 use crate::commands::node_rewards::common::NodeRewardsCommand;
+use crate::commands::node_rewards::NodeRewards;
+use anyhow::anyhow;
 use chrono::DateTime;
 use ic_canisters::governance::GovernanceCanisterWrapper;
 use ic_canisters::node_rewards::NodeRewardsCanisterWrapper;
@@ -31,6 +32,10 @@ impl OngoingRewardsCommand {
             .timestamp();
         let start_day = DateTime::from_timestamp(last_rewards.timestamp as i64, 0).unwrap().date_naive();
         let end_day = DateTime::from_timestamp(end_ts, 0).unwrap().date_naive();
+
+        if end_day < start_day {
+            return Err(anyhow!("Rewards have been distributed today, wait until tomorrow and retry"));
+        }
 
         let command = OngoingRewardsCommand;
         let (mut nrc_providers_rewards, subnets_failure_rates) = command.fetch_nrc_rewards(&node_rewards_client, start_day, end_day).await?;
