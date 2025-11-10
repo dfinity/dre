@@ -20,5 +20,8 @@ ic-nervous-system-timer-task = { workspace = true }
 itertools = { workspace = true }
 candid = { workspace = true }
 ic-cdk-timers = "0.12.2"
+ic-metrics-encoder = "1.1.1"
+ic-http-types = { workspace = true }
+ic-nervous-system-common = { workspace = true }
 [target.'cfg(all(target_arch = "wasm32", target_vendor = "unknown", target_os = "unknown"))'.dependencies]
 getrandom = { version = "0.2", features = ["custom"] }
