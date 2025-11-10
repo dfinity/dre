@@ -1,1 +1,0 @@
-../../trusted-neurons-alerts/README.md

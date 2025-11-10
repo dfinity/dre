@@ -1,3 +1,1 @@
-dashboard/node_modules/
-dashboard/packages/backend/node_modules/
-target/
+/Users/pietro.di.marco/RustroverProjects/dre2/.bazelignore

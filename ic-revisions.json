@@ -1,10 +1,1 @@
-{
-    "https://github.com/dfinity/ic.git": {
-        "commit": "b7da3ffe9d2d749012cbc18e530183d84ceff660",
-        "ref": "refs/heads/master"
-    },
-    "https://github.com/dfinity/cdk-rs.git": {
-        "commit": "fe65b6d1a22d8becf02a33dc33798930e6ac3905",
-        "ref": "refs/heads/main"
-    }
-}
+/Users/pietro.di.marco/RustroverProjects/dre2/ic-revisions.json

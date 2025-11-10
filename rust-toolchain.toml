@@ -1,5 +1,1 @@
-[toolchain]
-# Make sure docker/Dockerfile has the same Rust toolchain version
-channel = "1.90.0"
-profile = "default"
-components = ["rust-analyzer"]
+/Users/pietro.di.marco/RustroverProjects/dre2/rust-toolchain.toml

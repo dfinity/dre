@@ -1,5 +1,0 @@
-filegroup(
-    name = "non_default_subnets",
-    srcs = [ "non_default_subnets.csv" ],
-    visibility = [ "//visibility:public" ],
-)
