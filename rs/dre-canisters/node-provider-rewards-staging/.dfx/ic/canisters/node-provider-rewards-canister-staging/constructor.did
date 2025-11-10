@@ -1,27 +1,28 @@
 type DailyNodeFailureRate = variant {
   SubnetMember : record { node_metrics : opt NodeMetricsDaily };
-  NonSubnetMember : record { extrapolated_fr_percent : opt float64 };
+  NonSubnetMember : record { extrapolated_failure_rate : opt float64 };
 };
 type DailyNodeProviderRewards = record {
-  rewards_total_xdr_permyriad : opt nat64;
+  total_adjusted_rewards_xdr_permyriad : opt nat64;
+  total_base_rewards_xdr_permyriad : opt nat64;
   base_rewards : vec NodeTypeRegionBaseRewards;
   daily_nodes_rewards : vec DailyNodeRewards;
   base_rewards_type3 : vec Type3BaseRewards;
 };
 type DailyNodeRewards = record {
   region : opt text;
-  rewards_reduction_percent : opt float64;
+  performance_multiplier : opt float64;
   node_id : opt principal;
-  daily_node_fr : opt DailyNodeFailureRate;
-  base_rewards_xdr_permyriad : opt nat64;
+  daily_node_failure_rate : opt DailyNodeFailureRate;
+  base_rewards_xdr_permyriad : opt float64;
   node_reward_type : opt text;
-  adjusted_rewards_xdr_permyriad : opt nat64;
-  performance_multiplier_percent : opt float64;
+  rewards_reduction : opt float64;
+  adjusted_rewards_xdr_permyriad : opt float64;
   dc_id : opt text;
 };
 type DailyResults = record {
-  subnets_fr : vec record { principal; float64 };
   provider_results : vec record { principal; DailyNodeProviderRewards };
+  subnets_failure_rate : vec record { principal; float64 };
 };
 type DateUtc = record { day : opt nat32; month : opt nat32; year : opt nat32 };
 type GetNodeProvidersMonthlyXdrRewardsRequest = record {
@@ -46,11 +47,11 @@ type GetNodeProvidersRewardsResponse = variant {
 };
 type NodeMetricsDaily = record {
   subnet_assigned : opt principal;
-  original_fr_percent : opt float64;
+  original_failure_rate : opt float64;
   num_blocks_proposed : opt nat64;
-  subnet_assigned_fr_percent : opt float64;
-  relative_fr_percent : opt float64;
+  subnet_assigned_failure_rate : opt float64;
   num_blocks_failed : opt nat64;
+  relative_failure_rate : opt float64;
 };
 type NodeProvidersMonthlyXdrRewards = record {
   registry_version : opt nat64;
@@ -61,16 +62,16 @@ type NodeProvidersRewards = record {
 };
 type NodeTypeRegionBaseRewards = record {
   region : opt text;
-  daily_xdr_permyriad : opt nat64;
+  daily_xdr_permyriad : opt float64;
   node_reward_type : opt text;
-  monthly_xdr_permyriad : opt nat64;
+  monthly_xdr_permyriad : opt float64;
 };
 type Type3BaseRewards = record {
   region : opt text;
-  daily_xdr_permyriad : opt nat64;
+  daily_xdr_permyriad : opt float64;
   nodes_count : opt nat64;
-  avg_coefficient_percent : opt float64;
-  avg_rewards_xdr_permyriad : opt nat64;
+  avg_coefficient : opt float64;
+  avg_rewards_xdr_permyriad : opt float64;
 };
 service : () -> {
   get_node_providers_monthly_xdr_rewards : (

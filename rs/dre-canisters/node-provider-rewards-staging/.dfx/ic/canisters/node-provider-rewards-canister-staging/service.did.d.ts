@@ -5,27 +5,28 @@ import type { IDL } from '@dfinity/candid';
 export type DailyNodeFailureRate = {
     'SubnetMember' : { 'node_metrics' : [] | [NodeMetricsDaily] }
   } |
-  { 'NonSubnetMember' : { 'extrapolated_fr_percent' : [] | [number] } };
+  { 'NonSubnetMember' : { 'extrapolated_failure_rate' : [] | [number] } };
 export interface DailyNodeProviderRewards {
-  'rewards_total_xdr_permyriad' : [] | [bigint],
+  'total_adjusted_rewards_xdr_permyriad' : [] | [bigint],
+  'total_base_rewards_xdr_permyriad' : [] | [bigint],
   'base_rewards' : Array<NodeTypeRegionBaseRewards>,
   'daily_nodes_rewards' : Array<DailyNodeRewards>,
   'base_rewards_type3' : Array<Type3BaseRewards>,
 }
 export interface DailyNodeRewards {
   'region' : [] | [string],
-  'rewards_reduction_percent' : [] | [number],
+  'performance_multiplier' : [] | [number],
   'node_id' : [] | [Principal],
-  'daily_node_fr' : [] | [DailyNodeFailureRate],
-  'base_rewards_xdr_permyriad' : [] | [bigint],
+  'daily_node_failure_rate' : [] | [DailyNodeFailureRate],
+  'base_rewards_xdr_permyriad' : [] | [number],
   'node_reward_type' : [] | [string],
-  'adjusted_rewards_xdr_permyriad' : [] | [bigint],
-  'performance_multiplier_percent' : [] | [number],
+  'rewards_reduction' : [] | [number],
+  'adjusted_rewards_xdr_permyriad' : [] | [number],
   'dc_id' : [] | [string],
 }
 export interface DailyResults {
-  'subnets_fr' : Array<[Principal, number]>,
   'provider_results' : Array<[Principal, DailyNodeProviderRewards]>,
+  'subnets_failure_rate' : Array<[Principal, number]>,
 }
 export interface DateUtc {
   'day' : [] | [number],
@@ -52,11 +53,11 @@ export type GetNodeProvidersRewardsResponse = { 'Ok' : NodeProvidersRewards } |
   { 'Err' : string };
 export interface NodeMetricsDaily {
   'subnet_assigned' : [] | [Principal],
-  'original_fr_percent' : [] | [number],
+  'original_failure_rate' : [] | [number],
   'num_blocks_proposed' : [] | [bigint],
-  'subnet_assigned_fr_percent' : [] | [number],
-  'relative_fr_percent' : [] | [number],
+  'subnet_assigned_failure_rate' : [] | [number],
   'num_blocks_failed' : [] | [bigint],
+  'relative_failure_rate' : [] | [number],
 }
 export interface NodeProvidersMonthlyXdrRewards {
   'registry_version' : [] | [bigint],
@@ -67,16 +68,16 @@ export interface NodeProvidersRewards {
 }
 export interface NodeTypeRegionBaseRewards {
   'region' : [] | [string],
-  'daily_xdr_permyriad' : [] | [bigint],
+  'daily_xdr_permyriad' : [] | [number],
   'node_reward_type' : [] | [string],
-  'monthly_xdr_permyriad' : [] | [bigint],
+  'monthly_xdr_permyriad' : [] | [number],
 }
 export interface Type3BaseRewards {
   'region' : [] | [string],
-  'daily_xdr_permyriad' : [] | [bigint],
+  'daily_xdr_permyriad' : [] | [number],
   'nodes_count' : [] | [bigint],
-  'avg_coefficient_percent' : [] | [number],
-  'avg_rewards_xdr_permyriad' : [] | [bigint],
+  'avg_coefficient' : [] | [number],
+  'avg_rewards_xdr_permyriad' : [] | [number],
 }
 export interface _SERVICE {
   'get_node_providers_monthly_xdr_rewards' : ActorMethod<
