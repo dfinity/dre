@@ -242,7 +242,7 @@ impl ForumPostHandler for Discourse {
                             Err(e) => {
                                 return Err(anyhow::anyhow!(
                                     "Subnet {} not found in the specified subnet topic map file {} (error: {}). Don't know where to create a forum post",
-                                    subnet_id.to_string(),
+                                    subnet_id,
                                     path.display(),
                                     e
                                 ));
@@ -252,7 +252,7 @@ impl ForumPostHandler for Discourse {
                     };
                     let topic_info = subnet_topic_map.get(&subnet_id).ok_or(anyhow::anyhow!(
                         "Subnet {} not found in the discovered subnet topic map. Don't know where to create a forum post",
-                        subnet_id.to_string()
+                        subnet_id
                     ))?;
                     match self.client.create_post(body.clone(), topic_info.topic_id).await {
                         Ok(poast) => Ok::<DiscoursePost, anyhow::Error>(DiscoursePost {
