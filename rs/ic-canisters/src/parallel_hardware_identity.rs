@@ -1,3 +1,4 @@
+#![allow(deprecated)]
 use byteorder::{BigEndian, ReadBytesExt};
 use cryptoki::{
     context::{CInitializeArgs, Pkcs11 as CryptokiPkcs11},
