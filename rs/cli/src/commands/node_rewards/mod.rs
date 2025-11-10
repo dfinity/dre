@@ -546,8 +546,8 @@ impl NodeRewards {
 
             self.create_base_rewards_csv(&provider_dir, daily_rewards)?;
             self.create_base_rewards_type3_csv(&provider_dir, daily_rewards)?;
-            self.create_rewards_summary_csv(&provider_dir, &daily_rewards)?;
-            self.create_node_metrics_csv(&provider_dir, &daily_rewards)?;
+            self.create_rewards_summary_csv(&provider_dir, daily_rewards)?;
+            self.create_node_metrics_csv(&provider_dir, daily_rewards)?;
         }
 
         // Generate subnets failure rates CSV in the rewards directory
@@ -910,7 +910,7 @@ impl NodeRewards {
         // Sort by subnet_id first, then by day_utc
         subnets_fr_data
             .iter()
-            .flat_map(|(subnet_id, subnets_fr)| subnets_fr.iter().map(|(date, fr)| (subnet_id.clone(), Self::format_date_utc(*date), *fr)))
+            .flat_map(|(subnet_id, subnets_fr)| subnets_fr.iter().map(|(date, fr)| (*subnet_id, Self::format_date_utc(*date), *fr)))
             .sorted_by(|a, b| {
                 let subnet_cmp = a.1.cmp(&b.1);
                 if subnet_cmp == std::cmp::Ordering::Equal {
