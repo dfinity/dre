@@ -623,7 +623,6 @@ impl NodeRewards {
             "base_rewards_total",
             "adjusted_rewards_total",
             "adjusted_rewards_percent",
-            "rewards_total_xdr_permyriad",
             "nodes_in_registry",
             "assigned_nodes",
             "underperforming_nodes_count",
@@ -644,6 +643,8 @@ impl NodeRewards {
             } else {
                 "N/A".to_string()
             };
+
+            let nodes_in_registry = rewards.daily_nodes_rewards.len();
 
             // Count assigned nodes
             let assigned_count = rewards
@@ -671,8 +672,7 @@ impl NodeRewards {
                 &base_rewards_total.to_string(),
                 &adjusted_rewards_total.to_string(),
                 &adjusted_rewards_percent,
-                &base_rewards_total.to_string(),
-                &adjusted_rewards_total.to_string(),
+                &nodes_in_registry.to_string(),
                 &assigned_count.to_string(),
                 &underperforming_nodes_count.to_string(),
                 &underperforming_nodes,
