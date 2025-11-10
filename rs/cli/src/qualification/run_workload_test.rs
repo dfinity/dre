@@ -113,7 +113,7 @@ async fn ensure_finalization_rate_for_subnet(
 
     let finalization_rate = response["data"]["result"][0]["value"][1]
         .as_str()
-        .ok_or(anyhow::anyhow!("Response is not in the expected format {}", response.to_string()))?
+        .ok_or(anyhow::anyhow!("Response is not in the expected format {}", response))?
         .parse::<f64>()?;
 
     let expected_finalization_rate = expected_finalization_rate_for_subnet(subnet_type, ips.len());

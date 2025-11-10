@@ -319,15 +319,8 @@ impl NodeRewards {
             for (day, rewards) in daily_rewards {
                 let day_str = Self::format_date_utc(*day);
                 let nodes_in_registry = rewards.daily_nodes_rewards.len();
-
-                // Sum base and adjusted rewards across all nodes for the day
-                let base_rewards_total: u64 = rewards.daily_nodes_rewards.iter().map(|n| n.base_rewards_xdr_permyriad.unwrap()).sum();
-
-                let adjusted_rewards_total: u64 = rewards
-                    .daily_nodes_rewards
-                    .iter()
-                    .map(|n| n.adjusted_rewards_xdr_permyriad.unwrap())
-                    .sum();
+                let base_rewards_total: u64 = rewards.total_base_rewards_xdr_permyriad.unwrap();
+                let adjusted_rewards_total: u64 = rewards.total_adjusted_rewards_xdr_permyriad.unwrap();
 
                 // Calculate adjusted rewards percentage
                 let adjusted_rewards_percent = if base_rewards_total > 0 {
@@ -415,18 +408,15 @@ impl NodeRewards {
             let provider_prefix = get_provider_prefix(&provider_id_str);
 
             // Calculate adjusted rewards total
-            let adjusted_total: u64 = daily_rewards.iter().map(|(_, reward)| reward.rewards_total_xdr_permyriad.unwrap()).sum();
+            let adjusted_total: u64 = daily_rewards
+                .iter()
+                .map(|(_, reward)| reward.total_adjusted_rewards_xdr_permyriad.unwrap())
+                .sum();
 
             // Calculate base rewards total
             let base_total: u64 = daily_rewards
                 .iter()
-                .map(|(_, reward)| {
-                    reward
-                        .daily_nodes_rewards
-                        .iter()
-                        .map(|n| n.base_rewards_xdr_permyriad.unwrap())
-                        .sum::<u64>()
-                })
+                .map(|(_, reward)| reward.total_base_rewards_xdr_permyriad.unwrap())
                 .sum();
 
             // Calculate adj-base difference and percentage
@@ -556,8 +546,8 @@ impl NodeRewards {
 
             self.create_base_rewards_csv(&provider_dir, daily_rewards)?;
             self.create_base_rewards_type3_csv(&provider_dir, daily_rewards)?;
-            self.create_rewards_summary_csv(&provider_dir, &daily_rewards)?;
-            self.create_node_metrics_csv(&provider_dir, &daily_rewards)?;
+            self.create_rewards_summary_csv(&provider_dir, daily_rewards)?;
+            self.create_node_metrics_csv(&provider_dir, daily_rewards)?;
         }
 
         // Generate subnets failure rates CSV in the rewards directory
@@ -633,7 +623,6 @@ impl NodeRewards {
             "base_rewards_total",
             "adjusted_rewards_total",
             "adjusted_rewards_percent",
-            "rewards_total_xdr_permyriad",
             "nodes_in_registry",
             "assigned_nodes",
             "underperforming_nodes_count",
@@ -645,13 +634,8 @@ impl NodeRewards {
             let day_str = Self::format_date_utc(*day);
 
             // Sum base and adjusted rewards across all nodes for the day
-            let base_rewards_total: u64 = rewards.daily_nodes_rewards.iter().map(|n| n.base_rewards_xdr_permyriad.unwrap()).sum();
-
-            let adjusted_rewards_total: u64 = rewards
-                .daily_nodes_rewards
-                .iter()
-                .map(|n| n.adjusted_rewards_xdr_permyriad.unwrap())
-                .sum();
+            let base_rewards_total: u64 = rewards.total_base_rewards_xdr_permyriad.unwrap();
+            let adjusted_rewards_total: u64 = rewards.total_adjusted_rewards_xdr_permyriad.unwrap();
 
             // Calculate adjusted rewards percentage
             let adjusted_rewards_percent = if base_rewards_total > 0 {
@@ -660,7 +644,6 @@ impl NodeRewards {
                 "N/A".to_string()
             };
 
-            let total_rewards = rewards.rewards_total_xdr_permyriad.unwrap();
             let nodes_in_registry = rewards.daily_nodes_rewards.len();
 
             // Count assigned nodes
@@ -689,7 +672,6 @@ impl NodeRewards {
                 &base_rewards_total.to_string(),
                 &adjusted_rewards_total.to_string(),
                 &adjusted_rewards_percent,
-                &total_rewards.to_string(),
                 &nodes_in_registry.to_string(),
                 &assigned_count.to_string(),
                 &underperforming_nodes_count.to_string(),
@@ -928,7 +910,7 @@ impl NodeRewards {
         // Sort by subnet_id first, then by day_utc
         subnets_fr_data
             .iter()
-            .flat_map(|(subnet_id, subnets_fr)| subnets_fr.iter().map(|(date, fr)| (subnet_id.clone(), Self::format_date_utc(*date), *fr)))
+            .flat_map(|(subnet_id, subnets_fr)| subnets_fr.iter().map(|(date, fr)| (*subnet_id, Self::format_date_utc(*date), *fr)))
             .sorted_by(|a, b| {
                 let subnet_cmp = a.1.cmp(&b.1);
                 if subnet_cmp == std::cmp::Ordering::Equal {
