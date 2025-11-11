@@ -1,6 +1,6 @@
 use std::{cell::RefCell, rc::Rc, sync::Arc};
 
-use ic_canisters::{IcAgentCanisterClient, governance::GovernanceCanisterWrapper};
+use ic_canisters::{governance::GovernanceCanisterWrapper, IcAgentCanisterClient};
 use ic_management_backend::{
     health::HealthStatusQuerier,
     lazy_git::LazyGit,
@@ -102,9 +102,7 @@ impl DreContext {
         // Propagate health overrides to backend via env var for health client implementations
         if !args.override_health.is_empty() {
             let overrides = args.override_health.join(",");
-            unsafe {
-                std::env::set_var("DRE_OVERRIDE_HEALTH", overrides);
-            }
+            std::env::set_var("DRE_OVERRIDE_HEALTH", overrides);
         }
 
         Self::new(

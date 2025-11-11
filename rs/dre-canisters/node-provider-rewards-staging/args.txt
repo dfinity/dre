@@ -1,0 +1,12 @@
+(record {
+    from_day = record {
+                     day = opt (13 : nat32);
+                     month = opt (9 : nat32);
+                     year = opt (2_025 : nat32);
+                   };
+    to_day = record {
+                   day = opt (13 : nat32);
+                   month = opt (10 : nat32);
+                   year = opt (2_025 : nat32);
+                 };
+})

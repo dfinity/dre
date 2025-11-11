@@ -1,0 +1,213 @@
+type PrincipalId = principal;
+type SubnetId = PrincipalId;
+type NodeId = PrincipalId;
+
+type XDRPermyriad = float64;
+type Percent = float64;
+type DayUTC = text;
+
+type NodeProvidersRewards = record {
+    rewards_per_provider : vec record { PrincipalId; XDRPermyriad };
+};
+
+type RewardPeriodArgs = record {
+    // First timestamp of the day in nanoseconds
+    start_ts : nat64;
+    // Last timestamp of the day in nanoseconds
+    end_ts : nat64;
+};
+
+type NodeProviderRewardsCalculationArgs = record {
+    provider_id: PrincipalId;
+    reward_period: RewardPeriodArgs;
+};
+
+type NodeMetricsDailyDeprecated = record {
+    day: DayUTC;
+    subnet_assigned: SubnetId;
+    /// Subnet Assigned Failure Rate.
+    ///
+    /// The failure rate of the entire subnet.
+    /// Calculated as 75th percentile of the failure rate of all nodes in the subnet.
+    subnet_assigned_fr: Percent;
+    num_blocks_proposed: nat64;
+    num_blocks_failed: nat64;
+    /// Original Failure Rate.
+    ///
+    /// The failure rate before subnet failure rate reduction.
+    /// Calculated as `blocks_failed` / (`blocks_proposed` + `blocks_failed`)
+    original_fr: Percent;
+    /// Relative Failure Rate (`RFR`).
+    ///
+    /// The failure rate reduced by the subnet assigned failure rate.
+    /// Calculated as Max(0, `original_fr` - `subnet_assigned_fr`)
+    relative_fr: Percent;
+};
+
+type NodeResultsDeprecated = record {
+    node_type: text;
+    region: text;
+    dc_id: text;
+    rewardable_from: DayUTC;
+    rewardable_to: DayUTC;
+    rewardable_days: nat64;
+    daily_metrics: vec NodeMetricsDailyDeprecated;
+    /// Average Relative Failure Rate (`ARFR`).
+    ///
+    /// Average of `RFR` for the entire reward period.
+    /// None if the node is unassigned in the entire reward period
+    avg_relative_fr: opt Percent;
+    /// Average Extrapolated Failure Rate (`AEFR`).
+    ///
+    /// Failure rate average for the entire reward period
+    /// - On days when the node is unassigned `ARFR` is used
+    /// - On days when the node is assigned `RFR` is used
+    avg_extrapolated_fr: Percent;
+    /// Rewards reduction (`RR`).
+    ///
+    /// - For nodes with `AEFR` < 0.1, the rewards reduction is 0
+    /// - For nodes with `AEFR` > 0.6, the rewards reduction is 0.8
+    /// - For nodes with 0.1 <= `AEFR` <= 0.6, the rewards reduction is linearly interpolated between 0 and 0.8
+    rewards_reduction: Percent;
+    /// Performance multiplier (`PM`).
+    ///
+    /// Calculated as 1 - 'RR'
+    performance_multiplier: Percent;
+    base_rewards_per_month: XDRPermyriad;
+    /// Base Rewards for the rewards period.
+    ///
+    /// Calculated as `base_rewards_per_month` / 30.4375 * `rewardable_days`
+    base_rewards: XDRPermyriad;
+    /// Adjusted rewards (`AR`).
+    ///
+    /// Calculated as base_rewards * `PM`
+    adjusted_rewards: XDRPermyriad;
+};
+
+type RewardsCalculatorResults = record {
+    results_by_node: vec record { NodeId; NodeResultsDeprecated };
+    /// Extrapolated failure rate used as replacement for days when the node is unassigned
+    extrapolated_fr: Percent;
+    /// Rewards Total
+    /// The total rewards for the entire reward period computed as sum of the `AR`
+    rewards_total: XDRPermyriad;
+};
+type GetNodeProviderRewardsCalculationResponseDeprecated = variant {
+    Ok : RewardsCalculatorResults;
+    Err : text;
+};
+
+type GetNodeProvidersRewardsResponse = variant {
+    Ok : NodeProvidersRewards;
+    Err : text;
+};
+
+// New types for v1 of the Node Provider Rewards Calculation API
+
+type Decimal = record {
+  human_readable: opt text;
+};
+
+type NodeMetricsDaily = record {
+  subnet_assigned: opt principal;
+  subnet_assigned_fr_percent: opt Decimal;
+  num_blocks_proposed: opt nat64;
+  num_blocks_failed: opt nat64;
+  original_fr_percent: opt Decimal;
+  relative_fr_percent: opt Decimal;
+};
+
+type Assigned = record {
+  node_metrics: opt NodeMetricsDaily;
+};
+
+type Unassigned = record {
+  extrapolated_fr_percent: opt Decimal;
+};
+
+type Status = variant {
+  Assigned: Assigned;
+  Unassigned: Unassigned;
+};
+
+type NodeStatus = record {
+  status: opt Status;
+};
+
+type DayUtc = record {
+  value: opt nat64;
+};
+
+type DailyResults = record {
+  day: opt DayUtc;
+  node_status: opt NodeStatus;
+  performance_multiplier_percent: opt Decimal;
+  rewards_reduction_percent: opt Decimal;
+  base_rewards_xdr_permyriad: opt Decimal;
+  adjusted_rewards_xdr_permyriad: opt Decimal;
+};
+
+type NodeResults = record {
+  node_id: opt principal;
+  node_reward_type: opt text;
+  region: opt text;
+  dc_id: opt text;
+  daily_results: vec DailyResults;
+};
+
+type BaseRewards = record {
+  monthly_xdr_permyriad: opt Decimal;
+  daily_xdr_permyriad: opt Decimal;
+  node_reward_type: opt text;
+  region: opt text;
+};
+
+type DailyBaseRewardsType3 = record {
+  day: opt DayUtc;
+  region: opt text;
+  nodes_count: opt nat64;
+  avg_rewards_xdr_permyriad: opt Decimal;
+  avg_coefficient_percent: opt Decimal;
+  value_xdr_permyriad: opt Decimal;
+};
+
+type NodeProviderRewards = record {
+  rewards_total_xdr_permyriad: opt nat64;
+  base_rewards: vec BaseRewards;
+  base_rewards_type3: vec DailyBaseRewardsType3;
+  nodes_results: vec NodeResults;
+};
+
+type GetNodeProviderRewardsCalculationRequest = record {
+  from_nanos: nat64;
+  to_nanos: nat64;
+  provider_id: principal;
+  historical: bool;
+};
+
+type GetNodeProviderRewardsCalculationResponse = variant { Ok : NodeProviderRewards; Err : text };
+
+type NodeDailyFR = record {
+  node_id: principal;
+  daily_relative_fr: vec record {
+    0: DayUtc;
+    1: Decimal;
+  };
+};
+
+type SubnetNodesFR = record {
+  subnet_id: principal;
+  subnet_fr: Decimal;
+  nodes_daily_fr: vec NodeDailyFR;
+};
+
+
+type GetNodesFRBySubnet = variant { Ok : vec SubnetNodesFR; Err : text };
+
+service : {
+    get_node_providers_rewards : (RewardPeriodArgs) -> (GetNodeProvidersRewardsResponse) query;
+    get_node_provider_rewards_calculation : (NodeProviderRewardsCalculationArgs) -> (GetNodeProviderRewardsCalculationResponseDeprecated) query;
+    get_node_provider_rewards_calculation_v1 : (GetNodeProviderRewardsCalculationRequest) -> (GetNodeProviderRewardsCalculationResponse) query;
+    get_subnets_list: () -> (vec SubnetId) query;
+    get_nodes_fr_by_subnet : (RewardPeriodArgs) -> (GetNodesFRBySubnet) query;
+}

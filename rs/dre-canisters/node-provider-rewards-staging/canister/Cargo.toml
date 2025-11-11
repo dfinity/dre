@@ -1,0 +1,27 @@
+[package]
+name = "node-provider-rewards-canister-staging"
+version.workspace = true
+authors.workspace = true
+edition.workspace = true
+description.workspace = true
+documentation.workspace = true
+license.workspace = true
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+ic-cdk = { workspace = true }
+ic-node-rewards-canister-api = { workspace = true }
+ic-node-rewards-canister = { workspace = true }
+ic-nervous-system-canisters = { workspace = true }
+ic-registry-canister-client = { workspace = true }
+ic-nervous-system-timer-task = { workspace = true }
+itertools = { workspace = true }
+candid = { workspace = true }
+ic-cdk-timers = "0.12.2"
+ic-metrics-encoder = "1.1.1"
+ic-http-types = { workspace = true }
+ic-nervous-system-common = { workspace = true }
+[target.'cfg(all(target_arch = "wasm32", target_vendor = "unknown", target_os = "unknown"))'.dependencies]
+getrandom = { version = "0.2", features = ["custom"] }

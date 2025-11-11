@@ -2,7 +2,7 @@ use clap::Args;
 use ic_canisters::{governance::GovernanceCanisterWrapper, ledger::LedgerCanisterWrapper};
 use itertools::Itertools;
 
-use crate::{auth::AuthRequirement, exe::ExecutableCommand, exe::args::GlobalArgs};
+use crate::{auth::AuthRequirement, exe::args::GlobalArgs, exe::ExecutableCommand};
 
 #[derive(Args, Debug)]
 pub struct TopUp {}
@@ -29,12 +29,11 @@ impl ExecutableCommand for TopUp {
             .await?;
         let account_hex = account.iter().map(|byte| format!("{:02x}", byte)).join("");
 
-        println!(
-            "Please request ICP in the #icp-to-go Slack channel https://dfinity.enterprise.slack.com/archives/C044PCXQJG4 using the following message template.  Be sure to replace 'XX' with the amount of ICP you want:"
-        );
+        println!("Please request ICP in the #icp-to-go Slack channel https://dfinity.enterprise.slack.com/archives/C044PCXQJG4 using the following message template.  Be sure to replace 'XX' with the amount of ICP you want:");
         println!(
             "> Hi @icp-dispensers! Can I please get XX ICPs on the account address `{}` for neuron ID {} in order to be able to submit more NNS proposals. Thank you\n",
-            account_hex, neuron.neuron_id
+            account_hex,
+            neuron.neuron_id
         );
         println!("After receiving the ICP, you can check balance of staked ICP and voting power by running `dre neuron balance`");
 

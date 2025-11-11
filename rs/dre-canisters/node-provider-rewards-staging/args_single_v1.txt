@@ -1,0 +1,3 @@
+(record {
+    day_timestamp_nanos = 1752451200000000000;
+})

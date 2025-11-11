@@ -1,0 +1,17 @@
+{
+  "canisters": {
+    "node-provider-rewards-canister-staging": {
+      "candid": "canister/node_provider_rewards.did",
+      "package": "node-provider-rewards-canister-staging",
+      "type": "rust"
+    }
+  },
+  "defaults": {
+    "build": {
+      "args": "",
+      "packtool": ""
+    }
+  },
+  "output_env_file": ".env",
+  "version": 1
+}

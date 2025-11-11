@@ -1,0 +1,27 @@
+[workspace]
+members = [
+    "node-provider-rewards-staging/canister",
+]
+
+resolver = "2"
+
+[workspace.package]
+version = "0.0.1"
+edition = "2021"
+authors = ["IC Decentralized Reliability Engineering (DRE) Team"]
+description = "Canisters for the Internet Computer"
+documentation = "https://github.com/dfinity/dre/"
+license = "Apache-2.0"
+
+[workspace.dependencies]
+ic-nervous-system-canisters = { path = "../../../../../pietro.di.marco/RustroverProjects/ic/rs/nervous_system/canisters" }
+ic-node-rewards-canister = { path = "../../../../../pietro.di.marco/RustroverProjects/ic/rs/node_rewards/canister" }
+ic-node-rewards-canister-api = { path = "../../../../../pietro.di.marco/RustroverProjects/ic/rs/node_rewards/canister/api" }
+ic-nervous-system-common = { path = "../../../../../pietro.di.marco/RustroverProjects/ic/rs/nervous_system/common" }
+ic-registry-canister-client = { path = "../../../../../pietro.di.marco/RustroverProjects/ic/rs/registry/canister-client" }
+ic-nervous-system-timer-task = { path = "../../../../../pietro.di.marco/RustroverProjects/ic/rs/nervous_system/timer_task" }
+ic-http-types = { path = "../../../../../pietro.di.marco/RustroverProjects/ic/packages/ic-http-types" }
+candid = "0.10.19"
+itertools = "0.14.0"
+ic-cdk = { version = "^0.18.7" }
+ic-cdk-timers = { version = "^0.12.2" }

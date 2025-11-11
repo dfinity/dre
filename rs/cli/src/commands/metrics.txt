@@ -1,0 +1,2691 @@
+# Indented on purpose because it is appended to the end of the scrape_configs in prometheus.yml
+- job_name: service-discovery
+  tls_config:
+    insecure_skip_verify: true
+  http_sd_configs:
+    - url: "http://service-discovery.service-discovery:8000/prom/targets"
+      refresh_interval: 10s
+- job_name: http-gateway
+  scheme: http
+  file_sd_configs:
+    - files:
+        - "/generated-configs/http-gateway-scrape-config/*.json"
+      refresh_interval: 1m
+- job_name: boundary-nodes-https
+  honor_timestamps: true
+  metrics_path: /metrics
+  scheme: https
+  follow_redirects: true
+  enable_http2: true
+  static_configs:
+    - targets:
+        - e74ff-caaaa-aaaak-qbqmq-cai.raw.ic0.app
+      labels:
+        job: boundary_node_certificate_orchestrator
+        env: prod
+        service: certificate_orchestrator
+        canister: e74ff-caaaa-aaaak-qbqmq-cai
+    - targets:
+        - oydqf-haaaa-aaaao-afpsa-cai.raw.ic0.app
+      labels:
+        job: boundary_node_certificate_orchestrator
+        env: dev
+        service: certificate_orchestrator
+        canister: oydqf-haaaa-aaaao-afpsa-cai
+    - targets:
+        - gpwyc-niaaa-aaaar-qbxwa-cai.raw.icp0.io
+      labels:
+        job: http_gateway_custom_domains_canister
+        env: dev
+        service: custom_domains
+        canister: gpwyc-niaaa-aaaar-qbxwa-cai
+    - targets:
+        - gix6w-aqaaa-aaaar-qbxwq-cai.raw.icp0.io
+      labels:
+        job: http_gateway_custom_domains_canister
+        env: prod
+        service: custom_domains
+        canister: gix6w-aqaaa-aaaar-qbxwq-cai
+- job_name: rate-limiting-canister
+  honor_timestamps: true
+  metrics_path: /metrics
+  scheme: https
+  follow_redirects: true
+  enable_http2: true
+  static_configs:
+    - targets:
+        - u637p-5aaaa-aaaaq-qaaca-cai.raw.ic0.app
+      labels:
+        ic: mercury
+        owner: "#eng-boundary-nodes"
+- job_name: salt-sharing-canister
+  honor_timestamps: true
+  metrics_path: /metrics
+  scheme: https
+  follow_redirects: true
+  enable_http2: true
+  static_configs:
+    - targets:
+        - uz2z3-qyaaa-aaaaq-qaacq-cai.raw.ic0.app
+      labels:
+        ic: mercury
+        owner: "#eng-boundary-nodes"
+- job_name: governance-canister
+  honor_timestamps: true
+  metrics_path: /metrics
+  scheme: https
+  follow_redirects: true
+  enable_http2: true
+  static_configs:
+    - targets:
+        - rrkah-fqaaa-aaaaa-aaaaq-cai.raw.ic0.app
+      labels:
+        ic: mercury
+- job_name: registry-canister
+  honor_timestamps: true
+  metrics_path: /metrics
+  scheme: https
+  follow_redirects: true
+  enable_http2: true
+  static_configs:
+    - targets:
+        - rwlgt-iiaaa-aaaaa-aaaaa-cai.raw.ic0.app
+      labels:
+        ic: mercury
+- job_name: identity-canister
+  honor_timestamps: true
+  metrics_path: /metrics
+  scheme: https
+  follow_redirects: true
+  enable_http2: true
+  static_configs:
+    - targets:
+        - rdmx6-jaaaa-aaaaa-aaadq-cai.raw.ic0.app
+      labels:
+        ic: mercury
+        owner: "#eng-internet-identity"
+- job_name: identity-archive-canister
+  honor_timestamps: true
+  metrics_path: /metrics
+  scheme: https
+  follow_redirects: true
+  enable_http2: true
+  static_configs:
+    - targets:
+        - uc7f6-kaaaa-aaaaq-qaaaa-cai.raw.ic0.app
+      labels:
+        ic: mercury
+        owner: "#eng-internet-identity"
+- job_name: nns-dapp-canister
+  honor_timestamps: true
+  metrics_path: /metrics
+  scheme: https
+  follow_redirects: true
+  enable_http2: true
+  static_configs:
+    - targets:
+        - qoctq-giaaa-aaaaa-aaaea-cai.raw.ic0.app
+      labels:
+        ic: mercury
+        owner: "#eng-nns-dapp"
+- job_name: root-canister
+  honor_timestamps: true
+  metrics_path: /metrics
+  scheme: https
+  follow_redirects: true
+  enable_http2: true
+  static_configs:
+    - targets:
+        - r7inp-6aaaa-aaaaa-aaabq-cai.raw.ic0.app
+      labels:
+        ic: mercury
+- job_name: ledger-canister
+  honor_timestamps: true
+  metrics_path: /metrics
+  scheme: https
+  follow_redirects: true
+  enable_http2: true
+  static_configs:
+    - targets:
+        - ryjl3-tyaaa-aaaaa-aaaba-cai.raw.ic0.app
+      labels:
+        ic: mercury
+        token: icp
+        owner: "#defi"
+- job_name: ledger-archive-1
+  honor_timestamps: true
+  metrics_path: /metrics
+  scheme: https
+  follow_redirects: true
+  enable_http2: true
+  static_configs:
+    - targets:
+        - qjdve-lqaaa-aaaaa-aaaeq-cai.raw.ic0.app
+      labels:
+        ic: mercury
+        token: icp
+        owner: "#defi"
+- job_name: ledger-archive-2
+  honor_timestamps: true
+  metrics_path: /metrics
+  scheme: https
+  follow_redirects: true
+  enable_http2: true
+  static_configs:
+    - targets:
+        - qsgjb-riaaa-aaaaa-aaaga-cai.raw.ic0.app
+      labels:
+        ic: mercury
+        token: icp
+        owner: "#defi"
+- job_name: ledger-archive-3
+  honor_timestamps: true
+  metrics_path: /metrics
+  scheme: https
+  follow_redirects: true
+  enable_http2: true
+  static_configs:
+    - targets:
+        - q4eej-kyaaa-aaaaa-aaaha-cai.raw.ic0.app
+      labels:
+        ic: mercury
+        token: icp
+        owner: "#defi"
+- job_name: ledger-archive-4
+  honor_timestamps: true
+  metrics_path: /metrics
+  scheme: https
+  follow_redirects: true
+  enable_http2: true
+  static_configs:
+    - targets:
+        - q3fc5-haaaa-aaaaa-aaahq-cai.raw.ic0.app
+      labels:
+        ic: mercury
+        token: icp
+        owner: "#defi"
+- job_name: icp-index
+  honor_timestamps: true
+  metrics_path: /metrics
+  scheme: https
+  follow_redirects: true
+  enable_http2: true
+  static_configs:
+    - targets:
+        - qhbym-qaaaa-aaaaa-aaafq-cai.raw.ic0.app
+      labels:
+        ic: mercury
+        token: icp
+        owner: "#defi"
+- job_name: test-icp-ledger
+  honor_timestamps: true
+  metrics_path: /metrics
+  scheme: https
+  follow_redirects: true
+  enable_http2: true
+  static_configs:
+    - targets:
+        - xafvr-biaaa-aaaai-aql5q-cai.raw.icp0.io
+      labels:
+        ic: mercury
+        token: testicp
+        owner: "#defi"
+- job_name: test-icp-index
+  honor_timestamps: true
+  metrics_path: /metrics
+  scheme: https
+  follow_redirects: true
+  enable_http2: true
+  static_configs:
+    - targets:
+        - qcuy6-bqaaa-aaaai-aqmqq-cai.raw.icp0.io
+      labels:
+        ic: mercury
+        token: testicp
+        owner: "#defi"
+- job_name: test-icp-archive
+  honor_timestamps: true
+  metrics_path: /metrics
+  scheme: https
+  follow_redirects: true
+  enable_http2: true
+  static_configs:
+    - targets:
+        - ml4bs-lyaaa-aaaai-atgdq-cai.raw.icp0.io
+      labels:
+        ic: mercury
+        token: testicp
+        owner: "#defi"
+- job_name: test-icrc-ledger
+  honor_timestamps: true
+  metrics_path: /metrics
+  scheme: https
+  follow_redirects: true
+  enable_http2: true
+  static_configs:
+    - targets:
+        - 3jkp5-oyaaa-aaaaj-azwqa-cai.raw.icp0.io
+      labels:
+        ic: mercury
+        token: ticrc1
+        owner: "#defi"
+- job_name: test-icrc-index
+  honor_timestamps: true
+  metrics_path: /metrics
+  scheme: https
+  follow_redirects: true
+  enable_http2: true
+  static_configs:
+    - targets:
+        - qzre3-3iaaa-aaaai-aqmsa-cai.raw.icp0.io
+      labels:
+        ic: mercury
+        token: ticrc1
+        owner: "#defi"
+- job_name: test-icrc-archive
+  honor_timestamps: true
+  metrics_path: /metrics
+  scheme: https
+  follow_redirects: true
+  enable_http2: true
+  static_configs:
+    - targets:
+        - qflcj-waaaa-aaaaj-a2hga-cai.raw.icp0.io
+      labels:
+        ic: mercury
+        token: ticrc1
+        owner: "#defi"
+- job_name: cycles-minting-canister
+  honor_timestamps: true
+  metrics_path: /metrics
+  scheme: https
+  follow_redirects: true
+  enable_http2: true
+  static_configs:
+    - targets:
+        - rkp4c-7iaaa-aaaaa-aaaca-cai.raw.ic0.app
+      labels:
+        ic: mercury
+- job_name: motoko-playground-canister
+  honor_timestamps: true
+  metrics_path: /metrics
+  scheme: https
+  follow_redirects: true
+  enable_http2: true
+  static_configs:
+    - targets:
+        - mwrha-maaaa-aaaab-qabqq-cai.raw.ic0.app
+      labels:
+        ic: mercury
+- job_name: bitcoin-testnet-canister
+  honor_timestamps: true
+  metrics_path: /metrics
+  scheme: https
+  follow_redirects: true
+  enable_http2: true
+  static_configs:
+    - targets:
+        - g4xu7-jiaaa-aaaan-aaaaq-cai.raw.ic0.app
+      labels:
+        ic: mercury
+        owner: "#eng-execution"
+- job_name: bitcoin-mainnet-canister
+  honor_timestamps: true
+  metrics_path: /metrics
+  scheme: https
+  follow_redirects: true
+  enable_http2: true
+  static_configs:
+    - targets:
+        - ghsi2-tqaaa-aaaan-aaaca-cai.raw.ic0.app
+      labels:
+        ic: mercury
+        owner: "#eng-execution"
+- job_name: bitcoin-watchdog-testnet-canister
+  honor_timestamps: true
+  metrics_path: /metrics
+  scheme: https
+  follow_redirects: true
+  enable_http2: true
+  static_configs:
+    - targets:
+        - gjqfs-iaaaa-aaaan-aaada-cai.raw.ic0.app
+      labels:
+        ic: mercury
+        owner: "#eng-execution"
+- job_name: bitcoin-watchdog-mainnet-canister
+  honor_timestamps: true
+  metrics_path: /metrics
+  scheme: https
+  follow_redirects: true
+  enable_http2: true
+  static_configs:
+    - targets:
+        - gatoo-6iaaa-aaaan-aaacq-cai.raw.ic0.app
+      labels:
+        ic: mercury
+        owner: "#eng-execution"
+- job_name: dogecoin-testnet-canister
+  honor_timestamps: true
+  metrics_path: /metrics
+  scheme: https
+  follow_redirects: true
+  enable_http2: true
+  static_configs:
+    - targets:
+        - hd7hi-kqaaa-aaaan-aaaea-cai.raw.ic0.app
+      labels:
+        ic: mercury
+        owner: "#defi"
+- job_name: dogecoin-mainnet-canister
+  honor_timestamps: true
+  metrics_path: /metrics
+  scheme: https
+  follow_redirects: true
+  enable_http2: true
+  static_configs:
+    - targets:
+        - gordg-fyaaa-aaaan-aaadq-cai.raw.ic0.app
+      labels:
+        ic: mercury
+        owner: "#defi"
+- job_name: dogecoin-testnet-staging-canister
+  honor_timestamps: true
+  metrics_path: /metrics
+  scheme: https
+  follow_redirects: true
+  enable_http2: true
+  static_configs:
+    - targets:
+        - bavom-pqaaa-aaaad-abweq-cai.raw.icp0.io
+      labels:
+        ic: mercury
+        owner: "#defi"
+- job_name: dogecoin-mainnet-staging-canister
+  honor_timestamps: true
+  metrics_path: /metrics
+  scheme: https
+  follow_redirects: true
+  enable_http2: true
+  static_configs:
+    - targets:
+        - bhuiy-ciaaa-aaaad-abwea-cai.raw.icp0.io
+      labels:
+        ic: mercury
+        owner: "#defi"
+- job_name: exchange-rate-canister
+  honor_timestamps: true
+  metrics_path: /metrics
+  scheme: https
+  follow_redirects: true
+  enable_http2: true
+  static_configs:
+    - targets:
+        - uf6dk-hyaaa-aaaaq-qaaaq-cai.raw.ic0.app
+      labels:
+        ic: mercury
+- job_name: cycles-faucet
+  honor_timestamps: true
+  metrics_path: /metrics
+  scheme: https
+  authorization:
+    type: Bearer
+    credentials_file: /secrets/cycles-faucet/bearer-token
+  follow_redirects: true
+  enable_http2: true
+  static_configs:
+    - targets:
+        - fg7gi-vyaaa-aaaal-qadca-cai.raw.ic0.app
+        - qsdbp-piaaa-aaaaj-qabmq-cai.raw.ic0.app
+      labels:
+        ic: mercury
+- job_name: ckbtc-testnet-minter
+  honor_timestamps: true
+  metrics_path: /metrics
+  scheme: https
+  follow_redirects: true
+  enable_http2: true
+  static_configs:
+    - targets:
+        - ml52i-qqaaa-aaaar-qaaba-cai.raw.ic0.app
+      labels:
+        ic: mercury
+        token: cktestbtc
+        owner: "#defi"
+- job_name: ckbtc-testnet-ledger
+  honor_timestamps: true
+  metrics_path: /metrics
+  scheme: https
+  follow_redirects: true
+  enable_http2: true
+  static_configs:
+    - targets:
+        - mc6ru-gyaaa-aaaar-qaaaq-cai.raw.ic0.app
+      labels:
+        ic: mercury
+        token: cktestbtc
+        owner: "#defi"
+- job_name: ckbtc-testnet-index
+  honor_timestamps: true
+  metrics_path: /metrics
+  scheme: https
+  follow_redirects: true
+  enable_http2: true
+  static_configs:
+    - targets:
+        - mm444-5iaaa-aaaar-qaabq-cai.raw.ic0.app
+      labels:
+        ic: mercury
+        token: cktestbtc
+        owner: "#defi"
+- job_name: ckbtc-minter
+  honor_timestamps: true
+  metrics_path: /metrics
+  scheme: https
+  follow_redirects: true
+  enable_http2: true
+  static_configs:
+    - targets:
+        - mqygn-kiaaa-aaaar-qaadq-cai.raw.ic0.app
+      labels:
+        ic: mercury
+        token: ckbtc
+        owner: "#defi"
+- job_name: ckbtc-ledger
+  honor_timestamps: true
+  metrics_path: /metrics
+  scheme: https
+  follow_redirects: true
+  enable_http2: true
+  static_configs:
+    - targets:
+        - mxzaz-hqaaa-aaaar-qaada-cai.raw.ic0.app
+      labels:
+        ic: mercury
+        token: ckbtc
+        owner: "#defi"
+- job_name: ckbtc-archive
+  honor_timestamps: true
+  metrics_path: /metrics
+  scheme: https
+  follow_redirects: true
+  enable_http2: true
+  static_configs:
+    - targets:
+        - nbsys-saaaa-aaaar-qaaga-cai.raw.ic0.app
+      labels:
+        ic: mercury
+        token: ckbtc
+        owner: "#defi"
+- job_name: ckbtc-index
+  honor_timestamps: true
+  metrics_path: /metrics
+  scheme: https
+  follow_redirects: true
+  enable_http2: true
+  static_configs:
+    - targets:
+        - n5wcd-faaaa-aaaar-qaaea-cai.raw.ic0.app
+      labels:
+        ic: mercury
+        token: ckbtc
+        owner: "#defi"
+- job_name: btc-checker
+  honor_timestamps: true
+  metrics_path: /metrics
+  scheme: https
+  follow_redirects: true
+  enable_http2: true
+  static_configs:
+    - targets:
+        - oltsj-fqaaa-aaaar-qal5q-cai.raw.icp0.io
+      labels:
+        ic: mercury
+        network: mainnet
+        owner: "#defi"
+- job_name: test-btc-checker
+  honor_timestamps: true
+  metrics_path: /metrics
+  scheme: https
+  follow_redirects: true
+  enable_http2: true
+  static_configs:
+    - targets:
+        - o6ude-eyaaa-aaaar-qal6a-cai.raw.icp0.io
+      labels:
+        ic: mercury
+        network: testnet
+        owner: "#defi"
+- job_name: cketh-sepolia-minter
+  honor_timestamps: true
+  metrics_path: /metrics
+  scheme: https
+  follow_redirects: true
+  enable_http2: true
+  static_configs:
+    - targets:
+        - jzenf-aiaaa-aaaar-qaa7q-cai.raw.icp0.io
+      labels:
+        ic: mercury
+        token: ckSepoliaETH
+        owner: "#defi"
+- job_name: cketh-sepolia-orchestrator
+  honor_timestamps: true
+  metrics_path: /metrics
+  scheme: https
+  follow_redirects: true
+  enable_http2: true
+  static_configs:
+    - targets:
+        - 2s5qh-7aaaa-aaaar-qadya-cai.raw.icp0.io
+      labels:
+        ic: mercury
+        token: ckSepoliaETH
+        owner: "#defi"
+- job_name: cketh-sepolia-ledger
+  honor_timestamps: true
+  metrics_path: /metrics
+  scheme: https
+  follow_redirects: true
+  enable_http2: true
+  static_configs:
+    - targets:
+        - apia6-jaaaa-aaaar-qabma-cai.raw.icp0.io
+      labels:
+        ic: mercury
+        token: ckSepoliaETH
+        owner: "#defi"
+- job_name: cketh-sepolia-index
+  honor_timestamps: true
+  metrics_path: /metrics
+  scheme: https
+  follow_redirects: true
+  enable_http2: true
+  static_configs:
+    - targets:
+        - sh5u2-cqaaa-aaaar-qacna-cai.raw.icp0.io
+      labels:
+        ic: mercury
+        token: ckSepoliaETH
+        owner: "#defi"
+- job_name: ckusdc-sepolia-ledger
+  honor_timestamps: true
+  metrics_path: /metrics
+  scheme: https
+  follow_redirects: true
+  enable_http2: true
+  static_configs:
+    - targets:
+        - yfumr-cyaaa-aaaar-qaela-cai.raw.icp0.io
+      labels:
+        ic: mercury
+        token: ckSepoliaUSDC
+        owner: "#defi"
+- job_name: ckusdc-sepolia-index
+  honor_timestamps: true
+  metrics_path: /metrics
+  scheme: https
+  follow_redirects: true
+  enable_http2: true
+  static_configs:
+    - targets:
+        - ycvkf-paaaa-aaaar-qaelq-cai.raw.icp0.io
+      labels:
+        ic: mercury
+        token: ckSepoliaUSDC
+        owner: "#defi"
+- job_name: cklink-sepolia-ledger
+  honor_timestamps: true
+  metrics_path: /metrics
+  scheme: https
+  follow_redirects: true
+  enable_http2: true
+  static_configs:
+    - targets:
+        - r52mc-qaaaa-aaaar-qafzq-cai.raw.icp0.io
+      labels:
+        ic: mercury
+        token: ckSepoliaLINK
+        owner: "#defi"
+- job_name: cklink-sepolia-index
+  honor_timestamps: true
+  metrics_path: /metrics
+  scheme: https
+  follow_redirects: true
+  enable_http2: true
+  static_configs:
+    - targets:
+        - ri55p-riaaa-aaaar-qaf2a-cai.raw.icp0.io
+      labels:
+        ic: mercury
+        token: ckSepoliaLINK
+        owner: "#defi"
+- job_name: ckpepe-sepolia-ledger
+  honor_timestamps: true
+  metrics_path: /metrics
+  scheme: https
+  follow_redirects: true
+  enable_http2: true
+  static_configs:
+    - targets:
+        - hw4ru-taaaa-aaaar-qagdq-cai.raw.icp0.io
+      labels:
+        ic: mercury
+        token: ckSepoliaPEPE
+        owner: "#defi"
+- job_name: ckpepe-sepolia-index
+  honor_timestamps: true
+  metrics_path: /metrics
+  scheme: https
+  follow_redirects: true
+  enable_http2: true
+  static_configs:
+    - targets:
+        - g3sv2-4iaaa-aaaar-qagea-cai.raw.icp0.io
+      labels:
+        ic: mercury
+        token: ckSepoliaPEPE
+        owner: "#defi"
+- job_name: cketh-sepolia-archive
+  honor_timestamps: true
+  metrics_path: /metrics
+  scheme: https
+  follow_redirects: true
+  enable_http2: true
+  static_configs:
+    - targets:
+        - sa4so-piaaa-aaaar-qacnq-cai.raw.icp0.io
+      labels:
+        ic: mercury
+        token: ckSepoliaETH
+        owner: "#defi"
+- job_name: cketh-staging-minter
+  honor_timestamps: true
+  metrics_path: /metrics
+  scheme: https
+  follow_redirects: true
+  enable_http2: true
+  static_configs:
+    - targets:
+        - qbfgx-laaaa-aaaar-qacaa-cai.raw.icp0.io
+      labels:
+        ic: mercury
+        token: ckStagingETH
+        owner: "#defi"
+- job_name: cketh-staging-orchestrator
+  honor_timestamps: true
+  metrics_path: /metrics
+  scheme: https
+  follow_redirects: true
+  enable_http2: true
+  static_configs:
+    - targets:
+        - u5fmw-miaaa-aaaar-qafea-cai.raw.icp0.io
+      labels:
+        ic: mercury
+        token: ckStagingETH
+        owner: "#defi"
+- job_name: cketh-staging-ledger
+  honor_timestamps: true
+  metrics_path: /metrics
+  scheme: https
+  follow_redirects: true
+  enable_http2: true
+  static_configs:
+    - targets:
+        - qgead-gyaaa-aaaar-qacaq-cai.raw.icp0.io
+      labels:
+        ic: mercury
+        token: ckStagingETH
+        owner: "#defi"
+- job_name: cketh-mainnet-minter
+  honor_timestamps: true
+  metrics_path: /metrics
+  scheme: https
+  follow_redirects: true
+  enable_http2: true
+  static_configs:
+    - targets:
+        - sv3dd-oaaaa-aaaar-qacoa-cai.raw.icp0.io
+      labels:
+        ic: mercury
+        token: ckETH
+        owner: "#defi"
+- job_name: cketh-mainnet-orchestrator
+  honor_timestamps: true
+  metrics_path: /metrics
+  scheme: https
+  follow_redirects: true
+  enable_http2: true
+  static_configs:
+    - targets:
+        - vxkom-oyaaa-aaaar-qafda-cai.raw.icp0.io
+      labels:
+        ic: mercury
+        token: ckETH
+        owner: "#defi"
+- job_name: cketh-mainnet-ledger
+  honor_timestamps: true
+  metrics_path: /metrics
+  scheme: https
+  follow_redirects: true
+  enable_http2: true
+  static_configs:
+    - targets:
+        - ss2fx-dyaaa-aaaar-qacoq-cai.raw.icp0.io
+      labels:
+        ic: mercury
+        token: ckETH
+        owner: "#defi"
+- job_name: cketh-mainnet-index
+  honor_timestamps: true
+  metrics_path: /metrics
+  scheme: https
+  follow_redirects: true
+  enable_http2: true
+  static_configs:
+    - targets:
+        - s3zol-vqaaa-aaaar-qacpa-cai.raw.icp0.io
+      labels:
+        ic: mercury
+        token: ckETH
+        owner: "#defi"
+- job_name: cketh-mainnet-archive
+  honor_timestamps: true
+  metrics_path: /metrics
+  scheme: https
+  follow_redirects: true
+  enable_http2: true
+  static_configs:
+    - targets:
+        - xob7s-iqaaa-aaaar-qacra-cai.raw.icp0.io
+      labels:
+        ic: mercury
+        token: ckETH
+        owner: "#defi"
+- job_name: ckusdc-mainnet-ledger
+  honor_timestamps: true
+  metrics_path: /metrics
+  scheme: https
+  follow_redirects: true
+  enable_http2: true
+  static_configs:
+    - targets:
+        - xevnm-gaaaa-aaaar-qafnq-cai.raw.icp0.io
+      labels:
+        ic: mercury
+        token: ckUSDC
+        owner: "#defi"
+- job_name: ckusdc-mainnet-index
+  honor_timestamps: true
+  metrics_path: /metrics
+  scheme: https
+  follow_redirects: true
+  enable_http2: true
+  static_configs:
+    - targets:
+        - xrs4b-hiaaa-aaaar-qafoa-cai.raw.icp0.io
+      labels:
+        ic: mercury
+        token: ckUSDC
+        owner: "#defi"
+- job_name: ckusdc-mainnet-archive
+  honor_timestamps: true
+  metrics_path: /metrics
+  scheme: https
+  follow_redirects: true
+  enable_http2: true
+  static_configs:
+    - targets:
+        - t4dy3-uiaaa-aaaar-qafua-cai.raw.icp0.io
+      labels:
+        ic: mercury
+        token: ckUSDC
+        owner: "#defi"
+- job_name: ckusdt-mainnet-ledger
+  honor_timestamps: true
+  metrics_path: /metrics
+  scheme: https
+  follow_redirects: true
+  enable_http2: true
+  static_configs:
+    - targets:
+        - cngnf-vqaaa-aaaar-qag4q-cai.raw.icp0.io
+      labels:
+        ic: mercury
+        token: ckUSDT
+        owner: "#defi"
+- job_name: ckusdt-mainnet-index
+  honor_timestamps: true
+  metrics_path: /metrics
+  scheme: https
+  follow_redirects: true
+  enable_http2: true
+  static_configs:
+    - targets:
+        - cefgz-dyaaa-aaaar-qag5a-cai.raw.icp0.io
+      labels:
+        ic: mercury
+        token: ckUSDT
+        owner: "#defi"
+- job_name: ckusdt-mainnet-archive
+  honor_timestamps: true
+  metrics_path: /metrics
+  scheme: https
+  follow_redirects: true
+  enable_http2: true
+  static_configs:
+    - targets:
+        - yhujl-liaaa-aaaar-qaiha-cai.raw.icp0.io
+      labels:
+        ic: mercury
+        token: ckUSDT
+        owner: "#defi"
+- job_name: cklink-mainnet-ledger
+  honor_timestamps: true
+  metrics_path: /metrics
+  scheme: https
+  follow_redirects: true
+  enable_http2: true
+  static_configs:
+    - targets:
+        - g4tto-rqaaa-aaaar-qageq-cai.raw.icp0.io
+      labels:
+        ic: mercury
+        token: ckLINK
+        owner: "#defi"
+- job_name: cklink-mainnet-index
+  honor_timestamps: true
+  metrics_path: /metrics
+  scheme: https
+  follow_redirects: true
+  enable_http2: true
+  static_configs:
+    - targets:
+        - gvqys-hyaaa-aaaar-qagfa-cai.raw.icp0.io
+      labels:
+        ic: mercury
+        token: ckLINK
+        owner: "#defi"
+- job_name: cklink-mainnet-archive
+  honor_timestamps: true
+  metrics_path: /metrics
+  scheme: https
+  follow_redirects: true
+  enable_http2: true
+  static_configs:
+    - targets:
+        - zk2nf-eaaaa-aaaar-qaiaq-cai.raw.icp0.io
+      labels:
+        ic: mercury
+        token: ckLINK
+        owner: "#defi"
+- job_name: ckpepe-mainnet-ledger
+  honor_timestamps: true
+  metrics_path: /metrics
+  scheme: https
+  follow_redirects: true
+  enable_http2: true
+  static_configs:
+    - targets:
+        - etik7-oiaaa-aaaar-qagia-cai.raw.icp0.io
+      labels:
+        ic: mercury
+        token: ckPEPE
+        owner: "#defi"
+- job_name: ckpepe-mainnet-index
+  honor_timestamps: true
+  metrics_path: /metrics
+  scheme: https
+  follow_redirects: true
+  enable_http2: true
+  static_configs:
+    - targets:
+        - eujml-dqaaa-aaaar-qagiq-cai.raw.icp0.io
+      labels:
+        ic: mercury
+        token: ckPEPE
+        owner: "#defi"
+- job_name: ckpepe-mainnet-archive
+  honor_timestamps: true
+  metrics_path: /metrics
+  scheme: https
+  follow_redirects: true
+  enable_http2: true
+  static_configs:
+    - targets:
+        - 3qgfz-2qaaa-aaaar-qaipq-cai.raw.icp0.io
+      labels:
+        ic: mercury
+        token: ckPEPE
+        owner: "#defi"
+- job_name: ckoct-mainnet-ledger
+  honor_timestamps: true
+  metrics_path: /metrics
+  scheme: https
+  follow_redirects: true
+  enable_http2: true
+  static_configs:
+    - targets:
+        - ebo5g-cyaaa-aaaar-qagla-cai.raw.icp0.io
+      labels:
+        ic: mercury
+        token: ckOCT
+        owner: "#defi"
+- job_name: ckoct-mainnet-index
+  honor_timestamps: true
+  metrics_path: /metrics
+  scheme: https
+  follow_redirects: true
+  enable_http2: true
+  static_configs:
+    - targets:
+        - egp3s-paaaa-aaaar-qaglq-cai.raw.icp0.io
+      labels:
+        ic: mercury
+        token: ckOCT
+        owner: "#defi"
+- job_name: ckoct-mainnet-archive
+  honor_timestamps: true
+  metrics_path: /metrics
+  scheme: https
+  follow_redirects: true
+  enable_http2: true
+  static_configs:
+    - targets:
+        - jhaso-6yaaa-aaaar-qamrq-cai.raw.icp0.io
+      labels:
+        ic: mercury
+        token: ckOCT
+        owner: "#defi"
+- job_name: ckshib-mainnet-ledger
+  honor_timestamps: true
+  metrics_path: /metrics
+  scheme: https
+  follow_redirects: true
+  enable_http2: true
+  static_configs:
+    - targets:
+        - fxffn-xiaaa-aaaar-qagoa-cai.raw.icp0.io
+      labels:
+        ic: mercury
+        token: ckSHIB
+        owner: "#defi"
+- job_name: ckshib-mainnet-index
+  honor_timestamps: true
+  metrics_path: /metrics
+  scheme: https
+  follow_redirects: true
+  enable_http2: true
+  static_configs:
+    - targets:
+        - fqedz-2qaaa-aaaar-qagoq-cai.raw.icp0.io
+      labels:
+        ic: mercury
+        token: ckSHIB
+        owner: "#defi"
+- job_name: ckwbtc-mainnet-ledger
+  honor_timestamps: true
+  metrics_path: /metrics
+  scheme: https
+  follow_redirects: true
+  enable_http2: true
+  static_configs:
+    - targets:
+        - bptq2-faaaa-aaaar-qagxq-cai.raw.icp0.io
+      labels:
+        ic: mercury
+        token: ckWBTC
+        owner: "#defi"
+- job_name: ckwbtc-mainnet-index
+  honor_timestamps: true
+  metrics_path: /metrics
+  scheme: https
+  follow_redirects: true
+  enable_http2: true
+  static_configs:
+    - targets:
+        - dso6s-wiaaa-aaaar-qagya-cai.raw.icp0.io
+      labels:
+        ic: mercury
+        token: ckWBTC
+        owner: "#defi"
+- job_name: ckwsteth-mainnet-ledger
+  honor_timestamps: true
+  metrics_path: /metrics
+  scheme: https
+  follow_redirects: true
+  enable_http2: true
+  static_configs:
+    - targets:
+        - j2tuh-yqaaa-aaaar-qahcq-cai.raw.icp0.io
+      labels:
+        ic: mercury
+        token: ckWSTETH
+        owner: "#defi"
+- job_name: ckwsteth-mainnet-index
+  honor_timestamps: true
+  metrics_path: /metrics
+  scheme: https
+  follow_redirects: true
+  enable_http2: true
+  static_configs:
+    - targets:
+        - jtq73-oyaaa-aaaar-qahda-cai.raw.icp0.io
+      labels:
+        ic: mercury
+        token: ckWSTETH
+        owner: "#defi"
+- job_name: ckuni-mainnet-ledger
+  honor_timestamps: true
+  metrics_path: /metrics
+  scheme: https
+  follow_redirects: true
+  enable_http2: true
+  static_configs:
+    - targets:
+        - ilzky-ayaaa-aaaar-qahha-cai.raw.icp0.io
+      labels:
+        ic: mercury
+        token: ckUNI
+        owner: "#defi"
+- job_name: ckuni-mainnet-index
+  honor_timestamps: true
+  metrics_path: /metrics
+  scheme: https
+  follow_redirects: true
+  enable_http2: true
+  static_configs:
+    - targets:
+        - imymm-naaaa-aaaar-qahhq-cai.raw.icp0.io
+      labels:
+        ic: mercury
+        token: ckUNI
+        owner: "#defi"
+- job_name: ckeurc-mainnet-ledger
+  honor_timestamps: true
+  metrics_path: /metrics
+  scheme: https
+  follow_redirects: true
+  enable_http2: true
+  static_configs:
+    - targets:
+        - pe5t5-diaaa-aaaar-qahwa-cai.raw.icp0.io
+      labels:
+        ic: mercury
+        token: ckEURC
+        owner: "#defi"
+- job_name: ckeurc-mainnet-index
+  honor_timestamps: true
+  metrics_path: /metrics
+  scheme: https
+  follow_redirects: true
+  enable_http2: true
+  static_configs:
+    - targets:
+        - pd4vj-oqaaa-aaaar-qahwq-cai.raw.icp0.io
+      labels:
+        ic: mercury
+        token: ckEURC
+        owner: "#defi"
+- job_name: ckxaut-mainnet-ledger
+  honor_timestamps: true
+  metrics_path: /metrics
+  scheme: https
+  follow_redirects: true
+  enable_http2: true
+  static_configs:
+    - targets:
+        - nza5v-qaaaa-aaaar-qahzq-cai.raw.icp0.io
+      labels:
+        ic: mercury
+        token: ckXAUT
+        owner: "#defi"
+- job_name: ckxaut-mainnet-index
+  honor_timestamps: true
+  metrics_path: /metrics
+  scheme: https
+  follow_redirects: true
+  enable_http2: true
+  static_configs:
+    - targets:
+        - nmhmy-riaaa-aaaar-qah2a-cai.raw.icp0.io
+      labels:
+        ic: mercury
+        token: ckXAUT
+        owner: "#defi"
+- job_name: evmrpc-staging-13-node
+  honor_timestamps: true
+  metrics_path: /metrics
+  scheme: https
+  follow_redirects: true
+  enable_http2: true
+  static_configs:
+    - targets:
+        - a6d44-nyaaa-aaaap-abp7q-cai.raw.icp0.io
+      labels:
+        ic: mercury
+        owner: "#defi"
+- job_name: evmrpc-staging-fiduciary
+  honor_timestamps: true
+  metrics_path: /metrics
+  scheme: https
+  follow_redirects: true
+  enable_http2: true
+  static_configs:
+    - targets:
+        - xhcuo-6yaaa-aaaar-qacqq-cai.raw.icp0.io
+      labels:
+        ic: mercury
+        owner: "#defi"
+- job_name: evmrpc-prod-fiduciary
+  honor_timestamps: true
+  metrics_path: /metrics
+  scheme: https
+  follow_redirects: true
+  enable_http2: true
+  static_configs:
+    - targets:
+        - 7hfb6-caaaa-aaaar-qadga-cai.raw.icp0.io
+      labels:
+        ic: mercury
+        owner: "#defi"
+- job_name: solrpc-ci
+  honor_timestamps: true
+  metrics_path: /metrics
+  scheme: https
+  follow_redirects: true
+  enable_http2: true
+  static_configs:
+    - targets:
+        - zaylz-mqaaa-aaaar-qaqzq-cai.raw.icp0.io
+      labels:
+        ic: mercury
+        owner: "#defi"
+- job_name: solrpc-staging
+  honor_timestamps: true
+  metrics_path: /metrics
+  scheme: https
+  follow_redirects: true
+  enable_http2: true
+  static_configs:
+    - targets:
+        - titvo-eiaaa-aaaar-qaogq-cai.raw.icp0.io
+      labels:
+        ic: mercury
+        owner: "#defi"
+- job_name: solrpc-prod
+  honor_timestamps: true
+  metrics_path: /metrics
+  scheme: https
+  follow_redirects: true
+  enable_http2: true
+  static_configs:
+    - targets:
+        - tghme-zyaaa-aaaar-qarca-cai.raw.icp0.io
+      labels:
+        ic: mercury
+        owner: "#defi"
+- job_name: cycles-ledger
+  honor_timestamps: true
+  metrics_path: /metrics
+  scheme: https
+  follow_redirects: true
+  enable_http2: true
+  static_configs:
+    - targets:
+        - um5iw-rqaaa-aaaaq-qaaba-cai.raw.ic0.app
+      labels:
+        ic: mercury
+        token: tcycles
+        owner: "#eng-sdk"
+- job_name: cycles-ledger-index
+  honor_timestamps: true
+  metrics_path: /metrics
+  scheme: https
+  follow_redirects: true
+  enable_http2: true
+  static_configs:
+    - targets:
+        - ul4oc-4iaaa-aaaaq-qaabq-cai.raw.ic0.app
+      labels:
+        ic: mercury
+        token: tcycles
+        owner: "#eng-sdk"
+- job_name: cycles-ledger-index-staging
+  honor_timestamps: true
+  metrics_path: /metrics
+  scheme: https
+  follow_redirects: true
+  enable_http2: true
+  static_configs:
+    - targets:
+        - 6hfsy-3aaaa-aaaao-a4qca-cai.raw.icp0.io
+      labels:
+        ic: mercury
+        token: tcycles-staging
+        owner: "#defi"
+
+- job_name: prometheus
+  honor_timestamps: true
+  metrics_path: /metrics
+  scheme: https
+  follow_redirects: true
+  enable_http2: true
+  static_configs:
+    - targets:
+        - ic-metrics-prometheus.fr1-obs1.dfinity.network
+        - ic-metrics-prometheus.ch1-obs1.dfinity.network
+
+- job_name: grafana
+  honor_timestamps: true
+  metrics_path: /metrics
+  scheme: https
+  follow_redirects: true
+  enable_http2: true
+  static_configs:
+    - targets:
+        - grafana.ch1-obs1.dfinity.network
+        - grafana.fr1-obs1.dfinity.network
+
+- job_name: boundary-clickhouse
+  honor_timestamps: true
+  scrape_interval: 60s
+  scrape_timeout: 10s
+  follow_redirects: false
+  enable_http2: false
+  metrics_path: /federate
+  params:
+    "match[]":
+      - '{job=~"^(clickhouse-server|node|crowdsec)$"}'
+  scheme: http
+  static_configs:
+    - targets:
+        - bn-ch-proxy-http-alb-1490284030.us-east-2.elb.amazonaws.com:29090
+      labels:
+        env: prod
+
+- job_name: orbit
+  honor_timestamps: true
+  metrics_path: /metrics
+  scheme: https
+  follow_redirects: true
+  enable_http2: true
+  static_configs:
+    - targets:
+        - 5mxvd-qaaaa-aaaal-ajbkq-cai.raw.icp0.io
+  http_sd_configs:
+    - url: https://5mxvd-qaaaa-aaaal-ajbkq-cai.raw.icp0.io/metrics/sd
+      refresh_interval: 2m
+  relabel_configs:
+    - target_label: env
+      replacement: prod
+    - target_label: owner
+      replacement: dfinity
+    - target_label: dapp
+      replacement: orbit
+
+- job_name: sns-wasm-canister
+  honor_timestamps: true
+  metrics_path: /metrics
+  scheme: https
+  follow_redirects: true
+  enable_http2: true
+  static_configs:
+    - targets:
+        - qaa6y-5yaaa-aaaaa-aaafa-cai.raw.icp0.io
+      labels:
+        ic: mercury
+        owner: "#eng-nns"
+  http_sd_configs:
+    - url: https://qaa6y-5yaaa-aaaaa-aaafa-cai.raw.icp0.io/sns_canisters
+      refresh_interval: 2m
+  relabel_configs:
+    - source_labels:
+        - sns_canister_type
+      regex: ledger|index
+      action: drop
+
+# SNS: alice
+- job_name: sns-alice-archive
+  honor_timestamps: true
+  metrics_path: /metrics
+  scheme: https
+  follow_redirects: true
+  enable_http2: true
+  static_configs:
+    - targets:
+        - m5anr-uiaaa-aaaaq-aaeja-cai.raw.icp0.io
+      labels:
+        ic: mercury
+- job_name: sns-alice-index
+  honor_timestamps: true
+  metrics_path: /metrics
+  scheme: https
+  follow_redirects: true
+  enable_http2: true
+  static_configs:
+    - targets:
+        - mtcaz-pyaaa-aaaaq-aaeia-cai.raw.icp0.io
+      labels:
+        ic: mercury
+        token: sns-alice
+- job_name: sns-alice-ledger
+  honor_timestamps: true
+  metrics_path: /metrics
+  scheme: https
+  follow_redirects: true
+  enable_http2: true
+  static_configs:
+    - targets:
+        - oj6if-riaaa-aaaaq-aaeha-cai.raw.icp0.io
+      labels:
+        ic: mercury
+        token: sns-alice
+
+# SNS: boom-dao
+- job_name: sns-boom-dao-archive
+  honor_timestamps: true
+  metrics_path: /metrics
+  scheme: https
+  follow_redirects: true
+  enable_http2: true
+  static_configs:
+    - targets:
+        - r6akw-vqaaa-aaaaq-aabsa-cai.raw.icp0.io
+      labels:
+        ic: mercury
+- job_name: sns-boom-dao-index
+  honor_timestamps: true
+  metrics_path: /metrics
+  scheme: https
+  follow_redirects: true
+  enable_http2: true
+  static_configs:
+    - targets:
+        - v5tde-5aaaa-aaaaq-aabja-cai.raw.icp0.io
+      labels:
+        ic: mercury
+        token: sns-boom-dao
+- job_name: sns-boom-dao-ledger
+  honor_timestamps: true
+  metrics_path: /metrics
+  scheme: https
+  follow_redirects: true
+  enable_http2: true
+  static_configs:
+    - targets:
+        - vtrom-gqaaa-aaaaq-aabia-cai.raw.icp0.io
+      labels:
+        ic: mercury
+        token: sns-boom-dao
+
+# SNS: catalyze
+- job_name: sns-catalyze-archive
+  honor_timestamps: true
+  metrics_path: /metrics
+  scheme: https
+  follow_redirects: true
+  enable_http2: true
+  static_configs:
+    - targets:
+        - uz6mw-eaaaa-aaaaq-aabpa-cai.raw.icp0.io
+      labels:
+        ic: mercury
+- job_name: sns-catalyze-index
+  honor_timestamps: true
+  metrics_path: /metrics
+  scheme: https
+  follow_redirects: true
+  enable_http2: true
+  static_configs:
+    - targets:
+        - ux4b6-7qaaa-aaaaq-aaboa-cai.raw.icp0.io
+      labels:
+        ic: mercury
+        token: sns-catalyze
+- job_name: sns-catalyze-ledger
+  honor_timestamps: true
+  metrics_path: /metrics
+  scheme: https
+  follow_redirects: true
+  enable_http2: true
+  static_configs:
+    - targets:
+        - uf2wh-taaaa-aaaaq-aabna-cai.raw.icp0.io
+      labels:
+        ic: mercury
+        token: sns-catalyze
+
+# SNS: cycles-transfer-station
+- job_name: sns-cycles-transfer-station-archive
+  honor_timestamps: true
+  metrics_path: /metrics
+  scheme: https
+  follow_redirects: true
+  enable_http2: true
+  static_configs:
+    - targets:
+        - ng6bq-cqaaa-aaaaq-aadqa-cai.raw.icp0.io
+      labels:
+        ic: mercury
+- job_name: sns-cycles-transfer-station-index
+  honor_timestamps: true
+  metrics_path: /metrics
+  scheme: https
+  follow_redirects: true
+  enable_http2: true
+  static_configs:
+    - targets:
+        - i5e5b-eaaaa-aaaaq-aadpa-cai.raw.icp0.io
+      labels:
+        ic: mercury
+        token: sns-cycles-transfer-station
+- job_name: sns-cycles-transfer-station-ledger
+  honor_timestamps: true
+  metrics_path: /metrics
+  scheme: https
+  follow_redirects: true
+  enable_http2: true
+  static_configs:
+    - targets:
+        - itgqj-7qaaa-aaaaq-aadoa-cai.raw.icp0.io
+      labels:
+        ic: mercury
+        token: sns-cycles-transfer-station
+
+# SNS: decideai-dao
+- job_name: sns-decideai-dao-archive
+  honor_timestamps: true
+  metrics_path: /metrics
+  scheme: https
+  follow_redirects: true
+  enable_http2: true
+  static_configs:
+    - targets:
+        - uq5hk-siaaa-aaaaq-aaboq-cai.raw.icp0.io
+      labels:
+        ic: mercury
+- job_name: sns-decideai-dao-index
+  honor_timestamps: true
+  metrics_path: /metrics
+  scheme: https
+  follow_redirects: true
+  enable_http2: true
+  static_configs:
+    - targets:
+        - xaonm-oiaaa-aaaaq-aabgq-cai.raw.icp0.io
+      labels:
+        ic: mercury
+        token: sns-decideai-dao
+- job_name: sns-decideai-dao-ledger
+  honor_timestamps: true
+  metrics_path: /metrics
+  scheme: https
+  follow_redirects: true
+  enable_http2: true
+  static_configs:
+    - targets:
+        - xsi2v-cyaaa-aaaaq-aabfq-cai.raw.icp0.io
+      labels:
+        ic: mercury
+        token: sns-decideai-dao
+
+# SNS: dogmi
+- job_name: sns-dogmi-archive
+  honor_timestamps: true
+  metrics_path: /metrics
+  scheme: https
+  follow_redirects: true
+  enable_http2: true
+  static_configs:
+    - targets:
+        - mxu7p-2yaaa-aaaaq-aadvq-cai.raw.icp0.io
+      labels:
+        ic: mercury
+- job_name: sns-dogmi-index
+  honor_timestamps: true
+  metrics_path: /metrics
+  scheme: https
+  follow_redirects: true
+  enable_http2: true
+  static_configs:
+    - targets:
+        - n535v-yiaaa-aaaaq-aadsq-cai.raw.icp0.io
+      labels:
+        ic: mercury
+        token: sns-dogmi
+- job_name: sns-dogmi-ledger
+  honor_timestamps: true
+  metrics_path: /metrics
+  scheme: https
+  follow_redirects: true
+  enable_http2: true
+  static_configs:
+    - targets:
+        - np5km-uyaaa-aaaaq-aadrq-cai.raw.icp0.io
+      labels:
+        ic: mercury
+        token: sns-dogmi
+
+# SNS: dragginz
+- job_name: sns-dragginz-archive
+  honor_timestamps: true
+  metrics_path: /metrics
+  scheme: https
+  follow_redirects: true
+  enable_http2: true
+  static_configs:
+    - targets:
+        - zmbi7-fyaaa-aaaaq-aaahq-cai.raw.icp0.io
+      labels:
+        ic: mercury
+- job_name: sns-dragginz-index
+  honor_timestamps: true
+  metrics_path: /metrics
+  scheme: https
+  follow_redirects: true
+  enable_http2: true
+  static_configs:
+    - targets:
+        - zlaol-iaaaa-aaaaq-aaaha-cai.raw.icp0.io
+      labels:
+        ic: mercury
+        token: sns-dragginz
+- job_name: sns-dragginz-ledger
+  honor_timestamps: true
+  metrics_path: /metrics
+  scheme: https
+  follow_redirects: true
+  enable_http2: true
+  static_configs:
+    - targets:
+        - zfcdd-tqaaa-aaaaq-aaaga-cai.raw.icp0.io
+      labels:
+        ic: mercury
+        token: sns-dragginz
+
+# SNS: elna-ai
+- job_name: sns-elna-ai-archive
+  honor_timestamps: true
+  metrics_path: /metrics
+  scheme: https
+  follow_redirects: true
+  enable_http2: true
+  static_configs:
+    - targets:
+        - dyxt2-fqaaa-aaaaq-aacsa-cai.raw.icp0.io
+      labels:
+        ic: mercury
+- job_name: sns-elna-ai-index
+  honor_timestamps: true
+  metrics_path: /metrics
+  scheme: https
+  follow_redirects: true
+  enable_http2: true
+  static_configs:
+    - targets:
+        - gwk6g-ciaaa-aaaaq-aacoq-cai.raw.icp0.io
+      labels:
+        ic: mercury
+        token: sns-elna-ai
+- job_name: sns-elna-ai-ledger
+  honor_timestamps: true
+  metrics_path: /metrics
+  scheme: https
+  follow_redirects: true
+  enable_http2: true
+  static_configs:
+    - targets:
+        - gemj7-oyaaa-aaaaq-aacnq-cai.raw.icp0.io
+      labels:
+        ic: mercury
+        token: sns-elna-ai
+
+# SNS: estatedao
+- job_name: sns-estatedao-archive
+  honor_timestamps: true
+  metrics_path: /metrics
+  scheme: https
+  follow_redirects: true
+  enable_http2: true
+  static_configs:
+    - targets:
+        - kj2yv-baaaa-aaaaq-aadba-cai.raw.icp0.io
+      labels:
+        ic: mercury
+- job_name: sns-estatedao-index
+  honor_timestamps: true
+  metrics_path: /metrics
+  scheme: https
+  follow_redirects: true
+  enable_http2: true
+  static_configs:
+    - targets:
+        - bfk5s-wyaaa-aaaaq-aac5q-cai.raw.icp0.io
+      labels:
+        ic: mercury
+        token: sns-estatedao
+- job_name: sns-estatedao-ledger
+  honor_timestamps: true
+  metrics_path: /metrics
+  scheme: https
+  follow_redirects: true
+  enable_http2: true
+  static_configs:
+    - targets:
+        - bliq2-niaaa-aaaaq-aac4q-cai.raw.icp0.io
+      labels:
+        ic: mercury
+        token: sns-estatedao
+
+# SNS: fomowell
+- job_name: sns-fomowell-archive
+  honor_timestamps: true
+  metrics_path: /metrics
+  scheme: https
+  follow_redirects: true
+  enable_http2: true
+  static_configs:
+    - targets:
+        - mudgn-caaaa-aaaaq-aaeiq-cai.raw.icp0.io
+      labels:
+        ic: mercury
+- job_name: sns-fomowell-index
+  honor_timestamps: true
+  metrics_path: /metrics
+  scheme: https
+  follow_redirects: true
+  enable_http2: true
+  static_configs:
+    - targets:
+        - os3ua-lqaaa-aaaaq-aaefq-cai.raw.icp0.io
+      labels:
+        ic: mercury
+        token: sns-fomowell
+- job_name: sns-fomowell-ledger
+  honor_timestamps: true
+  metrics_path: /metrics
+  scheme: https
+  follow_redirects: true
+  enable_http2: true
+  static_configs:
+    - targets:
+        - o4zzi-qaaaa-aaaaq-aaeeq-cai.raw.icp0.io
+      labels:
+        ic: mercury
+        token: sns-fomowell
+
+# SNS: fuelev
+- job_name: sns-fuelev-archive
+  honor_timestamps: true
+  metrics_path: /metrics
+  scheme: https
+  follow_redirects: true
+  enable_http2: true
+  static_configs:
+    - targets:
+        - nzncd-niaaa-aaaaq-aaepa-cai.raw.icp0.io
+      labels:
+        ic: mercury
+- job_name: sns-fuelev-index
+  honor_timestamps: true
+  metrics_path: /metrics
+  scheme: https
+  follow_redirects: true
+  enable_http2: true
+  static_configs:
+    - targets:
+        - nxppl-wyaaa-aaaaq-aaeoa-cai.raw.icp0.io
+      labels:
+        ic: mercury
+        token: sns-fuelev
+- job_name: sns-fuelev-ledger
+  honor_timestamps: true
+  metrics_path: /metrics
+  scheme: https
+  follow_redirects: true
+  enable_http2: true
+  static_configs:
+    - targets:
+        - nfjys-2iaaa-aaaaq-aaena-cai.raw.icp0.io
+      labels:
+        ic: mercury
+        token: sns-fuelev
+
+# SNS: gold-dao
+- job_name: sns-gold-dao-archive
+  honor_timestamps: true
+  metrics_path: /metrics
+  scheme: https
+  follow_redirects: true
+  enable_http2: true
+  static_configs:
+    - targets:
+        - fgzua-6iaaa-aaaaq-aacgq-cai.raw.icp0.io
+      labels:
+        ic: mercury
+- job_name: sns-gold-dao-index
+  honor_timestamps: true
+  metrics_path: /metrics
+  scheme: https
+  follow_redirects: true
+  enable_http2: true
+  static_configs:
+    - targets:
+        - efv5g-kqaaa-aaaaq-aacaa-cai.raw.icp0.io
+      labels:
+        ic: mercury
+        token: sns-gold-dao
+- job_name: sns-gold-dao-ledger
+  honor_timestamps: true
+  metrics_path: /metrics
+  scheme: https
+  follow_redirects: true
+  enable_http2: true
+  static_configs:
+    - targets:
+        - tyyy3-4aaaa-aaaaq-aab7a-cai.raw.icp0.io
+      labels:
+        ic: mercury
+        token: sns-gold-dao
+
+# SNS: icexplorer
+- job_name: sns-icexplorer-archive
+  honor_timestamps: true
+  metrics_path: /metrics
+  scheme: https
+  follow_redirects: true
+  enable_http2: true
+  static_configs:
+    - targets:
+        - i6ted-4yaaa-aaaaq-aaesa-cai.raw.icp0.io
+      labels:
+        ic: mercury
+- job_name: sns-icexplorer-index
+  honor_timestamps: true
+  metrics_path: /metrics
+  scheme: https
+  follow_redirects: true
+  enable_http2: true
+  static_configs:
+    - targets:
+        - iluvo-5qaaa-aaaaq-aaerq-cai.raw.icp0.io
+      labels:
+        ic: mercury
+        token: sns-icexplorer
+- job_name: sns-icexplorer-ledger
+  honor_timestamps: true
+  metrics_path: /metrics
+  scheme: https
+  follow_redirects: true
+  enable_http2: true
+  static_configs:
+    - targets:
+        - ifwyg-gaaaa-aaaaq-aaeqq-cai.raw.icp0.io
+      labels:
+        ic: mercury
+        token: sns-icexplorer
+
+# SNS: icghost
+- job_name: sns-icghost-archive
+  honor_timestamps: true
+  metrics_path: /metrics
+  scheme: https
+  follow_redirects: true
+  enable_http2: true
+  static_configs:
+    - targets:
+        - 52vqa-maaaa-aaaaq-aaa7a-cai.raw.icp0.io
+      labels:
+        ic: mercury
+- job_name: sns-icghost-index
+  honor_timestamps: true
+  metrics_path: /metrics
+  scheme: https
+  follow_redirects: true
+  enable_http2: true
+  static_configs:
+    - targets:
+        - 5ithz-aqaaa-aaaaq-aaa4a-cai.raw.icp0.io
+      labels:
+        ic: mercury
+        token: sns-icghost
+- job_name: sns-icghost-ledger
+  honor_timestamps: true
+  metrics_path: /metrics
+  scheme: https
+  follow_redirects: true
+  enable_http2: true
+  static_configs:
+    - targets:
+        - 4c4fd-caaaa-aaaaq-aaa3a-cai.raw.icp0.io
+      labels:
+        ic: mercury
+        token: sns-icghost
+
+# SNS: iclighthouse-dao
+- job_name: sns-iclighthouse-dao-archive
+  honor_timestamps: true
+  metrics_path: /metrics
+  scheme: https
+  follow_redirects: true
+  enable_http2: true
+  static_configs:
+    - targets:
+        - g7jv2-uaaaa-aaaaq-aacpa-cai.raw.icp0.io
+      labels:
+        ic: mercury
+- job_name: sns-iclighthouse-dao-index
+  honor_timestamps: true
+  metrics_path: /metrics
+  scheme: https
+  follow_redirects: true
+  enable_http2: true
+  static_configs:
+    - targets:
+        - gnpcd-yqaaa-aaaaq-aacma-cai.raw.icp0.io
+      labels:
+        ic: mercury
+        token: sns-iclighthouse-dao
+- job_name: sns-iclighthouse-dao-ledger
+  honor_timestamps: true
+  metrics_path: /metrics
+  scheme: https
+  follow_redirects: true
+  enable_http2: true
+  static_configs:
+    - targets:
+        - hhaaz-2aaaa-aaaaq-aacla-cai.raw.icp0.io
+      labels:
+        ic: mercury
+        token: sns-iclighthouse-dao
+
+# SNS: icpanda-dao
+- job_name: sns-icpanda-dao-archive
+  honor_timestamps: true
+  metrics_path: /metrics
+  scheme: https
+  follow_redirects: true
+  enable_http2: true
+  static_configs:
+    - targets:
+        - apf7i-uiaaa-aaaaq-aac2q-cai.raw.icp0.io
+      labels:
+        ic: mercury
+- job_name: sns-icpanda-dao-index
+  honor_timestamps: true
+  metrics_path: /metrics
+  scheme: https
+  follow_redirects: true
+  enable_http2: true
+  static_configs:
+    - targets:
+        - c3324-riaaa-aaaaq-aacuq-cai.raw.icp0.io
+      labels:
+        ic: mercury
+        token: sns-icpanda-dao
+- job_name: sns-icpanda-dao-ledger
+  honor_timestamps: true
+  metrics_path: /metrics
+  scheme: https
+  follow_redirects: true
+  enable_http2: true
+  static_configs:
+    - targets:
+        - druyg-tyaaa-aaaaq-aactq-cai.raw.icp0.io
+      labels:
+        ic: mercury
+        token: sns-icpanda-dao
+
+# SNS: icpcc-dao-llc
+- job_name: sns-icpcc-dao-llc-archive
+  honor_timestamps: true
+  metrics_path: /metrics
+  scheme: https
+  follow_redirects: true
+  enable_http2: true
+  static_configs:
+    - targets:
+        - jzjst-5aaaa-aaaaq-aadja-cai.raw.icp0.io
+      labels:
+        ic: mercury
+- job_name: sns-icpcc-dao-llc-index
+  honor_timestamps: true
+  metrics_path: /metrics
+  scheme: https
+  follow_redirects: true
+  enable_http2: true
+  static_configs:
+    - targets:
+        - ldv2p-dqaaa-aaaaq-aadga-cai.raw.icp0.io
+      labels:
+        ic: mercury
+        token: sns-icpcc-dao-llc
+- job_name: sns-icpcc-dao-llc-ledger
+  honor_timestamps: true
+  metrics_path: /metrics
+  scheme: https
+  follow_redirects: true
+  enable_http2: true
+  static_configs:
+    - targets:
+        - lrtnw-paaaa-aaaaq-aadfa-cai.raw.icp0.io
+      labels:
+        ic: mercury
+        token: sns-icpcc-dao-llc
+
+# SNS: icpswap
+- job_name: sns-icpswap-archive
+  honor_timestamps: true
+  metrics_path: /metrics
+  scheme: https
+  follow_redirects: true
+  enable_http2: true
+  static_configs:
+    - targets:
+        - agguu-caaaa-aaaaq-aac3a-cai.raw.icp0.io
+      labels:
+        ic: mercury
+- job_name: sns-icpswap-index
+  honor_timestamps: true
+  metrics_path: /metrics
+  scheme: https
+  follow_redirects: true
+  enable_http2: true
+  static_configs:
+    - targets:
+        - co4lr-qaaaa-aaaaq-aacxa-cai.raw.icp0.io
+      labels:
+        ic: mercury
+        token: sns-icpswap
+- job_name: sns-icpswap-ledger
+  honor_timestamps: true
+  metrics_path: /metrics
+  scheme: https
+  follow_redirects: true
+  enable_http2: true
+  static_configs:
+    - targets:
+        - ca6gz-lqaaa-aaaaq-aacwa-cai.raw.icp0.io
+      labels:
+        ic: mercury
+        token: sns-icpswap
+
+# SNS: icvc
+- job_name: sns-icvc-index
+  honor_timestamps: true
+  metrics_path: /metrics
+  scheme: https
+  follow_redirects: true
+  enable_http2: true
+  static_configs:
+    - targets:
+        - mqvz3-xaaaa-aaaaq-aadva-cai.raw.icp0.io
+      labels:
+        ic: mercury
+        token: sns-icvc
+- job_name: sns-icvc-ledger
+  honor_timestamps: true
+  metrics_path: /metrics
+  scheme: https
+  follow_redirects: true
+  enable_http2: true
+  static_configs:
+    - targets:
+        - m6xut-mqaaa-aaaaq-aadua-cai.raw.icp0.io
+      labels:
+        ic: mercury
+        token: sns-icvc
+
+# SNS: kinic
+- job_name: sns-kinic-archive
+  honor_timestamps: true
+  metrics_path: /metrics
+  scheme: https
+  follow_redirects: true
+  enable_http2: true
+  static_configs:
+    - targets:
+        - 6yan7-4qaaa-aaaaq-aaaua-cai.raw.icp0.io
+      labels:
+        ic: mercury
+- job_name: sns-kinic-index
+  honor_timestamps: true
+  metrics_path: /metrics
+  scheme: https
+  follow_redirects: true
+  enable_http2: true
+  static_configs:
+    - targets:
+        - 7vojr-tyaaa-aaaaq-aaatq-cai.raw.icp0.io
+      labels:
+        ic: mercury
+        token: sns-kinic
+- job_name: sns-kinic-ledger
+  honor_timestamps: true
+  metrics_path: /metrics
+  scheme: https
+  follow_redirects: true
+  enable_http2: true
+  static_configs:
+    - targets:
+        - 73mez-iiaaa-aaaaq-aaasq-cai.raw.icp0.io
+      labels:
+        ic: mercury
+        token: sns-kinic
+
+# SNS: kongswap
+- job_name: sns-kongswap-archive
+  honor_timestamps: true
+  metrics_path: /metrics
+  scheme: https
+  follow_redirects: true
+  enable_http2: true
+  static_configs:
+    - targets:
+        - oel4p-saaaa-aaaaq-aad3a-cai.raw.icp0.io
+      labels:
+        ic: mercury
+- job_name: sns-kongswap-index
+  honor_timestamps: true
+  metrics_path: /metrics
+  scheme: https
+  follow_redirects: true
+  enable_http2: true
+  static_configs:
+    - targets:
+        - onixt-eiaaa-aaaaq-aad2q-cai.raw.icp0.io
+      labels:
+        ic: mercury
+        token: sns-kongswap
+- job_name: sns-kongswap-ledger
+  honor_timestamps: true
+  metrics_path: /metrics
+  scheme: https
+  follow_redirects: true
+  enable_http2: true
+  static_configs:
+    - targets:
+        - o7oak-iyaaa-aaaaq-aadzq-cai.raw.icp0.io
+      labels:
+        ic: mercury
+        token: sns-kongswap
+
+# SNS: mora-dao
+- job_name: sns-mora-dao-index
+  honor_timestamps: true
+  metrics_path: /metrics
+  scheme: https
+  follow_redirects: true
+  enable_http2: true
+  static_configs:
+    - targets:
+        - kaztj-xiaaa-aaaaq-aadaq-cai.raw.icp0.io
+      labels:
+        ic: mercury
+        token: sns-mora-dao
+- job_name: sns-mora-dao-ledger
+  honor_timestamps: true
+  metrics_path: /metrics
+  scheme: https
+  follow_redirects: true
+  enable_http2: true
+  static_configs:
+    - targets:
+        - bzohd-byaaa-aaaaq-aac7q-cai.raw.icp0.io
+      labels:
+        ic: mercury
+        token: sns-mora-dao
+
+# SNS: motoko
+- job_name: sns-motoko-archive
+  honor_timestamps: true
+  metrics_path: /metrics
+  scheme: https
+  follow_redirects: true
+  enable_http2: true
+  static_configs:
+    - targets:
+        - j6iuh-qyaaa-aaaaq-aadjq-cai.raw.icp0.io
+      labels:
+        ic: mercury
+- job_name: sns-motoko-index
+  honor_timestamps: true
+  metrics_path: /metrics
+  scheme: https
+  follow_redirects: true
+  enable_http2: true
+  static_configs:
+    - targets:
+        - ks7eq-3yaaa-aaaaq-aaddq-cai.raw.icp0.io
+      labels:
+        ic: mercury
+        token: sns-motoko
+- job_name: sns-motoko-ledger
+  honor_timestamps: true
+  metrics_path: /metrics
+  scheme: https
+  follow_redirects: true
+  enable_http2: true
+  static_configs:
+    - targets:
+        - k45jy-aiaaa-aaaaq-aadcq-cai.raw.icp0.io
+      labels:
+        ic: mercury
+        token: sns-motoko
+
+# SNS: neutrinite
+- job_name: sns-neutrinite-archive
+  honor_timestamps: true
+  metrics_path: /metrics
+  scheme: https
+  follow_redirects: true
+  enable_http2: true
+  static_configs:
+    - targets:
+        - fbysu-tqaaa-aaaaq-aacga-cai.raw.icp0.io
+      labels:
+        ic: mercury
+- job_name: sns-neutrinite-index
+  honor_timestamps: true
+  metrics_path: /metrics
+  scheme: https
+  follow_redirects: true
+  enable_http2: true
+  static_configs:
+    - targets:
+        - ft6fn-7aaaa-aaaaq-aacfa-cai.raw.icp0.io
+      labels:
+        ic: mercury
+        token: sns-neutrinite
+- job_name: sns-neutrinite-ledger
+  honor_timestamps: true
+  metrics_path: /metrics
+  scheme: https
+  follow_redirects: true
+  enable_http2: true
+  static_configs:
+    - targets:
+        - f54if-eqaaa-aaaaq-aacea-cai.raw.icp0.io
+      labels:
+        ic: mercury
+        token: sns-neutrinite
+
+# SNS: nfidwallet
+- job_name: sns-nfidwallet-archive
+  honor_timestamps: true
+  metrics_path: /metrics
+  scheme: https
+  follow_redirects: true
+  enable_http2: true
+  static_configs:
+    - targets:
+        - nqoj7-3aaaa-aaaaq-aaeoq-cai.raw.icp0.io
+      labels:
+        ic: mercury
+- job_name: sns-nfidwallet-index
+  honor_timestamps: true
+  metrics_path: /metrics
+  scheme: https
+  follow_redirects: true
+  enable_http2: true
+  static_configs:
+    - targets:
+        - mgfru-oqaaa-aaaaq-aaelq-cai.raw.icp0.io
+      labels:
+        ic: mercury
+        token: sns-nfidwallet
+- job_name: sns-nfidwallet-ledger
+  honor_timestamps: true
+  metrics_path: /metrics
+  scheme: https
+  follow_redirects: true
+  enable_http2: true
+  static_configs:
+    - targets:
+        - mih44-vaaaa-aaaaq-aaekq-cai.raw.icp0.io
+      labels:
+        ic: mercury
+        token: sns-nfidwallet
+
+# SNS: nuance
+- job_name: sns-nuance-archive
+  honor_timestamps: true
+  metrics_path: /metrics
+  scheme: https
+  follow_redirects: true
+  enable_http2: true
+  static_configs:
+    - targets:
+        - ssx2b-6qaaa-aaaaq-aabya-cai.raw.icp0.io
+      labels:
+        ic: mercury
+- job_name: sns-nuance-index
+  honor_timestamps: true
+  metrics_path: /metrics
+  scheme: https
+  follow_redirects: true
+  enable_http2: true
+  static_configs:
+    - targets:
+        - q5mdq-biaaa-aaaaq-aabuq-cai.raw.icp0.io
+      labels:
+        ic: mercury
+        token: sns-nuance
+- job_name: sns-nuance-ledger
+  honor_timestamps: true
+  metrics_path: /metrics
+  scheme: https
+  follow_redirects: true
+  enable_http2: true
+  static_configs:
+    - targets:
+        - rxdbk-dyaaa-aaaaq-aabtq-cai.raw.icp0.io
+      labels:
+        ic: mercury
+        token: sns-nuance
+
+# SNS: openchat
+- job_name: sns-openchat-archive
+  honor_timestamps: true
+  metrics_path: /metrics
+  scheme: https
+  follow_redirects: true
+  enable_http2: true
+  static_configs:
+    - targets:
+        - 2sqpr-ciaaa-aaaaq-aaaoq-cai.raw.icp0.io
+      labels:
+        ic: mercury
+- job_name: sns-openchat-index
+  honor_timestamps: true
+  metrics_path: /metrics
+  scheme: https
+  follow_redirects: true
+  enable_http2: true
+  static_configs:
+    - targets:
+        - 2awyi-oyaaa-aaaaq-aaanq-cai.raw.icp0.io
+      labels:
+        ic: mercury
+        token: sns-openchat
+- job_name: sns-openchat-ledger
+  honor_timestamps: true
+  metrics_path: /metrics
+  scheme: https
+  follow_redirects: true
+  enable_http2: true
+  static_configs:
+    - targets:
+        - 2ouva-viaaa-aaaaq-aaamq-cai.raw.icp0.io
+      labels:
+        ic: mercury
+        token: sns-openchat
+
+# SNS: openfpl
+- job_name: sns-openfpl-archive
+  honor_timestamps: true
+  metrics_path: /metrics
+  scheme: https
+  follow_redirects: true
+  enable_http2: true
+  static_configs:
+    - targets:
+        - aiez4-zqaaa-aaaaq-aac2a-cai.raw.icp0.io
+      labels:
+        ic: mercury
+- job_name: sns-openfpl-index
+  honor_timestamps: true
+  metrics_path: /metrics
+  scheme: https
+  follow_redirects: true
+  enable_http2: true
+  static_configs:
+    - targets:
+        - dnqcx-eyaaa-aaaaq-aacrq-cai.raw.icp0.io
+      labels:
+        ic: mercury
+        token: sns-openfpl
+- job_name: sns-openfpl-ledger
+  honor_timestamps: true
+  metrics_path: /metrics
+  scheme: https
+  follow_redirects: true
+  enable_http2: true
+  static_configs:
+    - targets:
+        - ddsp7-7iaaa-aaaaq-aacqq-cai.raw.icp0.io
+      labels:
+        ic: mercury
+        token: sns-openfpl
+
+# SNS: origyn
+- job_name: sns-origyn-archive
+  honor_timestamps: true
+  metrics_path: /metrics
+  scheme: https
+  follow_redirects: true
+  enable_http2: true
+  static_configs:
+    - targets:
+        - jlpfk-rqaaa-aaaaq-aadka-cai.raw.icp0.io
+      labels:
+        ic: mercury
+- job_name: sns-origyn-index
+  honor_timestamps: true
+  metrics_path: /metrics
+  scheme: https
+  follow_redirects: true
+  enable_http2: true
+  static_configs:
+    - targets:
+        - jqkzp-liaaa-aaaaq-aadiq-cai.raw.icp0.io
+      labels:
+        ic: mercury
+        token: sns-origyn
+- job_name: sns-origyn-ledger
+  honor_timestamps: true
+  metrics_path: /metrics
+  scheme: https
+  follow_redirects: true
+  enable_http2: true
+  static_configs:
+    - targets:
+        - lkwrt-vyaaa-aaaaq-aadhq-cai.raw.icp0.io
+      labels:
+        ic: mercury
+        token: sns-origyn
+
+# SNS: seers
+- job_name: sns-seers-archive
+  honor_timestamps: true
+  metrics_path: /metrics
+  scheme: https
+  follow_redirects: true
+  enable_http2: true
+  static_configs:
+    - targets:
+        - qupim-xaaaa-aaaaq-aabva-cai.raw.icp0.io
+      labels:
+        ic: mercury
+- job_name: sns-seers-index
+  honor_timestamps: true
+  metrics_path: /metrics
+  scheme: https
+  follow_redirects: true
+  enable_http2: true
+  static_configs:
+    - targets:
+        - rlh33-uyaaa-aaaaq-aabrq-cai.raw.icp0.io
+      labels:
+        ic: mercury
+        token: sns-seers
+- job_name: sns-seers-ledger
+  honor_timestamps: true
+  metrics_path: /metrics
+  scheme: https
+  follow_redirects: true
+  enable_http2: true
+  static_configs:
+    - targets:
+        - rffwt-piaaa-aaaaq-aabqq-cai.raw.icp0.io
+      labels:
+        ic: mercury
+        token: sns-seers
+
+# SNS: sneed
+- job_name: sns-sneed-archive
+  honor_timestamps: true
+  metrics_path: /metrics
+  scheme: https
+  follow_redirects: true
+  enable_http2: true
+  static_configs:
+    - targets:
+        - h4f44-ayaaa-aaaaq-aacjq-cai.raw.icp0.io
+      labels:
+        ic: mercury
+- job_name: sns-sneed-index
+  honor_timestamps: true
+  metrics_path: /metrics
+  scheme: https
+  follow_redirects: true
+  enable_http2: true
+  static_configs:
+    - targets:
+        - h3e2i-naaaa-aaaaq-aacja-cai.raw.icp0.io
+      labels:
+        ic: mercury
+        token: sns-sneed
+- job_name: sns-sneed-ledger
+  honor_timestamps: true
+  metrics_path: /metrics
+  scheme: https
+  follow_redirects: true
+  enable_http2: true
+  static_configs:
+    - targets:
+        - hvgxa-wqaaa-aaaaq-aacia-cai.raw.icp0.io
+      labels:
+        ic: mercury
+        token: sns-sneed
+
+# SNS: sonic
+- job_name: sns-sonic-archive
+  honor_timestamps: true
+  metrics_path: /metrics
+  scheme: https
+  follow_redirects: true
+  enable_http2: true
+  static_configs:
+    - targets:
+        - svw4v-tiaaa-aaaaq-aabyq-cai.raw.icp0.io
+      labels:
+        ic: mercury
+- job_name: sns-sonic-index
+  honor_timestamps: true
+  metrics_path: /metrics
+  scheme: https
+  follow_redirects: true
+  enable_http2: true
+  static_configs:
+    - targets:
+        - qpkuj-nyaaa-aaaaq-aabxq-cai.raw.icp0.io
+      labels:
+        ic: mercury
+        token: sns-sonic
+- job_name: sns-sonic-ledger
+  honor_timestamps: true
+  metrics_path: /metrics
+  scheme: https
+  follow_redirects: true
+  enable_http2: true
+  static_configs:
+    - targets:
+        - qbizb-wiaaa-aaaaq-aabwq-cai.raw.icp0.io
+      labels:
+        ic: mercury
+        token: sns-sonic
+
+# SNS: trax
+- job_name: sns-trax-archive
+  honor_timestamps: true
+  metrics_path: /metrics
+  scheme: https
+  follow_redirects: true
+  enable_http2: true
+  static_configs:
+    - targets:
+        - fu7dz-syaaa-aaaaq-aacfq-cai.raw.icp0.io
+      labels:
+        ic: mercury
+- job_name: sns-trax-index
+  honor_timestamps: true
+  metrics_path: /metrics
+  scheme: https
+  follow_redirects: true
+  enable_http2: true
+  static_configs:
+    - targets:
+        - e6qbd-qiaaa-aaaaq-aaccq-cai.raw.icp0.io
+      labels:
+        ic: mercury
+        token: sns-trax
+- job_name: sns-trax-ledger
+  honor_timestamps: true
+  metrics_path: /metrics
+  scheme: https
+  follow_redirects: true
+  enable_http2: true
+  static_configs:
+    - targets:
+        - emww2-4yaaa-aaaaq-aacbq-cai.raw.icp0.io
+      labels:
+        ic: mercury
+        token: sns-trax
+
+# SNS: waterneuron
+- job_name: sns-waterneuron-archive
+  honor_timestamps: true
+  metrics_path: /metrics
+  scheme: https
+  follow_redirects: true
+  enable_http2: true
+  static_configs:
+    - targets:
+        - i2f3v-jyaaa-aaaaq-aadpq-cai.raw.icp0.io
+      labels:
+        ic: mercury
+- job_name: sns-waterneuron-index
+  honor_timestamps: true
+  metrics_path: /metrics
+  scheme: https
+  follow_redirects: true
+  enable_http2: true
+  static_configs:
+    - targets:
+        - iidmm-fiaaa-aaaaq-aadmq-cai.raw.icp0.io
+      labels:
+        ic: mercury
+        token: sns-waterneuron
+- job_name: sns-waterneuron-ledger
+  honor_timestamps: true
+  metrics_path: /metrics
+  scheme: https
+  follow_redirects: true
+  enable_http2: true
+  static_configs:
+    - targets:
+        - jcmow-hyaaa-aaaaq-aadlq-cai.raw.icp0.io
+      labels:
+        ic: mercury
+        token: sns-waterneuron
+
+# SNS: yral
+- job_name: sns-yral-archive
+  honor_timestamps: true
+  metrics_path: /metrics
+  scheme: https
+  follow_redirects: true
+  enable_http2: true
+  static_configs:
+    - targets:
+        - 4zzzg-yyaaa-aaaaq-aaazq-cai.raw.icp0.io
+      labels:
+        ic: mercury
+- job_name: sns-yral-index
+  honor_timestamps: true
+  metrics_path: /metrics
+  scheme: https
+  follow_redirects: true
+  enable_http2: true
+  static_configs:
+    - targets:
+        - 6dfr2-giaaa-aaaaq-aaawq-cai.raw.icp0.io
+      labels:
+        ic: mercury
+        token: sns-yral
+- job_name: sns-yral-ledger
+  honor_timestamps: true
+  metrics_path: /metrics
+  scheme: https
+  follow_redirects: true
+  enable_http2: true
+  static_configs:
+    - targets:
+        - 6rdgd-kyaaa-aaaaq-aaavq-cai.raw.icp0.io
+      labels:
+        ic: mercury
+        token: sns-yral
+
+# SNS: yuku-dao
+- job_name: sns-yuku-dao-archive
+  honor_timestamps: true
+  metrics_path: /metrics
+  scheme: https
+  follow_redirects: true
+  enable_http2: true
+  static_configs:
+    - targets:
+        - bqnm7-xqaaa-aaaaq-aac6a-cai.raw.icp0.io
+      labels:
+        ic: mercury
+- job_name: sns-yuku-dao-index
+  honor_timestamps: true
+  metrics_path: /metrics
+  scheme: https
+  follow_redirects: true
+  enable_http2: true
+  static_configs:
+    - targets:
+        - a5dir-yyaaa-aaaaq-aaczq-cai.raw.icp0.io
+      labels:
+        ic: mercury
+        token: sns-yuku-dao
+- job_name: sns-yuku-dao-ledger
+  honor_timestamps: true
+  metrics_path: /metrics
+  scheme: https
+  follow_redirects: true
+  enable_http2: true
+  static_configs:
+    - targets:
+        - atbfz-diaaa-aaaaq-aacyq-cai.raw.icp0.io
+      labels:
+        ic: mercury
+        token: sns-yuku-dao
+- job_name: llm-canister
+  honor_timestamps: true
+  metrics_path: /metrics
+  scheme: https
+  follow_redirects: true
+  enable_http2: true
+  static_configs:
+    - targets:
+        - w36hm-eqaaa-aaaal-qr76a-cai.raw.icp0.io
+      labels:
+        owner: "#eng-ai"
+- job_name: llm-watchdog
+  honor_timestamps: true
+  metrics_path: /metrics
+  scheme: https
+  follow_redirects: true
+  enable_http2: true
+  static_configs:
+    - targets:
+        - gf6pv-nqaaa-aaaaf-qap7q-cai.raw.icp0.io
+      labels:
+        owner: "#eng-ai"
+- job_name: node-rewards-canister
+  honor_timestamps: true
+  metrics_path: /metrics
+  scheme: https
+  follow_redirects: true
+  enable_http2: true
+  static_configs:
+    - targets:
+        - uuew5-iiaaa-aaaaa-qbx4q-cai.raw.icp0.io
+      labels:
+        ic: mercury
+        owner: "#eng-dre"
