@@ -2,13 +2,12 @@ use candid::Encode;
 use ic_cdk::{init, post_upgrade, pre_upgrade, query, update};
 use ic_http_types::{HttpRequest, HttpResponse, HttpResponseBuilder};
 use ic_nervous_system_canisters::registry::RegistryCanister;
-use ic_nervous_system_common::serve_metrics;
 use ic_nervous_system_timer_task::{RecurringSyncTask, TimerTaskMetricsRegistry};
 use ic_node_rewards_canister::canister::NodeRewardsCanister;
 use ic_node_rewards_canister::storage::{RegistryStoreStableMemoryBorrower, LAST_DAY_SYNCED, METRICS_MANAGER};
 use ic_node_rewards_canister::telemetry;
 use ic_node_rewards_canister::telemetry::PROMETHEUS_METRICS;
-use ic_node_rewards_canister::timer_tasks::{GetNodeProvidersRewardsInstructionsExporter, HourlySyncTask, NodeProvidersRewardsExporter};
+use ic_node_rewards_canister::timer_tasks::{GetNodeProvidersRewardsInstructionsExporter, HourlySyncTask};
 use ic_node_rewards_canister_api::monthly_rewards::{
     GetNodeProvidersMonthlyXdrRewardsRequest, GetNodeProvidersMonthlyXdrRewardsResponse,
 };
@@ -55,7 +54,6 @@ fn post_upgrade() {
 pub fn schedule_timers() {
     HourlySyncTask::new(&CANISTER).schedule(&METRICS_REGISTRY);
     GetNodeProvidersRewardsInstructionsExporter::new(&CANISTER).schedule(&METRICS_REGISTRY);
-    NodeProvidersRewardsExporter::new(&CANISTER).schedule(&METRICS_REGISTRY);
 }
 
 #[update]
@@ -69,7 +67,6 @@ async fn get_node_providers_monthly_xdr_rewards(
 fn get_node_providers_rewards(
     request: GetNodeProvidersRewardsRequest,
 ) -> GetNodeProvidersRewardsResponse {
-    serve_metrics(encode_metrics);
     let instructions = telemetry::InstructionCounter::default();
     let res = NodeRewardsCanister::get_node_providers_rewards(&CANISTER, request);
     ic_cdk::println!("get_node_providers_rewards instructions: {:?}", instructions.sum());
@@ -93,20 +90,34 @@ fn get_node_providers_rewards_calculation(
     res
 }
 
-pub fn encode_metrics(w: &mut ic_metrics_encoder::MetricsEncoder<Vec<u8>>) -> std::io::Result<()> {
+fn encode_metrics(w: &mut ic_metrics_encoder::MetricsEncoder<Vec<u8>>) -> std::io::Result<()> {
     METRICS_REGISTRY.with_borrow(|registry| registry.encode("node_rewards", w))?;
     PROMETHEUS_METRICS.with_borrow(|p| p.encode_metrics(w))
 }
 
 #[query(
     hidden = true,
-    decode_with = "candid::decode_one_with_decoding_quota::<100000,_>"
+    decode_with = "candid::decode_one_with_decoding_quota::<1000000,_>"
 )]
 fn http_request(request: HttpRequest) -> HttpResponse {
     match request.path() {
         "/metrics" => {
-            ic_cdk::println!("http_request");
-            serve_metrics(encode_metrics)
+            let mut w = ic_metrics_encoder::MetricsEncoder::new(
+                vec![],
+                ic_cdk::api::time() as i64 / 1_000_000,
+            );
+
+            match encode_metrics(&mut w) {
+                Ok(_) => HttpResponseBuilder::ok()
+                    .header("Content-Type", "text/plain; version=0.0.4")
+                    .header("Cache-Control", "no-store")
+                    .with_body_and_content_length(w.into_inner())
+                    .build(),
+                Err(err) => {
+                    HttpResponseBuilder::server_error(format!("Failed to encode metrics: {err}"))
+                        .build()
+                }
+            }
         }
         _ => HttpResponseBuilder::not_found().build(),
     }
