@@ -10,6 +10,8 @@ use ic_canisters::governance::GovernanceCanisterWrapper;
 use ic_canisters::node_rewards::NodeRewardsCanisterWrapper;
 use ic_node_rewards_canister_api::DateUtc;
 use ic_node_rewards_canister_api::provider_rewards_calculation::{DailyNodeFailureRate, DailyNodeProviderRewards, DailyResults};
+use influxdb2::Client as InfluxClient;
+use influxdb2::models::DataPoint;
 use itertools::Itertools;
 use log::info;
 use std::cell::RefCell;
@@ -42,6 +44,12 @@ pub enum NodeRewardsMode {
         /// If set, display comparison table with governance rewards
         #[arg(long)]
         compare_with_governance: bool,
+    },
+    /// Push node rewards metrics to InfluxDB for a specific date
+    PushToInflux {
+        /// Date in format YYYY-MM-DD (defaults to yesterday)
+        #[arg(long)]
+        date: Option<String>,
     },
 }
 
@@ -85,6 +93,11 @@ impl ExecutableCommand for NodeRewards {
     fn validate(&self, _args: &GlobalArgs, _cmd: &mut clap::Command) {}
 
     async fn execute(&self, ctx: crate::ctx::DreContext) -> anyhow::Result<()> {
+        // Handle PushToInflux separately as it doesn't need governance client
+        if let NodeRewardsMode::PushToInflux { date } = &self.mode {
+            return self.push_to_influx(ctx, date.clone()).await;
+        }
+
         let (_, canister_agent) = ctx.create_ic_agent_canister_client().await?;
         let node_rewards_client: NodeRewardsCanisterWrapper = canister_agent.clone().into();
         let governance_client: GovernanceCanisterWrapper = canister_agent.into();
@@ -94,6 +107,9 @@ impl ExecutableCommand for NodeRewards {
         let gov_rewards_list = governance_client.list_node_provider_rewards(None).await?;
         // Run the selected subcommand and populate self attributes
         match &self.mode {
+            NodeRewardsMode::PushToInflux { .. } => {
+                unreachable!("PushToInflux should have been handled earlier")
+            }
             NodeRewardsMode::Ongoing {
                 csv_detailed_output_path,
                 provider_id,
@@ -925,6 +941,138 @@ impl NodeRewards {
             });
 
         wtr.flush()?;
+        Ok(())
+    }
+
+    /// Push node rewards metrics to InfluxDB
+    async fn push_to_influx(&self, ctx: crate::ctx::DreContext, date_str: Option<String>) -> anyhow::Result<()> {
+        // Get InfluxDB configuration from environment
+        let influx_url = std::env::var("INFLUXDB_URL").unwrap_or_else(|_| "http://localhost:8086".to_string());
+        let influx_token = std::env::var("INFLUXDB_TOKEN").map_err(|_| anyhow!("INFLUXDB_TOKEN environment variable not set"))?;
+        let influx_org = std::env::var("INFLUXDB_ORG").unwrap_or_else(|_| "ic-org".to_string());
+        let influx_bucket = std::env::var("INFLUXDB_BUCKET").unwrap_or_else(|_| "node-rewards".to_string());
+
+        // Parse or default to yesterday
+        let target_date = if let Some(date) = date_str {
+            chrono::NaiveDate::parse_from_str(&date, "%Y-%m-%d")?
+        } else {
+            let today = chrono::Utc::now().date_naive();
+            today.pred_opt().unwrap()
+        };
+
+        info!("Pushing node rewards data to InfluxDB for date: {}", target_date);
+
+        // Fetch data from node rewards canister
+        let (_, canister_agent) = ctx.create_ic_agent_canister_client().await?;
+        let node_rewards_client: NodeRewardsCanisterWrapper = canister_agent.into();
+
+        let date_utc = DateUtc::from(target_date);
+        let daily_results = node_rewards_client.get_rewards_daily(date_utc).await?;
+
+        // Create InfluxDB client
+        let client = InfluxClient::new(influx_url, influx_org, influx_token);
+
+        let timestamp_nanos = target_date
+            .and_hms_opt(0, 0, 0)
+            .ok_or_else(|| anyhow!("Invalid date midnight"))?
+            .and_utc()
+            .timestamp_nanos_opt()
+            .ok_or_else(|| anyhow!("Timestamp overflow"))?;
+
+        let mut points: Vec<DataPoint> = Vec::new();
+
+        // Push provider-level metrics
+        for (provider_id, provider_rewards) in daily_results.provider_results {
+            let provider_id_str = provider_id.to_string();
+
+            // Latest nodes count
+            points.push(
+                DataPoint::builder("latest_nodes_count")
+                    .tag("provider_id", &provider_id_str)
+                    .field("value", provider_rewards.daily_nodes_rewards.len() as i64)
+                    .timestamp(timestamp_nanos)
+                    .build()?,
+            );
+
+            // Total base rewards
+            points.push(
+                DataPoint::builder("latest_total_base_rewards_xdr_permyriad")
+                    .tag("provider_id", &provider_id_str)
+                    .field("value", provider_rewards.total_base_rewards_xdr_permyriad.unwrap() as i64)
+                    .timestamp(timestamp_nanos)
+                    .build()?,
+            );
+
+            // Total adjusted rewards
+            points.push(
+                DataPoint::builder("latest_total_adjusted_rewards_xdr_permyriad")
+                    .tag("provider_id", &provider_id_str)
+                    .field("value", provider_rewards.total_adjusted_rewards_xdr_permyriad.unwrap() as i64)
+                    .timestamp(timestamp_nanos)
+                    .build()?,
+            );
+
+            // Node-level metrics
+            for node_result in &provider_rewards.daily_nodes_rewards {
+                let node_id_str = node_result.node_id.map(|id| id.to_string()).unwrap_or_default();
+
+                // Original failure rate
+                if let Some(DailyNodeFailureRate::SubnetMember { node_metrics: Some(m) }) = &node_result.daily_node_failure_rate {
+                    if let Some(original_fr) = m.original_failure_rate {
+                        points.push(
+                            DataPoint::builder("latest_original_failure_rate")
+                                .tag("provider_id", &provider_id_str)
+                                .tag("node_id", &node_id_str)
+                                .tag("subnet_id", &m.subnet_assigned.map(|s| s.to_string()).unwrap_or_default())
+                                .field("value", original_fr)
+                                .timestamp(timestamp_nanos)
+                                .build()?,
+                        );
+                    }
+
+                    if let Some(relative_fr) = m.relative_failure_rate {
+                        points.push(
+                            DataPoint::builder("latest_relative_failure_rate")
+                                .tag("provider_id", &provider_id_str)
+                                .tag("node_id", &node_id_str)
+                                .tag("subnet_id", &m.subnet_assigned.map(|s| s.to_string()).unwrap_or_default())
+                                .field("value", relative_fr)
+                                .timestamp(timestamp_nanos)
+                                .build()?,
+                        );
+                    }
+                }
+            }
+        }
+
+        // Push subnet-level metrics
+        for (subnet_id, failure_rate) in daily_results.subnets_failure_rate {
+            points.push(
+                DataPoint::builder("subnet_failure_rate")
+                    .tag("subnet_id", &subnet_id.to_string())
+                    .field("value", failure_rate)
+                    .timestamp(timestamp_nanos)
+                    .build()?,
+            );
+        }
+
+        // Push governance latest reward timestamp
+        let governance_client: GovernanceCanisterWrapper = ctx.create_ic_agent_canister_client().await?.1.into();
+        let gov_rewards_list = governance_client.list_node_provider_rewards(None).await?;
+        if let Some(last_rewards) = gov_rewards_list.first() {
+            points.push(
+                DataPoint::builder("governance_latest_reward_event_timestamp_seconds")
+                    .field("value", last_rewards.timestamp as i64)
+                    .timestamp(timestamp_nanos)
+                    .build()?,
+            );
+        }
+
+        // Write all points to InfluxDB
+        info!("Writing {} data points to InfluxDB...", points.len());
+        client.write(&influx_bucket, futures::stream::iter(points)).await?;
+
+        info!("Successfully pushed node rewards data for {} to InfluxDB", target_date);
         Ok(())
     }
 }
