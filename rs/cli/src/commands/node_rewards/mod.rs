@@ -43,12 +43,6 @@ pub enum NodeRewardsMode {
         #[arg(long)]
         compare_with_governance: bool,
     },
-    /// Push node rewards metrics to InfluxDB for a specific date
-    PushToInflux {
-        /// Date in format YYYY-MM-DD (defaults to yesterday)
-        #[arg(long)]
-        date: Option<String>,
-    },
     /// Push node rewards metrics to VictoriaMetrics for a specific date
     PushToVictoria {
         /// Date in format YYYY-MM-DD (defaults to yesterday)
@@ -100,11 +94,6 @@ impl ExecutableCommand for NodeRewards {
     fn validate(&self, _args: &GlobalArgs, _cmd: &mut clap::Command) {}
 
     async fn execute(&self, ctx: crate::ctx::DreContext) -> anyhow::Result<()> {
-        // Handle PushToInflux separately as it doesn't need governance client
-        if let NodeRewardsMode::PushToInflux { date } = &self.mode {
-            return self.push_to_influx(ctx, date.clone()).await;
-        }
-
         // Handle PushToVictoria separately as it doesn't need governance client
         if let NodeRewardsMode::PushToVictoria { date, victoria_url } = &self.mode {
             return self.push_to_victoria(ctx, date.clone(), victoria_url.clone()).await;
@@ -119,9 +108,6 @@ impl ExecutableCommand for NodeRewards {
         let gov_rewards_list = governance_client.list_node_provider_rewards(None).await?;
         // Run the selected subcommand and populate self attributes
         match &self.mode {
-            NodeRewardsMode::PushToInflux { .. } => {
-                unreachable!("PushToInflux should have been handled earlier")
-            }
             NodeRewardsMode::PushToVictoria { .. } => {
                 unreachable!("PushToVictoria should have been handled earlier")
             }
@@ -1083,9 +1069,10 @@ impl NodeRewards {
         // Gather metrics and manually format with timestamps
         let metric_families = registry.gather();
         let mut buffer = String::new();
+        let num_families = metric_families.len();
 
         // Manually construct Prometheus format with timestamps
-        for mf in metric_families {
+        for mf in &metric_families {
             for m in mf.get_metric() {
                 let metric_name = mf.get_name();
 
@@ -1122,8 +1109,7 @@ impl NodeRewards {
 
         info!(
             "Pushing {} metrics to VictoriaMetrics for timestamp {}...",
-            metric_families.len(),
-            timestamp_millis
+            num_families, timestamp_millis
         );
 
         let response = client.post(&import_url).header("Content-Type", "text/plain").body(buffer).send().await?;
