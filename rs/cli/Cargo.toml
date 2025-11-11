@@ -92,6 +92,7 @@ ic-registry-common-proto = { workspace = true }
 base64 = { version = "0.22" }
 influxdb2 = "0.5"
 influxdb2-structmap = "0.2"
+prometheus = "0.13"
 
 [dev-dependencies]
 actix-rt = { workspace = true }

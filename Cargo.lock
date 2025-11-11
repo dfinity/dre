@@ -2235,6 +2235,7 @@ dependencies = [
  "log",
  "mockall",
  "pretty_env_logger",
+ "prometheus",
  "prost",
  "regex",
  "registry-canister",

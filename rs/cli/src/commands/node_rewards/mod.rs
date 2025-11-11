@@ -10,8 +10,6 @@ use ic_canisters::governance::GovernanceCanisterWrapper;
 use ic_canisters::node_rewards::NodeRewardsCanisterWrapper;
 use ic_node_rewards_canister_api::DateUtc;
 use ic_node_rewards_canister_api::provider_rewards_calculation::{DailyNodeFailureRate, DailyNodeProviderRewards, DailyResults};
-use influxdb2::Client as InfluxClient;
-use influxdb2::models::DataPoint;
 use itertools::Itertools;
 use log::info;
 use std::cell::RefCell;
@@ -50,6 +48,15 @@ pub enum NodeRewardsMode {
         /// Date in format YYYY-MM-DD (defaults to yesterday)
         #[arg(long)]
         date: Option<String>,
+    },
+    /// Push node rewards metrics to VictoriaMetrics for a specific date
+    PushToVictoria {
+        /// Date in format YYYY-MM-DD (defaults to yesterday)
+        #[arg(long)]
+        date: Option<String>,
+        /// VictoriaMetrics URL (defaults to http://localhost:9090)
+        #[arg(long)]
+        victoria_url: Option<String>,
     },
 }
 
@@ -98,6 +105,11 @@ impl ExecutableCommand for NodeRewards {
             return self.push_to_influx(ctx, date.clone()).await;
         }
 
+        // Handle PushToVictoria separately as it doesn't need governance client
+        if let NodeRewardsMode::PushToVictoria { date, victoria_url } = &self.mode {
+            return self.push_to_victoria(ctx, date.clone(), victoria_url.clone()).await;
+        }
+
         let (_, canister_agent) = ctx.create_ic_agent_canister_client().await?;
         let node_rewards_client: NodeRewardsCanisterWrapper = canister_agent.clone().into();
         let governance_client: GovernanceCanisterWrapper = canister_agent.into();
@@ -109,6 +121,9 @@ impl ExecutableCommand for NodeRewards {
         match &self.mode {
             NodeRewardsMode::PushToInflux { .. } => {
                 unreachable!("PushToInflux should have been handled earlier")
+            }
+            NodeRewardsMode::PushToVictoria { .. } => {
+                unreachable!("PushToVictoria should have been handled earlier")
             }
             NodeRewardsMode::Ongoing {
                 csv_detailed_output_path,
@@ -944,13 +959,13 @@ impl NodeRewards {
         Ok(())
     }
 
-    /// Push node rewards metrics to InfluxDB
-    async fn push_to_influx(&self, ctx: crate::ctx::DreContext, date_str: Option<String>) -> anyhow::Result<()> {
-        // Get InfluxDB configuration from environment
-        let influx_url = std::env::var("INFLUXDB_URL").unwrap_or_else(|_| "http://localhost:8086".to_string());
-        let influx_token = std::env::var("INFLUXDB_TOKEN").map_err(|_| anyhow!("INFLUXDB_TOKEN environment variable not set"))?;
-        let influx_org = std::env::var("INFLUXDB_ORG").unwrap_or_else(|_| "ic-org".to_string());
-        let influx_bucket = std::env::var("INFLUXDB_BUCKET").unwrap_or_else(|_| "node-rewards".to_string());
+    async fn push_to_victoria(&self, ctx: crate::ctx::DreContext, date_str: Option<String>, victoria_url: Option<String>) -> anyhow::Result<()> {
+        use prometheus::{GaugeVec, Opts, Registry};
+
+        // Get VictoriaMetrics configuration
+        let vm_url = victoria_url
+            .or_else(|| std::env::var("VICTORIA_METRICS_URL").ok())
+            .unwrap_or_else(|| "http://localhost:9090".to_string());
 
         // Parse or default to yesterday
         let target_date = if let Some(date) = date_str {
@@ -960,7 +975,7 @@ impl NodeRewards {
             today.pred_opt().unwrap()
         };
 
-        info!("Pushing node rewards data to InfluxDB for date: {}", target_date);
+        info!("Pushing node rewards data to VictoriaMetrics for date: {}", target_date);
 
         // Fetch data from node rewards canister
         let (_, canister_agent) = ctx.create_ic_agent_canister_client().await?;
@@ -969,110 +984,156 @@ impl NodeRewards {
         let date_utc = DateUtc::from(target_date);
         let daily_results = node_rewards_client.get_rewards_daily(date_utc).await?;
 
-        // Create InfluxDB client
-        let client = InfluxClient::new(influx_url, influx_org, influx_token);
+        // Create Prometheus registry and metrics
+        let registry = Registry::new();
 
-        let timestamp_nanos = target_date
-            .and_hms_opt(0, 0, 0)
-            .ok_or_else(|| anyhow!("Invalid date midnight"))?
+        let timestamp_millis = target_date
+            .and_hms_opt(12, 0, 0)
+            .ok_or_else(|| anyhow!("Invalid date noon"))?
             .and_utc()
-            .timestamp_nanos_opt()
-            .ok_or_else(|| anyhow!("Timestamp overflow"))?;
+            .timestamp_millis();
 
-        let mut points: Vec<DataPoint> = Vec::new();
+        // Define metrics
+        let nodes_count = GaugeVec::new(Opts::new("latest_nodes_count", "Number of nodes per provider"), &["provider_id"])?;
+        registry.register(Box::new(nodes_count.clone()))?;
 
-        // Push provider-level metrics
+        let base_rewards = GaugeVec::new(
+            Opts::new("latest_total_base_rewards_xdr_permyriad", "Total base rewards in XDR permyriad"),
+            &["provider_id"],
+        )?;
+        registry.register(Box::new(base_rewards.clone()))?;
+
+        let adjusted_rewards = GaugeVec::new(
+            Opts::new("latest_total_adjusted_rewards_xdr_permyriad", "Total adjusted rewards in XDR permyriad"),
+            &["provider_id"],
+        )?;
+        registry.register(Box::new(adjusted_rewards.clone()))?;
+
+        let original_failure_rate = GaugeVec::new(
+            Opts::new("latest_original_failure_rate", "Original failure rate per node"),
+            &["provider_id", "node_id", "subnet_id"],
+        )?;
+        registry.register(Box::new(original_failure_rate.clone()))?;
+
+        let relative_failure_rate = GaugeVec::new(
+            Opts::new("latest_relative_failure_rate", "Relative failure rate per node"),
+            &["provider_id", "node_id", "subnet_id"],
+        )?;
+        registry.register(Box::new(relative_failure_rate.clone()))?;
+
+        let subnet_failure = GaugeVec::new(Opts::new("subnet_failure_rate", "Failure rate per subnet"), &["subnet_id"])?;
+        registry.register(Box::new(subnet_failure.clone()))?;
+
+        let gov_timestamp = prometheus::Gauge::new(
+            "governance_latest_reward_event_timestamp_seconds",
+            "Latest governance reward event timestamp",
+        )?;
+        registry.register(Box::new(gov_timestamp.clone()))?;
+
+        // Set provider-level metrics
         for (provider_id, provider_rewards) in daily_results.provider_results {
             let provider_id_str = provider_id.to_string();
 
-            // Latest nodes count
-            points.push(
-                DataPoint::builder("latest_nodes_count")
-                    .tag("provider_id", &provider_id_str)
-                    .field("value", provider_rewards.daily_nodes_rewards.len() as i64)
-                    .timestamp(timestamp_nanos)
-                    .build()?,
-            );
+            nodes_count
+                .with_label_values(&[&provider_id_str])
+                .set(provider_rewards.daily_nodes_rewards.len() as f64);
 
-            // Total base rewards
-            points.push(
-                DataPoint::builder("latest_total_base_rewards_xdr_permyriad")
-                    .tag("provider_id", &provider_id_str)
-                    .field("value", provider_rewards.total_base_rewards_xdr_permyriad.unwrap() as i64)
-                    .timestamp(timestamp_nanos)
-                    .build()?,
-            );
+            if let Some(base) = provider_rewards.total_base_rewards_xdr_permyriad {
+                base_rewards.with_label_values(&[&provider_id_str]).set(base as f64);
+            }
 
-            // Total adjusted rewards
-            points.push(
-                DataPoint::builder("latest_total_adjusted_rewards_xdr_permyriad")
-                    .tag("provider_id", &provider_id_str)
-                    .field("value", provider_rewards.total_adjusted_rewards_xdr_permyriad.unwrap() as i64)
-                    .timestamp(timestamp_nanos)
-                    .build()?,
-            );
+            if let Some(adjusted) = provider_rewards.total_adjusted_rewards_xdr_permyriad {
+                adjusted_rewards.with_label_values(&[&provider_id_str]).set(adjusted as f64);
+            }
 
             // Node-level metrics
             for node_result in &provider_rewards.daily_nodes_rewards {
                 let node_id_str = node_result.node_id.map(|id| id.to_string()).unwrap_or_default();
 
-                // Original failure rate
                 if let Some(DailyNodeFailureRate::SubnetMember { node_metrics: Some(m) }) = &node_result.daily_node_failure_rate {
+                    let subnet_id_str = m.subnet_assigned.map(|s| s.to_string()).unwrap_or_default();
+
                     if let Some(original_fr) = m.original_failure_rate {
-                        points.push(
-                            DataPoint::builder("latest_original_failure_rate")
-                                .tag("provider_id", &provider_id_str)
-                                .tag("node_id", &node_id_str)
-                                .tag("subnet_id", &m.subnet_assigned.map(|s| s.to_string()).unwrap_or_default())
-                                .field("value", original_fr)
-                                .timestamp(timestamp_nanos)
-                                .build()?,
-                        );
+                        original_failure_rate
+                            .with_label_values(&[&provider_id_str, &node_id_str, &subnet_id_str])
+                            .set(original_fr);
                     }
 
                     if let Some(relative_fr) = m.relative_failure_rate {
-                        points.push(
-                            DataPoint::builder("latest_relative_failure_rate")
-                                .tag("provider_id", &provider_id_str)
-                                .tag("node_id", &node_id_str)
-                                .tag("subnet_id", &m.subnet_assigned.map(|s| s.to_string()).unwrap_or_default())
-                                .field("value", relative_fr)
-                                .timestamp(timestamp_nanos)
-                                .build()?,
-                        );
+                        relative_failure_rate
+                            .with_label_values(&[&provider_id_str, &node_id_str, &subnet_id_str])
+                            .set(relative_fr);
                     }
                 }
             }
         }
 
-        // Push subnet-level metrics
+        // Set subnet-level metrics
         for (subnet_id, failure_rate) in daily_results.subnets_failure_rate {
-            points.push(
-                DataPoint::builder("subnet_failure_rate")
-                    .tag("subnet_id", &subnet_id.to_string())
-                    .field("value", failure_rate)
-                    .timestamp(timestamp_nanos)
-                    .build()?,
-            );
+            subnet_failure.with_label_values(&[&subnet_id.to_string()]).set(failure_rate);
         }
 
-        // Push governance latest reward timestamp
+        // Set governance timestamp
         let governance_client: GovernanceCanisterWrapper = ctx.create_ic_agent_canister_client().await?.1.into();
         let gov_rewards_list = governance_client.list_node_provider_rewards(None).await?;
         if let Some(last_rewards) = gov_rewards_list.first() {
-            points.push(
-                DataPoint::builder("governance_latest_reward_event_timestamp_seconds")
-                    .field("value", last_rewards.timestamp as i64)
-                    .timestamp(timestamp_nanos)
-                    .build()?,
-            );
+            gov_timestamp.set(last_rewards.timestamp as f64);
         }
 
-        // Write all points to InfluxDB
-        info!("Writing {} data points to InfluxDB...", points.len());
-        client.write(&influx_bucket, futures::stream::iter(points)).await?;
+        // Gather metrics and manually format with timestamps
+        let metric_families = registry.gather();
+        let mut buffer = String::new();
 
-        info!("Successfully pushed node rewards data for {} to InfluxDB", target_date);
-        Ok(())
+        // Manually construct Prometheus format with timestamps
+        for mf in metric_families {
+            for m in mf.get_metric() {
+                let metric_name = mf.get_name();
+
+                // Build label string
+                let mut labels = Vec::new();
+                for label in m.get_label() {
+                    labels.push(format!("{}=\"{}\"", label.get_name(), label.get_value()));
+                }
+                let label_str = if labels.is_empty() {
+                    String::new()
+                } else {
+                    format!("{{{}}}", labels.join(","))
+                };
+
+                // Get metric value
+                let value = if m.has_gauge() {
+                    m.get_gauge().get_value()
+                } else if m.has_counter() {
+                    m.get_counter().get_value()
+                } else if m.has_untyped() {
+                    m.get_untyped().get_value()
+                } else {
+                    continue; // Skip unsupported metric types
+                };
+
+                // Format: metric_name{labels} value timestamp_ms
+                buffer.push_str(&format!("{}{} {} {}\n", metric_name, label_str, value, timestamp_millis));
+            }
+        }
+
+        // Push to VictoriaMetrics via import API
+        let client = reqwest::Client::new();
+        let import_url = format!("{}/api/v1/import/prometheus", vm_url.trim_end_matches('/'));
+
+        info!(
+            "Pushing {} metrics to VictoriaMetrics for timestamp {}...",
+            metric_families.len(),
+            timestamp_millis
+        );
+
+        let response = client.post(&import_url).header("Content-Type", "text/plain").body(buffer).send().await?;
+
+        if response.status().is_success() {
+            info!("Successfully pushed node rewards data for {} to VictoriaMetrics", target_date);
+            Ok(())
+        } else {
+            let error_text = response.text().await?;
+            Err(anyhow!("Failed to push to VictoriaMetrics: {}", error_text))
+        }
     }
 }
