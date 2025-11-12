@@ -16,6 +16,7 @@ use std::cell::RefCell;
 use std::collections::BTreeMap;
 use std::fs;
 use tabled::Tabled;
+use url::Url;
 
 #[derive(Subcommand, Debug, Clone)]
 pub enum NodeRewardsMode {
@@ -45,7 +46,7 @@ pub enum NodeRewardsMode {
     },
     /// Push node rewards metrics to VictoriaMetrics for a specific date
     PushToVictoria {
-        /// Date in format YYYY-MM-DD (defaults to yesterday)
+        /// Date in format YYYY-MM-DD
         #[arg(long)]
         date: Option<String>,
         /// VictoriaMetrics URL (defaults to http://localhost:9090)
@@ -94,11 +95,6 @@ impl ExecutableCommand for NodeRewards {
     fn validate(&self, _args: &GlobalArgs, _cmd: &mut clap::Command) {}
 
     async fn execute(&self, ctx: crate::ctx::DreContext) -> anyhow::Result<()> {
-        // Handle PushToVictoria separately as it doesn't need governance client
-        if let NodeRewardsMode::PushToVictoria { date, victoria_url } = &self.mode {
-            return self.push_to_victoria(ctx, date.clone(), victoria_url.clone()).await;
-        }
-
         let (_, canister_agent) = ctx.create_ic_agent_canister_client().await?;
         let node_rewards_client: NodeRewardsCanisterWrapper = canister_agent.clone().into();
         let governance_client: GovernanceCanisterWrapper = canister_agent.into();
@@ -108,8 +104,15 @@ impl ExecutableCommand for NodeRewards {
         let gov_rewards_list = governance_client.list_node_provider_rewards(None).await?;
         // Run the selected subcommand and populate self attributes
         match &self.mode {
-            NodeRewardsMode::PushToVictoria { .. } => {
-                unreachable!("PushToVictoria should have been handled earlier")
+            NodeRewardsMode::PushToVictoria { date, victoria_url } => {
+                let url_string = victoria_url
+                    .clone()
+                    .or_else(|| std::env::var("VICTORIA_METRICS_URL").ok())
+                    .unwrap_or_else(|| "http://localhost:9090".to_string());
+
+                let victoria_url = Url::parse(&url_string).map_err(|e| anyhow!("Invalid VictoriaMetrics URL '{}': {}", url_string, e))?;
+
+                return self.push_rewards_metrics_to_victoria(ctx, date.clone(), victoria_url).await;
             }
             NodeRewardsMode::Ongoing {
                 csv_detailed_output_path,
@@ -945,16 +948,10 @@ impl NodeRewards {
         Ok(())
     }
 
-    async fn push_to_victoria(&self, ctx: crate::ctx::DreContext, date_str: Option<String>, victoria_url: Option<String>) -> anyhow::Result<()> {
+    async fn push_rewards_metrics_to_victoria(&self, ctx: crate::ctx::DreContext, date: Option<String>, victoria_url: Url) -> anyhow::Result<()> {
         use prometheus::{GaugeVec, Opts, Registry};
-
-        // Get VictoriaMetrics configuration
-        let vm_url = victoria_url
-            .or_else(|| std::env::var("VICTORIA_METRICS_URL").ok())
-            .unwrap_or_else(|| "http://localhost:9090".to_string());
-
         // Parse or default to yesterday
-        let target_date = if let Some(date) = date_str {
+        let target_date = if let Some(date) = date {
             chrono::NaiveDate::parse_from_str(&date, "%Y-%m-%d")?
         } else {
             let today = chrono::Utc::now().date_naive();
@@ -973,36 +970,36 @@ impl NodeRewards {
         // Create Prometheus registry and metrics
         let registry = Registry::new();
 
-        let timestamp_millis = target_date
+        let noon_timestamp_millis = target_date
             .and_hms_opt(12, 0, 0)
             .ok_or_else(|| anyhow!("Invalid date noon"))?
             .and_utc()
             .timestamp_millis();
 
         // Define metrics
-        let nodes_count = GaugeVec::new(Opts::new("latest_nodes_count", "Number of nodes per provider"), &["provider_id"])?;
+        let nodes_count = GaugeVec::new(Opts::new("nodes_count", "Number of nodes per provider"), &["provider_id"])?;
         registry.register(Box::new(nodes_count.clone()))?;
 
         let base_rewards = GaugeVec::new(
-            Opts::new("latest_total_base_rewards_xdr_permyriad", "Total base rewards in XDR permyriad"),
+            Opts::new("total_base_rewards_xdr_permyriad", "Total base rewards in XDR permyriad"),
             &["provider_id"],
         )?;
         registry.register(Box::new(base_rewards.clone()))?;
 
         let adjusted_rewards = GaugeVec::new(
-            Opts::new("latest_total_adjusted_rewards_xdr_permyriad", "Total adjusted rewards in XDR permyriad"),
+            Opts::new("total_adjusted_rewards_xdr_permyriad", "Total adjusted rewards in XDR permyriad"),
             &["provider_id"],
         )?;
         registry.register(Box::new(adjusted_rewards.clone()))?;
 
         let original_failure_rate = GaugeVec::new(
-            Opts::new("latest_original_failure_rate", "Original failure rate per node"),
+            Opts::new("original_failure_rate", "Original failure rate per node"),
             &["provider_id", "node_id", "subnet_id"],
         )?;
         registry.register(Box::new(original_failure_rate.clone()))?;
 
         let relative_failure_rate = GaugeVec::new(
-            Opts::new("latest_relative_failure_rate", "Relative failure rate per node"),
+            Opts::new("relative_failure_rate", "Relative failure rate per node"),
             &["provider_id", "node_id", "subnet_id"],
         )?;
         registry.register(Box::new(relative_failure_rate.clone()))?;
@@ -1069,7 +1066,6 @@ impl NodeRewards {
         // Gather metrics and manually format with timestamps
         let metric_families = registry.gather();
         let mut buffer = String::new();
-        let num_families = metric_families.len();
 
         // Manually construct Prometheus format with timestamps
         for mf in &metric_families {
@@ -1099,20 +1095,16 @@ impl NodeRewards {
                 };
 
                 // Format: metric_name{labels} value timestamp_ms
-                buffer.push_str(&format!("{}{} {} {}\n", metric_name, label_str, value, timestamp_millis));
+                buffer.push_str(&format!("{}{} {} {}\n", metric_name, label_str, value, noon_timestamp_millis));
             }
         }
 
         // Push to VictoriaMetrics via import API
         let client = reqwest::Client::new();
-        let import_url = format!("{}/api/v1/import/prometheus", vm_url.trim_end_matches('/'));
-
-        info!(
-            "Pushing {} metrics to VictoriaMetrics for timestamp {}...",
-            num_families, timestamp_millis
-        );
-
-        let response = client.post(&import_url).header("Content-Type", "text/plain").body(buffer).send().await?;
+        let import_url = victoria_url
+            .join("/api/v1/import/prometheus")
+            .map_err(|e| anyhow!("Failed to construct VictoriaMetrics import URL: {}", e))?;
+        let response = client.post(import_url).header("Content-Type", "text/plain").body(buffer).send().await?;
 
         if response.status().is_success() {
             info!("Successfully pushed node rewards data for {} to VictoriaMetrics", target_date);
