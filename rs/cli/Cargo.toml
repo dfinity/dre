@@ -90,6 +90,7 @@ url = { workspace = true }
 hex = { workspace = true }
 ic-registry-common-proto = { workspace = true }
 base64 = { version = "0.22" }
+prometheus = "0.13"
 
 [dev-dependencies]
 actix-rt = { workspace = true }
