@@ -1,5 +1,5 @@
 {
-  "checksum": "c314e0d98e718728f62fcf5ba7112841a0a20cc4fb816e5eaaafd31a23a8bc82",
+  "checksum": "453c7d22d591a20f7c0289edbecf6681a0d22b8e8f4c6755e992892a1a9ff426",
   "crates": {
     "actix-codec 0.5.2": {
       "name": "actix-codec",
@@ -12927,6 +12927,10 @@
             {
               "id": "pretty_env_logger 0.5.0",
               "target": "pretty_env_logger"
+            },
+            {
+              "id": "prometheus 0.13.4",
+              "target": "prometheus"
             },
             {
               "id": "prost 0.13.5",
