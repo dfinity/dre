@@ -1100,7 +1100,7 @@ dependencies = [
 
 [[package]]
 name = "canister-log-fetcher"
-version = "0.6.9"
+version = "0.7.1"
 dependencies = [
  "anyhow",
  "clap",
@@ -1364,7 +1364,7 @@ dependencies = [
 
 [[package]]
 name = "config-writer-common"
-version = "0.6.9"
+version = "0.7.1"
 dependencies = [
  "crossbeam",
  "crossbeam-channel",
@@ -1881,7 +1881,7 @@ checksum = "092966b41edc516079bdf31ec78a2e0588d1d0c08f78b91d8307215928642b2b"
 
 [[package]]
 name = "decentralization"
-version = "0.6.9"
+version = "0.7.1"
 dependencies = [
  "actix-web",
  "ahash 0.8.12",
@@ -2161,7 +2161,7 @@ checksum = "1435fa1053d8b2fbbe9be7e97eca7f33d37b28409959813daefc1446a14247f1"
 
 [[package]]
 name = "dre"
-version = "0.6.9"
+version = "0.7.1"
 dependencies = [
  "actix-rt",
  "ahash 0.8.12",
@@ -2706,7 +2706,7 @@ dependencies = [
 
 [[package]]
 name = "general-testnet-service-discovery"
-version = "0.6.9"
+version = "0.7.1"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -3360,7 +3360,7 @@ dependencies = [
 
 [[package]]
 name = "ic-canisters"
-version = "0.6.9"
+version = "0.7.1"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -3391,7 +3391,7 @@ dependencies = [
  "log",
  "prost",
  "reqwest",
- "rewards-calculation 0.6.9",
+ "rewards-calculation 0.7.1",
  "serde",
  "sha2 0.10.9",
  "simple_asn1",
@@ -4195,7 +4195,7 @@ dependencies = [
 
 [[package]]
 name = "ic-management-backend"
-version = "0.6.9"
+version = "0.7.1"
 dependencies = [
  "actix-rt",
  "actix-web",
@@ -4284,7 +4284,7 @@ dependencies = [
 
 [[package]]
 name = "ic-management-types"
-version = "0.6.9"
+version = "0.7.1"
 dependencies = [
  "actix-web",
  "ahash 0.8.12",
@@ -6309,7 +6309,7 @@ checksum = "34080505efa8e45a4b816c349525ebe327ceaa8559756f0356cba97ef3bf7432"
 
 [[package]]
 name = "log-fetcher"
-version = "0.6.9"
+version = "0.7.1"
 dependencies = [
  "anyhow",
  "clap",
@@ -6325,7 +6325,7 @@ dependencies = [
 
 [[package]]
 name = "log-noise-filter-backend"
-version = "0.6.9"
+version = "0.7.1"
 dependencies = [
  "axum 0.8.6",
  "clap",
@@ -6340,7 +6340,7 @@ dependencies = [
 
 [[package]]
 name = "log-noise-filter-downloader"
-version = "0.6.9"
+version = "0.7.1"
 dependencies = [
  "anyhow",
  "clap",
@@ -6537,7 +6537,7 @@ checksum = "1d87ecb2933e8aeadb3e3a02b828fed80a7528047e68b4f424523a0981a3a084"
 
 [[package]]
 name = "multiservice-discovery"
-version = "0.6.9"
+version = "0.7.1"
 dependencies = [
  "anyhow",
  "assert_cmd",
@@ -6576,7 +6576,7 @@ dependencies = [
 
 [[package]]
 name = "multiservice-discovery-downloader"
-version = "0.6.9"
+version = "0.7.1"
 dependencies = [
  "clap",
  "crossbeam",
@@ -6598,7 +6598,7 @@ dependencies = [
 
 [[package]]
 name = "multiservice-discovery-shared"
-version = "0.6.9"
+version = "0.7.1"
 dependencies = [
  "erased-serde 0.4.9",
  "ic-sns-wasm",
@@ -6629,13 +6629,13 @@ dependencies = [
 
 [[package]]
 name = "node-provider-rewards-api"
-version = "0.6.9"
+version = "0.7.1"
 dependencies = [
  "candid",
  "chrono",
  "ic-base-types",
  "itertools 0.13.0",
- "rewards-calculation 0.6.9",
+ "rewards-calculation 0.7.1",
  "rust_decimal",
  "rust_decimal_macros",
  "serde",
@@ -6643,7 +6643,7 @@ dependencies = [
 
 [[package]]
 name = "node-provider-rewards-canister"
-version = "0.6.9"
+version = "0.7.1"
 dependencies = [
  "async-trait",
  "candid",
@@ -6673,7 +6673,7 @@ dependencies = [
  "mockall",
  "node-provider-rewards-api",
  "prost",
- "rewards-calculation 0.6.9",
+ "rewards-calculation 0.7.1",
  "serde",
  "serde_cbor",
  "tokio",
@@ -6779,7 +6779,7 @@ dependencies = [
 
 [[package]]
 name = "obs-canister-clients"
-version = "0.6.9"
+version = "0.7.1"
 dependencies = [
  "candid",
  "ic-agent 0.39.3",
@@ -7433,7 +7433,7 @@ dependencies = [
 
 [[package]]
 name = "prometheus-config-updater"
-version = "0.6.9"
+version = "0.7.1"
 dependencies = [
  "anyhow",
  "base64 0.22.1",
@@ -7967,7 +7967,7 @@ dependencies = [
 
 [[package]]
 name = "rewards-calculation"
-version = "0.6.9"
+version = "0.7.1"
 dependencies = [
  "chrono",
  "ic-base-types",
@@ -8547,7 +8547,7 @@ dependencies = [
 
 [[package]]
 name = "service-discovery"
-version = "0.6.9"
+version = "0.7.1"
 dependencies = [
  "anyhow",
  "crossbeam",
@@ -8683,7 +8683,7 @@ checksum = "7a2ae44ef20feb57a68b23d846850f861394c2e02dc425a50098ae8c90267589"
 
 [[package]]
 name = "slack-notifications"
-version = "0.6.9"
+version = "0.7.1"
 dependencies = [
  "anyhow",
  "candid",
@@ -8811,7 +8811,7 @@ dependencies = [
 
 [[package]]
 name = "sns-downloader"
-version = "0.6.9"
+version = "0.7.1"
 dependencies = [
  "clap",
  "crossbeam",
@@ -9607,7 +9607,7 @@ dependencies = [
 
 [[package]]
 name = "trustworthy-node-metrics-types"
-version = "0.6.9"
+version = "0.7.1"
 dependencies = [
  "candid",
  "dfn_core",
