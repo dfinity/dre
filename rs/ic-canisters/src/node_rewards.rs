@@ -6,8 +6,7 @@ use ic_node_rewards_canister_api::provider_rewards_calculation::{
     DailyResults, DateUtc, GetNodeProvidersRewardsCalculationRequest, GetNodeProvidersRewardsCalculationResponse,
 };
 
-const _NODE_METRICS_CANISTER: &str = "sgymv-uiaaa-aaaaa-aaaia-cai";
-const NODE_METRICS_CANISTER_DEV: &str = "uuew5-iiaaa-aaaaa-qbx4q-cai";
+const NODE_REWARDS_CANISTER: &str = "sgymv-uiaaa-aaaaa-aaaia-cai";
 
 pub struct NodeRewardsCanisterWrapper {
     agent: IcAgentCanisterClient,
@@ -27,7 +26,7 @@ impl NodeRewardsCanisterWrapper {
     pub async fn get_rewards_daily(&self, day: DateUtc) -> anyhow::Result<DailyResults> {
         self.agent
             .query::<GetNodeProvidersRewardsCalculationResponse>(
-                &Principal::from_str(NODE_METRICS_CANISTER_DEV).map_err(anyhow::Error::from)?,
+                &Principal::from_str(NODE_REWARDS_CANISTER).map_err(anyhow::Error::from)?,
                 "get_node_providers_rewards_calculation",
                 candid::encode_one(GetNodeProvidersRewardsCalculationRequest { day })?,
             )
