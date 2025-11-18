@@ -18,9 +18,6 @@ members = [
     "rs/log-fetcher",
     "rs/canister-log-fetcher",
     "rs/slack-notifications",
-    "rs/dre-canisters/node-provider-rewards/canister",
-    "rs/dre-canisters/node-provider-rewards/canister/api",
-    "rs/dre-canisters/node-provider-rewards/rewards-calculation",
     "rs/dre-canisters/trustworthy-node-metrics/src/trustworthy-node-metrics-types",
     "rs/ic-observability/general-testnet-service-discovery",
 ]
@@ -214,8 +211,7 @@ ic-cdk-timers = { version = "^0.12.2" }
 ic-cdk-macros = { version = "^0.18.7" }
 ic-stable-structures = "0.6.9"
 dfn_core = { git = "https://github.com/dfinity/ic.git", rev = "a93a3f1eea5cacfd570d96941b5d6f6d2a9b508b" }
-rewards-calculation = { path = "rs/dre-canisters/node-provider-rewards/rewards-calculation" }
-node-provider-rewards-api = { path = "rs/dre-canisters/node-provider-rewards/canister/api" }
+rewards-calculation = { git = "https://github.com/dfinity/ic.git", rev = "a93a3f1eea5cacfd570d96941b5d6f6d2a9b508b" }
 ic-node-rewards-canister-api = { git = "https://github.com/dfinity/ic.git", rev = "a93a3f1eea5cacfd570d96941b5d6f6d2a9b508b" }
 
 # dre-airflow deps, should be replaced with dre-airflow once
@@ -226,3 +222,4 @@ indexmap = { version = "2.11.1", features = ["serde"] }
 # Makes flamegraphs and backtraces more readable.
 # https://doc.rust-lang.org/cargo/reference/manifest.html#the-profile-sections
 debug = true
+
