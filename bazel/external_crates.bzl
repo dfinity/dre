@@ -44,9 +44,6 @@ def external_crates_repository():
             "//rs/ic-observability/sns-downloader:Cargo.toml",
             "//rs/log-fetcher:Cargo.toml",
             "//rs/slack-notifications:Cargo.toml",
-            "//rs/dre-canisters/node-provider-rewards/canister:Cargo.toml",
-            "//rs/dre-canisters/node-provider-rewards/canister/api:Cargo.toml",
-            "//rs/dre-canisters/node-provider-rewards/rewards-calculation:Cargo.toml",
             "//rs:dre-canisters/trustworthy-node-metrics/src/trustworthy-node-metrics/Cargo.toml",
             "//rs/dre-canisters/trustworthy-node-metrics/src/trustworthy-node-metrics-types:Cargo.toml",
             "//rs:dre-canisters/node_status_canister/src/node_status_canister_backend/Cargo.toml"

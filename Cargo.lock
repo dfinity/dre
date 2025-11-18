@@ -4883,27 +4883,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "ic-registry-canister-client"
-version = "0.9.0"
-source = "git+https://github.com/dfinity/ic.git?rev=a93a3f1eea5cacfd570d96941b5d6f6d2a9b508b#a93a3f1eea5cacfd570d96941b5d6f6d2a9b508b"
-dependencies = [
- "anyhow",
- "async-trait",
- "candid",
- "futures",
- "ic-cdk",
- "ic-interfaces-registry",
- "ic-nervous-system-canisters",
- "ic-nns-common",
- "ic-nns-constants",
- "ic-registry-transport",
- "ic-stable-structures",
- "ic-types",
- "itertools 0.12.1",
- "prost",
-]
-
-[[package]]
 name = "ic-registry-client"
 version = "0.9.0"
 source = "git+https://github.com/dfinity/ic.git?rev=a93a3f1eea5cacfd570d96941b5d6f6d2a9b508b#a93a3f1eea5cacfd570d96941b5d6f6d2a9b508b"
@@ -6625,58 +6604,6 @@ dependencies = [
  "cfg-if",
  "libc",
  "memoffset",
-]
-
-[[package]]
-name = "node-provider-rewards-api"
-version = "0.7.1"
-dependencies = [
- "candid",
- "chrono",
- "ic-base-types",
- "itertools 0.13.0",
- "rewards-calculation",
- "rust_decimal",
- "rust_decimal_macros",
- "serde",
-]
-
-[[package]]
-name = "node-provider-rewards-canister"
-version = "0.7.1"
-dependencies = [
- "async-trait",
- "candid",
- "chrono",
- "futures",
- "ic-base-types",
- "ic-cdk",
- "ic-cdk-macros",
- "ic-cdk-timers",
- "ic-dummy-getrandom-for-wasm",
- "ic-http-types",
- "ic-interfaces-registry",
- "ic-management-canister-types-private",
- "ic-metrics-encoder",
- "ic-nervous-system-canisters",
- "ic-nervous-system-common",
- "ic-nervous-system-runtime",
- "ic-nns-constants",
- "ic-protobuf",
- "ic-registry-canister-client",
- "ic-registry-keys",
- "ic-registry-transport",
- "ic-stable-structures",
- "ic-types",
- "indexmap 2.12.0",
- "itertools 0.13.0",
- "mockall",
- "node-provider-rewards-api",
- "prost",
- "rewards-calculation",
- "serde",
- "serde_cbor",
- "tokio",
 ]
 
 [[package]]
