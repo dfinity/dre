@@ -9,26 +9,24 @@ import subprocess
 import sys
 import textwrap
 import typing
-
 from dataclasses import dataclass
 
 mydir = os.path.join(os.path.dirname(__file__))
 if mydir not in sys.path:
     sys.path.append(mydir)
 
+import markdown  # noqa: E402
+from commit_annotation import (  # noqa: E402
+    COMMIT_BELONGS,
+    ChangeDeterminatorProtocol,
+)
 from const import (  # noqa: E402
-    OsKind,
     GUESTOS,
     HOSTOS,
+    OsKind,
 )
-from commit_annotation import (  # noqa: E402
-    ChangeDeterminatorProtocol,
-    COMMIT_BELONGS,
-)
-from git_repo import GitRepo, FileChange  # noqa: E402
+from git_repo import FileChange, GitRepo  # noqa: E402
 from util import auto_progressbar_with_item_descriptions  # noqa: E402
-
-import markdown  # noqa: E402
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -84,12 +82,8 @@ class Team:
 RELEASE_NOTES_REVIEWERS: dict[OsKind, list[Team]] = {
     GUESTOS: [
         Team("consensus", "@team-consensus", "SRJ3R849E", False),
-        Team("crypto", "@team-crypto", "SU7BZQ78E", False),
-        Team("execution", "@team-execution", "S01A577UL56", False),
-        Team("messaging", "@team-messaging", "S01SVC713PS", False),
-        Team("networking", "@team-networking", "SR6KC1DMZ", False),
         Team("node", "@node-team", "S027838EY30", False),
-        Team("runtime", "@team-runtime", "S03BM6C0CJY", False),
+        Team("team-dsm", "@team-dsm", "S09R319PHC1", False),
     ],
     HOSTOS: [
         Team("node", "@node-team", "S027838EY30", True),
@@ -109,46 +103,23 @@ TYPE_PRETTY_MAP = {
 }
 
 TEAM_PRETTY_MAP = {
-    "boundary-node": "Boundary Nodes",
-    "boundarynode-team": "Boundary Nodes",
-    "consensus-owners": "Consensus",
     "consensus": "Consensus",
-    "cross-chain-team": "Cross Chain",
-    "crypto-team": "Crypto",
-    "dept-crypto-library": "Crypto",
-    "docs-owners": "Docs",
+    "defi-team": "Defi team",
+    "team-dsm": "DSM",
     "dre": "DRE",
-    "DRE": "DRE",
-    "execution-owners": "Execution",
-    "execution": "Execution",
-    "financial-integrations": "Financial Integrations",
-    "finint": "Financial Integrations",
     "ghost": "Ghost",
     "ic-interface-owners": "Interface",
-    "ic-message-routing-owners": "Message Routing",
     "ic-owners-owners": "Owners",
-    "ic-support-eu": "SupportEU",
-    "ic-support-na": "SupportNA",
-    "ic-support": "Support",
-    "ic-testing-verification": "T&V",
     "idx": "IDX",
-    "interface-owners": "Interface",
-    "message-routing-owners": "Message Routing",
-    "networking-team": "Networking",
-    "networking": "Networking",
-    "nns-team": "NNS",
-    "node-team": "Node",
+    "governance-team": "Governance",
     "node": "Node",
-    "owners-owners": "Owners",
-    "platform-operations": "Platform Ops",
     "prodsec": "Prodsec",
     "product-security": "Prodsec",
-    "runtime-owners": "Runtime",
-    "runtime": "Runtime",
-    "sdk-team": "SDK",
-    "trust-team": "Trust",
+    "sdk": "SDK",
     "utopia": "Utopia",
-    "pocket-ic": "Pocket IC",
+    "infrasec": "Infrasec",
+    "research": "Research",
+    "formal-models": "Formal models",
 }
 
 
