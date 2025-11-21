@@ -34,23 +34,10 @@ COMMIT_HASH_LENGTH = 9
 
 REPLICA_TEAMS = set(
     [
-        "consensus-owners",
         "consensus",
-        "crypto-team",
-        "dept-crypto-library",
-        "execution-owners",
-        "execution",
         "ic-interface-owners",
-        "ic-message-routing-owners",
-        "interface-owners",
-        "message-routing-owners",
-        "networking-team",
-        "networking",
-        "node-team",
         "node",
-        "Orchestrator",
-        "runtime-owners",
-        "runtime",
+        "team-dsm",
         "ic-owners-owners",
     ]
 )
