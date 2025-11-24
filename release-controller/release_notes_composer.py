@@ -1,11 +1,13 @@
 #!/usr/bin/env python3
 import fnmatch
+import functools
 import logging
 import os
 import pathlib
 import re
 import subprocess
 import sys
+import tempfile
 import textwrap
 import typing
 from dataclasses import dataclass
@@ -390,7 +392,7 @@ def compose_change_description(
     commit_message: str,
     commiter: str,
     file_changes: list[FileChange],
-    dir: pathlib.Path,
+    codeowners_text: str,
     belongs: bool,
 ) -> Change:
     # Conventional commit regex pattern
@@ -431,34 +433,43 @@ def compose_change_description(
 
     dfinity_team_prefix = "@dfinity/"
 
-    for change in file_changes:
-        owners_line = subprocess.run(
-            [resolve_binary("codeowners"), change["file_path"]],
-            text=True,
-            capture_output=True,
-            cwd=dir,
-        ).stdout
+    with tempfile.NamedTemporaryFile("w+t") as tmp_file:
+        file_path = tmp_file.name
+        tmp_file.write(codeowners_text)
+        tmp_file.flush()
 
-        # Becase the first thing is the path being queried
-        owners = owners_line.split()[1:]
+        for change in file_changes:
+            owners_line = subprocess.run(
+                [
+                    resolve_binary("codeowners"),
+                    "--file",
+                    file_path,
+                    change["file_path"],
+                ],
+                text=True,
+                capture_output=True,
+            ).stdout
 
-        for owner in owners:
-            owner = (
+            # Becase the first thing is the path being queried
+            owners = owners_line.split()[1:]
+            owners = [
                 owner.split(dfinity_team_prefix)[1]
-                if dfinity_team_prefix in owner
+                if owner.startswith(dfinity_team_prefix)
                 else owner
-            )
+                for owner in owners
+            ]
+            # Default to ic-owners-owners
+            owners = [
+                "ic-owners-owners" if "unowned" in owner else owner for owner in owners
+            ]
 
-            if "unowned" in owner:
-                owner = "unknown"
+            teams = set(owners)
 
-        teams = set(owners)
-
-        for team in teams:
-            if team not in ownership:
-                ownership[team] = change["num_changes"]
-                continue
-            ownership[team] += change["num_changes"]
+            for team in teams:
+                if team not in ownership:
+                    ownership[team] = change["num_changes"]
+                    continue
+                ownership[team] += change["num_changes"]
 
     if (
         "ic-owners-owners" in ownership
@@ -519,6 +530,14 @@ def get_change_description_for_commit(
     ic_repo: GitRepo,
     belongs: bool,
 ) -> Change:
+    @functools.cache
+    def parse_and_cache_codeowners(commit_id: str) -> str:
+        codeowners_text = ic_repo.file_contents(
+            commit_hash,
+            pathlib.Path(".github/CODEOWNERS"),
+        ).decode("utf-8")
+        return codeowners_text
+
     commit_message = ic_repo.get_commit_info("%s", commit_hash)
     committer = ic_repo.get_commit_info("%an", commit_hash)
     file_changes_for_commit = ic_repo.file_changes_for_commit(commit_hash)
@@ -528,7 +547,7 @@ def get_change_description_for_commit(
         commit_message,
         committer,
         file_changes_for_commit,
-        ic_repo.dir,
+        parse_and_cache_codeowners(commit_hash),
         belongs,
     )
 
