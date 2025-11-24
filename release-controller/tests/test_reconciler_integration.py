@@ -1,18 +1,17 @@
-import pydantic_yaml
 import typing
-import pytest_mock.plugin
 
-import const
 import commit_annotation
-import git_repo
+import const
 import dryrun
+import git_repo
+import pydantic_yaml
+import pytest_mock.plugin
+from dre_cli import ElectionProposal
+from public_dashboard import DashboardAPI
 from reconciler import Reconciler
 from reconciler_state import ReconcilerState
-from public_dashboard import DashboardAPI
-from dre_cli import ElectionProposal
 from release_index import Model as ReleaseIndexModel
 from release_index_loader import StaticReleaseLoader
-
 from tests.fixtures import ic_repo as ic_repo
 
 
@@ -249,20 +248,19 @@ Additionally, descriptions of some changes might have been slightly modified to 
 To see a full list of commits added since last release, compare the revisions on [GitHub](https://github.com/dfinity/ic/compare/release-2025-10-02_03-13-base...release-2025-10-12_01-01-base).
 ## Features:
 ## Bugfixes:
-* [`f7d0a8f47`](https://github.com/dfinity/ic/commit/f7d0a8f47) Consensus,Interface(orchestrator): abort initial sleep in hostOS upgrade checks if requested ([#7046](https://github.com/dfinity/ic/pull/7046))
-* [`04444c85b`](https://github.com/dfinity/ic/commit/04444c85b) Execution,Interface: subnet memory taken for canisters with memory allocation ([#7028](https://github.com/dfinity/ic/pull/7028))
-* [`fb4dff62d`](https://github.com/dfinity/ic/commit/fb4dff62d) Owners(icrc-ledger-types): Add try_from_subaccount_to_principal ([#6911](https://github.com/dfinity/ic/pull/6911))
+* [`f7d0a8f47`](https://github.com/dfinity/ic/commit/f7d0a8f47) Consensus(orchestrator): abort initial sleep in hostOS upgrade checks if requested ([#7046](https://github.com/dfinity/ic/pull/7046))
+* [`04444c85b`](https://github.com/dfinity/ic/commit/04444c85b) Execution: subnet memory taken for canisters with memory allocation ([#7028](https://github.com/dfinity/ic/pull/7028))
 * [`a54a2fd77`](https://github.com/dfinity/ic/commit/a54a2fd77) Node: revert "chore: Resize backup LV to 500GB ([#6926](https://github.com/dfinity/ic/pull/6926))" ([#7059](https://github.com/dfinity/ic/pull/7059))
 ## Performance improvements:
-* [`a9ea00d62`](https://github.com/dfinity/ic/commit/a9ea00d62) Consensus,Interface(idkg): Use multi-threading in `send_dealing_support` ([#6968](https://github.com/dfinity/ic/pull/6968))
-* [`5fdc757d6`](https://github.com/dfinity/ic/commit/5fdc757d6) Consensus,Interface(idkg): Use multi-threading in `validate_dealings` ([#6962](https://github.com/dfinity/ic/pull/6962))
+* [`a9ea00d62`](https://github.com/dfinity/ic/commit/a9ea00d62) Consensus(idkg): Use multi-threading in `send_dealing_support` ([#6968](https://github.com/dfinity/ic/pull/6968))
+* [`5fdc757d6`](https://github.com/dfinity/ic/commit/5fdc757d6) Consensus(idkg): Use multi-threading in `validate_dealings` ([#6962](https://github.com/dfinity/ic/pull/6962))
 ## Chores:
-* [`67cc97592`](https://github.com/dfinity/ic/commit/67cc97592) Consensus,Interface: Shorten NNS delegation refresh interval ([#7068](https://github.com/dfinity/ic/pull/7068))
-* [`17f72f06c`](https://github.com/dfinity/ic/commit/17f72f06c) Execution,Interface: consider memory allocation in scheduler invariants ([#7042](https://github.com/dfinity/ic/pull/7042))
-* [`0945e0f03`](https://github.com/dfinity/ic/commit/0945e0f03) Execution,Interface: Improve error suggestion for CanisterMetadataSectionNotFound ([#7036](https://github.com/dfinity/ic/pull/7036))
-* [`f9818d864`](https://github.com/dfinity/ic/commit/f9818d864) Execution,Interface: remove obsolete canister_log_memory_usage v1 metric ([#7011](https://github.com/dfinity/ic/pull/7011))
-* [`ffd98c33d`](https://github.com/dfinity/ic/commit/ffd98c33d) Interface,Message Routing: rename ManifestDelta ([#7070](https://github.com/dfinity/ic/pull/7070))
-* [`fa37988f9`](https://github.com/dfinity/ic/commit/fa37988f9) Interface,Message Routing: Remove old BitVec logic from incremental manifest computation ([#7052](https://github.com/dfinity/ic/pull/7052))
+* [`67cc97592`](https://github.com/dfinity/ic/commit/67cc97592) Consensus: Shorten NNS delegation refresh interval ([#7068](https://github.com/dfinity/ic/pull/7068))
+* [`17f72f06c`](https://github.com/dfinity/ic/commit/17f72f06c) Execution: consider memory allocation in scheduler invariants ([#7042](https://github.com/dfinity/ic/pull/7042))
+* [`0945e0f03`](https://github.com/dfinity/ic/commit/0945e0f03) Execution: Improve error suggestion for CanisterMetadataSectionNotFound ([#7036](https://github.com/dfinity/ic/pull/7036))
+* [`f9818d864`](https://github.com/dfinity/ic/commit/f9818d864) Execution: remove obsolete canister_log_memory_usage v1 metric ([#7011](https://github.com/dfinity/ic/pull/7011))
+* [`ffd98c33d`](https://github.com/dfinity/ic/commit/ffd98c33d) Message Routing: rename ManifestDelta ([#7070](https://github.com/dfinity/ic/pull/7070))
+* [`fa37988f9`](https://github.com/dfinity/ic/commit/fa37988f9) Message Routing: Remove old BitVec logic from incremental manifest computation ([#7052](https://github.com/dfinity/ic/pull/7052))
 * [`741426fe1`](https://github.com/dfinity/ic/commit/741426fe1) Node: Drop ext4 support from monitor-expand-shared-data ([#7055](https://github.com/dfinity/ic/pull/7055))
 * [`3d50e3e43`](https://github.com/dfinity/ic/commit/3d50e3e43) Node: Resize backup LV to 500GB ([#6926](https://github.com/dfinity/ic/pull/6926))
 ## Refactoring:
@@ -271,34 +269,37 @@ To see a full list of commits added since last release, compare the revisions on
 ## Excluded Changes
 
 ### Changed files are excluded by file path filter
-* [`a21d0e6a3`](https://github.com/dfinity/ic/commit/a21d0e6a3) Interface: add aliases for request type variants for backwards compatibility ([#7032](https://github.com/dfinity/ic/pull/7032))
-* [`1e4faccbc`](https://github.com/dfinity/ic/commit/1e4faccbc) Execution,Interface: unify management canister doc comments for Rust types ([#7062](https://github.com/dfinity/ic/pull/7062))
+* [`a21d0e6a3`](https://github.com/dfinity/ic/commit/a21d0e6a3) Boundary Nodes: add aliases for request type variants for backwards compatibility ([#7032](https://github.com/dfinity/ic/pull/7032))
+* [`1e4faccbc`](https://github.com/dfinity/ic/commit/1e4faccbc) Execution: unify management canister doc comments for Rust types ([#7062](https://github.com/dfinity/ic/pull/7062))
 
 ### Not modifying GuestOS
-* [`ccacbf11c`](https://github.com/dfinity/ic/commit/ccacbf11c) Interface(nns): Archive topics of garbage collected proposals ([#7020](https://github.com/dfinity/ic/pull/7020))
-* [`ff761f361`](https://github.com/dfinity/ic/commit/ff761f361) Interface(nns): Stop exposing KnownNeuronData in list_neurons ([#6953](https://github.com/dfinity/ic/pull/6953))
-* [`b0059ae3f`](https://github.com/dfinity/ic/commit/b0059ae3f) Interface(sns-wasm): Add an option to skip updating latest version in SnsWasm::add_wasm ([#7058](https://github.com/dfinity/ic/pull/7058))
-* [`8eba66ec7`](https://github.com/dfinity/ic/commit/8eba66ec7) Interface: Track mainnet measurements in repo (again) ([#7022](https://github.com/dfinity/ic/pull/7022))
-* [`5dcdf2ef8`](https://github.com/dfinity/ic/commit/5dcdf2ef8) Interface(dogecoin): facade for ckdoge minter canister ([#6814](https://github.com/dfinity/ic/pull/6814))
-* [`79668f2e5`](https://github.com/dfinity/ic/commit/79668f2e5) Interface: add empty governance_test.did files to make cargo clippy succeed ([#7079](https://github.com/dfinity/ic/pull/7079))
-* [`0e08d8b07`](https://github.com/dfinity/ic/commit/0e08d8b07) Interface: recertify registry after canister migration ([#7040](https://github.com/dfinity/ic/pull/7040))
-* [`ef525f001`](https://github.com/dfinity/ic/commit/ef525f001) Owners: temporarily adding repro-check back to tools ([#7067](https://github.com/dfinity/ic/pull/7067))
-* [`d7516b0b0`](https://github.com/dfinity/ic/commit/d7516b0b0) Node(nervous-system-tools): Let proposal generation script use the right commit for reading changelogs ([#7076](https://github.com/dfinity/ic/pull/7076))
+* [`b0059ae3f`](https://github.com/dfinity/ic/commit/b0059ae3f) Execution(sns-wasm): Add an option to skip updating latest version in SnsWasm::add_wasm ([#7058](https://github.com/dfinity/ic/pull/7058))
+* [`ccacbf11c`](https://github.com/dfinity/ic/commit/ccacbf11c) Governance(nns): Archive topics of garbage collected proposals ([#7020](https://github.com/dfinity/ic/pull/7020))
+* [`ff761f361`](https://github.com/dfinity/ic/commit/ff761f361) Governance(nns): Stop exposing KnownNeuronData in list_neurons ([#6953](https://github.com/dfinity/ic/pull/6953))
+* [`5dcdf2ef8`](https://github.com/dfinity/ic/commit/5dcdf2ef8) Owners(dogecoin): facade for ckdoge minter canister ([#6814](https://github.com/dfinity/ic/pull/6814))
+* [`8eba66ec7`](https://github.com/dfinity/ic/commit/8eba66ec7) Node: Track mainnet measurements in repo (again) ([#7022](https://github.com/dfinity/ic/pull/7022))
+* [`79668f2e5`](https://github.com/dfinity/ic/commit/79668f2e5) Governance: add empty governance_test.did files to make cargo clippy succeed ([#7079](https://github.com/dfinity/ic/pull/7079))
+* [`d7516b0b0`](https://github.com/dfinity/ic/commit/d7516b0b0) Governance(nervous-system-tools): Let proposal generation script use the right commit for reading changelogs ([#7076](https://github.com/dfinity/ic/pull/7076))
+* [`0e08d8b07`](https://github.com/dfinity/ic/commit/0e08d8b07) Governance: recertify registry after canister migration ([#7040](https://github.com/dfinity/ic/pull/7040))
+* [`ef525f001`](https://github.com/dfinity/ic/commit/ef525f001) IDX: temporarily adding repro-check back to tools ([#7067](https://github.com/dfinity/ic/pull/7067))
 * [`d63c89bcb`](https://github.com/dfinity/ic/commit/d63c89bcb) Node: documentation file paths ([#7044](https://github.com/dfinity/ic/pull/7044))
-* [`db66ec472`](https://github.com/dfinity/ic/commit/db66ec472) Interface(nns-recovery): reduce resource usage of NNS recovery system tests ([#7018](https://github.com/dfinity/ic/pull/7018))
-* [`71237836a`](https://github.com/dfinity/ic/commit/71237836a) Interface: Remove dfn_macro ([#6922](https://github.com/dfinity/ic/pull/6922))
-* [`b0dc45feb`](https://github.com/dfinity/ic/commit/b0dc45feb) Interface,Node: Move tools onto config types ([#7019](https://github.com/dfinity/ic/pull/7019))
-* [`cf07c0912`](https://github.com/dfinity/ic/commit/cf07c0912) Interface,Node(node): clean up nested test and improve code reuse ([#7017](https://github.com/dfinity/ic/pull/7017))
-* [`fb59d8233`](https://github.com/dfinity/ic/commit/fb59d8233) Interface,Node: in the kill_start_test run the kill-start iteration 5 times ([#7050](https://github.com/dfinity/ic/pull/7050))
+* [`db66ec472`](https://github.com/dfinity/ic/commit/db66ec472) Consensus,Node(nns-recovery): reduce resource usage of NNS recovery system tests ([#7018](https://github.com/dfinity/ic/pull/7018))
+* [`71237836a`](https://github.com/dfinity/ic/commit/71237836a) Execution: Remove dfn_macro ([#6922](https://github.com/dfinity/ic/pull/6922))
 * [`891c0d9d6`](https://github.com/dfinity/ic/commit/891c0d9d6) Owners: Update Mainnet ICOS revisions file ([#7085](https://github.com/dfinity/ic/pull/7085))
 * [`a44bcc6d2`](https://github.com/dfinity/ic/commit/a44bcc6d2) Owners: Update Mainnet ICOS revisions file ([#7083](https://github.com/dfinity/ic/pull/7083))
-* [`0756b99d2`](https://github.com/dfinity/ic/commit/0756b99d2) Owners: bump oisy npm to 22.12 ([#7081](https://github.com/dfinity/ic/pull/7081))
-* [`132f6ee3b`](https://github.com/dfinity/ic/commit/132f6ee3b) Owners(IDX): fix cargo build logic ([#7048](https://github.com/dfinity/ic/pull/7048))
+* [`0756b99d2`](https://github.com/dfinity/ic/commit/0756b99d2) IDX: bump oisy npm to 22.12 ([#7081](https://github.com/dfinity/ic/pull/7081))
+* [`132f6ee3b`](https://github.com/dfinity/ic/commit/132f6ee3b) IDX: fix cargo build logic ([#7048](https://github.com/dfinity/ic/pull/7048))
 * [`755aed257`](https://github.com/dfinity/ic/commit/755aed257) Node: use node reward type to determine node generation ([#6961](https://github.com/dfinity/ic/pull/6961))
-* [`c78222177`](https://github.com/dfinity/ic/commit/c78222177) Interface(nns/sns): Use patching for test canister candid files ([#6947](https://github.com/dfinity/ic/pull/6947))
-* [`7c84f99be`](https://github.com/dfinity/ic/commit/7c84f99be) Execution,Interface: Systest for migration canister ([#7004](https://github.com/dfinity/ic/pull/7004))
-* [`fd628eccb`](https://github.com/dfinity/ic/commit/fd628eccb) Interface(ICRC-Ledger): endpoint that disables icrc3 in the test ledger ([#7041](https://github.com/dfinity/ic/pull/7041))
-* [`c027ae49c`](https://github.com/dfinity/ic/commit/c027ae49c) Interface,Node: duplicate kill_start_test into a long and short version ([#7060](https://github.com/dfinity/ic/pull/7060))
+* [`b0dc45feb`](https://github.com/dfinity/ic/commit/b0dc45feb) Node: Move tools onto config types ([#7019](https://github.com/dfinity/ic/pull/7019))
+* [`cf07c0912`](https://github.com/dfinity/ic/commit/cf07c0912) Node: clean up nested test and improve code reuse ([#7017](https://github.com/dfinity/ic/pull/7017))
+* [`fb59d8233`](https://github.com/dfinity/ic/commit/fb59d8233) Node: in the kill_start_test run the kill-start iteration 5 times ([#7050](https://github.com/dfinity/ic/pull/7050))
+* [`c78222177`](https://github.com/dfinity/ic/commit/c78222177) Governance(nns/sns): Use patching for test canister candid files ([#6947](https://github.com/dfinity/ic/pull/6947))
+* [`7c84f99be`](https://github.com/dfinity/ic/commit/7c84f99be) Execution: Systest for migration canister ([#7004](https://github.com/dfinity/ic/pull/7004))
+* [`fd628eccb`](https://github.com/dfinity/ic/commit/fd628eccb) Financial Integrations(ICRC-Ledger): endpoint that disables icrc3 in the test ledger ([#7041](https://github.com/dfinity/ic/pull/7041))
+* [`c027ae49c`](https://github.com/dfinity/ic/commit/c027ae49c) Node: duplicate kill_start_test into a long and short version ([#7060](https://github.com/dfinity/ic/pull/7060))
+
+### The change is not owned by any replica or HostOS team
+* [`fb4dff62d`](https://github.com/dfinity/ic/commit/fb4dff62d) Financial Integrations(icrc-ledger-types): Add try_from_subaccount_to_principal ([#6911](https://github.com/dfinity/ic/pull/6911))
 """.rstrip()
         expected_hostos_release_notes = """We're preparing [a new IC release](https://github.com/dfinity/ic/tree/release-2025-10-12_01-01-base).
 
@@ -322,47 +323,47 @@ To see a full list of commits added since last release, compare the revisions on
 ## Excluded Changes
 
 ### Changed files are excluded by file path filter
-* [`1e4faccbc`](https://github.com/dfinity/ic/commit/1e4faccbc) Execution,Interface: unify management canister doc comments for Rust types ([#7062](https://github.com/dfinity/ic/pull/7062))
+* [`1e4faccbc`](https://github.com/dfinity/ic/commit/1e4faccbc) Execution: unify management canister doc comments for Rust types ([#7062](https://github.com/dfinity/ic/pull/7062))
 
 ### Not modifying HostOS
-* [`ccacbf11c`](https://github.com/dfinity/ic/commit/ccacbf11c) Interface(nns): Archive topics of garbage collected proposals ([#7020](https://github.com/dfinity/ic/pull/7020))
-* [`ff761f361`](https://github.com/dfinity/ic/commit/ff761f361) Interface(nns): Stop exposing KnownNeuronData in list_neurons ([#6953](https://github.com/dfinity/ic/pull/6953))
-* [`b0059ae3f`](https://github.com/dfinity/ic/commit/b0059ae3f) Interface(sns-wasm): Add an option to skip updating latest version in SnsWasm::add_wasm ([#7058](https://github.com/dfinity/ic/pull/7058))
-* [`8eba66ec7`](https://github.com/dfinity/ic/commit/8eba66ec7) Interface: Track mainnet measurements in repo (again) ([#7022](https://github.com/dfinity/ic/pull/7022))
-* [`5dcdf2ef8`](https://github.com/dfinity/ic/commit/5dcdf2ef8) Interface(dogecoin): facade for ckdoge minter canister ([#6814](https://github.com/dfinity/ic/pull/6814))
-* [`f7d0a8f47`](https://github.com/dfinity/ic/commit/f7d0a8f47) Consensus,Interface(orchestrator): abort initial sleep in hostOS upgrade checks if requested ([#7046](https://github.com/dfinity/ic/pull/7046))
-* [`04444c85b`](https://github.com/dfinity/ic/commit/04444c85b) Execution,Interface: subnet memory taken for canisters with memory allocation ([#7028](https://github.com/dfinity/ic/pull/7028))
-* [`79668f2e5`](https://github.com/dfinity/ic/commit/79668f2e5) Interface: add empty governance_test.did files to make cargo clippy succeed ([#7079](https://github.com/dfinity/ic/pull/7079))
-* [`0e08d8b07`](https://github.com/dfinity/ic/commit/0e08d8b07) Interface: recertify registry after canister migration ([#7040](https://github.com/dfinity/ic/pull/7040))
-* [`a21d0e6a3`](https://github.com/dfinity/ic/commit/a21d0e6a3) Interface: add aliases for request type variants for backwards compatibility ([#7032](https://github.com/dfinity/ic/pull/7032))
-* [`ef525f001`](https://github.com/dfinity/ic/commit/ef525f001) Owners: temporarily adding repro-check back to tools ([#7067](https://github.com/dfinity/ic/pull/7067))
-* [`fb4dff62d`](https://github.com/dfinity/ic/commit/fb4dff62d) Owners(icrc-ledger-types): Add try_from_subaccount_to_principal ([#6911](https://github.com/dfinity/ic/pull/6911))
-* [`d7516b0b0`](https://github.com/dfinity/ic/commit/d7516b0b0) Node(nervous-system-tools): Let proposal generation script use the right commit for reading changelogs ([#7076](https://github.com/dfinity/ic/pull/7076))
+* [`b0059ae3f`](https://github.com/dfinity/ic/commit/b0059ae3f) Execution(sns-wasm): Add an option to skip updating latest version in SnsWasm::add_wasm ([#7058](https://github.com/dfinity/ic/pull/7058))
+* [`ccacbf11c`](https://github.com/dfinity/ic/commit/ccacbf11c) Governance(nns): Archive topics of garbage collected proposals ([#7020](https://github.com/dfinity/ic/pull/7020))
+* [`ff761f361`](https://github.com/dfinity/ic/commit/ff761f361) Governance(nns): Stop exposing KnownNeuronData in list_neurons ([#6953](https://github.com/dfinity/ic/pull/6953))
+* [`5dcdf2ef8`](https://github.com/dfinity/ic/commit/5dcdf2ef8) Owners(dogecoin): facade for ckdoge minter canister ([#6814](https://github.com/dfinity/ic/pull/6814))
+* [`8eba66ec7`](https://github.com/dfinity/ic/commit/8eba66ec7) Node: Track mainnet measurements in repo (again) ([#7022](https://github.com/dfinity/ic/pull/7022))
+* [`a21d0e6a3`](https://github.com/dfinity/ic/commit/a21d0e6a3) Boundary Nodes: add aliases for request type variants for backwards compatibility ([#7032](https://github.com/dfinity/ic/pull/7032))
+* [`f7d0a8f47`](https://github.com/dfinity/ic/commit/f7d0a8f47) Consensus(orchestrator): abort initial sleep in hostOS upgrade checks if requested ([#7046](https://github.com/dfinity/ic/pull/7046))
+* [`04444c85b`](https://github.com/dfinity/ic/commit/04444c85b) Execution: subnet memory taken for canisters with memory allocation ([#7028](https://github.com/dfinity/ic/pull/7028))
+* [`fb4dff62d`](https://github.com/dfinity/ic/commit/fb4dff62d) Financial Integrations(icrc-ledger-types): Add try_from_subaccount_to_principal ([#6911](https://github.com/dfinity/ic/pull/6911))
+* [`79668f2e5`](https://github.com/dfinity/ic/commit/79668f2e5) Governance: add empty governance_test.did files to make cargo clippy succeed ([#7079](https://github.com/dfinity/ic/pull/7079))
+* [`d7516b0b0`](https://github.com/dfinity/ic/commit/d7516b0b0) Governance(nervous-system-tools): Let proposal generation script use the right commit for reading changelogs ([#7076](https://github.com/dfinity/ic/pull/7076))
+* [`0e08d8b07`](https://github.com/dfinity/ic/commit/0e08d8b07) Governance: recertify registry after canister migration ([#7040](https://github.com/dfinity/ic/pull/7040))
+* [`ef525f001`](https://github.com/dfinity/ic/commit/ef525f001) IDX: temporarily adding repro-check back to tools ([#7067](https://github.com/dfinity/ic/pull/7067))
 * [`a54a2fd77`](https://github.com/dfinity/ic/commit/a54a2fd77) Node: revert "chore: Resize backup LV to 500GB ([#6926](https://github.com/dfinity/ic/pull/6926))" ([#7059](https://github.com/dfinity/ic/pull/7059))
 * [`d63c89bcb`](https://github.com/dfinity/ic/commit/d63c89bcb) Node: documentation file paths ([#7044](https://github.com/dfinity/ic/pull/7044))
-* [`a9ea00d62`](https://github.com/dfinity/ic/commit/a9ea00d62) Consensus,Interface(idkg): Use multi-threading in `send_dealing_support` ([#6968](https://github.com/dfinity/ic/pull/6968))
-* [`5fdc757d6`](https://github.com/dfinity/ic/commit/5fdc757d6) Consensus,Interface(idkg): Use multi-threading in `validate_dealings` ([#6962](https://github.com/dfinity/ic/pull/6962))
-* [`db66ec472`](https://github.com/dfinity/ic/commit/db66ec472) Interface(nns-recovery): reduce resource usage of NNS recovery system tests ([#7018](https://github.com/dfinity/ic/pull/7018))
-* [`67cc97592`](https://github.com/dfinity/ic/commit/67cc97592) Consensus,Interface: Shorten NNS delegation refresh interval ([#7068](https://github.com/dfinity/ic/pull/7068))
-* [`17f72f06c`](https://github.com/dfinity/ic/commit/17f72f06c) Execution,Interface: consider memory allocation in scheduler invariants ([#7042](https://github.com/dfinity/ic/pull/7042))
-* [`0945e0f03`](https://github.com/dfinity/ic/commit/0945e0f03) Execution,Interface: Improve error suggestion for CanisterMetadataSectionNotFound ([#7036](https://github.com/dfinity/ic/pull/7036))
-* [`f9818d864`](https://github.com/dfinity/ic/commit/f9818d864) Execution,Interface: remove obsolete canister_log_memory_usage v1 metric ([#7011](https://github.com/dfinity/ic/pull/7011))
-* [`71237836a`](https://github.com/dfinity/ic/commit/71237836a) Interface: Remove dfn_macro ([#6922](https://github.com/dfinity/ic/pull/6922))
-* [`ffd98c33d`](https://github.com/dfinity/ic/commit/ffd98c33d) Interface,Message Routing: rename ManifestDelta ([#7070](https://github.com/dfinity/ic/pull/7070))
-* [`fa37988f9`](https://github.com/dfinity/ic/commit/fa37988f9) Interface,Message Routing: Remove old BitVec logic from incremental manifest computation ([#7052](https://github.com/dfinity/ic/pull/7052))
-* [`b0dc45feb`](https://github.com/dfinity/ic/commit/b0dc45feb) Interface,Node: Move tools onto config types ([#7019](https://github.com/dfinity/ic/pull/7019))
-* [`cf07c0912`](https://github.com/dfinity/ic/commit/cf07c0912) Interface,Node(node): clean up nested test and improve code reuse ([#7017](https://github.com/dfinity/ic/pull/7017))
-* [`fb59d8233`](https://github.com/dfinity/ic/commit/fb59d8233) Interface,Node: in the kill_start_test run the kill-start iteration 5 times ([#7050](https://github.com/dfinity/ic/pull/7050))
+* [`a9ea00d62`](https://github.com/dfinity/ic/commit/a9ea00d62) Consensus(idkg): Use multi-threading in `send_dealing_support` ([#6968](https://github.com/dfinity/ic/pull/6968))
+* [`5fdc757d6`](https://github.com/dfinity/ic/commit/5fdc757d6) Consensus(idkg): Use multi-threading in `validate_dealings` ([#6962](https://github.com/dfinity/ic/pull/6962))
+* [`db66ec472`](https://github.com/dfinity/ic/commit/db66ec472) Consensus,Node(nns-recovery): reduce resource usage of NNS recovery system tests ([#7018](https://github.com/dfinity/ic/pull/7018))
+* [`67cc97592`](https://github.com/dfinity/ic/commit/67cc97592) Consensus: Shorten NNS delegation refresh interval ([#7068](https://github.com/dfinity/ic/pull/7068))
+* [`71237836a`](https://github.com/dfinity/ic/commit/71237836a) Execution: Remove dfn_macro ([#6922](https://github.com/dfinity/ic/pull/6922))
+* [`17f72f06c`](https://github.com/dfinity/ic/commit/17f72f06c) Execution: consider memory allocation in scheduler invariants ([#7042](https://github.com/dfinity/ic/pull/7042))
+* [`0945e0f03`](https://github.com/dfinity/ic/commit/0945e0f03) Execution: Improve error suggestion for CanisterMetadataSectionNotFound ([#7036](https://github.com/dfinity/ic/pull/7036))
+* [`f9818d864`](https://github.com/dfinity/ic/commit/f9818d864) Execution: remove obsolete canister_log_memory_usage v1 metric ([#7011](https://github.com/dfinity/ic/pull/7011))
+* [`ffd98c33d`](https://github.com/dfinity/ic/commit/ffd98c33d) Message Routing: rename ManifestDelta ([#7070](https://github.com/dfinity/ic/pull/7070))
+* [`fa37988f9`](https://github.com/dfinity/ic/commit/fa37988f9) Message Routing: Remove old BitVec logic from incremental manifest computation ([#7052](https://github.com/dfinity/ic/pull/7052))
 * [`891c0d9d6`](https://github.com/dfinity/ic/commit/891c0d9d6) Owners: Update Mainnet ICOS revisions file ([#7085](https://github.com/dfinity/ic/pull/7085))
 * [`a44bcc6d2`](https://github.com/dfinity/ic/commit/a44bcc6d2) Owners: Update Mainnet ICOS revisions file ([#7083](https://github.com/dfinity/ic/pull/7083))
-* [`0756b99d2`](https://github.com/dfinity/ic/commit/0756b99d2) Owners: bump oisy npm to 22.12 ([#7081](https://github.com/dfinity/ic/pull/7081))
-* [`132f6ee3b`](https://github.com/dfinity/ic/commit/132f6ee3b) Owners(IDX): fix cargo build logic ([#7048](https://github.com/dfinity/ic/pull/7048))
+* [`0756b99d2`](https://github.com/dfinity/ic/commit/0756b99d2) IDX: bump oisy npm to 22.12 ([#7081](https://github.com/dfinity/ic/pull/7081))
+* [`132f6ee3b`](https://github.com/dfinity/ic/commit/132f6ee3b) IDX: fix cargo build logic ([#7048](https://github.com/dfinity/ic/pull/7048))
 * [`741426fe1`](https://github.com/dfinity/ic/commit/741426fe1) Node: Drop ext4 support from monitor-expand-shared-data ([#7055](https://github.com/dfinity/ic/pull/7055))
 * [`3d50e3e43`](https://github.com/dfinity/ic/commit/3d50e3e43) Node: Resize backup LV to 500GB ([#6926](https://github.com/dfinity/ic/pull/6926))
-* [`c78222177`](https://github.com/dfinity/ic/commit/c78222177) Interface(nns/sns): Use patching for test canister candid files ([#6947](https://github.com/dfinity/ic/pull/6947))
-* [`7c84f99be`](https://github.com/dfinity/ic/commit/7c84f99be) Execution,Interface: Systest for migration canister ([#7004](https://github.com/dfinity/ic/pull/7004))
-* [`fd628eccb`](https://github.com/dfinity/ic/commit/fd628eccb) Interface(ICRC-Ledger): endpoint that disables icrc3 in the test ledger ([#7041](https://github.com/dfinity/ic/pull/7041))
-* [`c027ae49c`](https://github.com/dfinity/ic/commit/c027ae49c) Interface,Node: duplicate kill_start_test into a long and short version ([#7060](https://github.com/dfinity/ic/pull/7060))
+* [`b0dc45feb`](https://github.com/dfinity/ic/commit/b0dc45feb) Node: Move tools onto config types ([#7019](https://github.com/dfinity/ic/pull/7019))
+* [`cf07c0912`](https://github.com/dfinity/ic/commit/cf07c0912) Node: clean up nested test and improve code reuse ([#7017](https://github.com/dfinity/ic/pull/7017))
+* [`fb59d8233`](https://github.com/dfinity/ic/commit/fb59d8233) Node: in the kill_start_test run the kill-start iteration 5 times ([#7050](https://github.com/dfinity/ic/pull/7050))
+* [`c78222177`](https://github.com/dfinity/ic/commit/c78222177) Governance(nns/sns): Use patching for test canister candid files ([#6947](https://github.com/dfinity/ic/pull/6947))
+* [`7c84f99be`](https://github.com/dfinity/ic/commit/7c84f99be) Execution: Systest for migration canister ([#7004](https://github.com/dfinity/ic/pull/7004))
+* [`fd628eccb`](https://github.com/dfinity/ic/commit/fd628eccb) Financial Integrations(ICRC-Ledger): endpoint that disables icrc3 in the test ledger ([#7041](https://github.com/dfinity/ic/pull/7041))
+* [`c027ae49c`](https://github.com/dfinity/ic/commit/c027ae49c) Node: duplicate kill_start_test into a long and short version ([#7060](https://github.com/dfinity/ic/pull/7060))
 """.rstrip()
         assert guestos_post["cooked"] == expected_guestos_release_notes
         assert hostos_post["cooked"] == expected_hostos_release_notes
