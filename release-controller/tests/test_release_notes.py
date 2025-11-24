@@ -51,7 +51,7 @@ def test_get_change_description_for_commit(ic_repo: GitRepo) -> None:
     assert testme(commit_hash="94fd38099") == Change(
         commit="94fd38099",
         teams=[
-            "ic-owners-owners",
+            "idx",
         ],
         type="chore",
         scope="IDX",

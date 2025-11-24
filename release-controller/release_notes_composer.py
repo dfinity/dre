@@ -11,8 +11,6 @@ import textwrap
 import typing
 from dataclasses import dataclass
 
-from codeowners import CodeOwners
-
 mydir = os.path.join(os.path.dirname(__file__))
 if mydir not in sys.path:
     sys.path.append(mydir)
@@ -390,7 +388,6 @@ def compose_change_description(
     commit_message: str,
     commiter: str,
     file_changes: list[FileChange],
-    codeowners: CodeOwners,
     belongs: bool,
 ) -> Change:
     # Conventional commit regex pattern
@@ -432,7 +429,11 @@ def compose_change_description(
     dfinity_team_prefix = "@dfinity/"
 
     for change in file_changes:
-        owners = codeowners.of(change["file_path"])
+        owners = subprocess.run(
+            ["codeowners", change["file_path"]], text=True, capture_output=True
+        ).stdout
+
+        raise ValueError("Received owners:\n" + owners)
 
         if owners:
             teams = set(
@@ -444,7 +445,7 @@ def compose_change_description(
                 for _type, handle in owners
             )
         else:
-            teams = {"unknown"}
+            teams = set(["unknown"])
 
         for team in teams:
             if team not in ownership:

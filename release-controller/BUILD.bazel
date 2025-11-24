@@ -9,6 +9,14 @@ env = {
     "BAZEL": "true",
 }
 
+alias(
+    name = "codeowners",
+    actual = select({
+        "@bazel_tools//src/conditions:linux_x86_64": "@codeowners_linux//:codeowners",
+        "@bazel_tools//src/conditions:darwin_x86_64": "@codeowners_darwin//:codeowners",
+    }),
+)
+
 native_binary(
     name = "bazelisk",
     src = select({
@@ -70,12 +78,11 @@ py_library (
 
 py_library (
     name = "release_notes_composer",
-    data = [],
+    data = [":codeowners"],
     srcs = ["release_notes_composer.py"],
     deps = [
         requirement("markdown"),
         requirement("pymdown-extensions"),
-        requirement("codeowners"),
     ] + ["commit_annotation"],
     tags = ["typecheck"],
 )
