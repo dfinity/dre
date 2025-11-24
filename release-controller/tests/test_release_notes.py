@@ -26,7 +26,6 @@ def test_get_change_description_for_commit(ic_repo: GitRepo) -> None:
         commit="00dc67f8d",
         teams=[
             "crypto-team",
-            "ic-interface-owners",
         ],
         type="refactor",
         scope="",
@@ -351,7 +350,7 @@ To see a full list of commits added since last release, compare the revisions on
 ## Bugfixes:
 * author: Leon Tan  | [`56b0c90d2`](https://github.com/dfinity/ic/commit/56b0c90d2) Consensus(consnesus): Fix reshare chain key validation ([#4829](https://github.com/dfinity/ic/pull/4829))
 * author: mich      | [`7575e49a4`](https://github.com/dfinity/ic/commit/7575e49a4) Execution: Improve constants in wasm chunk store ([#4712](https://github.com/dfinity/ic/pull/4712))
-* author: Math Björ | [`5599a9860`](https://github.com/dfinity/ic/commit/5599a9860) Financial Integrations(ICRC_Ledger): Recompute ICRC ledger certified data in post upgrade ([#4796](https://github.com/dfinity/ic/pull/4796))
+* ~~author: Math Björ | [`5599a9860`](https://github.com/dfinity/ic/commit/5599a9860) Financial Integrations(ICRC_Ledger): Recompute ICRC ledger certified data in post upgrade ([#4796](https://github.com/dfinity/ic/pull/4796)) [AUTO-EXCLUDED:The change is not owned by any replica or HostOS team]~~
 * author: Shuo Wang | [`79f0a7d1f`](https://github.com/dfinity/ic/commit/79f0a7d1f) Message Routing: switch to checkpoint for wasm binaries in canister snapshots ([#4777](https://github.com/dfinity/ic/pull/4777))
 * author: Bas  van  | [`c9210f4d2`](https://github.com/dfinity/ic/commit/c9210f4d2) Node: revert "chore: unifying downloading logic ([#4805](https://github.com/dfinity/ic/pull/4805))" ([#4836](https://github.com/dfinity/ic/pull/4836))
 * ~~author: Igor Novg | [`e564b0380`](https://github.com/dfinity/ic/commit/e564b0380) Node: api bn: update `ic-gateway`, increase h2 streams, lower shedding threshold ([#4818](https://github.com/dfinity/ic/pull/4818)) [AUTO-EXCLUDED:Changed files are excluded by file path filter]~~
@@ -374,13 +373,20 @@ To see a full list of commits added since last release, compare the revisions on
 * ~~author: jaso      | [`13b6e2630`](https://github.com/dfinity/ic/commit/13b6e2630) NNS: Add a timer task to perform voting power snapshots ([#4405](https://github.com/dfinity/ic/pull/4405)) [AUTO-EXCLUDED:Not modifying HostOS]~~
 * ~~author: jaso      | [`e41b1f0c4`](https://github.com/dfinity/ic/commit/e41b1f0c4) NNS: Define NeuronAsyncLock to be compatible with safer access pattern to global state ([#4774](https://github.com/dfinity/ic/pull/4774)) [AUTO-EXCLUDED:Not modifying HostOS]~~
 * ~~author: jaso      | [`6aca5540e`](https://github.com/dfinity/ic/commit/6aca5540e) NNS: Add an index for maturity disbursement based on finalization timestamp ([#4770](https://github.com/dfinity/ic/pull/4770)) [AUTO-EXCLUDED:Not modifying HostOS]~~
-* ~~author: jaso      | [`1c46b8a2c`](https://github.com/dfinity/ic/commit/1c46b8a2c) NNS: Turn off disburse maturity which was incorrectly turned on ([#4827](https://github.com/dfinity/ic/pull/4827)) [AUTO-EXCLUDED:Not modifying HostOS]~~
 * ~~author: greg      | [`34404b5a8`](https://github.com/dfinity/ic/commit/34404b5a8) Cross Chain: re-enable `ic_xc_cketh_test` ([#4780](https://github.com/dfinity/ic/pull/4780)) [AUTO-EXCLUDED:Not modifying HostOS]~~
 * ~~author: stie      | [`51f052788`](https://github.com/dfinity/ic/commit/51f052788) Message Routing: Make the Heartbeat Counter on the Random Traffic Canister increment only for substantial Heartbeats. ([#4807](https://github.com/dfinity/ic/pull/4807)) [AUTO-EXCLUDED:Not modifying HostOS]~~
+* ~~author: jaso      | [`1c46b8a2c`](https://github.com/dfinity/ic/commit/1c46b8a2c) NNS: Turn off disburse maturity which was incorrectly turned on ([#4827](https://github.com/dfinity/ic/pull/4827)) [AUTO-EXCLUDED:Not modifying HostOS]~~
+* ~~author: Paul Liu  | [`39c02b84c`](https://github.com/dfinity/ic/commit/39c02b84c) Cross Chain(ckbtc): Upgrade the btc checker ([#4709](https://github.com/dfinity/ic/pull/4709)) [AUTO-EXCLUDED:Not modifying HostOS]~~
 * ~~author: venk      | [`ce266e1df`](https://github.com/dfinity/ic/commit/ce266e1df) Execution(fuzzing): Switch to ExecutionTest framework from StateMachine ([#4786](https://github.com/dfinity/ic/pull/4786)) [AUTO-EXCLUDED:Not modifying HostOS]~~
 * ~~author: Dimi Sarl | [`7c0b90e5a`](https://github.com/dfinity/ic/commit/7c0b90e5a) Execution,Interface: Add a Contributing.md file in rs/embedders ([#4677](https://github.com/dfinity/ic/pull/4677)) [AUTO-EXCLUDED:Not modifying HostOS]~~
 * ~~author: Nico Matt | [`bc4751117`](https://github.com/dfinity/ic/commit/bc4751117) IDX: clean up execlogs workflows ([#4791](https://github.com/dfinity/ic/pull/4791)) [AUTO-EXCLUDED:Not modifying HostOS]~~
 * ~~author: Nico Matt | [`800d9a1a3`](https://github.com/dfinity/ic/commit/800d9a1a3) IDX: use execution log for determinism checks ([#4771](https://github.com/dfinity/ic/pull/4771)) [AUTO-EXCLUDED:Not modifying HostOS]~~
+* ~~author: Dani Wong | [`28ef5ff67`](https://github.com/dfinity/ic/commit/28ef5ff67) NNS: Delete flags related to periodic confirmation of following. ([#3782](https://github.com/dfinity/ic/pull/3782)) [AUTO-EXCLUDED:Not modifying HostOS]~~
+* ~~author: max-      | [`971eecc54`](https://github.com/dfinity/ic/commit/971eecc54) NNS: update changelogs ([#4793](https://github.com/dfinity/ic/pull/4793)) [AUTO-EXCLUDED:Not modifying HostOS]~~
+* ~~author: pr-c      | [`19523bdab`](https://github.com/dfinity/ic/commit/19523bdab) unknown: Update Mainnet IC revisions canisters file ([#4809](https://github.com/dfinity/ic/pull/4809)) [AUTO-EXCLUDED:Not modifying HostOS]~~
+* ~~author: pr-c      | [`44558846e`](https://github.com/dfinity/ic/commit/44558846e) unknown: Update Mainnet IC revisions canisters file ([#4808](https://github.com/dfinity/ic/pull/4808)) [AUTO-EXCLUDED:Not modifying HostOS]~~
+* ~~author: pr-c      | [`512cf412f`](https://github.com/dfinity/ic/commit/512cf412f) unknown: Update Mainnet IC revisions file ([#4806](https://github.com/dfinity/ic/pull/4806)) [AUTO-EXCLUDED:Not modifying HostOS]~~
+* ~~author: pr-c      | [`d95941df2`](https://github.com/dfinity/ic/commit/d95941df2) unknown: Update Mainnet IC revisions file ([#4802](https://github.com/dfinity/ic/pull/4802)) [AUTO-EXCLUDED:Not modifying HostOS]~~
 * ~~author: Paul Liu  | [`c90a65062`](https://github.com/dfinity/ic/commit/c90a65062) Cross Chain(ckbtc): Clean up types used by ckbtc minter ([#4757](https://github.com/dfinity/ic/pull/4757)) [AUTO-EXCLUDED:Not modifying HostOS]~~
 * ~~author: Leon Tan  | [`593392e05`](https://github.com/dfinity/ic/commit/593392e05) Consensus: Increase number of retries of get signature in system tests ([#4835](https://github.com/dfinity/ic/pull/4835)) [AUTO-EXCLUDED:Not modifying HostOS]~~
 * ~~author: Leo  Eich | [`3e3a91cb3`](https://github.com/dfinity/ic/commit/3e3a91cb3) Consensus: Increase subnet size to 4 nodes in recovery tests ([#4830](https://github.com/dfinity/ic/pull/4830)) [AUTO-EXCLUDED:Not modifying HostOS]~~
