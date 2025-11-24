@@ -458,10 +458,7 @@ def compose_change_description(
                 else owner
                 for owner in owners
             ]
-            # Default to ic-owners-owners
-            owners = [
-                "ic-owners-owners" if "unowned" in owner else owner for owner in owners
-            ]
+            owners = ["unknown" if "(unowned)" == owner else owner for owner in owners]
 
             teams = set(owners)
 
@@ -476,6 +473,18 @@ def compose_change_description(
         and len(set(ownership.keys()).intersection(REPLICA_TEAMS)) > 1
     ):
         ownership.pop("ic-owners-owners")
+
+    if "unknown" in ownership:
+        # If there are other changes and there are some uknown
+        # skip all of them that are unknown.
+        # This is for historical reasons, now all of the files
+        # should be owned by the teams.
+        if len(ownership.keys()) > 1:
+            ownership.pop("unknown")
+        # If the only changes that are made are not owned by
+        # anyone, deem them as owned by ic-owners-owners
+        elif len(ownership.keys()) == 1:
+            ownership["ic-owners-owners"] = ownership.pop("unknown")
 
     # TODO: count max first by replica team then others
     teams = set()
