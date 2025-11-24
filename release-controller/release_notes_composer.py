@@ -11,6 +11,8 @@ import textwrap
 import typing
 from dataclasses import dataclass
 
+from codeowners import CodeOwners
+
 mydir = os.path.join(os.path.dirname(__file__))
 if mydir not in sys.path:
     sys.path.append(mydir)
@@ -388,7 +390,7 @@ def compose_change_description(
     commit_message: str,
     commiter: str,
     file_changes: list[FileChange],
-    codeowners: dict[str, list[str]],
+    codeowners: CodeOwners,
     belongs: bool,
 ) -> Change:
     # Conventional commit regex pattern
@@ -427,19 +429,22 @@ def compose_change_description(
 
     conventional = parse_conventional_commit(stripped_message, conv_commit_pattern)
 
+    dfinity_team_prefix = "@dfinity/"
+
     for change in file_changes:
-        teams = set(
-            sum(
-                [
-                    codeowners[p]
-                    for p in codeowners.keys()
-                    if fnmatch.fnmatch(change["file_path"], p.removeprefix("/"))
-                ],
-                [],
+        owners = codeowners.of(change["file_path"])
+
+        if owners:
+            teams = set(
+                # If the prefix is present in the handle, strip it.
+                # Otherwise, keep the handle as is.
+                handle.split(dfinity_team_prefix)[1]
+                if dfinity_team_prefix in handle
+                else handle
+                for _type, handle in owners
             )
-        )
-        if not teams:
-            teams = set(["unknown"])
+        else:
+            teams = {"unknown"}
 
         for team in teams:
             if team not in ownership:
@@ -507,12 +512,12 @@ def get_change_description_for_commit(
     belongs: bool,
 ) -> Change:
     @functools.cache
-    def parse_and_cache_codeowners(commit_id: str) -> dict[str, list[str]]:
+    def parse_and_cache_codeowners(commit_id: str) -> CodeOwners:
         codeowners_text = ic_repo.file_contents(
             commit_hash,
             pathlib.Path(".github/CODEOWNERS"),
         ).decode("utf-8")
-        return parse_codeowners(codeowners_text)
+        return CodeOwners(codeowners_text)
 
     commit_message = ic_repo.get_commit_info("%s", commit_hash)
     committer = ic_repo.get_commit_info("%an", commit_hash)

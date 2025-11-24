@@ -75,6 +75,7 @@ py_library (
     deps = [
         requirement("markdown"),
         requirement("pymdown-extensions"),
+        requirement("codeowners"),
     ] + ["commit_annotation"],
     tags = ["typecheck"],
 )
