@@ -44,7 +44,7 @@ def test_get_change_description_for_commit(ic_repo: GitRepo) -> None:
         scope="crypto",
         message="bump ic_bls12_381 to 0.10.0 ([#770](https://github.com/dfinity/ic/pull/770))",
         commiter="Olek Tkac",
-        exclusion_reason=None,
+        exclusion_reason="The change is not owned by any replica or HostOS team",
         belongs_to_this_release=True,
     )
     # .github change
@@ -77,7 +77,7 @@ def test_get_change_description_for_commit(ic_repo: GitRepo) -> None:
     assert testme(commit_hash="5a250cb34") == Change(
         commit="5a250cb34",
         teams=[
-            "ic-interface-owners",
+            "nns-team",
         ],
         type="feat",
         scope="ic-admin",
@@ -90,7 +90,7 @@ def test_get_change_description_for_commit(ic_repo: GitRepo) -> None:
     assert testme(commit_hash="d436a526d") == Change(
         commit="d436a526d",
         teams=[
-            "ic-interface-owners",
+            "nns-team",
         ],
         type="feat",
         scope="ic-admin",
@@ -102,19 +102,19 @@ def test_get_change_description_for_commit(ic_repo: GitRepo) -> None:
     assert testme(commit_hash="92e0f4a55") == Change(
         commit="92e0f4a55",
         teams=[
-            "ic-interface-owners",
+            "nns-team",
         ],
         type="feat",
         scope="nns",
         message="Store `wasm_metadata` in SNS-W's stable memory (attempt #2) ([#977](https://github.com/dfinity/ic/pull/977))",
         commiter="Arsh Ter-",
-        exclusion_reason="Scope of the change (nns) is not related to the artifact",
+        exclusion_reason="The change is not owned by any replica or HostOS team",
         belongs_to_this_release=True,
     )
     assert testme(commit_hash="0aa15a5be") == Change(
         commit="0aa15a5be",
         teams=[
-            "ic-interface-owners",
+            "nns-team",
         ],
         type="feat",
         scope="nns",
@@ -126,7 +126,7 @@ def test_get_change_description_for_commit(ic_repo: GitRepo) -> None:
     assert testme(commit_hash="974f22dc1") == Change(
         commit="974f22dc1",
         teams=[
-            "ic-interface-owners",
+            "nns-team",
         ],
         type="feat",
         scope="sns",
@@ -138,19 +138,19 @@ def test_get_change_description_for_commit(ic_repo: GitRepo) -> None:
     assert testme(commit_hash="05b02520f") == Change(
         commit="05b02520f",
         teams=[
-            "ic-interface-owners",
+            "nns-team",
         ],
         type="feat",
         scope="sns",
         message="Reject new participants if the maximum number of required SNS neurons has been reached ([#924](https://github.com/dfinity/ic/pull/924))",
         commiter="Arsh Ter-",
-        exclusion_reason="Scope of the change (sns) is not related to the artifact",
+        exclusion_reason="The change is not owned by any replica or HostOS team",
         belongs_to_this_release=True,
     )
     assert testme(commit_hash="57293157d") == Change(
         commit="57293157d",
         teams=[
-            "ic-interface-owners",
+            "nns-team",
         ],
         type="chore",
         scope="sns",
@@ -162,7 +162,7 @@ def test_get_change_description_for_commit(ic_repo: GitRepo) -> None:
     assert testme(commit_hash="f4242cbcf") == Change(
         commit="f4242cbcf",
         teams=[
-            "ic-interface-owners",
+            "nns-team",
         ],
         type="chore",
         scope="",
@@ -175,7 +175,6 @@ def test_get_change_description_for_commit(ic_repo: GitRepo) -> None:
         commit="a63138ab5",
         teams=[
             "execution",
-            "ic-interface-owners",
             "ic-message-routing-owners",
         ],
         type="feat",
@@ -263,7 +262,7 @@ To see a full list of commits added since last release, compare the revisions on
 ## Tests:
 * author: Dimi Sarl | [`0ed8c497c`](https://github.com/dfinity/ic/commit/0ed8c497c) Consensus,Execution: Fix property tests in bitcoin consensus payload builder ([#656](https://github.com/dfinity/ic/pull/656))
 ## ~~Other changes not modifying GuestOS~~
-* ~~author: maci      | [`9397d7264`](https://github.com/dfinity/ic/commit/9397d7264) Financial Integrations,unknown(icrc-ledger-types): bumping version to 0.1.6 in order to release icrc3 and icrc21 types. ([#509](https://github.com/dfinity/ic/pull/509)) [AUTO-EXCLUDED:Not modifying GuestOS]~~
+* ~~author: maci      | [`9397d7264`](https://github.com/dfinity/ic/commit/9397d7264) Financial Integrations(icrc-ledger-types): bumping version to 0.1.6 in order to release icrc3 and icrc21 types. ([#509](https://github.com/dfinity/ic/pull/509)) [AUTO-EXCLUDED:Not modifying GuestOS]~~
 * ~~author: Carl Gund | [`e81fe6b18`](https://github.com/dfinity/ic/commit/e81fe6b18) IDX: trigger qualifier workflow ([#668](https://github.com/dfinity/ic/pull/668)) [AUTO-EXCLUDED:Not modifying GuestOS]~~
 * ~~author: Maci Kot  | [`2c324f2d0`](https://github.com/dfinity/ic/commit/2c324f2d0) Networking: Enable wasm64 in ic_starter ([#666](https://github.com/dfinity/ic/pull/666)) [AUTO-EXCLUDED:Not modifying GuestOS]~~
 * ~~author: jaso      | [`51cbfe127`](https://github.com/dfinity/ic/commit/51cbfe127) NNS: Enable new topics to be followed ([#710](https://github.com/dfinity/ic/pull/710)) [AUTO-EXCLUDED:Not modifying GuestOS]~~
@@ -378,14 +377,14 @@ To see a full list of commits added since last release, compare the revisions on
 * ~~author: Paul Liu  | [`39c02b84c`](https://github.com/dfinity/ic/commit/39c02b84c) Cross Chain(ckbtc): Upgrade the btc checker ([#4709](https://github.com/dfinity/ic/pull/4709)) [AUTO-EXCLUDED:Not modifying HostOS]~~
 * ~~author: venk      | [`ce266e1df`](https://github.com/dfinity/ic/commit/ce266e1df) Execution(fuzzing): Switch to ExecutionTest framework from StateMachine ([#4786](https://github.com/dfinity/ic/pull/4786)) [AUTO-EXCLUDED:Not modifying HostOS]~~
 * ~~author: Dimi Sarl | [`7c0b90e5a`](https://github.com/dfinity/ic/commit/7c0b90e5a) Execution,Interface: Add a Contributing.md file in rs/embedders ([#4677](https://github.com/dfinity/ic/pull/4677)) [AUTO-EXCLUDED:Not modifying HostOS]~~
+* ~~author: pr-c      | [`19523bdab`](https://github.com/dfinity/ic/commit/19523bdab) Owners: Update Mainnet IC revisions canisters file ([#4809](https://github.com/dfinity/ic/pull/4809)) [AUTO-EXCLUDED:Not modifying HostOS]~~
+* ~~author: pr-c      | [`44558846e`](https://github.com/dfinity/ic/commit/44558846e) Owners: Update Mainnet IC revisions canisters file ([#4808](https://github.com/dfinity/ic/pull/4808)) [AUTO-EXCLUDED:Not modifying HostOS]~~
+* ~~author: pr-c      | [`512cf412f`](https://github.com/dfinity/ic/commit/512cf412f) Owners: Update Mainnet IC revisions file ([#4806](https://github.com/dfinity/ic/pull/4806)) [AUTO-EXCLUDED:Not modifying HostOS]~~
+* ~~author: pr-c      | [`d95941df2`](https://github.com/dfinity/ic/commit/d95941df2) Owners: Update Mainnet IC revisions file ([#4802](https://github.com/dfinity/ic/pull/4802)) [AUTO-EXCLUDED:Not modifying HostOS]~~
 * ~~author: Nico Matt | [`bc4751117`](https://github.com/dfinity/ic/commit/bc4751117) IDX: clean up execlogs workflows ([#4791](https://github.com/dfinity/ic/pull/4791)) [AUTO-EXCLUDED:Not modifying HostOS]~~
 * ~~author: Nico Matt | [`800d9a1a3`](https://github.com/dfinity/ic/commit/800d9a1a3) IDX: use execution log for determinism checks ([#4771](https://github.com/dfinity/ic/pull/4771)) [AUTO-EXCLUDED:Not modifying HostOS]~~
 * ~~author: Dani Wong | [`28ef5ff67`](https://github.com/dfinity/ic/commit/28ef5ff67) NNS: Delete flags related to periodic confirmation of following. ([#3782](https://github.com/dfinity/ic/pull/3782)) [AUTO-EXCLUDED:Not modifying HostOS]~~
 * ~~author: max-      | [`971eecc54`](https://github.com/dfinity/ic/commit/971eecc54) NNS: update changelogs ([#4793](https://github.com/dfinity/ic/pull/4793)) [AUTO-EXCLUDED:Not modifying HostOS]~~
-* ~~author: pr-c      | [`19523bdab`](https://github.com/dfinity/ic/commit/19523bdab) unknown: Update Mainnet IC revisions canisters file ([#4809](https://github.com/dfinity/ic/pull/4809)) [AUTO-EXCLUDED:Not modifying HostOS]~~
-* ~~author: pr-c      | [`44558846e`](https://github.com/dfinity/ic/commit/44558846e) unknown: Update Mainnet IC revisions canisters file ([#4808](https://github.com/dfinity/ic/pull/4808)) [AUTO-EXCLUDED:Not modifying HostOS]~~
-* ~~author: pr-c      | [`512cf412f`](https://github.com/dfinity/ic/commit/512cf412f) unknown: Update Mainnet IC revisions file ([#4806](https://github.com/dfinity/ic/pull/4806)) [AUTO-EXCLUDED:Not modifying HostOS]~~
-* ~~author: pr-c      | [`d95941df2`](https://github.com/dfinity/ic/commit/d95941df2) unknown: Update Mainnet IC revisions file ([#4802](https://github.com/dfinity/ic/pull/4802)) [AUTO-EXCLUDED:Not modifying HostOS]~~
 * ~~author: Paul Liu  | [`c90a65062`](https://github.com/dfinity/ic/commit/c90a65062) Cross Chain(ckbtc): Clean up types used by ckbtc minter ([#4757](https://github.com/dfinity/ic/pull/4757)) [AUTO-EXCLUDED:Not modifying HostOS]~~
 * ~~author: Leon Tan  | [`593392e05`](https://github.com/dfinity/ic/commit/593392e05) Consensus: Increase number of retries of get signature in system tests ([#4835](https://github.com/dfinity/ic/pull/4835)) [AUTO-EXCLUDED:Not modifying HostOS]~~
 * ~~author: Leo  Eich | [`3e3a91cb3`](https://github.com/dfinity/ic/commit/3e3a91cb3) Consensus: Increase subnet size to 4 nodes in recovery tests ([#4830](https://github.com/dfinity/ic/pull/4830)) [AUTO-EXCLUDED:Not modifying HostOS]~~
