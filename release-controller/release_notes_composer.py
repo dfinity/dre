@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 import fnmatch
-import functools
 import logging
 import os
 import pathlib
@@ -10,6 +9,9 @@ import sys
 import textwrap
 import typing
 from dataclasses import dataclass
+from typing import Any
+
+from util import resolve_binary
 
 mydir = os.path.join(os.path.dirname(__file__))
 if mydir not in sys.path:
@@ -388,6 +390,7 @@ def compose_change_description(
     commit_message: str,
     commiter: str,
     file_changes: list[FileChange],
+    dir: pathlib.Path,
     belongs: bool,
 ) -> Change:
     # Conventional commit regex pattern
@@ -413,7 +416,7 @@ def compose_change_description(
     ):
         exclusion_reason = "Changed files are excluded by file path filter"
 
-    ownership = {}
+    ownership: dict[str, Any] = {}
     stripped_message = re.sub(jira_ticket_regex, "", commit_message)
     stripped_message = re.sub(empty_brackets_regex, "", stripped_message)
     # add github PR links
@@ -429,23 +432,27 @@ def compose_change_description(
     dfinity_team_prefix = "@dfinity/"
 
     for change in file_changes:
-        owners = subprocess.run(
-            ["codeowners", change["file_path"]], text=True, capture_output=True
+        owners_line = subprocess.run(
+            [resolve_binary("codeowners"), change["file_path"]],
+            text=True,
+            capture_output=True,
+            cwd=dir,
         ).stdout
 
-        raise ValueError("Received owners:\n" + owners)
+        # Becase the first thing is the path being queried
+        owners = owners_line.split()[1:]
 
-        if owners:
-            teams = set(
-                # If the prefix is present in the handle, strip it.
-                # Otherwise, keep the handle as is.
-                handle.split(dfinity_team_prefix)[1]
-                if dfinity_team_prefix in handle
-                else handle
-                for _type, handle in owners
+        for owner in owners:
+            owner = (
+                owner.split(dfinity_team_prefix)[1]
+                if dfinity_team_prefix in owner
+                else owner
             )
-        else:
-            teams = set(["unknown"])
+
+            if "unowned" in owner:
+                owner = "unknown"
+
+        teams = set(owners)
 
         for team in teams:
             if team not in ownership:
@@ -512,25 +519,16 @@ def get_change_description_for_commit(
     ic_repo: GitRepo,
     belongs: bool,
 ) -> Change:
-    @functools.cache
-    def parse_and_cache_codeowners(commit_id: str) -> CodeOwners:
-        codeowners_text = ic_repo.file_contents(
-            commit_hash,
-            pathlib.Path(".github/CODEOWNERS"),
-        ).decode("utf-8")
-        return CodeOwners(codeowners_text)
-
     commit_message = ic_repo.get_commit_info("%s", commit_hash)
     committer = ic_repo.get_commit_info("%an", commit_hash)
     file_changes_for_commit = ic_repo.file_changes_for_commit(commit_hash)
-    codeowners = parse_and_cache_codeowners(commit_hash)
 
     return compose_change_description(
         commit_hash,
         commit_message,
         committer,
         file_changes_for_commit,
-        codeowners,
+        ic_repo.dir,
         belongs,
     )
 

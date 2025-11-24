@@ -154,15 +154,15 @@ http_archive = use_repo_rule("@bazel_tools//tools/build_defs/repo:http.bzl", "ht
 
 http_archive(
     name = "codeowners_linux",
-    sha256 = "bb3a283e2bd6c50d8b383c5a8b99179ded65eefdbd95945826a61f860ce531f4",
-    url = "https://github.com/hmarr/codeowners/releases/download/v1.2.1/codeowners_1.2.1_linux_arm64.tar.gz",
+    sha256 = "94f9f9ec43dba151816b5c2fd98698afbfd03d5ac63db77d2d8c2cf77b326bb0",
+    url = "https://github.com/hmarr/codeowners/releases/download/v1.2.1/codeowners_1.2.1_linux_amd64.tar.gz",
     build_file = "@//3rdparty:BUILD.codeowners.bazel",
 )
 
 http_archive(
     name = "codeowners_darwin",
-    sha256 = "1a271d2a3960491d7fceffdca741e7a3830cb2ab5013723ed8f9efe04dd3d9c1",
-    url = "https://github.com/hmarr/codeowners/releases/download/v1.2.1/codeowners_1.2.1_darwin_arm64.tar.gz",
+    sha256 = "39d5868f50a3716af61c1bd4722b9f840f07a005d3018b20483de26b10ced19a",
+    url = "https://github.com/hmarr/codeowners/releases/download/v1.2.1/codeowners_1.2.1_darwin_amd64.tar.gz",
     build_file = "@//3rdparty:BUILD.codeowners.bazel",
 )
 

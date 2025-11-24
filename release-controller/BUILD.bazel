@@ -9,12 +9,13 @@ env = {
     "BAZEL": "true",
 }
 
-alias(
+native_binary(
     name = "codeowners",
-    actual = select({
+    src = select({
         "@bazel_tools//src/conditions:linux_x86_64": "@codeowners_linux//:codeowners",
         "@bazel_tools//src/conditions:darwin_x86_64": "@codeowners_darwin//:codeowners",
     }),
+    out = "codeowners",
 )
 
 native_binary(
@@ -83,7 +84,7 @@ py_library (
     deps = [
         requirement("markdown"),
         requirement("pymdown-extensions"),
-    ] + ["commit_annotation"],
+    ] + ["commit_annotation", "util"],
     tags = ["typecheck"],
 )
 
