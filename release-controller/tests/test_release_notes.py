@@ -1,15 +1,14 @@
-from tests.fixtures import ic_repo as ic_repo
-
+from commit_annotation import COMMIT_BELONGS, LocalCommitChangeDeterminator
+from const import GUESTOS, HOSTOS
+from git_repo import GitRepo
 from release_notes_composer import (
-    prepare_release_notes,
-    get_change_description_for_commit,
+    Change,
     OrdinaryReleaseNotesRequest,
     SecurityReleaseNotesRequest,
-    Change,
+    get_change_description_for_commit,
+    prepare_release_notes,
 )
-from commit_annotation import LocalCommitChangeDeterminator, COMMIT_BELONGS
-from git_repo import GitRepo
-from const import GUESTOS, HOSTOS
+from tests.fixtures import ic_repo as ic_repo
 
 
 def test_get_change_description_for_commit(ic_repo: GitRepo) -> None:
@@ -185,6 +184,16 @@ def test_get_change_description_for_commit(ic_repo: GitRepo) -> None:
         scope="",
         message="Check `SystemState` invariants on checkpoint loading ([#1165](https://github.com/dfinity/ic/pull/1165))",
         commiter="Alin Sinp",
+        exclusion_reason=None,
+        belongs_to_this_release=True,
+    )
+    assert testme(commit_hash="ee64a50") == Change(
+        commit="ee64a50",
+        teams=["team-dsm"],
+        type="chore",
+        scope="",
+        message="Extend log message for invalid stream slices during block making ([#7658](https://github.com/dfinity/ic/pull/7658))",
+        commiter="Davi Derl",
         exclusion_reason=None,
         belongs_to_this_release=True,
     )
