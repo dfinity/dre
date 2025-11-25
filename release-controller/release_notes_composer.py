@@ -7,28 +7,30 @@ import pathlib
 import re
 import subprocess
 import sys
+import tempfile
 import textwrap
 import typing
-
 from dataclasses import dataclass
+from typing import Any
+
+from util import resolve_binary
 
 mydir = os.path.join(os.path.dirname(__file__))
 if mydir not in sys.path:
     sys.path.append(mydir)
 
+import markdown  # noqa: E402
+from commit_annotation import (  # noqa: E402
+    COMMIT_BELONGS,
+    ChangeDeterminatorProtocol,
+)
 from const import (  # noqa: E402
-    OsKind,
     GUESTOS,
     HOSTOS,
+    OsKind,
 )
-from commit_annotation import (  # noqa: E402
-    ChangeDeterminatorProtocol,
-    COMMIT_BELONGS,
-)
-from git_repo import GitRepo, FileChange  # noqa: E402
+from git_repo import FileChange, GitRepo  # noqa: E402
 from util import auto_progressbar_with_item_descriptions  # noqa: E402
-
-import markdown  # noqa: E402
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -54,6 +56,7 @@ REPLICA_TEAMS = set(
         "runtime-owners",
         "runtime",
         "ic-owners-owners",
+        "team-dsm",
     ]
 )
 
@@ -84,12 +87,8 @@ class Team:
 RELEASE_NOTES_REVIEWERS: dict[OsKind, list[Team]] = {
     GUESTOS: [
         Team("consensus", "@team-consensus", "SRJ3R849E", False),
-        Team("crypto", "@team-crypto", "SU7BZQ78E", False),
-        Team("execution", "@team-execution", "S01A577UL56", False),
-        Team("messaging", "@team-messaging", "S01SVC713PS", False),
-        Team("networking", "@team-networking", "SR6KC1DMZ", False),
         Team("node", "@node-team", "S027838EY30", False),
-        Team("runtime", "@team-runtime", "S03BM6C0CJY", False),
+        Team("team-dsm", "@team-dsm", "S09R319PHC1", False),
     ],
     HOSTOS: [
         Team("node", "@node-team", "S027838EY30", True),
@@ -107,6 +106,7 @@ TYPE_PRETTY_MAP = {
     "other": ("Other changes", 7),
     "excluded": ("Excluded changes", 8),
 }
+
 
 TEAM_PRETTY_MAP = {
     "boundary-node": "Boundary Nodes",
@@ -149,6 +149,13 @@ TEAM_PRETTY_MAP = {
     "trust-team": "Trust",
     "utopia": "Utopia",
     "pocket-ic": "Pocket IC",
+    "defi-team": "Defi team",
+    "team-dsm": "DSM",
+    "governance-team": "Governance",
+    "sdk": "SDK",
+    "infrasec": "Infrasec",
+    "research": "Research",
+    "formal-models": "Formal models",
 }
 
 
@@ -216,27 +223,6 @@ def get_rc_branch(repo_dir: str, commit_hash: str) -> str:
     if rc_branches:
         return rc_branches[0]
     return ""
-
-
-def parse_codeowners(codeowners_text: str) -> dict[str, list[str]]:
-    codeowners = codeowners_text.splitlines(True)
-    filtered = [line.strip() for line in codeowners]
-    filtered = [line for line in filtered if line and not line.startswith("#")]
-    parsed = {}
-    for line in filtered:
-        # _LOGGER.debug("Parsing CODEOWNERS, line: %s" % line)
-        result = line.split()
-        if len(result) <= 1:
-            continue
-        teams = [
-            team.split("@dfinity/")[1] for team in result[1:] if "@dfinity/" in team
-        ]
-        pattern = result[0]
-        pattern = pattern if pattern.startswith("/") else "/" + pattern
-        pattern = pattern if not pattern.endswith("/") else pattern + "*"
-
-        parsed[pattern] = teams
-    return parsed
 
 
 class ConventionalCommit(typing.TypedDict):
@@ -385,7 +371,7 @@ def compose_change_description(
     commit_message: str,
     commiter: str,
     file_changes: list[FileChange],
-    codeowners: dict[str, list[str]],
+    codeowners_text: str,
     belongs: bool,
 ) -> Change:
     # Conventional commit regex pattern
@@ -411,7 +397,7 @@ def compose_change_description(
     ):
         exclusion_reason = "Changed files are excluded by file path filter"
 
-    ownership = {}
+    ownership: dict[str, Any] = {}
     stripped_message = re.sub(jira_ticket_regex, "", commit_message)
     stripped_message = re.sub(empty_brackets_regex, "", stripped_message)
     # add github PR links
@@ -424,31 +410,80 @@ def compose_change_description(
 
     conventional = parse_conventional_commit(stripped_message, conv_commit_pattern)
 
-    for change in file_changes:
-        teams = set(
-            sum(
-                [
-                    codeowners[p]
-                    for p in codeowners.keys()
-                    if fnmatch.fnmatch(change["file_path"], p.removeprefix("/"))
-                ],
-                [],
-            )
-        )
-        if not teams:
-            teams = set(["unknown"])
+    dfinity_team_prefix = "@dfinity/"
 
-        for team in teams:
-            if team not in ownership:
-                ownership[team] = change["num_changes"]
-                continue
-            ownership[team] += change["num_changes"]
+    with tempfile.NamedTemporaryFile("w+t") as tmp_file:
+        file_path = tmp_file.name
+        tmp_file.write(codeowners_text)
+        tmp_file.flush()
+
+        for change in file_changes:
+            try:
+                result = subprocess.run(
+                    [
+                        resolve_binary("codeowners"),
+                        "--file",
+                        file_path,
+                        change["file_path"],
+                    ],
+                    text=True,
+                    capture_output=True,
+                    check=True,
+                    timeout=30,
+                )
+                owners_line = result.stdout
+            except subprocess.CalledProcessError as e:
+                _LOGGER.error(
+                    "Failed to determine codeowners for %s: %s (stderr: %s)",
+                    change["file_path"],
+                    e,
+                    e.stderr,
+                )
+                raise
+            except subprocess.TimeoutExpired as e:
+                _LOGGER.error("Timeout determining codeowners for %s", change["file_path"])
+                raise
+
+            # Because the first thing is the path being queried
+            owners_parts = owners_line.split()
+            if not owners_parts:
+                _LOGGER.warning("Empty codeowners output for %s", change["file_path"])
+                owners = ["unknown"]
+            else:
+                owners = owners_parts[1:]
+                owners = [
+                    owner.split(dfinity_team_prefix)[1]
+                    if owner.startswith(dfinity_team_prefix)
+                    else owner
+                    for owner in owners
+                ]
+                owners = ["unknown" if "(unowned)" == owner else owner for owner in owners]
+
+            teams = set(owners)
+
+            for team in teams:
+                if team not in ownership:
+                    ownership[team] = change["num_changes"]
+                    continue
+                ownership[team] += change["num_changes"]
 
     if (
         "ic-owners-owners" in ownership
         and len(set(ownership.keys()).intersection(REPLICA_TEAMS)) > 1
     ):
         ownership.pop("ic-owners-owners")
+
+    if "unknown" in ownership:
+        # If there are other changes and there are some uknown
+        # skip all of them that are unknown.
+        # This is for historical reasons, now all of the files
+        # should be owned by the teams.
+        if len(ownership.keys()) > 1:
+            ownership.pop("unknown")
+        # If the only changes that are made are not owned by
+        # anyone, deem them as owned by ic-owners-owners
+        elif len(ownership.keys()) == 1:
+            ownership["ic-owners-owners"] = ownership.pop("unknown")
 
     # TODO: count max first by replica team then others
     teams = set()
@@ -504,24 +539,23 @@ def get_change_description_for_commit(
     belongs: bool,
 ) -> Change:
     @functools.cache
-    def parse_and_cache_codeowners(commit_id: str) -> dict[str, list[str]]:
+    def parse_and_cache_codeowners(commit_id: str) -> str:
         codeowners_text = ic_repo.file_contents(
             commit_hash,
             pathlib.Path(".github/CODEOWNERS"),
         ).decode("utf-8")
-        return parse_codeowners(codeowners_text)
+        return codeowners_text
 
     commit_message = ic_repo.get_commit_info("%s", commit_hash)
     committer = ic_repo.get_commit_info("%an", commit_hash)
     file_changes_for_commit = ic_repo.file_changes_for_commit(commit_hash)
-    codeowners = parse_and_cache_codeowners(commit_hash)
 
     return compose_change_description(
         commit_hash,
         commit_message,
         committer,
         file_changes_for_commit,
-        codeowners,
+        parse_and_cache_codeowners(commit_hash),
         belongs,
     )
 
