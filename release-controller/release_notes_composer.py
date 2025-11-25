@@ -225,27 +225,6 @@ def get_rc_branch(repo_dir: str, commit_hash: str) -> str:
     return ""
 
 
-def parse_codeowners(codeowners_text: str) -> dict[str, list[str]]:
-    codeowners = codeowners_text.splitlines(True)
-    filtered = [line.strip() for line in codeowners]
-    filtered = [line for line in filtered if line and not line.startswith("#")]
-    parsed = {}
-    for line in filtered:
-        # _LOGGER.debug("Parsing CODEOWNERS, line: %s" % line)
-        result = line.split()
-        if len(result) <= 1:
-            continue
-        teams = [
-            team.split("@dfinity/")[1] for team in result[1:] if "@dfinity/" in team
-        ]
-        pattern = result[0]
-        pattern = pattern if pattern.startswith("/") else "/" + pattern
-        pattern = pattern if not pattern.endswith("/") else pattern + "*"
-
-        parsed[pattern] = teams
-    return parsed
-
-
 class ConventionalCommit(typing.TypedDict):
     type: str
     scope: str | None
@@ -439,26 +418,46 @@ def compose_change_description(
         tmp_file.flush()
 
         for change in file_changes:
-            owners_line = subprocess.run(
-                [
-                    resolve_binary("codeowners"),
-                    "--file",
-                    file_path,
+            try:
+                result = subprocess.run(
+                    [
+                        resolve_binary("codeowners"),
+                        "--file",
+                        file_path,
+                        change["file_path"],
+                    ],
+                    text=True,
+                    capture_output=True,
+                    check=True,
+                    timeout=30,
+                )
+                owners_line = result.stdout
+            except subprocess.CalledProcessError as e:
+                _LOGGER.error(
+                    "Failed to determine codeowners for %s: %s (stderr: %s)",
                     change["file_path"],
-                ],
-                text=True,
-                capture_output=True,
-            ).stdout
+                    e,
+                    e.stderr,
+                )
+                raise
+            except subprocess.TimeoutExpired as e:
+                _LOGGER.error("Timeout determining codeowners for %s", change["file_path"])
+                raise
 
-            # Becase the first thing is the path being queried
-            owners = owners_line.split()[1:]
-            owners = [
-                owner.split(dfinity_team_prefix)[1]
-                if owner.startswith(dfinity_team_prefix)
-                else owner
-                for owner in owners
-            ]
-            owners = ["unknown" if "(unowned)" == owner else owner for owner in owners]
+            # Because the first thing is the path being queried
+            owners_parts = owners_line.split()
+            if not owners_parts:
+                _LOGGER.warning("Empty codeowners output for %s", change["file_path"])
+                owners = ["unknown"]
+            else:
+                owners = owners_parts[1:]
+                owners = [
+                    owner.split(dfinity_team_prefix)[1]
+                    if owner.startswith(dfinity_team_prefix)
+                    else owner
+                    for owner in owners
+                ]
+                owners = ["unknown" if "(unowned)" == owner else owner for owner in owners]
 
             teams = set(owners)
 
