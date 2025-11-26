@@ -28,6 +28,10 @@ pub enum NodeRewardsMode {
         /// Filter to a single provider (full principal or provider prefix)
         #[arg(long)]
         provider_id: Option<String>,
+
+        /// If set, display comparison table with governance rewards
+        #[arg(long)]
+        compare_with_governance: bool,
     },
     /// Show past rewards for a given month (YYYY-MM) and compare with governance
     PastRewards {
@@ -71,6 +75,7 @@ impl Default for NodeRewards {
             mode: NodeRewardsMode::Ongoing {
                 csv_detailed_output_path: None,
                 provider_id: None,
+                compare_with_governance: false,
             },
             node_rewards_ctx: RefCell::new(None),
         }
@@ -97,6 +102,7 @@ impl ExecutableCommand for NodeRewards {
             NodeRewardsMode::Ongoing {
                 csv_detailed_output_path,
                 provider_id,
+                compare_with_governance,
             } => {
                 let last_rewards = gov_rewards_list.into_iter().next().unwrap();
                 // Range: from latest governance ts to yesterday
@@ -114,13 +120,32 @@ impl ExecutableCommand for NodeRewards {
                     return Err(anyhow!("Rewards have been distributed today, wait until tomorrow and retry"));
                 }
 
+                let last = governance_client.get_node_provider_rewards().await?;
+                let xdr_permyriad_per_icp = last
+                    .xdr_conversion_rate
+                    .as_ref()
+                    .and_then(|x| x.xdr_permyriad_per_icp)
+                    .ok_or_else(|| anyhow::anyhow!("Missing XDR conversion rate"))?;
+
+                println!("Start date: {:?}, End date: {:?}", last.start_date, last.end_date);
+
+                let governance_providers_rewards: BTreeMap<PrincipalId, u64> = last
+                    .rewards
+                    .iter()
+                    .map(|r| {
+                        let icp_amount = r.amount_e8s as f64 / 100_000_000f64;
+                        let xdr_permyriad_amount = icp_amount * xdr_permyriad_per_icp as f64;
+                        (r.node_provider.as_ref().and_then(|np| np.id).unwrap(), xdr_permyriad_amount as u64)
+                    })
+                    .collect();
+
                 *self.node_rewards_ctx.borrow_mut() = Some(NodeRewardsCtx {
                     start_date,
                     end_date,
                     csv_detailed_output_path: csv_detailed_output_path.clone(),
                     provider_id: provider_id.clone(),
-                    governance_providers_rewards: BTreeMap::new(),
-                    compare_with_governance: false,
+                    governance_providers_rewards,
+                    compare_with_governance: *compare_with_governance,
                 });
             }
             NodeRewardsMode::PastRewards {

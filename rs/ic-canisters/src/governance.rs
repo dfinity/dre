@@ -232,6 +232,21 @@ impl GovernanceCanisterWrapper {
         Ok(response.rewards)
     }
 
+    pub async fn get_node_provider_rewards(&self) -> anyhow::Result<MonthlyNodeProviderRewards> {
+        let resp = self
+            .client
+            .agent
+            .update(&GOVERNANCE_CANISTER_ID.into(), "get_node_provider_rewards")
+            .with_effective_canister_id(GOVERNANCE_CANISTER_ID.into())
+            .call_and_wait()
+            .await
+            .map_err(anyhow::Error::from)?;
+
+        let result: Result<MonthlyNodeProviderRewards, GovernanceError> =
+            Decode!(resp.as_slice(), Result<MonthlyNodeProviderRewards, GovernanceError>).map_err(anyhow::Error::from)?;
+        result.map_err(|e| anyhow::anyhow!("Governance error: {:?}", e))
+    }
+
     async fn query<T>(&self, method_name: &str, args: Vec<u8>) -> anyhow::Result<T>
     where
         T: candid::CandidType + for<'a> candid::Deserialize<'a>,
