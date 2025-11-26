@@ -102,7 +102,7 @@ impl ExecutableCommand for NodeRewards {
             NodeRewardsMode::Ongoing {
                 csv_detailed_output_path,
                 provider_id,
-                compare_with_governance
+                compare_with_governance,
             } => {
                 let last_rewards = gov_rewards_list.into_iter().next().unwrap();
                 // Range: from latest governance ts to yesterday
@@ -120,8 +120,7 @@ impl ExecutableCommand for NodeRewards {
                     return Err(anyhow!("Rewards have been distributed today, wait until tomorrow and retry"));
                 }
 
-                let last = governance_client
-                    .get_node_provider_rewards().await?;
+                let last = governance_client.get_node_provider_rewards().await?;
                 let xdr_permyriad_per_icp = last
                     .xdr_conversion_rate
                     .as_ref()
@@ -139,7 +138,6 @@ impl ExecutableCommand for NodeRewards {
                         (r.node_provider.as_ref().and_then(|np| np.id).unwrap(), xdr_permyriad_amount as u64)
                     })
                     .collect();
-
 
                 *self.node_rewards_ctx.borrow_mut() = Some(NodeRewardsCtx {
                     start_date,
