@@ -18,6 +18,7 @@ use super::upgrade::Upgrade;
 use super::version::Version;
 use super::vote::Vote;
 use crate::commands::node_rewards::NodeRewards;
+use crate::commands::registry_investigator::RegistryInvestigator;
 use crate::commands::subnet::Subnet;
 use crate::exe::impl_executable_command_for_enums;
 use clap::Parser;
@@ -34,7 +35,7 @@ pub struct MainCommand {
     pub subcommands: Subcommands,
 }
 
-impl_executable_command_for_enums! { MainCommand, DerToPrincipal, Network, Subnet, Get, Propose, UpdateUnassignedNodes, Version, NodeMetrics, NodeRewards, HostOs, Nodes, ApiBoundaryNodes, Vote, Registry, Firewall, Upgrade, Proposals, Completions, Qualify, UpdateDefaultSubnets, Neuron, Governance }
+impl_executable_command_for_enums! { MainCommand, DerToPrincipal, Network, Subnet, Get, Propose, UpdateUnassignedNodes, Version, NodeMetrics, NodeRewards, HostOs, Nodes, ApiBoundaryNodes, Vote, Registry, Firewall, Upgrade, Proposals, Completions, Qualify, UpdateDefaultSubnets, Neuron, Governance, RegistryInvestigator }
 
 #[derive(Args, Debug)]
 pub struct Completions {
