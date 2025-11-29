@@ -20,9 +20,9 @@ use ic_registry_keys::{
     API_BOUNDARY_NODE_RECORD_KEY_PREFIX, DATA_CENTER_KEY_PREFIX, HOSTOS_VERSION_KEY_PREFIX, NODE_OPERATOR_RECORD_KEY_PREFIX, NODE_RECORD_KEY_PREFIX,
     NODE_REWARDS_TABLE_KEY, REPLICA_VERSION_KEY_PREFIX, SUBNET_RECORD_KEY_PREFIX,
 };
-use ic_types::PrincipalId;
 use log::info;
 use prost::Message;
+use std::collections::VecDeque;
 
 #[derive(Args, Debug)]
 pub struct FullHistory {
@@ -41,7 +41,7 @@ impl ExecutableCommand for FullHistory {
     async fn execute(&self, ctx: crate::ctx::DreContext) -> anyhow::Result<()> {
         let local_registry = ctx.local_registry()?;
 
-        let latest_version = local_registry.get_latest_version();
+        let mut latest_version = local_registry.get_latest_version();
 
         info!("Latest version known to the local registry: {latest_version}");
 
@@ -49,27 +49,19 @@ impl ExecutableCommand for FullHistory {
 
         info!("Will attempt to make full history of key: {full_key}");
 
-        let mut chain = vec![];
-        let mut last_hash = 0;
+        let mut chain = VecDeque::new();
 
-        for v in 0..=latest_version.get() {
-            let record_at_version = local_registry.get_versioned_value(&full_key, v.into());
+        while latest_version.get() != 0 {
+            let record_at_version = local_registry.get_versioned_value(&full_key, latest_version);
 
             let record = match record_at_version {
                 Ok(v) => v,
-                Err(e) => return Err(anyhow::anyhow!("Received error at version {v}: {e:?}")),
+                Err(e) => return Err(anyhow::anyhow!("Received error at version {latest_version}: {e:?}")),
             };
 
-            let mut hasher = DefaultHasher::new();
-            record.value.hash(&mut hasher);
-            let hash = hasher.finish();
+            latest_version = record.version.decrement();
 
-            if hash == last_hash {
-                continue;
-            }
-
-            last_hash = hash;
-            chain.push(record);
+            chain.push_front(record);
         }
 
         info!("Found {} state transitions for queried key", chain.len());
@@ -151,7 +143,10 @@ impl FullHistory {
         serialize_decoded_record(decoded_record)
     }
 
-    fn display_chain(&self, chain: Vec<RegistryVersionedRecord<Vec<u8>>>) -> anyhow::Result<()> {
+    fn display_chain<I>(&self, chain: I) -> anyhow::Result<()>
+    where
+        I: IntoIterator<Item = RegistryVersionedRecord<Vec<u8>>>,
+    {
         for content_at_version in chain {
             println!("Version: {}", content_at_version.version);
             println!("Value:\n{}", self.content_to_value(content_at_version)?);
