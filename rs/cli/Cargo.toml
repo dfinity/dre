@@ -64,6 +64,7 @@ ic-sys = { workspace = true }
 ic-types = { workspace = true }
 icp-ledger = { workspace = true }
 indexmap = { workspace = true }
+ic-interfaces-registry.workspace = true
 itertools = { workspace = true }
 keyring = { workspace = true, optional = true }
 log = { workspace = true }

@@ -2196,6 +2196,7 @@ dependencies = [
  "ic-canister-client-sender",
  "ic-canisters",
  "ic-icrc1-test-utils",
+ "ic-interfaces-registry",
  "ic-management-backend",
  "ic-management-types",
  "ic-nervous-system-clients",

@@ -109,6 +109,13 @@ impl Store {
         Ok(path)
     }
 
+    pub fn local_registry(&self, network: &Network) -> anyhow::Result<LocalRegistry> {
+        let registry_path = self.local_store_for_network(network)?;
+
+        info!("Using local registry path for network {}: {}", network.name, registry_path.display());
+        LocalRegistry::new(&registry_path, Duration::from_millis(1000)).map_err(anyhow::Error::from)
+    }
+
     pub async fn registry(
         &self,
         network: &Network,
@@ -117,14 +124,12 @@ impl Store {
     ) -> anyhow::Result<Arc<dyn LazyRegistry>> {
         let registry_path = self.local_store_for_network(network)?;
 
-        info!("Using local registry path for network {}: {}", network.name, registry_path.display());
-
         match self.offline {
             true => warn!("Explicit offline mode! Registry won't be synced"),
             false => sync_local_store_with_path(network, &registry_path).await?,
         }
 
-        let local_registry = LocalRegistry::new(&registry_path, Duration::from_millis(1000))?;
+        let local_registry = self.local_registry(&network)?;
 
         Ok(Arc::new(LazyRegistryImpl::new(
             local_registry,

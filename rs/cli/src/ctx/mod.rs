@@ -8,6 +8,7 @@ use ic_management_backend::{
     proposal::{ProposalAgent, ProposalAgentImpl},
 };
 use ic_management_types::Network;
+use ic_registry_local_registry::LocalRegistry;
 use log::warn;
 
 use crate::{
@@ -270,6 +271,10 @@ impl DreContext {
 
     pub fn cordoned_features_fetcher(&self) -> Arc<dyn CordonedFeatureFetcher> {
         self.cordoned_features_fetcher.clone()
+    }
+
+    pub fn local_registry(&self) -> anyhow::Result<LocalRegistry> {
+        self.store.local_registry(&self.network())
     }
 }
 
