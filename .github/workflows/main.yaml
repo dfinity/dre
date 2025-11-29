@@ -37,7 +37,7 @@ jobs:
       packages: write
       pages: write
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           fetch-depth: 2
 
@@ -85,7 +85,7 @@ jobs:
 
       - name: "🧪 Upload test artifacts"
         if: ${{ github.ref == 'refs/heads/main' }}
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: test-artifacts
           path: bazel-out/k8-opt/bin/rs/ic-observability/multiservice-discovery/multiservice-discovery
