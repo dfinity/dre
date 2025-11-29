@@ -1,10 +1,10 @@
-use std::hash::{DefaultHasher, Hash, Hasher};
-
 use crate::commands::registry_investigator::AuthRequirement;
 use crate::exe::ExecutableCommand;
 use crate::exe::args::GlobalArgs;
 use candid::Principal;
+use chrono::{DateTime, Utc};
 use clap::{Args, ValueEnum};
+use ic_canisters::registry::RegistryCanisterWrapper;
 use ic_interfaces_registry::{RegistryClient, RegistryVersionedRecord};
 use ic_protobuf::registry::{
     api_boundary_node::v1::ApiBoundaryNodeRecord,
@@ -59,6 +59,10 @@ impl ExecutableCommand for FullHistory {
                 Err(e) => return Err(anyhow::anyhow!("Received error at version {latest_version}: {e:?}")),
             };
 
+            if record.version.get() == 0 {
+                break;
+            }
+
             latest_version = record.version.decrement();
 
             chain.push_front(record);
@@ -66,7 +70,9 @@ impl ExecutableCommand for FullHistory {
 
         info!("Found {} state transitions for queried key", chain.len());
 
-        self.display_chain(chain)
+        let (_, agent) = ctx.create_ic_agent_canister_client().await?;
+
+        self.display_chain(chain, RegistryCanisterWrapper::from(agent)).await
     }
 
     fn validate(&self, _args: &GlobalArgs, cmd: &mut clap::Command) {
@@ -143,12 +149,30 @@ impl FullHistory {
         serialize_decoded_record(decoded_record)
     }
 
-    fn display_chain<I>(&self, chain: I) -> anyhow::Result<()>
+    async fn display_chain<I>(&self, chain: I, reg_canister: RegistryCanisterWrapper) -> anyhow::Result<()>
     where
         I: IntoIterator<Item = RegistryVersionedRecord<Vec<u8>>>,
     {
         for content_at_version in chain {
+            let resp = reg_canister
+                .get_high_capacity_value(content_at_version.key.clone(), Some(content_at_version.version.get()))
+                .await?;
+
+            let time = match resp.timestamp_nanoseconds {
+                0 => "Unknown".to_string(),
+                nanos => {
+                    let duration = std::time::Duration::from_nanos(nanos);
+                    std::time::UNIX_EPOCH
+                        .checked_add(duration)
+                        .map(|t| {
+                            let datetime: DateTime<Utc> = t.into();
+                            datetime.format("%Y-%m-%d %H:%M:%S%.9f UTC").to_string()
+                        })
+                        .ok_or(anyhow::anyhow!("Time overflows"))?
+                }
+            };
             println!("Version: {}", content_at_version.version);
+            println!("Timestamp: {time}");
             println!("Value:\n{}", self.content_to_value(content_at_version)?);
             println!();
         }
@@ -187,7 +211,6 @@ enum KeyType {
 }
 
 enum DecodedRecord {
-    DeletionMarker,
     SubnetList(SubnetListRecord),
     NodeRewardsTable(NodeRewardsTable),
     BlessedReplicaVersions(BlessedReplicaVersions),
@@ -202,7 +225,6 @@ enum DecodedRecord {
 
 fn serialize_decoded_record(decoded_record: DecodedRecord) -> anyhow::Result<String> {
     let raw_record = match decoded_record {
-        DecodedRecord::DeletionMarker => return Ok("deletion marker".to_string()),
         DecodedRecord::SubnetList(subnet_list_record) => serde_json::to_value(subnet_list_record),
         DecodedRecord::NodeRewardsTable(node_rewards_table) => serde_json::to_value(node_rewards_table),
         DecodedRecord::BlessedReplicaVersions(blessed_replica_versions) => serde_json::to_value(blessed_replica_versions),

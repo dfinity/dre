@@ -86,10 +86,10 @@ impl RegistryCanisterWrapper {
             .map(|(res, _, _)| res)
     }
 
-    async fn get_value(&self, request: String) -> anyhow::Result<Vec<u8>> {
+    pub async fn get_high_capacity_value(&self, request: String, version: Option<u64>) -> anyhow::Result<HighCapacityRegistryGetValueResponse> {
         let request = RegistryGetValueRequest {
             key: request.as_bytes().to_vec(),
-            ..Default::default()
+            version,
         };
 
         let mut buf = vec![];
@@ -100,9 +100,18 @@ impl RegistryCanisterWrapper {
         if let Some(error) = decoded_resp.error {
             return Err(anyhow::anyhow!(error.reason));
         }
-        let Some(content) = decoded_resp.content else {
+
+        if decoded_resp.content.is_none() {
             return Err(anyhow::anyhow!("No content found in get_value response"));
         };
+
+        Ok(decoded_resp)
+    }
+
+    async fn get_value(&self, request: String) -> anyhow::Result<Vec<u8>> {
+        let response = self.get_high_capacity_value(request, None).await?;
+        // The previous check would report an error otherwise
+        let content = response.content.unwrap();
         let dechunkified = dechunkify_get_value_response_content(content, self).await?;
 
         Ok(dechunkified)
