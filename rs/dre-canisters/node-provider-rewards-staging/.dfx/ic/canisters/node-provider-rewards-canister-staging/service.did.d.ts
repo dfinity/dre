@@ -40,12 +40,16 @@ export interface GetNodeProvidersMonthlyXdrRewardsResponse {
   'error' : [] | [string],
   'rewards' : [] | [NodeProvidersMonthlyXdrRewards],
 }
-export interface GetNodeProvidersRewardsCalculationRequest { 'day' : DateUtc }
+export interface GetNodeProvidersRewardsCalculationRequest {
+  'day' : DateUtc,
+  'algorithm_version' : [] | [RewardsCalculationVersion],
+}
 export type GetNodeProvidersRewardsCalculationResponse = {
     'Ok' : DailyResults
   } |
   { 'Err' : string };
 export interface GetNodeProvidersRewardsRequest {
+  'algorithm_version' : [] | [RewardsCalculationVersion],
   'to_day' : DateUtc,
   'from_day' : DateUtc,
 }
@@ -64,6 +68,7 @@ export interface NodeProvidersMonthlyXdrRewards {
   'rewards' : Array<[Principal, bigint]>,
 }
 export interface NodeProvidersRewards {
+  'algorithm_version' : RewardsCalculationVersion,
   'rewards_xdr_permyriad' : Array<[Principal, bigint]>,
 }
 export interface NodeTypeRegionBaseRewards {
@@ -72,6 +77,7 @@ export interface NodeTypeRegionBaseRewards {
   'node_reward_type' : [] | [string],
   'monthly_xdr_permyriad' : [] | [number],
 }
+export interface RewardsCalculationVersion { 'version' : number }
 export interface Type3BaseRewards {
   'region' : [] | [string],
   'daily_xdr_permyriad' : [] | [number],

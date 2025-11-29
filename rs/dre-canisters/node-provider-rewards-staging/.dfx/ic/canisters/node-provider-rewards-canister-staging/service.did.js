@@ -10,16 +10,19 @@ export const idlFactory = ({ IDL }) => {
     'error' : IDL.Opt(IDL.Text),
     'rewards' : IDL.Opt(NodeProvidersMonthlyXdrRewards),
   });
+  const RewardsCalculationVersion = IDL.Record({ 'version' : IDL.Nat32 });
   const DateUtc = IDL.Record({
     'day' : IDL.Opt(IDL.Nat32),
     'month' : IDL.Opt(IDL.Nat32),
     'year' : IDL.Opt(IDL.Nat32),
   });
   const GetNodeProvidersRewardsRequest = IDL.Record({
+    'algorithm_version' : IDL.Opt(RewardsCalculationVersion),
     'to_day' : DateUtc,
     'from_day' : DateUtc,
   });
   const NodeProvidersRewards = IDL.Record({
+    'algorithm_version' : RewardsCalculationVersion,
     'rewards_xdr_permyriad' : IDL.Vec(IDL.Tuple(IDL.Principal, IDL.Nat64)),
   });
   const GetNodeProvidersRewardsResponse = IDL.Variant({
@@ -28,6 +31,7 @@ export const idlFactory = ({ IDL }) => {
   });
   const GetNodeProvidersRewardsCalculationRequest = IDL.Record({
     'day' : DateUtc,
+    'algorithm_version' : IDL.Opt(RewardsCalculationVersion),
   });
   const NodeTypeRegionBaseRewards = IDL.Record({
     'region' : IDL.Opt(IDL.Text),

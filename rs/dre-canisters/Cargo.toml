@@ -23,5 +23,5 @@ ic-nervous-system-timer-task = { path = "../../../../../pietro.di.marco/Rustrove
 ic-http-types = { path = "../../../../../pietro.di.marco/RustroverProjects/ic/packages/ic-http-types" }
 candid = "0.10.19"
 itertools = "0.14.0"
-ic-cdk = { version = "^0.18.7" }
-ic-cdk-timers = { version = "^0.12.2" }
+ic-cdk = { version = "0.19.0" }
+ic-cdk-timers = { version = "1.0.0" }

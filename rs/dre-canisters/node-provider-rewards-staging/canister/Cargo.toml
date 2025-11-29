@@ -19,7 +19,7 @@ ic-registry-canister-client = { workspace = true }
 ic-nervous-system-timer-task = { workspace = true }
 itertools = { workspace = true }
 candid = { workspace = true }
-ic-cdk-timers = "0.12.2"
+ic-cdk-timers = { workspace = true }
 ic-metrics-encoder = "1.1.1"
 ic-http-types = { workspace = true }
 ic-nervous-system-common = { workspace = true }
