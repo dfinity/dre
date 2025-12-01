@@ -198,14 +198,17 @@ impl DisplayMode {
             // Display
             println!("Version: {}", right.version);
             println!("Timestamp: {time}");
-            for c in diff.iter_all_changes() {
-                let text = c.to_string();
-                match c.tag() {
-                    similar::ChangeTag::Equal => print!(" {text}"),
-                    similar::ChangeTag::Delete => print!("-{}", text.red()),
-                    similar::ChangeTag::Insert => print!("+{}", text.bright_green()),
-                }
+            for change in diff.iter_all_changes() {
+                let text = change.to_string();
+                let formatted = match change.tag() {
+                    similar::ChangeTag::Equal => text.to_string(),
+                    similar::ChangeTag::Delete => format!("-{text}").red().to_string(),
+                    similar::ChangeTag::Insert => format!("+{text}").bright_green().to_string(),
+                };
+
+                print!("{formatted}");
             }
+            println!();
 
             left_content = right.content.clone();
             maybe_right = chain_iter.next();
