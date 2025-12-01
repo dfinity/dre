@@ -2,7 +2,7 @@ use crate::commands::registry_investigator::{AuthRequirement, DecodedRecord, Key
 use crate::exe::ExecutableCommand;
 use crate::exe::args::GlobalArgs;
 use chrono::{DateTime, Utc};
-use clap::Args;
+use clap::{Args, ValueEnum};
 use ic_canisters::registry::RegistryCanisterWrapper;
 use ic_interfaces_registry::{RegistryClient, RegistryVersionedRecord};
 use ic_protobuf::registry::{
@@ -17,6 +17,7 @@ use ic_protobuf::registry::{
 };
 use log::info;
 use prost::Message;
+use strum::Display;
 
 #[derive(Args, Debug)]
 pub struct FullHistory {
@@ -25,6 +26,9 @@ pub struct FullHistory {
 
     #[clap(long)]
     key_value: Option<String>,
+
+    #[clap(long, default_value_t = DisplayMode::Full, ignore_case = true)]
+    display: DisplayMode,
 }
 
 impl ExecutableCommand for FullHistory {
@@ -116,30 +120,74 @@ impl FullHistory {
     where
         I: IntoIterator<Item = RegistryVersionedRecord<Vec<u8>>>,
     {
+        let mut mapped_content = vec![];
+
         for content_at_version in chain {
             let resp = reg_canister
                 .get_high_capacity_value(content_at_version.key.clone(), Some(content_at_version.version.get()))
                 .await?;
 
-            let time = match resp.timestamp_nanoseconds {
-                0 => "Unknown".to_string(),
-                nanos => {
-                    let duration = std::time::Duration::from_nanos(nanos);
-                    std::time::UNIX_EPOCH
-                        .checked_add(duration)
-                        .map(|t| {
-                            let datetime: DateTime<Utc> = t.into();
-                            datetime.format("%Y-%m-%d %H:%M:%S%.9f UTC").to_string()
-                        })
-                        .ok_or(anyhow::anyhow!("Time overflows"))?
-                }
+            mapped_content.push(FullRegistryDetail {
+                timestamp: match resp.timestamp_nanoseconds {
+                    0 => None,
+                    nanos => {
+                        let duration = std::time::Duration::from_nanos(nanos);
+                        std::time::UNIX_EPOCH.checked_add(duration).map(|t| t.into())
+                    }
+                },
+                version: content_at_version.version.get(),
+                content: self.content_to_value(content_at_version)?,
+            });
+        }
+
+        self.display.display_chain(mapped_content);
+
+        Ok(())
+    }
+}
+
+struct FullRegistryDetail {
+    timestamp: Option<DateTime<Utc>>,
+    version: u64,
+    content: String,
+}
+
+#[derive(ValueEnum, Clone, Debug, Display)]
+enum DisplayMode {
+    Full,
+    Diff,
+}
+
+impl DisplayMode {
+    fn display_chain<I>(&self, chain: I)
+    where
+        I: IntoIterator<Item = FullRegistryDetail>,
+    {
+        match &self {
+            DisplayMode::Full => Self::display_full(chain),
+            DisplayMode::Diff => Self::display_diff(chain),
+        }
+    }
+
+    fn display_full<I>(chain: I)
+    where
+        I: IntoIterator<Item = FullRegistryDetail>,
+    {
+        for content_at_version in chain {
+            let time = match &content_at_version.timestamp {
+                None => "Unknown".to_string(),
+                Some(dt) => dt.format("%Y-%m-%d %H:%M:%S%.9f UTC").to_string(),
             };
             println!("Version: {}", content_at_version.version);
             println!("Timestamp: {time}");
-            println!("Value:\n{}", self.content_to_value(content_at_version)?);
+            println!("Value:\n{}", content_at_version.content);
             println!();
         }
+    }
 
-        Ok(())
+    fn display_diff<I>(chain: I)
+    where
+        I: IntoIterator<Item = FullRegistryDetail>,
+    {
     }
 }
