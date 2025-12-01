@@ -1,4 +1,4 @@
-use crate::commands::registry_investigator::{AuthRequirement, DecodedRecord, KeyType, serialize_decoded_record};
+use crate::commands::registry_investigator::{AuthRequirement, DecodedRecord, KeyType, RegistryDiagnoser, serialize_decoded_record};
 use crate::exe::ExecutableCommand;
 use crate::exe::args::GlobalArgs;
 use chrono::{DateTime, Utc};
@@ -17,7 +17,6 @@ use ic_protobuf::registry::{
 };
 use log::info;
 use prost::Message;
-use std::collections::VecDeque;
 
 #[derive(Args, Debug)]
 pub struct FullHistory {
@@ -36,7 +35,7 @@ impl ExecutableCommand for FullHistory {
     async fn execute(&self, ctx: crate::ctx::DreContext) -> anyhow::Result<()> {
         let local_registry = ctx.local_registry()?;
 
-        let mut latest_version = local_registry.get_latest_version();
+        let latest_version = local_registry.get_latest_version();
 
         info!("Latest version known to the local registry: {latest_version}");
 
@@ -44,24 +43,9 @@ impl ExecutableCommand for FullHistory {
 
         info!("Will attempt to make full history of key: {full_key}");
 
-        let mut chain = VecDeque::new();
+        let registry_diagnoser = RegistryDiagnoser { registry: local_registry };
 
-        while latest_version.get() != 0 {
-            let record_at_version = local_registry.get_versioned_value(&full_key, latest_version);
-
-            let record = match record_at_version {
-                Ok(v) => v,
-                Err(e) => return Err(anyhow::anyhow!("Received error at version {latest_version}: {e:?}")),
-            };
-
-            if record.version.get() == 0 {
-                break;
-            }
-
-            latest_version = record.version.decrement();
-
-            chain.push_front(record);
-        }
+        let chain = registry_diagnoser.fetch_all_changes_for_key_up_to_version(&full_key, latest_version)?;
 
         info!("Found {} state transitions for queried key", chain.len());
 

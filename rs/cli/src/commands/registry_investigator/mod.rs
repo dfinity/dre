@@ -1,7 +1,10 @@
+use std::collections::VecDeque;
+
 use crate::exe::impl_executable_command_for_enums;
 use candid::Principal;
 use clap::{Args, ValueEnum};
 use full_history::FullHistory;
+use ic_interfaces_registry::{RegistryClient, RegistryVersionedRecord};
 use ic_protobuf::registry::{
     api_boundary_node::v1::ApiBoundaryNodeRecord,
     dc::v1::DataCenterRecord,
@@ -16,6 +19,8 @@ use ic_registry_keys::{
     API_BOUNDARY_NODE_RECORD_KEY_PREFIX, DATA_CENTER_KEY_PREFIX, HOSTOS_VERSION_KEY_PREFIX, NODE_OPERATOR_RECORD_KEY_PREFIX, NODE_RECORD_KEY_PREFIX,
     NODE_REWARDS_TABLE_KEY, REPLICA_VERSION_KEY_PREFIX, SUBNET_RECORD_KEY_PREFIX,
 };
+use ic_registry_local_registry::LocalRegistry;
+use ic_types::RegistryVersion;
 
 mod full_history;
 
@@ -73,6 +78,41 @@ impl KeyType {
             KeyType::DataCenter => DATA_CENTER_KEY_PREFIX,
         }
         .to_string()
+    }
+}
+
+// Some handy tools for the registry investigations
+struct RegistryDiagnoser {
+    registry: LocalRegistry,
+}
+
+impl RegistryDiagnoser {
+    fn fetch_all_changes_for_key_up_to_version(
+        &self,
+        key: &str,
+        version: RegistryVersion,
+    ) -> anyhow::Result<VecDeque<RegistryVersionedRecord<Vec<u8>>>> {
+        let mut version = version;
+        let mut chain = VecDeque::new();
+
+        while version.get() != 0 {
+            let record_at_version = self.registry.get_versioned_value(key, version);
+
+            let record = match record_at_version {
+                Ok(v) => v,
+                Err(e) => return Err(anyhow::anyhow!("Received error at version {version}: {e:?}")),
+            };
+
+            if record.version.get() == 0 {
+                break;
+            }
+
+            version = record.version.decrement();
+
+            chain.push_front(record);
+        }
+
+        Ok(chain)
     }
 }
 
