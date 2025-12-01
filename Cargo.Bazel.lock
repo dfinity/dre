@@ -1,5 +1,5 @@
 {
-  "checksum": "c359180f0307474f340c76f4d7635e30eb200e2ce1a7bb3c211270b6c41f3add",
+  "checksum": "5dc3bbcd432c8c2f2edd65b8ad2fcf3e41bc650eb8b9733ba80e197e6214358b",
   "crates": {
     "actix-codec 0.5.2": {
       "name": "actix-codec",
@@ -12837,6 +12837,10 @@
               "target": "ic_icrc1_test_utils"
             },
             {
+              "id": "ic-interfaces-registry 0.9.0",
+              "target": "ic_interfaces_registry"
+            },
+            {
               "id": "ic-nervous-system-clients 0.0.1",
               "target": "ic_nervous_system_clients"
             },
@@ -12975,6 +12979,10 @@
             {
               "id": "shlex 1.3.0",
               "target": "shlex"
+            },
+            {
+              "id": "similar 2.7.0",
+              "target": "similar"
             },
             {
               "id": "spinners 4.1.1",
@@ -49744,6 +49752,51 @@
       ],
       "license_file": "LICENSE-Apache"
     },
+    "similar 2.7.0": {
+      "name": "similar",
+      "version": "2.7.0",
+      "package_url": "https://github.com/mitsuhiko/similar",
+      "repository": {
+        "Http": {
+          "url": "https://static.crates.io/crates/similar/2.7.0/download",
+          "sha256": "bbbb5d9659141646ae647b42fe094daf6c6192d1620870b449d9557f748b2daa"
+        }
+      },
+      "targets": [
+        {
+          "Library": {
+            "crate_name": "similar",
+            "crate_root": "src/lib.rs",
+            "srcs": {
+              "allow_empty": true,
+              "include": [
+                "**/*.rs"
+              ]
+            }
+          }
+        }
+      ],
+      "library_target_name": "similar",
+      "common_attrs": {
+        "compile_data_glob": [
+          "**"
+        ],
+        "crate_features": {
+          "common": [
+            "default",
+            "text"
+          ],
+          "selects": {}
+        },
+        "edition": "2018",
+        "version": "2.7.0"
+      },
+      "license": "Apache-2.0",
+      "license_ids": [
+        "Apache-2.0"
+      ],
+      "license_file": "LICENSE"
+    },
     "simple_asn1 0.6.3": {
       "name": "simple_asn1",
       "version": "0.6.3",
@@ -63017,6 +63070,7 @@
     "serde_yaml 0.9.34+deprecated",
     "sha2 0.10.9",
     "shlex 1.3.0",
+    "similar 2.7.0",
     "simple_asn1 0.6.3",
     "slog 2.8.2",
     "slog-async 2.8.0",
