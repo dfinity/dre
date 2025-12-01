@@ -3,6 +3,7 @@ use crate::exe::ExecutableCommand;
 use crate::exe::args::GlobalArgs;
 use chrono::{DateTime, Utc};
 use clap::{Args, ValueEnum};
+use colored::Colorize;
 use ic_canisters::registry::RegistryCanisterWrapper;
 use ic_interfaces_registry::{RegistryClient, RegistryVersionedRecord};
 use ic_protobuf::registry::{
@@ -17,6 +18,7 @@ use ic_protobuf::registry::{
 };
 use log::info;
 use prost::Message;
+use similar::TextDiff;
 use strum::Display;
 
 #[derive(Args, Debug)]
@@ -159,20 +161,14 @@ enum DisplayMode {
 }
 
 impl DisplayMode {
-    fn display_chain<I>(&self, chain: I)
-    where
-        I: IntoIterator<Item = FullRegistryDetail>,
-    {
+    fn display_chain(&self, chain: Vec<FullRegistryDetail>) {
         match &self {
             DisplayMode::Full => Self::display_full(chain),
             DisplayMode::Diff => Self::display_diff(chain),
         }
     }
 
-    fn display_full<I>(chain: I)
-    where
-        I: IntoIterator<Item = FullRegistryDetail>,
-    {
+    fn display_full(chain: Vec<FullRegistryDetail>) {
         for content_at_version in chain {
             let time = match &content_at_version.timestamp {
                 None => "Unknown".to_string(),
@@ -185,9 +181,34 @@ impl DisplayMode {
         }
     }
 
-    fn display_diff<I>(chain: I)
-    where
-        I: IntoIterator<Item = FullRegistryDetail>,
-    {
+    fn display_diff(chain: Vec<FullRegistryDetail>) {
+        let mut left_content = "".to_string();
+
+        let mut chain_iter = chain.iter();
+        let mut maybe_right = chain_iter.next();
+
+        while let Some(right) = maybe_right {
+            let diff = TextDiff::from_lines(&left_content, &right.content);
+
+            let time = match &right.timestamp {
+                None => "Unknown".to_string(),
+                Some(dt) => dt.format("%Y-%m-%d %H:%M:%S%.9f UTC").to_string(),
+            };
+
+            // Display
+            println!("Version: {}", right.version);
+            println!("Timestamp: {time}");
+            for c in diff.iter_all_changes() {
+                let text = c.to_string();
+                match c.tag() {
+                    similar::ChangeTag::Equal => print!(" {text}"),
+                    similar::ChangeTag::Delete => print!("-{}", text.red()),
+                    similar::ChangeTag::Insert => print!("+{}", text.bright_green()),
+                }
+            }
+
+            left_content = right.content.clone();
+            maybe_right = chain_iter.next();
+        }
     }
 }
