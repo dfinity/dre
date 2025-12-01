@@ -1,9 +1,8 @@
-use crate::commands::registry_investigator::AuthRequirement;
+use crate::commands::registry_investigator::{AuthRequirement, DecodedRecord, KeyType, serialize_decoded_record};
 use crate::exe::ExecutableCommand;
 use crate::exe::args::GlobalArgs;
-use candid::Principal;
 use chrono::{DateTime, Utc};
-use clap::{Args, ValueEnum};
+use clap::Args;
 use ic_canisters::registry::RegistryCanisterWrapper;
 use ic_interfaces_registry::{RegistryClient, RegistryVersionedRecord};
 use ic_protobuf::registry::{
@@ -15,10 +14,6 @@ use ic_protobuf::registry::{
     node_rewards::v2::NodeRewardsTable,
     replica_version::v1::{BlessedReplicaVersions, ReplicaVersionRecord},
     subnet::v1::{SubnetListRecord, SubnetRecord},
-};
-use ic_registry_keys::{
-    API_BOUNDARY_NODE_RECORD_KEY_PREFIX, DATA_CENTER_KEY_PREFIX, HOSTOS_VERSION_KEY_PREFIX, NODE_OPERATOR_RECORD_KEY_PREFIX, NODE_RECORD_KEY_PREFIX,
-    NODE_REWARDS_TABLE_KEY, REPLICA_VERSION_KEY_PREFIX, SUBNET_RECORD_KEY_PREFIX,
 };
 use log::info;
 use prost::Message;
@@ -98,31 +93,15 @@ impl ExecutableCommand for FullHistory {
 }
 
 impl FullHistory {
-    fn key_type_to_prefix(&self) -> String {
-        match self.key_type {
-            KeyType::SubnetList => "subnet_list",
-            KeyType::NodeRewardsTable => NODE_REWARDS_TABLE_KEY,
-            KeyType::BlessedReplicaVersions => "blessed_replica_versions",
-            KeyType::ApiBoundaryNode => API_BOUNDARY_NODE_RECORD_KEY_PREFIX,
-            KeyType::Node => NODE_RECORD_KEY_PREFIX,
-            KeyType::NodeOperator => NODE_OPERATOR_RECORD_KEY_PREFIX,
-            KeyType::ReplicaVersion => REPLICA_VERSION_KEY_PREFIX,
-            KeyType::HostOsVersion => HOSTOS_VERSION_KEY_PREFIX,
-            KeyType::Subnet => SUBNET_RECORD_KEY_PREFIX,
-            KeyType::DataCenter => DATA_CENTER_KEY_PREFIX,
-        }
-        .to_string()
-    }
-
     fn full_record_key(&self) -> String {
+        let prefix = self.key_type.to_registry_prefix();
         match self.key_type {
-            KeyType::SubnetList | KeyType::NodeRewardsTable | KeyType::BlessedReplicaVersions => return self.key_type_to_prefix(),
+            KeyType::SubnetList | KeyType::NodeRewardsTable | KeyType::BlessedReplicaVersions => return prefix,
             _ => {}
         }
 
-        let prefix = self.key_type_to_prefix();
+        // The value has to be here at this point because of the `validate` function
         let value = self.key_value.clone().unwrap();
-
         format!("{prefix}{value}")
     }
 
@@ -179,92 +158,4 @@ impl FullHistory {
 
         Ok(())
     }
-}
-
-/// Supported key types
-#[derive(Debug, Clone, ValueEnum)]
-enum KeyType {
-    SubnetList,
-
-    NodeRewardsTable,
-
-    BlessedReplicaVersions,
-
-    #[clap(aliases = ["api-bn"])]
-    ApiBoundaryNode,
-
-    #[clap(aliases = ["n"])]
-    Node,
-
-    #[clap(aliases = ["no"])]
-    NodeOperator,
-
-    ReplicaVersion,
-
-    HostOsVersion,
-
-    #[clap(aliases = ["s"])]
-    Subnet,
-
-    #[clap(aliases = ["dc"])]
-    DataCenter,
-}
-
-enum DecodedRecord {
-    SubnetList(SubnetListRecord),
-    NodeRewardsTable(NodeRewardsTable),
-    BlessedReplicaVersions(BlessedReplicaVersions),
-    ApiBoundaryNode(ApiBoundaryNodeRecord),
-    Node(NodeRecord),
-    NodeOperator(NodeOperatorRecord),
-    ReplicaVersion(ReplicaVersionRecord),
-    HostOsVersion(HostosVersionRecord),
-    Subnet(SubnetRecord),
-    DataCenter(DataCenterRecord),
-}
-
-fn serialize_decoded_record(decoded_record: DecodedRecord) -> anyhow::Result<String> {
-    let raw_record = match decoded_record {
-        DecodedRecord::SubnetList(subnet_list_record) => serde_json::to_value(subnet_list_record),
-        DecodedRecord::NodeRewardsTable(node_rewards_table) => serde_json::to_value(node_rewards_table),
-        DecodedRecord::BlessedReplicaVersions(blessed_replica_versions) => serde_json::to_value(blessed_replica_versions),
-        DecodedRecord::ApiBoundaryNode(api_boundary_node_record) => serde_json::to_value(api_boundary_node_record),
-        DecodedRecord::Node(node_record) => serde_json::to_value(node_record),
-        DecodedRecord::NodeOperator(node_operator_record) => serde_json::to_value(node_operator_record),
-        DecodedRecord::ReplicaVersion(replica_version_record) => serde_json::to_value(replica_version_record),
-        DecodedRecord::HostOsVersion(hostos_version_record) => serde_json::to_value(hostos_version_record),
-        DecodedRecord::Subnet(subnet_list_record) => serde_json::to_value(subnet_list_record),
-        DecodedRecord::DataCenter(data_center_record) => serde_json::to_value(data_center_record),
-    }
-    .map_err(anyhow::Error::from)?;
-
-    let raw_record = fixup_ids(raw_record);
-
-    serde_json::to_string_pretty(&raw_record).map_err(anyhow::Error::from)
-}
-
-fn fixup_ids(mut value: serde_json::Value) -> serde_json::Value {
-    if let serde_json::Value::Array(arr) = &value {
-        // Try to convert the JSON array of numbers into a Vec<u8>
-        let byte_vec: Option<Vec<u8>> = arr
-            .iter()
-            // Check if all elements are numbers that can fit in a u8
-            .all(|v| v.is_u64() && v.as_u64().unwrap() <= 255)
-            .then(|| arr.iter().map(|v| v.as_u64().unwrap() as u8).collect());
-
-        if let Some(bytes) = byte_vec {
-            return serde_json::Value::String(Principal::from_slice(&bytes).to_string());
-        }
-    }
-
-    if let serde_json::Value::Object(map) = &mut value {
-        for value in map.values_mut() {
-            *value = fixup_ids(std::mem::take(value));
-        }
-    } else if let serde_json::Value::Array(arr) = &mut value {
-        for item in arr {
-            *item = fixup_ids(std::mem::take(item));
-        }
-    }
-    value
 }
