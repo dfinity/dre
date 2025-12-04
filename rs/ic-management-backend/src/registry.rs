@@ -3,6 +3,7 @@ use crate::health::HealthStatusQuerier;
 use crate::node_labels;
 use crate::proposal::{self, ProposalAgent, SubnetUpdateProposal, UpdateUnassignedNodesProposal};
 use crate::public_dashboard::query_ic_dashboard_list;
+use candid::Principal;
 use decentralization::network::{AvailableNodesQuerier, NodesConverter, SubnetQuerier, SubnetQueryBy};
 use futures::TryFutureExt;
 use futures::future::BoxFuture;
@@ -42,7 +43,7 @@ use lazy_static::lazy_static;
 use log::{debug, error, info, warn};
 use regex::Regex;
 use std::cmp::Ordering;
-use std::collections::{HashMap, HashSet};
+use std::collections::{BTreeMap, HashMap, HashSet};
 use std::convert::TryFrom;
 use std::net::Ipv6Addr;
 use std::ops::Add;
@@ -954,6 +955,7 @@ pub async fn sync_local_store_with_path(target_network: &Network, local_registry
         registry_cache.get_latest_version()
     };
     let mut updates = vec![];
+    let mut mutations_per_key_per_version: BTreeMap<String, BTreeMap<u64, usize>> = BTreeMap::new();
 
     loop {
         match registry_canister.get_latest_version().await {
@@ -984,6 +986,12 @@ pub async fn sync_local_store_with_path(target_network: &Network, local_registry
         }
         if let Ok(mut initial_records) = registry_canister.get_certified_changes_since(local_latest_version.get()).await {
             initial_records.sort_by_key(|tr| tr.version);
+
+            for record in &initial_records {
+                let mutations_per_key = mutations_per_key_per_version.entry(record.key.to_string()).or_insert(BTreeMap::new());
+                *mutations_per_key.entry(record.version.get()).or_insert(0) += 1;
+            }
+
             let changelog = initial_records.iter().fold(Changelog::default(), |mut cl, r| {
                 let rel_version = (r.version - local_latest_version).get();
                 if cl.len() < rel_version as usize {
@@ -1050,7 +1058,17 @@ pub async fn sync_local_store_with_path(target_network: &Network, local_registry
         }
     }
 
+    for (_, mutations_per_version) in mutations_per_key_per_version.iter_mut() {
+        mutations_per_version.retain(|_, value| *value > 1);
+    }
+
+    mutations_per_key_per_version.retain(|_, val| !val.is_empty());
+
     futures::future::join_all(updates).await;
+    info!(
+        "Mutations per version per key:\n{}",
+        serde_json::to_string_pretty(&mutations_per_key_per_version).unwrap()
+    );
     Ok(())
 }
 
