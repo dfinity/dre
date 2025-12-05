@@ -32,12 +32,16 @@ type GetNodeProvidersMonthlyXdrRewardsResponse = record {
   error : opt text;
   rewards : opt NodeProvidersMonthlyXdrRewards;
 };
-type GetNodeProvidersRewardsCalculationRequest = record { day : DateUtc };
+type GetNodeProvidersRewardsCalculationRequest = record {
+  day : DateUtc;
+  algorithm_version : opt RewardsCalculationVersion;
+};
 type GetNodeProvidersRewardsCalculationResponse = variant {
   Ok : DailyResults;
   Err : text;
 };
 type GetNodeProvidersRewardsRequest = record {
+  algorithm_version : opt RewardsCalculationVersion;
   to_day : DateUtc;
   from_day : DateUtc;
 };
@@ -58,6 +62,7 @@ type NodeProvidersMonthlyXdrRewards = record {
   rewards : vec record { principal; nat64 };
 };
 type NodeProvidersRewards = record {
+  algorithm_version : RewardsCalculationVersion;
   rewards_xdr_permyriad : vec record { principal; nat64 };
 };
 type NodeTypeRegionBaseRewards = record {
@@ -66,6 +71,7 @@ type NodeTypeRegionBaseRewards = record {
   node_reward_type : opt text;
   monthly_xdr_permyriad : opt float64;
 };
+type RewardsCalculationVersion = record { version : nat32 };
 type Type3BaseRewards = record {
   region : opt text;
   daily_xdr_permyriad : opt float64;
