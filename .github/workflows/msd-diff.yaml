@@ -19,7 +19,7 @@ jobs:
     # This image is based on ubuntu:20.04
     container: ghcr.io/dfinity/dre/actions-runner:6413f2909a49329ecbf5371ee7ddf07a9799b625
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           ref: ${{ github.event.pull_request.head.ref }}
 
@@ -57,7 +57,7 @@ jobs:
           echo "targets_main=$TARGETS_DIR_MAIN" >> $GITHUB_OUTPUT
           echo "targets_branch=$TARGETS_DIR_BRANCH" >> $GITHUB_OUTPUT
       - name: "Check MSD Diff"
-        uses: "int128/diff-action@v1"
+        uses: "int128/diff-action@v2"
         with:
           base: ${{ steps.msd-diff.outputs.targets_main }}
           head: ${{ steps.msd-diff.outputs.targets_branch }}
