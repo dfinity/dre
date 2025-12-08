@@ -269,7 +269,6 @@ To see a full list of commits added since last release, compare the revisions on
 ## Excluded Changes
 
 ### Changed files are excluded by file path filter
-* [`a21d0e6a3`](https://github.com/dfinity/ic/commit/a21d0e6a3) Boundary Nodes: add aliases for request type variants for backwards compatibility ([#7032](https://github.com/dfinity/ic/pull/7032))
 * [`1e4faccbc`](https://github.com/dfinity/ic/commit/1e4faccbc) Execution: unify management canister doc comments for Rust types ([#7062](https://github.com/dfinity/ic/pull/7062))
 
 ### Not modifying GuestOS
@@ -299,6 +298,7 @@ To see a full list of commits added since last release, compare the revisions on
 * [`c027ae49c`](https://github.com/dfinity/ic/commit/c027ae49c) Node: duplicate kill_start_test into a long and short version ([#7060](https://github.com/dfinity/ic/pull/7060))
 
 ### The change is not owned by any replica or HostOS team
+* [`a21d0e6a3`](https://github.com/dfinity/ic/commit/a21d0e6a3) Boundary Nodes: add aliases for request type variants for backwards compatibility ([#7032](https://github.com/dfinity/ic/pull/7032))
 * [`fb4dff62d`](https://github.com/dfinity/ic/commit/fb4dff62d) Financial Integrations(icrc-ledger-types): Add try_from_subaccount_to_principal ([#6911](https://github.com/dfinity/ic/pull/6911))
 """.rstrip()
         expected_hostos_release_notes = """We're preparing [a new IC release](https://github.com/dfinity/ic/tree/release-2025-10-12_01-01-base).

@@ -166,7 +166,6 @@ EXCLUDE_CHANGES_FILTERS = [
     r"rs\/nns.+",
     r"test",
     r"^bazel",
-    r"boundary",
     r"rosetta",
     r"pocket[_-]ic",
     r"^Cargo.lock$",
@@ -440,8 +439,10 @@ def compose_change_description(
                     e.stderr,
                 )
                 raise
-            except subprocess.TimeoutExpired as e:
-                _LOGGER.error("Timeout determining codeowners for %s", change["file_path"])
+            except subprocess.TimeoutExpired:
+                _LOGGER.error(
+                    "Timeout determining codeowners for %s", change["file_path"]
+                )
                 raise
 
             # Because the first thing is the path being queried
@@ -457,7 +458,9 @@ def compose_change_description(
                     else owner
                     for owner in owners
                 ]
-                owners = ["unknown" if "(unowned)" == owner else owner for owner in owners]
+                owners = [
+                    "unknown" if "(unowned)" == owner else owner for owner in owners
+                ]
 
             teams = set(owners)
 
