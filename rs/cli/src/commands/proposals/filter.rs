@@ -2,6 +2,7 @@ use crate::{auth::AuthRequirement, exe::ExecutableCommand, exe::args::GlobalArgs
 use clap::Args;
 use ic_canisters::governance::GovernanceCanisterWrapper;
 use ic_nns_common::pb::v1::ProposalId;
+use ic_nns_governance_api::ListProposalInfoRequest;
 use itertools::Itertools;
 use log::{debug, error};
 use strum::IntoEnumIterator;
@@ -9,7 +10,7 @@ use strum::IntoEnumIterator;
 use std::fmt::Display;
 
 use clap::ValueEnum;
-use ic_nns_governance::pb::v1::{ListProposalInfo, ProposalStatus as ProposalStatusUpstream, Topic as TopicUpstream};
+use ic_nns_governance::pb::v1::{ProposalStatus as ProposalStatusUpstream, Topic as TopicUpstream};
 
 use crate::commands::proposals::Proposal;
 #[derive(Args, Debug)]
@@ -244,7 +245,7 @@ impl ExecutableCommand for Filter {
 
         let mut remaining = self.limit;
         let mut proposals: Vec<Proposal> = vec![];
-        let mut payload = ListProposalInfo {
+        let mut payload = ListProposalInfoRequest {
             before_proposal: None,
             exclude_topic: exclude_topic.clone().into_iter().map(|t| t.into()).collect_vec(),
             include_status: statuses.clone().into_iter().map(|s| s.into()).collect_vec(),
@@ -278,7 +279,7 @@ impl ExecutableCommand for Filter {
                 })
                 .sorted_by(|a: &Proposal, b: &Proposal| b.id.cmp(&a.id))
                 .collect_vec();
-            payload = ListProposalInfo {
+            payload = ListProposalInfoRequest {
                 before_proposal: current_batch.clone().last().map(|p| ProposalId { id: p.id }),
                 exclude_topic: exclude_topic.clone().into_iter().map(|t| t.into()).collect_vec(),
                 include_status: statuses.clone().into_iter().map(|s| s.into()).collect_vec(),

@@ -28,7 +28,11 @@ impl NodeRewardsCanisterWrapper {
             .query::<GetNodeProvidersRewardsCalculationResponse>(
                 &Principal::from_str(NODE_REWARDS_CANISTER).map_err(anyhow::Error::from)?,
                 "get_node_providers_rewards_calculation",
-                candid::encode_one(GetNodeProvidersRewardsCalculationRequest { day })?,
+                candid::encode_one(GetNodeProvidersRewardsCalculationRequest {
+                    day,
+                    // Use the default version
+                    algorithm_version: None,
+                })?,
             )
             .await?
             .map_err(|e| anyhow::anyhow!(e))

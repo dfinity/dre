@@ -1,5 +1,5 @@
 use ic_management_types::Network;
-use ic_nns_governance::pb::v1::{ListProposalInfo, ProposalStatus};
+use ic_nns_governance::pb::v1::ProposalStatus;
 
 use anyhow::Result;
 use candid::Decode;
@@ -12,7 +12,7 @@ use std::time::SystemTime;
 use tokio::time::{Duration, sleep};
 mod slack;
 use clap::Parser;
-use ic_nns_governance_api::{ListProposalInfoResponse, ProposalInfo};
+use ic_nns_governance_api::{ListProposalInfoRequest, ListProposalInfoResponse, ProposalInfo};
 use reqwest::Url;
 
 #[macro_use]
@@ -146,7 +146,7 @@ impl ProposalPoller {
                 &ic_agent::export::Principal::from_slice(ic_nns_constants::GOVERNANCE_CANISTER_ID.get().as_slice()),
                 "list_proposals",
             )
-            .with_arg(candid::encode_one(ListProposalInfo {
+            .with_arg(candid::encode_one(ListProposalInfoRequest {
                 limit: 1000,
                 include_status: vec![ProposalStatus::Failed.into(), ProposalStatus::Open.into(), ProposalStatus::Adopted.into()],
                 omit_large_fields: Some(true),

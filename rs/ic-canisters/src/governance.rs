@@ -3,7 +3,6 @@ use ic_nns_common::pb::v1::NeuronId;
 use ic_nns_common::pb::v1::ProposalId;
 use ic_nns_constants::GOVERNANCE_CANISTER_ID;
 use ic_nns_governance::pb::v1::GovernanceError;
-use ic_nns_governance::pb::v1::ListProposalInfo;
 use ic_nns_governance::pb::v1::ManageNeuron;
 use ic_nns_governance::pb::v1::NodeProvider as PbNodeProvider;
 use ic_nns_governance::pb::v1::Proposal;
@@ -17,6 +16,7 @@ use ic_nns_governance_api::DateRangeFilter;
 use ic_nns_governance_api::ListNodeProviderRewardsRequest;
 use ic_nns_governance_api::ListNodeProviderRewardsResponse;
 use ic_nns_governance_api::ListNodeProvidersResponse;
+use ic_nns_governance_api::ListProposalInfoRequest;
 use ic_nns_governance_api::ManageNeuronResponse;
 use ic_nns_governance_api::MonthlyNodeProviderRewards;
 use ic_nns_governance_api::manage_neuron_response::Command as CommandResponse;
@@ -162,7 +162,7 @@ impl GovernanceCanisterWrapper {
         }
     }
 
-    pub async fn list_proposals(&self, contract: ListProposalInfo) -> anyhow::Result<Vec<ProposalInfo>> {
+    pub async fn list_proposals(&self, contract: ListProposalInfoRequest) -> anyhow::Result<Vec<ProposalInfo>> {
         self.query::<ListProposalInfoResponse>("list_proposals", candid::encode_one(&contract)?)
             .await
             .map(|r| r.proposal_info)
