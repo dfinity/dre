@@ -10,17 +10,14 @@ import os
 import re
 import subprocess
 import typing
-from multiprocessing import cpu_count
-from multiprocessing import Pool
+from multiprocessing import Pool, cpu_count
 
 from ic.agent import Agent
 from ic.certificate import lookup
 from ic.client import Client
 from ic.identity import Identity
 from ic.principal import Principal
-from tenacity import retry
-from tenacity import stop_after_attempt
-from tenacity import wait_exponential
+from tenacity import retry, stop_after_attempt, wait_exponential
 
 from pylib.ic_utils import download_ic_executable
 
@@ -30,7 +27,9 @@ GOV_PRINCIPAL = "rrkah-fqaaa-aaaaa-aaaaq-cai"
 class IcAdmin:
     """Interface with the ic-admin utility."""
 
-    def __init__(self, nns_urls: typing.Optional[str] = None, git_revision: str | None = None):
+    def __init__(
+        self, nns_urls: typing.Optional[str] = None, git_revision: str | None = None
+    ):
         """Create an object with the specified ic-admin path and NNS URL."""
         if isinstance(nns_urls, str):
             self.nns_url = nns_urls
@@ -39,7 +38,9 @@ class IcAdmin:
         if not git_revision:
             agent = Agent(Identity(), Client(self.nns_url))
             git_revision = canister_version(agent, GOV_PRINCIPAL)
-        self.ic_admin_path = download_ic_executable(git_revision=git_revision, executable_name="ic-admin")
+        self.ic_admin_path = download_ic_executable(
+            git_revision=git_revision, executable_name="ic-admin"
+        )
 
     @retry(
         reraise=True,
@@ -50,7 +51,15 @@ class IcAdmin:
         """Run the ic-admin utility with the specified command and authentication set."""
         if cmd[0].startswith("propose"):
             if "HSM_PIN" in os.environ:
-                auth = ["--use-hsm", "--pin", os.environ["HSM_PIN"], "--slot", "4", "--key-id", "01"]
+                auth = [
+                    "--use-hsm",
+                    "--pin",
+                    os.environ["HSM_PIN"],
+                    "--slot",
+                    "4",
+                    "--key-id",
+                    "01",
+                ]
             elif "PROPOSER_KEY_FILE" in os.environ:
                 auth = ["-s", os.environ["PROPOSER_KEY_FILE"]]
             else:
@@ -110,7 +119,9 @@ class IcAdmin:
         subnet_list = self._get_subnet_list()
         with Pool(cpu_count()) as pool:
             # for each subnet number get the subnet version
-            subnets_versions = pool.map(self.get_subnet_replica_version, range(len(subnet_list)))
+            subnets_versions = pool.map(
+                self.get_subnet_replica_version, range(len(subnet_list))
+            )
             # subnets_versions is now an array of versions: each subnet sequentially
             # construct and return a dict of {subnet_id: version}
             return {k: v for k, v in zip(subnet_list, subnets_versions)}
@@ -126,7 +137,9 @@ class IcAdmin:
 
     def node_get_ipv6(self, node_id):
         """Return the IPv6 address for the provided node ID."""
-        r = re.search('ip_addr: "([0-9a-fA-F:]+)"', self._get_node(node_id).decode("utf8"))
+        r = re.search(
+            'ip_addr: "([0-9a-fA-F:]+)"', self._get_node(node_id).decode("utf8")
+        )
         ipv6 = ipaddress.ip_address(r.group(1))
         logging.debug("Extracted node %s ipv6 address: %s", node_id, ipv6)
         return ipv6.compressed
@@ -152,6 +165,8 @@ def canister_version(agent: Agent, canister_principal: str) -> str:
 
 if __name__ == "__main__":
     # One can run some simple one-off tests here, e.g.:
-    ic_admin = IcAdmin("https://ic0.app", git_revision="b7da3ffe9d2d749012cbc18e530183d84ceff660")
+    ic_admin = IcAdmin(
+        "https://ic0.app", git_revision="a93a3f1eea5cacfd570d96941b5d6f6d2a9b508b"
+    )
 
     print(ic_admin.get_subnet_replica_versions())

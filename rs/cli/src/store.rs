@@ -26,7 +26,7 @@ pub struct Store {
 }
 
 const DURATION_BETWEEN_CHECKS_FOR_NEW_IC_ADMIN: Duration = Duration::from_secs(60 * 60 * 24);
-pub const FALLBACK_IC_ADMIN_VERSION: &str = "d4ee25b0865e89d3eaac13a60f0016d5e3296b31";
+pub const FALLBACK_IC_ADMIN_VERSION: &str = "1a1cb8cbff5e5c5c1fd01ec37e3c22e5119f12c3";
 
 impl Store {
     #[cfg(not(test))]

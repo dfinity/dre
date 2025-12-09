@@ -2,7 +2,7 @@ use crate::exe::args::GlobalArgs;
 use clap::Args;
 use ic_canisters::governance::GovernanceCanisterWrapper;
 use ic_nns_common::pb::v1::ProposalId;
-use ic_nns_governance::pb::v1::ListProposalInfo;
+use ic_nns_governance_api::ListProposalInfoRequest;
 use itertools::Itertools;
 
 use super::Proposal;
@@ -67,7 +67,7 @@ impl ExecutableCommand for List {
     async fn execute(&self, ctx: crate::ctx::DreContext) -> anyhow::Result<()> {
         let client = GovernanceCanisterWrapper::from(ctx.create_ic_agent_canister_client().await?);
         let proposals = client
-            .list_proposals(ListProposalInfo {
+            .list_proposals(ListProposalInfoRequest {
                 limit: self.limit,
                 before_proposal: self.before_proposal.as_ref().map(|p| ProposalId { id: *p }),
                 exclude_topic: self.exclude_topic.clone(),
@@ -75,6 +75,7 @@ impl ExecutableCommand for List {
                 include_status: self.include_status.clone(),
                 include_all_manage_neuron_proposals: self.include_all_manage_neuron_proposals,
                 omit_large_fields: self.omit_large_fields,
+                return_self_describing_action: None,
             })
             .await?
             .into_iter()

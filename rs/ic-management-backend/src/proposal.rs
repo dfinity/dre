@@ -12,7 +12,8 @@ use ic_management_types::UpdateElectedReplicaVersionsProposal;
 use ic_management_types::UpdateNodesHostosVersionsProposal;
 use ic_management_types::filter_map_nns_function_proposals;
 use ic_management_types::{TopologyChangePayload, TopologyChangeProposal};
-use ic_nns_governance::pb::v1::{ListProposalInfo, ProposalStatus, Topic};
+use ic_nns_governance::pb::v1::{ProposalStatus, Topic};
+use ic_nns_governance_api::ListProposalInfoRequest;
 use ic_nns_governance_api::proposal::Action;
 use ic_nns_governance_api::{ListProposalInfoResponse, ProposalInfo};
 use itertools::Itertools;
@@ -248,7 +249,7 @@ impl ProposalAgentImpl {
                         "list_proposals",
                     )
                     .with_arg(
-                        Encode!(&ListProposalInfo {
+                        Encode!(&ListProposalInfoRequest {
                             limit: 1000,
                             // 0, 1, 2, 3, 4, 5, 6, 8, 9, 10
                             exclude_topic: vec![
