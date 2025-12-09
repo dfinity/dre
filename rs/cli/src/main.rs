@@ -60,7 +60,7 @@ fn init_logger() {
                 // Default logging level is: info generally, warn for mio and actix_server
                 // You can override defaults by setting environment variables
                 // RUST_LOG or LOG_LEVEL
-                unsafe { std::env::set_var("RUST_LOG", "info,mio::=warn,actix_server::=warn") }
+                unsafe { std::env::set_var("LOG_LEVEL", "info,mio::=warn,actix_server::=warn") }
             }
         }
     }
