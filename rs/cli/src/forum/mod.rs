@@ -144,17 +144,16 @@ pub enum ForumPostKind {
 }
 
 #[automock]
+#[must_use = "You must not forget to update the proposal URL using the forum post this returns"]
 pub trait ForumPostHandler: Sync + Send {
-    #[must_use = "You must not forget to update the proposal URL using the forum post this returns"]
     fn forum_post(&self, kind: ForumPostKind) -> BoxFuture<'_, anyhow::Result<Box<dyn ForumPost>>>;
 }
 
 #[automock]
+#[must_use = "You must not forget to use the forum post URL in the proposal or to update the proposal URL in the forum post"]
 pub trait ForumPost: Sync + Send {
-    #[must_use = "You must not forget to use the forum post URL in the proposal you are about to make"]
     fn url(&self) -> Option<url::Url>;
 
-    #[must_use = "You must not forget to update the proposal URL in the forum post you requested"]
     fn add_proposal_url(&self, proposal_id: u64) -> BoxFuture<'_, anyhow::Result<()>>;
 }
 
