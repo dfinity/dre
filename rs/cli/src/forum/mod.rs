@@ -3,7 +3,6 @@ use std::{path::PathBuf, str::FromStr};
 use clap::Args as ClapArgs;
 use futures::future::BoxFuture;
 use ic_types::PrincipalId;
-use mockall::automock;
 
 mod impls;
 
@@ -143,13 +142,11 @@ pub enum ForumPostKind {
     Generic,
 }
 
-#[automock]
 pub trait ForumPostHandler: Sync + Send {
     #[must_use = "You must not forget to update the proposal URL using the forum post this returns"]
     fn forum_post(&self, kind: ForumPostKind) -> BoxFuture<'_, anyhow::Result<Box<dyn ForumPost>>>;
 }
 
-#[automock]
 pub trait ForumPost: Sync + Send {
     #[must_use = "You must not forget to use the forum post URL in the proposal you are about to make"]
     fn url(&self) -> Option<url::Url>;
