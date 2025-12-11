@@ -2,7 +2,8 @@
 
 set -euo pipefail
 
-echo "BUILD_TIME \"$(TZ=UTC date --rfc-3339=seconds)\""
+# date format is hardcoded with +00:00 since we define UTC
+echo "BUILD_TIME \"$(TZ=UTC date -u +"%Y-%m-%d %H:%M:%S+00:00")\""
 
 if [[ -n "${GITHUB_SHA:-}" ]]; then
   GIT_REV="$GITHUB_SHA"
