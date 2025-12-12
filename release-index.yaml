@@ -12,6 +12,8 @@ releases:
     versions:
       - name: base
         version: d2a13f0ecb29c96818d24076925d5da19ae61e93
+      - name: fix-ic-boundary
+        version: df87dc70c910f4a1b80f8751628fe8ea45188910
   - rc_name: rc--2025-11-28_03-22
     versions:
       - name: base
