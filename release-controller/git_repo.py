@@ -337,10 +337,12 @@ class GitRepo:
             )
 
     def parent(self, object: str) -> str:
-        return check_output(
+        """Return the first parent of a commit (or empty string for root commits)."""
+        parents = check_output(
             ["git", "log", "--pretty=%P", "-n", "1", object],
             cwd=self.dir,
-        ).strip()
+        ).strip().split()
+        return parents[0] if parents else ""
 
     def branch_list(self, pattern: str) -> typing.List[str]:
         return [
