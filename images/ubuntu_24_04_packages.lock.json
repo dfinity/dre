@@ -3391,6 +3391,251 @@
 			"version": "3.4.6-1build1"
 		},
 		{
+			"arch": "amd64",
+			"dependencies": [
+				{
+					"key": "libsubid4_1-4.13-p-dfsg1-4ubuntu3.2_amd64",
+					"name": "libsubid4",
+					"version": "1:4.13+dfsg1-4ubuntu3.2"
+				},
+				{
+					"key": "libselinux1_3.5-2ubuntu2.1_amd64",
+					"name": "libselinux1",
+					"version": "3.5-2ubuntu2.1"
+				},
+				{
+					"key": "libpcre2-8-0_10.42-4ubuntu2.1_amd64",
+					"name": "libpcre2-8-0",
+					"version": "10.42-4ubuntu2.1"
+				},
+				{
+					"key": "libc6_2.39-0ubuntu8.5_amd64",
+					"name": "libc6",
+					"version": "2.39-0ubuntu8.5"
+				},
+				{
+					"key": "libgcc-s1_14.2.0-4ubuntu2_24.04_amd64",
+					"name": "libgcc-s1",
+					"version": "14.2.0-4ubuntu2~24.04"
+				},
+				{
+					"key": "gcc-14-base_14.2.0-4ubuntu2_24.04_amd64",
+					"name": "gcc-14-base",
+					"version": "14.2.0-4ubuntu2~24.04"
+				},
+				{
+					"key": "libaudit1_1-3.1.2-2.1build1.1_amd64",
+					"name": "libaudit1",
+					"version": "1:3.1.2-2.1build1.1"
+				},
+				{
+					"key": "libcap-ng0_0.8.4-2build2_amd64",
+					"name": "libcap-ng0",
+					"version": "0.8.4-2build2"
+				},
+				{
+					"key": "libaudit-common_1-3.1.2-2.1build1.1_amd64",
+					"name": "libaudit-common",
+					"version": "1:3.1.2-2.1build1.1"
+				}
+			],
+			"key": "uidmap_1-4.13-p-dfsg1-4ubuntu3.2_amd64",
+			"name": "uidmap",
+			"sha256": "a80cb7f72dd18c73cbb0b07b7fbe855504f26bfafae072a9b3d125c89d499b9e",
+			"urls": [
+				"https://snapshot.ubuntu.com/ubuntu/20250826T000000Z/pool/main/s/shadow/uidmap_4.13+dfsg1-4ubuntu3.2_amd64.deb"
+			],
+			"version": "1:4.13+dfsg1-4ubuntu3.2"
+		},
+		{
+			"arch": "amd64",
+			"dependencies": [],
+			"key": "libsubid4_1-4.13-p-dfsg1-4ubuntu3.2_amd64",
+			"name": "libsubid4",
+			"sha256": "ba97fd28c53560a8d2a2261e8f75a7ab4112535b12f9fe1d50970c30051da0da",
+			"urls": [
+				"https://snapshot.ubuntu.com/ubuntu/20250826T000000Z/pool/main/s/shadow/libsubid4_4.13+dfsg1-4ubuntu3.2_amd64.deb"
+			],
+			"version": "1:4.13+dfsg1-4ubuntu3.2"
+		},
+		{
+			"arch": "amd64",
+			"dependencies": [],
+			"key": "libaudit1_1-3.1.2-2.1build1.1_amd64",
+			"name": "libaudit1",
+			"sha256": "408457f91745dd33746d24d063986df96a81166d6a59431583073398cefa1301",
+			"urls": [
+				"https://snapshot.ubuntu.com/ubuntu/20250826T000000Z/pool/main/a/audit/libaudit1_3.1.2-2.1build1.1_amd64.deb"
+			],
+			"version": "1:3.1.2-2.1build1.1"
+		},
+		{
+			"arch": "amd64",
+			"dependencies": [],
+			"key": "libcap-ng0_0.8.4-2build2_amd64",
+			"name": "libcap-ng0",
+			"sha256": "cf1e9437ac7ddf6539dbe87b68858cbdef84d78c6aac243ab3b6e564a52ed930",
+			"urls": [
+				"https://snapshot.ubuntu.com/ubuntu/20250826T000000Z/pool/main/libc/libcap-ng/libcap-ng0_0.8.4-2build2_amd64.deb"
+			],
+			"version": "0.8.4-2build2"
+		},
+		{
+			"arch": "amd64",
+			"dependencies": [],
+			"key": "libaudit-common_1-3.1.2-2.1build1.1_amd64",
+			"name": "libaudit-common",
+			"sha256": "c8ab5bed96f9781daab7c36fcbe4b12c3f3247a37256c0e341dc827db1e9a010",
+			"urls": [
+				"https://snapshot.ubuntu.com/ubuntu/20250826T000000Z/pool/main/a/audit/libaudit-common_3.1.2-2.1build1.1_all.deb"
+			],
+			"version": "1:3.1.2-2.1build1.1"
+		},
+		{
+			"arch": "amd64",
+			"dependencies": [
+				{
+					"key": "libnftnl11_1.2.6-2build1_amd64",
+					"name": "libnftnl11",
+					"version": "1.2.6-2build1"
+				},
+				{
+					"key": "libmnl0_1.0.5-2build1_amd64",
+					"name": "libmnl0",
+					"version": "1.0.5-2build1"
+				},
+				{
+					"key": "libc6_2.39-0ubuntu8.5_amd64",
+					"name": "libc6",
+					"version": "2.39-0ubuntu8.5"
+				},
+				{
+					"key": "libgcc-s1_14.2.0-4ubuntu2_24.04_amd64",
+					"name": "libgcc-s1",
+					"version": "14.2.0-4ubuntu2~24.04"
+				},
+				{
+					"key": "gcc-14-base_14.2.0-4ubuntu2_24.04_amd64",
+					"name": "gcc-14-base",
+					"version": "14.2.0-4ubuntu2~24.04"
+				},
+				{
+					"key": "libnfnetlink0_1.0.2-2build1_amd64",
+					"name": "libnfnetlink0",
+					"version": "1.0.2-2build1"
+				},
+				{
+					"key": "libnetfilter-conntrack3_1.0.9-6build1_amd64",
+					"name": "libnetfilter-conntrack3",
+					"version": "1.0.9-6build1"
+				},
+				{
+					"key": "netbase_6.4_amd64",
+					"name": "netbase",
+					"version": "6.4"
+				},
+				{
+					"key": "libxtables12_1.8.10-3ubuntu2_amd64",
+					"name": "libxtables12",
+					"version": "1.8.10-3ubuntu2"
+				},
+				{
+					"key": "libip6tc2_1.8.10-3ubuntu2_amd64",
+					"name": "libip6tc2",
+					"version": "1.8.10-3ubuntu2"
+				},
+				{
+					"key": "libip4tc2_1.8.10-3ubuntu2_amd64",
+					"name": "libip4tc2",
+					"version": "1.8.10-3ubuntu2"
+				}
+			],
+			"key": "iptables_1.8.10-3ubuntu2_amd64",
+			"name": "iptables",
+			"sha256": "d341e8ffc42ca035f5aa0fd9a798c8d2b2edb019225dc11f4dac16edf9c57840",
+			"urls": [
+				"https://snapshot.ubuntu.com/ubuntu/20250826T000000Z/pool/main/i/iptables/iptables_1.8.10-3ubuntu2_amd64.deb"
+			],
+			"version": "1.8.10-3ubuntu2"
+		},
+		{
+			"arch": "amd64",
+			"dependencies": [],
+			"key": "libnftnl11_1.2.6-2build1_amd64",
+			"name": "libnftnl11",
+			"sha256": "e5bde5c9cbb95082700011f0b7ef2c0a41900b0a9fd7434f6e90448e2a7b4e50",
+			"urls": [
+				"https://snapshot.ubuntu.com/ubuntu/20250826T000000Z/pool/main/libn/libnftnl/libnftnl11_1.2.6-2build1_amd64.deb"
+			],
+			"version": "1.2.6-2build1"
+		},
+		{
+			"arch": "amd64",
+			"dependencies": [],
+			"key": "libmnl0_1.0.5-2build1_amd64",
+			"name": "libmnl0",
+			"sha256": "5170658bf0eaf54a8c7d53061ca6b47a6cf33a83543a75fa521de7046cb7197a",
+			"urls": [
+				"https://snapshot.ubuntu.com/ubuntu/20250826T000000Z/pool/main/libm/libmnl/libmnl0_1.0.5-2build1_amd64.deb"
+			],
+			"version": "1.0.5-2build1"
+		},
+		{
+			"arch": "amd64",
+			"dependencies": [],
+			"key": "libnfnetlink0_1.0.2-2build1_amd64",
+			"name": "libnfnetlink0",
+			"sha256": "f557a287af2ca00df5dbf632c6b77d77479139ffb51c83e3de9766eb609b5d63",
+			"urls": [
+				"https://snapshot.ubuntu.com/ubuntu/20250826T000000Z/pool/main/libn/libnfnetlink/libnfnetlink0_1.0.2-2build1_amd64.deb"
+			],
+			"version": "1.0.2-2build1"
+		},
+		{
+			"arch": "amd64",
+			"dependencies": [],
+			"key": "libnetfilter-conntrack3_1.0.9-6build1_amd64",
+			"name": "libnetfilter-conntrack3",
+			"sha256": "6d32a4c4618eb7d6c0d989591d28637a9acdfa86dfe22e42e9ac9cc25d882a97",
+			"urls": [
+				"https://snapshot.ubuntu.com/ubuntu/20250826T000000Z/pool/main/libn/libnetfilter-conntrack/libnetfilter-conntrack3_1.0.9-6build1_amd64.deb"
+			],
+			"version": "1.0.9-6build1"
+		},
+		{
+			"arch": "amd64",
+			"dependencies": [],
+			"key": "libxtables12_1.8.10-3ubuntu2_amd64",
+			"name": "libxtables12",
+			"sha256": "c94063499d1b0b336f39607107efb7de95d52a5d4e7e6a9368a5f7308f05b714",
+			"urls": [
+				"https://snapshot.ubuntu.com/ubuntu/20250826T000000Z/pool/main/i/iptables/libxtables12_1.8.10-3ubuntu2_amd64.deb"
+			],
+			"version": "1.8.10-3ubuntu2"
+		},
+		{
+			"arch": "amd64",
+			"dependencies": [],
+			"key": "libip6tc2_1.8.10-3ubuntu2_amd64",
+			"name": "libip6tc2",
+			"sha256": "b98b88eb6aa14a902ea1aebc3b12ddd140572545ae1fc6428cb0868c31671d05",
+			"urls": [
+				"https://snapshot.ubuntu.com/ubuntu/20250826T000000Z/pool/main/i/iptables/libip6tc2_1.8.10-3ubuntu2_amd64.deb"
+			],
+			"version": "1.8.10-3ubuntu2"
+		},
+		{
+			"arch": "amd64",
+			"dependencies": [],
+			"key": "libip4tc2_1.8.10-3ubuntu2_amd64",
+			"name": "libip4tc2",
+			"sha256": "eb381f8ff0469534df3f1b146c3eb8baa6e36f8cfcdf2e3e039398322930d0a4",
+			"urls": [
+				"https://snapshot.ubuntu.com/ubuntu/20250826T000000Z/pool/main/i/iptables/libip4tc2_1.8.10-3ubuntu2_amd64.deb"
+			],
+			"version": "1.8.10-3ubuntu2"
+		},
+		{
 			"arch": "arm64",
 			"dependencies": [],
 			"key": "ncurses-base_6.4-p-20240113-1ubuntu2_arm64",
@@ -6758,6 +7003,251 @@
 				"https://snapshot.ubuntu.com/ubuntu/20250826T000000Z/pool/main/libf/libffi/libffi-dev_3.4.6-1build1_arm64.deb"
 			],
 			"version": "3.4.6-1build1"
+		},
+		{
+			"arch": "arm64",
+			"dependencies": [
+				{
+					"key": "libsubid4_1-4.13-p-dfsg1-4ubuntu3.2_arm64",
+					"name": "libsubid4",
+					"version": "1:4.13+dfsg1-4ubuntu3.2"
+				},
+				{
+					"key": "libselinux1_3.5-2ubuntu2.1_arm64",
+					"name": "libselinux1",
+					"version": "3.5-2ubuntu2.1"
+				},
+				{
+					"key": "libpcre2-8-0_10.42-4ubuntu2.1_arm64",
+					"name": "libpcre2-8-0",
+					"version": "10.42-4ubuntu2.1"
+				},
+				{
+					"key": "libc6_2.39-0ubuntu8.5_arm64",
+					"name": "libc6",
+					"version": "2.39-0ubuntu8.5"
+				},
+				{
+					"key": "libgcc-s1_14.2.0-4ubuntu2_24.04_arm64",
+					"name": "libgcc-s1",
+					"version": "14.2.0-4ubuntu2~24.04"
+				},
+				{
+					"key": "gcc-14-base_14.2.0-4ubuntu2_24.04_arm64",
+					"name": "gcc-14-base",
+					"version": "14.2.0-4ubuntu2~24.04"
+				},
+				{
+					"key": "libaudit1_1-3.1.2-2.1build1.1_arm64",
+					"name": "libaudit1",
+					"version": "1:3.1.2-2.1build1.1"
+				},
+				{
+					"key": "libcap-ng0_0.8.4-2build2_arm64",
+					"name": "libcap-ng0",
+					"version": "0.8.4-2build2"
+				},
+				{
+					"key": "libaudit-common_1-3.1.2-2.1build1.1_arm64",
+					"name": "libaudit-common",
+					"version": "1:3.1.2-2.1build1.1"
+				}
+			],
+			"key": "uidmap_1-4.13-p-dfsg1-4ubuntu3.2_arm64",
+			"name": "uidmap",
+			"sha256": "052b1852a9ab03d931398a9d0060ef7c312f1b48bc4f4ee4533649bb958b634a",
+			"urls": [
+				"https://snapshot.ubuntu.com/ubuntu/20250826T000000Z/pool/main/s/shadow/uidmap_4.13+dfsg1-4ubuntu3.2_arm64.deb"
+			],
+			"version": "1:4.13+dfsg1-4ubuntu3.2"
+		},
+		{
+			"arch": "arm64",
+			"dependencies": [],
+			"key": "libsubid4_1-4.13-p-dfsg1-4ubuntu3.2_arm64",
+			"name": "libsubid4",
+			"sha256": "00916edc15862421e803bec7e69d548c6ce281badf5d449498085a3b3710639f",
+			"urls": [
+				"https://snapshot.ubuntu.com/ubuntu/20250826T000000Z/pool/main/s/shadow/libsubid4_4.13+dfsg1-4ubuntu3.2_arm64.deb"
+			],
+			"version": "1:4.13+dfsg1-4ubuntu3.2"
+		},
+		{
+			"arch": "arm64",
+			"dependencies": [],
+			"key": "libaudit1_1-3.1.2-2.1build1.1_arm64",
+			"name": "libaudit1",
+			"sha256": "6cca04d5483a634ff2ed78a31897bad1941226b8b6fc13030d8bb1d688ef2583",
+			"urls": [
+				"https://snapshot.ubuntu.com/ubuntu/20250826T000000Z/pool/main/a/audit/libaudit1_3.1.2-2.1build1.1_arm64.deb"
+			],
+			"version": "1:3.1.2-2.1build1.1"
+		},
+		{
+			"arch": "arm64",
+			"dependencies": [],
+			"key": "libcap-ng0_0.8.4-2build2_arm64",
+			"name": "libcap-ng0",
+			"sha256": "ffaaedcfab1d1cc48997f09e88b6664f2cc7cba1c7e15bf1078084f512697d4d",
+			"urls": [
+				"https://snapshot.ubuntu.com/ubuntu/20250826T000000Z/pool/main/libc/libcap-ng/libcap-ng0_0.8.4-2build2_arm64.deb"
+			],
+			"version": "0.8.4-2build2"
+		},
+		{
+			"arch": "arm64",
+			"dependencies": [],
+			"key": "libaudit-common_1-3.1.2-2.1build1.1_arm64",
+			"name": "libaudit-common",
+			"sha256": "c8ab5bed96f9781daab7c36fcbe4b12c3f3247a37256c0e341dc827db1e9a010",
+			"urls": [
+				"https://snapshot.ubuntu.com/ubuntu/20250826T000000Z/pool/main/a/audit/libaudit-common_3.1.2-2.1build1.1_all.deb"
+			],
+			"version": "1:3.1.2-2.1build1.1"
+		},
+		{
+			"arch": "arm64",
+			"dependencies": [
+				{
+					"key": "libnftnl11_1.2.6-2build1_arm64",
+					"name": "libnftnl11",
+					"version": "1.2.6-2build1"
+				},
+				{
+					"key": "libmnl0_1.0.5-2build1_arm64",
+					"name": "libmnl0",
+					"version": "1.0.5-2build1"
+				},
+				{
+					"key": "libc6_2.39-0ubuntu8.5_arm64",
+					"name": "libc6",
+					"version": "2.39-0ubuntu8.5"
+				},
+				{
+					"key": "libgcc-s1_14.2.0-4ubuntu2_24.04_arm64",
+					"name": "libgcc-s1",
+					"version": "14.2.0-4ubuntu2~24.04"
+				},
+				{
+					"key": "gcc-14-base_14.2.0-4ubuntu2_24.04_arm64",
+					"name": "gcc-14-base",
+					"version": "14.2.0-4ubuntu2~24.04"
+				},
+				{
+					"key": "libnfnetlink0_1.0.2-2build1_arm64",
+					"name": "libnfnetlink0",
+					"version": "1.0.2-2build1"
+				},
+				{
+					"key": "libnetfilter-conntrack3_1.0.9-6build1_arm64",
+					"name": "libnetfilter-conntrack3",
+					"version": "1.0.9-6build1"
+				},
+				{
+					"key": "netbase_6.4_arm64",
+					"name": "netbase",
+					"version": "6.4"
+				},
+				{
+					"key": "libxtables12_1.8.10-3ubuntu2_arm64",
+					"name": "libxtables12",
+					"version": "1.8.10-3ubuntu2"
+				},
+				{
+					"key": "libip6tc2_1.8.10-3ubuntu2_arm64",
+					"name": "libip6tc2",
+					"version": "1.8.10-3ubuntu2"
+				},
+				{
+					"key": "libip4tc2_1.8.10-3ubuntu2_arm64",
+					"name": "libip4tc2",
+					"version": "1.8.10-3ubuntu2"
+				}
+			],
+			"key": "iptables_1.8.10-3ubuntu2_arm64",
+			"name": "iptables",
+			"sha256": "cbaacdb34f19a9b29f569205cdbf1e5851f63fde60777c5cf539a2b46c0c2fc7",
+			"urls": [
+				"https://snapshot.ubuntu.com/ubuntu/20250826T000000Z/pool/main/i/iptables/iptables_1.8.10-3ubuntu2_arm64.deb"
+			],
+			"version": "1.8.10-3ubuntu2"
+		},
+		{
+			"arch": "arm64",
+			"dependencies": [],
+			"key": "libnftnl11_1.2.6-2build1_arm64",
+			"name": "libnftnl11",
+			"sha256": "678792e1aa102892b594e0ee13ee93b763011674bddba800a3974a68a83c6ed1",
+			"urls": [
+				"https://snapshot.ubuntu.com/ubuntu/20250826T000000Z/pool/main/libn/libnftnl/libnftnl11_1.2.6-2build1_arm64.deb"
+			],
+			"version": "1.2.6-2build1"
+		},
+		{
+			"arch": "arm64",
+			"dependencies": [],
+			"key": "libmnl0_1.0.5-2build1_arm64",
+			"name": "libmnl0",
+			"sha256": "9442f15a4bbc6148e527045adaf85c86ae3ffe159176d6a5f3b471b49150e470",
+			"urls": [
+				"https://snapshot.ubuntu.com/ubuntu/20250826T000000Z/pool/main/libm/libmnl/libmnl0_1.0.5-2build1_arm64.deb"
+			],
+			"version": "1.0.5-2build1"
+		},
+		{
+			"arch": "arm64",
+			"dependencies": [],
+			"key": "libnfnetlink0_1.0.2-2build1_arm64",
+			"name": "libnfnetlink0",
+			"sha256": "c7c64d90793ce4d7df262aad50d99eb45ca848fa9421f1bccb22665c350bdb2f",
+			"urls": [
+				"https://snapshot.ubuntu.com/ubuntu/20250826T000000Z/pool/main/libn/libnfnetlink/libnfnetlink0_1.0.2-2build1_arm64.deb"
+			],
+			"version": "1.0.2-2build1"
+		},
+		{
+			"arch": "arm64",
+			"dependencies": [],
+			"key": "libnetfilter-conntrack3_1.0.9-6build1_arm64",
+			"name": "libnetfilter-conntrack3",
+			"sha256": "7b152f919dbd3ffd9ca3ac95d96fdac0cdd139656eb284a0abbc46fce6063301",
+			"urls": [
+				"https://snapshot.ubuntu.com/ubuntu/20250826T000000Z/pool/main/libn/libnetfilter-conntrack/libnetfilter-conntrack3_1.0.9-6build1_arm64.deb"
+			],
+			"version": "1.0.9-6build1"
+		},
+		{
+			"arch": "arm64",
+			"dependencies": [],
+			"key": "libxtables12_1.8.10-3ubuntu2_arm64",
+			"name": "libxtables12",
+			"sha256": "72cd6add0f8eaaa45f44dd5c0903df083ab3847091d0633b4e46e8f80443718a",
+			"urls": [
+				"https://snapshot.ubuntu.com/ubuntu/20250826T000000Z/pool/main/i/iptables/libxtables12_1.8.10-3ubuntu2_arm64.deb"
+			],
+			"version": "1.8.10-3ubuntu2"
+		},
+		{
+			"arch": "arm64",
+			"dependencies": [],
+			"key": "libip6tc2_1.8.10-3ubuntu2_arm64",
+			"name": "libip6tc2",
+			"sha256": "4438956b281410ee6d58ce59d1f9588e30f4abf7167e110fdb4f26a99fa5dee7",
+			"urls": [
+				"https://snapshot.ubuntu.com/ubuntu/20250826T000000Z/pool/main/i/iptables/libip6tc2_1.8.10-3ubuntu2_arm64.deb"
+			],
+			"version": "1.8.10-3ubuntu2"
+		},
+		{
+			"arch": "arm64",
+			"dependencies": [],
+			"key": "libip4tc2_1.8.10-3ubuntu2_arm64",
+			"name": "libip4tc2",
+			"sha256": "e692da5dffee228ed346474a6e9e21511acbb7329bc304b4ae6dbbc25b2831a2",
+			"urls": [
+				"https://snapshot.ubuntu.com/ubuntu/20250826T000000Z/pool/main/i/iptables/libip4tc2_1.8.10-3ubuntu2_arm64.deb"
+			],
+			"version": "1.8.10-3ubuntu2"
 		}
 	],
 	"version": 1

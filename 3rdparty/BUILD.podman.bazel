@@ -1,0 +1,14 @@
+load("@aspect_bazel_lib//lib:tar.bzl", "tar")
+
+package(default_visibility = ["//visibility:public"])
+
+# This rule takes all files in the external repo (usr/, etc/)
+# and packages them into a generic tarball for the OCI layer.
+tar(
+    name = "layer",
+    srcs = glob(
+        ["**"], 
+        # Exclude build metadata so it doesn't end up in your container
+        exclude = ["BUILD.bazel", "WORKSPACE", "README.md"]
+    ),
+)

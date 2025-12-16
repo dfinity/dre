@@ -166,6 +166,22 @@ http_archive(
     build_file = "@//3rdparty:BUILD.codeowners.bazel",
 )
 
+http_archive(
+    name = "podman_amd64",
+    sha256 = "52772424db65197cea22e4adcbdc27665cbf5395247032dabd864315d7baffe6",
+    url = "https://github.com/mgoltzsche/podman-static/releases/download/v5.7.1/podman-linux-amd64.tar.gz",
+    strip_prefix = "podman-linux-amd64",
+    build_file = "@//3rdparty:BUILD.podman.bazel",
+)
+
+http_archive(
+    name = "podman_arm64",
+    sha256 = "ec9a1dfcdeba9496cfb7037d2d11c7608e8a43115841913e7029825960cdd460",
+    url = "https://github.com/mgoltzsche/podman-static/releases/download/v5.7.1/podman-linux-arm64.tar.gz",
+    strip_prefix = "podman-linux-arm64",
+    build_file = "@//3rdparty:BUILD.podman.bazel",
+)
+
 IC_REPO_VERSION = "f34ab00f31dc3f223ef832be30303f93e59c19ec"
 
 http_archive(

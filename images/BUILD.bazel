@@ -18,7 +18,7 @@
 
 load("@rules_oci//oci:defs.bzl", "oci_image")
 load("@aspect_bazel_lib//lib:tar.bzl", "tar")
-load("@rules_distroless//distroless:defs.bzl", "group", "passwd", "cacerts", "home")
+load("@rules_distroless//distroless:defs.bzl", "group", "passwd", "cacerts", "home", "flatten")
 
 package(default_visibility = ["//visibility:public"])
 
@@ -98,6 +98,41 @@ tar(
     ],
 )
 
+# podman symlinks
+tar(
+    name = "podman-symlinks",
+    mtree = [
+        # needed as dpkg assumes sh is installed in a typical debian installation.
+        "./usr/bin/podman type=link link=/usr/local/bin/podman",
+    ],
+)
+
+# iptables symlinks
+tar(
+    name = "iptables-symlinks",
+    mtree = [
+        "./usr/bin/iptables type=link link=/usr/sbin/iptables-nft",
+        "./usr/bin/iptables-save type=link link=/usr/sbin/iptables-nft-save",
+        "./usr/bin/iptables-restore type=link link=/usr/sbin/iptables-nft-restore",
+        
+        # ipv6
+        "./usr/bin/ip6tables type=link link=/usr/sbin/ip6tables-nft",
+        "./usr/bin/ip6tables-save type=link link=/usr/sbin/ip6tables-nft-save",
+        "./usr/bin/ip6tables-restore type=link link=/usr/sbin/ip6tables-nft-restore",
+    ],
+)
+
+# Disable cgroups because of nested containers
+# issues
+tar(
+    name = "podman-config",
+    srcs = ["containers.conf"],
+    mtree = [
+        "./etc/containers/containers.conf type=file content=$(location containers.conf)",
+    ],
+)
+
+
 cacerts(
     name = "cacerts",
     package = select({
@@ -116,6 +151,22 @@ tar(
     mtree = [
         "./etc/ssl/cert.pem type=link link=/etc/ssl/certs/ca-certificates.crt",
     ],
+)
+
+flatten(
+    name = "ubuntu_apk_flat",
+    tars = [
+        "@ubuntu_24_04_packages//:ubuntu_24_04_packages",
+    ],
+    deduplicate = True,
+)
+
+alias(
+    name = "podman_layer",
+    actual = select({
+        "@platforms//cpu:arm64": "@podman_arm64//:layer",
+        "@platforms//cpu:x86_64": "@podman_amd64//:layer",
+    }),
 )
 
 oci_image(
@@ -137,7 +188,11 @@ oci_image(
         ":cacerts-symlink",
         # Packages listed in this manifest (see YAML files in this folder)
         # get installed in the container by this rule.
-        "@ubuntu_24_04_packages//:ubuntu_24_04_packages",
+        ":ubuntu_apk_flat",
         "clang-symlinks",
+        ":podman_layer",
+        "podman-symlinks",
+        "iptables-symlinks",
+        "podman-config",
     ],
 )
