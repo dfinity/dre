@@ -1,7 +1,7 @@
 use crate::ctx::DreContext;
 use crate::{auth::AuthRequirement, exe::ExecutableCommand, exe::args::GlobalArgs};
 use base64::{Engine as _, engine::general_purpose::STANDARD as BASE64};
-use clap::{Args, Subcommand};
+use clap::{Args, Parser, Subcommand};
 use colored::Colorize;
 use ic_canisters::IcAgentCanisterClient;
 use ic_canisters::governance::GovernanceCanisterWrapper;
@@ -36,7 +36,7 @@ use std::{
     sync::Arc,
 };
 
-#[derive(Args, Debug)]
+#[derive(Parser, Debug)]
 #[clap(after_help = r#"EXAMPLES:
     dre registry                                                         # Dump all contents to stdout
     dre registry --filter rewards_correct!=true              # Entries for which rewardable_nodes != total_up_nodes
@@ -79,10 +79,6 @@ pub struct RegistryArgs {
     #[clap(long, short, alias = "filter", global = true)]
     pub filters: Vec<Filter>,
 
-    /// Specify the height for the registry
-    #[clap(long, visible_aliases = ["registry-height", "version"])]
-    pub height: Option<u64>,
-
     /// Dump raw registry versions in range by index; defaults to 0 -1 if no args
     #[clap(
         long = "dump-versions",
@@ -100,6 +96,15 @@ pub struct RegistryArgs {
 pub enum RegistrySubcommand {
     /// Show diff between two registry versions
     Diff(RegistryDiff),
+    /// Get registry at specific height (or latest)
+    Get(RegistryGet),
+}
+
+#[derive(Args, Debug)]
+pub struct RegistryGet {
+    /// Specify the height for the registry
+    #[clap(visible_aliases = ["registry-height", "version"])]
+    pub height: Option<u64>,
 }
 
 #[derive(Args, Debug)]
@@ -148,8 +153,19 @@ impl ExecutableCommand for Registry {
     }
 
     async fn execute(&self, ctx: DreContext) -> anyhow::Result<()> {
-        if let Some(RegistrySubcommand::Diff(diff)) = &self.subcommand {
-            return self.diff(ctx, diff).await;
+        match &self.subcommand {
+            Some(RegistrySubcommand::Diff(diff)) => return self.diff(ctx, diff).await,
+            Some(RegistrySubcommand::Get(get)) => return self.get(ctx, get).await,
+            None => {
+                if self.args.dump_versions.is_some() {
+                    // fall through
+                } else {
+                    // No subcommand and no dump-versions => show help
+                    let mut cmd = <Registry as clap::CommandFactory>::command();
+                    cmd.print_help()?;
+                    return Ok(());
+                }
+            }
         }
 
         let writer: Box<dyn std::io::Write> = match &self.args.output {
@@ -169,8 +185,28 @@ impl ExecutableCommand for Registry {
             return Ok(());
         }
 
-        // Friendly aggregated registry view (default)
-        let registry = self.get_registry(ctx, self.args.height, false).await?;
+        Ok(())
+    }
+
+    fn validate(&self, _args: &GlobalArgs, _cmd: &mut clap::Command) {}
+}
+
+impl Registry {
+    async fn get(&self, ctx: DreContext, args: &RegistryGet) -> anyhow::Result<()> {
+        let writer: Box<dyn std::io::Write> = match &self.args.output {
+            Some(path) => {
+                let path = path.with_extension("json");
+                let file = fs_err::File::create(path)?;
+                info!("Writing to file: {:?}", file.path().canonicalize()?);
+                Box::new(std::io::BufWriter::new(file))
+            }
+            None => Box::new(std::io::stdout()),
+        };
+
+        // Aggregated registry view
+        // Default to online/sync unless stated otherwise (but we don't have offline flag in Get args yet? Store supports, context supports it).
+        // Let's assume standard behavior is online sync for 'get'.
+        let registry = self.get_registry(ctx, args.height, false).await?;
         let mut serde_value = serde_json::to_value(registry)?;
         self.args.filters.iter().for_each(|filter| {
             let _ = filter_json_value(&mut serde_value, &filter.key, &filter.value, &filter.comparison);
@@ -181,13 +217,8 @@ impl ExecutableCommand for Registry {
         Ok(())
     }
 
-    fn validate(&self, _args: &GlobalArgs, _cmd: &mut clap::Command) {}
-}
-
-impl Registry {
     pub(crate) async fn dump_versions_json(&self, ctx: DreContext) -> anyhow::Result<serde_json::Value> {
         use ic_registry_common_proto::pb::local_store::v1::ChangelogEntry as PbChangelogEntry;
-
         // Ensure local registry is initialized/synced to have content available
         // (no-op in offline mode)
         let _ = ctx.registry_with_version(None, false).await;
@@ -212,21 +243,29 @@ impl Registry {
     }
 
     async fn diff(&self, ctx: DreContext, diff: &RegistryDiff) -> anyhow::Result<()> {
-        let v1 = diff.version_from.ok_or_else(|| anyhow::anyhow!("Both versions must be specified"))?;
-        let v2 = diff.version_to.ok_or_else(|| anyhow::anyhow!("Both versions must be specified"))?;
-
-        // Logic: Fetch High version (online/sync) first, then Low version (offline)
-        let (reg1, reg2) = if v1 > v2 {
-            // v1 is High (Sync), v2 is Low (Offline)
-            let r1 = self.get_registry(ctx.clone(), Some(v1), false).await?;
-            let r2 = self.get_registry(ctx.clone(), Some(v2), true).await?;
-            (r1, r2)
-        } else {
-            // v2 is High (Sync), v1 is Low (Offline) - or equal
-            // Fetch High first to ensure sync happens
-            let r2 = self.get_registry(ctx.clone(), Some(v2), false).await?;
-            let r1 = self.get_registry(ctx.clone(), Some(v1), true).await?;
-            (r1, r2)
+        let (reg1, reg2) = match (diff.version_from, diff.version_to) {
+            (Some(v1), Some(v2)) => {
+                // Logic: Fetch High version (online/sync) first, then Low version (offline)
+                if v1 > v2 {
+                    let r1 = self.get_registry(ctx.clone(), Some(v1), false).await?;
+                    let r2 = self.get_registry(ctx.clone(), Some(v2), true).await?;
+                    (r1, r2)
+                } else {
+                    // v2 >= v1. Fetch High (v2) first (sync), then Low (v1) offline.
+                    let r2 = self.get_registry(ctx.clone(), Some(v2), false).await?;
+                    let r1 = self.get_registry(ctx.clone(), Some(v1), true).await?;
+                    (r1, r2)
+                }
+            }
+            (Some(v1), None) => {
+                // Compare v1 (Base) vs Latest (Target).
+                // Fetch Latest (Target) first, sync enabled.
+                let r2 = self.get_registry(ctx.clone(), None, false).await?;
+                // Fetch v1 (Base), offline.
+                let r1 = self.get_registry(ctx.clone(), Some(v1), true).await?;
+                (r1, r2)
+            }
+            _ => anyhow::bail!("Must specify at least one version to diff"),
         };
 
         let mut val1 = serde_json::to_value(&reg1)?;
