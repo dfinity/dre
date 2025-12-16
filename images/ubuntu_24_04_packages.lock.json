@@ -370,7 +370,23 @@
 		},
 		{
 			"arch": "amd64",
-			"dependencies": [],
+			"dependencies": [
+				{
+					"key": "libc6_2.39-0ubuntu8.5_amd64",
+					"name": "libc6",
+					"version": "2.39-0ubuntu8.5"
+				},
+				{
+					"key": "libgcc-s1_14.2.0-4ubuntu2_24.04_amd64",
+					"name": "libgcc-s1",
+					"version": "14.2.0-4ubuntu2~24.04"
+				},
+				{
+					"key": "gcc-14-base_14.2.0-4ubuntu2_24.04_amd64",
+					"name": "gcc-14-base",
+					"version": "14.2.0-4ubuntu2~24.04"
+				}
+			],
 			"key": "debianutils_5.17build1_amd64",
 			"name": "debianutils",
 			"sha256": "1047a9a57018e18531f76e5b00e226a68554b6f1d147f2a5c1b32518c7b20636",
@@ -2195,9 +2211,54 @@
 					"version": "2.42-4ubuntu2.5"
 				},
 				{
-					"key": "make_4.3-4.1build2_amd64",
-					"name": "make",
+					"key": "make-guile_4.3-4.1build2_amd64",
+					"name": "make-guile",
 					"version": "4.3-4.1build2"
+				},
+				{
+					"key": "guile-3.0-libs_3.0.9-1build2_amd64",
+					"name": "guile-3.0-libs",
+					"version": "3.0.9-1build2"
+				},
+				{
+					"key": "libunistring5_1.1-2build1.1_amd64",
+					"name": "libunistring5",
+					"version": "1.1-2build1.1"
+				},
+				{
+					"key": "libreadline8t64_8.2-4build1_amd64",
+					"name": "libreadline8t64",
+					"version": "8.2-4build1"
+				},
+				{
+					"key": "libtinfo6_6.4-p-20240113-1ubuntu2_amd64",
+					"name": "libtinfo6",
+					"version": "6.4+20240113-1ubuntu2"
+				},
+				{
+					"key": "readline-common_8.2-4build1_amd64",
+					"name": "readline-common",
+					"version": "8.2-4build1"
+				},
+				{
+					"key": "libgmp10_2-6.3.0-p-dfsg-2ubuntu6.1_amd64",
+					"name": "libgmp10",
+					"version": "2:6.3.0+dfsg-2ubuntu6.1"
+				},
+				{
+					"key": "libgc1_1-8.2.6-1build1_amd64",
+					"name": "libgc1",
+					"version": "1:8.2.6-1build1"
+				},
+				{
+					"key": "libffi8_3.4.6-1build1_amd64",
+					"name": "libffi8",
+					"version": "3.4.6-1build1"
+				},
+				{
+					"key": "libcrypt1_1-4.4.36-4build1_amd64",
+					"name": "libcrypt1",
+					"version": "1:4.4.36-4build1"
 				},
 				{
 					"key": "patch_2.7.6-7build3_amd64",
@@ -2280,11 +2341,6 @@
 					"version": "5.38.2-3.2ubuntu0.2"
 				},
 				{
-					"key": "libcrypt1_1-4.4.36-4build1_amd64",
-					"name": "libcrypt1",
-					"version": "1:4.4.36-4build1"
-				},
-				{
 					"key": "libgdbm6t64_1.23-5.1build1_amd64",
 					"name": "libgdbm6t64",
 					"version": "1.23-5.1build1"
@@ -2323,11 +2379,6 @@
 					"key": "libmpfr6_4.2.1-1build1.1_amd64",
 					"name": "libmpfr6",
 					"version": "4.2.1-1build1.1"
-				},
-				{
-					"key": "libgmp10_2-6.3.0-p-dfsg-2ubuntu6.1_amd64",
-					"name": "libgmp10",
-					"version": "2:6.3.0+dfsg-2ubuntu6.1"
 				},
 				{
 					"key": "libmpc3_1.3.1-1build1.1_amd64",
@@ -2602,13 +2653,35 @@
 		{
 			"arch": "amd64",
 			"dependencies": [],
-			"key": "make_4.3-4.1build2_amd64",
-			"name": "make",
-			"sha256": "1fe6a815b56c7b6e9ce4086a363f09444bbd0a0d30e230c453d0b78e44b57a99",
+			"key": "make-guile_4.3-4.1build2_amd64",
+			"name": "make-guile",
+			"sha256": "f1520b2d23c212e7a541c0ebb82c1ce7870daead0628f8d98833560017c66f4a",
 			"urls": [
-				"https://snapshot.ubuntu.com/ubuntu/20250826T000000Z/pool/main/m/make-dfsg/make_4.3-4.1build2_amd64.deb"
+				"https://snapshot.ubuntu.com/ubuntu/20250826T000000Z/pool/universe/m/make-dfsg/make-guile_4.3-4.1build2_amd64.deb"
 			],
 			"version": "4.3-4.1build2"
+		},
+		{
+			"arch": "amd64",
+			"dependencies": [],
+			"key": "guile-3.0-libs_3.0.9-1build2_amd64",
+			"name": "guile-3.0-libs",
+			"sha256": "5a2deeb07b128d527b8ec8a21200ffcc1403c405c9cd8c06fc58945594494b83",
+			"urls": [
+				"https://snapshot.ubuntu.com/ubuntu/20250826T000000Z/pool/universe/g/guile-3.0/guile-3.0-libs_3.0.9-1build2_amd64.deb"
+			],
+			"version": "3.0.9-1build2"
+		},
+		{
+			"arch": "amd64",
+			"dependencies": [],
+			"key": "libgc1_1-8.2.6-1build1_amd64",
+			"name": "libgc1",
+			"sha256": "67d4d83f1c7f3bc240d44f4d9133e08d0da3e5069e50e6dd15ea998af7bccd06",
+			"urls": [
+				"https://snapshot.ubuntu.com/ubuntu/20250826T000000Z/pool/main/libg/libgc/libgc1_8.2.6-1build1_amd64.deb"
+			],
+			"version": "1:8.2.6-1build1"
 		},
 		{
 			"arch": "amd64",
@@ -3186,6 +3259,21 @@
 					"version": "1:20.1.8~++20250804090239+87f0227cb601-1~exp1~20250804210352.139"
 				},
 				{
+					"key": "libobjc-13-dev_13.3.0-6ubuntu2_24.04_amd64",
+					"name": "libobjc-13-dev",
+					"version": "13.3.0-6ubuntu2~24.04"
+				},
+				{
+					"key": "libobjc4_14.2.0-4ubuntu2_24.04_amd64",
+					"name": "libobjc4",
+					"version": "14.2.0-4ubuntu2~24.04"
+				},
+				{
+					"key": "libgc1_1-8.2.6-1build1_amd64",
+					"name": "libgc1",
+					"version": "1:8.2.6-1build1"
+				},
+				{
 					"key": "libgcc-13-dev_13.3.0-6ubuntu2_24.04_amd64",
 					"name": "libgcc-13-dev",
 					"version": "13.3.0-6ubuntu2~24.04"
@@ -3346,6 +3434,28 @@
 				"https://apt.llvm.org/noble/pool/main/l/llvm-toolchain-20/libclang-common-20-dev_20.1.8~++20250804090239+87f0227cb601-1~exp1~20250804210352.139_amd64.deb"
 			],
 			"version": "1:20.1.8~++20250804090239+87f0227cb601-1~exp1~20250804210352.139"
+		},
+		{
+			"arch": "amd64",
+			"dependencies": [],
+			"key": "libobjc-13-dev_13.3.0-6ubuntu2_24.04_amd64",
+			"name": "libobjc-13-dev",
+			"sha256": "44c6dec54a29296facdbc1f28a2504cdb0a98024f419575fc3d7ad5bb11f87ed",
+			"urls": [
+				"https://snapshot.ubuntu.com/ubuntu/20250826T000000Z/pool/universe/g/gcc-13/libobjc-13-dev_13.3.0-6ubuntu2~24.04_amd64.deb"
+			],
+			"version": "13.3.0-6ubuntu2~24.04"
+		},
+		{
+			"arch": "amd64",
+			"dependencies": [],
+			"key": "libobjc4_14.2.0-4ubuntu2_24.04_amd64",
+			"name": "libobjc4",
+			"sha256": "9cd4da73202a52f325c5df08a390a0221d7c156672b7ce36fe71aaa66cff7049",
+			"urls": [
+				"https://snapshot.ubuntu.com/ubuntu/20250826T000000Z/pool/universe/g/gcc-14/libobjc4_14.2.0-4ubuntu2~24.04_amd64.deb"
+			],
+			"version": "14.2.0-4ubuntu2~24.04"
 		},
 		{
 			"arch": "amd64",
@@ -3639,6 +3749,11 @@
 			"arch": "amd64",
 			"dependencies": [
 				{
+					"key": "debconf_1.5.86ubuntu1_amd64",
+					"name": "debconf",
+					"version": "1.5.86ubuntu1"
+				},
+				{
 					"key": "libpam-modules_1.5.3-5ubuntu5.4_amd64",
 					"name": "libpam-modules",
 					"version": "1.5.3-5ubuntu5.4"
@@ -3714,11 +3829,6 @@
 					"version": "1.5.3-5ubuntu5.4"
 				},
 				{
-					"key": "debconf_1.5.86ubuntu1_amd64",
-					"name": "debconf",
-					"version": "1.5.86ubuntu1"
-				},
-				{
 					"key": "libaudit1_1-3.1.2-2.1build1.1_amd64",
 					"name": "libaudit1",
 					"version": "1:3.1.2-2.1build1.1"
@@ -3744,6 +3854,11 @@
 					"version": "5.3.28+dfsg2-7"
 				},
 				{
+					"key": "libnss-sudo_1.9.15p5-3ubuntu5.24.04.1_amd64",
+					"name": "libnss-sudo",
+					"version": "1.9.15p5-3ubuntu5.24.04.1"
+				},
+				{
 					"key": "zlib1g_1-1.3.dfsg-3.1ubuntu2.1_amd64",
 					"name": "zlib1g",
 					"version": "1:1.3.dfsg-3.1ubuntu2.1"
@@ -3754,16 +3869,76 @@
 					"version": "3.0.13-0ubuntu3.5"
 				},
 				{
+					"key": "libldap2_2.6.7-p-dfsg-1_exp1ubuntu8.2_amd64",
+					"name": "libldap2",
+					"version": "2.6.7+dfsg-1~exp1ubuntu8.2"
+				},
+				{
+					"key": "libsasl2-2_2.1.28-p-dfsg1-5ubuntu3.1_amd64",
+					"name": "libsasl2-2",
+					"version": "2.1.28+dfsg1-5ubuntu3.1"
+				},
+				{
+					"key": "libsasl2-modules-db_2.1.28-p-dfsg1-5ubuntu3.1_amd64",
+					"name": "libsasl2-modules-db",
+					"version": "2.1.28+dfsg1-5ubuntu3.1"
+				},
+				{
+					"key": "libgnutls30t64_3.8.3-1.1ubuntu3.4_amd64",
+					"name": "libgnutls30t64",
+					"version": "3.8.3-1.1ubuntu3.4"
+				},
+				{
+					"key": "libunistring5_1.1-2build1.1_amd64",
+					"name": "libunistring5",
+					"version": "1.1-2build1.1"
+				},
+				{
+					"key": "libtasn1-6_4.19.0-3ubuntu0.24.04.1_amd64",
+					"name": "libtasn1-6",
+					"version": "4.19.0-3ubuntu0.24.04.1"
+				},
+				{
+					"key": "libp11-kit0_0.25.3-4ubuntu2.1_amd64",
+					"name": "libp11-kit0",
+					"version": "0.25.3-4ubuntu2.1"
+				},
+				{
+					"key": "libffi8_3.4.6-1build1_amd64",
+					"name": "libffi8",
+					"version": "3.4.6-1build1"
+				},
+				{
+					"key": "libnettle8t64_3.9.1-2.2build1.1_amd64",
+					"name": "libnettle8t64",
+					"version": "3.9.1-2.2build1.1"
+				},
+				{
+					"key": "libidn2-0_2.3.7-2build1.1_amd64",
+					"name": "libidn2-0",
+					"version": "2.3.7-2build1.1"
+				},
+				{
+					"key": "libhogweed6t64_3.9.1-2.2build1.1_amd64",
+					"name": "libhogweed6t64",
+					"version": "3.9.1-2.2build1.1"
+				},
+				{
+					"key": "libgmp10_2-6.3.0-p-dfsg-2ubuntu6.1_amd64",
+					"name": "libgmp10",
+					"version": "2:6.3.0+dfsg-2ubuntu6.1"
+				},
+				{
 					"key": "libapparmor1_4.0.1really4.0.1-0ubuntu0.24.04.4_amd64",
 					"name": "libapparmor1",
 					"version": "4.0.1really4.0.1-0ubuntu0.24.04.4"
 				}
 			],
-			"key": "sudo_1.9.15p5-3ubuntu5.24.04.1_amd64",
-			"name": "sudo",
-			"sha256": "3e384a472c7a4855b518051610760b42c7a2bae48483a189438f9fffff6952f2",
+			"key": "sudo-ldap_1.9.15p5-3ubuntu5.24.04.1_amd64",
+			"name": "sudo-ldap",
+			"sha256": "cd9548759138724ffd7424a962d4c56cb2a7bdaa292db9b3be62a6a425064306",
 			"urls": [
-				"https://snapshot.ubuntu.com/ubuntu/20250826T000000Z/pool/main/s/sudo/sudo_1.9.15p5-3ubuntu5.24.04.1_amd64.deb"
+				"https://snapshot.ubuntu.com/ubuntu/20250826T000000Z/pool/universe/s/sudo/sudo-ldap_1.9.15p5-3ubuntu5.24.04.1_amd64.deb"
 			],
 			"version": "1.9.15p5-3ubuntu5.24.04.1"
 		},
@@ -3803,6 +3978,17 @@
 		{
 			"arch": "amd64",
 			"dependencies": [],
+			"key": "libnss-sudo_1.9.15p5-3ubuntu5.24.04.1_amd64",
+			"name": "libnss-sudo",
+			"sha256": "aa4d90f4a3f05939bdfb90deeb39a235c2594c1c9ebd6fb77c456262397b4643",
+			"urls": [
+				"https://snapshot.ubuntu.com/ubuntu/20250826T000000Z/pool/universe/s/sudo/libnss-sudo_1.9.15p5-3ubuntu5.24.04.1_all.deb"
+			],
+			"version": "1.9.15p5-3ubuntu5.24.04.1"
+		},
+		{
+			"arch": "amd64",
+			"dependencies": [],
 			"key": "libapparmor1_4.0.1really4.0.1-0ubuntu0.24.04.4_amd64",
 			"name": "libapparmor1",
 			"sha256": "bf54e6abb5b3ad9e584db4e350d47058f6690384c8918d8b85b7940767d5203f",
@@ -3810,6 +3996,187 @@
 				"https://snapshot.ubuntu.com/ubuntu/20250826T000000Z/pool/main/a/apparmor/libapparmor1_4.0.1really4.0.1-0ubuntu0.24.04.4_amd64.deb"
 			],
 			"version": "4.0.1really4.0.1-0ubuntu0.24.04.4"
+		},
+		{
+			"arch": "amd64",
+			"dependencies": [
+				{
+					"key": "zlib1g_1-1.3.dfsg-3.1ubuntu2.1_amd64",
+					"name": "zlib1g",
+					"version": "1:1.3.dfsg-3.1ubuntu2.1"
+				},
+				{
+					"key": "libc6_2.39-0ubuntu8.5_amd64",
+					"name": "libc6",
+					"version": "2.39-0ubuntu8.5"
+				},
+				{
+					"key": "libgcc-s1_14.2.0-4ubuntu2_24.04_amd64",
+					"name": "libgcc-s1",
+					"version": "14.2.0-4ubuntu2~24.04"
+				},
+				{
+					"key": "gcc-14-base_14.2.0-4ubuntu2_24.04_amd64",
+					"name": "gcc-14-base",
+					"version": "14.2.0-4ubuntu2~24.04"
+				},
+				{
+					"key": "libuuid1_2.39.3-9ubuntu6.3_amd64",
+					"name": "libuuid1",
+					"version": "2.39.3-9ubuntu6.3"
+				},
+				{
+					"key": "libudev1_255.4-1ubuntu8.10_amd64",
+					"name": "libudev1",
+					"version": "255.4-1ubuntu8.10"
+				},
+				{
+					"key": "libcap2_1-2.66-5ubuntu2.2_amd64",
+					"name": "libcap2",
+					"version": "1:2.66-5ubuntu2.2"
+				},
+				{
+					"key": "libtinfo6_6.4-p-20240113-1ubuntu2_amd64",
+					"name": "libtinfo6",
+					"version": "6.4+20240113-1ubuntu2"
+				},
+				{
+					"key": "libsystemd0_255.4-1ubuntu8.10_amd64",
+					"name": "libsystemd0",
+					"version": "255.4-1ubuntu8.10"
+				},
+				{
+					"key": "libzstd1_1.5.5-p-dfsg2-2build1.1_amd64",
+					"name": "libzstd1",
+					"version": "1.5.5+dfsg2-2build1.1"
+				},
+				{
+					"key": "liblzma5_5.6.1-p-really5.4.5-1ubuntu0.2_amd64",
+					"name": "liblzma5",
+					"version": "5.6.1+really5.4.5-1ubuntu0.2"
+				},
+				{
+					"key": "liblz4-1_1.9.4-1build1.1_amd64",
+					"name": "liblz4-1",
+					"version": "1.9.4-1build1.1"
+				},
+				{
+					"key": "libgcrypt20_1.10.3-2build1_amd64",
+					"name": "libgcrypt20",
+					"version": "1.10.3-2build1"
+				},
+				{
+					"key": "libgpg-error0_1.47-3build2.1_amd64",
+					"name": "libgpg-error0",
+					"version": "1.47-3build2.1"
+				},
+				{
+					"key": "libsmartcols1_2.39.3-9ubuntu6.3_amd64",
+					"name": "libsmartcols1",
+					"version": "2.39.3-9ubuntu6.3"
+				},
+				{
+					"key": "libselinux1_3.5-2ubuntu2.1_amd64",
+					"name": "libselinux1",
+					"version": "3.5-2ubuntu2.1"
+				},
+				{
+					"key": "libpcre2-8-0_10.42-4ubuntu2.1_amd64",
+					"name": "libpcre2-8-0",
+					"version": "10.42-4ubuntu2.1"
+				},
+				{
+					"key": "libpam0g_1.5.3-5ubuntu5.4_amd64",
+					"name": "libpam0g",
+					"version": "1.5.3-5ubuntu5.4"
+				},
+				{
+					"key": "debconf_1.5.86ubuntu1_amd64",
+					"name": "debconf",
+					"version": "1.5.86ubuntu1"
+				},
+				{
+					"key": "libaudit1_1-3.1.2-2.1build1.1_amd64",
+					"name": "libaudit1",
+					"version": "1:3.1.2-2.1build1.1"
+				},
+				{
+					"key": "libcap-ng0_0.8.4-2build2_amd64",
+					"name": "libcap-ng0",
+					"version": "0.8.4-2build2"
+				},
+				{
+					"key": "libaudit-common_1-3.1.2-2.1build1.1_amd64",
+					"name": "libaudit-common",
+					"version": "1:3.1.2-2.1build1.1"
+				},
+				{
+					"key": "libmount1_2.39.3-9ubuntu6.3_amd64",
+					"name": "libmount1",
+					"version": "2.39.3-9ubuntu6.3"
+				},
+				{
+					"key": "libblkid1_2.39.3-9ubuntu6.3_amd64",
+					"name": "libblkid1",
+					"version": "2.39.3-9ubuntu6.3"
+				},
+				{
+					"key": "libcrypt1_1-4.4.36-4build1_amd64",
+					"name": "libcrypt1",
+					"version": "1:4.4.36-4build1"
+				}
+			],
+			"key": "util-linux_2.39.3-9ubuntu6.3_amd64",
+			"name": "util-linux",
+			"sha256": "c0c693f0f7b4924912014a73b5ec3b6909cdd88956d3f27d802d3cb9b045fd63",
+			"urls": [
+				"https://snapshot.ubuntu.com/ubuntu/20250826T000000Z/pool/main/u/util-linux/util-linux_2.39.3-9ubuntu6.3_amd64.deb"
+			],
+			"version": "2.39.3-9ubuntu6.3"
+		},
+		{
+			"arch": "amd64",
+			"dependencies": [],
+			"key": "libuuid1_2.39.3-9ubuntu6.3_amd64",
+			"name": "libuuid1",
+			"sha256": "8b2aa3430b3c95109924906953be424a62a49928305c73974a46ffebe2f8ebd0",
+			"urls": [
+				"https://snapshot.ubuntu.com/ubuntu/20250826T000000Z/pool/main/u/util-linux/libuuid1_2.39.3-9ubuntu6.3_amd64.deb"
+			],
+			"version": "2.39.3-9ubuntu6.3"
+		},
+		{
+			"arch": "amd64",
+			"dependencies": [],
+			"key": "libsmartcols1_2.39.3-9ubuntu6.3_amd64",
+			"name": "libsmartcols1",
+			"sha256": "8005e86f49290714bc0b1ac025d9a6d14fd59eeb3fcf06645a562255246b6658",
+			"urls": [
+				"https://snapshot.ubuntu.com/ubuntu/20250826T000000Z/pool/main/u/util-linux/libsmartcols1_2.39.3-9ubuntu6.3_amd64.deb"
+			],
+			"version": "2.39.3-9ubuntu6.3"
+		},
+		{
+			"arch": "amd64",
+			"dependencies": [],
+			"key": "libmount1_2.39.3-9ubuntu6.3_amd64",
+			"name": "libmount1",
+			"sha256": "7b18805e92b838c1b240334ff92b5bc6b3183292ba37df4b29c81f3dfdeb23b4",
+			"urls": [
+				"https://snapshot.ubuntu.com/ubuntu/20250826T000000Z/pool/main/u/util-linux/libmount1_2.39.3-9ubuntu6.3_amd64.deb"
+			],
+			"version": "2.39.3-9ubuntu6.3"
+		},
+		{
+			"arch": "amd64",
+			"dependencies": [],
+			"key": "libblkid1_2.39.3-9ubuntu6.3_amd64",
+			"name": "libblkid1",
+			"sha256": "a65c27d08395f32778004c591e537ef8e71a2caa2614fcdfdfe603bb3e33b7f6",
+			"urls": [
+				"https://snapshot.ubuntu.com/ubuntu/20250826T000000Z/pool/main/u/util-linux/libblkid1_2.39.3-9ubuntu6.3_amd64.deb"
+			],
+			"version": "2.39.3-9ubuntu6.3"
 		},
 		{
 			"arch": "arm64",
@@ -4181,7 +4548,23 @@
 		},
 		{
 			"arch": "arm64",
-			"dependencies": [],
+			"dependencies": [
+				{
+					"key": "libc6_2.39-0ubuntu8.5_arm64",
+					"name": "libc6",
+					"version": "2.39-0ubuntu8.5"
+				},
+				{
+					"key": "libgcc-s1_14.2.0-4ubuntu2_24.04_arm64",
+					"name": "libgcc-s1",
+					"version": "14.2.0-4ubuntu2~24.04"
+				},
+				{
+					"key": "gcc-14-base_14.2.0-4ubuntu2_24.04_arm64",
+					"name": "gcc-14-base",
+					"version": "14.2.0-4ubuntu2~24.04"
+				}
+			],
 			"key": "debianutils_5.17build1_arm64",
 			"name": "debianutils",
 			"sha256": "7419da04f9c467986b2176e799f3683b9403c643966084d0f6054f2a5b8919e9",
@@ -6006,9 +6389,54 @@
 					"version": "2.42-4ubuntu2.5"
 				},
 				{
-					"key": "make_4.3-4.1build2_arm64",
-					"name": "make",
+					"key": "make-guile_4.3-4.1build2_arm64",
+					"name": "make-guile",
 					"version": "4.3-4.1build2"
+				},
+				{
+					"key": "guile-3.0-libs_3.0.9-1build2_arm64",
+					"name": "guile-3.0-libs",
+					"version": "3.0.9-1build2"
+				},
+				{
+					"key": "libunistring5_1.1-2build1.1_arm64",
+					"name": "libunistring5",
+					"version": "1.1-2build1.1"
+				},
+				{
+					"key": "libreadline8t64_8.2-4build1_arm64",
+					"name": "libreadline8t64",
+					"version": "8.2-4build1"
+				},
+				{
+					"key": "libtinfo6_6.4-p-20240113-1ubuntu2_arm64",
+					"name": "libtinfo6",
+					"version": "6.4+20240113-1ubuntu2"
+				},
+				{
+					"key": "readline-common_8.2-4build1_arm64",
+					"name": "readline-common",
+					"version": "8.2-4build1"
+				},
+				{
+					"key": "libgmp10_2-6.3.0-p-dfsg-2ubuntu6.1_arm64",
+					"name": "libgmp10",
+					"version": "2:6.3.0+dfsg-2ubuntu6.1"
+				},
+				{
+					"key": "libgc1_1-8.2.6-1build1_arm64",
+					"name": "libgc1",
+					"version": "1:8.2.6-1build1"
+				},
+				{
+					"key": "libffi8_3.4.6-1build1_arm64",
+					"name": "libffi8",
+					"version": "3.4.6-1build1"
+				},
+				{
+					"key": "libcrypt1_1-4.4.36-4build1_arm64",
+					"name": "libcrypt1",
+					"version": "1:4.4.36-4build1"
 				},
 				{
 					"key": "patch_2.7.6-7build3_arm64",
@@ -6091,11 +6519,6 @@
 					"version": "5.38.2-3.2ubuntu0.2"
 				},
 				{
-					"key": "libcrypt1_1-4.4.36-4build1_arm64",
-					"name": "libcrypt1",
-					"version": "1:4.4.36-4build1"
-				},
-				{
 					"key": "libgdbm6t64_1.23-5.1build1_arm64",
 					"name": "libgdbm6t64",
 					"version": "1.23-5.1build1"
@@ -6134,11 +6557,6 @@
 					"key": "libmpfr6_4.2.1-1build1.1_arm64",
 					"name": "libmpfr6",
 					"version": "4.2.1-1build1.1"
-				},
-				{
-					"key": "libgmp10_2-6.3.0-p-dfsg-2ubuntu6.1_arm64",
-					"name": "libgmp10",
-					"version": "2:6.3.0+dfsg-2ubuntu6.1"
 				},
 				{
 					"key": "libmpc3_1.3.1-1build1.1_arm64",
@@ -6408,13 +6826,35 @@
 		{
 			"arch": "arm64",
 			"dependencies": [],
-			"key": "make_4.3-4.1build2_arm64",
-			"name": "make",
-			"sha256": "3bbbf5d426bc68fc232fc4e20f135aaf3eb76a514839acf82eeffa0dce9c81d4",
+			"key": "make-guile_4.3-4.1build2_arm64",
+			"name": "make-guile",
+			"sha256": "b6dcc270f3bff966cded24fe09cbcc7ef4584c489b1e60b66cef16373f50b4b0",
 			"urls": [
-				"https://snapshot.ubuntu.com/ubuntu/20250826T000000Z/pool/main/m/make-dfsg/make_4.3-4.1build2_arm64.deb"
+				"https://snapshot.ubuntu.com/ubuntu/20250826T000000Z/pool/universe/m/make-dfsg/make-guile_4.3-4.1build2_arm64.deb"
 			],
 			"version": "4.3-4.1build2"
+		},
+		{
+			"arch": "arm64",
+			"dependencies": [],
+			"key": "guile-3.0-libs_3.0.9-1build2_arm64",
+			"name": "guile-3.0-libs",
+			"sha256": "7975e5c05f93ee5f2e4a720ef39380406da08b603988be8d11877b99ee723a7b",
+			"urls": [
+				"https://snapshot.ubuntu.com/ubuntu/20250826T000000Z/pool/universe/g/guile-3.0/guile-3.0-libs_3.0.9-1build2_arm64.deb"
+			],
+			"version": "3.0.9-1build2"
+		},
+		{
+			"arch": "arm64",
+			"dependencies": [],
+			"key": "libgc1_1-8.2.6-1build1_arm64",
+			"name": "libgc1",
+			"sha256": "487546cfdc5c09a86461d245b8a9c7d337e6b24c278d47854a36ca4a60f891a8",
+			"urls": [
+				"https://snapshot.ubuntu.com/ubuntu/20250826T000000Z/pool/main/libg/libgc/libgc1_8.2.6-1build1_arm64.deb"
+			],
+			"version": "1:8.2.6-1build1"
 		},
 		{
 			"arch": "arm64",
@@ -6981,6 +7421,21 @@
 					"version": "1:20.1.8~++20250804090239+87f0227cb601-1~exp1~20250804210352.139"
 				},
 				{
+					"key": "libobjc-13-dev_13.3.0-6ubuntu2_24.04_arm64",
+					"name": "libobjc-13-dev",
+					"version": "13.3.0-6ubuntu2~24.04"
+				},
+				{
+					"key": "libobjc4_14.2.0-4ubuntu2_24.04_arm64",
+					"name": "libobjc4",
+					"version": "14.2.0-4ubuntu2~24.04"
+				},
+				{
+					"key": "libgc1_1-8.2.6-1build1_arm64",
+					"name": "libgc1",
+					"version": "1:8.2.6-1build1"
+				},
+				{
 					"key": "libgcc-13-dev_13.3.0-6ubuntu2_24.04_arm64",
 					"name": "libgcc-13-dev",
 					"version": "13.3.0-6ubuntu2~24.04"
@@ -7136,6 +7591,28 @@
 				"https://apt.llvm.org/noble/pool/main/l/llvm-toolchain-20/libclang-common-20-dev_20.1.8~++20250804090239+87f0227cb601-1~exp1~20250804210352.139_arm64.deb"
 			],
 			"version": "1:20.1.8~++20250804090239+87f0227cb601-1~exp1~20250804210352.139"
+		},
+		{
+			"arch": "arm64",
+			"dependencies": [],
+			"key": "libobjc-13-dev_13.3.0-6ubuntu2_24.04_arm64",
+			"name": "libobjc-13-dev",
+			"sha256": "28ceced9b2d618d733e1b8ce9776c1037570613095d5b3fda4eeca58bb439b47",
+			"urls": [
+				"https://snapshot.ubuntu.com/ubuntu/20250826T000000Z/pool/universe/g/gcc-13/libobjc-13-dev_13.3.0-6ubuntu2~24.04_arm64.deb"
+			],
+			"version": "13.3.0-6ubuntu2~24.04"
+		},
+		{
+			"arch": "arm64",
+			"dependencies": [],
+			"key": "libobjc4_14.2.0-4ubuntu2_24.04_arm64",
+			"name": "libobjc4",
+			"sha256": "346754a46c80712d8cd780b6266ce21c1059fc8f56ec068247583b252b2ff67e",
+			"urls": [
+				"https://snapshot.ubuntu.com/ubuntu/20250826T000000Z/pool/universe/g/gcc-14/libobjc4_14.2.0-4ubuntu2~24.04_arm64.deb"
+			],
+			"version": "14.2.0-4ubuntu2~24.04"
 		},
 		{
 			"arch": "arm64",
@@ -7429,6 +7906,11 @@
 			"arch": "arm64",
 			"dependencies": [
 				{
+					"key": "debconf_1.5.86ubuntu1_arm64",
+					"name": "debconf",
+					"version": "1.5.86ubuntu1"
+				},
+				{
 					"key": "libpam-modules_1.5.3-5ubuntu5.4_arm64",
 					"name": "libpam-modules",
 					"version": "1.5.3-5ubuntu5.4"
@@ -7504,11 +7986,6 @@
 					"version": "1.5.3-5ubuntu5.4"
 				},
 				{
-					"key": "debconf_1.5.86ubuntu1_arm64",
-					"name": "debconf",
-					"version": "1.5.86ubuntu1"
-				},
-				{
 					"key": "libaudit1_1-3.1.2-2.1build1.1_arm64",
 					"name": "libaudit1",
 					"version": "1:3.1.2-2.1build1.1"
@@ -7534,6 +8011,11 @@
 					"version": "5.3.28+dfsg2-7"
 				},
 				{
+					"key": "libnss-sudo_1.9.15p5-3ubuntu5.24.04.1_arm64",
+					"name": "libnss-sudo",
+					"version": "1.9.15p5-3ubuntu5.24.04.1"
+				},
+				{
 					"key": "zlib1g_1-1.3.dfsg-3.1ubuntu2.1_arm64",
 					"name": "zlib1g",
 					"version": "1:1.3.dfsg-3.1ubuntu2.1"
@@ -7544,16 +8026,76 @@
 					"version": "3.0.13-0ubuntu3.5"
 				},
 				{
+					"key": "libldap2_2.6.7-p-dfsg-1_exp1ubuntu8.2_arm64",
+					"name": "libldap2",
+					"version": "2.6.7+dfsg-1~exp1ubuntu8.2"
+				},
+				{
+					"key": "libsasl2-2_2.1.28-p-dfsg1-5ubuntu3.1_arm64",
+					"name": "libsasl2-2",
+					"version": "2.1.28+dfsg1-5ubuntu3.1"
+				},
+				{
+					"key": "libsasl2-modules-db_2.1.28-p-dfsg1-5ubuntu3.1_arm64",
+					"name": "libsasl2-modules-db",
+					"version": "2.1.28+dfsg1-5ubuntu3.1"
+				},
+				{
+					"key": "libgnutls30t64_3.8.3-1.1ubuntu3.4_arm64",
+					"name": "libgnutls30t64",
+					"version": "3.8.3-1.1ubuntu3.4"
+				},
+				{
+					"key": "libunistring5_1.1-2build1.1_arm64",
+					"name": "libunistring5",
+					"version": "1.1-2build1.1"
+				},
+				{
+					"key": "libtasn1-6_4.19.0-3ubuntu0.24.04.1_arm64",
+					"name": "libtasn1-6",
+					"version": "4.19.0-3ubuntu0.24.04.1"
+				},
+				{
+					"key": "libp11-kit0_0.25.3-4ubuntu2.1_arm64",
+					"name": "libp11-kit0",
+					"version": "0.25.3-4ubuntu2.1"
+				},
+				{
+					"key": "libffi8_3.4.6-1build1_arm64",
+					"name": "libffi8",
+					"version": "3.4.6-1build1"
+				},
+				{
+					"key": "libnettle8t64_3.9.1-2.2build1.1_arm64",
+					"name": "libnettle8t64",
+					"version": "3.9.1-2.2build1.1"
+				},
+				{
+					"key": "libidn2-0_2.3.7-2build1.1_arm64",
+					"name": "libidn2-0",
+					"version": "2.3.7-2build1.1"
+				},
+				{
+					"key": "libhogweed6t64_3.9.1-2.2build1.1_arm64",
+					"name": "libhogweed6t64",
+					"version": "3.9.1-2.2build1.1"
+				},
+				{
+					"key": "libgmp10_2-6.3.0-p-dfsg-2ubuntu6.1_arm64",
+					"name": "libgmp10",
+					"version": "2:6.3.0+dfsg-2ubuntu6.1"
+				},
+				{
 					"key": "libapparmor1_4.0.1really4.0.1-0ubuntu0.24.04.4_arm64",
 					"name": "libapparmor1",
 					"version": "4.0.1really4.0.1-0ubuntu0.24.04.4"
 				}
 			],
-			"key": "sudo_1.9.15p5-3ubuntu5.24.04.1_arm64",
-			"name": "sudo",
-			"sha256": "7926f628a7d273a4c80e5283c1d69a2b6447532a882fb9167c01758b88fab79a",
+			"key": "sudo-ldap_1.9.15p5-3ubuntu5.24.04.1_arm64",
+			"name": "sudo-ldap",
+			"sha256": "d8ef45f1579aff80e36b3e038e605745e4829dc0038180b3ef991eb498dad9a9",
 			"urls": [
-				"https://snapshot.ubuntu.com/ubuntu/20250826T000000Z/pool/main/s/sudo/sudo_1.9.15p5-3ubuntu5.24.04.1_arm64.deb"
+				"https://snapshot.ubuntu.com/ubuntu/20250826T000000Z/pool/universe/s/sudo/sudo-ldap_1.9.15p5-3ubuntu5.24.04.1_arm64.deb"
 			],
 			"version": "1.9.15p5-3ubuntu5.24.04.1"
 		},
@@ -7593,6 +8135,17 @@
 		{
 			"arch": "arm64",
 			"dependencies": [],
+			"key": "libnss-sudo_1.9.15p5-3ubuntu5.24.04.1_arm64",
+			"name": "libnss-sudo",
+			"sha256": "aa4d90f4a3f05939bdfb90deeb39a235c2594c1c9ebd6fb77c456262397b4643",
+			"urls": [
+				"https://snapshot.ubuntu.com/ubuntu/20250826T000000Z/pool/universe/s/sudo/libnss-sudo_1.9.15p5-3ubuntu5.24.04.1_all.deb"
+			],
+			"version": "1.9.15p5-3ubuntu5.24.04.1"
+		},
+		{
+			"arch": "arm64",
+			"dependencies": [],
 			"key": "libapparmor1_4.0.1really4.0.1-0ubuntu0.24.04.4_arm64",
 			"name": "libapparmor1",
 			"sha256": "127d1a3a53e67dacef215361dab374012004732a0c3c537040a1656371fc6028",
@@ -7600,6 +8153,187 @@
 				"https://snapshot.ubuntu.com/ubuntu/20250826T000000Z/pool/main/a/apparmor/libapparmor1_4.0.1really4.0.1-0ubuntu0.24.04.4_arm64.deb"
 			],
 			"version": "4.0.1really4.0.1-0ubuntu0.24.04.4"
+		},
+		{
+			"arch": "arm64",
+			"dependencies": [
+				{
+					"key": "zlib1g_1-1.3.dfsg-3.1ubuntu2.1_arm64",
+					"name": "zlib1g",
+					"version": "1:1.3.dfsg-3.1ubuntu2.1"
+				},
+				{
+					"key": "libc6_2.39-0ubuntu8.5_arm64",
+					"name": "libc6",
+					"version": "2.39-0ubuntu8.5"
+				},
+				{
+					"key": "libgcc-s1_14.2.0-4ubuntu2_24.04_arm64",
+					"name": "libgcc-s1",
+					"version": "14.2.0-4ubuntu2~24.04"
+				},
+				{
+					"key": "gcc-14-base_14.2.0-4ubuntu2_24.04_arm64",
+					"name": "gcc-14-base",
+					"version": "14.2.0-4ubuntu2~24.04"
+				},
+				{
+					"key": "libuuid1_2.39.3-9ubuntu6.3_arm64",
+					"name": "libuuid1",
+					"version": "2.39.3-9ubuntu6.3"
+				},
+				{
+					"key": "libudev1_255.4-1ubuntu8.10_arm64",
+					"name": "libudev1",
+					"version": "255.4-1ubuntu8.10"
+				},
+				{
+					"key": "libcap2_1-2.66-5ubuntu2.2_arm64",
+					"name": "libcap2",
+					"version": "1:2.66-5ubuntu2.2"
+				},
+				{
+					"key": "libtinfo6_6.4-p-20240113-1ubuntu2_arm64",
+					"name": "libtinfo6",
+					"version": "6.4+20240113-1ubuntu2"
+				},
+				{
+					"key": "libsystemd0_255.4-1ubuntu8.10_arm64",
+					"name": "libsystemd0",
+					"version": "255.4-1ubuntu8.10"
+				},
+				{
+					"key": "libzstd1_1.5.5-p-dfsg2-2build1.1_arm64",
+					"name": "libzstd1",
+					"version": "1.5.5+dfsg2-2build1.1"
+				},
+				{
+					"key": "liblzma5_5.6.1-p-really5.4.5-1ubuntu0.2_arm64",
+					"name": "liblzma5",
+					"version": "5.6.1+really5.4.5-1ubuntu0.2"
+				},
+				{
+					"key": "liblz4-1_1.9.4-1build1.1_arm64",
+					"name": "liblz4-1",
+					"version": "1.9.4-1build1.1"
+				},
+				{
+					"key": "libgcrypt20_1.10.3-2build1_arm64",
+					"name": "libgcrypt20",
+					"version": "1.10.3-2build1"
+				},
+				{
+					"key": "libgpg-error0_1.47-3build2.1_arm64",
+					"name": "libgpg-error0",
+					"version": "1.47-3build2.1"
+				},
+				{
+					"key": "libsmartcols1_2.39.3-9ubuntu6.3_arm64",
+					"name": "libsmartcols1",
+					"version": "2.39.3-9ubuntu6.3"
+				},
+				{
+					"key": "libselinux1_3.5-2ubuntu2.1_arm64",
+					"name": "libselinux1",
+					"version": "3.5-2ubuntu2.1"
+				},
+				{
+					"key": "libpcre2-8-0_10.42-4ubuntu2.1_arm64",
+					"name": "libpcre2-8-0",
+					"version": "10.42-4ubuntu2.1"
+				},
+				{
+					"key": "libpam0g_1.5.3-5ubuntu5.4_arm64",
+					"name": "libpam0g",
+					"version": "1.5.3-5ubuntu5.4"
+				},
+				{
+					"key": "debconf_1.5.86ubuntu1_arm64",
+					"name": "debconf",
+					"version": "1.5.86ubuntu1"
+				},
+				{
+					"key": "libaudit1_1-3.1.2-2.1build1.1_arm64",
+					"name": "libaudit1",
+					"version": "1:3.1.2-2.1build1.1"
+				},
+				{
+					"key": "libcap-ng0_0.8.4-2build2_arm64",
+					"name": "libcap-ng0",
+					"version": "0.8.4-2build2"
+				},
+				{
+					"key": "libaudit-common_1-3.1.2-2.1build1.1_arm64",
+					"name": "libaudit-common",
+					"version": "1:3.1.2-2.1build1.1"
+				},
+				{
+					"key": "libmount1_2.39.3-9ubuntu6.3_arm64",
+					"name": "libmount1",
+					"version": "2.39.3-9ubuntu6.3"
+				},
+				{
+					"key": "libblkid1_2.39.3-9ubuntu6.3_arm64",
+					"name": "libblkid1",
+					"version": "2.39.3-9ubuntu6.3"
+				},
+				{
+					"key": "libcrypt1_1-4.4.36-4build1_arm64",
+					"name": "libcrypt1",
+					"version": "1:4.4.36-4build1"
+				}
+			],
+			"key": "util-linux_2.39.3-9ubuntu6.3_arm64",
+			"name": "util-linux",
+			"sha256": "2e97dbd9f5734808773b1548bb6b1f2d260290b536c3b5456a3a82cbd4a349ec",
+			"urls": [
+				"https://snapshot.ubuntu.com/ubuntu/20250826T000000Z/pool/main/u/util-linux/util-linux_2.39.3-9ubuntu6.3_arm64.deb"
+			],
+			"version": "2.39.3-9ubuntu6.3"
+		},
+		{
+			"arch": "arm64",
+			"dependencies": [],
+			"key": "libuuid1_2.39.3-9ubuntu6.3_arm64",
+			"name": "libuuid1",
+			"sha256": "16e0e02b4abde4c624b827404aa20e5bc5980e0f258bbda3801ed16c77a170f2",
+			"urls": [
+				"https://snapshot.ubuntu.com/ubuntu/20250826T000000Z/pool/main/u/util-linux/libuuid1_2.39.3-9ubuntu6.3_arm64.deb"
+			],
+			"version": "2.39.3-9ubuntu6.3"
+		},
+		{
+			"arch": "arm64",
+			"dependencies": [],
+			"key": "libsmartcols1_2.39.3-9ubuntu6.3_arm64",
+			"name": "libsmartcols1",
+			"sha256": "1c3b231456b86798d16564f54b021f314c35421da0227abad4d9c2f51967a4fa",
+			"urls": [
+				"https://snapshot.ubuntu.com/ubuntu/20250826T000000Z/pool/main/u/util-linux/libsmartcols1_2.39.3-9ubuntu6.3_arm64.deb"
+			],
+			"version": "2.39.3-9ubuntu6.3"
+		},
+		{
+			"arch": "arm64",
+			"dependencies": [],
+			"key": "libmount1_2.39.3-9ubuntu6.3_arm64",
+			"name": "libmount1",
+			"sha256": "d09c4708a6eeac33eea3c9418ed36da41c9f2e79c19402304799f13aaecd1123",
+			"urls": [
+				"https://snapshot.ubuntu.com/ubuntu/20250826T000000Z/pool/main/u/util-linux/libmount1_2.39.3-9ubuntu6.3_arm64.deb"
+			],
+			"version": "2.39.3-9ubuntu6.3"
+		},
+		{
+			"arch": "arm64",
+			"dependencies": [],
+			"key": "libblkid1_2.39.3-9ubuntu6.3_arm64",
+			"name": "libblkid1",
+			"sha256": "01352846e784071d8433f529cbcc34e7b55595bb0083bb6658acda2a4bdb39c9",
+			"urls": [
+				"https://snapshot.ubuntu.com/ubuntu/20250826T000000Z/pool/main/u/util-linux/libblkid1_2.39.3-9ubuntu6.3_arm64.deb"
+			],
+			"version": "2.39.3-9ubuntu6.3"
 		}
 	],
 	"version": 1

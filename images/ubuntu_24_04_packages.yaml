@@ -19,6 +19,11 @@ sources:
   - channel: llvm-toolchain-noble-20 main
     url: https://apt.llvm.org/noble/
 
+  - channel: noble universe
+    url: https://snapshot.ubuntu.com/ubuntu/20250826T000000Z
+  - channel: noble-updates universe
+    url: https://snapshot.ubuntu.com/ubuntu/20250826T000000Z
+
 archs:
   - "amd64"
   - "arm64"
@@ -48,3 +53,5 @@ packages:
   - "uidmap"
   - "iptables"
   - "sudo"
+  - "debianutils"
+  - "util-linux"

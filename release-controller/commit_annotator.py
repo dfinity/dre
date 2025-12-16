@@ -155,7 +155,8 @@ def compute_annotations_for_object(
     annotator.checkout(object)
     bazel_query_output = subprocess.check_output(
         [
-            resolve_binary("bazel"),
+            "./ci/container/container-run.sh",
+            "bazel",
             "query",
         ]
         + BAZEL_OPTS

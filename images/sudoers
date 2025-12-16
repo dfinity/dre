@@ -1,1 +1,2 @@
-ALL ALL=(ALL) NOPASSWD: /usr/bin/podman
+ALL ALL=(ALL) NOPASSWD: /usr/bin/podman, /usr/local/bin/podman
+

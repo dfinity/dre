@@ -86,63 +86,42 @@ home(
     ],
 )
 
-# clang symlinks
+# symlinks
 tar(
-    name = "clang-symlinks",
+    name = "symlinks",
+    srcs = ["containers.conf", "sudoers", "pam_sudo_fix"],
     mtree = [
+        # clang-symlinks
         # needed as dpkg assumes sh is installed in a typical debian installation.
         "./usr/bin/clang type=link link=/usr/bin/clang-20",
         "./usr/bin/asan_symbolize-20 type=link link=/usr/bin/asan_symbolize",
         "./usr/bin/clang++ type=link link=/usr/bin/clang++-20",
         "./usr/bin/clang-cpp type=link link=/usr/bin/clang-cpp-20",
-    ],
-)
 
-# podman symlinks
-tar(
-    name = "podman-symlinks",
-    mtree = [
-        # needed as dpkg assumes sh is installed in a typical debian installation.
+        # podman symlinks
         "./usr/bin/podman type=link link=/usr/local/bin/podman",
-    ],
-)
+        "./etc/containers/containers.conf type=file content=$(location containers.conf)",
 
-# iptables symlinks
-tar(
-    name = "iptables-symlinks",
-    mtree = [
+        # iptables symlinks
         "./usr/bin/iptables type=link link=/usr/sbin/iptables-nft",
         "./usr/bin/iptables-save type=link link=/usr/sbin/iptables-nft-save",
         "./usr/bin/iptables-restore type=link link=/usr/sbin/iptables-nft-restore",
-        
-        # ipv6
+
+        # ip6tables symlinks
         "./usr/bin/ip6tables type=link link=/usr/sbin/ip6tables-nft",
         "./usr/bin/ip6tables-save type=link link=/usr/sbin/ip6tables-nft-save",
         "./usr/bin/ip6tables-restore type=link link=/usr/sbin/ip6tables-nft-restore",
-    ],
-)
 
-# Disable cgroups because of nested containers
-# issues
-tar(
-    name = "podman-config",
-    srcs = ["containers.conf"],
-    mtree = [
-        "./etc/containers/containers.conf type=file content=$(location containers.conf)",
-    ],
-)
-
-# Sudoers for container run only
-# with pam fix
-tar(
-    name = "sudo-config",
-    srcs = ["sudoers", "pam_sudo_fix"],
-    mtree = [
+        # sudoers for container run only
         "./etc/sudoers.d/podman_only type=file mode=0440 uid=0 gid=0 content=$(location sudoers)",
+
+        # pam fix
         "./etc/pam.d/sudo type=file mode=0644 uid=0 gid=0 content=$(location pam_sudo_fix)",
+
+        # which fix
+        "./usr/bin/which type=link link=/usr/bin/which.debianutils",
     ],
 )
-
 
 cacerts(
     name = "cacerts",
@@ -200,11 +179,7 @@ oci_image(
         # Packages listed in this manifest (see YAML files in this folder)
         # get installed in the container by this rule.
         ":ubuntu_apk_flat",
-        "clang-symlinks",
+        "symlinks",
         ":podman_layer",
-        "podman-symlinks",
-        "iptables-symlinks",
-        "podman-config",
-        "sudo-config",
     ],
 )
