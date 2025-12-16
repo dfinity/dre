@@ -55,3 +55,4 @@ packages:
   - "sudo"
   - "debianutils"
   - "util-linux"
+  - "libc-bin"

@@ -5,11 +5,13 @@ import os
 import pathlib
 import re
 import shlex
+import stat
 import subprocess
 import sys
 import threading
 import time
 import typing
+from pathlib import Path
 
 from prometheus_client import Gauge, start_http_server
 from tenacity import after_log, retry, retry_if_exception_type, stop_after_delay
@@ -100,6 +102,27 @@ def release_branch_date(branch: str) -> typing.Optional[datetime]:
     return datetime.strptime(branch_date, "%Y-%m-%d")
 
 
+def ensure_bazel_wrapper(cwd: Path) -> Path:
+    cache_dir = Path.home() / ".cache"
+    cache_dir.mkdir(parents=True, exist_ok=True)
+
+    wrapper = cache_dir / "run-bazel.sh"
+
+    script = """#!/usr/bin/env bash
+set -euo pipefail
+
+# Run bazel via container wrapper, relative to the repo root (cwd)
+exec ./ci/container/container-run.sh bazel "$@"
+"""
+
+    if not wrapper.exists():
+        wrapper.write_text(script)
+        # chmod +x
+        wrapper.chmod(wrapper.stat().st_mode | stat.S_IEXEC)
+
+    return wrapper
+
+
 # target-determinator sometimes fails on first few tries
 # we will therefore blow up after 180 seconds
 @retry(
@@ -117,7 +140,7 @@ def target_determinator(
             "-before-query-error-behavior=fatal",
             "-delete-cached-worktree",
             "-bazel-opts=" + " ".join(shlex.quote(x) for x in BAZEL_OPTS),
-            f"-bazel={resolve_binary('bazel')}",
+            f"-bazel={ensure_bazel_wrapper(cwd)}",
             "--targets",
             bazel_targets,
             parent_object,
@@ -153,19 +176,27 @@ def compute_annotations_for_object(
     # we run them serially now, and -- in between them -- we clean the
     # repository's working directory.
     annotator.checkout(object)
-    bazel_query_output = subprocess.check_output(
-        [
-            "./ci/container/container-run.sh",
-            "bazel",
-            "query",
-        ]
-        + BAZEL_OPTS
-        + [
-            f"{targets}",
-        ],
-        text=True,
-        cwd=annotator.dir,
-    )
+    try:
+        bazel_query_output = subprocess.check_output(
+            [
+                "./ci/container/container-run.sh",
+                "bazel",
+                "query",
+            ]
+            + BAZEL_OPTS
+            + [
+                f"{targets}",
+            ],
+            text=True,
+            cwd=annotator.dir,
+        )
+    except subprocess.CalledProcessError as e:
+        logger.error(
+            "Received the following output: \nOutput: %s\nStderr: %s",
+            e.stdout,
+            e.stderr,
+        )
+        raise
     target_determinator_output = target_determinator(
         annotator.dir, annotator.parent(object), targets
     )

@@ -4179,6 +4179,33 @@
 			"version": "2.39.3-9ubuntu6.3"
 		},
 		{
+			"arch": "amd64",
+			"dependencies": [
+				{
+					"key": "libc6_2.39-0ubuntu8.5_amd64",
+					"name": "libc6",
+					"version": "2.39-0ubuntu8.5"
+				},
+				{
+					"key": "libgcc-s1_14.2.0-4ubuntu2_24.04_amd64",
+					"name": "libgcc-s1",
+					"version": "14.2.0-4ubuntu2~24.04"
+				},
+				{
+					"key": "gcc-14-base_14.2.0-4ubuntu2_24.04_amd64",
+					"name": "gcc-14-base",
+					"version": "14.2.0-4ubuntu2~24.04"
+				}
+			],
+			"key": "libc-bin_2.39-0ubuntu8.5_amd64",
+			"name": "libc-bin",
+			"sha256": "f14a80637c3ca1e808f765d9f69457e919116b45a88a36a242f402124ddb72dc",
+			"urls": [
+				"https://snapshot.ubuntu.com/ubuntu/20250826T000000Z/pool/main/g/glibc/libc-bin_2.39-0ubuntu8.5_amd64.deb"
+			],
+			"version": "2.39-0ubuntu8.5"
+		},
+		{
 			"arch": "arm64",
 			"dependencies": [],
 			"key": "ncurses-base_6.4-p-20240113-1ubuntu2_arm64",
@@ -8334,6 +8361,33 @@
 				"https://snapshot.ubuntu.com/ubuntu/20250826T000000Z/pool/main/u/util-linux/libblkid1_2.39.3-9ubuntu6.3_arm64.deb"
 			],
 			"version": "2.39.3-9ubuntu6.3"
+		},
+		{
+			"arch": "arm64",
+			"dependencies": [
+				{
+					"key": "libc6_2.39-0ubuntu8.5_arm64",
+					"name": "libc6",
+					"version": "2.39-0ubuntu8.5"
+				},
+				{
+					"key": "libgcc-s1_14.2.0-4ubuntu2_24.04_arm64",
+					"name": "libgcc-s1",
+					"version": "14.2.0-4ubuntu2~24.04"
+				},
+				{
+					"key": "gcc-14-base_14.2.0-4ubuntu2_24.04_arm64",
+					"name": "gcc-14-base",
+					"version": "14.2.0-4ubuntu2~24.04"
+				}
+			],
+			"key": "libc-bin_2.39-0ubuntu8.5_arm64",
+			"name": "libc-bin",
+			"sha256": "cc3fb93c996c2db97bcdaae840def0e1167d76008ee4c41ede27bc429f5c5683",
+			"urls": [
+				"https://snapshot.ubuntu.com/ubuntu/20250826T000000Z/pool/main/g/glibc/libc-bin_2.39-0ubuntu8.5_arm64.deb"
+			],
+			"version": "2.39-0ubuntu8.5"
 		}
 	],
 	"version": 1

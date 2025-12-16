@@ -1,2 +1,3 @@
 ALL ALL=(ALL) NOPASSWD: /usr/bin/podman, /usr/local/bin/podman
+Defaults !env_reset
 

@@ -89,7 +89,7 @@ home(
 # symlinks
 tar(
     name = "symlinks",
-    srcs = ["containers.conf", "sudoers", "pam_sudo_fix"],
+    srcs = ["containers.conf", "sudoers", "pam_sudo_fix", "sub_overrides"],
     mtree = [
         # clang-symlinks
         # needed as dpkg assumes sh is installed in a typical debian installation.
@@ -120,6 +120,16 @@ tar(
 
         # which fix
         "./usr/bin/which type=link link=/usr/bin/which.debianutils",
+
+        # Define subuids and subgids for root and user
+        "./etc/subuid type=file mode=0644 content=$(location sub_overrides)",
+        "./etc/subgid type=file mode=0644 content=$(location sub_overrides)",
+        
+        # Some directories that we need for the dev container
+        "./home/user/.cache type=dir mode=0755 uid=1000 gid=1000",
+        "./home/user/.cache/zig-cache type=dir mode=0755 uid=1000 gid=1000",
+        "./home/user/.ssh type=dir mode=0700 uid=1000 gid=1000",
+        "./tmp/ict_testnets type=dir mode=0755 uid=1000 gid=1000",
     ],
 )
 
@@ -179,7 +189,7 @@ oci_image(
         # Packages listed in this manifest (see YAML files in this folder)
         # get installed in the container by this rule.
         ":ubuntu_apk_flat",
-        "symlinks",
         ":podman_layer",
+        "symlinks",
     ],
 )
