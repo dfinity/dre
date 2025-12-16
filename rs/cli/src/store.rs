@@ -114,7 +114,7 @@ impl Store {
         network: &Network,
         proposal_agent: Arc<dyn ProposalAgent>,
         version_height: Option<u64>,
-        skip_sync: bool,
+        offline: bool,
     ) -> anyhow::Result<Arc<dyn LazyRegistry>> {
         let registry_path = self.local_store_for_network(network)?;
 
@@ -123,10 +123,10 @@ impl Store {
             network.name,
             registry_path.display(),
             version_height.map(|v| v.to_string()).unwrap_or_else(|| "latest".to_string()),
-            self.offline || skip_sync
+            self.offline || offline
         );
 
-        match self.offline || skip_sync {
+        match self.offline || offline {
             true => {
                 if self.offline {
                     warn!("Explicit offline mode! Registry won't be synced")
