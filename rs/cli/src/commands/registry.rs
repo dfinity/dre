@@ -170,7 +170,7 @@ impl ExecutableCommand for Registry {
         }
 
         // Friendly aggregated registry view (default)
-        let registry = self.get_registry(ctx, self.args.height).await?;
+        let registry = self.get_registry(ctx, self.args.height, false).await?;
         let mut serde_value = serde_json::to_value(registry)?;
         self.args.filters.iter().for_each(|filter| {
             let _ = filter_json_value(&mut serde_value, &filter.key, &filter.value, &filter.comparison);
@@ -190,7 +190,7 @@ impl Registry {
 
         // Ensure local registry is initialized/synced to have content available
         // (no-op in offline mode)
-        let _ = ctx.registry_with_version(None).await;
+        let _ = ctx.registry_with_version(None, false).await;
 
         let base_dirs = local_registry_dirs_for_ctx(&ctx)?;
 
@@ -212,14 +212,22 @@ impl Registry {
     }
 
     async fn diff(&self, ctx: DreContext, diff: &RegistryDiff) -> anyhow::Result<()> {
-        // Ensure local registry is initialized/synced to have content available
-        let _ = ctx.registry().await;
-
         let v1 = diff.version_from.ok_or_else(|| anyhow::anyhow!("Both versions must be specified"))?;
         let v2 = diff.version_to.ok_or_else(|| anyhow::anyhow!("Both versions must be specified"))?;
 
-        let reg1 = self.get_registry(ctx.clone(), Some(v1)).await?;
-        let reg2 = self.get_registry(ctx, Some(v2)).await?;
+        // Logic: Fetch High version (online/sync) first, then Low version (offline)
+        let (reg1, reg2) = if v1 > v2 {
+            // v1 is High (Sync), v2 is Low (Offline)
+            let r1 = self.get_registry(ctx.clone(), Some(v1), false).await?;
+            let r2 = self.get_registry(ctx.clone(), Some(v2), true).await?;
+            (r1, r2)
+        } else {
+            // v2 is High (Sync), v1 is Low (Offline) - or equal
+            // Fetch High first to ensure sync happens
+            let r2 = self.get_registry(ctx.clone(), Some(v2), false).await?;
+            let r1 = self.get_registry(ctx.clone(), Some(v1), true).await?;
+            (r1, r2)
+        };
 
         let mut val1 = serde_json::to_value(&reg1)?;
         let mut val2 = serde_json::to_value(&reg2)?;
@@ -384,8 +392,8 @@ fn flatten_version_records(
     out
 }
 impl Registry {
-    async fn get_registry(&self, ctx: DreContext, height: Option<u64>) -> anyhow::Result<RegistryDump> {
-        let local_registry = ctx.registry_with_version(height).await;
+    async fn get_registry(&self, ctx: DreContext, height: Option<u64>, offline: bool) -> anyhow::Result<RegistryDump> {
+        let local_registry = ctx.registry_with_version(height, offline).await;
 
         let elected_guest_os_versions = get_elected_guest_os_versions(&local_registry)?;
         let elected_host_os_versions = get_elected_host_os_versions(&local_registry)?;
