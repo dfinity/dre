@@ -37,7 +37,7 @@ passwd(
             "gid": 0,
             "home": "/root",
             "shell": "/bin/bash",
-            "username": "r00t",
+            "username": "root",
         },
         {
             "uid": 100,
@@ -132,6 +132,17 @@ tar(
     ],
 )
 
+# Sudoers for container run only
+# with pam fix
+tar(
+    name = "sudo-config",
+    srcs = ["sudoers", "pam_sudo_fix"],
+    mtree = [
+        "./etc/sudoers.d/podman_only type=file mode=0440 uid=0 gid=0 content=$(location sudoers)",
+        "./etc/pam.d/sudo type=file mode=0644 uid=0 gid=0 content=$(location pam_sudo_fix)",
+    ],
+)
+
 
 cacerts(
     name = "cacerts",
@@ -194,5 +205,6 @@ oci_image(
         "podman-symlinks",
         "iptables-symlinks",
         "podman-config",
+        "sudo-config",
     ],
 )

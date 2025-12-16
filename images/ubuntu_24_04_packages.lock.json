@@ -3636,6 +3636,182 @@
 			"version": "1.8.10-3ubuntu2"
 		},
 		{
+			"arch": "amd64",
+			"dependencies": [
+				{
+					"key": "libpam-modules_1.5.3-5ubuntu5.4_amd64",
+					"name": "libpam-modules",
+					"version": "1.5.3-5ubuntu5.4"
+				},
+				{
+					"key": "libpam-modules-bin_1.5.3-5ubuntu5.4_amd64",
+					"name": "libpam-modules-bin",
+					"version": "1.5.3-5ubuntu5.4"
+				},
+				{
+					"key": "libsystemd0_255.4-1ubuntu8.10_amd64",
+					"name": "libsystemd0",
+					"version": "255.4-1ubuntu8.10"
+				},
+				{
+					"key": "libzstd1_1.5.5-p-dfsg2-2build1.1_amd64",
+					"name": "libzstd1",
+					"version": "1.5.5+dfsg2-2build1.1"
+				},
+				{
+					"key": "libc6_2.39-0ubuntu8.5_amd64",
+					"name": "libc6",
+					"version": "2.39-0ubuntu8.5"
+				},
+				{
+					"key": "libgcc-s1_14.2.0-4ubuntu2_24.04_amd64",
+					"name": "libgcc-s1",
+					"version": "14.2.0-4ubuntu2~24.04"
+				},
+				{
+					"key": "gcc-14-base_14.2.0-4ubuntu2_24.04_amd64",
+					"name": "gcc-14-base",
+					"version": "14.2.0-4ubuntu2~24.04"
+				},
+				{
+					"key": "liblzma5_5.6.1-p-really5.4.5-1ubuntu0.2_amd64",
+					"name": "liblzma5",
+					"version": "5.6.1+really5.4.5-1ubuntu0.2"
+				},
+				{
+					"key": "liblz4-1_1.9.4-1build1.1_amd64",
+					"name": "liblz4-1",
+					"version": "1.9.4-1build1.1"
+				},
+				{
+					"key": "libgcrypt20_1.10.3-2build1_amd64",
+					"name": "libgcrypt20",
+					"version": "1.10.3-2build1"
+				},
+				{
+					"key": "libgpg-error0_1.47-3build2.1_amd64",
+					"name": "libgpg-error0",
+					"version": "1.47-3build2.1"
+				},
+				{
+					"key": "libcap2_1-2.66-5ubuntu2.2_amd64",
+					"name": "libcap2",
+					"version": "1:2.66-5ubuntu2.2"
+				},
+				{
+					"key": "libselinux1_3.5-2ubuntu2.1_amd64",
+					"name": "libselinux1",
+					"version": "3.5-2ubuntu2.1"
+				},
+				{
+					"key": "libpcre2-8-0_10.42-4ubuntu2.1_amd64",
+					"name": "libpcre2-8-0",
+					"version": "10.42-4ubuntu2.1"
+				},
+				{
+					"key": "libpam0g_1.5.3-5ubuntu5.4_amd64",
+					"name": "libpam0g",
+					"version": "1.5.3-5ubuntu5.4"
+				},
+				{
+					"key": "debconf_1.5.86ubuntu1_amd64",
+					"name": "debconf",
+					"version": "1.5.86ubuntu1"
+				},
+				{
+					"key": "libaudit1_1-3.1.2-2.1build1.1_amd64",
+					"name": "libaudit1",
+					"version": "1:3.1.2-2.1build1.1"
+				},
+				{
+					"key": "libcap-ng0_0.8.4-2build2_amd64",
+					"name": "libcap-ng0",
+					"version": "0.8.4-2build2"
+				},
+				{
+					"key": "libaudit-common_1-3.1.2-2.1build1.1_amd64",
+					"name": "libaudit-common",
+					"version": "1:3.1.2-2.1build1.1"
+				},
+				{
+					"key": "libcrypt1_1-4.4.36-4build1_amd64",
+					"name": "libcrypt1",
+					"version": "1:4.4.36-4build1"
+				},
+				{
+					"key": "libdb5.3t64_5.3.28-p-dfsg2-7_amd64",
+					"name": "libdb5.3t64",
+					"version": "5.3.28+dfsg2-7"
+				},
+				{
+					"key": "zlib1g_1-1.3.dfsg-3.1ubuntu2.1_amd64",
+					"name": "zlib1g",
+					"version": "1:1.3.dfsg-3.1ubuntu2.1"
+				},
+				{
+					"key": "libssl3t64_3.0.13-0ubuntu3.5_amd64",
+					"name": "libssl3t64",
+					"version": "3.0.13-0ubuntu3.5"
+				},
+				{
+					"key": "libapparmor1_4.0.1really4.0.1-0ubuntu0.24.04.4_amd64",
+					"name": "libapparmor1",
+					"version": "4.0.1really4.0.1-0ubuntu0.24.04.4"
+				}
+			],
+			"key": "sudo_1.9.15p5-3ubuntu5.24.04.1_amd64",
+			"name": "sudo",
+			"sha256": "3e384a472c7a4855b518051610760b42c7a2bae48483a189438f9fffff6952f2",
+			"urls": [
+				"https://snapshot.ubuntu.com/ubuntu/20250826T000000Z/pool/main/s/sudo/sudo_1.9.15p5-3ubuntu5.24.04.1_amd64.deb"
+			],
+			"version": "1.9.15p5-3ubuntu5.24.04.1"
+		},
+		{
+			"arch": "amd64",
+			"dependencies": [],
+			"key": "libpam-modules_1.5.3-5ubuntu5.4_amd64",
+			"name": "libpam-modules",
+			"sha256": "b466a6f32122a0f7708832989ccdc72caed077a1c2741d2bc86f83e485edd630",
+			"urls": [
+				"https://snapshot.ubuntu.com/ubuntu/20250826T000000Z/pool/main/p/pam/libpam-modules_1.5.3-5ubuntu5.4_amd64.deb"
+			],
+			"version": "1.5.3-5ubuntu5.4"
+		},
+		{
+			"arch": "amd64",
+			"dependencies": [],
+			"key": "libpam-modules-bin_1.5.3-5ubuntu5.4_amd64",
+			"name": "libpam-modules-bin",
+			"sha256": "79ce14ddb5c1e1d2d85632570ffa62b087712a7a0560a669bda7fcf6d2c31e71",
+			"urls": [
+				"https://snapshot.ubuntu.com/ubuntu/20250826T000000Z/pool/main/p/pam/libpam-modules-bin_1.5.3-5ubuntu5.4_amd64.deb"
+			],
+			"version": "1.5.3-5ubuntu5.4"
+		},
+		{
+			"arch": "amd64",
+			"dependencies": [],
+			"key": "libpam0g_1.5.3-5ubuntu5.4_amd64",
+			"name": "libpam0g",
+			"sha256": "84b0615fda801c6f60b29a04de7c815b3b252ccba4d0d9154a01b554e9dd6eb3",
+			"urls": [
+				"https://snapshot.ubuntu.com/ubuntu/20250826T000000Z/pool/main/p/pam/libpam0g_1.5.3-5ubuntu5.4_amd64.deb"
+			],
+			"version": "1.5.3-5ubuntu5.4"
+		},
+		{
+			"arch": "amd64",
+			"dependencies": [],
+			"key": "libapparmor1_4.0.1really4.0.1-0ubuntu0.24.04.4_amd64",
+			"name": "libapparmor1",
+			"sha256": "bf54e6abb5b3ad9e584db4e350d47058f6690384c8918d8b85b7940767d5203f",
+			"urls": [
+				"https://snapshot.ubuntu.com/ubuntu/20250826T000000Z/pool/main/a/apparmor/libapparmor1_4.0.1really4.0.1-0ubuntu0.24.04.4_amd64.deb"
+			],
+			"version": "4.0.1really4.0.1-0ubuntu0.24.04.4"
+		},
+		{
 			"arch": "arm64",
 			"dependencies": [],
 			"key": "ncurses-base_6.4-p-20240113-1ubuntu2_arm64",
@@ -7248,6 +7424,182 @@
 				"https://snapshot.ubuntu.com/ubuntu/20250826T000000Z/pool/main/i/iptables/libip4tc2_1.8.10-3ubuntu2_arm64.deb"
 			],
 			"version": "1.8.10-3ubuntu2"
+		},
+		{
+			"arch": "arm64",
+			"dependencies": [
+				{
+					"key": "libpam-modules_1.5.3-5ubuntu5.4_arm64",
+					"name": "libpam-modules",
+					"version": "1.5.3-5ubuntu5.4"
+				},
+				{
+					"key": "libpam-modules-bin_1.5.3-5ubuntu5.4_arm64",
+					"name": "libpam-modules-bin",
+					"version": "1.5.3-5ubuntu5.4"
+				},
+				{
+					"key": "libsystemd0_255.4-1ubuntu8.10_arm64",
+					"name": "libsystemd0",
+					"version": "255.4-1ubuntu8.10"
+				},
+				{
+					"key": "libzstd1_1.5.5-p-dfsg2-2build1.1_arm64",
+					"name": "libzstd1",
+					"version": "1.5.5+dfsg2-2build1.1"
+				},
+				{
+					"key": "libc6_2.39-0ubuntu8.5_arm64",
+					"name": "libc6",
+					"version": "2.39-0ubuntu8.5"
+				},
+				{
+					"key": "libgcc-s1_14.2.0-4ubuntu2_24.04_arm64",
+					"name": "libgcc-s1",
+					"version": "14.2.0-4ubuntu2~24.04"
+				},
+				{
+					"key": "gcc-14-base_14.2.0-4ubuntu2_24.04_arm64",
+					"name": "gcc-14-base",
+					"version": "14.2.0-4ubuntu2~24.04"
+				},
+				{
+					"key": "liblzma5_5.6.1-p-really5.4.5-1ubuntu0.2_arm64",
+					"name": "liblzma5",
+					"version": "5.6.1+really5.4.5-1ubuntu0.2"
+				},
+				{
+					"key": "liblz4-1_1.9.4-1build1.1_arm64",
+					"name": "liblz4-1",
+					"version": "1.9.4-1build1.1"
+				},
+				{
+					"key": "libgcrypt20_1.10.3-2build1_arm64",
+					"name": "libgcrypt20",
+					"version": "1.10.3-2build1"
+				},
+				{
+					"key": "libgpg-error0_1.47-3build2.1_arm64",
+					"name": "libgpg-error0",
+					"version": "1.47-3build2.1"
+				},
+				{
+					"key": "libcap2_1-2.66-5ubuntu2.2_arm64",
+					"name": "libcap2",
+					"version": "1:2.66-5ubuntu2.2"
+				},
+				{
+					"key": "libselinux1_3.5-2ubuntu2.1_arm64",
+					"name": "libselinux1",
+					"version": "3.5-2ubuntu2.1"
+				},
+				{
+					"key": "libpcre2-8-0_10.42-4ubuntu2.1_arm64",
+					"name": "libpcre2-8-0",
+					"version": "10.42-4ubuntu2.1"
+				},
+				{
+					"key": "libpam0g_1.5.3-5ubuntu5.4_arm64",
+					"name": "libpam0g",
+					"version": "1.5.3-5ubuntu5.4"
+				},
+				{
+					"key": "debconf_1.5.86ubuntu1_arm64",
+					"name": "debconf",
+					"version": "1.5.86ubuntu1"
+				},
+				{
+					"key": "libaudit1_1-3.1.2-2.1build1.1_arm64",
+					"name": "libaudit1",
+					"version": "1:3.1.2-2.1build1.1"
+				},
+				{
+					"key": "libcap-ng0_0.8.4-2build2_arm64",
+					"name": "libcap-ng0",
+					"version": "0.8.4-2build2"
+				},
+				{
+					"key": "libaudit-common_1-3.1.2-2.1build1.1_arm64",
+					"name": "libaudit-common",
+					"version": "1:3.1.2-2.1build1.1"
+				},
+				{
+					"key": "libcrypt1_1-4.4.36-4build1_arm64",
+					"name": "libcrypt1",
+					"version": "1:4.4.36-4build1"
+				},
+				{
+					"key": "libdb5.3t64_5.3.28-p-dfsg2-7_arm64",
+					"name": "libdb5.3t64",
+					"version": "5.3.28+dfsg2-7"
+				},
+				{
+					"key": "zlib1g_1-1.3.dfsg-3.1ubuntu2.1_arm64",
+					"name": "zlib1g",
+					"version": "1:1.3.dfsg-3.1ubuntu2.1"
+				},
+				{
+					"key": "libssl3t64_3.0.13-0ubuntu3.5_arm64",
+					"name": "libssl3t64",
+					"version": "3.0.13-0ubuntu3.5"
+				},
+				{
+					"key": "libapparmor1_4.0.1really4.0.1-0ubuntu0.24.04.4_arm64",
+					"name": "libapparmor1",
+					"version": "4.0.1really4.0.1-0ubuntu0.24.04.4"
+				}
+			],
+			"key": "sudo_1.9.15p5-3ubuntu5.24.04.1_arm64",
+			"name": "sudo",
+			"sha256": "7926f628a7d273a4c80e5283c1d69a2b6447532a882fb9167c01758b88fab79a",
+			"urls": [
+				"https://snapshot.ubuntu.com/ubuntu/20250826T000000Z/pool/main/s/sudo/sudo_1.9.15p5-3ubuntu5.24.04.1_arm64.deb"
+			],
+			"version": "1.9.15p5-3ubuntu5.24.04.1"
+		},
+		{
+			"arch": "arm64",
+			"dependencies": [],
+			"key": "libpam-modules_1.5.3-5ubuntu5.4_arm64",
+			"name": "libpam-modules",
+			"sha256": "e1185cd8e1ad93a8ec0447b1884cd3b6c3d391587f3fc2f6863a7a0428260d5a",
+			"urls": [
+				"https://snapshot.ubuntu.com/ubuntu/20250826T000000Z/pool/main/p/pam/libpam-modules_1.5.3-5ubuntu5.4_arm64.deb"
+			],
+			"version": "1.5.3-5ubuntu5.4"
+		},
+		{
+			"arch": "arm64",
+			"dependencies": [],
+			"key": "libpam-modules-bin_1.5.3-5ubuntu5.4_arm64",
+			"name": "libpam-modules-bin",
+			"sha256": "182125898b26b0ae2ada48d25fb07976eb967be5fcd4f016d24936bd30628caa",
+			"urls": [
+				"https://snapshot.ubuntu.com/ubuntu/20250826T000000Z/pool/main/p/pam/libpam-modules-bin_1.5.3-5ubuntu5.4_arm64.deb"
+			],
+			"version": "1.5.3-5ubuntu5.4"
+		},
+		{
+			"arch": "arm64",
+			"dependencies": [],
+			"key": "libpam0g_1.5.3-5ubuntu5.4_arm64",
+			"name": "libpam0g",
+			"sha256": "b55da5f3a590e7b0dc59532c27c61bd0b8d1964e4a2d223153e88144b8828ef2",
+			"urls": [
+				"https://snapshot.ubuntu.com/ubuntu/20250826T000000Z/pool/main/p/pam/libpam0g_1.5.3-5ubuntu5.4_arm64.deb"
+			],
+			"version": "1.5.3-5ubuntu5.4"
+		},
+		{
+			"arch": "arm64",
+			"dependencies": [],
+			"key": "libapparmor1_4.0.1really4.0.1-0ubuntu0.24.04.4_arm64",
+			"name": "libapparmor1",
+			"sha256": "127d1a3a53e67dacef215361dab374012004732a0c3c537040a1656371fc6028",
+			"urls": [
+				"https://snapshot.ubuntu.com/ubuntu/20250826T000000Z/pool/main/a/apparmor/libapparmor1_4.0.1really4.0.1-0ubuntu0.24.04.4_arm64.deb"
+			],
+			"version": "4.0.1really4.0.1-0ubuntu0.24.04.4"
 		}
 	],
 	"version": 1

@@ -47,3 +47,4 @@ packages:
   - "libffi-dev" # necessary to build the IC just like clang
   - "uidmap"
   - "iptables"
+  - "sudo"
