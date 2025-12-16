@@ -123,10 +123,20 @@ impl DreContext {
     }
 
     pub async fn registry_with_version(&self, version_height: Option<u64>) -> Arc<dyn LazyRegistry> {
+        if let Some(height) = version_height {
+            // User requested explicit offline mode for specific height fetches
+            return self
+                .store
+                .registry(self.network(), self.proposals_agent(), Some(height), true)
+                .await
+                .unwrap();
+        }
+
         if let Some(reg) = self.registry.borrow().as_ref() {
             return reg.clone();
         }
-        let registry = self.store.registry(self.network(), self.proposals_agent(), version_height).await.unwrap();
+        // Default fetch (latest): sync enabled
+        let registry = self.store.registry(self.network(), self.proposals_agent(), None, false).await.unwrap();
         *self.registry.borrow_mut() = Some(registry.clone());
         registry
     }

@@ -1,7 +1,8 @@
 use crate::ctx::DreContext;
 use crate::{auth::AuthRequirement, exe::ExecutableCommand, exe::args::GlobalArgs};
 use base64::{Engine as _, engine::general_purpose::STANDARD as BASE64};
-use clap::Args;
+use clap::{Args, Subcommand};
+use colored::Colorize;
 use ic_canisters::IcAgentCanisterClient;
 use ic_canisters::governance::GovernanceCanisterWrapper;
 use ic_management_backend::{health::HealthStatusQuerier, lazy_registry::LazyRegistry};
@@ -25,6 +26,7 @@ use prost::Message;
 use regex::Regex;
 use serde::Serialize;
 use serde_json::Value;
+use similar::{ChangeTag, TextDiff};
 use std::iter::{IntoIterator, Iterator};
 use std::{
     collections::{BTreeMap, HashMap, HashSet},
@@ -60,12 +62,21 @@ use std::{
     - For known protobuf records, embedded byte arrays are compacted to base64 strings for readability.
 "#)]
 pub struct Registry {
+    #[clap(flatten)]
+    pub args: RegistryArgs,
+
+    #[clap(subcommand)]
+    pub subcommand: Option<RegistrySubcommand>,
+}
+
+#[derive(Args, Debug)]
+pub struct RegistryArgs {
     /// Output file (default is stdout)
-    #[clap(short = 'o', long)]
+    #[clap(short = 'o', long, global = true)]
     pub output: Option<PathBuf>,
 
     /// Filters in `key=value` format
-    #[clap(long, short, alias = "filter")]
+    #[clap(long, short, alias = "filter", global = true)]
     pub filters: Vec<Filter>,
 
     /// Specify the height for the registry
@@ -83,6 +94,18 @@ pub struct Registry {
         help = "Index-based range over available versions. Negative indexes allowed (Python-style). If omitted, defaults to 0 -1."
     )]
     pub dump_versions: Option<Vec<i64>>,
+}
+
+#[derive(Subcommand, Debug)]
+pub enum RegistrySubcommand {
+    /// Show diff between two registry versions
+    Diff(RegistryDiff),
+}
+
+#[derive(Args, Debug)]
+pub struct RegistryDiff {
+    pub version_from: Option<u64>,
+    pub version_to: Option<u64>,
 }
 
 #[derive(Debug, Clone)]
@@ -125,7 +148,11 @@ impl ExecutableCommand for Registry {
     }
 
     async fn execute(&self, ctx: DreContext) -> anyhow::Result<()> {
-        let writer: Box<dyn std::io::Write> = match &self.output {
+        if let Some(RegistrySubcommand::Diff(diff)) = &self.subcommand {
+            return self.diff(ctx, diff).await;
+        }
+
+        let writer: Box<dyn std::io::Write> = match &self.args.output {
             Some(path) => {
                 let path = path.with_extension("json");
                 let file = fs_err::File::create(path)?;
@@ -136,16 +163,16 @@ impl ExecutableCommand for Registry {
         };
 
         // Versions/records mode
-        if self.dump_versions.is_some() {
+        if self.args.dump_versions.is_some() {
             let json_value = self.dump_versions_json(ctx).await?;
             serde_json::to_writer_pretty(writer, &json_value)?;
             return Ok(());
         }
 
         // Friendly aggregated registry view (default)
-        let registry = self.get_registry(ctx).await?;
+        let registry = self.get_registry(ctx, self.args.height).await?;
         let mut serde_value = serde_json::to_value(registry)?;
-        self.filters.iter().for_each(|filter| {
+        self.args.filters.iter().for_each(|filter| {
             let _ = filter_json_value(&mut serde_value, &filter.key, &filter.value, &filter.comparison);
         });
 
@@ -176,12 +203,75 @@ impl Registry {
         let versions_sorted: Vec<u64> = entries_sorted.iter().map(|(v, _)| *v).collect();
 
         // Select versions
-        let selected_versions = select_versions(self.dump_versions.clone(), &versions_sorted)?;
+        let selected_versions = select_versions(self.args.dump_versions.clone(), &versions_sorted)?;
 
         // Build flat list of records
         let entries_map: std::collections::HashMap<u64, PbChangelogEntry> = entries_sorted.into_iter().collect();
         let out = flatten_version_records(&selected_versions, &entries_map);
         Ok(serde_json::to_value(out)?)
+    }
+
+    async fn diff(&self, ctx: DreContext, diff: &RegistryDiff) -> anyhow::Result<()> {
+        // Ensure local registry is initialized/synced to have content available
+        let _ = ctx.registry().await;
+
+        let v1 = diff.version_from.ok_or_else(|| anyhow::anyhow!("Both versions must be specified"))?;
+        let v2 = diff.version_to.ok_or_else(|| anyhow::anyhow!("Both versions must be specified"))?;
+
+        let reg1 = self.get_registry(ctx.clone(), Some(v1)).await?;
+        let reg2 = self.get_registry(ctx, Some(v2)).await?;
+
+        let mut val1 = serde_json::to_value(&reg1)?;
+        let mut val2 = serde_json::to_value(&reg2)?;
+
+        self.args.filters.iter().for_each(|filter| {
+            let _ = filter_json_value(&mut val1, &filter.key, &filter.value, &filter.comparison);
+            let _ = filter_json_value(&mut val2, &filter.key, &filter.value, &filter.comparison);
+        });
+
+        let json1 = serde_json::to_string_pretty(&val1)?;
+        let json2 = serde_json::to_string_pretty(&val2)?;
+
+        let diff = TextDiff::from_lines(&json1, &json2);
+
+        let writer: Box<dyn std::io::Write> = match &self.args.output {
+            Some(path) => {
+                let file = fs_err::File::create(path)?;
+                info!("Writing to file: {:?}", file.path().canonicalize()?);
+                Box::new(std::io::BufWriter::new(file))
+            }
+            None => Box::new(std::io::stdout()),
+        };
+        let mut writer = writer;
+
+        let use_color = self.args.output.is_none() && std::io::IsTerminal::is_terminal(&std::io::stdout());
+
+        for (idx, group) in diff.grouped_ops(3).iter().enumerate() {
+            if idx > 0 {
+                writeln!(writer, "{}", "---".dimmed())?;
+            }
+            for op in group {
+                for change in diff.iter_changes(op) {
+                    let (sign, s) = match change.tag() {
+                        ChangeTag::Delete => ("-", change.to_string()),
+                        ChangeTag::Insert => ("+", change.to_string()),
+                        ChangeTag::Equal => (" ", change.to_string()),
+                    };
+                    if use_color {
+                        let color = match change.tag() {
+                            ChangeTag::Delete => colored::Color::Red,
+                            ChangeTag::Insert => colored::Color::Green,
+                            ChangeTag::Equal => colored::Color::White,
+                        };
+                        write!(writer, "{}{} ", sign.color(color), s.color(color))?;
+                    } else {
+                        write!(writer, "{}{} ", sign, s)?;
+                    }
+                }
+            }
+        }
+
+        Ok(())
     }
 }
 
@@ -294,8 +384,8 @@ fn flatten_version_records(
     out
 }
 impl Registry {
-    async fn get_registry(&self, ctx: DreContext) -> anyhow::Result<RegistryDump> {
-        let local_registry = ctx.registry_with_version(self.height).await;
+    async fn get_registry(&self, ctx: DreContext, height: Option<u64>) -> anyhow::Result<RegistryDump> {
+        let local_registry = ctx.registry_with_version(height).await;
 
         let elected_guest_os_versions = get_elected_guest_os_versions(&local_registry)?;
         let elected_host_os_versions = get_elected_host_os_versions(&local_registry)?;
@@ -340,7 +430,7 @@ impl Registry {
             node_operators: node_operators.values().cloned().collect_vec(),
             node_rewards_table,
             api_bns,
-            node_providers: get_node_providers(&local_registry, ctx.network(), ctx.is_offline(), self.height.is_none()).await?,
+            node_providers: get_node_providers(&local_registry, ctx.network(), ctx.is_offline(), height.is_none()).await?,
         })
     }
 }
@@ -357,6 +447,12 @@ fn extract_version_from_registry_path(base_dir: &std::path::Path, full_path: &st
     // We reconstruct the hex by concatenating the four segments (without slashes) and parse as hex u64.
     let rel = full_path.strip_prefix(base_dir).ok()?;
     let parts: Vec<_> = rel.iter().map(|s| s.to_string_lossy()).collect();
+
+    if parts.len() == 1 {
+        let hex = parts[0].trim_end_matches(".pb");
+        return u64::from_str_radix(hex, 16).ok();
+    }
+
     if parts.len() < 4 {
         return None;
     }
