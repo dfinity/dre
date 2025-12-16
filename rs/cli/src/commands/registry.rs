@@ -78,26 +78,16 @@ pub struct RegistryArgs {
     /// Filters in `key=value` format
     #[clap(long, short, alias = "filter", global = true)]
     pub filters: Vec<Filter>,
-
-    /// Dump raw registry versions in range by index; defaults to 0 -1 if no args
-    #[clap(
-        long = "dump-versions",
-        num_args(0..=2),
-        value_names = ["FROM", "TO"],
-        allow_hyphen_values = true,
-        conflicts_with_all = ["filters"],
-        visible_aliases = ["dump-version", "dump-versions-json", "dump-json-versions", "json-versions"],
-        help = "Index-based range over available versions. Negative indexes allowed (Python-style). If omitted, defaults to 0 -1."
-    )]
-    pub dump_versions: Option<Vec<i64>>,
 }
 
 #[derive(Subcommand, Debug)]
 pub enum RegistrySubcommand {
-    /// Show diff between two registry versions
+    /// Show diff between two registry
     Diff(RegistryDiff),
     /// Get registry at specific height (or latest)
     Get(RegistryGet),
+    /// Show registry history
+    History(RegistryHistory),
 }
 
 #[derive(Args, Debug)]
@@ -105,6 +95,13 @@ pub struct RegistryGet {
     /// Specify the height for the registry
     #[clap(visible_aliases = ["registry-height", "version"])]
     pub height: Option<u64>,
+}
+
+#[derive(Args, Debug)]
+pub struct RegistryHistory {
+    /// Index-based range over available versions. Negative indexes allowed (Python-style). If omitted, defaults to 0 -1.
+    #[clap(num_args(0..=2), allow_hyphen_values = true)]
+    pub range: Vec<i64>,
 }
 
 #[derive(Args, Debug)]
@@ -156,36 +153,14 @@ impl ExecutableCommand for Registry {
         match &self.subcommand {
             Some(RegistrySubcommand::Diff(diff)) => return self.diff(ctx, diff).await,
             Some(RegistrySubcommand::Get(get)) => return self.get(ctx, get).await,
+            Some(RegistrySubcommand::History(history)) => return self.history(ctx, history).await,
             None => {
-                if self.args.dump_versions.is_some() {
-                    // fall through
-                } else {
-                    // No subcommand and no dump-versions => show help
-                    let mut cmd = <Registry as clap::CommandFactory>::command();
-                    cmd.print_help()?;
-                    return Ok(());
-                }
+                // No subcommand => show help
+                let mut cmd = <Registry as clap::CommandFactory>::command();
+                cmd.print_help()?;
+                return Ok(());
             }
         }
-
-        let writer: Box<dyn std::io::Write> = match &self.args.output {
-            Some(path) => {
-                let path = path.with_extension("json");
-                let file = fs_err::File::create(path)?;
-                info!("Writing to file: {:?}", file.path().canonicalize()?);
-                Box::new(std::io::BufWriter::new(file))
-            }
-            None => Box::new(std::io::stdout()),
-        };
-
-        // Versions/records mode
-        if self.args.dump_versions.is_some() {
-            let json_value = self.dump_versions_json(ctx).await?;
-            serde_json::to_writer_pretty(writer, &json_value)?;
-            return Ok(());
-        }
-
-        Ok(())
     }
 
     fn validate(&self, _args: &GlobalArgs, _cmd: &mut clap::Command) {}
@@ -217,7 +192,29 @@ impl Registry {
         Ok(())
     }
 
-    pub(crate) async fn dump_versions_json(&self, ctx: DreContext) -> anyhow::Result<serde_json::Value> {
+    async fn history(&self, ctx: DreContext, args: &RegistryHistory) -> anyhow::Result<()> {
+        // Validate range arguments
+        if args.range.len() > 2 {
+            anyhow::bail!("History range accepts at most 2 arguments (FROM and TO), got {}", args.range.len());
+        }
+
+        // Reorder if needed to ensure increasing order
+        let range = if args.range.len() == 2 && args.range[0] > args.range[1] {
+            vec![args.range[1], args.range[0]]
+        } else {
+            args.range.clone()
+        };
+
+        let writer: Box<dyn std::io::Write> = match &self.args.output {
+            Some(path) => {
+                let path = path.with_extension("json");
+                let file = fs_err::File::create(path)?;
+                info!("Writing to file: {:?}", file.path().canonicalize()?);
+                Box::new(std::io::BufWriter::new(file))
+            }
+            None => Box::new(std::io::stdout()),
+        };
+
         use ic_registry_common_proto::pb::local_store::v1::ChangelogEntry as PbChangelogEntry;
         // Ensure local registry is initialized/synced to have content available
         // (no-op in offline mode)
@@ -234,12 +231,16 @@ impl Registry {
         let versions_sorted: Vec<u64> = entries_sorted.iter().map(|(v, _)| *v).collect();
 
         // Select versions
-        let selected_versions = select_versions(self.args.dump_versions.clone(), &versions_sorted)?;
+        // If range is empty, treat as None (default 0 -1 in select_versions logic)
+        let range_opt = if range.is_empty() { None } else { Some(range) };
+        let selected_versions = select_versions(range_opt, &versions_sorted)?;
 
         // Build flat list of records
         let entries_map: std::collections::HashMap<u64, PbChangelogEntry> = entries_sorted.into_iter().collect();
         let out = flatten_version_records(&selected_versions, &entries_map);
-        Ok(serde_json::to_value(out)?)
+
+        serde_json::to_writer_pretty(writer, &out)?;
+        Ok(())
     }
 
     async fn diff(&self, ctx: DreContext, diff: &RegistryDiff) -> anyhow::Result<()> {
