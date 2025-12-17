@@ -95,7 +95,7 @@ async fn history_outputs_records_sorted() {
 
     // Act & Assert: query versions individually to avoid interference
     use crate::commands::registry::{RegistryHistory, RegistrySubcommand};
-    
+
     // Test 1: All versions (empty range)
     let output_file1 = std::path::PathBuf::from("/tmp/test_history_output1.json");
     let history_args1 = RegistryHistory { range: vec![-2] };
@@ -207,7 +207,7 @@ async fn list_versions_only_outputs_numbers() {
     );
 
     use crate::commands::registry::{RegistryHistory, RegistrySubcommand};
-    
+
     let output_file = std::path::PathBuf::from("/tmp/test_list_versions_output.json");
     let history_args = RegistryHistory { range: vec![2, 2] };
     let cmd = Registry {
