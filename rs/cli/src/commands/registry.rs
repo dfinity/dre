@@ -193,7 +193,7 @@ impl Registry {
         Ok(())
     }
 
-    async fn history(&self, ctx: DreContext, args: &RegistryHistory) -> anyhow::Result<()> {
+    pub(crate) async fn history(&self, ctx: DreContext, args: &RegistryHistory) -> anyhow::Result<()> {
         use ic_registry_common_proto::pb::local_store::v1::ChangelogEntry as PbChangelogEntry;
 
         // Validate and normalize range arguments
@@ -226,16 +226,17 @@ impl Registry {
         // Select versions (returns actual version numbers)
         let range_opt = if range.is_empty() { None } else { Some(range) };
         let selected_versions = select_versions(range_opt, &versions_sorted)?;
+        if let (Some(&first), Some(&last)) = (selected_versions.first(), selected_versions.last()) {
+            if first == last {
+                info!("Selected version {}", first);
+            } else {
+                info!("Selected versions from {} to {}", first, last);
+            }
+        }
         
-        // Convert version numbers to indices by subtracting 1 (move one to the left: version 1 -> 0, version 2 -> 1, etc.)
-        let selected_indices: Vec<u64> = selected_versions
-            .iter()
-            .map(|&version| version - 1)
-            .collect();
-
         // Build flat list of records
         let entries_map: std::collections::HashMap<u64, PbChangelogEntry> = entries_sorted.into_iter().collect();
-        let out = flatten_version_records(&selected_indices, &entries_map);
+        let out = flatten_version_records(&selected_versions, &entries_map);
 
         serde_json::to_writer_pretty(writer, &out)?;
         Ok(())
@@ -261,11 +262,12 @@ impl Registry {
         // Select versions - handle exactly like history
         let range_opt = if range.is_empty() { None } else { Some(range) };
         let selected_versions = select_versions(range_opt, &versions_sorted)?;
-        println!("selected_versions: {:?}", selected_versions);
-        return Ok(());
-
-        if selected_versions.len() < 2 {
-            anyhow::bail!("Need at least 2 versions to diff, got {}", selected_versions.len());
+        if let (Some(&first), Some(&last)) = (selected_versions.first(), selected_versions.last()) {
+            if first == last {
+                info!("Selected version {}", first);
+            } else {
+                info!("Selected versions from {} to {}", first, last);
+            }
         }
 
         // Take first and last from selected versions
@@ -445,6 +447,10 @@ pub(crate) fn select_versions(versions: Option<Vec<i64>>, versions_sorted: &[u64
             (Some(1), Some(*from))
         },
         [from] => (Some(*from), None),
+        [from, to] if from == to => {
+            // Same number twice: return just that single version
+            (Some(*from), Some(*to))
+        },
         [from, to] => (Some(*from), Some(*to)),
         _ => unreachable!(),
     };
@@ -458,6 +464,9 @@ pub(crate) fn select_versions(versions: Option<Vec<i64>>, versions_sorted: &[u64
             i if i < 0 => {
                 // Negative: treat as index from the end (Python-style)
                 let j = (n as i64) + i;
+                if j < 0 {
+                    anyhow::bail!("Index {} is out of range for {} available versions", idx, n);
+                }
                 Ok(j.clamp(0, n as i64) as usize)
             }
             i if i > 0 => {
@@ -474,31 +483,23 @@ pub(crate) fn select_versions(versions: Option<Vec<i64>>, versions_sorted: &[u64
         }
     };
     
-    let a = match from_opt {
+    let mut a = match from_opt {
         Some(idx) => to_index(idx)?,
         None => 0,
     };
-    let b = match to_opt {
+    let mut b = match to_opt {
         Some(idx) => to_index(idx)?,
         None => n - 1, // Last index for end-inclusive
     };
     
+    // Reorder if needed (swap a and b if a > b)
     if a > b {
-        return Ok(vec![]);
+        std::mem::swap(&mut a, &mut b);
     }
     
     // End-inclusive range: use ..= to include both a and b
     // Result is already sorted since versions_sorted is sorted
     let result = versions_sorted[a..=b].to_vec();
-    
-    // Log selected versions range
-    if let (Some(&first), Some(&last)) = (result.first(), result.last()) {
-        if first == last {
-            info!("Selected version {}", first);
-        } else {
-            info!("Selected versions from {} to {}", first, last);
-        }
-    }
     
     Ok(result)
 }
