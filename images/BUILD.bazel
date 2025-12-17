@@ -18,7 +18,7 @@
 
 load("@rules_oci//oci:defs.bzl", "oci_image")
 load("@aspect_bazel_lib//lib:tar.bzl", "tar")
-load("@rules_distroless//distroless:defs.bzl", "group", "passwd", "cacerts", "home")
+load("@rules_distroless//distroless:defs.bzl", "group", "passwd", "cacerts", "home", "flatten")
 
 package(default_visibility = ["//visibility:public"])
 
@@ -118,6 +118,18 @@ tar(
     ],
 )
 
+flatten(
+    name = "ubuntu_apk_flat",
+    tars = [
+        # Packages that are installed from apt
+        # We need to flatten them because each file ends up
+        # being a layer and it becomes impossible to
+        # import the built image into docker.
+        "@ubuntu_24_04_packages//:ubuntu_24_04_packages",
+    ],
+    deduplicate = True,
+)
+
 oci_image(
     name = "ubuntu_24_04",
     architecture = select({
@@ -135,9 +147,7 @@ oci_image(
         ":home",
         ":cacerts",
         ":cacerts-symlink",
-        # Packages listed in this manifest (see YAML files in this folder)
-        # get installed in the container by this rule.
-        "@ubuntu_24_04_packages//:ubuntu_24_04_packages",
-        "clang-symlinks",
+        ":ubuntu_apk_flat",
+        ":clang-symlinks",
     ],
 )

@@ -3,17 +3,20 @@ import http.server
 import logging
 import os
 import pathlib
+import re
 import shlex
 import subprocess
 import sys
-import re
 import threading
 import time
 import typing
-from prometheus_client import start_http_server, Gauge
-from tenacity import retry, stop_after_delay, retry_if_exception_type, after_log
+
+from prometheus_client import Gauge, start_http_server
+from tenacity import after_log, retry, retry_if_exception_type, stop_after_delay
 
 sys.path.append(os.path.join(os.path.dirname(__file__)))
+
+from datetime import datetime
 
 from commit_annotation import (
     CHANGED_NOTES_NAMESPACES,
@@ -22,17 +25,15 @@ from commit_annotation import (
     CommitInclusionState,
     GitRepoAnnotator,
 )
-from git_repo import GitRepo
-from datetime import datetime
-from util import conventional_logging, resolve_binary, DefaultSubcommandArgParser
-from process_watchdog import Watchdog
-
 from const import (
-    OsKind,
     GUESTOS,
     HOSTOS,
     OS_KINDS,
+    OsKind,
 )
+from git_repo import GitRepo
+from process_watchdog import Watchdog
+from util import DefaultSubcommandArgParser, conventional_logging, resolve_binary
 
 BAZEL_TARGETS = {
     # All targets that produce the update image for GuestOS.
