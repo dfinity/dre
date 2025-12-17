@@ -177,7 +177,7 @@ impl ExecutableCommand for Registry {
                 // No subcommand => show help
                 let mut cmd = <Registry as clap::CommandFactory>::command();
                 cmd.print_help()?;
-                return Ok(());
+                Ok(())
             }
         }
     }
@@ -347,7 +347,7 @@ pub(crate) fn validate_range(range: &[i64]) -> anyhow::Result<Vec<i64>> {
     }
 
     // Fail if 0 is passed
-    if range.iter().any(|&x| x == 0) {
+    if range.contains(&0) {
         anyhow::bail!("Range cannot contain 0");
     }
 
