@@ -226,15 +226,7 @@ impl Registry {
         let out = flatten_version_records(&selected_versions, &entries_map);
 
         // Write to file or stdout
-        let writer: Box<dyn std::io::Write> = match &self.args.output {
-            Some(path) => {
-                let path = path.with_extension("json");
-                let file = fs_err::File::create(path)?;
-                info!("Writing to file: {:?}", file.path().canonicalize()?);
-                Box::new(std::io::BufWriter::new(file))
-            }
-            None => Box::new(std::io::stdout()),
-        };
+        let mut writer = create_writer(&self.args.output)?;
         serde_json::to_writer_pretty(writer, &out)?;
 
         Ok(())
@@ -243,9 +235,9 @@ impl Registry {
     async fn diff(&self, ctx: DreContext, diff: &RegistryDiff) -> anyhow::Result<()> {
         let range = validate_range(&diff.range)?;
         let range = if range.is_empty() { None } else { Some(range) };
-        let (versions, _) = get_sorted_versions(&ctx).await?;
+        let (versions_sorted, _) = get_sorted_versions(&ctx).await?;
 
-        let selected_versions = select_versions(range, &versions)?;
+        let selected_versions = select_versions(range, &versions_sorted)?;
         if let (Some(&first), Some(&last)) = (selected_versions.first(), selected_versions.last()) {
             if first == last {
                 info!("Selected version {}", first);
@@ -285,15 +277,8 @@ impl Registry {
 
         let diff = TextDiff::from_lines(&json1, &json2);
 
-        let writer: Box<dyn std::io::Write> = match &self.args.output {
-            Some(path) => {
-                let file = fs_err::File::create(path)?;
-                info!("Writing to file: {:?}", file.path().canonicalize()?);
-                Box::new(std::io::BufWriter::new(file))
-            }
-            None => Box::new(std::io::stdout()),
-        };
-        let mut writer = writer;
+        // Write to file or stdout
+        let mut writer = create_writer(&self.args.output)?;
 
         let use_color = self.args.output.is_none() && std::io::IsTerminal::is_terminal(&std::io::stdout());
 
@@ -384,6 +369,17 @@ async fn get_sorted_versions(ctx: &DreContext) -> anyhow::Result<(Vec<u64>, Vec<
     }
 
     Ok((versions_sorted, entries_sorted))
+}
+
+fn create_writer(output: &Option<std::path::PathBuf>) -> anyhow::Result<Box<dyn std::io::Write>> {
+    match output {
+        Some(path) => {
+            let file = fs_err::File::create(path)?;
+            info!("Writing to file: {:?}", file.path().canonicalize()?);
+            Ok(Box::new(std::io::BufWriter::new(file)))
+        }
+        None => Ok(Box::new(std::io::stdout())),
+    }
 }
 
 // Helper: collect candidate base dirs
