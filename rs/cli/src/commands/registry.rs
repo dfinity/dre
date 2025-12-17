@@ -223,15 +223,19 @@ impl Registry {
         entries_sorted.sort_by_key(|(v, _)| *v);
         let versions_sorted: Vec<u64> = entries_sorted.iter().map(|(v, _)| *v).collect();
 
-        // Select versions
+        // Select versions (returns actual version numbers)
         let range_opt = if range.is_empty() { None } else { Some(range) };
         let selected_versions = select_versions(range_opt, &versions_sorted)?;
-        println!("selected_versions: {:?}", selected_versions);
-        return Ok(());
+        
+        // Convert version numbers to indices by subtracting 1 (move one to the left: version 1 -> 0, version 2 -> 1, etc.)
+        let selected_indices: Vec<u64> = selected_versions
+            .iter()
+            .map(|&version| version - 1)
+            .collect();
 
         // Build flat list of records
         let entries_map: std::collections::HashMap<u64, PbChangelogEntry> = entries_sorted.into_iter().collect();
-        let out = flatten_version_records(&selected_versions, &entries_map);
+        let out = flatten_version_records(&selected_indices, &entries_map);
 
         serde_json::to_writer_pretty(writer, &out)?;
         Ok(())
@@ -427,15 +431,19 @@ fn load_first_available_entries(
 
 // Slicing semantics:
 // - End-inclusive (both from and to are included)
-// - Positive numbers are treated as actual version numbers (not indices)
+// - Positive numbers are treated as actual version numbers (0 is not supported)
 // - Negative numbers are treated as indices (Python-style from the end, -1 is last)
-// - 0 means start first version (version 1)
+// - If a single positive number is provided, return versions from 1 to that number
 // - Versions are returned as increasing vector
-fn select_versions(versions: Option<Vec<i64>>, versions_sorted: &[u64]) -> anyhow::Result<Vec<u64>> {
+pub(crate) fn select_versions(versions: Option<Vec<i64>>, versions_sorted: &[u64]) -> anyhow::Result<Vec<u64>> {
     let n = versions_sorted.len();
     let args = versions.unwrap_or_default();
     let (from_opt, to_opt): (Option<i64>, Option<i64>) = match args.as_slice() {
         [] => (None, None),
+        [from] if *from > 0 => {
+            // Single positive number: return from 1 to that number
+            (Some(1), Some(*from))
+        },
         [from] => (Some(*from), None),
         [from, to] => (Some(*from), Some(*to)),
         _ => unreachable!(),
@@ -452,12 +460,15 @@ fn select_versions(versions: Option<Vec<i64>>, versions_sorted: &[u64]) -> anyho
                 let j = (n as i64) + i;
                 Ok(j.clamp(0, n as i64) as usize)
             }
-            0 => Ok(0),
             i if i > 0 => {
                 // Positive: treat as actual version number, find its position
                 let version = i as u64;
                 versions_sorted.binary_search(&version)
                     .map_err(|_| anyhow::anyhow!("Version {} not found in available versions", version))
+            }
+            0 => {
+                // 0 is not supported as a version number
+                Err(anyhow::anyhow!("Version 0 is not supported"))
             }
             _ => unreachable!(),
         }
@@ -478,7 +489,18 @@ fn select_versions(versions: Option<Vec<i64>>, versions_sorted: &[u64]) -> anyho
     
     // End-inclusive range: use ..= to include both a and b
     // Result is already sorted since versions_sorted is sorted
-    Ok(versions_sorted[a..=b].to_vec())
+    let result = versions_sorted[a..=b].to_vec();
+    
+    // Log selected versions range
+    if let (Some(&first), Some(&last)) = (result.first(), result.last()) {
+        if first == last {
+            info!("Selected version {}", first);
+        } else {
+            info!("Selected versions from {} to {}", first, last);
+        }
+    }
+    
+    Ok(result)
 }
 
 fn flatten_version_records(
