@@ -40,29 +40,36 @@ use std::{
 #[clap(after_help = r#"EXAMPLES:
   Registry content: Get content up to a specific version
     dre registry get                                                     # Get up to latest version
-    dre registry get <versions>                                          # Get up to a specific version
+    dre registry get <version>                                           # Get up to a specific version
 
   Registry diff: Get a diff between two versions
     dre registry diff                                                    # Get a diff between the latest version and the latest - 10 versions
-    dre registry diff <range>                                            # Get a diff between two specific versions of the provided range
+    dre registry diff <version> <version>                                # Get a diff between two specific versions of the provided range
 
   Registry history: Get content of each version
-    dre registry history                                                  # Get content of the latest 10 versions
-    dre registry history <range>                                          # Get content of the versions of the provided range
+    dre registry history                                                 # Get content of the latest 10 versions
+    dre registry history <version> <version>                             # Get content of the versions of the provided range
 
-  <range>:
+  <version>:
     - numbers are inclusive
-    - there is no version 0
+    - 0 is not supported
+    - -1 is latest version
     - negative numbers are relative to the latest version
     - positive numbers are versions
 
-  <range> examples:
-    10 15                                                                # between 10 and 15
-    15 10                                                                # between 10 and 15
-    15                                                                   # between 1 and 15
-    -5 -2                                                                # between latest-5 and latest-2
-    -2 -5                                                                # between latest-2 and latest-5
-    -5                                                                   # between latest-5 and latest
+  examples for commands that support two <version> arguments (diff, history):
+    10 15                                                                # from 10 to 15
+    15 10                                                                # from 10 to 15
+    15                                                                   # from 1 to 15
+    -5 -2                                                                # from latest-5 to latest-2
+    -2 -5                                                                # from latest-5 to latest-2
+    -5                                                                   # from latest-5 to latest
+    -1                                                                   # from latest to latest
+
+  examples for commands that support one <version> argument (get):
+    15                                                                   # select 15
+    -5                                                                   # select latest-15
+    -1                                                                   # select latest
 
   option examples:
     dre registry --filter rewards_correct!=true                          # Entries for which rewardable_nodes != total_up_nodes
