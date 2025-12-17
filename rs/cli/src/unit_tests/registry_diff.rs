@@ -1,4 +1,3 @@
-use colored::Colorize;
 use similar::{ChangeTag, TextDiff};
 
 #[test]
