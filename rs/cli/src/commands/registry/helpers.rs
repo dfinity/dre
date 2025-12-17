@@ -33,9 +33,20 @@ use std::{
 
 #[derive(Debug, Clone)]
 pub struct Filter {
-    pub key: String,
-    pub value: Value,
-    pub comparison: Comparison,
+    pub(crate) key: String,
+    pub(crate) value: Value,
+    pub(crate) comparison: Comparison,
+}
+
+impl Filter {
+    pub(crate) fn get_help_message() -> String {
+        format!("Filter in `key=value` format. Multiple filters can be provided.
+Examples:
+    --filter \"rewards_correct!=true\"
+    --filter \"node_type=type1\"
+    --filter \"subnet_id startswith tdb26\"
+    --filter \"node_id contains h5zep\"")
+    }
 }
 
 impl FromStr for Filter {
@@ -772,7 +783,7 @@ async fn get_node_providers(
 }
 
 #[derive(Debug, Serialize)]
-struct RegistryDump {
+pub(crate) struct RegistryDump {
     subnets: Vec<SubnetRecord>,
     nodes: Vec<NodeDetails>,
     unassigned_nodes_config: Option<UnassignedNodesConfigRecord>,
@@ -897,7 +908,7 @@ struct NodeProvider {
 }
 
 #[derive(Debug, Clone)]
-enum Comparison {
+pub(crate) enum Comparison {
     Equal,
     NotEqual,
     GreaterThan,
@@ -992,7 +1003,7 @@ impl Comparison {
     }
 }
 
-fn filter_json_value(current: &mut Value, key: &str, value: &Value, comparison: &Comparison) -> bool {
+pub(crate) fn filter_json_value(current: &mut Value, key: &str, value: &Value, comparison: &Comparison) -> bool {
     match current {
         Value::Object(map) => {
             // Check if current object contains key-value pair

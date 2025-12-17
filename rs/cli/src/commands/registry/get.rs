@@ -1,12 +1,20 @@
 use clap::Args;
 
 use crate::{auth::AuthRequirement, exe::ExecutableCommand, exe::args::GlobalArgs};
-use crate::commands::registry::helpers::{validate_range, get_sorted_versions, select_versions};
+use crate::commands::registry::helpers::{validate_range, get_sorted_versions, select_versions, filter_json_value, get_registry, create_writer};
+use crate::commands::registry::helpers::Filter;
+use std::path::PathBuf;
 
 #[derive(Args, Debug)]
 pub struct Get {
     #[clap(allow_hyphen_values = true)]
     pub version: Option<i64>,
+
+    #[clap(short = 'o', long, help = "Output file (default is stdout)")]
+    pub output: Option<PathBuf>,
+
+    #[clap(long, short, alias = "filter", help = Filter::get_help_message())]
+    pub filter: Vec<Filter>,
 }
 
 impl ExecutableCommand for Get {
@@ -34,8 +42,18 @@ impl ExecutableCommand for Get {
             None
         };
 
-        // TODO: Implement get_registry call and filtering
-        println!("Get version: {:?}", height);
+        // Aggregated registry view
+        let registry = get_registry(ctx, height, false).await?;
+        let mut serde_value = serde_json::to_value(registry)?;
+
+        // Apply filters
+        self.filter.clone().iter().for_each(|filter| {
+            let _ = filter_json_value(&mut serde_value, &filter.key.clone(), &filter.value.clone(), &filter.comparison.clone());
+        });
+
+        // Write to file or stdout
+        let writer = create_writer(&self.output)?;
+        serde_json::to_writer_pretty(writer, &serde_value)?;
 
         Ok(())
     }
