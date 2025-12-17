@@ -442,12 +442,12 @@ pub(crate) fn select_versions(versions: Option<Vec<i64>>, versions_sorted: &[u64
         [from] if *from > 0 => {
             // Single positive number: return from 1 to that number
             (Some(1), Some(*from))
-        },
+        }
         [from] => (Some(*from), None),
         [from, to] if from == to => {
             // Same number twice: return just that single version
             (Some(*from), Some(*to))
-        },
+        }
         [from, to] => (Some(*from), Some(*to)),
         _ => unreachable!(),
     };
@@ -469,7 +469,8 @@ pub(crate) fn select_versions(versions: Option<Vec<i64>>, versions_sorted: &[u64
             i if i > 0 => {
                 // Positive: treat as actual version number, find its position
                 let version = i as u64;
-                versions_sorted.binary_search(&version)
+                versions_sorted
+                    .binary_search(&version)
                     .map_err(|_| anyhow::anyhow!("Version {} not found in available versions", version))
             }
             0 => {

@@ -51,5 +51,8 @@ fn test_select_versions() {
     // With 22 versions, -23 would be out of range
     let result = select_versions(Some(vec![-23]), &versions_sorted);
     assert!(result.is_err(), "-23 should error because it's out of range for 22 versions");
-    assert!(result.unwrap_err().to_string().contains("out of range"), "Error message should mention 'out of range'");
+    assert!(
+        result.unwrap_err().to_string().contains("out of range"),
+        "Error message should mention 'out of range'"
+    );
 }
