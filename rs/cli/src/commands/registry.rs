@@ -106,9 +106,9 @@ pub enum RegistrySubcommand {
 
 #[derive(Args, Debug)]
 pub struct RegistryGet {
-    /// Specify the height for the registry
-    #[clap(visible_aliases = ["registry-height", "version"])]
-    pub height: Option<u64>,
+    /// Specify the height for the registry. Negative numbers are relative to the latest version (e.g., -20 means 20 versions before the latest).
+    #[clap(visible_aliases = ["registry-height", "version"], allow_hyphen_values = true)]
+    pub height: Option<i64>,
 }
 
 #[derive(Args, Debug)]
@@ -183,23 +183,32 @@ impl ExecutableCommand for Registry {
 
 impl Registry {
     async fn get(&self, ctx: DreContext, args: &RegistryGet) -> anyhow::Result<()> {
+        // Resolve version: if negative, use select_versions with range from input to -1, then take first element
+        let height: Option<u64> = if let Some(h) = args.height {
+            if h < 0 {
+                // Negative: create range vector, validate it, then use select_versions
+                let range = vec![h, -1];
+                let validate_range = validate_range(&range)?;
+                let (versions_sorted, _) = get_sorted_versions(&ctx).await?;
+                let range_opt = if validate_range.is_empty() { None } else { Some(validate_range) };
+                let selected = select_versions(range_opt, &versions_sorted)?;
+                selected.first().copied()
+            } else {
+                Some(h as u64)
+            }
+        } else {
+            None
+        };
+
         // Aggregated registry view
-        let registry = self.get_registry(ctx, args.height, false).await?;
+        let registry = self.get_registry(ctx, height, false).await?;
         let mut serde_value = serde_json::to_value(registry)?;
         self.args.filters.iter().for_each(|filter| {
             let _ = filter_json_value(&mut serde_value, &filter.key, &filter.value, &filter.comparison);
         });
 
-        let writer: Box<dyn std::io::Write> = match &self.args.output {
-            Some(path) => {
-                let path = path.with_extension("json");
-                let file = fs_err::File::create(path)?;
-                info!("Writing to file: {:?}", file.path().canonicalize()?);
-                Box::new(std::io::BufWriter::new(file))
-            }
-            None => Box::new(std::io::stdout()),
-        };
-
+        // Write to file or stdout
+        let writer = create_writer(&self.args.output)?;
         serde_json::to_writer_pretty(writer, &serde_value)?;
 
         Ok(())
@@ -208,9 +217,9 @@ impl Registry {
     pub(crate) async fn history(&self, ctx: DreContext, args: &RegistryHistory) -> anyhow::Result<()> {
         use ic_registry_common_proto::pb::local_store::v1::ChangelogEntry as PbChangelogEntry;
 
-        let args_range = validate_range(&args.range)?;
+        let validated_range = validate_range(&args.range)?;
         let (versions_sorted, entries_sorted) = get_sorted_versions(&ctx).await?;
-        let range = if args_range.is_empty() { None } else { Some(args_range) };
+        let range = if validated_range.is_empty() { None } else { Some(validated_range) };
 
         let selected_versions = select_versions(range, &versions_sorted)?;
         if let (Some(&first), Some(&last)) = (selected_versions.first(), selected_versions.last()) {
@@ -226,15 +235,15 @@ impl Registry {
         let out = flatten_version_records(&selected_versions, &entries_map);
 
         // Write to file or stdout
-        let mut writer = create_writer(&self.args.output)?;
+        let writer = create_writer(&self.args.output)?;
         serde_json::to_writer_pretty(writer, &out)?;
 
         Ok(())
     }
 
     async fn diff(&self, ctx: DreContext, diff: &RegistryDiff) -> anyhow::Result<()> {
-        let range = validate_range(&diff.range)?;
-        let range = if range.is_empty() { None } else { Some(range) };
+        let validated_range = validate_range(&diff.range)?;
+        let range = if validated_range.is_empty() { None } else { Some(validated_range) };
         let (versions_sorted, _) = get_sorted_versions(&ctx).await?;
 
         let selected_versions = select_versions(range, &versions_sorted)?;
