@@ -196,7 +196,6 @@ impl Registry {
     pub(crate) async fn history(&self, ctx: DreContext, args: &RegistryHistory) -> anyhow::Result<()> {
         use ic_registry_common_proto::pb::local_store::v1::ChangelogEntry as PbChangelogEntry;
 
-        // Validate and normalize range arguments
         let range = validate_range(&args.range)?;
 
         let writer: Box<dyn std::io::Write> = match &self.args.output {
@@ -243,9 +242,7 @@ impl Registry {
     }
 
     async fn diff(&self, ctx: DreContext, diff: &RegistryDiff) -> anyhow::Result<()> {
-        // Validate and normalize range arguments
         let range = validate_range(&diff.range)?;
-        println!("range: {:?}", range);
 
         // Ensure local registry is initialized/synced
         let _ = ctx.registry_with_version(None, false).await;
@@ -342,7 +339,7 @@ impl Registry {
     }
 }
 
-/// Validate and normalize a range of version indices.
+/// Validate a range of version indices.
 /// 
 /// This function validates that the range has at most 2 elements and reorders
 /// the range to ensure increasing order. If an empty vector is passed, it defaults to [-10].
