@@ -38,24 +38,38 @@ use std::{
 
 #[derive(Parser, Debug)]
 #[clap(after_help = r#"EXAMPLES:
-    dre registry                                                         # Dump all contents to stdout
-    dre registry --filter rewards_correct!=true              # Entries for which rewardable_nodes != total_up_nodes
+  Registry content: Get content up to a specific version
+    dre registry get                                                     # Get up to latest version
+    dre registry get <versions>                                          # Get up to a specific version
+
+  Registry diff: Get a diff between two versions
+    dre registry diff                                                    # Get a diff between the latest version and the latest - 10 versions
+    dre registry diff <range>                                            # Get a diff between two specific versions of the provided range
+
+  Registry history: Get content of each version
+    dre registry history                                                  # Get content of the latest 10 versions
+    dre registry history <range>                                          # Get content of the versions of the provided range
+
+  <range>:
+    - numbers are inclusive
+    - there is no version 0
+    - negative numbers are relative to the latest version
+    - positive numbers are versions
+
+  <range> examples:
+    10 15                                                                # between 10 and 15
+    15 10                                                                # between 10 and 15
+    15                                                                   # between 1 and 15
+    -5 -2                                                                # between latest-5 and latest-2
+    -2 -5                                                                # between latest-2 and latest-5
+    -5                                                                   # between latest-5 and latest
+
+  option examples:
+    dre registry --filter rewards_correct!=true                          # Entries for which rewardable_nodes != total_up_nodes
     dre registry --filter "node_type=type1"                              # Entries where node_type == "type1"
-    dre registry -o registry.json --filter "subnet_id startswith tdb26"  # Write to file and filter by subnet_id
-    dre registry -o registry.json --filter "node_id contains h5zep"      # Write to file and filter by node_id
-
-  Registry versions/records dump:
-    dre registry --dump-versions                                         # Dump ALL versions (Python slicing, end-exclusive)
-    dre registry --dump-versions 0                                       # Same as above (from start to end)
-    dre registry --dump-versions -5                                      # Last 5 versions (from -5 to end)
-    dre registry --dump-versions -5 -1                                   # Last 4 versions (excludes last)
-
-  Indexing semantics (important!):
-    - Python slicing with end-exclusive semantics
-    - Positive indices are 1-based positions (since registry records are 1-based)
-    - 0 means start (same as omitting FROM)
-    - Negative indices count from the end (-1 is last)
-    - Reversed ranges yield empty results
+    dre registry --filter "subnet_id startswith tdb26"                   # Filter by subnet_id
+    dre registry --filter "node_id contains h5zep"                       # Filter by node_id
+    dre registry -o registry.json                                        # Write to file
 
   Notes:
     - Values are best-effort decoded by key; unknown bytes are shown as {"bytes_base64": "..."}.
