@@ -194,17 +194,10 @@ impl Registry {
     }
 
     async fn history(&self, ctx: DreContext, args: &RegistryHistory) -> anyhow::Result<()> {
-        // Validate range arguments
-        if args.range.len() > 2 {
-            anyhow::bail!("History range accepts at most 2 arguments (FROM and TO), got {}", args.range.len());
-        }
+        use ic_registry_common_proto::pb::local_store::v1::ChangelogEntry as PbChangelogEntry;
 
-        // Reorder if needed to ensure increasing order
-        let range = if args.range.len() == 2 && args.range[0] > args.range[1] {
-            vec![args.range[1], args.range[0]]
-        } else {
-            args.range.clone()
-        };
+        // Validate and normalize range arguments
+        let range = validate_range(&args.range)?;
 
         let writer: Box<dyn std::io::Write> = match &self.args.output {
             Some(path) => {
@@ -216,7 +209,6 @@ impl Registry {
             None => Box::new(std::io::stdout()),
         };
 
-        use ic_registry_common_proto::pb::local_store::v1::ChangelogEntry as PbChangelogEntry;
         // Ensure local registry is initialized/synced to have content available
         // (no-op in offline mode)
         let _ = ctx.registry_with_version(None, false).await;
@@ -232,9 +224,10 @@ impl Registry {
         let versions_sorted: Vec<u64> = entries_sorted.iter().map(|(v, _)| *v).collect();
 
         // Select versions
-        // If range is empty, treat as None (default 0 -1 in select_versions logic)
         let range_opt = if range.is_empty() { None } else { Some(range) };
         let selected_versions = select_versions(range_opt, &versions_sorted)?;
+        println!("selected_versions: {:?}", selected_versions);
+        return Ok(());
 
         // Build flat list of records
         let entries_map: std::collections::HashMap<u64, PbChangelogEntry> = entries_sorted.into_iter().collect();
@@ -245,22 +238,9 @@ impl Registry {
     }
 
     async fn diff(&self, ctx: DreContext, diff: &RegistryDiff) -> anyhow::Result<()> {
-        use ic_registry_common_proto::pb::local_store::v1::ChangelogEntry as PbChangelogEntry;
-
-        // Validate range arguments
-        if diff.range.is_empty() {
-            anyhow::bail!("Diff requires at least one version argument");
-        }
-        if diff.range.len() > 2 {
-            anyhow::bail!("Diff accepts at most 2 arguments (FROM and TO), got {}", diff.range.len());
-        }
-
-        // Reorder if needed to ensure increasing order
-        let range = if diff.range.len() == 2 && diff.range[0] > diff.range[1] {
-            vec![diff.range[1], diff.range[0]]
-        } else {
-            diff.range.clone()
-        };
+        // Validate and normalize range arguments
+        let range = validate_range(&diff.range)?;
+        println!("range: {:?}", range);
 
         // Ensure local registry is initialized/synced
         let _ = ctx.registry_with_version(None, false).await;
@@ -277,6 +257,8 @@ impl Registry {
         // Select versions - handle exactly like history
         let range_opt = if range.is_empty() { None } else { Some(range) };
         let selected_versions = select_versions(range_opt, &versions_sorted)?;
+        println!("selected_versions: {:?}", selected_versions);
+        return Ok(());
 
         if selected_versions.len() < 2 {
             anyhow::bail!("Need at least 2 versions to diff, got {}", selected_versions.len());
@@ -354,6 +336,35 @@ impl Registry {
     }
 }
 
+/// Validate and normalize a range of version indices.
+/// 
+/// This function validates that the range has at most 2 elements and reorders
+/// the range to ensure increasing order. If an empty vector is passed, it defaults to [-10].
+/// 
+/// # Arguments
+/// * `range` - The range vector to validate and normalize
+/// 
+/// # Returns
+/// * `Ok(Vec<i64>)` - The normalized range (reordered if needed, or [-10] if empty)
+/// * `Err` - If validation fails
+pub(crate) fn validate_range(range: &[i64]) -> anyhow::Result<Vec<i64>> {
+    if range.is_empty() {
+        return Ok(vec![-10]);
+    }
+    if range.len() > 2 {
+        anyhow::bail!("Range accepts at most 2 arguments (FROM and TO), got {}", range.len());
+    }
+
+    // Reorder if needed to ensure increasing order
+    let normalized = if range.len() == 2 && range[0] > range[1] {
+        vec![range[1], range[0]]
+    } else {
+        range.to_vec()
+    };
+
+    Ok(normalized)
+}
+
 // Helper: collect candidate base dirs
 fn local_registry_dirs_for_ctx(ctx: &DreContext) -> anyhow::Result<Vec<std::path::PathBuf>> {
     let mut base_dirs = vec![
@@ -400,11 +411,11 @@ fn load_first_available_entries(
 }
 
 // Slicing semantics:
-// - Python-like, end-exclusive
-// - Positive indices are 1-based positions (since registry records are 1-based)
+// - End-inclusive (both from and to are included)
+// - Positive numbers are treated as actual version numbers (not indices)
+// - Negative numbers are treated as indices (Python-style from the end, -1 is last)
 // - 0 means start (same as omitting FROM)
-// - Negative indices are from the end (-1 is last)
-// - Reversed ranges yield empty results
+// - Versions are returned as increasing vector
 fn select_versions(versions: Option<Vec<i64>>, versions_sorted: &[u64]) -> anyhow::Result<Vec<u64>> {
     let n = versions_sorted.len();
     let args = versions.unwrap_or_default();
@@ -417,25 +428,42 @@ fn select_versions(versions: Option<Vec<i64>>, versions_sorted: &[u64]) -> anyho
     if n == 0 {
         return Ok(vec![]);
     }
-    let norm_index = |idx: i64| -> usize {
+    
+    // Convert input to array indices
+    let to_index = |idx: i64| -> anyhow::Result<usize> {
         match idx {
             i if i < 0 => {
-                let j = (n as i64) + i; // Python-style negative from end
-                j.clamp(0, n as i64) as usize
+                // Negative: treat as index from the end (Python-style)
+                let j = (n as i64) + i;
+                Ok(j.clamp(0, n as i64) as usize)
             }
-            0 => 0,
-            i => {
-                // Treat positive indices as 1-based positions since registry records are 1-based; convert to zero-based
-                ((i - 1) as usize).clamp(0, n)
+            0 => Ok(0),
+            i if i > 0 => {
+                // Positive: treat as actual version number, find its position
+                let version = i as u64;
+                versions_sorted.binary_search(&version)
+                    .map_err(|_| anyhow::anyhow!("Version {} not found in available versions", version))
             }
+            _ => unreachable!(),
         }
     };
-    let a = from_opt.map(norm_index).unwrap_or(0);
-    let b = to_opt.map(norm_index).unwrap_or(n);
-    if a >= b {
+    
+    let a = match from_opt {
+        Some(idx) => to_index(idx)?,
+        None => 0,
+    };
+    let b = match to_opt {
+        Some(idx) => to_index(idx)?,
+        None => n - 1, // Last index for end-inclusive
+    };
+    
+    if a > b {
         return Ok(vec![]);
     }
-    Ok(versions_sorted[a..b].to_vec())
+    
+    // End-inclusive range: use ..= to include both a and b
+    // Result is already sorted since versions_sorted is sorted
+    Ok(versions_sorted[a..=b].to_vec())
 }
 
 fn flatten_version_records(
