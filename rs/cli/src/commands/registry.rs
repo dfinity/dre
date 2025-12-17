@@ -113,21 +113,18 @@ pub enum RegistrySubcommand {
 
 #[derive(Args, Debug)]
 pub struct RegistryGet {
-    /// Specify the height for the registry. Negative numbers are relative to the latest version (e.g., -20 means 20 versions before the latest).
-    #[clap(visible_aliases = ["registry-height", "version"], allow_hyphen_values = true)]
-    pub height: Option<i64>,
+    #[clap(allow_hyphen_values = true)]
+    pub version: Option<i64>,
 }
 
 #[derive(Args, Debug)]
 pub struct RegistryHistory {
-    /// Index-based range over available versions. Negative indexes allowed (Python-style). If omitted, defaults to 0 -1.
     #[clap(num_args(0..=2), allow_hyphen_values = true)]
     pub range: Vec<i64>,
 }
 
 #[derive(Args, Debug)]
 pub struct RegistryDiff {
-    /// Version range to diff. Accepts 1 or 2 arguments. With 1 arg, diffs that version against latest. With 2 args, diffs between the two versions.
     #[clap(num_args(1..=2), allow_hyphen_values = true)]
     pub range: Vec<i64>,
 }
@@ -191,7 +188,7 @@ impl ExecutableCommand for Registry {
 impl Registry {
     async fn get(&self, ctx: DreContext, args: &RegistryGet) -> anyhow::Result<()> {
         // Resolve version: if negative, use select_versions with range from input to -1, then take first element
-        let height: Option<u64> = if let Some(h) = args.height {
+        let height: Option<u64> = if let Some(h) = args.version {
             if h < 0 {
                 // Negative: create range vector, validate it, then use select_versions
                 let range = vec![h, -1];

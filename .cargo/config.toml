@@ -2,7 +2,6 @@
 linker = "clang"
 rustflags = ["-C", "link-arg=-fuse-ld=mold"]
 
-
 [alias]
 cross-x86 = "zigbuild --bin dre --release --target x86_64-apple-darwin"
 cross-aarch = "zigbuild --bin dre --release --target aarch64-apple-darwin"
