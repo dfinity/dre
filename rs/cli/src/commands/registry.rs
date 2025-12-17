@@ -340,19 +340,34 @@ impl Registry {
 /// 
 /// This function validates that the range has at most 2 elements and reorders
 /// the range to ensure increasing order. If an empty vector is passed, it defaults to [-10].
+/// The function will fail if:
+/// - 0 is passed in the range
+/// - Positive version numbers are mixed with negative indices
 /// 
 /// # Arguments
 /// * `range` - The range vector to validate and normalize
 /// 
 /// # Returns
 /// * `Ok(Vec<i64>)` - The normalized range (reordered if needed, or [-10] if empty)
-/// * `Err` - If validation fails
+/// * `Err` - If validation fails (e.g., if 0 is in the range, mixing positive/negative, or more than 2 elements)
 pub(crate) fn validate_range(range: &[i64]) -> anyhow::Result<Vec<i64>> {
     if range.is_empty() {
         return Ok(vec![-10]);
     }
     if range.len() > 2 {
         anyhow::bail!("Range accepts at most 2 arguments (FROM and TO), got {}", range.len());
+    }
+
+    // Fail if 0 is passed
+    if range.iter().any(|&x| x == 0) {
+        anyhow::bail!("Range cannot contain 0");
+    }
+
+    // Fail if mixing positive version numbers and negative indices
+    let has_positive = range.iter().any(|&x| x > 0);
+    let has_negative = range.iter().any(|&x| x < 0);
+    if has_positive && has_negative {
+        anyhow::bail!("Cannot mix positive version numbers and negative indices in range");
     }
 
     // Reorder if needed to ensure increasing order
@@ -414,7 +429,7 @@ fn load_first_available_entries(
 // - End-inclusive (both from and to are included)
 // - Positive numbers are treated as actual version numbers (not indices)
 // - Negative numbers are treated as indices (Python-style from the end, -1 is last)
-// - 0 means start (same as omitting FROM)
+// - 0 means start first version (version 1)
 // - Versions are returned as increasing vector
 fn select_versions(versions: Option<Vec<i64>>, versions_sorted: &[u64]) -> anyhow::Result<Vec<u64>> {
     let n = versions_sorted.len();
