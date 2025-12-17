@@ -3,7 +3,7 @@ use clap::Args;
 use crate::{auth::AuthRequirement, exe::ExecutableCommand, exe::args::GlobalArgs};
 use crate::commands::registry::helpers::{validate_range, get_sorted_versions, select_versions, create_writer, filter_json_value, get_registry};
 use crate::commands::registry::helpers::Filter;
-use crate::commands::registry::helpers::VersionRecord;
+use colored::Colorize;
 use similar::TextDiff;
 use similar::ChangeTag;
 use std::path::PathBuf;
