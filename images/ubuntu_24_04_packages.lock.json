@@ -3391,6 +3391,68 @@
 			"version": "3.4.6-1build1"
 		},
 		{
+			"arch": "amd64",
+			"dependencies": [
+				{
+					"key": "libsystemd0_255.4-1ubuntu8.10_amd64",
+					"name": "libsystemd0",
+					"version": "255.4-1ubuntu8.10"
+				},
+				{
+					"key": "libzstd1_1.5.5-p-dfsg2-2build1.1_amd64",
+					"name": "libzstd1",
+					"version": "1.5.5+dfsg2-2build1.1"
+				},
+				{
+					"key": "libc6_2.39-0ubuntu8.5_amd64",
+					"name": "libc6",
+					"version": "2.39-0ubuntu8.5"
+				},
+				{
+					"key": "libgcc-s1_14.2.0-4ubuntu2_24.04_amd64",
+					"name": "libgcc-s1",
+					"version": "14.2.0-4ubuntu2~24.04"
+				},
+				{
+					"key": "gcc-14-base_14.2.0-4ubuntu2_24.04_amd64",
+					"name": "gcc-14-base",
+					"version": "14.2.0-4ubuntu2~24.04"
+				},
+				{
+					"key": "liblzma5_5.6.1-p-really5.4.5-1ubuntu0.2_amd64",
+					"name": "liblzma5",
+					"version": "5.6.1+really5.4.5-1ubuntu0.2"
+				},
+				{
+					"key": "liblz4-1_1.9.4-1build1.1_amd64",
+					"name": "liblz4-1",
+					"version": "1.9.4-1build1.1"
+				},
+				{
+					"key": "libgcrypt20_1.10.3-2build1_amd64",
+					"name": "libgcrypt20",
+					"version": "1.10.3-2build1"
+				},
+				{
+					"key": "libgpg-error0_1.47-3build2.1_amd64",
+					"name": "libgpg-error0",
+					"version": "1.47-3build2.1"
+				},
+				{
+					"key": "libcap2_1-2.66-5ubuntu2.2_amd64",
+					"name": "libcap2",
+					"version": "1:2.66-5ubuntu2.2"
+				}
+			],
+			"key": "libsystemd-dev_255.4-1ubuntu8.10_amd64",
+			"name": "libsystemd-dev",
+			"sha256": "f19affec2fd8671f595b8078aad998845a233857500e058252f16f743facad39",
+			"urls": [
+				"https://snapshot.ubuntu.com/ubuntu/20250826T000000Z/pool/main/s/systemd/libsystemd-dev_255.4-1ubuntu8.10_amd64.deb"
+			],
+			"version": "255.4-1ubuntu8.10"
+		},
+		{
 			"arch": "arm64",
 			"dependencies": [],
 			"key": "ncurses-base_6.4-p-20240113-1ubuntu2_arm64",
@@ -6758,6 +6820,68 @@
 				"https://snapshot.ubuntu.com/ubuntu/20250826T000000Z/pool/main/libf/libffi/libffi-dev_3.4.6-1build1_arm64.deb"
 			],
 			"version": "3.4.6-1build1"
+		},
+		{
+			"arch": "arm64",
+			"dependencies": [
+				{
+					"key": "libsystemd0_255.4-1ubuntu8.10_arm64",
+					"name": "libsystemd0",
+					"version": "255.4-1ubuntu8.10"
+				},
+				{
+					"key": "libzstd1_1.5.5-p-dfsg2-2build1.1_arm64",
+					"name": "libzstd1",
+					"version": "1.5.5+dfsg2-2build1.1"
+				},
+				{
+					"key": "libc6_2.39-0ubuntu8.5_arm64",
+					"name": "libc6",
+					"version": "2.39-0ubuntu8.5"
+				},
+				{
+					"key": "libgcc-s1_14.2.0-4ubuntu2_24.04_arm64",
+					"name": "libgcc-s1",
+					"version": "14.2.0-4ubuntu2~24.04"
+				},
+				{
+					"key": "gcc-14-base_14.2.0-4ubuntu2_24.04_arm64",
+					"name": "gcc-14-base",
+					"version": "14.2.0-4ubuntu2~24.04"
+				},
+				{
+					"key": "liblzma5_5.6.1-p-really5.4.5-1ubuntu0.2_arm64",
+					"name": "liblzma5",
+					"version": "5.6.1+really5.4.5-1ubuntu0.2"
+				},
+				{
+					"key": "liblz4-1_1.9.4-1build1.1_arm64",
+					"name": "liblz4-1",
+					"version": "1.9.4-1build1.1"
+				},
+				{
+					"key": "libgcrypt20_1.10.3-2build1_arm64",
+					"name": "libgcrypt20",
+					"version": "1.10.3-2build1"
+				},
+				{
+					"key": "libgpg-error0_1.47-3build2.1_arm64",
+					"name": "libgpg-error0",
+					"version": "1.47-3build2.1"
+				},
+				{
+					"key": "libcap2_1-2.66-5ubuntu2.2_arm64",
+					"name": "libcap2",
+					"version": "1:2.66-5ubuntu2.2"
+				}
+			],
+			"key": "libsystemd-dev_255.4-1ubuntu8.10_arm64",
+			"name": "libsystemd-dev",
+			"sha256": "bebccd1494632a8f95101f85ddc11d46299d10e9891775784c479d1b97092eb2",
+			"urls": [
+				"https://snapshot.ubuntu.com/ubuntu/20250826T000000Z/pool/main/s/systemd/libsystemd-dev_255.4-1ubuntu8.10_arm64.deb"
+			],
+			"version": "255.4-1ubuntu8.10"
 		}
 	],
 	"version": 1
