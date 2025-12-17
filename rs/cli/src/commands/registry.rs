@@ -232,7 +232,7 @@ impl Registry {
                 info!("Selected versions from {} to {}", first, last);
             }
         }
-        
+
         // Build flat list of records
         let entries_map: std::collections::HashMap<u64, PbChangelogEntry> = entries_sorted.into_iter().collect();
         let out = flatten_version_records(&selected_versions, &entries_map);
@@ -340,16 +340,16 @@ impl Registry {
 }
 
 /// Validate a range of version indices.
-/// 
+///
 /// This function validates that the range has at most 2 elements and reorders
 /// the range to ensure increasing order. If an empty vector is passed, it defaults to [-10].
 /// The function will fail if:
 /// - 0 is passed in the range
 /// - Positive version numbers are mixed with negative indices
-/// 
+///
 /// # Arguments
 /// * `range` - The range vector to validate and normalize
-/// 
+///
 /// # Returns
 /// * `Ok(Vec<i64>)` - The normalized range (reordered if needed, or [-10] if empty)
 /// * `Err` - If validation fails (e.g., if 0 is in the range, mixing positive/negative, or more than 2 elements)
@@ -454,7 +454,7 @@ pub(crate) fn select_versions(versions: Option<Vec<i64>>, versions_sorted: &[u64
     if n == 0 {
         return Ok(vec![]);
     }
-    
+
     // Convert input to array indices
     let to_index = |idx: i64| -> anyhow::Result<usize> {
         match idx {
@@ -479,7 +479,7 @@ pub(crate) fn select_versions(versions: Option<Vec<i64>>, versions_sorted: &[u64
             _ => unreachable!(),
         }
     };
-    
+
     let mut a = match from_opt {
         Some(idx) => to_index(idx)?,
         None => 0,
@@ -488,16 +488,16 @@ pub(crate) fn select_versions(versions: Option<Vec<i64>>, versions_sorted: &[u64
         Some(idx) => to_index(idx)?,
         None => n - 1, // Last index for end-inclusive
     };
-    
+
     // Reorder if needed (swap a and b if a > b)
     if a > b {
         std::mem::swap(&mut a, &mut b);
     }
-    
+
     // End-inclusive range: use ..= to include both a and b
     // Result is already sorted since versions_sorted is sorted
     let result = versions_sorted[a..=b].to_vec();
-    
+
     Ok(result)
 }
 
