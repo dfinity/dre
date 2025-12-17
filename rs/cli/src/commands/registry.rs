@@ -368,7 +368,9 @@ pub(crate) fn validate_range(range: &[i64]) -> anyhow::Result<Vec<i64>> {
     Ok(normalized)
 }
 
-async fn get_sorted_versions(ctx: &DreContext) -> anyhow::Result<(Vec<u64>, Vec<(u64, ic_registry_common_proto::pb::local_store::v1::ChangelogEntry)>)> {
+async fn get_sorted_versions(
+    ctx: &DreContext,
+) -> anyhow::Result<(Vec<u64>, Vec<(u64, ic_registry_common_proto::pb::local_store::v1::ChangelogEntry)>)> {
     // Ensure local registry is initialized/synced
     let _ = ctx.registry_with_version(None, false).await;
     let base_dirs = local_registry_dirs_for_ctx(ctx)?;
