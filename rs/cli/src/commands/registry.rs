@@ -106,8 +106,9 @@ pub struct RegistryHistory {
 
 #[derive(Args, Debug)]
 pub struct RegistryDiff {
-    pub version_from: Option<u64>,
-    pub version_to: Option<u64>,
+    /// Version range to diff. Accepts 1 or 2 arguments. With 1 arg, diffs that version against latest. With 2 args, diffs between the two versions.
+    #[clap(num_args(1..=2), allow_hyphen_values = true)]
+    pub range: Vec<i64>,
 }
 
 #[derive(Debug, Clone)]
@@ -244,29 +245,59 @@ impl Registry {
     }
 
     async fn diff(&self, ctx: DreContext, diff: &RegistryDiff) -> anyhow::Result<()> {
-        let (reg1, reg2) = match (diff.version_from, diff.version_to) {
-            (Some(v1), Some(v2)) => {
-                // Logic: Fetch High version (online/sync) first, then Low version (offline)
-                if v1 > v2 {
-                    let r1 = self.get_registry(ctx.clone(), Some(v1), false).await?;
-                    let r2 = self.get_registry(ctx.clone(), Some(v2), true).await?;
-                    (r1, r2)
-                } else {
-                    // v2 >= v1. Fetch High (v2) first (sync), then Low (v1) offline.
-                    let r2 = self.get_registry(ctx.clone(), Some(v2), false).await?;
-                    let r1 = self.get_registry(ctx.clone(), Some(v1), true).await?;
-                    (r1, r2)
-                }
-            }
-            (Some(v1), None) => {
-                // Compare v1 (Base) vs Latest (Target).
-                // Fetch Latest (Target) first, sync enabled.
-                let r2 = self.get_registry(ctx.clone(), None, false).await?;
-                // Fetch v1 (Base), offline.
-                let r1 = self.get_registry(ctx.clone(), Some(v1), true).await?;
+        use ic_registry_common_proto::pb::local_store::v1::ChangelogEntry as PbChangelogEntry;
+
+        // Validate range arguments
+        if diff.range.is_empty() {
+            anyhow::bail!("Diff requires at least one version argument");
+        }
+        if diff.range.len() > 2 {
+            anyhow::bail!("Diff accepts at most 2 arguments (FROM and TO), got {}", diff.range.len());
+        }
+
+        // Reorder if needed to ensure increasing order
+        let range = if diff.range.len() == 2 && diff.range[0] > diff.range[1] {
+            vec![diff.range[1], diff.range[0]]
+        } else {
+            diff.range.clone()
+        };
+
+        // Ensure local registry is initialized/synced
+        let _ = ctx.registry_with_version(None, false).await;
+        let base_dirs = local_registry_dirs_for_ctx(&ctx)?;
+        let entries = load_first_available_entries(&base_dirs)?;
+        let mut entries_sorted = entries;
+        entries_sorted.sort_by_key(|(v, _)| *v);
+        let versions_sorted: Vec<u64> = entries_sorted.iter().map(|(v, _)| *v).collect();
+
+        if versions_sorted.is_empty() {
+            anyhow::bail!("No registry versions available");
+        }
+
+        // Select versions - handle exactly like history
+        let range_opt = if range.is_empty() { None } else { Some(range) };
+        let selected_versions = select_versions(range_opt, &versions_sorted)?;
+
+        if selected_versions.len() < 2 {
+            anyhow::bail!("Need at least 2 versions to diff, got {}", selected_versions.len());
+        }
+
+        // Take first and last from selected versions
+        let actual_v1 = selected_versions[0];
+        let actual_v2 = *selected_versions.last().unwrap();
+
+        let (reg1, reg2) = {
+            // Logic: Fetch High version (online/sync) first, then Low version (offline)
+            if actual_v1 > actual_v2 {
+                let r1 = self.get_registry(ctx.clone(), Some(actual_v1), false).await?;
+                let r2 = self.get_registry(ctx.clone(), Some(actual_v2), true).await?;
+                (r1, r2)
+            } else {
+                // actual_v2 >= actual_v1. Fetch High (v2) first (sync), then Low (v1) offline.
+                let r2 = self.get_registry(ctx.clone(), Some(actual_v2), false).await?;
+                let r1 = self.get_registry(ctx.clone(), Some(actual_v1), true).await?;
                 (r1, r2)
             }
-            _ => anyhow::bail!("Must specify at least one version to diff"),
         };
 
         let mut val1 = serde_json::to_value(&reg1)?;
