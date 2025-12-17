@@ -33,9 +33,9 @@ use std::{
 
 #[derive(Debug, Clone)]
 pub struct Filter {
-    key: String,
-    value: Value,
-    comparison: Comparison,
+    pub key: String,
+    pub value: Value,
+    pub comparison: Comparison,
 }
 
 impl FromStr for Filter {
@@ -282,58 +282,54 @@ pub(crate) fn flatten_version_records(
     out
 }
 
-pub struct Registry {}
+pub(crate) async fn get_registry(ctx: DreContext, height: Option<u64>, offline: bool) -> anyhow::Result<RegistryDump> {
+    let local_registry = ctx.registry_with_version(height, offline).await;
 
-impl Registry {
-    async fn get_registry(&self, ctx: DreContext, height: Option<u64>, offline: bool) -> anyhow::Result<RegistryDump> {
-        let local_registry = ctx.registry_with_version(height, offline).await;
+    let elected_guest_os_versions = get_elected_guest_os_versions(&local_registry)?;
+    let elected_host_os_versions = get_elected_host_os_versions(&local_registry)?;
 
-        let elected_guest_os_versions = get_elected_guest_os_versions(&local_registry)?;
-        let elected_host_os_versions = get_elected_host_os_versions(&local_registry)?;
+    let mut node_operators = get_node_operators(&local_registry, ctx.network()).await?;
 
-        let mut node_operators = get_node_operators(&local_registry, ctx.network()).await?;
+    let dcs = local_registry.get_datacenters()?;
 
-        let dcs = local_registry.get_datacenters()?;
+    let (subnets, nodes) = get_subnets_and_nodes(&local_registry, &node_operators, ctx.health_client()).await?;
 
-        let (subnets, nodes) = get_subnets_and_nodes(&local_registry, &node_operators, ctx.health_client()).await?;
+    let unassigned_nodes_config = local_registry.get_unassigned_nodes()?;
 
-        let unassigned_nodes_config = local_registry.get_unassigned_nodes()?;
-
-        // Calculate number of rewardable nodes for node operators
-        for node_operator in node_operators.values_mut() {
-            let mut nodes_by_health = IndexMap::new();
-            for node_details in nodes.iter().filter(|n| n.node_operator_id == node_operator.node_operator_principal_id) {
-                let node_id = node_details.node_id;
-                let health = node_details.status.to_string();
-                let nodes = nodes_by_health.entry(health).or_insert_with(Vec::new);
-                nodes.push(node_id);
-            }
-            node_operator.computed.nodes_health = nodes_by_health;
-            node_operator.computed.total_up_nodes = nodes
-                .iter()
-                .filter(|n| {
-                    n.node_operator_id == node_operator.node_operator_principal_id
-                        && (n.status == HealthStatus::Healthy || n.status == HealthStatus::Degraded)
-                })
-                .count() as u32;
+    // Calculate number of rewardable nodes for node operators
+    for node_operator in node_operators.values_mut() {
+        let mut nodes_by_health = IndexMap::new();
+        for node_details in nodes.iter().filter(|n| n.node_operator_id == node_operator.node_operator_principal_id) {
+            let node_id = node_details.node_id;
+            let health = node_details.status.to_string();
+            let nodes = nodes_by_health.entry(health).or_insert_with(Vec::new);
+            nodes.push(node_id);
         }
-        let node_rewards_table = get_node_rewards_table(&local_registry, ctx.network());
-
-        let api_bns = get_api_boundary_nodes(&local_registry)?;
-
-        Ok(RegistryDump {
-            elected_guest_os_versions,
-            elected_host_os_versions,
-            nodes,
-            subnets,
-            unassigned_nodes_config,
-            dcs,
-            node_operators: node_operators.values().cloned().collect_vec(),
-            node_rewards_table,
-            api_bns,
-            node_providers: get_node_providers(&local_registry, ctx.network(), ctx.is_offline(), height.is_none()).await?,
-        })
+        node_operator.computed.nodes_health = nodes_by_health;
+        node_operator.computed.total_up_nodes = nodes
+            .iter()
+            .filter(|n| {
+                n.node_operator_id == node_operator.node_operator_principal_id
+                    && (n.status == HealthStatus::Healthy || n.status == HealthStatus::Degraded)
+            })
+            .count() as u32;
     }
+    let node_rewards_table = get_node_rewards_table(&local_registry, ctx.network());
+
+    let api_bns = get_api_boundary_nodes(&local_registry)?;
+
+    Ok(RegistryDump {
+        elected_guest_os_versions,
+        elected_host_os_versions,
+        nodes,
+        subnets,
+        unassigned_nodes_config,
+        dcs,
+        node_operators: node_operators.values().cloned().collect_vec(),
+        node_rewards_table,
+        api_bns,
+        node_providers: get_node_providers(&local_registry, ctx.network(), ctx.is_offline(), height.is_none()).await?,
+    })
 }
 
 #[derive(Debug, Serialize)]
