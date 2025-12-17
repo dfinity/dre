@@ -183,6 +183,13 @@ impl ExecutableCommand for Registry {
 
 impl Registry {
     async fn get(&self, ctx: DreContext, args: &RegistryGet) -> anyhow::Result<()> {
+        // Aggregated registry view
+        let registry = self.get_registry(ctx, args.height, false).await?;
+        let mut serde_value = serde_json::to_value(registry)?;
+        self.args.filters.iter().for_each(|filter| {
+            let _ = filter_json_value(&mut serde_value, &filter.key, &filter.value, &filter.comparison);
+        });
+
         let writer: Box<dyn std::io::Write> = match &self.args.output {
             Some(path) => {
                 let path = path.with_extension("json");
@@ -192,15 +199,6 @@ impl Registry {
             }
             None => Box::new(std::io::stdout()),
         };
-
-        // Aggregated registry view
-        // Default to online/sync unless stated otherwise (but we don't have offline flag in Get args yet? Store supports, context supports it).
-        // Let's assume standard behavior is online sync for 'get'.
-        let registry = self.get_registry(ctx, args.height, false).await?;
-        let mut serde_value = serde_json::to_value(registry)?;
-        self.args.filters.iter().for_each(|filter| {
-            let _ = filter_json_value(&mut serde_value, &filter.key, &filter.value, &filter.comparison);
-        });
 
         serde_json::to_writer_pretty(writer, &serde_value)?;
 
@@ -210,35 +208,11 @@ impl Registry {
     pub(crate) async fn history(&self, ctx: DreContext, args: &RegistryHistory) -> anyhow::Result<()> {
         use ic_registry_common_proto::pb::local_store::v1::ChangelogEntry as PbChangelogEntry;
 
-        let range = validate_range(&args.range)?;
+        let args_range = validate_range(&args.range)?;
+        let (versions, entries_sorted) = get_sorted_versions(&ctx).await?;
+        let range = if args_range.is_empty() { None } else { Some(args_range) };
 
-        let writer: Box<dyn std::io::Write> = match &self.args.output {
-            Some(path) => {
-                let path = path.with_extension("json");
-                let file = fs_err::File::create(path)?;
-                info!("Writing to file: {:?}", file.path().canonicalize()?);
-                Box::new(std::io::BufWriter::new(file))
-            }
-            None => Box::new(std::io::stdout()),
-        };
-
-        // Ensure local registry is initialized/synced to have content available
-        // (no-op in offline mode)
-        let _ = ctx.registry_with_version(None, false).await;
-
-        let base_dirs = local_registry_dirs_for_ctx(&ctx)?;
-
-        // Walk all .pb files recursively across candidates; stop at first non-empty
-        let entries = load_first_available_entries(&base_dirs)?;
-
-        // Apply version filters
-        let mut entries_sorted = entries;
-        entries_sorted.sort_by_key(|(v, _)| *v);
-        let versions_sorted: Vec<u64> = entries_sorted.iter().map(|(v, _)| *v).collect();
-
-        // Select versions (returns actual version numbers)
-        let range_opt = if range.is_empty() { None } else { Some(range) };
-        let selected_versions = select_versions(range_opt, &versions_sorted)?;
+        let selected_versions = select_versions(range, &versions)?;
         if let (Some(&first), Some(&last)) = (selected_versions.first(), selected_versions.last()) {
             if first == last {
                 info!("Selected version {}", first);
@@ -251,28 +225,27 @@ impl Registry {
         let entries_map: std::collections::HashMap<u64, PbChangelogEntry> = entries_sorted.into_iter().collect();
         let out = flatten_version_records(&selected_versions, &entries_map);
 
+        // Write to file or stdout
+        let writer: Box<dyn std::io::Write> = match &self.args.output {
+            Some(path) => {
+                let path = path.with_extension("json");
+                let file = fs_err::File::create(path)?;
+                info!("Writing to file: {:?}", file.path().canonicalize()?);
+                Box::new(std::io::BufWriter::new(file))
+            }
+            None => Box::new(std::io::stdout()),
+        };
         serde_json::to_writer_pretty(writer, &out)?;
+
         Ok(())
     }
 
     async fn diff(&self, ctx: DreContext, diff: &RegistryDiff) -> anyhow::Result<()> {
         let range = validate_range(&diff.range)?;
+        let range = if range.is_empty() { None } else { Some(range) };
+        let (versions, _) = get_sorted_versions(&ctx).await?;
 
-        // Ensure local registry is initialized/synced
-        let _ = ctx.registry_with_version(None, false).await;
-        let base_dirs = local_registry_dirs_for_ctx(&ctx)?;
-        let entries = load_first_available_entries(&base_dirs)?;
-        let mut entries_sorted = entries;
-        entries_sorted.sort_by_key(|(v, _)| *v);
-        let versions_sorted: Vec<u64> = entries_sorted.iter().map(|(v, _)| *v).collect();
-
-        if versions_sorted.is_empty() {
-            anyhow::bail!("No registry versions available");
-        }
-
-        // Select versions - handle exactly like history
-        let range_opt = if range.is_empty() { None } else { Some(range) };
-        let selected_versions = select_versions(range_opt, &versions_sorted)?;
+        let selected_versions = select_versions(range, &versions)?;
         if let (Some(&first), Some(&last)) = (selected_versions.first(), selected_versions.last()) {
             if first == last {
                 info!("Selected version {}", first);
@@ -395,6 +368,22 @@ pub(crate) fn validate_range(range: &[i64]) -> anyhow::Result<Vec<i64>> {
     };
 
     Ok(normalized)
+}
+
+async fn get_sorted_versions(ctx: &DreContext) -> anyhow::Result<(Vec<u64>, Vec<(u64, ic_registry_common_proto::pb::local_store::v1::ChangelogEntry)>)> {
+    // Ensure local registry is initialized/synced
+    let _ = ctx.registry_with_version(None, false).await;
+    let base_dirs = local_registry_dirs_for_ctx(ctx)?;
+    let entries = load_first_available_entries(&base_dirs)?;
+    let mut entries_sorted = entries;
+    entries_sorted.sort_by_key(|(v, _)| *v);
+    let versions_sorted: Vec<u64> = entries_sorted.iter().map(|(v, _)| *v).collect();
+
+    if versions_sorted.is_empty() {
+        anyhow::bail!("No registry versions available");
+    }
+
+    Ok((versions_sorted, entries_sorted))
 }
 
 // Helper: collect candidate base dirs
