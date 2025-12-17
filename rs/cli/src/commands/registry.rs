@@ -209,10 +209,10 @@ impl Registry {
         use ic_registry_common_proto::pb::local_store::v1::ChangelogEntry as PbChangelogEntry;
 
         let args_range = validate_range(&args.range)?;
-        let (versions, entries_sorted) = get_sorted_versions(&ctx).await?;
+        let (versions_sorted, entries_sorted) = get_sorted_versions(&ctx).await?;
         let range = if args_range.is_empty() { None } else { Some(args_range) };
 
-        let selected_versions = select_versions(range, &versions)?;
+        let selected_versions = select_versions(range, &versions_sorted)?;
         if let (Some(&first), Some(&last)) = (selected_versions.first(), selected_versions.last()) {
             if first == last {
                 info!("Selected version {}", first);
