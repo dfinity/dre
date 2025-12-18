@@ -3,11 +3,12 @@ use clap::{Args, Subcommand};
 use crate::commands::registry::get::Get;
 use crate::commands::registry::history::History;
 use crate::commands::registry::diff::Diff;
-use crate::commands::registry::legacy::Legacy;
+use crate::commands::registry::helpers::Filter;
 use crate::exe::ExecutableCommand;
 use crate::ctx::DreContext;
 use crate::auth::AuthRequirement;
 use crate::exe::args::GlobalArgs;
+use std::path::PathBuf;
 
 mod get;
 mod history;
@@ -19,6 +20,12 @@ mod helpers;
 pub struct Registry {
     #[clap(subcommand)]
     pub subcommands: Option<Subcommands>,
+
+    #[clap(short = 'o', long, help = "Output file (default is stdout)")]
+    pub output: Option<PathBuf>,
+
+    #[clap(long, short, alias = "filter", help = Filter::get_help_message())]
+    pub filter: Vec<Filter>,
 }
 
 #[derive(Subcommand, Debug)]
@@ -49,9 +56,13 @@ impl ExecutableCommand for Registry {
             Some(Subcommands::History(history)) => history.execute(ctx).await,
             Some(Subcommands::Diff(diff)) => diff.execute(ctx).await,
             None => {
-                // No subcommand => run legacy mode
-                let legacy = Legacy {};
-                legacy.execute(ctx).await
+                // No subcommand => run Get and pass output/filter options to it
+                let get = Get {
+                    version: None,
+                    output: self.output.clone(),
+                    filter: self.filter.clone(),
+                };
+                get.execute(ctx).await
             }
         }
     }
