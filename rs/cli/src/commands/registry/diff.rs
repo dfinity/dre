@@ -74,9 +74,6 @@ impl ExecutableCommand for Diff {
         let actual_v1 = selected_versions[0];
         let actual_v2 = *selected_versions.last().unwrap();
 
-        // Registry has already been fetched, set store to offline
-        ctx.set_offline(true);
-
         // Fetch aggregated registry data for both versions
         let reg1 = get_registry(ctx.clone(), Some(actual_v1)).await?;
         let reg2 = get_registry(ctx.clone(), Some(actual_v2)).await?;

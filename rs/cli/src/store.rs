@@ -60,10 +60,6 @@ impl Store {
         self.offline
     }
 
-    pub fn set_offline(&mut self, offline: bool) {
-        self.offline = offline;
-    }
-
     fn path(&self) -> &PathBuf {
         &self.path
     }

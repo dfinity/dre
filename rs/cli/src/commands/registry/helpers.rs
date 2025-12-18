@@ -25,7 +25,7 @@ use serde::Serialize;
 use serde_json::Value;
 use std::iter::{IntoIterator, Iterator};
 use std::{
-    collections::{BTreeMap, HashMap, HashSet},
+    collections::{BTreeMap, HashMap},
     net::Ipv6Addr,
     str::FromStr,
     sync::Arc,
@@ -137,6 +137,15 @@ pub(crate) async fn get_sorted_versions(
 
     if versions_sorted.is_empty() {
         anyhow::bail!("No registry versions available");
+    }
+
+    // Print available versions after syncing
+    if let (Some(&first), Some(&last)) = (versions_sorted.first(), versions_sorted.last()) {
+        if first == last {
+            info!("Registry synced. Available version: {}", first);
+        } else {
+            info!("Registry synced. Available versions: {} to {} ({} versions)", first, last, versions_sorted.len());
+        }
     }
 
     Ok((versions_sorted, entries_sorted))
@@ -339,7 +348,7 @@ pub(crate) async fn get_registry(ctx: DreContext, height: Option<u64>) -> anyhow
         node_operators: node_operators.values().cloned().collect_vec(),
         node_rewards_table,
         api_bns,
-        node_providers: get_node_providers(&local_registry, ctx.network(), ctx.is_offline(), height.is_none()).await?,
+        node_providers: get_node_providers(&local_registry, ctx.network(), ctx.is_offline()).await?,
     })
 }
 
@@ -705,7 +714,6 @@ async fn get_node_providers(
     local_registry: &Arc<dyn LazyRegistry>,
     network: &Network,
     offline: bool,
-    latest_height: bool,
 ) -> anyhow::Result<Vec<NodeProvider>> {
     let all_nodes = local_registry.nodes().await?;
 
@@ -731,27 +739,13 @@ async fn get_node_providers(
     } else {
         HashMap::new()
     };
-    let mut reg_node_providers = local_registry
+    let reg_node_providers = local_registry
         .operators()
         .await?
         .values()
         .map(|operator| operator.provider.clone())
         .collect_vec();
-    let reg_provider_ids = reg_node_providers.iter().map(|provider| provider.principal).collect::<HashSet<_>>();
 
-    // Governance canister doesn't have the mechanism to retrieve node providers on a certain height
-    // meaning that merging the lists on arbitrary heights wouldn't make sense.
-    if latest_height {
-        for principal in gov_node_providers.keys() {
-            if !reg_provider_ids.contains(principal) {
-                reg_node_providers.push(ic_management_types::Provider {
-                    principal: *principal,
-                    name: None,
-                    website: None,
-                });
-            }
-        }
-    }
     let reg_node_providers = reg_node_providers
         .into_iter()
         .sorted_by_key(|provider| provider.principal)
