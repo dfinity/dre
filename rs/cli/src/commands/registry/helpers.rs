@@ -144,7 +144,12 @@ pub(crate) async fn get_sorted_versions(
         if first == last {
             info!("Registry synced. Available version: {}", first);
         } else {
-            info!("Registry synced. Available versions: {} to {} ({} versions)", first, last, versions_sorted.len());
+            info!(
+                "Registry synced. Available versions: {} to {} ({} versions)",
+                first,
+                last,
+                versions_sorted.len()
+            );
         }
     }
 
@@ -364,11 +369,6 @@ fn extract_version_from_registry_path(base_dir: &std::path::Path, full_path: &st
     // We reconstruct the hex by concatenating the four segments (without slashes) and parse as hex u64.
     let rel = full_path.strip_prefix(base_dir).ok()?;
     let parts: Vec<_> = rel.iter().map(|s| s.to_string_lossy()).collect();
-
-    if parts.len() == 1 {
-        let hex = parts[0].trim_end_matches(".pb");
-        return u64::from_str_radix(hex, 16).ok();
-    }
 
     if parts.len() < 4 {
         return None;
@@ -710,11 +710,7 @@ fn get_api_boundary_nodes(local_registry: &Arc<dyn LazyRegistry>) -> anyhow::Res
     Ok(api_bns)
 }
 
-async fn get_node_providers(
-    local_registry: &Arc<dyn LazyRegistry>,
-    network: &Network,
-    offline: bool,
-) -> anyhow::Result<Vec<NodeProvider>> {
+async fn get_node_providers(local_registry: &Arc<dyn LazyRegistry>, network: &Network, offline: bool) -> anyhow::Result<Vec<NodeProvider>> {
     let all_nodes = local_registry.nodes().await?;
 
     // Get the node providers from the node operator records, and from the governance canister, and merge them
