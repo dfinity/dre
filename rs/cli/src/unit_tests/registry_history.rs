@@ -11,12 +11,8 @@ use serial_test::serial;
 use crate::exe::ExecutableCommand;
 
 use crate::{
-    artifact_downloader::MockArtifactDownloader,
-    auth::Neuron,
-    commands::registry::history::History,
-    cordoned_feature_fetcher::MockCordonedFeatureFetcher,
-    ctx::tests::get_mocked_ctx,
-    ic_admin::MockIcAdmin,
+    artifact_downloader::MockArtifactDownloader, auth::Neuron, commands::registry::history::History,
+    cordoned_feature_fetcher::MockCordonedFeatureFetcher, ctx::tests::get_mocked_ctx, ic_admin::MockIcAdmin,
 };
 
 fn hex_version(v: u64) -> String {
@@ -98,11 +94,11 @@ async fn history_outputs_records_sorted() {
     // Test 1: All versions (empty range)
     let output_file1 = std::path::PathBuf::from("/tmp/test_history_output1.json");
     let cmd_v1: History = History {
-            version_1: Some(-2),
-            version_2: None,
-            output: Some(output_file1.clone()),
-            filter: vec![],
-        };
+        version_1: Some(-2),
+        version_2: None,
+        output: Some(output_file1.clone()),
+        filter: vec![],
+    };
     cmd_v1.execute(ctx.clone()).await.unwrap();
     let content1 = std::fs::read_to_string(&output_file1).unwrap();
     let j1: serde_json::Value = serde_json::from_str(&content1).unwrap();
