@@ -41,7 +41,7 @@ impl ExecutableCommand for Get {
 
     fn validate(&self, _args: &GlobalArgs, _cmd: &mut clap::Command) {}
 
-    async fn execute(&self, mut ctx: crate::ctx::DreContext) -> anyhow::Result<()> {
+    async fn execute(&self, ctx: crate::ctx::DreContext) -> anyhow::Result<()> {
         // Resolve version
         let version: Option<u64> = if let Some(h) = self.version {
             if h < 0 {
