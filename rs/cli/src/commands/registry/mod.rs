@@ -11,10 +11,9 @@ use crate::exe::args::GlobalArgs;
 use std::path::PathBuf;
 
 mod get;
-mod history;
+pub mod history;
 mod diff;
-mod legacy;
-mod helpers;
+pub mod helpers;
 
 #[derive(Args, Debug)]
 pub struct Registry {

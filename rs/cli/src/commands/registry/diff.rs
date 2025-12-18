@@ -36,7 +36,7 @@ pub struct Diff{
     pub output: Option<PathBuf>,
 
     #[clap(long, short, alias = "filter", help = Filter::get_help_message())]
-    pub filters: Vec<Filter>,
+    pub filter: Vec<Filter>,
 }
 
 impl ExecutableCommand for Diff {
@@ -84,7 +84,7 @@ impl ExecutableCommand for Diff {
         // Apply filters
         let mut val1 = serde_json::to_value(&reg1)?;
         let mut val2 = serde_json::to_value(&reg2)?;
-        self.filters.clone().iter().for_each(|filter| {
+        self.filter.clone().iter().for_each(|filter| {
             let _ = filter_json_value(&mut val1, &filter.key.clone(), &filter.value.clone(), &filter.comparison.clone());
             let _ = filter_json_value(&mut val2, &filter.key.clone(), &filter.value.clone(), &filter.comparison.clone());
         });

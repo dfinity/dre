@@ -1,6 +1,6 @@
 #[test]
 fn test_select_versions() {
-    use crate::commands::registry::select_versions;
+    use crate::commands::registry::helpers::{select_versions};
 
     // Create versions from 1 to 22
     let versions_sorted: Vec<u64> = (1..=22).collect();
