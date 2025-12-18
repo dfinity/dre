@@ -68,11 +68,7 @@ impl ExecutableCommand for Diff {
         let actual_v2 = *selected_versions.last().unwrap();
 
         // Log versions
-        info!(
-            "Selected version range from {} to {}",
-            actual_v1,
-            actual_v2,
-        );
+        info!("Selected version range from {} to {}", actual_v1, actual_v2,);
 
         // Fetch aggregated registry data for both versions
         // Clear registry cache before each call to ensure we get the correct version
