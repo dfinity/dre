@@ -122,11 +122,11 @@ impl DreContext {
         .await
     }
 
-    pub async fn registry_with_version(&self, version_height: Option<u64>, offline: bool) -> Arc<dyn LazyRegistry> {
+    pub async fn registry_with_version(&self, version_height: Option<u64>) -> Arc<dyn LazyRegistry> {
         if let Some(height) = version_height {
             return self
                 .store
-                .registry(self.network(), self.proposals_agent(), Some(height), offline)
+                .registry(self.network(), self.proposals_agent(), Some(height))
                 .await
                 .unwrap();
         }
@@ -134,7 +134,7 @@ impl DreContext {
         if let Some(reg) = self.registry.borrow().as_ref() {
             return reg.clone();
         }
-        let registry = self.store.registry(self.network(), self.proposals_agent(), None, offline).await.unwrap();
+        let registry = self.store.registry(self.network(), self.proposals_agent(), None).await.unwrap();
         *self.registry.borrow_mut() = Some(registry.clone());
         registry
     }
@@ -143,8 +143,12 @@ impl DreContext {
         self.store.is_offline()
     }
 
+    pub fn set_offline(&mut self, offline: bool) {
+        self.store.set_offline(offline);
+    }
+
     pub async fn registry(&self) -> Arc<dyn LazyRegistry> {
-        self.registry_with_version(None, false).await
+        self.registry_with_version(None).await
     }
 
     pub fn network(&self) -> &Network {

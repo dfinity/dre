@@ -48,7 +48,7 @@ impl ExecutableCommand for Diff {
 
     fn validate(&self, _args: &GlobalArgs, _cmd: &mut clap::Command) {}
 
-    async fn execute(&self, ctx: crate::ctx::DreContext) -> anyhow::Result<()> {
+    async fn execute(&self, mut ctx: crate::ctx::DreContext) -> anyhow::Result<()> {
         // Build range vector from optional version_1/version_2 fields
         let range: Vec<i64> = match (self.version_1, self.version_2) {
             (Some(f), Some(t)) => vec![f, t],
@@ -74,18 +74,12 @@ impl ExecutableCommand for Diff {
         let actual_v1 = selected_versions[0];
         let actual_v2 = *selected_versions.last().unwrap();
 
-        // Fetch registry for higher version first (online/sync), then lower version (offline)
-        let (reg1, reg2) = {
-            if actual_v1 > actual_v2 {
-                let r1 = get_registry(ctx.clone(), Some(actual_v1), false).await?;
-                let r2 = get_registry(ctx.clone(), Some(actual_v2), true).await?;
-                (r1, r2)
-            } else {
-                let r2 = get_registry(ctx.clone(), Some(actual_v2), false).await?;
-                let r1 = get_registry(ctx.clone(), Some(actual_v1), true).await?;
-                (r1, r2)
-            }
-        };
+        // Registry has already been fetched, set store to offline
+        ctx.set_offline(true);
+
+        // Fetch aggregated registry data for both versions
+        let reg1 = get_registry(ctx.clone(), Some(actual_v1)).await?;
+        let reg2 = get_registry(ctx.clone(), Some(actual_v2)).await?;
 
         // Apply filters
         let mut val1 = serde_json::to_value(&reg1)?;
@@ -95,10 +89,10 @@ impl ExecutableCommand for Diff {
             let _ = filter_json_value(&mut val2, &filter.key.clone(), &filter.value.clone(), &filter.comparison.clone());
         });
 
-        // Create diff
+        // Create diff: val2 - val1
         let json1 = serde_json::to_string_pretty(&val1)?;
         let json2 = serde_json::to_string_pretty(&val2)?;
-        let diff = TextDiff::from_lines(&json1, &json2);
+        let diff = TextDiff::from_lines(&json2, &json1);
 
         // Write to file or stdout
         let mut writer = create_writer(&self.output)?;

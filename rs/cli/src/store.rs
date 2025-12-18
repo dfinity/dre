@@ -60,6 +60,10 @@ impl Store {
         self.offline
     }
 
+    pub fn set_offline(&mut self, offline: bool) {
+        self.offline = offline;
+    }
+
     fn path(&self) -> &PathBuf {
         &self.path
     }
@@ -114,7 +118,6 @@ impl Store {
         network: &Network,
         proposal_agent: Arc<dyn ProposalAgent>,
         version_height: Option<u64>,
-        offline: bool,
     ) -> anyhow::Result<Arc<dyn LazyRegistry>> {
         let registry_path = self.local_store_for_network(network)?;
 
@@ -123,10 +126,10 @@ impl Store {
             network.name,
             registry_path.display(),
             version_height.map(|v| v.to_string()).unwrap_or_else(|| "latest".to_string()),
-            self.offline || offline
+            self.offline,
         );
 
-        match self.offline || offline {
+        match self.offline {
             true => {
                 if self.offline {
                     warn!("Explicit offline mode! Registry won't be synced")

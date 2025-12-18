@@ -128,7 +128,7 @@ pub(crate) async fn get_sorted_versions(
     ctx: &DreContext,
 ) -> anyhow::Result<(Vec<u64>, Vec<(u64, ic_registry_common_proto::pb::local_store::v1::ChangelogEntry)>)> {
     // Ensure local registry is initialized/synced
-    let _ = ctx.registry_with_version(None, false).await;
+    let _ = ctx.registry_with_version(None).await;
     let base_dirs = local_registry_dirs_for_ctx(ctx)?;
     let entries = load_first_available_entries(&base_dirs)?;
     let mut entries_sorted = entries;
@@ -297,8 +297,8 @@ pub(crate) fn flatten_version_records(
     out
 }
 
-pub(crate) async fn get_registry(ctx: DreContext, height: Option<u64>, offline: bool) -> anyhow::Result<RegistryDump> {
-    let local_registry = ctx.registry_with_version(height, offline).await;
+pub(crate) async fn get_registry(ctx: DreContext, height: Option<u64>) -> anyhow::Result<RegistryDump> {
+    let local_registry = ctx.registry_with_version(height).await;
 
     let elected_guest_os_versions = get_elected_guest_os_versions(&local_registry)?;
     let elected_host_os_versions = get_elected_host_os_versions(&local_registry)?;
