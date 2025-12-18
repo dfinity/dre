@@ -214,10 +214,6 @@ pub(crate) fn select_versions(versions: Option<Vec<i64>>, versions_sorted: &[u64
             (Some(1), Some(*from))
         }
         [from] => (Some(*from), None),
-        [from, to] if from == to => {
-            // Same number twice: return just that single version
-            (Some(*from), Some(*to))
-        }
         [from, to] => (Some(*from), Some(*to)),
         _ => unreachable!(),
     };
