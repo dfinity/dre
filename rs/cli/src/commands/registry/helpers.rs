@@ -48,7 +48,7 @@ Examples:
     --filter \"rewards_correct!=true\"
     --filter \"node_type=type1\"
     --filter \"subnet_id startswith tdb26\"
-    --filter \"node_id contains h5zep\""
+    --filter \"node_id contains h5zep\"",
         )
     }
 }
