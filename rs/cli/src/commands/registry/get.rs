@@ -8,7 +8,7 @@ use log::info;
 
 #[derive(Args, Debug)]
 pub struct Get {
-    #[clap(allow_hyphen_values = true)]
+    #[clap(index = 1, allow_hyphen_values = true, help = "Version number or negative index (e.g., 100 or -5)")]
     pub version: Option<i64>,
 
     #[clap(short = 'o', long, help = "Output file (default is stdout)")]
