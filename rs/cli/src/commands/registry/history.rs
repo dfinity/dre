@@ -7,7 +7,7 @@ use std::path::PathBuf;
 use log::info;
 
 #[derive(Args, Debug)]
-#[clap(about = "Show registry history", long_about = "Show registry history for a version range.
+#[clap(about = "Show registry history for a version range.
 
 Version numbers:
   - Positive numbers are actual version numbers
@@ -21,7 +21,8 @@ Examples:
   -1              # Show history of latest version only
   100             # Show history from version 1 to 100
   -5 -2           # Show history from latest-5 to latest-2
-  10 15           # Show history from version 10 to 15")]
+  10 15           # Show history from version 10 to 15
+  ")]
 
 pub struct History {
     #[clap(index = 1, allow_hyphen_values = true, help = "Version in range (optional)")]
@@ -47,12 +48,12 @@ impl ExecutableCommand for History {
     async fn execute(&self, ctx: crate::ctx::DreContext) -> anyhow::Result<()> {
         use ic_registry_common_proto::pb::local_store::v1::ChangelogEntry as PbChangelogEntry;
 
-        // Build range vector from optional from/to fields
+        // Build range vector from optional version_1/version_2 fields
         let range: Vec<i64> = match (self.version_1, self.version_2) {
             (Some(f), Some(t)) => vec![f, t],
             (Some(f), None) => vec![f],
             (None, None) => vec![],
-            (None, Some(_)) => anyhow::bail!("Cannot specify 'to' without 'from'"),
+            (None, Some(_)) => anyhow::bail!("This should never happen"),
         };
 
         // Resolve range

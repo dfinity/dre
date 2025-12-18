@@ -10,12 +10,27 @@ use std::path::PathBuf;
 use log::info;
 
 #[derive(Args, Debug)]
-pub struct Diff{
-    #[clap(index = 1, allow_hyphen_values = true, help = "First version in range")]
-    pub from: i64,
+#[clap(about = "Show diff of two aggregated versions of the registry.
 
-    #[clap(index = 2, allow_hyphen_values = true, help = "Last version in range (optional)")]
-    pub to: Option<i64>,
+Version numbers:
+  - Positive numbers are actual version numbers
+  - Negative numbers are indices relative to the latest version (-1 = latest)
+  - 0 is not supported
+  - No argument will show diff between latest and latest-10
+  - Version numbers are inclusive.
+
+Examples:
+  -5              # Show diff between latest-5 and latest
+  100             # Show diff between version 1 and 100
+  -5 -2           # Show diff between latest-5 and latest-2
+  10 15           # Show diff between version 10 and 15
+  ")]
+pub struct Diff{
+    #[clap(index = 1, allow_hyphen_values = true, help = "Version in range (optional)")]
+    pub version_1: Option<i64>,
+
+    #[clap(index = 2, allow_hyphen_values = true, help = "Version in range (optional)")]
+    pub version_2: Option<i64>,
 
     #[clap(short = 'o', long, help = "Output file (default is stdout)")]
     pub output: Option<PathBuf>,
@@ -32,61 +47,60 @@ impl ExecutableCommand for Diff {
     fn validate(&self, _args: &GlobalArgs, _cmd: &mut clap::Command) {}
 
     async fn execute(&self, ctx: crate::ctx::DreContext) -> anyhow::Result<()> {
-        // Build range vector from from/to fields
-        let range: Vec<i64> = match (self.from, self.to) {
-            (f, Some(t)) => vec![f, t],
-            (f, None) => vec![f],
+        // Build range vector from optional version_1/version_2 fields
+        let range: Vec<i64> = match (self.version_1, self.version_2) {
+            (Some(f), Some(t)) => vec![f, t],
+            (Some(f), None) => vec![f],
+            (None, None) => vec![],
+            (None, Some(_)) => anyhow::bail!("This should never happen"),
         };
 
+        // Resolve range
         let validated_range = validate_range_argument(&range)?;
         let range = if validated_range.is_empty() { None } else { Some(validated_range) };
         let (versions_sorted, _) = get_sorted_versions(&ctx).await?;
-
         let selected_versions = select_versions(range, &versions_sorted)?;
-        if let (Some(&first), Some(&last)) = (selected_versions.first(), selected_versions.last()) {
-            if first == last {
-                info!("Selected version {}", first);
-            } else {
-                info!("Selected versions from {} to {}", first, last);
-            }
-        }
+
+        // Log versions
+        info!("Selected version range from {} to {}", selected_versions.first().unwrap(), selected_versions.last().unwrap());
 
         // Take first and last from selected versions
         let actual_v1 = selected_versions[0];
         let actual_v2 = *selected_versions.last().unwrap();
 
+        // Fetch registry for higher version first (online/sync), then lower version (offline)
         let (reg1, reg2) = {
-            // Logic: Fetch High version (online/sync) first, then Low version (offline)
             if actual_v1 > actual_v2 {
                 let r1 = get_registry(ctx.clone(), Some(actual_v1), false).await?;
                 let r2 = get_registry(ctx.clone(), Some(actual_v2), true).await?;
                 (r1, r2)
             } else {
-                // actual_v2 >= actual_v1. Fetch High (v2) first (sync), then Low (v1) offline.
                 let r2 = get_registry(ctx.clone(), Some(actual_v2), false).await?;
                 let r1 = get_registry(ctx.clone(), Some(actual_v1), true).await?;
                 (r1, r2)
             }
         };
 
+        // Apply filters
         let mut val1 = serde_json::to_value(&reg1)?;
         let mut val2 = serde_json::to_value(&reg2)?;
-
         self.filters.clone().iter().for_each(|filter| {
             let _ = filter_json_value(&mut val1, &filter.key.clone(), &filter.value.clone(), &filter.comparison.clone());
             let _ = filter_json_value(&mut val2, &filter.key.clone(), &filter.value.clone(), &filter.comparison.clone());
         });
 
+        // Create diff
         let json1 = serde_json::to_string_pretty(&val1)?;
         let json2 = serde_json::to_string_pretty(&val2)?;
-
         let diff = TextDiff::from_lines(&json1, &json2);
 
         // Write to file or stdout
         let mut writer = create_writer(&self.output)?;
 
+        // Use color if output is stdout
         let use_color = self.output.is_none() && std::io::IsTerminal::is_terminal(&std::io::stdout());
 
+        // Write diff to file or stdout
         for (idx, group) in diff.grouped_ops(3).iter().enumerate() {
             if idx > 0 {
                 writeln!(writer, "{}", "---".dimmed().to_string())?;
