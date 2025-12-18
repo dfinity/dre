@@ -115,7 +115,7 @@ async fn history_outputs_records_sorted() {
     let cmd_v2 = History {
         version_1: Some(-1),
         version_2: None,
-        output: Some(output_file1.clone()),
+        output: Some(output_file2.clone()),
         filter: vec![],
     };
     cmd_v2.execute(ctx).await.unwrap();
@@ -208,7 +208,6 @@ async fn list_versions_only_outputs_numbers() {
     let content = std::fs::read_to_string(&output_file).unwrap();
     let json: serde_json::Value = serde_json::from_str(&content).unwrap();
     let arr = json.as_array().unwrap();
-    println!("arr: {:?}", arr);
-    assert!(arr.iter().any(|e| e["version"] == 1));
+    assert!(arr.iter().any(|e| e["version"] == 2));
     std::fs::remove_file(&output_file).ok();
 }

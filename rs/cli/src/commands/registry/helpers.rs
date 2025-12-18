@@ -370,6 +370,11 @@ fn extract_version_from_registry_path(base_dir: &std::path::Path, full_path: &st
     let rel = full_path.strip_prefix(base_dir).ok()?;
     let parts: Vec<_> = rel.iter().map(|s| s.to_string_lossy()).collect();
 
+    if parts.len() == 1 {
+        let hex = parts[0].trim_end_matches(".pb");
+        return u64::from_str_radix(hex, 16).ok();
+    }
+
     if parts.len() < 4 {
         return None;
     }
