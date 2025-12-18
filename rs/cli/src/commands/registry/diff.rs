@@ -48,7 +48,7 @@ impl ExecutableCommand for Diff {
 
     fn validate(&self, _args: &GlobalArgs, _cmd: &mut clap::Command) {}
 
-    async fn execute(&self, mut ctx: crate::ctx::DreContext) -> anyhow::Result<()> {
+    async fn execute(&self, ctx: crate::ctx::DreContext) -> anyhow::Result<()> {
         // Build range vector from optional version_1/version_2 fields
         let range: Vec<i64> = match (self.version_1, self.version_2) {
             (Some(f), Some(t)) => vec![f, t],
