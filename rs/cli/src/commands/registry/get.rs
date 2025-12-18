@@ -43,7 +43,7 @@ impl ExecutableCommand for Get {
 
     async fn execute(&self, mut ctx: crate::ctx::DreContext) -> anyhow::Result<()> {
         // Resolve version
-        let (version, registry_has_been_syned): (Option<u64>, bool) = if let Some(h) = self.version {
+        let version: Option<u64> = if let Some(h) = self.version {
             if h < 0 {
                 // Negative: find version based on relative index
                 let range = vec![h, -1];
@@ -51,26 +51,21 @@ impl ExecutableCommand for Get {
                 let (versions_sorted, _) = get_sorted_versions(&ctx).await?;
                 let range_opt = if validated_range.is_empty() { None } else { Some(validated_range) };
                 let selected = select_versions(range_opt, &versions_sorted)?;
-                (selected.first().copied(), true)
+                selected.first().copied()
             } else {
                 // Positive: return the version number as is
-                (Some(h as u64), false)
+                Some(h as u64)
             }
         } else {
-            // No version provided: return None for latest version
-            (None, false)
+            // No version provided: resolve to latest version explicitly
+            None
         };
 
         // Log version
         if let Some(version) = version {
-            info!("Selected version {}", version);
+            info!("Selected version: {}", version);
         } else {
-            info!("Selected latest version");
-        }
-
-        // set store to offline if registry has already been synced
-        if registry_has_been_syned {
-            ctx.set_offline(true);
+            info!("Selected version: latest");
         }
 
         // Aggregated registry view. Only sync if the registry has not been synced yet.
