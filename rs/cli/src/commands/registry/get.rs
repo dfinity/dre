@@ -41,7 +41,7 @@ impl ExecutableCommand for Get {
 
     fn validate(&self, _args: &GlobalArgs, _cmd: &mut clap::Command) {}
 
-    async fn execute(&self, ctx: crate::ctx::DreContext) -> anyhow::Result<()> {
+    async fn execute(&self, mut ctx: crate::ctx::DreContext) -> anyhow::Result<()> {
         // Resolve version
         let (version, registry_has_been_syned): (Option<u64>, bool) = if let Some(h) = self.version {
             if h < 0 {
@@ -68,8 +68,13 @@ impl ExecutableCommand for Get {
             info!("Selected latest version");
         }
 
+        // set store to offline if registry has already been synced
+        if registry_has_been_syned {
+            ctx.set_offline(true);
+        }
+
         // Aggregated registry view. Only sync if the registry has not been synced yet.
-        let registry = get_registry(ctx, version, registry_has_been_syned).await?;
+        let registry = get_registry(ctx, version).await?;
         let mut serde_value = serde_json::to_value(registry)?;
 
         // Apply filters
