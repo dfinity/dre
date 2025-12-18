@@ -31,6 +31,8 @@ use std::{
     sync::Arc,
 };
 
+const DEFAULT_VERSION_RANGE_INDEX: i64 = -10;
+
 #[derive(Debug, Clone)]
 pub struct Filter {
     pub(crate) key: String,
@@ -79,7 +81,7 @@ impl FromStr for Filter {
 /// Validate a range of version indices.
 ///
 /// This function validates that the range has at most 2 elements and reorders
-/// the range to ensure increasing order. If an empty vector is passed, it defaults to [-10].
+/// the range to ensure increasing order. If an empty vector is passed, it defaults to $DEFAULT_VERSION_RANGE_INDEX.
 /// The function will fail if:
 /// - 0 is passed in the range
 /// - Positive version numbers are mixed with negative indices
@@ -88,11 +90,11 @@ impl FromStr for Filter {
 /// * `range` - The range vector to validate and normalize
 ///
 /// # Returns
-/// * `Ok(Vec<i64>)` - The normalized range (reordered if needed, or [-10] if empty)
+/// * `Ok(Vec<i64>)` - The normalized range (reordered if needed, or $DEFAULT_VERSION_RANGE_INDEX if empty)
 /// * `Err` - If validation fails (e.g., if 0 is in the range, mixing positive/negative, or more than 2 elements)
-pub(crate) fn validate_range(range: &[i64]) -> anyhow::Result<Vec<i64>> {
+pub(crate) fn validate_range_argument(range: &[i64]) -> anyhow::Result<Vec<i64>> {
     if range.is_empty() {
-        return Ok(vec![-10]);
+        return Ok(vec![DEFAULT_VERSION_RANGE_INDEX]);
     }
     if range.len() > 2 {
         anyhow::bail!("Range accepts at most 2 arguments (FROM and TO), got {}", range.len());

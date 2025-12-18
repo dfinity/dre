@@ -1,9 +1,8 @@
 use clap::Args;
 
 use crate::{auth::AuthRequirement, exe::ExecutableCommand, exe::args::GlobalArgs};
-use crate::commands::registry::helpers::{validate_range, get_sorted_versions, select_versions, create_writer, flatten_version_records};
-use crate::commands::registry::helpers::Filter;
-use crate::commands::registry::helpers::VersionRecord;
+use crate::commands::registry::helpers::{validate_range_argument, get_sorted_versions, select_versions, create_writer, flatten_version_records};
+use crate::commands::registry::helpers::{Filter, VersionRecord};
 use std::path::PathBuf;
 use log::info;
 
@@ -12,9 +11,11 @@ pub struct History {
     #[clap(allow_hyphen_values = true)]
     pub range: Vec<i64>,
 
+    #[clap(short = 'o', long, help = "Output file (default is stdout)")]
     pub output: Option<PathBuf>,
 
-    pub filters: Vec<Filter>,
+    #[clap(long, short, alias = "filter", help = Filter::get_help_message())]
+    pub filter: Vec<Filter>,
 }
 
 impl ExecutableCommand for History {
@@ -27,18 +28,14 @@ impl ExecutableCommand for History {
     async fn execute(&self, ctx: crate::ctx::DreContext) -> anyhow::Result<()> {
         use ic_registry_common_proto::pb::local_store::v1::ChangelogEntry as PbChangelogEntry;
 
-        let validated_range = validate_range(&self.range)?;
+        // Resolve range
+        let validated_range = validate_range_argument(&self.range)?;
         let (versions_sorted, entries_sorted) = get_sorted_versions(&ctx).await?;
         let range = if validated_range.is_empty() { None } else { Some(validated_range) };
-
         let selected_versions = select_versions(range, &versions_sorted)?;
-        if let (Some(&first), Some(&last)) = (selected_versions.first(), selected_versions.last()) {
-            if first == last {
-                info!("Selected version {}", first);
-            } else {
-                info!("Selected versions from {} to {}", first, last);
-            }
-        }
+
+        // Log versions
+        info!("Selected version range from {} to {}", selected_versions.first().unwrap(), selected_versions.last().unwrap());
 
         // Build flat list of records
         let entries_map: std::collections::HashMap<u64, PbChangelogEntry> = entries_sorted.into_iter().collect();
