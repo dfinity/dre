@@ -1,7 +1,7 @@
 use clap::Args;
 
 use crate::{auth::AuthRequirement, exe::ExecutableCommand, exe::args::GlobalArgs};
-use crate::commands::registry::helpers::{validate_range, get_sorted_versions, select_versions, create_writer, filter_json_value, get_registry};
+use crate::commands::registry::helpers::{validate_range_argument, get_sorted_versions, select_versions, create_writer, filter_json_value, get_registry};
 use crate::commands::registry::helpers::Filter;
 use colored::Colorize;
 use similar::TextDiff;
@@ -27,7 +27,7 @@ impl ExecutableCommand for Diff {
     fn validate(&self, _args: &GlobalArgs, _cmd: &mut clap::Command) {}
 
     async fn execute(&self, ctx: crate::ctx::DreContext) -> anyhow::Result<()> {
-        let validated_range = validate_range(&self.range)?;
+        let validated_range = validate_range_argument(&self.range)?;
         let range = if validated_range.is_empty() { None } else { Some(validated_range) };
         let (versions_sorted, _) = get_sorted_versions(&ctx).await?;
 

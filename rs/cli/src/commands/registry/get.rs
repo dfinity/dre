@@ -1,9 +1,10 @@
 use clap::Args;
 
 use crate::{auth::AuthRequirement, exe::ExecutableCommand, exe::args::GlobalArgs};
-use crate::commands::registry::helpers::{validate_range, get_sorted_versions, select_versions, filter_json_value, get_registry, create_writer};
+use crate::commands::registry::helpers::{validate_range_argument, get_sorted_versions, select_versions, filter_json_value, get_registry, create_writer};
 use crate::commands::registry::helpers::Filter;
 use std::path::PathBuf;
+use log::info;
 
 #[derive(Args, Debug)]
 pub struct Get {
@@ -25,25 +26,34 @@ impl ExecutableCommand for Get {
     fn validate(&self, _args: &GlobalArgs, _cmd: &mut clap::Command) {}
 
     async fn execute(&self, ctx: crate::ctx::DreContext) -> anyhow::Result<()> {
-        // Resolve version: if negative, use select_versions with range from input to -1, then take first element
-        let height: Option<u64> = if let Some(h) = self.version {
+        // Resolve version
+        let (version, registry_has_been_syned): (Option<u64>, bool) = if let Some(h) = self.version {
             if h < 0 {
-                // Negative: create range vector, validate it, then use select_versions
+                // Negative: find version based on relative index
                 let range = vec![h, -1];
-                let validated_range = validate_range(&range)?;
+                let validated_range = validate_range_argument(&range)?;
                 let (versions_sorted, _) = get_sorted_versions(&ctx).await?;
                 let range_opt = if validated_range.is_empty() { None } else { Some(validated_range) };
                 let selected = select_versions(range_opt, &versions_sorted)?;
-                selected.first().copied()
+                (selected.first().copied(), true)
             } else {
-                Some(h as u64)
+                // Positive: return the version number as is
+                (Some(h as u64), false)
             }
         } else {
-            None
+            // No version provided: return None for latest version
+            (None, false)
         };
 
-        // Aggregated registry view
-        let registry = get_registry(ctx, height, false).await?;
+        // Log version
+        if let Some(version) = version {
+            info!("Selected version {}", version);
+        } else {
+            info!("Selected latest version");
+        }
+
+        // Aggregated registry view. Only sync if the registry has not been synced yet.
+        let registry = get_registry(ctx, version, registry_has_been_syned).await?;
         let mut serde_value = serde_json::to_value(registry)?;
 
         // Apply filters
