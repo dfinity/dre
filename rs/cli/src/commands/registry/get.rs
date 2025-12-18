@@ -22,7 +22,6 @@ Examples:
   -1              # Get data of latest version
   55400           # Get data of version 55400
 ")]
-
 pub struct Get {
     #[clap(index = 1, allow_hyphen_values = true, help = "Version number or negative index")]
     pub version: Option<i64>,

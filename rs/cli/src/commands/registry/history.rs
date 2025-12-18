@@ -23,7 +23,6 @@ Examples:
   -5 -2           # Show history from latest-5 to latest-2
   55400 55440     # Show history from version 10 to 15
   ")]
-
 pub struct History {
     #[clap(index = 1, allow_hyphen_values = true, help = "Version in range (optional)")]
     pub version_1: Option<i64>,

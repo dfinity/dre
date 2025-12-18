@@ -42,7 +42,7 @@ pub struct Filter {
 
 impl Filter {
     pub(crate) fn get_help_message() -> String {
-        format!(
+        String::from(
             "Filter in `key=value` format. Multiple filters can be provided.
 Examples:
     --filter \"rewards_correct!=true\"

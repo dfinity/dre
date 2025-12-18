@@ -99,7 +99,7 @@ impl ExecutableCommand for Diff {
         // Write diff to file or stdout
         for (idx, group) in diff.grouped_ops(3).iter().enumerate() {
             if idx > 0 {
-                writeln!(writer, "{}", "---".dimmed().to_string())?;
+                writeln!(writer, "{}", "---".dimmed())?;
             }
             for op in group {
                 for change in diff.iter_changes(op) {
