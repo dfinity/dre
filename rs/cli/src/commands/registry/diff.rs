@@ -1,13 +1,15 @@
 use clap::Args;
 
-use crate::{auth::AuthRequirement, exe::ExecutableCommand, exe::args::GlobalArgs};
-use crate::commands::registry::helpers::{validate_range_argument, get_sorted_versions, select_versions, create_writer, filter_json_value, get_registry};
 use crate::commands::registry::helpers::Filter;
+use crate::commands::registry::helpers::{
+    create_writer, filter_json_value, get_registry, get_sorted_versions, select_versions, validate_range_argument,
+};
+use crate::{auth::AuthRequirement, exe::ExecutableCommand, exe::args::GlobalArgs};
 use colored::Colorize;
-use similar::TextDiff;
-use similar::ChangeTag;
-use std::path::PathBuf;
 use log::info;
+use similar::ChangeTag;
+use similar::TextDiff;
+use std::path::PathBuf;
 
 #[derive(Args, Debug)]
 #[clap(about = "Show diff of two aggregated versions of the registry.
@@ -25,7 +27,7 @@ Examples:
   -5 -2           # Show diff between latest-5 and latest-2
   10 15           # Show diff between version 10 and 15
   ")]
-pub struct Diff{
+pub struct Diff {
     #[clap(index = 1, allow_hyphen_values = true, help = "Version in range (optional)")]
     pub version_1: Option<i64>,
 
@@ -62,7 +64,11 @@ impl ExecutableCommand for Diff {
         let selected_versions = select_versions(range, &versions_sorted)?;
 
         // Log versions
-        info!("Selected version range from {} to {}", selected_versions.first().unwrap(), selected_versions.last().unwrap());
+        info!(
+            "Selected version range from {} to {}",
+            selected_versions.first().unwrap(),
+            selected_versions.last().unwrap()
+        );
 
         // Take first and last from selected versions
         let actual_v1 = selected_versions[0];

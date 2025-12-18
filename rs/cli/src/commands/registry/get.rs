@@ -1,10 +1,12 @@
 use clap::Args;
 
-use crate::{auth::AuthRequirement, exe::ExecutableCommand, exe::args::GlobalArgs};
-use crate::commands::registry::helpers::{validate_range_argument, get_sorted_versions, select_versions, filter_json_value, get_registry, create_writer};
 use crate::commands::registry::helpers::Filter;
-use std::path::PathBuf;
+use crate::commands::registry::helpers::{
+    create_writer, filter_json_value, get_registry, get_sorted_versions, select_versions, validate_range_argument,
+};
+use crate::{auth::AuthRequirement, exe::ExecutableCommand, exe::args::GlobalArgs};
 use log::info;
+use std::path::PathBuf;
 
 #[derive(Args, Debug)]
 #[clap(about = "Get aggregated registry data for a specific version.

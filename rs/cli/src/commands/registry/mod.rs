@@ -1,19 +1,19 @@
 use clap::{Args, Subcommand};
 
-use crate::commands::registry::get::Get;
-use crate::commands::registry::history::History;
-use crate::commands::registry::diff::Diff;
-use crate::commands::registry::helpers::Filter;
-use crate::exe::ExecutableCommand;
-use crate::ctx::DreContext;
 use crate::auth::AuthRequirement;
+use crate::commands::registry::diff::Diff;
+use crate::commands::registry::get::Get;
+use crate::commands::registry::helpers::Filter;
+use crate::commands::registry::history::History;
+use crate::ctx::DreContext;
+use crate::exe::ExecutableCommand;
 use crate::exe::args::GlobalArgs;
 use std::path::PathBuf;
 
-mod get;
-pub mod history;
 mod diff;
+mod get;
 pub mod helpers;
+pub mod history;
 
 #[derive(Args, Debug)]
 pub struct Registry {
