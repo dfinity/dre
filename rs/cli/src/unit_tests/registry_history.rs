@@ -8,10 +8,12 @@ use ic_registry_common_proto::pb::local_store::v1::{ChangelogEntry as PbChangelo
 use prost::Message;
 use serial_test::serial;
 
+use crate::exe::ExecutableCommand;
+
 use crate::{
     artifact_downloader::MockArtifactDownloader,
     auth::Neuron,
-    commands::registry::{Registry, RegistryArgs},
+    commands::registry::history::History,
     cordoned_feature_fetcher::MockCordonedFeatureFetcher,
     ctx::tests::get_mocked_ctx,
     ic_admin::MockIcAdmin,
@@ -93,20 +95,15 @@ async fn history_outputs_records_sorted() {
         Arc::new(MockHealthStatusQuerier::new()),
     );
 
-    // Act & Assert: query versions individually to avoid interference
-    use crate::commands::registry::{RegistryHistory, RegistrySubcommand};
-
     // Test 1: All versions (empty range)
     let output_file1 = std::path::PathBuf::from("/tmp/test_history_output1.json");
-    let history_args1 = RegistryHistory { range: vec![-2] };
-    let cmd_v1 = Registry {
-        args: RegistryArgs {
+    let cmd_v1: History = History {
+            version_1: Some(-2),
+            version_2: None,
             output: Some(output_file1.clone()),
-            filters: vec![],
-        },
-        subcommand: Some(RegistrySubcommand::History(RegistryHistory { range: vec![-2] })),
-    };
-    cmd_v1.history(ctx.clone(), &history_args1).await.unwrap();
+            filter: vec![],
+        };
+    cmd_v1.execute(ctx.clone()).await.unwrap();
     let content1 = std::fs::read_to_string(&output_file1).unwrap();
     let j1: serde_json::Value = serde_json::from_str(&content1).unwrap();
     let a1 = j1.as_array().unwrap();
@@ -119,15 +116,13 @@ async fn history_outputs_records_sorted() {
 
     // Test 2: Last version only
     let output_file2 = std::path::PathBuf::from("/tmp/test_history_output2.json");
-    let history_args2 = RegistryHistory { range: vec![-1] };
-    let cmd_v2 = Registry {
-        args: RegistryArgs {
-            output: Some(output_file2.clone()),
-            filters: vec![],
-        },
-        subcommand: Some(RegistrySubcommand::History(RegistryHistory { range: vec![-1] })),
+    let cmd_v2 = History {
+        version_1: Some(-1),
+        version_2: None,
+        output: Some(output_file1.clone()),
+        filter: vec![],
     };
-    cmd_v2.history(ctx, &history_args2).await.unwrap();
+    cmd_v2.execute(ctx).await.unwrap();
     let content2 = std::fs::read_to_string(&output_file2).unwrap();
     let j2: serde_json::Value = serde_json::from_str(&content2).unwrap();
     let a2 = j2.as_array().unwrap();
@@ -206,18 +201,14 @@ async fn list_versions_only_outputs_numbers() {
         Arc::new(MockHealthStatusQuerier::new()),
     );
 
-    use crate::commands::registry::{RegistryHistory, RegistrySubcommand};
-
     let output_file = std::path::PathBuf::from("/tmp/test_list_versions_output.json");
-    let history_args = RegistryHistory { range: vec![2, 2] };
-    let cmd = Registry {
-        args: RegistryArgs {
-            output: Some(output_file.clone()),
-            filters: vec![],
-        },
-        subcommand: Some(RegistrySubcommand::History(RegistryHistory { range: vec![2, 2] })),
+    let cmd = History {
+        version_1: Some(2),
+        version_2: Some(2),
+        output: Some(output_file.clone()),
+        filter: vec![],
     };
-    cmd.history(ctx, &history_args).await.unwrap();
+    cmd.execute(ctx).await.unwrap();
     let content = std::fs::read_to_string(&output_file).unwrap();
     let json: serde_json::Value = serde_json::from_str(&content).unwrap();
     let arr = json.as_array().unwrap();
