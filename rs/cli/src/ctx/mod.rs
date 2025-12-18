@@ -131,6 +131,10 @@ impl DreContext {
         registry
     }
 
+    pub fn clear_registry_cache(&self) {
+        *self.registry.borrow_mut() = None;
+    }
+
     pub fn is_offline(&self) -> bool {
         self.store.is_offline()
     }

@@ -20,7 +20,7 @@ Version numbers:
 Examples:
   -5              # Get data of latest-5
   -1              # Get data of latest version
-  100             # Get data of version 100
+  55400           # Get data of version 55400
 ")]
 
 pub struct Get {

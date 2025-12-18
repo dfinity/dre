@@ -19,9 +19,9 @@ Version numbers:
 Examples:
   -5              # Show history from latest-5 to latest
   -1              # Show history of latest version only
-  100             # Show history from version 1 to 100
+  55400           # Show history from version 1 to 100
   -5 -2           # Show history from latest-5 to latest-2
-  10 15           # Show history from version 10 to 15
+  55400 55440     # Show history from version 10 to 15
   ")]
 
 pub struct History {

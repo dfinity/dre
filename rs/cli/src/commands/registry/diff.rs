@@ -23,9 +23,9 @@ Version numbers:
 
 Examples:
   -5              # Show diff between latest-5 and latest
-  100             # Show diff between version 1 and 100
+  55400           # Show diff between version 1 and 100
   -5 -2           # Show diff between latest-5 and latest-2
-  10 15           # Show diff between version 10 and 15
+  55400 55440     # Show diff between version 10 and 15
   ")]
 pub struct Diff {
     #[clap(index = 1, allow_hyphen_values = true, help = "Version in range (optional)")]
@@ -63,19 +63,22 @@ impl ExecutableCommand for Diff {
         let (versions_sorted, _) = get_sorted_versions(&ctx).await?;
         let selected_versions = select_versions(range, &versions_sorted)?;
 
+        // Take first and last from selected versions
+        let actual_v1 = *selected_versions.first().unwrap();
+        let actual_v2 = *selected_versions.last().unwrap();
+
         // Log versions
         info!(
             "Selected version range from {} to {}",
-            selected_versions.first().unwrap(),
-            selected_versions.last().unwrap()
+            actual_v1,
+            actual_v2,
         );
 
-        // Take first and last from selected versions
-        let actual_v1 = selected_versions[0];
-        let actual_v2 = *selected_versions.last().unwrap();
-
         // Fetch aggregated registry data for both versions
+        // Clear registry cache before each call to ensure we get the correct version
+        ctx.clear_registry_cache();
         let reg1 = get_registry(ctx.clone(), Some(actual_v1)).await?;
+        ctx.clear_registry_cache();
         let reg2 = get_registry(ctx.clone(), Some(actual_v2)).await?;
 
         // Apply filters
