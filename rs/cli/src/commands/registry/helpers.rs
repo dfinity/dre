@@ -42,12 +42,14 @@ pub struct Filter {
 
 impl Filter {
     pub(crate) fn get_help_message() -> String {
-        format!("Filter in `key=value` format. Multiple filters can be provided.
+        format!(
+            "Filter in `key=value` format. Multiple filters can be provided.
 Examples:
     --filter \"rewards_correct!=true\"
     --filter \"node_type=type1\"
     --filter \"subnet_id startswith tdb26\"
-    --filter \"node_id contains h5zep\"")
+    --filter \"node_id contains h5zep\""
+        )
     }
 }
 
