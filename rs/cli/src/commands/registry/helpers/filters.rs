@@ -111,6 +111,7 @@ impl FromStr for Comparison {
 
 impl Comparison {
     fn matches(&self, value: &Value, other: &Value) -> bool {
+        println!("value: {:?}, other: {:?}", value, other);
         match self {
             Comparison::Equal => value == other,
             Comparison::NotEqual => value != other,
@@ -367,7 +368,7 @@ mod tests {
     fn test_comparison_matches() {
         struct TestCase {
             description: String,
-            input: Comparison,
+            input: (Comparison, Value, Value),
             output: bool
         }
 
@@ -375,20 +376,20 @@ mod tests {
             {
                 TestCase {
                     description: "equal: success".to_string(),
-                    input: Comparison::Equal,
+                    input: (Comparison::Equal, Value::String("wwdbq-xuq".to_string()), Value::String("wwdbq-xuq".to_string())),
                     output: true
                 }
             },
             {
                 TestCase {
-                    description: "equal: failure".to_string(),
-                    input: Comparison::Equal,
+                    description: "equal: success".to_string(),
+                    input: (Comparison::Equal, Value::String("wwdbq-xuq".to_string()), Value::String("aslkf-akj".to_string())),
                     output: false
                 }
             },
         ];
         for test_case in test_cases {
-            let result = test_case.input.matches(&Value::String("wwdbq-xuq".to_string()), &Value::String("wwdbq".to_string()));
+            let result = test_case.input.0.matches(&test_case.input.1, &test_case.input.2);
             assert_eq!(result, test_case.output, "{}", test_case.description);
         }
 
