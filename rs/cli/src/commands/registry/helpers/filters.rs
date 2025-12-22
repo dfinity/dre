@@ -1,4 +1,4 @@
-use serde_json::Value;
+use serde_json::{json, Value};
 use std::str::FromStr;
 use regex::Regex;
 
@@ -229,27 +229,133 @@ mod tests {
          }
 
         let test_cases: Vec<TestCase> = vec![
-             TestCase {
-                 description: "no input, nothing filtered".to_string(),
-                 input: (Filter::from_str("node_provider_principal_id startswith wwdbq-xuq").unwrap(), Value::Object(serde_json::Map::new())),
-                 output: (false, Value::Object(serde_json::Map::new())),
-             },
-             TestCase {
-                description: "1 level input, nothing filtered".to_string(),
-                input: (Filter::from_str("node_provider_principal_id startswith wwdbq-xuq").unwrap(), Value::Object(serde_json::Map::new())),
-                output: (false, Value::Object(serde_json::Map::new())),
+            {
+                let input_data = json!({});
+                let output_data = json!({});
+
+                TestCase {
+                    description: "no input, filter not applied to anything".to_string(),
+                    input: (Filter::from_str("principal_id startswith wwdbq-xuq").unwrap(), input_data),
+                    output: (false, output_data),
+                }
             },
-            TestCase {
-                description: "1 level input, filtered".to_string(),
-                input: (Filter::from_str("node_provider_principal_id startswith wwdbq-xuq").unwrap(), Value::Object(serde_json::Map::new("node_provider_principal_id" => Value::String("wwdbq-xuq".to_string())))),
-                output: (true, Value::Object(serde_json::Map::new())),
+            {
+                let input_data = json!({"principal_id": "wwdbq-xuq"});
+                let output_data = json!({"principal_id": "wwdbq-xuq"});
+
+                TestCase {
+                    description: "match: key found, value found".to_string(),
+                    input: (Filter::from_str("principal_id startswith wwdbq-xuq").unwrap(), input_data),
+                    output: (true, output_data),
+                }
+             },
+             {
+                let input_data = json!({"principal_id": "wwdbq-xuq"});
+                let output_data = json!({"principal_id": "wwdbq-xuq"});
+
+                TestCase {
+                    description: "match: key found, value not found".to_string(),
+                    input: (Filter::from_str("principal_id startswith aslkd-lja").unwrap(), input_data),
+                    output: (false, output_data),
+                }
+            },
+            {
+                let input_data = json!({
+                    "node_provider": {
+                        "principal_id": "wwdbq-xuq",
+                        "number_of_nodes": "10"
+                    },
+                    "subnets": {
+                        "principal_id": "asdkj-iso",
+                    }
+                });
+                let output_data = json!({
+                    "node_provider": {
+                        "principal_id": "wwdbq-xuq",
+                        "number_of_nodes": "10"
+                    }
+                });
+
+                TestCase {
+                    description: "filter matches (key and value), other item is filtered out".to_string(),
+                    input: (Filter::from_str("principal_id startswith wwdbq-x").unwrap(), input_data),
+                    output: (true, output_data),
+                }
+            },
+            {
+                let input_data = json!({
+                    "node_provider": {
+                        "principal_id": "wwdbq-xuq",
+                        "number_of_nodes": "10"
+                    },
+                    "subnets": {
+                        "principal_id": "asdkj-iso",
+                    }
+                });
+                let output_data = json!({});
+
+                TestCase {
+                    description: "filter doesn't match, nothing returned".to_string(),
+                    input: (Filter::from_str("some_key startswith some_value").unwrap(), input_data),
+                    output: (false, output_data),
+                }
+            },
+            {
+                let input_data = json!({
+                    "node_provider": [
+                        {
+                            "principal_id": "wwdbq-xuq",
+                            "number_of_nodes": "15"
+                        },
+                        {
+                            "principal_id": "asdkj-iso",
+                            "number_of_nodes": "10"
+                        },
+                    ],
+                });
+                let output_data = json!({
+                    "node_provider": [
+                        {
+                            "principal_id": "wwdbq-xuq",
+                            "number_of_nodes": "15"
+                        },
+                    ],
+                });
+
+                TestCase {
+                    description: "filter matches (key and value), other item is filtered out".to_string(),
+                    input: (Filter::from_str("principal_id startswith wwdbq-x").unwrap(), input_data),
+                    output: (true, output_data),
+                }
+            },
+            {
+                let input_data = json!({
+                    "node_provider": [
+                        {
+                            "principal_id": "wwdbq-xuq",
+                            "number_of_nodes": "15"
+                        },
+                        {
+                            "principal_id": "asdkj-iso",
+                            "number_of_nodes": "10"
+                        },
+                    ],
+                });
+                let output_data = json!({});
+
+                TestCase {
+                    description: "filter matches (key and value), other item is filtered out".to_string(),
+                    input: (Filter::from_str("some_key startswith some_value").unwrap(), input_data),
+                    output: (false, output_data),
+                }
             },
         ];
 
         for mut test_case in test_cases {
             let result = test_case.input.0.filter_json_value(&mut test_case.input.1);
+
             match (&result, &test_case.output) {
-                (actual, expected) => {
+               (actual, expected) => {
                     assert_eq!(*actual, expected.0, "{}", test_case.description);
                     assert_eq!(test_case.input.1, expected.1, "{}", test_case.description);
                 }
