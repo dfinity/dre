@@ -226,7 +226,7 @@ mod tests {
             description: String,
             input: (Filter,Value),
             output: (bool,Value),
-         }
+        }
 
         let test_cases: Vec<TestCase> = vec![
             {
@@ -361,5 +361,36 @@ mod tests {
                 }
             }
         }
+    }
+
+    #[test]
+    fn test_comparison_matches() {
+        struct TestCase {
+            description: String,
+            input: Comparison,
+            output: bool
+        }
+
+        let test_cases: Vec<TestCase> = vec![
+            {
+                TestCase {
+                    description: "equal: success".to_string(),
+                    input: Comparison::Equal,
+                    output: true
+                }
+            },
+            {
+                TestCase {
+                    description: "equal: failure".to_string(),
+                    input: Comparison::Equal,
+                    output: false
+                }
+            },
+        ];
+        for test_case in test_cases {
+            let result = test_case.input.matches(&Value::String("wwdbq-xuq".to_string()), &Value::String("wwdbq".to_string()));
+            assert_eq!(result, test_case.output, "{}", test_case.description);
+        }
+
     }
 }
