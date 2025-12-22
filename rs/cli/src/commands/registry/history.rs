@@ -1,9 +1,7 @@
 use clap::Args;
 
-use crate::commands::registry::helpers::{Filter, VersionRecord};
-use crate::commands::registry::helpers::{create_writer, flatten_version_records, get_sorted_versions, select_versions, validate_range_argument};
+use crate::commands::registry::helpers::Filter;
 use crate::{auth::AuthRequirement, exe::ExecutableCommand, exe::args::GlobalArgs};
-use log::info;
 use std::path::PathBuf;
 
 #[derive(Args, Debug)]
@@ -45,36 +43,36 @@ impl ExecutableCommand for History {
     fn validate(&self, _args: &GlobalArgs, _cmd: &mut clap::Command) {}
 
     async fn execute(&self, ctx: crate::ctx::DreContext) -> anyhow::Result<()> {
-        use ic_registry_common_proto::pb::local_store::v1::ChangelogEntry as PbChangelogEntry;
+        // use ic_registry_common_proto::pb::local_store::v1::ChangelogEntry as PbChangelogEntry;
 
-        // Build range vector from optional version_1/version_2 fields
-        let range: Vec<i64> = match (self.version_1, self.version_2) {
-            (Some(f), Some(t)) => vec![f, t],
-            (Some(f), None) => vec![f],
-            (None, None) => vec![],
-            (None, Some(_)) => anyhow::bail!("This should never happen"),
-        };
+        // // Build range vector from optional version_1/version_2 fields
+        // let range: Vec<i64> = match (self.version_1, self.version_2) {
+        //     (Some(f), Some(t)) => vec![f, t],
+        //     (Some(f), None) => vec![f],
+        //     (None, None) => vec![],
+        //     (None, Some(_)) => anyhow::bail!("This should never happen"),
+        // };
 
-        // Resolve range
-        let validated_range = validate_range_argument(&range)?;
-        let (versions_sorted, entries_sorted) = get_sorted_versions(&ctx).await?;
-        let range = if validated_range.is_empty() { None } else { Some(validated_range) };
-        let selected_versions = select_versions(range, &versions_sorted)?;
+        // // Resolve range
+        // let validated_range = validate_range_argument(&range)?;
+        // let (versions_sorted, entries_sorted) = get_sorted_versions(&ctx).await?;
+        // let range = if validated_range.is_empty() { None } else { Some(validated_range) };
+        // let selected_versions = select_versions(range, &versions_sorted)?;
 
-        // Log versions
-        info!(
-            "Selected version range from {} to {}",
-            selected_versions.first().unwrap(),
-            selected_versions.last().unwrap()
-        );
+        // // Log versions
+        // info!(
+        //     "Selected version range from {} to {}",
+        //     selected_versions.first().unwrap(),
+        //     selected_versions.last().unwrap()
+        // );
 
-        // Build flat list of records
-        let entries_map: std::collections::HashMap<u64, PbChangelogEntry> = entries_sorted.into_iter().collect();
-        let out: Vec<VersionRecord> = flatten_version_records(&selected_versions, &entries_map);
+        // // Build flat list of records
+        // let entries_map: std::collections::HashMap<u64, PbChangelogEntry> = entries_sorted.into_iter().collect();
+        // let out: Vec<VersionRecord> = flatten_version_records(&selected_versions, &entries_map);
 
-        // Write to file or stdout
-        let writer = create_writer(&self.output)?;
-        serde_json::to_writer_pretty(writer, &out)?;
+        // // Write to file or stdout
+        // let writer = create_writer(&self.output)?;
+        // serde_json::to_writer_pretty(writer, &out)?;
 
         Ok(())
     }
