@@ -2,6 +2,7 @@ pub mod filters;
 mod versions;
 
 pub use filters::Filter;
+pub use versions::VersionRange;
 
 
 // use crate::ctx::DreContext;

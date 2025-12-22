@@ -176,14 +176,14 @@ impl Comparison {
 mod tests {
     use super::*;
 
-    struct TestCase {
-        description: String,
-        input: String,
-        output: anyhow::Result<Filter>,
-     }
-
     #[test]
     fn test_from_str() {
+        struct TestCase {
+            description: String,
+            input: String,
+            output: anyhow::Result<Filter>,
+        }
+
         let test_cases: Vec<TestCase> = vec![
             TestCase {
                 description: "valid filter".to_string(),
