@@ -93,7 +93,7 @@ base64 = { version = "0.22" }
 
 [dev-dependencies]
 actix-rt = { workspace = true }
-serial_test = "2.0"
+serial_test = "3.2"
 
 [build-dependencies]
 clap = { workspace = true }
