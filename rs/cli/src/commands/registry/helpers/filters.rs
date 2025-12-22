@@ -372,22 +372,200 @@ mod tests {
             output: bool
         }
 
-        let test_cases: Vec<TestCase> = vec![
-            {
-                TestCase {
-                    description: "equal: success".to_string(),
-                    input: (Comparison::Equal, Value::String("wwdbq-xuq".to_string()), Value::String("wwdbq-xuq".to_string())),
-                    output: true
-                }
-            },
-            {
-                TestCase {
-                    description: "equal: success".to_string(),
-                    input: (Comparison::Equal, Value::String("wwdbq-xuq".to_string()), Value::String("aslkf-akj".to_string())),
-                    output: false
-                }
-            },
-        ];
+         let test_cases: Vec<TestCase> = vec![
+             // Equal tests
+             {
+                 TestCase {
+                     description: "equal: success".to_string(),
+                     input: (Comparison::Equal, Value::String("wwdbq-xuq".to_string()), Value::String("wwdbq-xuq".to_string())),
+                     output: true
+                 }
+             },
+             {
+                 TestCase {
+                     description: "equal: failure".to_string(),
+                     input: (Comparison::Equal, Value::String("wwdbq-xuq".to_string()), Value::String("aslkf-akj".to_string())),
+                     output: false
+                 }
+             },
+             // NotEqual tests
+             {
+                 TestCase {
+                     description: "not_equal: success".to_string(),
+                     input: (Comparison::NotEqual, Value::String("wwdbq-xuq".to_string()), Value::String("aslkf-akj".to_string())),
+                     output: true
+                 }
+             },
+             {
+                 TestCase {
+                     description: "not_equal: failure".to_string(),
+                     input: (Comparison::NotEqual, Value::String("wwdbq-xuq".to_string()), Value::String("wwdbq-xuq".to_string())),
+                     output: false
+                 }
+             },
+             // GreaterThan tests
+             {
+                 TestCase {
+                     description: "greater_than: number success".to_string(),
+                     input: (Comparison::GreaterThan, json!(10), json!(5)),
+                     output: true
+                 }
+             },
+             {
+                 TestCase {
+                     description: "greater_than: number failure".to_string(),
+                     input: (Comparison::GreaterThan, json!(5), json!(10)),
+                     output: false
+                 }
+             },
+             {
+                 TestCase {
+                     description: "greater_than: string success".to_string(),
+                     input: (Comparison::GreaterThan, Value::String("zebra".to_string()), Value::String("apple".to_string())),
+                     output: true
+                 }
+             },
+             {
+                 TestCase {
+                     description: "greater_than: string failure".to_string(),
+                     input: (Comparison::GreaterThan, Value::String("apple".to_string()), Value::String("zebra".to_string())),
+                     output: false
+                 }
+             },
+             // LessThan tests
+             {
+                 TestCase {
+                     description: "less_than: number success".to_string(),
+                     input: (Comparison::LessThan, json!(5), json!(10)),
+                     output: true
+                 }
+             },
+             {
+                 TestCase {
+                     description: "less_than: number failure".to_string(),
+                     input: (Comparison::LessThan, json!(10), json!(5)),
+                     output: false
+                 }
+             },
+             {
+                 TestCase {
+                     description: "less_than: string success".to_string(),
+                     input: (Comparison::LessThan, Value::String("apple".to_string()), Value::String("zebra".to_string())),
+                     output: true
+                 }
+             },
+             {
+                 TestCase {
+                     description: "less_than: string failure".to_string(),
+                     input: (Comparison::LessThan, Value::String("zebra".to_string()), Value::String("apple".to_string())),
+                     output: false
+                 }
+             },
+             // GreaterThanOrEqual tests
+             {
+                 TestCase {
+                     description: "greater_than_or_equal: equal success".to_string(),
+                     input: (Comparison::GreaterThanOrEqual, json!(10), json!(10)),
+                     output: true
+                 }
+             },
+             {
+                 TestCase {
+                     description: "greater_than_or_equal: greater success".to_string(),
+                     input: (Comparison::GreaterThanOrEqual, json!(10), json!(5)),
+                     output: true
+                 }
+             },
+             {
+                 TestCase {
+                     description: "greater_than_or_equal: failure".to_string(),
+                     input: (Comparison::GreaterThanOrEqual, json!(5), json!(10)),
+                     output: false
+                 }
+             },
+             // LessThanOrEqual tests
+             {
+                 TestCase {
+                     description: "less_than_or_equal: equal success".to_string(),
+                     input: (Comparison::LessThanOrEqual, json!(10), json!(10)),
+                     output: true
+                 }
+             },
+             {
+                 TestCase {
+                     description: "less_than_or_equal: less success".to_string(),
+                     input: (Comparison::LessThanOrEqual, json!(5), json!(10)),
+                     output: true
+                 }
+             },
+             {
+                 TestCase {
+                     description: "less_than_or_equal: failure".to_string(),
+                     input: (Comparison::LessThanOrEqual, json!(10), json!(5)),
+                     output: false
+                 }
+             },
+             // Regex tests
+             {
+                 TestCase {
+                     description: "regex: match success".to_string(),
+                     input: (Comparison::Regex, Value::String("hello world".to_string()), Value::String("hello.*".to_string())),
+                     output: true
+                 }
+             },
+             {
+                 TestCase {
+                     description: "regex: no match failure".to_string(),
+                     input: (Comparison::Regex, Value::String("hello world".to_string()), Value::String("^goodbye.*".to_string())),
+                     output: false
+                 }
+             },
+             // Contains tests
+             {
+                 TestCase {
+                     description: "contains: success".to_string(),
+                     input: (Comparison::Contains, Value::String("hello world".to_string()), Value::String("world".to_string())),
+                     output: true
+                 }
+             },
+             {
+                 TestCase {
+                     description: "contains: failure".to_string(),
+                     input: (Comparison::Contains, Value::String("hello world".to_string()), Value::String("goodbye".to_string())),
+                     output: false
+                 }
+             },
+             // StartsWith tests
+             {
+                 TestCase {
+                     description: "starts_with: success".to_string(),
+                     input: (Comparison::StartsWith, Value::String("hello world".to_string()), Value::String("hello".to_string())),
+                     output: true
+                 }
+             },
+             {
+                 TestCase {
+                     description: "starts_with: failure".to_string(),
+                     input: (Comparison::StartsWith, Value::String("hello world".to_string()), Value::String("world".to_string())),
+                     output: false
+                 }
+             },
+             // EndsWith tests
+             {
+                 TestCase {
+                     description: "ends_with: success".to_string(),
+                     input: (Comparison::EndsWith, Value::String("hello world".to_string()), Value::String("world".to_string())),
+                     output: true
+                 }
+             },
+             {
+                 TestCase {
+                     description: "ends_with: failure".to_string(),
+                     input: (Comparison::EndsWith, Value::String("hello world".to_string()), Value::String("hello".to_string())),
+                     output: false
+                 }
+             },
+         ];
         for test_case in test_cases {
             let result = test_case.input.0.matches(&test_case.input.1, &test_case.input.2);
             assert_eq!(result, test_case.output, "{}", test_case.description);
