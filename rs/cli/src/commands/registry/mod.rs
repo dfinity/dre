@@ -12,8 +12,8 @@ use std::path::PathBuf;
 
 mod diff;
 mod get;
-pub mod helpers;
-pub mod history;
+mod helpers;
+mod history;
 
 #[derive(Args, Debug)]
 pub struct Registry {
