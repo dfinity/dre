@@ -23,7 +23,7 @@ pub struct Registry {
     #[clap(short = 'o', long, help = "Output file (default is stdout)")]
     pub output: Option<PathBuf>,
 
-    #[clap(long, short, alias = "filter", help = Filter::get_help_message())]
+    #[clap(long, short, alias = "filter", help = Filter::get_help_text())]
     pub filter: Vec<Filter>,
 }
 

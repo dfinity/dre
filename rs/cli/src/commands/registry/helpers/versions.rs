@@ -19,6 +19,15 @@ impl VersionRange {
         self.to
     }
 
+    pub fn get_help_text() -> String {
+        String::from(
+"- Positive numbers are actual version numbers
+- Negative numbers are indices relative to the latest version (-1 = latest)
+- 0 is not supported
+- Version numbers are inclusive."
+        )
+    }
+
     pub fn create_from_args(maybe_version: Option<i64>, maybe_version_2: Option<i64>, mode: VersionFillMode, versions_in_registry: &[u64], ) -> anyhow::Result<Self> {
         let length: u64 = versions_in_registry.len() as u64;
         let max_version_u64: u64 = versions_in_registry[length as usize - 1];
@@ -112,8 +121,6 @@ impl VersionRange {
         }
     }
 }
-
-
 
 #[cfg(test)]
 mod tests {

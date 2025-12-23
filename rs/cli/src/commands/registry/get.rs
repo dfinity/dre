@@ -9,27 +9,26 @@ use std::path::PathBuf;
 use log::info;
 
 #[derive(Args, Debug)]
-#[clap(about = "Get aggregated registry data for a specific version.
+#[clap(about = format!("Get aggregated data for a specific version"))]
 
-Version numbers:
-  - Positive numbers are actual version numbers
-  - Negative numbers are indices relative to the latest version (-1 = latest)
-  - 0 is not supported
-  - No argument will show history of the latest version
+pub struct Get {
+    #[clap(index = 1, allow_hyphen_values = true, help = format!("Version number or negative index
+
+- No argument will get data of the latest version.
+{}
 
 Examples:
   -5              # Get data of latest-5
   -1              # Get data of latest version
   55400           # Get data of version 55400
-")]
-pub struct Get {
-    #[clap(index = 1, allow_hyphen_values = true, help = "Version number or negative index")]
+", VersionRange::get_help_text()))]
+
     pub version: Option<i64>,
 
     #[clap(short = 'o', long, help = "Output file (default is stdout)")]
     pub output: Option<PathBuf>,
 
-    #[clap(long, short, alias = "filter", help = Filter::get_help_message())]
+    #[clap(short = 'f', long, help = Filter::get_help_text())]
     pub filter: Vec<Filter>,
 }
 
