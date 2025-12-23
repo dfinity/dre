@@ -11,7 +11,7 @@ pub struct Filter {
 }
 
 impl Filter {
-    pub(crate) fn get_help_message() -> String {
+    pub(crate) fn get_help_text() -> String {
         String::from(
             "Filter in `key=value` format. Multiple filters can be provided.
 Examples:
