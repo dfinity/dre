@@ -11,14 +11,22 @@ pub struct VersionRange {
 }
 
 impl VersionRange {
-    pub fn create_from_args(maybe_version_1: Option<i64>, maybe_version_2: Option<i64>, mode: VersionFillMode, versions_in_registry: &[u64], ) -> anyhow::Result<Self> {
+    pub fn get_from(&self) -> Option<u64> {
+        self.from
+    }
+
+    pub fn get_to(&self) -> Option<u64> {
+        self.to
+    }
+
+    pub fn create_from_args(maybe_version: Option<i64>, maybe_version_2: Option<i64>, mode: VersionFillMode, versions_in_registry: &[u64], ) -> anyhow::Result<Self> {
         let length: u64 = versions_in_registry.len() as u64;
         let max_version_u64: u64 = versions_in_registry[length as usize - 1];
 
         let from_version: u64;
         let to_version: u64;
 
-        match (maybe_version_1, maybe_version_2) {
+        match (maybe_version, maybe_version_2) {
             (None, None) => {
                 from_version = 1;
                 to_version = max_version_u64;

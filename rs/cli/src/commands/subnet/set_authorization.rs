@@ -68,7 +68,7 @@ impl ExecutableCommand for SetAuthorization {
     }
 
     async fn execute(&self, ctx: crate::ctx::DreContext) -> anyhow::Result<()> {
-        let registry = ctx.registry().await;
+        let registry = ctx.fetch_registry().await;
         let subnets = registry.subnets().await?;
 
         let (_, agent) = ctx.create_ic_agent_canister_client().await?;
@@ -117,8 +117,8 @@ fn construct_summary(
     Ok(format!(
         "Updating the list of authorized subnets to:
 
-| Subnet id | Subnet Type | Public | 
-| --------- | ----------- | ------ | 
+| Subnet id | Subnet Type | Public |
+| --------- | ----------- | ------ |
 {}
 ",
         subnets

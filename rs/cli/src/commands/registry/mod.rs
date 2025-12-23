@@ -3,7 +3,7 @@ use clap::{Args, Subcommand};
 use crate::auth::AuthRequirement;
 use crate::commands::registry::diff::Diff;
 use crate::commands::registry::get::Get;
-use crate::commands::registry::helpers::Filter;
+use crate::commands::registry::helpers::filters::Filter;
 use crate::commands::registry::history::History;
 use crate::ctx::DreContext;
 use crate::exe::ExecutableCommand;

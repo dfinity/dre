@@ -2,7 +2,7 @@ use clap::Args;
 
 use crate::{auth::AuthRequirement, exe::ExecutableCommand, exe::args::GlobalArgs};
 use std::path::PathBuf;
-use crate::commands::registry::helpers::Filter;
+use crate::commands::registry::helpers::filters::Filter;
 
 #[derive(Args, Debug)]
 #[clap(about = "Show diff of two aggregated versions of the registry.
