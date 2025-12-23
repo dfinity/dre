@@ -134,7 +134,7 @@ impl DreContext {
         registry
     }
 
-    pub async fn fetch_registry(&self) -> Arc<dyn LazyRegistry> {
+    pub async fn load_registry(&self) -> Arc<dyn LazyRegistry> {
         self.load_registry_for_version(None).await
     }
 
@@ -248,7 +248,7 @@ impl DreContext {
     }
 
     pub async fn subnet_manager(&self) -> anyhow::Result<SubnetManager> {
-        let registry = self.fetch_registry().await;
+        let registry = self.load_registry().await;
 
         Ok(SubnetManager::new(
             registry,
@@ -267,7 +267,7 @@ impl DreContext {
         }
 
         let runner = Rc::new(Runner::new(
-            self.fetch_registry().await,
+            self.load_registry().await,
             self.network().clone(),
             self.proposals_agent(),
             self.verbose_runner,

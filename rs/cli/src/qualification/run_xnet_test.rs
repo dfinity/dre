@@ -48,7 +48,7 @@ impl Step for RunXnetTest {
         let e2e_bin = ctx.download_executable(E2E_TEST_DRIVER, &self.version).await?;
         let wasm_path = ctx.download_canister(XNET_TEST_CANISTER, &self.version).await?;
 
-        let registry = ctx.dre_ctx().fetch_registry().await;
+        let registry = ctx.dre_ctx().load_registry().await;
         let subnet = registry.subnets().await?;
         let subnet = subnet
             .values()

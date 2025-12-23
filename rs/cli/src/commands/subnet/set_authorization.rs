@@ -68,7 +68,7 @@ impl ExecutableCommand for SetAuthorization {
     }
 
     async fn execute(&self, ctx: crate::ctx::DreContext) -> anyhow::Result<()> {
-        let registry = ctx.fetch_registry().await;
+        let registry = ctx.load_registry().await;
         let subnets = registry.subnets().await?;
 
         let (_, agent) = ctx.create_ic_agent_canister_client().await?;
