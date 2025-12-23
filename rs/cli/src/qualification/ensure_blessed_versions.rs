@@ -23,7 +23,7 @@ impl Step for EnsureBlessedRevisions {
     }
 
     async fn execute(&self, ctx: &StepCtx) -> anyhow::Result<()> {
-        let registry = ctx.dre_ctx().registry().await;
+        let registry = ctx.dre_ctx().fetch_registry().await;
         let blessed_versions = registry.elected_guestos().await?;
 
         if blessed_versions.contains(&self.version) {

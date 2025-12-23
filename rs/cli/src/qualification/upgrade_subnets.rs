@@ -72,7 +72,7 @@ impl Step for UpgradeSubnets {
     }
 
     async fn execute(&self, ctx: &StepCtx) -> anyhow::Result<()> {
-        let registry = ctx.dre_ctx().registry().await;
+        let registry = ctx.dre_ctx().fetch_registry().await;
         let subnets = registry.subnets().await?;
         ctx.print_text(format!("Found total of {} nodes", registry.nodes().await?.len()));
         ctx.print_subnet_versions().await?;
@@ -123,7 +123,7 @@ impl Step for UpgradeSubnets {
                 ctx.print_subnet_versions().await?;
             }
         } else {
-            let registry = ctx.dre_ctx().registry().await;
+            let registry = ctx.dre_ctx().fetch_registry().await;
             let unassigned_nodes_version = registry.unassigned_nodes_replica_version().await?;
             if unassigned_nodes_version.to_string() == self.to_version {
                 ctx.print_text(format!("Unassigned nodes are already on {}, skipping", self.to_version));
@@ -174,7 +174,7 @@ const PLACEHOLDER: &str = "upgrading...";
 
 async fn wait_for_subnet_revision(ctx: &StepCtx, subnet: Option<PrincipalId>, revision: &str) -> anyhow::Result<()> {
     let client = ClientBuilder::new().timeout(TIMEOUT).build()?;
-    let registry = ctx.dre_ctx().registry().await;
+    let registry = ctx.dre_ctx().fetch_registry().await;
     for i in 0..MAX_TRIES {
         tokio::time::sleep(SLEEP).await;
         ctx.print_text(format!(

@@ -8,7 +8,7 @@ use ic_management_backend::{
     proposal::{ProposalAgent, ProposalAgentImpl},
 };
 use ic_management_types::Network;
-use log::warn;
+use log::{info, warn};
 
 use crate::{
     artifact_downloader::{ArtifactDownloader, ArtifactDownloaderImpl},
@@ -122,16 +122,24 @@ impl DreContext {
         .await
     }
 
-    pub async fn registry_with_version(&self, version_height: Option<u64>) -> Arc<dyn LazyRegistry> {
+    pub async fn load_registry_for_version(&self, version_height: Option<u64>) -> Arc<dyn LazyRegistry> {
         if let Some(reg) = self.registry.borrow().as_ref() {
+            info!("Registry already loaded. Skipping.");
             return reg.clone();
         }
+
+        info!("Loading registry for version: {:?}", version_height);
         let registry = self.store.registry(self.network(), self.proposals_agent(), version_height).await.unwrap();
         *self.registry.borrow_mut() = Some(registry.clone());
         registry
     }
 
+    pub async fn fetch_registry(&self) -> Arc<dyn LazyRegistry> {
+        self.load_registry_for_version(None).await
+    }
+
     pub fn clear_registry_cache(&self) {
+        info!("Clearing registry cache");
         *self.registry.borrow_mut() = None;
     }
 
@@ -139,8 +147,12 @@ impl DreContext {
         self.store.is_offline()
     }
 
-    pub async fn registry(&self) -> Arc<dyn LazyRegistry> {
-        self.registry_with_version(None).await
+    pub fn get_registry(&self) -> Result<Arc<dyn LazyRegistry>, anyhow::Error> {
+        if self.registry.borrow().is_none() {
+            return Err(anyhow::anyhow!("Registry not loaded"));
+        }
+
+        Ok(self.registry.borrow().as_ref().unwrap().clone())
     }
 
     pub fn network(&self) -> &Network {
@@ -236,7 +248,7 @@ impl DreContext {
     }
 
     pub async fn subnet_manager(&self) -> anyhow::Result<SubnetManager> {
-        let registry = self.registry().await;
+        let registry = self.fetch_registry().await;
 
         Ok(SubnetManager::new(
             registry,
@@ -255,7 +267,7 @@ impl DreContext {
         }
 
         let runner = Rc::new(Runner::new(
-            self.registry().await,
+            self.fetch_registry().await,
             self.network().clone(),
             self.proposals_agent(),
             self.verbose_runner,

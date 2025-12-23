@@ -44,7 +44,7 @@ impl ExecutableCommand for Firewall {
     }
 
     async fn execute(&self, ctx: DreContext) -> anyhow::Result<()> {
-        let registry = ctx.registry().await;
+        let registry = ctx.fetch_registry().await;
         let firewall_ruleset = registry.firewall_rule_set(self.rules_scope.clone()).await?;
 
         let rules: BTreeMap<usize, &FirewallRule> = firewall_ruleset.entries.iter().enumerate().sorted_by(|a, b| a.0.cmp(&b.0)).collect();

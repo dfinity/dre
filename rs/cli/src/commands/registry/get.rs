@@ -1,8 +1,12 @@
 use clap::Args;
 
-use crate::commands::registry::helpers::Filter;
+use crate::commands::registry::helpers::versions::{VersionRange, VersionFillMode};
+use crate::commands::registry::helpers::dump::{get_sorted_versions_from_local, get_dump_from_registry};
+use crate::commands::registry::helpers::filters::Filter;
+use crate::commands::registry::helpers::writer::create_writer;
 use crate::{auth::AuthRequirement, exe::ExecutableCommand, exe::args::GlobalArgs};
 use std::path::PathBuf;
+use log::info;
 
 #[derive(Args, Debug)]
 #[clap(about = "Get aggregated registry data for a specific version.
@@ -37,44 +41,34 @@ impl ExecutableCommand for Get {
     fn validate(&self, _args: &GlobalArgs, _cmd: &mut clap::Command) {}
 
     async fn execute(&self, ctx: crate::ctx::DreContext) -> anyhow::Result<()> {
-        // // Resolve version
-        // let version: Option<u64> = if let Some(h) = self.version {
-        //     if h < 0 {
-        //         // Negative: find version based on relative index
-        //         let range = vec![h, -1];
-        //         let validated_range = validate_range_argument(&range)?;
-        //         let (versions_sorted, _) = get_sorted_versions(&ctx).await?;
-        //         let range_opt = if validated_range.is_empty() { None } else { Some(validated_range) };
-        //         let selected = select_versions(range_opt, &versions_sorted)?;
-        //         selected.first().copied()
-        //     } else {
-        //         // Positive: return the version number as is
-        //         Some(h as u64)
-        //     }
-        // } else {
-        //     // No version provided: resolve to latest version explicitly
-        //     None
-        // };
+        // Ensure local registry is initialized/synced
+        let _ = ctx.load_registry_for_version(None).await;
 
-        // // Log version
-        // if let Some(version) = version {
-        //     info!("Selected version: {}", version);
-        // } else {
-        //     info!("Selected version: latest");
-        // }
+        // Get sorted versions
+        let (versions_in_registry, _) = get_sorted_versions_from_local(&ctx).await?;
 
-        // // Aggregated registry view. Only sync if the registry has not been synced yet.
-        // let registry = get_registry(ctx, version).await?;
-        // let mut serde_value = serde_json::to_value(registry)?;
+        // Create version range
+        let version_range = VersionRange::create_from_args(self.version, None, VersionFillMode::FromStart, &versions_in_registry)?;
+        info!("Selected version range: {:?}", version_range);
 
-        // // Apply filters
-        // self.filter.iter().for_each(|filter| {
-        //     let _ = filter.filter_json_value(&mut serde_value);
-        // });
+        // Clear registry cache and fetch specific version if version is not None
+        if self.version.is_some() {
+            ctx.clear_registry_cache();
+            let _ = ctx.load_registry_for_version(version_range.get_to()).await;
+        }
 
-        // // Write to file or stdout
-        // let writer = create_writer(&self.output)?;
-        // serde_json::to_writer_pretty(writer, &serde_value)?;
+        // Get registry dump
+        let registry_dump = get_dump_from_registry(ctx).await?;
+        let mut serde_value = serde_json::to_value(registry_dump)?;
+
+        // Apply filters
+        self.filter.iter().for_each(|filter| {
+            let _ = filter.filter_json_value(&mut serde_value);
+        });
+
+        // Write to file or stdout
+        let writer = create_writer(&self.output)?;
+        serde_json::to_writer_pretty(writer, &serde_value)?;
 
         Ok(())
     }

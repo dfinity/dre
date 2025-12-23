@@ -37,7 +37,7 @@ impl Step for Workload {
     async fn execute(&self, ctx: &StepCtx) -> anyhow::Result<()> {
         let wg_binary = ctx.download_executable(IC_WORKLOAD_GENERATOR, &self.version).await?;
 
-        let subnets = ctx.dre_ctx().registry().await.subnets().await?;
+        let subnets = ctx.dre_ctx().fetch_registry().await.subnets().await?;
         let subnet = subnets
             .values()
             .find(|s| s.subnet_type.eq(&SubnetType::Application))

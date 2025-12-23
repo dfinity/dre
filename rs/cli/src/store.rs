@@ -118,7 +118,7 @@ impl Store {
         let registry_path = self.local_store_for_network(network)?;
 
         info!(
-            "Using local registry path for network {}: {} (height: {}, offline: {})",
+            "Using local registry path for network {}: {} (version: {}, offline: {})",
             network.name,
             registry_path.display(),
             version_height.map(|v| v.to_string()).unwrap_or_else(|| "latest".to_string()),

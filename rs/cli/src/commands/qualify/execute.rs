@@ -68,7 +68,7 @@ impl ExecutableCommand for Execute {
             None => {
                 let anonymous_admin_wrapper_for_mainnet = ctx.readonly_ic_admin_for_other_network(Network::mainnet_unchecked().unwrap()).await?;
 
-                let subnets = ctx.registry().await.subnets().await?;
+                let subnets = ctx.fetch_registry().await.subnets().await?;
                 let nns_subnet_id = subnets.keys().next().unwrap();
 
                 let output = serde_json::from_str::<Value>(

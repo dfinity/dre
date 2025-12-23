@@ -1,6 +1,6 @@
 use clap::Args;
 
-use crate::commands::registry::helpers::Filter;
+use crate::commands::registry::helpers::filters::Filter;
 use crate::{auth::AuthRequirement, exe::ExecutableCommand, exe::args::GlobalArgs};
 use std::path::PathBuf;
 

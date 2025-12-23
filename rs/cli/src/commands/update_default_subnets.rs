@@ -67,7 +67,7 @@ impl ExecutableCommand for UpdateDefaultSubnets {
         let non_default_subnets_csv = self.parse_csv()?;
         info!("Found following elements: {:?}", non_default_subnets_csv);
 
-        let registry = ctx.registry().await;
+        let registry = ctx.fetch_registry().await;
         let subnets = registry.subnets().await?;
         let mut excluded_subnets = IndexMap::new();
 
