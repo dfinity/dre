@@ -1,19 +1,17 @@
-use clap::Args;
-
 use crate::commands::registry::helpers::filters::Filter;
 use crate::commands::registry::helpers::versions::VersionRange;
 use crate::commands::registry::helpers::dump::{get_sorted_versions_from_local};
 use crate::commands::registry::helpers::versions::VersionFillMode;
 use crate::commands::registry::helpers::writer::create_writer;
 use crate::{auth::AuthRequirement, exe::ExecutableCommand, exe::args::GlobalArgs};
-use ic_registry_common_proto::pb::local_store::v1::MutationType;
-use ic_registry_common_proto::pb::local_store::v1::ChangelogEntry;
+use ic_registry_common_proto::pb::local_store::v1::{MutationType, ChangelogEntry};
 use std::path::PathBuf;
 use serde::Serialize;
 use log::info;
 use serde_json::Value;
 use base64::{Engine as _, engine::general_purpose::STANDARD as BASE64};
 use prost::Message;
+use clap::Args;
 
 #[derive(Args, Debug)]
 #[clap(about = "Show history for a version range")]
@@ -64,13 +62,12 @@ impl ExecutableCommand for History {
 
         // Create version range
         let version_range = VersionRange::create_from_args(self.version_1, self.version_2, VersionFillMode::ToEnd, &versions_in_registry)?;
-        info!("Selected version range: {:?}", version_range);
+        info!("Selected version range {:?}", version_range);
 
         // Build flat list of records
         let entries_map: std::collections::HashMap<u64, ChangelogEntry> = entries_sorted.into_iter().collect();
-        let selected_versions: Vec<u64> = (version_range.get_from().unwrap()..=version_range.get_to().unwrap()).collect();
+        let selected_versions: Vec<u64> = (version_range.get_from()..=version_range.get_to()).collect();
         let flattened_version_records: Vec<FlattenedVersionRecord> = FlattenedVersionRecord::create_from_selected_version(&selected_versions, &entries_map);
-        // let out: Vec<VersionRecord> = flatten_version_records(&selected_versions, &entries_map);
 
         // Write to file or stdout
         let writer = create_writer(&self.output)?;

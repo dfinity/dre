@@ -6,16 +6,16 @@ pub enum VersionFillMode {
 
 #[derive(PartialEq, Eq)]
 pub struct VersionRange {
-    from: Option<u64>,
-    to: Option<u64>,
+    from: u64,
+    to: u64,
 }
 
 impl VersionRange {
-    pub fn get_from(&self) -> Option<u64> {
+    pub fn get_from(&self) -> u64 {
         self.from
     }
 
-    pub fn get_to(&self) -> Option<u64> {
+    pub fn get_to(&self) -> u64 {
         self.to
     }
 
@@ -40,7 +40,7 @@ impl VersionRange {
                 from_version = 1;
                 to_version = max_version_u64;
 
-                return Ok(Self { from: Some(from_version), to: Some(to_version) });
+                return Ok(Self { from: from_version, to: to_version });
             }
             (Some(version), None) => {
                 let version_u64: u64 = version.abs() as u64;
@@ -83,8 +83,8 @@ impl VersionRange {
                 }
 
                 return Ok(Self {
-                    from: Some(from_version),
-                    to: Some(to_version),
+                    from: from_version,
+                    to: to_version,
                 })
             }
             (Some(version_1), Some(version_2)) => {
@@ -110,8 +110,8 @@ impl VersionRange {
                 }
 
                 return Ok(Self {
-                    from: Some(from_version),
-                    to: Some(to_version),
+                    from: from_version,
+                    to: to_version,
                 })
 
             }
@@ -124,7 +124,7 @@ impl VersionRange {
 
 impl std::fmt::Debug for VersionRange {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "from {:?} to {:?}", self.from, self.to)
+        write!(f, "from {} to {}", self.from, self.to)
     }
 }
 
@@ -145,12 +145,12 @@ mod tests {
             TestCase {
                 description: "None input returns full range from 1 to max".to_string(),
                 input: (None, None, VersionFillMode::FromStart, vec![1, 2, 3]),
-                output: Ok(VersionRange { from: Some(1), to: Some(3) }), // from_version=1, to_version=max_version=3
+                output: Ok(VersionRange { from: 1, to: 3 }), // from_version=1, to_version=max_version=3
             },
             TestCase {
                 description: "None input with ToEnd mode returns full range from 1 to max".to_string(),
                 input: (None, None, VersionFillMode::ToEnd, vec![10, 20, 30]),
-                output: Ok(VersionRange { from: Some(1), to: Some(30) }), // from_version=1, to_version=max_version=30
+                output: Ok(VersionRange { from: 1, to: 30 }), // from_version=1, to_version=max_version=30
             },
             // Version 0 error case
             TestCase {
@@ -168,23 +168,23 @@ mod tests {
             TestCase {
                 description: "negative version -1 with FromStart".to_string(),
                 input: (Some(-1), None, VersionFillMode::FromStart, vec![10, 20, 30]),
-                output: Ok(VersionRange { from: Some(1), to: Some(30) }), // from_version=1, to_version=max_version_u64-version_u64+1=30-1+1=30
+                output: Ok(VersionRange { from: 1, to: 30 }), // from_version=1, to_version=max_version_u64-version_u64+1=30-1+1=30
             },
             TestCase {
                 description: "negative version -2 with FromStart".to_string(),
                 input: (Some(-2), None, VersionFillMode::FromStart, vec![10, 20, 30]),
-                output: Ok(VersionRange { from: Some(1), to: Some(29) }), // from_version=1, to_version=max_version_u64-version_u64+1=30-2+1=29
+                output: Ok(VersionRange { from: 1, to: 29 }), // from_version=1, to_version=max_version_u64-version_u64+1=30-2+1=29
             },
             // Negative version valid with ToEnd
             TestCase {
                 description: "negative version -1 with ToEnd".to_string(),
                 input: (Some(-1), None, VersionFillMode::ToEnd, vec![10, 20, 30]),
-                output: Ok(VersionRange { from: Some(30), to: Some(30) }), // from_version=max_version_u64-version_u64+1=30-1+1=30, to_version=max_version_u64=30
+                output: Ok(VersionRange { from: 30, to: 30 }), // from_version=max_version_u64-version_u64+1=30-1+1=30, to_version=max_version_u64=30
             },
             TestCase {
                 description: "negative version -2 with ToEnd".to_string(),
                 input: (Some(-2), None, VersionFillMode::ToEnd, vec![10, 20, 30]),
-                output: Ok(VersionRange { from: Some(29), to: Some(30) }), // from_version=max_version_u64-version_u64+1=30-2+1=29, to_version=max_version_u64=30
+                output: Ok(VersionRange { from: 29, to: 30 }), // from_version=max_version_u64-version_u64+1=30-2+1=29, to_version=max_version_u64=30
             },
             // Positive version out of range
             TestCase {
@@ -196,55 +196,55 @@ mod tests {
             TestCase {
                 description: "positive version 1 with FromStart".to_string(),
                 input: (Some(1), None, VersionFillMode::FromStart, vec![10, 20, 30]),
-                output: Ok(VersionRange { from: Some(1), to: Some(1) }), // from_version=1, to_version=version_u64=1
+                output: Ok(VersionRange { from: 1, to: 1 }), // from_version=1, to_version=version_u64=1
             },
             TestCase {
                 description: "positive version 2 with FromStart".to_string(),
                 input: (Some(2), None, VersionFillMode::FromStart, vec![10, 20, 30]),
-                output: Ok(VersionRange { from: Some(1), to: Some(2) }), // from_version=1, to_version=version_u64=2
+                output: Ok(VersionRange { from: 1, to: 2 }), // from_version=1, to_version=version_u64=2
             },
             // Positive version valid with ToEnd
             TestCase {
                 description: "positive version 1 with ToEnd".to_string(),
                 input: (Some(1), None, VersionFillMode::ToEnd, vec![10, 20, 30]),
-                output: Ok(VersionRange { from: Some(1), to: Some(30) }), // from_version=version_u64=1, to_version=max_version_u64=30
+                output: Ok(VersionRange { from: 1, to: 30 }), // from_version=version_u64=1, to_version=max_version_u64=30
             },
             TestCase {
                 description: "positive version 2 with ToEnd".to_string(),
                 input: (Some(2), None, VersionFillMode::ToEnd, vec![10, 20, 30]),
-                output: Ok(VersionRange { from: Some(2), to: Some(30) }), // from_version=version_u64=2, to_version=max_version_u64=30
+                output: Ok(VersionRange { from: 2, to: 30 }), // from_version=version_u64=2, to_version=max_version_u64=30
             },
             // Two version arguments - both positive
             TestCase {
                 description: "two positive versions: 1 and 2".to_string(),
                 input: (Some(1), Some(2), VersionFillMode::FromStart, vec![10, 20, 30]),
-                output: Ok(VersionRange { from: Some(1), to: Some(2) }), // from_version=version_1_u64=1, to_version=version_2_u64=2
+                output: Ok(VersionRange { from: 1, to: 2 }), // from_version=version_1_u64=1, to_version=version_2_u64=2
             },
             TestCase {
                 description: "two positive versions: 2 and 3".to_string(),
                 input: (Some(2), Some(3), VersionFillMode::FromStart, vec![10, 20, 30]),
-                output: Ok(VersionRange { from: Some(2), to: Some(3) }), // from_version=version_1_u64=2, to_version=version_2_u64=3
+                output: Ok(VersionRange { from: 2, to: 3 }), // from_version=version_1_u64=2, to_version=version_2_u64=3
             },
             TestCase {
                 description: "two positive versions: 10 and 20".to_string(),
                 input: (Some(10), Some(20), VersionFillMode::FromStart, vec![10, 20, 30]),
-                output: Ok(VersionRange { from: Some(10), to: Some(20) }), // from_version=version_1_u64=10, to_version=version_2_u64=20
+                output: Ok(VersionRange { from: 10, to: 20 }), // from_version=version_1_u64=10, to_version=version_2_u64=20
             },
             // Two version arguments - both negative
             TestCase {
                 description: "two negative versions: -1 and -1".to_string(),
                 input: (Some(-1), Some(-1), VersionFillMode::FromStart, vec![10, 20, 30]),
-                output: Ok(VersionRange { from: Some(30), to: Some(30) }), // from_version=max_version_u64-version_1_u64+1=30-1+1=30, to_version=max_version_u64-version_2_u64+1=30-1+1=30
+                output: Ok(VersionRange { from: 30, to: 30 }), // from_version=max_version_u64-version_1_u64+1=30-1+1=30, to_version=max_version_u64-version_2_u64+1=30-1+1=30
             },
             TestCase {
                 description: "two negative versions: -2 and -1".to_string(),
                 input: (Some(-2), Some(-1), VersionFillMode::FromStart, vec![10, 20, 30]),
-                output: Ok(VersionRange { from: Some(29), to: Some(30) }), // from_version=max_version_u64-version_1_u64+1=30-2+1=29, to_version=max_version_u64-version_2_u64+1=30-1+1=30
+                output: Ok(VersionRange { from: 29, to: 30 }), // from_version=max_version_u64-version_1_u64+1=30-2+1=29, to_version=max_version_u64-version_2_u64+1=30-1+1=30
             },
             TestCase {
                 description: "two negative versions: -3 and -2".to_string(),
                 input: (Some(-3), Some(-2), VersionFillMode::FromStart, vec![10, 20, 30]),
-                output: Ok(VersionRange { from: Some(28), to: Some(29) }), // from_version=max_version_u64-version_1_u64+1=30-3+1=28, to_version=max_version_u64-version_2_u64+1=30-2+1=29
+                output: Ok(VersionRange { from: 28, to: 29 }), // from_version=max_version_u64-version_1_u64+1=30-3+1=28, to_version=max_version_u64-version_2_u64+1=30-2+1=29
             },
             // Two version arguments - error cases
             TestCase {
