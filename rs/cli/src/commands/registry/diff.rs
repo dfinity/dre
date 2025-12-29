@@ -127,6 +127,7 @@ mod tests {
 
     #[test]
     fn test_generate_diff() {
+        // Test data
         let json1 = serde_json::json!({
             "a": 1,
             "b": 2
@@ -135,17 +136,23 @@ mod tests {
             "a": 1,
             "b": 3
         });
+
+        // Generate diff
         let json1_str: String = serde_json::to_string_pretty(&json1).unwrap();
         let json2_str: String = serde_json::to_string_pretty(&json2).unwrap();
         let diff = TextDiff::from_lines(json1_str.as_str(), json2_str.as_str());
+
+        // Write diff to file
         let mut writer = Writer::new(&Some(PathBuf::from("/tmp/diff_test_output.json")), false).unwrap();
         generate_diff(&diff, &mut writer).unwrap();
+        // Flush data to disk
         writer.flush().unwrap(); // Ensure data is written to disk
         drop(writer); // Explicitly drop to ensure file is closed
 
+        // Read diff output from file
         let diff_output = fs_err::read_to_string("/tmp/diff_test_output.json").unwrap();
-        println!("diff_output: {}", diff_output);
 
+        // Assert diff output contains expected changes
         assert!(diff_output.contains("  \"a\": 1,"));
         assert!(diff_output.contains("-  \"b\": 2"));
         assert!(diff_output.contains("+  \"b\": 3"));
