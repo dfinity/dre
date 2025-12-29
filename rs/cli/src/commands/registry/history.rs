@@ -58,10 +58,10 @@ impl ExecutableCommand for History {
         let _ = ctx.load_registry().await;
 
         // Get sorted versions
-        let (versions_in_registry, entries_sorted) = get_sorted_versions_from_local(&ctx).await?;
+        let (versions_sorted, entries_sorted) = get_sorted_versions_from_local(&ctx).await?;
 
         // Create version range
-        let version_range = VersionRange::create_from_args(self.version_1, self.version_2, VersionFillMode::ToEnd, &versions_in_registry)?;
+        let version_range = VersionRange::create_from_args(self.version_1, self.version_2, VersionFillMode::ToEnd, &versions_sorted)?;
         info!("Selected version range {:?}", version_range);
 
         // Build flat list of records

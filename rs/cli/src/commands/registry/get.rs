@@ -44,10 +44,10 @@ impl ExecutableCommand for Get {
         let _ = ctx.load_registry().await;
 
         // Get sorted versions
-        let (versions_in_registry, _) = get_sorted_versions_from_local(&ctx).await?;
+        let (versions_sorted, _) = get_sorted_versions_from_local(&ctx).await?;
 
         // Create version range
-        let version_range = VersionRange::create_from_args(self.version, None, VersionFillMode::FromStart, &versions_in_registry)?;
+        let version_range = VersionRange::create_from_args(self.version, None, VersionFillMode::FromStart, &versions_sorted)?;
         info!("Selected version range {:?}", version_range);
 
         // Clear registry cache and fetch specific version if version is not None
