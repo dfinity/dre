@@ -114,3 +114,39 @@ fn generate_diff(diff: &TextDiff<'_, '_, '_, str>, writer: &mut Writer) -> anyho
     }
     Ok(())
 }
+
+#[cfg(test)]
+mod tests {
+    use super::{generate_diff, Writer};
+    use similar::TextDiff;
+    use std::path::PathBuf;
+
+    #[test]
+    fn test_generate_diff() {
+        let json1 = serde_json::json!({
+            "a": 1,
+            "b": 2
+        });
+        let json2 = serde_json::json!({
+            "a": 1,
+            "b": 3
+        });
+        let json1_str: String = serde_json::to_string_pretty(&json1).unwrap();
+        let json2_str: String = serde_json::to_string_pretty(&json2).unwrap();
+        let diff = TextDiff::from_lines(json1_str.as_str(), json2_str.as_str());
+        let mut writer = Writer::new(&Some(PathBuf::from("/tmp/diff_test_output.json")), false).unwrap();
+        generate_diff(&diff, &mut writer).unwrap();
+        writer.flush().unwrap(); // Ensure data is written to disk
+        drop(writer); // Explicitly drop to ensure file is closed
+
+        let diff_output = fs_err::read_to_string("/tmp/diff_test_output.json").unwrap();
+        println!("diff_output: {}", diff_output);
+
+        assert!(diff_output.contains("  \"a\": 1,"));
+        assert!(diff_output.contains("-  \"b\": 2"));
+        assert!(diff_output.contains("+  \"b\": 3"));
+
+        // cleanup
+        fs_err::remove_file("/tmp/diff_test_output.json").unwrap();
+    }
+}

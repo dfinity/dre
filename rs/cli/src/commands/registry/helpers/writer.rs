@@ -45,4 +45,10 @@ impl Writer {
         }
         Ok(())
     }
+
+    #[allow(dead_code)] // Used in tests
+    pub fn flush(&mut self) -> anyhow::Result<()> {
+        self.writer.flush()?;
+        Ok(())
+    }
 }
