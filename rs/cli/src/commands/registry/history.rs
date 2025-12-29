@@ -69,9 +69,15 @@ impl ExecutableCommand for History {
         let selected_versions: Vec<u64> = (version_range.get_from()..=version_range.get_to()).collect();
         let flattened_version_records: Vec<FlattenedVersionRecord> = FlattenedVersionRecord::create_from_selected_version(&selected_versions, &entries_map);
 
+        // Apply filters
+        let mut flattened_version_records_json = serde_json::to_value(flattened_version_records)?;
+        self.filter.iter().for_each(|filter| {
+            let _ = filter.filter_json_value(&mut flattened_version_records_json);
+        });
+
         // Write to file or stdout
         let writer = create_writer(&self.output)?;
-        serde_json::to_writer_pretty(writer, &flattened_version_records)?;
+        serde_json::to_writer_pretty(writer, &flattened_version_records_json)?;
 
         Ok(())
     }

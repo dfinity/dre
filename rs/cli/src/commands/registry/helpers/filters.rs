@@ -2,7 +2,6 @@ use serde_json::{json, Value};
 use std::str::FromStr;
 use regex::Regex;
 
-
 #[derive(Debug, Clone, PartialEq)]
 pub struct Filter {
     key: String,
@@ -93,14 +92,15 @@ impl FromStr for Comparison {
     type Err = anyhow::Error;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
+        println!("s: {:?}", s);
         match s {
-            "eq" | "=" | "==" => Ok(Comparison::Equal),
-            "ne" | "!=" => Ok(Comparison::NotEqual),
-            "gt" | ">" => Ok(Comparison::GreaterThan),
-            "lt" | "<" => Ok(Comparison::LessThan),
-            "ge" | ">=" => Ok(Comparison::GreaterThanOrEqual),
-            "le" | "<=" => Ok(Comparison::LessThanOrEqual),
-            "regex" | "re" | "matches" | "=~" => Ok(Comparison::Regex),
+            "eq" | "=" | "==" | " = " | " == " => Ok(Comparison::Equal),
+            "ne" | "!=" | " != " => Ok(Comparison::NotEqual),
+            "gt" | ">" | " > " => Ok(Comparison::GreaterThan),
+            "lt" | "<" | " < " => Ok(Comparison::LessThan),
+            "ge" | ">=" | " >= " => Ok(Comparison::GreaterThanOrEqual),
+            "le" | "<=" | " <= " => Ok(Comparison::LessThanOrEqual),
+            "regex" | "re" | "matches" | "=~" | " =~ " => Ok(Comparison::Regex),
             "contains" => Ok(Comparison::Contains),
             "startswith" => Ok(Comparison::StartsWith),
             "endswith" => Ok(Comparison::EndsWith),
@@ -111,7 +111,6 @@ impl FromStr for Comparison {
 
 impl Comparison {
     fn matches(&self, value: &Value, other: &Value) -> bool {
-        println!("value: {:?}, other: {:?}", value, other);
         match self {
             Comparison::Equal => value == other,
             Comparison::NotEqual => value != other,
