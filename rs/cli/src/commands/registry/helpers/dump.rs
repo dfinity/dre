@@ -586,3 +586,114 @@ fn extract_version_from_registry_path(base_dir: &std::path::Path, full_path: &st
     let hex = format!("{}{}{}{}", seg1, seg2, seg3, last);
     u64::from_str_radix(&hex, 16).ok()
 }
+
+#[cfg(test)]
+mod test {
+    use super::extract_version_from_registry_path;
+    use std::path::PathBuf;
+
+    #[test]
+    fn test_extract_version_from_registry_path() {
+        struct TestCase {
+            description: String,
+            input: (PathBuf, PathBuf),
+            output: Option<u64>,
+        }
+
+        let test_cases = vec![
+            TestCase {
+                description: "nested structure with 4 parts - version 1".to_string(),
+                input: (
+                    PathBuf::from("/path/to/registry"),
+                    PathBuf::from("/path/to/registry/0000000000/00/00/00001.pb")
+                ),
+                output: Some(1),
+            },
+            TestCase {
+                description: "nested structure with hex version".to_string(),
+                input: (
+                    PathBuf::from("/path/to/registry"),
+                    PathBuf::from("/path/to/registry/0000000000/00/00/0d431.pb")
+                ),
+                output: Some(0xd431),
+            },
+            TestCase {
+                description: "nested structure with version 55400".to_string(),
+                input: (
+                    PathBuf::from("/path/to/registry"),
+                    PathBuf::from("/path/to/registry/0000000000/00/00/0d868.pb")
+                ),
+                output: Some(55400),
+            },
+            TestCase {
+                description: "nested structure with large version".to_string(),
+                input: (
+                    PathBuf::from("/path/to/registry"),
+                    PathBuf::from("/path/to/registry/0000ffffff/ff/ff/fffff.pb")
+                ),
+                output: Some(0xfffffffffffffff),
+            },
+            TestCase {
+                description: "flat structure single file".to_string(),
+                input: (
+                    PathBuf::from("/path/to/registry"),
+                    PathBuf::from("/path/to/registry/0000000001.pb")
+                ),
+                output: Some(1),
+            },
+            TestCase {
+                description: "flat structure with hex version".to_string(),
+                input: (
+                    PathBuf::from("/path/to/registry"),
+                    PathBuf::from("/path/to/registry/000000d431.pb")
+                ),
+                output: Some(0xd431),
+            },
+            TestCase {
+                description: "nested structure with more than 4 parts".to_string(),
+                input: (
+                    PathBuf::from("/path/to/registry"),
+                    PathBuf::from("/path/to/registry/subdir/0000000000/00/00/00001.pb")
+                ),
+                output: Some(1),
+            },
+            TestCase {
+                description: "path not under base directory".to_string(),
+                input: (
+                    PathBuf::from("/path/to/registry"),
+                    PathBuf::from("/different/path/0000000001/00/00/00001.pb")
+                ),
+                output: None,
+            },
+            TestCase {
+                description: "nested structure with less than 4 parts".to_string(),
+                input: (
+                    PathBuf::from("/path/to/registry"),
+                    PathBuf::from("/path/to/registry/0000000001/00.pb")
+                ),
+                output: None,
+            },
+            TestCase {
+                description: "invalid hex in filename".to_string(),
+                input: (
+                    PathBuf::from("/path/to/registry"),
+                    PathBuf::from("/path/to/registry/invalid/00/00/00001.pb")
+                ),
+                output: None,
+            },
+            TestCase {
+                description: "empty path".to_string(),
+                input: (
+                    PathBuf::from("/path/to/registry"),
+                    PathBuf::from("/path/to/registry")
+                ),
+                output: None,
+            },
+        ];
+
+        for test_case in test_cases {
+            let result = extract_version_from_registry_path(&test_case.input.0, &test_case.input.1);
+            assert_eq!(result, test_case.output, "{}", test_case.description);
+        }
+    }
+}
