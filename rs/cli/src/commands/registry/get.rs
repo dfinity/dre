@@ -3,7 +3,7 @@ use clap::Args;
 use crate::commands::registry::helpers::versions::{VersionRange, VersionFillMode};
 use crate::commands::registry::helpers::dump::{get_sorted_versions_from_local, get_dump_from_registry};
 use crate::commands::registry::helpers::filters::Filter;
-use crate::commands::registry::helpers::writer::create_writer;
+use crate::commands::registry::helpers::writer::Writer;
 use crate::{auth::AuthRequirement, exe::ExecutableCommand, exe::args::GlobalArgs};
 use std::path::PathBuf;
 use log::info;
@@ -39,7 +39,7 @@ impl ExecutableCommand for Get {
 
     fn validate(&self, _args: &GlobalArgs, _cmd: &mut clap::Command) {}
 
-    async fn execute(&self, ctx: crate::ctx::DreContext) -> anyhow::Result<()> {
+    async fn execute(&self, mut ctx: crate::ctx::DreContext) -> anyhow::Result<()> {
         // Ensure local registry is initialized/synced
         let _ = ctx.load_registry().await;
 
@@ -66,8 +66,8 @@ impl ExecutableCommand for Get {
         });
 
         // Write to file or stdout
-        let writer = create_writer(&self.output)?;
-        serde_json::to_writer_pretty(writer, &serde_value)?;
+        let mut writer = Writer::new(&self.output, false)?;
+        writer.write_line(&serde_json::to_string_pretty(&serde_value)?)?;
 
         Ok(())
     }

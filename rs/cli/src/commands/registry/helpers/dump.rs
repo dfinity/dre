@@ -1,22 +1,23 @@
-use serde::Serialize;
+
+use crate::ctx::DreContext;
+use ic_canisters::IcAgentCanisterClient;
+use ic_canisters::governance::GovernanceCanisterWrapper;
+use ic_management_backend::health::HealthStatusQuerier;
+use icp_ledger::AccountIdentifier;
+use ic_management_backend::lazy_registry::LazyRegistry;
+use ic_management_types::{HealthStatus, Network};
 use ic_protobuf::registry::unassigned_nodes_config::v1::UnassignedNodesConfigRecord;
 use ic_protobuf::registry::dc::v1::DataCenterRecord;
 use ic_protobuf::registry::replica_version::v1::ReplicaVersionRecord;
 use ic_protobuf::registry::hostos_version::v1::HostosVersionRecord;
-use ic_types::PrincipalId;
-use ic_protobuf::registry::node::v1::NodeRewardType;
-use ic_protobuf::registry::node::v1::ConnectionEndpoint;
-use ic_protobuf::registry::subnet::v1::ChainKeyConfig;
+use ic_protobuf::registry::node::v1::{NodeRewardType, ConnectionEndpoint, IPv4InterfaceConfig};
+use ic_protobuf::registry::subnet::v1::{ChainKeyConfig, SubnetFeatures};
 use ic_registry_subnet_type::SubnetType;
-use ic_protobuf::registry::subnet::v1::SubnetFeatures;
-use ic_management_types::HealthStatus;
-use ic_protobuf::registry::node::v1::IPv4InterfaceConfig;
+use ic_types::PrincipalId;
 use indexmap::IndexMap;
-use crate::ctx::DreContext;
 use log::{info, warn};
 use prost::Message;
-use ic_management_types::Network;
-use ic_management_backend::lazy_registry::LazyRegistry;
+use serde::Serialize;
 use itertools::Itertools;
 use std::{
     collections::{BTreeMap, HashMap},
@@ -24,10 +25,6 @@ use std::{
     str::FromStr,
     sync::Arc,
 };
-use ic_canisters::IcAgentCanisterClient;
-use ic_canisters::governance::GovernanceCanisterWrapper;
-use ic_management_backend::health::HealthStatusQuerier;
-use icp_ledger::AccountIdentifier;
 
 #[derive(Debug, Serialize)]
 pub(crate) struct RegistryDump {

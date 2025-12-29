@@ -1,17 +1,16 @@
 use crate::commands::registry::helpers::filters::Filter;
-use crate::commands::registry::helpers::versions::VersionRange;
 use crate::commands::registry::helpers::dump::{get_sorted_versions_from_local};
-use crate::commands::registry::helpers::versions::VersionFillMode;
-use crate::commands::registry::helpers::writer::create_writer;
+use crate::commands::registry::helpers::versions::{VersionRange, VersionFillMode};
+use crate::commands::registry::helpers::writer::Writer;
 use crate::{auth::AuthRequirement, exe::ExecutableCommand, exe::args::GlobalArgs};
-use ic_registry_common_proto::pb::local_store::v1::{MutationType, ChangelogEntry};
-use std::path::PathBuf;
-use serde::Serialize;
-use log::info;
-use serde_json::Value;
 use base64::{Engine as _, engine::general_purpose::STANDARD as BASE64};
-use prost::Message;
 use clap::Args;
+use ic_registry_common_proto::pb::local_store::v1::{MutationType, ChangelogEntry};
+use log::info;
+use prost::Message;
+use serde::Serialize;
+use serde_json::Value;
+use std::path::PathBuf;
 
 #[derive(Args, Debug)]
 #[clap(about = "Show history for a version range")]
@@ -76,8 +75,8 @@ impl ExecutableCommand for History {
         });
 
         // Write to file or stdout
-        let writer = create_writer(&self.output)?;
-        serde_json::to_writer_pretty(writer, &flattened_version_records_json)?;
+        let mut writer = Writer::new(&self.output, false)?;
+        writer.write_line(&serde_json::to_string_pretty(&flattened_version_records_json)?)?;
 
         Ok(())
     }

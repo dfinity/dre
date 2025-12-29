@@ -138,7 +138,7 @@ impl DreContext {
         self.load_registry_for_version(None).await
     }
 
-    pub fn clear_registry_cache(&self) {
+    pub fn clear_registry_cache(&mut self) {
         info!("Clearing registry cache");
         *self.registry.borrow_mut() = None;
     }

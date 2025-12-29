@@ -1,36 +1,45 @@
-use clap::Args;
-
 use crate::{auth::AuthRequirement, exe::ExecutableCommand, exe::args::GlobalArgs};
-use std::path::PathBuf;
+use crate::commands::registry::helpers::dump::RegistryDump;
+use crate::commands::registry::helpers::dump::{get_sorted_versions_from_local, get_dump_from_registry};
 use crate::commands::registry::helpers::filters::Filter;
+use crate::commands::registry::helpers::versions::{VersionRange, VersionFillMode};
+use crate::commands::registry::helpers::writer::Writer;
+use clap::Args;
+use colored::Colorize;
+use log::info;
+use similar::TextDiff;
+use std::path::PathBuf;
 
 #[derive(Args, Debug)]
-#[clap(about = "Show diff of two aggregated versions of the registry.
+#[clap(about = "Show diff of the data between two aggregated versions")]
+pub struct Diff {
+  #[clap(index = 1, allow_hyphen_values = true, help = format!("Version number or negative index
 
-Version numbers:
-  - Positive numbers are actual version numbers
-  - Negative numbers are indices relative to the latest version (-1 = latest)
-  - 0 is not supported
-  - No argument will show diff between latest and latest-10
-  - Version numbers are inclusive.
+- No argument will show diff from latest-10 to latest
+{}
 
 Examples:
-  -5              # Show diff between latest-5 and latest
-  55400           # Show diff between version 1 and 100
-  -5 -2           # Show diff between latest-5 and latest-2
-  55400 55440     # Show diff between version 10 and 15
-  ")]
-pub struct Diff {
-    #[clap(index = 1, allow_hyphen_values = true, help = "Version in range (optional)")]
-    pub version_1: Option<i64>,
+  -5              # Show diff of latest-5 to latest
+  -1              # Show diff of latest
+  55400           # Show diff from 55400 to latest
+", VersionRange::get_help_text()))]
+  pub version_1: Option<i64>,
 
-    #[clap(index = 2, allow_hyphen_values = true, help = "Version in range (optional)")]
+  #[clap(index = 2, allow_hyphen_values = true, help = "Version number or negative index
+
+See [VERSION_1] for more information.
+Only supported in combination with [VERSION_1].
+
+Examples for combination with [VERSION_1]:
+  -5 -2           # Show diff of latest-5 to latest-2
+  55400 55450     # Show diff from 55400 to 55450
+    ")]
     pub version_2: Option<i64>,
 
     #[clap(short = 'o', long, help = "Output file (default is stdout)")]
     pub output: Option<PathBuf>,
 
-    #[clap(long, short, alias = "filter", help = Filter::get_help_text())]
+    #[clap(short = 'f', long, help = Filter::get_help_text())]
     pub filter: Vec<Filter>,
 }
 
@@ -41,82 +50,67 @@ impl ExecutableCommand for Diff {
 
     fn validate(&self, _args: &GlobalArgs, _cmd: &mut clap::Command) {}
 
-    async fn execute(&self, ctx: crate::ctx::DreContext) -> anyhow::Result<()> {
-        // Build range vector from optional version_1/version_2 fields
-        // let range: Vec<i64> = match (self.version_1, self.version_2) {
-        //     (Some(f), Some(t)) => vec![f, t],
-        //     (Some(f), None) => vec![f],
-        //     (None, None) => vec![],
-        //     (None, Some(_)) => anyhow::bail!("This should never happen"),
-        // };
+    async fn execute(&self, mut ctx: crate::ctx::DreContext) -> anyhow::Result<()> {
+        // Ensure local registry is initialized/synced
+        let _ = ctx.load_registry().await;
 
-        // // Resolve range
-        // let validated_range = validate_range_argument(&range)?;
-        // let range = if validated_range.is_empty() { None } else { Some(validated_range) };
-        // let (versions_sorted, _) = get_sorted_versions(&ctx).await?;
-        // let selected_versions = select_versions(range, &versions_sorted)?;
+        // Get sorted versions
+        let (versions_sorted, _) = get_sorted_versions_from_local(&ctx).await?;
 
-        // // Take first and last from selected versions
-        // let actual_v1 = *selected_versions.first().unwrap();
-        // let actual_v2 = *selected_versions.last().unwrap();
+        // Create version range
+        let version_range = VersionRange::create_from_args(self.version_1, self.version_2, VersionFillMode::ToEnd, &versions_sorted)?;
+        info!("Selected version range {:?}", version_range);
 
-        // // Log versions
-        // info!("Selected version range from {} to {}", actual_v1, actual_v2,);
+        // Fetch data for version 1
+        ctx.clear_registry_cache();
+        let _ = ctx.load_registry_for_version(Some(version_range.get_to())).await;
+        let registry_dump_v1: RegistryDump = get_dump_from_registry(ctx.clone()).await?;
+        let mut serde_value_v1 = serde_json::to_value(registry_dump_v1)?;
 
-        // // Fetch aggregated registry data for both versions
-        // // Clear registry cache before each call to ensure we get the correct version
-        // ctx.clear_registry_cache();
-        // let reg1 = get_registry(ctx.clone(), Some(actual_v1)).await?;
-        // ctx.clear_registry_cache();
-        // let reg2 = get_registry(ctx.clone(), Some(actual_v2)).await?;
+        // Apply filters to version 1
+        self.filter.iter().for_each(|filter| {
+            let _ = filter.filter_json_value(&mut serde_value_v1);
+        });
 
-        // // Apply filters
-        // let mut val1 = serde_json::to_value(&reg1)?;
-        // let mut val2 = serde_json::to_value(&reg2)?;
-        // self.filter.iter().for_each(|filter| {
-        //     let _ = filter.filter_json_value(&mut val1);
-        //     let _ = filter.filter_json_value(&mut val2);
-        // });
+        // Fetch data for version 2
+        ctx.clear_registry_cache();
+        let _ = ctx.load_registry_for_version(Some(version_range.get_from())).await;
+        let registry_dump_v2: RegistryDump = get_dump_from_registry(ctx.clone()).await?;
+        let mut serde_value_v2 = serde_json::to_value(registry_dump_v2)?;
 
-        // // Create diff: val2 - val1
-        // let json1 = serde_json::to_string_pretty(&val1)?;
-        // let json2 = serde_json::to_string_pretty(&val2)?;
-        // let diff = TextDiff::from_lines(&json2, &json1);
+        // Apply filters to version 2
+        self.filter.iter().for_each(|filter| {
+            let _ = filter.filter_json_value(&mut serde_value_v2);
+        });
 
-        // // Write to file or stdout
-        // let mut writer = create_writer(&self.output)?;
+        // Create diff: v2 - v1
+        let json1 = serde_json::to_string_pretty(&serde_value_v1)?;
+        let json2 = serde_json::to_string_pretty(&serde_value_v2)?;
+        let diff = TextDiff::from_lines(&json2, &json1);
 
-        // // Use color if output is stdout
-        // let use_color = self.output.is_none() && std::io::IsTerminal::is_terminal(&std::io::stdout());
+        // Use color if output is stdout
+        let use_color = self.output.is_none() && std::io::IsTerminal::is_terminal(&std::io::stdout());
 
-        // // Write diff to file or stdout
-        // for (idx, group) in diff.grouped_ops(3).iter().enumerate() {
-        //     if idx > 0 {
-        //         writeln!(writer, "{}", "---".dimmed())?;
-        //     }
-        //     for op in group {
-        //         for change in diff.iter_changes(op) {
-        //             let (sign, s) = match change.tag() {
-        //                 ChangeTag::Delete => ("-", change.to_string()),
-        //                 ChangeTag::Insert => ("+", change.to_string()),
-        //                 ChangeTag::Equal => (" ", change.to_string()),
-        //             };
-        //             if use_color {
-        //                 let color = match change.tag() {
-        //                     ChangeTag::Delete => colored::Color::Red,
-        //                     ChangeTag::Insert => colored::Color::Green,
-        //                     ChangeTag::Equal => colored::Color::White,
-        //                 };
-        //                 write!(writer, "{}{} ", sign.color(color), s.color(color))?;
-        //             } else {
-        //                 write!(writer, "{}{} ", sign, s)?;
-        //             }
-        //         }
-        //     }
-        // }
+        // Create writer
+        let mut writer = Writer::new(&self.output, use_color)?;
 
-        println!("diff");
+        // Write diff to file or stdout
+        generate_diff(&diff, &mut writer)?;
 
         Ok(())
     }
+}
+
+fn generate_diff(diff: &TextDiff<'_, '_, '_, str>, writer: &mut Writer) -> anyhow::Result<()> {
+    for (idx, group) in diff.grouped_ops(3).iter().enumerate() {
+        if idx > 0 {
+            writer.write_line(&"---".dimmed())?;
+        }
+        for op in group {
+            for change in diff.iter_changes(op) {
+                writer.write_diff_line(&change.tag(), &change.to_string())?;
+            }
+        }
+    }
+    Ok(())
 }
