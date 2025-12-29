@@ -1,12 +1,12 @@
 use clap::Args;
 
-use crate::commands::registry::helpers::versions::{VersionRange, VersionFillMode};
-use crate::commands::registry::helpers::dump::{get_sorted_versions_from_local, get_dump_from_registry};
+use crate::commands::registry::helpers::dump::{get_dump_from_registry, get_sorted_versions_from_local};
 use crate::commands::registry::helpers::filters::Filter;
+use crate::commands::registry::helpers::versions::{VersionFillMode, VersionRange};
 use crate::commands::registry::helpers::writer::Writer;
 use crate::{auth::AuthRequirement, exe::ExecutableCommand, exe::args::GlobalArgs};
-use std::path::PathBuf;
 use log::info;
+use std::path::PathBuf;
 
 #[derive(Args, Debug)]
 #[clap(about = format!("Get aggregated data for a specific version"))]
@@ -22,7 +22,6 @@ Examples:
   -1              # Get data of latest version
   55400           # Get data of version 55400
 ", VersionRange::get_help_text()))]
-
     pub version: Option<i64>,
 
     #[clap(short = 'o', long, help = "Output file (default is stdout)")]

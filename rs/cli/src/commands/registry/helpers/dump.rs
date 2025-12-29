@@ -1,24 +1,23 @@
-
 use crate::ctx::DreContext;
 use ic_canisters::IcAgentCanisterClient;
 use ic_canisters::governance::GovernanceCanisterWrapper;
 use ic_management_backend::health::HealthStatusQuerier;
-use icp_ledger::AccountIdentifier;
 use ic_management_backend::lazy_registry::LazyRegistry;
 use ic_management_types::{HealthStatus, Network};
-use ic_protobuf::registry::unassigned_nodes_config::v1::UnassignedNodesConfigRecord;
 use ic_protobuf::registry::dc::v1::DataCenterRecord;
-use ic_protobuf::registry::replica_version::v1::ReplicaVersionRecord;
 use ic_protobuf::registry::hostos_version::v1::HostosVersionRecord;
-use ic_protobuf::registry::node::v1::{NodeRewardType, ConnectionEndpoint, IPv4InterfaceConfig};
+use ic_protobuf::registry::node::v1::{ConnectionEndpoint, IPv4InterfaceConfig, NodeRewardType};
+use ic_protobuf::registry::replica_version::v1::ReplicaVersionRecord;
 use ic_protobuf::registry::subnet::v1::{ChainKeyConfig, SubnetFeatures};
+use ic_protobuf::registry::unassigned_nodes_config::v1::UnassignedNodesConfigRecord;
 use ic_registry_subnet_type::SubnetType;
 use ic_types::PrincipalId;
+use icp_ledger::AccountIdentifier;
 use indexmap::IndexMap;
+use itertools::Itertools;
 use log::{info, warn};
 use prost::Message;
 use serde::Serialize;
-use itertools::Itertools;
 use std::{
     collections::{BTreeMap, HashMap},
     net::Ipv6Addr,

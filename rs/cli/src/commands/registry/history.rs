@@ -1,11 +1,11 @@
+use crate::commands::registry::helpers::dump::get_sorted_versions_from_local;
 use crate::commands::registry::helpers::filters::Filter;
-use crate::commands::registry::helpers::dump::{get_sorted_versions_from_local};
-use crate::commands::registry::helpers::versions::{VersionRange, VersionFillMode};
+use crate::commands::registry::helpers::versions::{VersionFillMode, VersionRange};
 use crate::commands::registry::helpers::writer::Writer;
 use crate::{auth::AuthRequirement, exe::ExecutableCommand, exe::args::GlobalArgs};
 use base64::{Engine as _, engine::general_purpose::STANDARD as BASE64};
 use clap::Args;
-use ic_registry_common_proto::pb::local_store::v1::{MutationType, ChangelogEntry};
+use ic_registry_common_proto::pb::local_store::v1::{ChangelogEntry, MutationType};
 use log::info;
 use prost::Message;
 use serde::Serialize;
@@ -27,7 +27,10 @@ Examples:
 ", VersionRange::get_help_text()))]
     pub version_1: Option<i64>,
 
-    #[clap(index = 2, allow_hyphen_values = true, help = "Version number or negative index
+    #[clap(
+        index = 2,
+        allow_hyphen_values = true,
+        help = "Version number or negative index
 
 See [VERSION_1] for more information.
 Only supported in combination with [VERSION_1].
@@ -35,7 +38,8 @@ Only supported in combination with [VERSION_1].
 Examples for combination with [VERSION_1]:
   -5 -2           # Show history of latest-5 to latest-2
   55400 55450     # Show history from 55400 to 55450
-    ")]
+    "
+    )]
     pub version_2: Option<i64>,
 
     #[clap(short = 'o', long, help = "Output file (default is stdout)")]
@@ -66,7 +70,8 @@ impl ExecutableCommand for History {
         // Build flat list of records
         let entries_map: std::collections::HashMap<u64, ChangelogEntry> = entries_sorted.into_iter().collect();
         let selected_versions: Vec<u64> = (version_range.get_from()..=version_range.get_to()).collect();
-        let flattened_version_records: Vec<FlattenedVersionRecord> = FlattenedVersionRecord::create_from_selected_version(&selected_versions, &entries_map);
+        let flattened_version_records: Vec<FlattenedVersionRecord> =
+            FlattenedVersionRecord::create_from_selected_version(&selected_versions, &entries_map);
 
         // Apply filters
         let mut flattened_version_records_json = serde_json::to_value(flattened_version_records)?;
@@ -90,7 +95,10 @@ struct FlattenedVersionRecord {
 }
 
 impl FlattenedVersionRecord {
-    fn create_from_selected_version(selected_versions: &Vec<u64>, entries_map: &std::collections::HashMap<u64, ChangelogEntry>) -> Vec<FlattenedVersionRecord>  {
+    fn create_from_selected_version(
+        selected_versions: &Vec<u64>,
+        entries_map: &std::collections::HashMap<u64, ChangelogEntry>,
+    ) -> Vec<FlattenedVersionRecord> {
         let mut flattened_version_records: Vec<FlattenedVersionRecord> = Vec::new();
 
         for v in selected_versions {
@@ -110,8 +118,8 @@ impl FlattenedVersionRecord {
             }
         }
         flattened_version_records
-        }
     }
+}
 
 /// Best-effort decode of registry value bytes into JSON. Falls back to hex when unknown.
 /// This can be extended to specific types in the future, if needed

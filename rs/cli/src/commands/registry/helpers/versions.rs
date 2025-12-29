@@ -21,14 +21,19 @@ impl VersionRange {
 
     pub fn get_help_text() -> String {
         String::from(
-"- Positive numbers are actual version numbers
+            "- Positive numbers are actual version numbers
 - Negative numbers are indices relative to the latest version (-1 = latest)
 - 0 is not supported
-- Version numbers are inclusive."
+- Version numbers are inclusive.",
         )
     }
 
-    pub fn create_from_args(maybe_version: Option<i64>, maybe_version_2: Option<i64>, mode: VersionFillMode, versions_in_registry: &[u64], ) -> anyhow::Result<Self> {
+    pub fn create_from_args(
+        maybe_version: Option<i64>,
+        maybe_version_2: Option<i64>,
+        mode: VersionFillMode,
+        versions_in_registry: &[u64],
+    ) -> anyhow::Result<Self> {
         let length: u64 = versions_in_registry.len() as u64;
         let max_version_u64: u64 = versions_in_registry[length as usize - 1];
 
@@ -40,52 +45,62 @@ impl VersionRange {
                 from_version = 1;
                 to_version = max_version_u64;
 
-                return Ok(Self { from: from_version, to: to_version });
+                return Ok(Self {
+                    from: from_version,
+                    to: to_version,
+                });
             }
             (Some(version), None) => {
                 let version_u64: u64 = version.abs() as u64;
 
                 if version < 0 {
                     if version_u64 > length {
-                        anyhow::bail!("Relative version number {} is out of range ({} to {})", version, versions_in_registry[0], versions_in_registry[length as usize - 1]);
+                        anyhow::bail!(
+                            "Relative version number {} is out of range ({} to {})",
+                            version,
+                            versions_in_registry[0],
+                            versions_in_registry[length as usize - 1]
+                        );
                     }
 
                     match mode {
                         VersionFillMode::FromStart => {
                             from_version = 1;
                             to_version = max_version_u64 - version_u64 + 1;
-
                         }
                         VersionFillMode::ToEnd => {
                             from_version = max_version_u64 - version_u64 + 1;
                             to_version = max_version_u64;
                         }
                     }
-                }
-                else if version > 0 {
+                } else if version > 0 {
                     if version_u64 > max_version_u64 {
-                        anyhow::bail!("Version number {} is out of range ({} to {})", version, versions_in_registry[0], max_version_u64);
+                        anyhow::bail!(
+                            "Version number {} is out of range ({} to {})",
+                            version,
+                            versions_in_registry[0],
+                            max_version_u64
+                        );
                     }
 
                     match mode {
                         VersionFillMode::FromStart => {
                             from_version = 1;
-                            to_version = version_u64 ;
+                            to_version = version_u64;
                         }
                         VersionFillMode::ToEnd => {
                             from_version = version_u64;
                             to_version = max_version_u64;
                         }
                     }
-                }
-                else {
+                } else {
                     anyhow::bail!("Version 0 is not supported");
                 }
 
                 return Ok(Self {
                     from: from_version,
                     to: to_version,
-                })
+                });
             }
             (Some(version_1), Some(version_2)) => {
                 let version_1_u64: u64 = version_1.abs() as u64;
@@ -94,26 +109,21 @@ impl VersionRange {
                 if version_1 < 0 && version_2 < 0 {
                     from_version = max_version_u64 - version_1_u64 + 1;
                     to_version = max_version_u64 - version_2_u64 + 1;
-                }
-                else if version_1 > 0 && version_2 > 0 {
+                } else if version_1 > 0 && version_2 > 0 {
                     from_version = version_1_u64;
                     to_version = version_2_u64;
-                }
-                else if version_1 * version_1 < 0 {
+                } else if version_1 * version_1 < 0 {
                     anyhow::bail!("Cannot mix positive version numbers and negative indices");
-                }
-                else if version_1 == 0 || version_2 == 0 {
+                } else if version_1 == 0 || version_2 == 0 {
                     anyhow::bail!("Version 0 is not supported");
-                }
-                else {
+                } else {
                     anyhow::bail!("Unsupported combination of version numbers: {}, {}", version_1, version_2);
                 }
 
                 return Ok(Self {
                     from: from_version,
                     to: to_version,
-                })
-
+                });
             }
             (None, Some(_)) => {
                 anyhow::bail!("Only pass second version number is not supported");

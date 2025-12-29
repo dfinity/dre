@@ -1,9 +1,9 @@
-use crate::{auth::AuthRequirement, exe::ExecutableCommand, exe::args::GlobalArgs};
 use crate::commands::registry::helpers::dump::RegistryDump;
-use crate::commands::registry::helpers::dump::{get_sorted_versions_from_local, get_dump_from_registry};
+use crate::commands::registry::helpers::dump::{get_dump_from_registry, get_sorted_versions_from_local};
 use crate::commands::registry::helpers::filters::Filter;
-use crate::commands::registry::helpers::versions::{VersionRange, VersionFillMode};
+use crate::commands::registry::helpers::versions::{VersionFillMode, VersionRange};
 use crate::commands::registry::helpers::writer::Writer;
+use crate::{auth::AuthRequirement, exe::ExecutableCommand, exe::args::GlobalArgs};
 use clap::Args;
 use colored::Colorize;
 use log::info;
@@ -13,7 +13,7 @@ use std::path::PathBuf;
 #[derive(Args, Debug)]
 #[clap(about = "Show diff of the data between two aggregated versions")]
 pub struct Diff {
-  #[clap(index = 1, allow_hyphen_values = true, help = format!("Version number or negative index
+    #[clap(index = 1, allow_hyphen_values = true, help = format!("Version number or negative index
 
 - No argument will show diff from latest-10 to latest
 {}
@@ -23,9 +23,12 @@ Examples:
   -1              # Show diff of latest
   55400           # Show diff from 55400 to latest
 ", VersionRange::get_help_text()))]
-  pub version_1: Option<i64>,
+    pub version_1: Option<i64>,
 
-  #[clap(index = 2, allow_hyphen_values = true, help = "Version number or negative index
+    #[clap(
+        index = 2,
+        allow_hyphen_values = true,
+        help = "Version number or negative index
 
 See [VERSION_1] for more information.
 Only supported in combination with [VERSION_1].
@@ -33,7 +36,8 @@ Only supported in combination with [VERSION_1].
 Examples for combination with [VERSION_1]:
   -5 -2           # Show diff of latest-5 to latest-2
   55400 55450     # Show diff from 55400 to 55450
-    ")]
+    "
+    )]
     pub version_2: Option<i64>,
 
     #[clap(short = 'o', long, help = "Output file (default is stdout)")]
@@ -117,7 +121,7 @@ fn generate_diff(diff: &TextDiff<'_, '_, '_, str>, writer: &mut Writer) -> anyho
 
 #[cfg(test)]
 mod tests {
-    use super::{generate_diff, Writer};
+    use super::{Writer, generate_diff};
     use similar::TextDiff;
     use std::path::PathBuf;
 
