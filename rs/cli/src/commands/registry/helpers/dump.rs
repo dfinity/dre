@@ -1,6 +1,7 @@
 use crate::ctx::DreContext;
 use ic_canisters::IcAgentCanisterClient;
 use ic_canisters::governance::GovernanceCanisterWrapper;
+use ic_registry_common_proto::pb::local_store::v1::ChangelogEntry;
 use ic_management_backend::health::HealthStatusQuerier;
 use ic_management_backend::lazy_registry::LazyRegistry;
 use ic_management_types::{HealthStatus, Network};
@@ -20,6 +21,7 @@ use prost::Message;
 use serde::Serialize;
 use std::{
     collections::{BTreeMap, HashMap},
+    ffi::OsStr,
     net::Ipv6Addr,
     str::FromStr,
     sync::Arc,
@@ -259,7 +261,7 @@ async fn get_node_operators(local_registry: &Arc<dyn LazyRegistry>, network: &Ne
 
 pub(crate) async fn get_sorted_versions_from_local(
     ctx: &DreContext,
-) -> anyhow::Result<(Vec<u64>, Vec<(u64, ic_registry_common_proto::pb::local_store::v1::ChangelogEntry)>)> {
+) -> anyhow::Result<(Vec<u64>, Vec<(u64, ChangelogEntry)>)> {
     let base_dirs = get_dirs_from_ctx(ctx)?;
 
     let entries = load_first_available_entries(&base_dirs)?;
@@ -522,18 +524,15 @@ async fn _get_nodes(
 
 pub(crate) fn load_first_available_entries(
     base_dirs: &[std::path::PathBuf],
-) -> anyhow::Result<Vec<(u64, ic_registry_common_proto::pb::local_store::v1::ChangelogEntry)>> {
-    use ic_registry_common_proto::pb::local_store::v1::ChangelogEntry as PbChangelogEntry;
-    use std::ffi::OsStr;
-
-    let mut entries: Vec<(u64, PbChangelogEntry)> = Vec::new();
+) -> anyhow::Result<Vec<(u64, ChangelogEntry)>> {
+    let mut entries: Vec<(u64, ChangelogEntry)> = Vec::new();
     for base_dir in base_dirs.iter() {
-        let mut local: Vec<(u64, PbChangelogEntry)> = Vec::new();
+        let mut local: Vec<(u64, ChangelogEntry)> = Vec::new();
         collect_pb_files(base_dir, &mut |path| {
             if path.extension() == Some(OsStr::new("pb")) {
                 if let Some(v) = extract_version_from_registry_path(base_dir, path) {
                     let bytes = std::fs::read(path).unwrap_or_else(|_| panic!("Failed reading {}", path.display()));
-                    let entry = PbChangelogEntry::decode(bytes.as_slice()).unwrap_or_else(|_| panic!("Failed decoding {}", path.display()));
+                    let entry = ChangelogEntry::decode(bytes.as_slice()).unwrap_or_else(|_| panic!("Failed decoding {}", path.display()));
                     local.push((v, entry));
                 }
             }
@@ -589,8 +588,327 @@ fn extract_version_from_registry_path(base_dir: &std::path::Path, full_path: &st
 
 #[cfg(test)]
 mod test {
-    use super::extract_version_from_registry_path;
+    use super::*;
     use std::path::PathBuf;
+    use std::collections::HashSet;
+    use std::time::{SystemTime, UNIX_EPOCH};
+    use ic_registry_common_proto::pb::local_store::v1::{ChangelogEntry, KeyMutation, MutationType};
+    use prost::Message;
+
+    #[test]
+    fn test_load_first_available_entries() {
+        struct TestCase {
+            description: String,
+            setup: Box<dyn Fn(&PathBuf) -> Vec<PathBuf>>,
+            expected_result: Result<usize, bool>, // Ok(count) or Err(should_error)
+        }
+
+        // Generate unique test directory name
+        let test_id = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .unwrap()
+            .as_nanos();
+        let base_test_dir = PathBuf::from(format!("/tmp/dre_test_load_entries_{}", test_id));
+
+        let test_cases = vec![
+            TestCase {
+                description: "all directories empty".to_string(),
+                setup: Box::new(|base| {
+                    let dir1 = base.join("dir1");
+                    let dir2 = base.join("dir2");
+                    fs_err::create_dir_all(&dir1).unwrap();
+                    fs_err::create_dir_all(&dir2).unwrap();
+                    vec![dir1, dir2]
+                }),
+                expected_result: Err(true), // Should error
+            },
+            TestCase {
+                description: "multiple directories, first empty, second has entries".to_string(),
+                setup: Box::new(|base| {
+                    let dir1 = base.join("dir1");
+                    let dir2 = base.join("dir2");
+                    fs_err::create_dir_all(&dir1).unwrap();
+                    fs_err::create_dir_all(&dir2).unwrap();
+                    let entry = ChangelogEntry {
+                        key_mutations: vec![KeyMutation {
+                            key: "test_key".to_string(),
+                            value: b"test_value".to_vec(),
+                            mutation_type: MutationType::Set as i32,
+                        }],
+                    };
+                    let hex_str = format!("{:019x}", 1);
+                    let dir_path = dir2
+                        .join(&hex_str[0..10])
+                        .join(&hex_str[10..12])
+                        .join(&hex_str[12..14]);
+                    fs_err::create_dir_all(&dir_path).unwrap();
+                    let file_path = dir_path.join(format!("{}.pb", &hex_str[14..]));
+                    fs_err::write(&file_path, entry.encode_to_vec()).unwrap();
+                    vec![dir1, dir2]
+                }),
+                expected_result: Ok(1),
+            },
+            TestCase {
+                description: "multiple directories, first has entries, second ignored".to_string(),
+                setup: Box::new(|base| {
+                    let dir1 = base.join("dir1");
+                    let dir2 = base.join("dir2");
+                    fs_err::create_dir_all(&dir1).unwrap();
+                    fs_err::create_dir_all(&dir2).unwrap();
+                    let entry1 = ChangelogEntry {
+                        key_mutations: vec![KeyMutation {
+                            key: "test_key1".to_string(),
+                            value: b"test_value1".to_vec(),
+                            mutation_type: MutationType::Set as i32,
+                        }],
+                    };
+                    let entry2 = ChangelogEntry {
+                        key_mutations: vec![KeyMutation {
+                            key: "test_key2".to_string(),
+                            value: b"test_value2".to_vec(),
+                            mutation_type: MutationType::Set as i32,
+                        }],
+                    };
+                    // Create entry in dir1
+                    let hex_str1 = format!("{:019x}", 1);
+                    let dir_path1 = dir1
+                        .join(&hex_str1[0..10])
+                        .join(&hex_str1[10..12])
+                        .join(&hex_str1[12..14]);
+                    fs_err::create_dir_all(&dir_path1).unwrap();
+                    let file_path1 = dir_path1.join(format!("{}.pb", &hex_str1[14..]));
+                    fs_err::write(&file_path1, entry1.encode_to_vec()).unwrap();
+                    // Create entry in dir2 (should be ignored)
+                    let hex_str2 = format!("{:019x}", 2);
+                    let dir_path2 = dir2
+                        .join(&hex_str2[0..10])
+                        .join(&hex_str2[10..12])
+                        .join(&hex_str2[12..14]);
+                    fs_err::create_dir_all(&dir_path2).unwrap();
+                    let file_path2 = dir_path2.join(format!("{}.pb", &hex_str2[14..]));
+                    fs_err::write(&file_path2, entry2.encode_to_vec()).unwrap();
+                    vec![dir1, dir2]
+                }),
+                expected_result: Ok(1), // Should only return entries from dir1
+            },
+        ];
+
+        // Cleanup function
+        let cleanup = |path: &PathBuf| {
+            if path.exists() {
+                let _ = fs_err::remove_dir_all(path);
+            }
+        };
+
+        for test_case in test_cases {
+            let base_dirs = (test_case.setup)(&base_test_dir);
+
+            let result = load_first_available_entries(&base_dirs);
+
+            match test_case.expected_result {
+                Ok(expected_count) => {
+                    assert!(
+                        result.is_ok(),
+                        "{}: load_first_available_entries should succeed",
+                        test_case.description
+                    );
+                    let entries = result.unwrap();
+                    assert_eq!(
+                        entries.len(),
+                        expected_count,
+                        "{}: should load {} entries, got {}",
+                        test_case.description,
+                        expected_count,
+                        entries.len()
+                    );
+                }
+                Err(should_error) => {
+                    if should_error {
+                        assert!(
+                            result.is_err(),
+                            "{}: load_first_available_entries should return error",
+                            test_case.description
+                        );
+                    } else {
+                        assert!(
+                            result.is_ok(),
+                            "{}: load_first_available_entries should succeed",
+                            test_case.description
+                        );
+                    }
+                }
+            }
+
+            // Cleanup after each test case
+            for dir in &base_dirs {
+                cleanup(dir);
+            }
+        }
+
+        // Final cleanup of base test directory
+        cleanup(&base_test_dir);
+    }
+
+    #[test]
+    fn test_collect_pb_files() {
+        use std::time::{SystemTime, UNIX_EPOCH};
+
+        struct TestCase {
+            description: String,
+            setup: Box<dyn Fn(&PathBuf) -> (PathBuf, HashSet<PathBuf>)>,
+            expected_count: usize,
+        }
+
+        // Generate unique test directory name
+        let test_id = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .unwrap()
+            .as_nanos();
+        let base_test_dir = PathBuf::from(format!("/tmp/dre_test_collect_pb_{}", test_id));
+
+        let test_cases = vec![
+            TestCase {
+                description: "empty directory".to_string(),
+                setup: Box::new(|base| {
+                    let test_dir = base.join("empty");
+                    fs_err::create_dir_all(&test_dir).unwrap();
+                    (test_dir, HashSet::new())
+                }),
+                expected_count: 0,
+            },
+            TestCase {
+                description: "single file in root".to_string(),
+                setup: Box::new(|base| {
+                    let test_dir = base.join("single_file");
+                    fs_err::create_dir_all(&test_dir).unwrap();
+                    let file1 = test_dir.join("file1.pb");
+                    fs_err::write(&file1, b"test").unwrap();
+                    let mut expected = HashSet::new();
+                    expected.insert(file1.clone());
+                    (test_dir, expected)
+                }),
+                expected_count: 1,
+            },
+            TestCase {
+                description: "multiple files in root".to_string(),
+                setup: Box::new(|base| {
+                    let test_dir = base.join("multiple_files");
+                    fs_err::create_dir_all(&test_dir).unwrap();
+                    let file1 = test_dir.join("file1.pb");
+                    let file2 = test_dir.join("file2.pb");
+                    let file3 = test_dir.join("file3.txt");
+                    fs_err::write(&file1, b"test1").unwrap();
+                    fs_err::write(&file2, b"test2").unwrap();
+                    fs_err::write(&file3, b"test3").unwrap();
+                    let mut expected = HashSet::new();
+                    expected.insert(file1.clone());
+                    expected.insert(file2.clone());
+                    expected.insert(file3.clone());
+                    (test_dir, expected)
+                }),
+                expected_count: 3,
+            },
+            TestCase {
+                description: "nested directory structure".to_string(),
+                setup: Box::new(|base| {
+                    let test_dir = base.join("nested");
+                    let subdir = test_dir.join("subdir");
+                    fs_err::create_dir_all(&subdir).unwrap();
+                    let file1 = test_dir.join("file1.pb");
+                    let file2 = subdir.join("file2.pb");
+                    let file3 = subdir.join("file3.pb");
+                    fs_err::write(&file1, b"test1").unwrap();
+                    fs_err::write(&file2, b"test2").unwrap();
+                    fs_err::write(&file3, b"test3").unwrap();
+                    let mut expected = HashSet::new();
+                    expected.insert(file1.clone());
+                    expected.insert(file2.clone());
+                    expected.insert(file3.clone());
+                    (test_dir, expected)
+                }),
+                expected_count: 3,
+            },
+            TestCase {
+                description: "deeply nested directory structure".to_string(),
+                setup: Box::new(|base| {
+                    let test_dir = base.join("deeply_nested");
+                    let deep_dir = test_dir.join("level1").join("level2").join("level3");
+                    fs_err::create_dir_all(&deep_dir).unwrap();
+                    let file1 = test_dir.join("file1.pb");
+                    let file2 = deep_dir.join("file2.pb");
+                    fs_err::write(&file1, b"test1").unwrap();
+                    fs_err::write(&file2, b"test2").unwrap();
+                    let mut expected = HashSet::new();
+                    expected.insert(file1.clone());
+                    expected.insert(file2.clone());
+                    (test_dir, expected)
+                }),
+                expected_count: 2,
+            },
+            TestCase {
+                description: "non-existent directory".to_string(),
+                setup: Box::new(|base| {
+                    let test_dir = base.join("non_existent");
+                    (test_dir, HashSet::new())
+                }),
+                expected_count: 0,
+            },
+            TestCase {
+                description: "directory with only subdirectories (no files)".to_string(),
+                setup: Box::new(|base| {
+                    let test_dir = base.join("only_subdirs");
+                    let subdir1 = test_dir.join("subdir1");
+                    let subdir2 = test_dir.join("subdir2");
+                    fs_err::create_dir_all(&subdir1).unwrap();
+                    fs_err::create_dir_all(&subdir2).unwrap();
+                    (test_dir, HashSet::new())
+                }),
+                expected_count: 0,
+            },
+        ];
+
+        // Cleanup function
+        let cleanup = |path: &PathBuf| {
+            if path.exists() {
+                let _ = fs_err::remove_dir_all(path);
+            }
+        };
+
+        for test_case in test_cases {
+            let (test_dir, expected_files) = (test_case.setup)(&base_test_dir);
+            let base_path = test_dir.clone();
+
+            let mut collected_files = HashSet::new();
+            let result = collect_pb_files(&base_path, &mut |path| {
+                collected_files.insert(path.to_path_buf());
+            });
+
+            assert!(result.is_ok(), "{}: collect_pb_files should succeed", test_case.description);
+            assert_eq!(
+                collected_files.len(),
+                test_case.expected_count,
+                "{}: should collect {} files, got {}",
+                test_case.description,
+                test_case.expected_count,
+                collected_files.len()
+            );
+
+            for expected_file in &expected_files {
+                assert!(
+                    collected_files.contains(expected_file),
+                    "{}: should collect {:?}",
+                    test_case.description,
+                    expected_file
+                );
+            }
+
+            // Cleanup after each test case
+            cleanup(&test_dir);
+        }
+
+        // Final cleanup of base test directory
+        cleanup(&base_test_dir);
+    }
 
     #[test]
     fn test_extract_version_from_registry_path() {
