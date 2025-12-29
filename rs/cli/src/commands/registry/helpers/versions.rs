@@ -4,7 +4,7 @@ pub enum VersionFillMode {
     ToEnd,
 }
 
-#[derive(Debug, PartialEq, Eq)]
+#[derive(PartialEq, Eq)]
 pub struct VersionRange {
     from: Option<u64>,
     to: Option<u64>,
@@ -119,6 +119,12 @@ impl VersionRange {
                 anyhow::bail!("Only pass second version number is not supported");
             }
         }
+    }
+}
+
+impl std::fmt::Debug for VersionRange {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "from {:?} to {:?}", self.from, self.to)
     }
 }
 

@@ -276,7 +276,7 @@ pub(crate) async fn get_sorted_versions_from_local(
     }
 
     info!(
-        "Registry synced. Available versions: {} to {} ({} versions)",
+        "Available versions in local store: {} to {} ({} versions)",
         versions_sorted.first().unwrap(),
         versions_sorted.last().unwrap(),
         versions_sorted.len()
@@ -524,7 +524,7 @@ async fn _get_nodes(
     Ok(nodes)
 }
 
-fn load_first_available_entries(
+pub(crate) fn load_first_available_entries(
     base_dirs: &[std::path::PathBuf],
 ) -> anyhow::Result<Vec<(u64, ic_registry_common_proto::pb::local_store::v1::ChangelogEntry)>> {
     use ic_registry_common_proto::pb::local_store::v1::ChangelogEntry as PbChangelogEntry;
