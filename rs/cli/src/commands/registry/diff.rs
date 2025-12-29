@@ -157,7 +157,7 @@ mod tests {
         assert!(diff_output.contains("-  \"b\": 2"));
         assert!(diff_output.contains("+  \"b\": 3"));
 
-        // cleanup
+        // Cleanup
         fs_err::remove_file("/tmp/diff_test_output.json").unwrap();
     }
 }

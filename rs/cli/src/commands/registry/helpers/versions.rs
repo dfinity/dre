@@ -4,6 +4,8 @@ pub enum VersionFillMode {
     ToEnd,
 }
 
+const DEFAULT_INDEX: u64 = 10;
+
 #[derive(PartialEq, Eq)]
 pub struct VersionRange {
     from: u64,
@@ -42,8 +44,16 @@ impl VersionRange {
 
         match (maybe_version, maybe_version_2) {
             (None, None) => {
-                from_version = 1;
-                to_version = max_version_u64;
+                match mode {
+                    VersionFillMode::FromStart => {
+                        from_version = 1;
+                        to_version = max_version_u64;
+                    }
+                    VersionFillMode::ToEnd => {
+                        from_version = max_version_u64 - DEFAULT_INDEX + 1;
+                        to_version = max_version_u64;
+                    }
+                }
 
                 return Ok(Self {
                     from: from_version,
