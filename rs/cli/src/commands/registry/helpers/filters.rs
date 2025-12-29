@@ -1,4 +1,4 @@
-use serde_json::{json, Value};
+use serde_json::Value;
 use std::str::FromStr;
 use regex::Regex;
 
@@ -230,8 +230,8 @@ mod tests {
 
         let test_cases: Vec<TestCase> = vec![
             {
-                let input_data = json!({});
-                let output_data = json!({});
+                let input_data = serde_json::json!({});
+                let output_data = serde_json::json!({});
 
                 TestCase {
                     description: "no input, filter not applied to anything".to_string(),
@@ -240,8 +240,8 @@ mod tests {
                 }
             },
             {
-                let input_data = json!({"principal_id": "wwdbq-xuq"});
-                let output_data = json!({"principal_id": "wwdbq-xuq"});
+                let input_data = serde_json::json!({"principal_id": "wwdbq-xuq"});
+                let output_data = serde_json::json!({"principal_id": "wwdbq-xuq"});
 
                 TestCase {
                     description: "match: key found, value found".to_string(),
@@ -250,8 +250,8 @@ mod tests {
                 }
              },
              {
-                let input_data = json!({"principal_id": "wwdbq-xuq"});
-                let output_data = json!({"principal_id": "wwdbq-xuq"});
+                let input_data = serde_json::json!({"principal_id": "wwdbq-xuq"});
+                let output_data = serde_json::json!({"principal_id": "wwdbq-xuq"});
 
                 TestCase {
                     description: "match: key found, value not found".to_string(),
@@ -260,7 +260,7 @@ mod tests {
                 }
             },
             {
-                let input_data = json!({
+                let input_data = serde_json::json!({
                     "node_provider": {
                         "principal_id": "wwdbq-xuq",
                         "number_of_nodes": "10"
@@ -269,7 +269,7 @@ mod tests {
                         "principal_id": "asdkj-iso",
                     }
                 });
-                let output_data = json!({
+                let output_data = serde_json::json!({
                     "node_provider": {
                         "principal_id": "wwdbq-xuq",
                         "number_of_nodes": "10"
@@ -283,7 +283,7 @@ mod tests {
                 }
             },
             {
-                let input_data = json!({
+                let input_data = serde_json::json!({
                     "node_provider": {
                         "principal_id": "wwdbq-xuq",
                         "number_of_nodes": "10"
@@ -292,7 +292,7 @@ mod tests {
                         "principal_id": "asdkj-iso",
                     }
                 });
-                let output_data = json!({});
+                let output_data = serde_json::json!({});
 
                 TestCase {
                     description: "filter doesn't match, nothing returned".to_string(),
@@ -301,7 +301,7 @@ mod tests {
                 }
             },
             {
-                let input_data = json!({
+                let input_data = serde_json::json!({
                     "node_provider": [
                         {
                             "principal_id": "wwdbq-xuq",
@@ -313,7 +313,7 @@ mod tests {
                         },
                     ],
                 });
-                let output_data = json!({
+                let output_data = serde_json::json!({
                     "node_provider": [
                         {
                             "principal_id": "wwdbq-xuq",
@@ -329,7 +329,7 @@ mod tests {
                 }
             },
             {
-                let input_data = json!({
+                let input_data = serde_json::json!({
                     "node_provider": [
                         {
                             "principal_id": "wwdbq-xuq",
@@ -341,7 +341,7 @@ mod tests {
                         },
                     ],
                 });
-                let output_data = json!({});
+                let output_data = serde_json::json!({});
 
                 TestCase {
                     description: "filter matches (key and value), other item is filtered out".to_string(),
@@ -406,14 +406,14 @@ mod tests {
              {
                  TestCase {
                      description: "greater_than: number success".to_string(),
-                     input: (Comparison::GreaterThan, json!(10), json!(5)),
+                     input: (Comparison::GreaterThan, serde_json::json!(10), serde_json::json!(5)),
                      output: true
                  }
              },
              {
                  TestCase {
                      description: "greater_than: number failure".to_string(),
-                     input: (Comparison::GreaterThan, json!(5), json!(10)),
+                     input: (Comparison::GreaterThan, serde_json::json!(5), serde_json::json!(10)),
                      output: false
                  }
              },
@@ -435,14 +435,14 @@ mod tests {
              {
                  TestCase {
                      description: "less_than: number success".to_string(),
-                     input: (Comparison::LessThan, json!(5), json!(10)),
+                     input: (Comparison::LessThan, serde_json::json!(5), serde_json::json!(10)),
                      output: true
                  }
              },
              {
                  TestCase {
                      description: "less_than: number failure".to_string(),
-                     input: (Comparison::LessThan, json!(10), json!(5)),
+                     input: (Comparison::LessThan, serde_json::json!(10), serde_json::json!(5)),
                      output: false
                  }
              },
@@ -464,21 +464,21 @@ mod tests {
              {
                  TestCase {
                      description: "greater_than_or_equal: equal success".to_string(),
-                     input: (Comparison::GreaterThanOrEqual, json!(10), json!(10)),
+                     input: (Comparison::GreaterThanOrEqual, serde_json::json!(10), serde_json::json!(10)),
                      output: true
                  }
              },
              {
                  TestCase {
                      description: "greater_than_or_equal: greater success".to_string(),
-                     input: (Comparison::GreaterThanOrEqual, json!(10), json!(5)),
+                     input: (Comparison::GreaterThanOrEqual, serde_json::json!(10), serde_json::json!(5)),
                      output: true
                  }
              },
              {
                  TestCase {
                      description: "greater_than_or_equal: failure".to_string(),
-                     input: (Comparison::GreaterThanOrEqual, json!(5), json!(10)),
+                     input: (Comparison::GreaterThanOrEqual, serde_json::json!(5), serde_json::json!(10)),
                      output: false
                  }
              },
@@ -486,21 +486,21 @@ mod tests {
              {
                  TestCase {
                      description: "less_than_or_equal: equal success".to_string(),
-                     input: (Comparison::LessThanOrEqual, json!(10), json!(10)),
+                     input: (Comparison::LessThanOrEqual, serde_json::json!(10), serde_json::json!(10)),
                      output: true
                  }
              },
              {
                  TestCase {
                      description: "less_than_or_equal: less success".to_string(),
-                     input: (Comparison::LessThanOrEqual, json!(5), json!(10)),
+                     input: (Comparison::LessThanOrEqual, serde_json::json!(5), serde_json::json!(10)),
                      output: true
                  }
              },
              {
                  TestCase {
                      description: "less_than_or_equal: failure".to_string(),
-                     input: (Comparison::LessThanOrEqual, json!(10), json!(5)),
+                     input: (Comparison::LessThanOrEqual, serde_json::json!(10), serde_json::json!(5)),
                      output: false
                  }
              },
