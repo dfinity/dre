@@ -1,7 +1,6 @@
 use crate::ctx::DreContext;
 use ic_canisters::IcAgentCanisterClient;
 use ic_canisters::governance::GovernanceCanisterWrapper;
-use ic_registry_common_proto::pb::local_store::v1::ChangelogEntry;
 use ic_management_backend::health::HealthStatusQuerier;
 use ic_management_backend::lazy_registry::LazyRegistry;
 use ic_management_types::{HealthStatus, Network};
@@ -11,6 +10,7 @@ use ic_protobuf::registry::node::v1::{ConnectionEndpoint, IPv4InterfaceConfig, N
 use ic_protobuf::registry::replica_version::v1::ReplicaVersionRecord;
 use ic_protobuf::registry::subnet::v1::{ChainKeyConfig, SubnetFeatures};
 use ic_protobuf::registry::unassigned_nodes_config::v1::UnassignedNodesConfigRecord;
+use ic_registry_common_proto::pb::local_store::v1::ChangelogEntry;
 use ic_registry_subnet_type::SubnetType;
 use ic_types::PrincipalId;
 use icp_ledger::AccountIdentifier;
@@ -259,9 +259,7 @@ async fn get_node_operators(local_registry: &Arc<dyn LazyRegistry>, network: &Ne
     Ok(node_operators)
 }
 
-pub(crate) async fn get_sorted_versions_from_local(
-    ctx: &DreContext,
-) -> anyhow::Result<(Vec<u64>, Vec<(u64, ChangelogEntry)>)> {
+pub(crate) async fn get_sorted_versions_from_local(ctx: &DreContext) -> anyhow::Result<(Vec<u64>, Vec<(u64, ChangelogEntry)>)> {
     let base_dirs = get_dirs_from_ctx(ctx)?;
 
     let entries = load_first_available_entries(&base_dirs)?;
@@ -522,9 +520,7 @@ async fn _get_nodes(
     Ok(nodes)
 }
 
-pub(crate) fn load_first_available_entries(
-    base_dirs: &[std::path::PathBuf],
-) -> anyhow::Result<Vec<(u64, ChangelogEntry)>> {
+pub(crate) fn load_first_available_entries(base_dirs: &[std::path::PathBuf]) -> anyhow::Result<Vec<(u64, ChangelogEntry)>> {
     let mut entries: Vec<(u64, ChangelogEntry)> = Vec::new();
     for base_dir in base_dirs.iter() {
         let mut local: Vec<(u64, ChangelogEntry)> = Vec::new();
@@ -589,11 +585,11 @@ fn extract_version_from_registry_path(base_dir: &std::path::Path, full_path: &st
 #[cfg(test)]
 mod test {
     use super::*;
-    use std::path::PathBuf;
-    use std::collections::HashSet;
-    use std::time::{SystemTime, UNIX_EPOCH};
     use ic_registry_common_proto::pb::local_store::v1::{ChangelogEntry, KeyMutation, MutationType};
     use prost::Message;
+    use std::collections::HashSet;
+    use std::path::PathBuf;
+    use std::time::{SystemTime, UNIX_EPOCH};
 
     #[test]
     fn test_load_first_available_entries() {
@@ -604,10 +600,7 @@ mod test {
         }
 
         // Generate unique test directory name
-        let test_id = SystemTime::now()
-            .duration_since(UNIX_EPOCH)
-            .unwrap()
-            .as_nanos();
+        let test_id = SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_nanos();
         let base_test_dir = PathBuf::from(format!("/tmp/dre_test_load_entries_{}", test_id));
 
         let test_cases = vec![
@@ -637,10 +630,7 @@ mod test {
                         }],
                     };
                     let hex_str = format!("{:019x}", 1);
-                    let dir_path = dir2
-                        .join(&hex_str[0..10])
-                        .join(&hex_str[10..12])
-                        .join(&hex_str[12..14]);
+                    let dir_path = dir2.join(&hex_str[0..10]).join(&hex_str[10..12]).join(&hex_str[12..14]);
                     fs_err::create_dir_all(&dir_path).unwrap();
                     let file_path = dir_path.join(format!("{}.pb", &hex_str[14..]));
                     fs_err::write(&file_path, entry.encode_to_vec()).unwrap();
@@ -671,19 +661,13 @@ mod test {
                     };
                     // Create entry in dir1
                     let hex_str1 = format!("{:019x}", 1);
-                    let dir_path1 = dir1
-                        .join(&hex_str1[0..10])
-                        .join(&hex_str1[10..12])
-                        .join(&hex_str1[12..14]);
+                    let dir_path1 = dir1.join(&hex_str1[0..10]).join(&hex_str1[10..12]).join(&hex_str1[12..14]);
                     fs_err::create_dir_all(&dir_path1).unwrap();
                     let file_path1 = dir_path1.join(format!("{}.pb", &hex_str1[14..]));
                     fs_err::write(&file_path1, entry1.encode_to_vec()).unwrap();
                     // Create entry in dir2 (should be ignored)
                     let hex_str2 = format!("{:019x}", 2);
-                    let dir_path2 = dir2
-                        .join(&hex_str2[0..10])
-                        .join(&hex_str2[10..12])
-                        .join(&hex_str2[12..14]);
+                    let dir_path2 = dir2.join(&hex_str2[0..10]).join(&hex_str2[10..12]).join(&hex_str2[12..14]);
                     fs_err::create_dir_all(&dir_path2).unwrap();
                     let file_path2 = dir_path2.join(format!("{}.pb", &hex_str2[14..]));
                     fs_err::write(&file_path2, entry2.encode_to_vec()).unwrap();
@@ -707,11 +691,7 @@ mod test {
 
             match test_case.expected_result {
                 Ok(expected_count) => {
-                    assert!(
-                        result.is_ok(),
-                        "{}: load_first_available_entries should succeed",
-                        test_case.description
-                    );
+                    assert!(result.is_ok(), "{}: load_first_available_entries should succeed", test_case.description);
                     let entries = result.unwrap();
                     assert_eq!(
                         entries.len(),
@@ -730,11 +710,7 @@ mod test {
                             test_case.description
                         );
                     } else {
-                        assert!(
-                            result.is_ok(),
-                            "{}: load_first_available_entries should succeed",
-                            test_case.description
-                        );
+                        assert!(result.is_ok(), "{}: load_first_available_entries should succeed", test_case.description);
                     }
                 }
             }
@@ -760,10 +736,7 @@ mod test {
         }
 
         // Generate unique test directory name
-        let test_id = SystemTime::now()
-            .duration_since(UNIX_EPOCH)
-            .unwrap()
-            .as_nanos();
+        let test_id = SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_nanos();
         let base_test_dir = PathBuf::from(format!("/tmp/dre_test_collect_pb_{}", test_id));
 
         let test_cases = vec![
@@ -923,7 +896,7 @@ mod test {
                 description: "nested structure with 4 parts - version 1".to_string(),
                 input: (
                     PathBuf::from("/path/to/registry"),
-                    PathBuf::from("/path/to/registry/0000000000/00/00/00001.pb")
+                    PathBuf::from("/path/to/registry/0000000000/00/00/00001.pb"),
                 ),
                 output: Some(1),
             },
@@ -931,7 +904,7 @@ mod test {
                 description: "nested structure with hex version".to_string(),
                 input: (
                     PathBuf::from("/path/to/registry"),
-                    PathBuf::from("/path/to/registry/0000000000/00/00/0d431.pb")
+                    PathBuf::from("/path/to/registry/0000000000/00/00/0d431.pb"),
                 ),
                 output: Some(0xd431),
             },
@@ -939,7 +912,7 @@ mod test {
                 description: "nested structure with version 55400".to_string(),
                 input: (
                     PathBuf::from("/path/to/registry"),
-                    PathBuf::from("/path/to/registry/0000000000/00/00/0d868.pb")
+                    PathBuf::from("/path/to/registry/0000000000/00/00/0d868.pb"),
                 ),
                 output: Some(55400),
             },
@@ -947,31 +920,25 @@ mod test {
                 description: "nested structure with large version".to_string(),
                 input: (
                     PathBuf::from("/path/to/registry"),
-                    PathBuf::from("/path/to/registry/0000ffffff/ff/ff/fffff.pb")
+                    PathBuf::from("/path/to/registry/0000ffffff/ff/ff/fffff.pb"),
                 ),
                 output: Some(0xfffffffffffffff),
             },
             TestCase {
                 description: "flat structure single file".to_string(),
-                input: (
-                    PathBuf::from("/path/to/registry"),
-                    PathBuf::from("/path/to/registry/0000000001.pb")
-                ),
+                input: (PathBuf::from("/path/to/registry"), PathBuf::from("/path/to/registry/0000000001.pb")),
                 output: Some(1),
             },
             TestCase {
                 description: "flat structure with hex version".to_string(),
-                input: (
-                    PathBuf::from("/path/to/registry"),
-                    PathBuf::from("/path/to/registry/000000d431.pb")
-                ),
+                input: (PathBuf::from("/path/to/registry"), PathBuf::from("/path/to/registry/000000d431.pb")),
                 output: Some(0xd431),
             },
             TestCase {
                 description: "nested structure with more than 4 parts".to_string(),
                 input: (
                     PathBuf::from("/path/to/registry"),
-                    PathBuf::from("/path/to/registry/subdir/0000000000/00/00/00001.pb")
+                    PathBuf::from("/path/to/registry/subdir/0000000000/00/00/00001.pb"),
                 ),
                 output: Some(1),
             },
@@ -979,32 +946,26 @@ mod test {
                 description: "path not under base directory".to_string(),
                 input: (
                     PathBuf::from("/path/to/registry"),
-                    PathBuf::from("/different/path/0000000001/00/00/00001.pb")
+                    PathBuf::from("/different/path/0000000001/00/00/00001.pb"),
                 ),
                 output: None,
             },
             TestCase {
                 description: "nested structure with less than 4 parts".to_string(),
-                input: (
-                    PathBuf::from("/path/to/registry"),
-                    PathBuf::from("/path/to/registry/0000000001/00.pb")
-                ),
+                input: (PathBuf::from("/path/to/registry"), PathBuf::from("/path/to/registry/0000000001/00.pb")),
                 output: None,
             },
             TestCase {
                 description: "invalid hex in filename".to_string(),
                 input: (
                     PathBuf::from("/path/to/registry"),
-                    PathBuf::from("/path/to/registry/invalid/00/00/00001.pb")
+                    PathBuf::from("/path/to/registry/invalid/00/00/00001.pb"),
                 ),
                 output: None,
             },
             TestCase {
                 description: "empty path".to_string(),
-                input: (
-                    PathBuf::from("/path/to/registry"),
-                    PathBuf::from("/path/to/registry")
-                ),
+                input: (PathBuf::from("/path/to/registry"), PathBuf::from("/path/to/registry")),
                 output: None,
             },
         ];

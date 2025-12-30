@@ -222,16 +222,16 @@ fn normalize_protobuf_json(mut v: Value) -> Value {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::collections::HashMap;
-    use ic_protobuf::registry::dc::v1::DataCenterRecord;
-    use ic_protobuf::registry::node_operator::v1::NodeOperatorRecord;
-    use ic_protobuf::registry::node::v1::NodeRecord;
-    use ic_protobuf::registry::subnet::v1::SubnetRecord;
-    use ic_protobuf::registry::replica_version::v1::{ReplicaVersionRecord, BlessedReplicaVersions};
-    use ic_protobuf::registry::hostos_version::v1::HostosVersionRecord;
-    use ic_protobuf::registry::unassigned_nodes_config::v1::UnassignedNodesConfigRecord;
     use ic_protobuf::registry::api_boundary_node::v1::ApiBoundaryNodeRecord;
+    use ic_protobuf::registry::dc::v1::DataCenterRecord;
+    use ic_protobuf::registry::hostos_version::v1::HostosVersionRecord;
+    use ic_protobuf::registry::node::v1::NodeRecord;
+    use ic_protobuf::registry::node_operator::v1::NodeOperatorRecord;
     use ic_protobuf::registry::node_rewards::v2::NodeRewardsTable;
+    use ic_protobuf::registry::replica_version::v1::{BlessedReplicaVersions, ReplicaVersionRecord};
+    use ic_protobuf::registry::subnet::v1::SubnetRecord;
+    use ic_protobuf::registry::unassigned_nodes_config::v1::UnassignedNodesConfigRecord;
+    use std::collections::HashMap;
 
     #[test]
     fn test_create_from_selected_version() {
@@ -250,82 +250,94 @@ mod tests {
             },
             TestCase {
                 description: "empty selected versions".to_string(),
-                input: (vec![], std::collections::HashMap::from([
-                    (1, ChangelogEntry {
-                        key_mutations: vec![],
-                    })
-                ])),
+                input: (vec![], std::collections::HashMap::from([(1, ChangelogEntry { key_mutations: vec![] })])),
                 output: vec![],
             },
             TestCase {
                 description: "single version with single key mutation (Set)".to_string(),
-                input: (vec![1], std::collections::HashMap::from([
-                    (1, ChangelogEntry {
-                        key_mutations: vec![
-                            ic_registry_common_proto::pb::local_store::v1::KeyMutation {
+                input: (
+                    vec![1],
+                    std::collections::HashMap::from([(
+                        1,
+                        ChangelogEntry {
+                            key_mutations: vec![ic_registry_common_proto::pb::local_store::v1::KeyMutation {
                                 key: "test_key".to_string(),
                                 value: b"test_value_too_long_to_be_principal_id".to_vec(),
                                 mutation_type: MutationType::Set as i32,
-                            }
-                        ],
-                    })
-                ])),
-                output: vec![
-                    FlattenedVersionRecord {
-                        version: 1,
-                        key: "test_key".to_string(),
-                        value: serde_json::json!({"bytes_base64": "dGVzdF92YWx1ZV90b29fbG9uZ190b19iZV9wcmluY2lwYWxfaWQ="}),
-                    }
-                ],
+                            }],
+                        },
+                    )]),
+                ),
+                output: vec![FlattenedVersionRecord {
+                    version: 1,
+                    key: "test_key".to_string(),
+                    value: serde_json::json!({"bytes_base64": "dGVzdF92YWx1ZV90b29fbG9uZ190b19iZV9wcmluY2lwYWxfaWQ="}),
+                }],
             },
             TestCase {
                 description: "single version with single key mutation (Unset)".to_string(),
-                input: (vec![1], std::collections::HashMap::from([
-                    (1, ChangelogEntry {
-                        key_mutations: vec![
-                            ic_registry_common_proto::pb::local_store::v1::KeyMutation {
+                input: (
+                    vec![1],
+                    std::collections::HashMap::from([(
+                        1,
+                        ChangelogEntry {
+                            key_mutations: vec![ic_registry_common_proto::pb::local_store::v1::KeyMutation {
                                 key: "test_key".to_string(),
                                 value: vec![],
                                 mutation_type: MutationType::Unset as i32,
-                            }
-                        ],
-                    })
-                ])),
-                output: vec![
-                    FlattenedVersionRecord {
-                        version: 1,
-                        key: "test_key".to_string(),
-                        value: serde_json::Value::Null,
-                    }
-                ],
+                            }],
+                        },
+                    )]),
+                ),
+                output: vec![FlattenedVersionRecord {
+                    version: 1,
+                    key: "test_key".to_string(),
+                    value: serde_json::Value::Null,
+                }],
             },
             TestCase {
                 description: "multiple versions with multiple key mutations".to_string(),
-                input: (vec![1, 2], std::collections::HashMap::from([
-                    (1, ChangelogEntry {
-                        key_mutations: vec![
-                            ic_registry_common_proto::pb::local_store::v1::KeyMutation {
-                                key: "key1".to_string(),
-                                value: vec![0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31],
-                                mutation_type: MutationType::Set as i32,
+                input: (
+                    vec![1, 2],
+                    std::collections::HashMap::from([
+                        (
+                            1,
+                            ChangelogEntry {
+                                key_mutations: vec![
+                                    ic_registry_common_proto::pb::local_store::v1::KeyMutation {
+                                        key: "key1".to_string(),
+                                        value: vec![
+                                            0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28,
+                                            29, 30, 31,
+                                        ],
+                                        mutation_type: MutationType::Set as i32,
+                                    },
+                                    ic_registry_common_proto::pb::local_store::v1::KeyMutation {
+                                        key: "key2".to_string(),
+                                        value: vec![
+                                            100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116, 117, 118, 119, 120,
+                                            121, 122, 123, 124, 125, 126, 127, 128, 129, 130, 131,
+                                        ],
+                                        mutation_type: MutationType::Set as i32,
+                                    },
+                                ],
                             },
-                            ic_registry_common_proto::pb::local_store::v1::KeyMutation {
-                                key: "key2".to_string(),
-                                value: vec![100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116, 117, 118, 119, 120, 121, 122, 123, 124, 125, 126, 127, 128, 129, 130, 131],
-                                mutation_type: MutationType::Set as i32,
-                            }
-                        ],
-                    }),
-                    (2, ChangelogEntry {
-                        key_mutations: vec![
-                            ic_registry_common_proto::pb::local_store::v1::KeyMutation {
-                                key: "key3".to_string(),
-                                value: vec![200, 201, 202, 203, 204, 205, 206, 207, 208, 209, 210, 211, 212, 213, 214, 215, 216, 217, 218, 219, 220, 221, 222, 223, 224, 225, 226, 227, 228, 229, 230, 231],
-                                mutation_type: MutationType::Set as i32,
-                            }
-                        ],
-                    })
-                ])),
+                        ),
+                        (
+                            2,
+                            ChangelogEntry {
+                                key_mutations: vec![ic_registry_common_proto::pb::local_store::v1::KeyMutation {
+                                    key: "key3".to_string(),
+                                    value: vec![
+                                        200, 201, 202, 203, 204, 205, 206, 207, 208, 209, 210, 211, 212, 213, 214, 215, 216, 217, 218, 219, 220, 221,
+                                        222, 223, 224, 225, 226, 227, 228, 229, 230, 231,
+                                    ],
+                                    mutation_type: MutationType::Set as i32,
+                                }],
+                            },
+                        ),
+                    ]),
+                ),
                 output: vec![
                     FlattenedVersionRecord {
                         version: 1,
@@ -341,31 +353,42 @@ mod tests {
                         version: 2,
                         key: "key3".to_string(),
                         value: serde_json::json!({"bytes_base64": "yMnKy8zNzs/Q0dLT1NXW19jZ2tvc3d7f4OHi4+Tl5uc="}),
-                    }
+                    },
                 ],
             },
             TestCase {
                 description: "version not in entries map is skipped".to_string(),
-                input: (vec![1, 2, 3], std::collections::HashMap::from([
-                    (1, ChangelogEntry {
-                        key_mutations: vec![
-                            ic_registry_common_proto::pb::local_store::v1::KeyMutation {
-                                key: "key1".to_string(),
-                                value: vec![10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110, 120, 130, 140, 150, 160, 170, 180, 190, 200, 210, 220, 230, 240, 250, 1, 2, 3, 4, 5],
-                                mutation_type: MutationType::Set as i32,
-                            }
-                        ],
-                    }),
-                    (3, ChangelogEntry {
-                        key_mutations: vec![
-                            ic_registry_common_proto::pb::local_store::v1::KeyMutation {
-                                key: "key3".to_string(),
-                                value: vec![5, 15, 25, 35, 45, 55, 65, 75, 85, 95, 105, 115, 125, 135, 145, 155, 165, 175, 185, 195, 205, 215, 225, 235, 245, 10, 20, 30, 40, 50],
-                                mutation_type: MutationType::Set as i32,
-                            }
-                        ],
-                    })
-                ])),
+                input: (
+                    vec![1, 2, 3],
+                    std::collections::HashMap::from([
+                        (
+                            1,
+                            ChangelogEntry {
+                                key_mutations: vec![ic_registry_common_proto::pb::local_store::v1::KeyMutation {
+                                    key: "key1".to_string(),
+                                    value: vec![
+                                        10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110, 120, 130, 140, 150, 160, 170, 180, 190, 200, 210, 220, 230,
+                                        240, 250, 1, 2, 3, 4, 5,
+                                    ],
+                                    mutation_type: MutationType::Set as i32,
+                                }],
+                            },
+                        ),
+                        (
+                            3,
+                            ChangelogEntry {
+                                key_mutations: vec![ic_registry_common_proto::pb::local_store::v1::KeyMutation {
+                                    key: "key3".to_string(),
+                                    value: vec![
+                                        5, 15, 25, 35, 45, 55, 65, 75, 85, 95, 105, 115, 125, 135, 145, 155, 165, 175, 185, 195, 205, 215, 225, 235,
+                                        245, 10, 20, 30, 40, 50,
+                                    ],
+                                    mutation_type: MutationType::Set as i32,
+                                }],
+                            },
+                        ),
+                    ]),
+                ),
                 output: vec![
                     FlattenedVersionRecord {
                         version: 1,
@@ -376,16 +399,12 @@ mod tests {
                         version: 3,
                         key: "key3".to_string(),
                         value: serde_json::json!({"bytes_base64": "BQ8ZIy03QUtVX2lzfYeRm6WvucPN1+Hr9QoUHigy"}),
-                    }
+                    },
                 ],
             },
             TestCase {
                 description: "version with empty key_mutations".to_string(),
-                input: (vec![1], std::collections::HashMap::from([
-                    (1, ChangelogEntry {
-                        key_mutations: vec![],
-                    })
-                ])),
+                input: (vec![1], std::collections::HashMap::from([(1, ChangelogEntry { key_mutations: vec![] })])),
                 output: vec![],
             },
         ];
@@ -588,10 +607,7 @@ mod tests {
             },
             TestCase {
                 description: "unknown key falls back to base64".to_string(),
-                input: (
-                    "unknown_key_prefix".to_string(),
-                    b"some_arbitrary_bytes_that_are_longer_than_29".to_vec(),
-                ),
+                input: ("unknown_key_prefix".to_string(), b"some_arbitrary_bytes_that_are_longer_than_29".to_vec()),
                 output: serde_json::json!({
                     "bytes_base64": "c29tZV9hcmJpdHJhcnlfYnl0ZXNfdGhhdF9hcmVfbG9uZ2VyX3RoYW5fMjk="
                 }),
