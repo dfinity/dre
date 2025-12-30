@@ -22,7 +22,6 @@ pub struct History {
 
 Examples:
   -5              # Show history of latest-5 to latest
-  -1              # Show history of latest
   55400           # Show history from 55400 to latest
 ", VersionRange::get_help_text()))]
     pub version_1: Option<i64>,

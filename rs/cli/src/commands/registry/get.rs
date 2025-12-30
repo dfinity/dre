@@ -1,10 +1,9 @@
-use clap::Args;
-
 use crate::commands::registry::helpers::dump::{get_dump_from_registry, get_sorted_versions_from_local};
 use crate::commands::registry::helpers::filters::Filter;
 use crate::commands::registry::helpers::versions::{VersionFillMode, VersionRange};
 use crate::commands::registry::helpers::writer::Writer;
 use crate::{auth::AuthRequirement, exe::ExecutableCommand, exe::args::GlobalArgs};
+use clap::Args;
 use log::info;
 use std::path::PathBuf;
 
@@ -19,7 +18,6 @@ pub struct Get {
 
 Examples:
   -5              # Get data of latest-5
-  -1              # Get data of latest version
   55400           # Get data of version 55400
 ", VersionRange::get_help_text()))]
     pub version: Option<i64>,
