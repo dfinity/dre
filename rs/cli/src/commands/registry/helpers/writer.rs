@@ -15,10 +15,10 @@ impl Writer {
                 let file = fs_err::File::create(path)?;
                 info!("Writing to file: {:?}", path.canonicalize()?);
 
-                return Ok(Writer {
+                Ok(Writer {
                     writer: Box::new(std::io::BufWriter::new(file)),
                     use_color,
-                });
+                })
             }
             None => Ok(Writer {
                 writer: Box::new(std::io::stdout()),

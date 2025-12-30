@@ -525,13 +525,12 @@ pub(crate) fn load_first_available_entries(base_dirs: &[std::path::PathBuf]) -> 
     for base_dir in base_dirs.iter() {
         let mut local: Vec<(u64, ChangelogEntry)> = Vec::new();
         collect_pb_files(base_dir, &mut |path| {
-            if path.extension() == Some(OsStr::new("pb")) {
-                if let Some(v) = extract_version_from_registry_path(base_dir, path) {
+            if path.extension() == Some(OsStr::new("pb"))
+                && let Some(v) = extract_version_from_registry_path(base_dir, path) {
                     let bytes = std::fs::read(path).unwrap_or_else(|_| panic!("Failed reading {}", path.display()));
                     let entry = ChangelogEntry::decode(bytes.as_slice()).unwrap_or_else(|_| panic!("Failed decoding {}", path.display()));
                     local.push((v, entry));
                 }
-            }
         })?;
         if !local.is_empty() {
             entries = local;

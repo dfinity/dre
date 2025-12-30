@@ -161,19 +161,17 @@ fn decode_value_to_json(key: &str, bytes: &[u8]) -> Value {
         if let Ok(rec) = ic_protobuf::registry::unassigned_nodes_config::v1::UnassignedNodesConfigRecord::decode(bytes) {
             return normalize_protobuf_json(serde_json::to_value(&rec).unwrap_or(Value::Null));
         }
-    } else if key == "blessed_replica_versions" {
-        if let Ok(rec) = ic_protobuf::registry::replica_version::v1::BlessedReplicaVersions::decode(bytes) {
+    } else if key == "blessed_replica_versions"
+        && let Ok(rec) = ic_protobuf::registry::replica_version::v1::BlessedReplicaVersions::decode(bytes) {
             return normalize_protobuf_json(serde_json::to_value(&rec).unwrap_or(Value::Null));
         }
-    }
 
     // Fallback: base64 for compactness
     let s = BASE64.encode(bytes);
-    if bytes.len() <= 29 {
-        if let Ok(p) = ic_types::PrincipalId::try_from(bytes.to_vec()) {
+    if bytes.len() <= 29
+        && let Ok(p) = ic_types::PrincipalId::try_from(bytes.to_vec()) {
             return serde_json::json!({ "bytes_base64": s, "principal": p.to_string() });
         }
-    }
     serde_json::json!({ "bytes_base64": s })
 }
 
@@ -194,8 +192,8 @@ fn normalize_protobuf_json(mut v: Value) -> Value {
     }
 
     // Replace array of small integers (likely bytes) with base64 when appropriate
-    if let Value::Array(arr) = &v {
-        if !arr.is_empty()
+    if let Value::Array(arr) = &v
+        && !arr.is_empty()
             && arr
                 .iter()
                 .all(|x| matches!(x, Value::Number(n) if n.as_u64().is_some() && n.as_u64().unwrap() <= 255))
@@ -207,14 +205,12 @@ fn normalize_protobuf_json(mut v: Value) -> Value {
                 }
             }
             let s = BASE64.encode(&buf);
-            if buf.len() <= 29 {
-                if let Ok(p) = ic_types::PrincipalId::try_from(buf) {
+            if buf.len() <= 29
+                && let Ok(p) = ic_types::PrincipalId::try_from(buf) {
                     return serde_json::json!({"bytes_base64": s, "principal": p.to_string()});
                 }
-            }
             return serde_json::json!({ "bytes_base64": s });
         }
-    }
     v
 }
 

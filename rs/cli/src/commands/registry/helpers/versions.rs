@@ -55,13 +55,13 @@ impl VersionRange {
                     }
                 }
 
-                return Ok(Self {
+                Ok(Self {
                     from: from_version,
                     to: to_version,
-                });
+                })
             }
             (Some(version), None) => {
-                let version_u64: u64 = version.abs() as u64;
+                let version_u64: u64 = version.unsigned_abs();
 
                 if version < 0 {
                     if version_u64 > length {
@@ -107,14 +107,14 @@ impl VersionRange {
                     anyhow::bail!("Version 0 is not supported");
                 }
 
-                return Ok(Self {
+                Ok(Self {
                     from: from_version,
                     to: to_version,
-                });
+                })
             }
             (Some(version_1), Some(version_2)) => {
-                let version_1_u64: u64 = version_1.abs() as u64;
-                let version_2_u64: u64 = version_2.abs() as u64;
+                let version_1_u64: u64 = version_1.unsigned_abs();
+                let version_2_u64: u64 = version_2.unsigned_abs();
 
                 if version_1 < 0 && version_2 < 0 {
                     from_version = max_version_u64 - version_1_u64;
@@ -130,10 +130,10 @@ impl VersionRange {
                     anyhow::bail!("Unsupported combination of version numbers: {}, {}", version_1, version_2);
                 }
 
-                return Ok(Self {
+                Ok(Self {
                     from: from_version,
                     to: to_version,
-                });
+                })
             }
             (None, Some(_)) => {
                 anyhow::bail!("Only pass second version number is not supported");
