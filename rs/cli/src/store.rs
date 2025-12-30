@@ -126,11 +126,7 @@ impl Store {
         );
 
         match self.offline {
-            true => {
-                if self.offline {
-                    warn!("Explicit offline mode! Registry won't be synced")
-                }
-            }
+            true => warn!("Explicit offline mode! Registry won't be synced"),
             false => sync_local_store_with_path(network, &registry_path).await?,
         }
 
