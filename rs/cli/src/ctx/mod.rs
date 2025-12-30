@@ -8,7 +8,7 @@ use ic_management_backend::{
     proposal::{ProposalAgent, ProposalAgentImpl},
 };
 use ic_management_types::Network;
-use log::warn;
+use log::{debug, warn};
 
 use crate::{
     artifact_downloader::{ArtifactDownloader, ArtifactDownloaderImpl},
@@ -124,11 +124,19 @@ impl DreContext {
 
     pub async fn registry_with_version(&self, version_height: Option<u64>) -> Arc<dyn LazyRegistry> {
         if let Some(reg) = self.registry.borrow().as_ref() {
+            debug!("Registry already loaded. Skipping.");
             return reg.clone();
         }
+
+        debug!("Loading registry for version: {:?}", version_height);
         let registry = self.store.registry(self.network(), self.proposals_agent(), version_height).await.unwrap();
         *self.registry.borrow_mut() = Some(registry.clone());
         registry
+    }
+
+    pub fn clear_registry_cache(&mut self) {
+        debug!("Clearing registry cache");
+        *self.registry.borrow_mut() = None;
     }
 
     pub fn is_offline(&self) -> bool {
@@ -137,6 +145,14 @@ impl DreContext {
 
     pub async fn registry(&self) -> Arc<dyn LazyRegistry> {
         self.registry_with_version(None).await
+    }
+
+    pub fn get_registry(&self) -> Result<Arc<dyn LazyRegistry>, anyhow::Error> {
+        if self.registry.borrow().is_none() {
+            return Err(anyhow::anyhow!("Registry not loaded"));
+        }
+
+        Ok(self.registry.borrow().as_ref().unwrap().clone())
     }
 
     pub fn network(&self) -> &Network {
