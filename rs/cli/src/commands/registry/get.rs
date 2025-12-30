@@ -52,7 +52,7 @@ impl ExecutableCommand for Get {
         // Clear registry cache and fetch specific version if version is not None
         if self.version.is_some() {
             ctx.clear_registry_cache();
-            let _ = ctx.registry_for_version(Some(version_range.get_to())).await;
+            let _ = ctx.registry_with_version(Some(version_range.get_to())).await;
         }
 
         // Get registry dump

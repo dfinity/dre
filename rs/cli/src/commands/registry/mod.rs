@@ -1,4 +1,7 @@
-use clap::{Args, Subcommand};
+mod diff;
+mod get;
+mod helpers;
+mod history;
 
 use crate::auth::AuthRequirement;
 use crate::commands::registry::diff::Diff;
@@ -8,12 +11,8 @@ use crate::commands::registry::history::History;
 use crate::ctx::DreContext;
 use crate::exe::ExecutableCommand;
 use crate::exe::args::GlobalArgs;
+use clap::{Args, Subcommand};
 use std::path::PathBuf;
-
-mod diff;
-mod get;
-mod helpers;
-mod history;
 
 #[derive(Args, Debug)]
 pub struct Registry {
@@ -65,10 +64,6 @@ impl ExecutableCommand for Registry {
             }
         }
     }
-
-    fn neuron_override(&self) -> Option<crate::auth::Neuron> {
-        self.subcommands.as_ref().and_then(|s| s.neuron_override())
-    }
 }
 
 impl ExecutableCommand for Subcommands {
@@ -93,14 +88,6 @@ impl ExecutableCommand for Subcommands {
             Subcommands::Get(get) => get.execute(ctx).await,
             Subcommands::History(history) => history.execute(ctx).await,
             Subcommands::Diff(diff) => diff.execute(ctx).await,
-        }
-    }
-
-    fn neuron_override(&self) -> Option<crate::auth::Neuron> {
-        match self {
-            Subcommands::Get(get) => get.neuron_override(),
-            Subcommands::History(history) => history.neuron_override(),
-            Subcommands::Diff(diff) => diff.neuron_override(),
         }
     }
 }

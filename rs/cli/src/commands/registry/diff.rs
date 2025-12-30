@@ -67,7 +67,7 @@ impl ExecutableCommand for Diff {
 
         // Fetch data for version 1
         ctx.clear_registry_cache();
-        let _ = ctx.registry_for_version(Some(version_range.get_to())).await;
+        let _ = ctx.registry_with_version(Some(version_range.get_to())).await;
         let registry_dump_v1: RegistryDump = get_dump_from_registry(ctx.clone()).await?;
         let mut serde_value_v1 = serde_json::to_value(registry_dump_v1)?;
 
@@ -78,7 +78,7 @@ impl ExecutableCommand for Diff {
 
         // Fetch data for version 2
         ctx.clear_registry_cache();
-        let _ = ctx.registry_for_version(Some(version_range.get_from())).await;
+        let _ = ctx.registry_with_version(Some(version_range.get_from())).await;
         let registry_dump_v2: RegistryDump = get_dump_from_registry(ctx.clone()).await?;
         let mut serde_value_v2 = serde_json::to_value(registry_dump_v2)?;
 

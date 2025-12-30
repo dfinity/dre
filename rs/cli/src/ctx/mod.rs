@@ -122,7 +122,7 @@ impl DreContext {
         .await
     }
 
-    pub async fn registry_for_version(&self, version_height: Option<u64>) -> Arc<dyn LazyRegistry> {
+    pub async fn registry_with_version(&self, version_height: Option<u64>) -> Arc<dyn LazyRegistry> {
         if let Some(reg) = self.registry.borrow().as_ref() {
             info!("Registry already loaded. Skipping.");
             return reg.clone();
@@ -134,10 +134,6 @@ impl DreContext {
         registry
     }
 
-    pub async fn registry(&self) -> Arc<dyn LazyRegistry> {
-        self.registry_for_version(None).await
-    }
-
     pub fn clear_registry_cache(&mut self) {
         info!("Clearing registry cache");
         *self.registry.borrow_mut() = None;
@@ -145,6 +141,10 @@ impl DreContext {
 
     pub fn is_offline(&self) -> bool {
         self.store.is_offline()
+    }
+
+    pub async fn registry(&self) -> Arc<dyn LazyRegistry> {
+        self.registry_with_version(None).await
     }
 
     pub fn get_registry(&self) -> Result<Arc<dyn LazyRegistry>, anyhow::Error> {
