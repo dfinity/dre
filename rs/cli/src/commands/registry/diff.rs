@@ -5,7 +5,6 @@ use crate::commands::registry::helpers::versions::{VersionFillMode, VersionRange
 use crate::commands::registry::helpers::writer::Writer;
 use crate::{auth::AuthRequirement, exe::ExecutableCommand, exe::args::GlobalArgs};
 use clap::Args;
-use colored::Colorize;
 use log::info;
 use similar::TextDiff;
 use std::path::PathBuf;
@@ -95,69 +94,10 @@ impl ExecutableCommand for Diff {
         // Use color if output is stdout
         let use_color = self.output.is_none() && std::io::IsTerminal::is_terminal(&std::io::stdout());
 
-        // Create writer
+        // Create writer and write diff
         let mut writer = Writer::new(&self.output, use_color)?;
-
-        // Write diff to file or stdout
-        generate_diff(&diff, &mut writer)?;
+        writer.write_diff(&diff)?;
 
         Ok(())
-    }
-}
-
-fn generate_diff(diff: &TextDiff<'_, '_, '_, str>, writer: &mut Writer) -> anyhow::Result<()> {
-    for (idx, group) in diff.grouped_ops(3).iter().enumerate() {
-        if idx > 0 {
-            writer.write_line(&"---".dimmed())?;
-        }
-        for op in group {
-            for change in diff.iter_changes(op) {
-                writer.write_diff_line(&change.tag(), &change.to_string())?;
-            }
-        }
-    }
-    Ok(())
-}
-
-#[cfg(test)]
-mod tests {
-    use super::{Writer, generate_diff};
-    use similar::TextDiff;
-    use std::path::PathBuf;
-
-    #[test]
-    fn test_generate_diff() {
-        // Test data
-        let json1 = serde_json::json!({
-            "a": 1,
-            "b": 2
-        });
-        let json2 = serde_json::json!({
-            "a": 1,
-            "b": 3
-        });
-
-        // Generate diff
-        let json1_str: String = serde_json::to_string_pretty(&json1).unwrap();
-        let json2_str: String = serde_json::to_string_pretty(&json2).unwrap();
-        let diff = TextDiff::from_lines(json1_str.as_str(), json2_str.as_str());
-
-        // Write diff to file
-        let mut writer = Writer::new(&Some(PathBuf::from("/tmp/diff_test_output.json")), false).unwrap();
-        generate_diff(&diff, &mut writer).unwrap();
-        // Flush data to disk
-        writer.flush().unwrap(); // Ensure data is written to disk
-        drop(writer); // Explicitly drop to ensure file is closed
-
-        // Read diff output from file
-        let diff_output = fs_err::read_to_string("/tmp/diff_test_output.json").unwrap();
-
-        // Assert diff output contains expected changes
-        assert!(diff_output.contains("  \"a\": 1,"));
-        assert!(diff_output.contains("-  \"b\": 2"));
-        assert!(diff_output.contains("+  \"b\": 3"));
-
-        // Cleanup
-        fs_err::remove_file("/tmp/diff_test_output.json").unwrap();
     }
 }

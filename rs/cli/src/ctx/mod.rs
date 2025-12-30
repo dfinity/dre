@@ -8,7 +8,7 @@ use ic_management_backend::{
     proposal::{ProposalAgent, ProposalAgentImpl},
 };
 use ic_management_types::Network;
-use log::{info, warn};
+use log::{debug, warn};
 
 use crate::{
     artifact_downloader::{ArtifactDownloader, ArtifactDownloaderImpl},
@@ -124,18 +124,18 @@ impl DreContext {
 
     pub async fn registry_with_version(&self, version_height: Option<u64>) -> Arc<dyn LazyRegistry> {
         if let Some(reg) = self.registry.borrow().as_ref() {
-            info!("Registry already loaded. Skipping.");
+            debug!("Registry already loaded. Skipping.");
             return reg.clone();
         }
 
-        info!("Loading registry for version: {:?}", version_height);
+        debug!("Loading registry for version: {:?}", version_height);
         let registry = self.store.registry(self.network(), self.proposals_agent(), version_height).await.unwrap();
         *self.registry.borrow_mut() = Some(registry.clone());
         registry
     }
 
     pub fn clear_registry_cache(&mut self) {
-        info!("Clearing registry cache");
+        debug!("Clearing registry cache");
         *self.registry.borrow_mut() = None;
     }
 
