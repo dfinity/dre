@@ -19,7 +19,6 @@ pub struct Diff {
 
 Examples:
   -5              # Show diff of latest-5 to latest
-  -1              # Show diff of latest
   55400           # Show diff from 55400 to latest
 ", VersionRange::get_help_text()))]
     pub version_1: Option<i64>,

@@ -50,7 +50,7 @@ impl VersionRange {
                         to_version = max_version_u64;
                     }
                     VersionFillMode::ToEnd => {
-                        from_version = max_version_u64 - DEFAULT_INDEX + 1;
+                        from_version = max_version_u64 - DEFAULT_INDEX;
                         to_version = max_version_u64;
                     }
                 }
@@ -76,10 +76,10 @@ impl VersionRange {
                     match mode {
                         VersionFillMode::FromStart => {
                             from_version = 1;
-                            to_version = max_version_u64 - version_u64 + 1;
+                            to_version = max_version_u64 - version_u64;
                         }
                         VersionFillMode::ToEnd => {
-                            from_version = max_version_u64 - version_u64 + 1;
+                            from_version = max_version_u64 - version_u64;
                             to_version = max_version_u64;
                         }
                     }
@@ -117,8 +117,8 @@ impl VersionRange {
                 let version_2_u64: u64 = version_2.abs() as u64;
 
                 if version_1 < 0 && version_2 < 0 {
-                    from_version = max_version_u64 - version_1_u64 + 1;
-                    to_version = max_version_u64 - version_2_u64 + 1;
+                    from_version = max_version_u64 - version_1_u64;
+                    to_version = max_version_u64 - version_2_u64;
                 } else if version_1 > 0 && version_2 > 0 {
                     from_version = version_1_u64;
                     to_version = version_2_u64;
