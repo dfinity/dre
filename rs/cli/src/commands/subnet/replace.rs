@@ -60,7 +60,7 @@ impl ExecutableCommand for Replace {
             _ => SubnetTarget::FromNodesIds(self.remove_nodes.clone()),
         };
 
-        let all_nodes = ctx.load_registry().await.nodes().await?.values().cloned().collect_vec();
+        let all_nodes = ctx.registry().await.nodes().await?.values().cloned().collect_vec();
 
         let subnet_manager = ctx.subnet_manager().await?;
         let subnet_change_response = subnet_manager
@@ -119,7 +119,7 @@ impl Replace {
     async fn validate_subnet_id_and_nodes(&self, ctx: &crate::ctx::DreContext) -> anyhow::Result<()> {
         let nodes_add_or_remove = [self.remove_nodes.clone(), self.add_nodes.clone()].concat();
         if let (Some(expected_subnet_id), false) = (self.subnet_id, nodes_add_or_remove.is_empty()) {
-            let registry = ctx.load_registry().await;
+            let registry = ctx.registry().await;
             let nodes = registry.get_nodes_from_ids(&nodes_add_or_remove).await?;
             let subnet = registry
                 .subnet(SubnetQueryBy::NodeList(nodes))

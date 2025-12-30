@@ -70,7 +70,7 @@ impl ExecutableCommand for ForceReplace {
     }
 
     async fn execute(&self, ctx: crate::ctx::DreContext) -> anyhow::Result<()> {
-        let registry = ctx.load_registry().await;
+        let registry = ctx.registry().await;
 
         let subnets = registry.subnets_and_proposals().await?;
         let subnet = subnets

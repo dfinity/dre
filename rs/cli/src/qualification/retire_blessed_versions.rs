@@ -20,7 +20,7 @@ impl Step for RetireBlessedVersions {
     }
 
     async fn execute(&self, ctx: &StepCtx) -> anyhow::Result<()> {
-        let registry = ctx.dre_ctx().load_registry().await;
+        let registry = ctx.dre_ctx().registry().await;
 
         let blessed_versions = registry.elected_guestos().await?;
         let mut to_unelect = vec![];

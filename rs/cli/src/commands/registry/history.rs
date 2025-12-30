@@ -58,7 +58,7 @@ impl ExecutableCommand for History {
 
     async fn execute(&self, ctx: crate::ctx::DreContext) -> anyhow::Result<()> {
         // Ensure local registry is initialized/synced
-        let _ = ctx.load_registry().await;
+        let _ = ctx.registry().await;
 
         // Get sorted versions
         let (versions_sorted, entries_sorted) = get_sorted_versions_from_local(&ctx).await?;

@@ -40,7 +40,7 @@ impl ExecutableCommand for Get {
 
     async fn execute(&self, mut ctx: crate::ctx::DreContext) -> anyhow::Result<()> {
         // Ensure local registry is initialized/synced
-        let _ = ctx.load_registry().await;
+        let _ = ctx.registry().await;
 
         // Get sorted versions
         let (versions_sorted, _) = get_sorted_versions_from_local(&ctx).await?;
@@ -52,7 +52,7 @@ impl ExecutableCommand for Get {
         // Clear registry cache and fetch specific version if version is not None
         if self.version.is_some() {
             ctx.clear_registry_cache();
-            let _ = ctx.load_registry_for_version(Some(version_range.get_to())).await;
+            let _ = ctx.registry_for_version(Some(version_range.get_to())).await;
         }
 
         // Get registry dump

@@ -293,7 +293,7 @@ impl QualificationExecutor {
 
             self.print_text(format!("Executed step {}: `{}`", ordered_step.index, ordered_step.step.name()));
 
-            let registry = self.step_ctx.dre_ctx().load_registry().await;
+            let registry = self.step_ctx.dre_ctx().registry().await;
             self.print_text(format!("Syncing with registry after step {}", ordered_step.index));
             let sync_registry = || async { registry.sync_with_nns().await };
             // If the system subnet downgraded it could be some time until it boots up

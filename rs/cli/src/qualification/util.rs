@@ -140,7 +140,7 @@ impl StepCtx {
     }
 
     pub async fn print_subnet_versions(&self) -> anyhow::Result<()> {
-        let registry = self.dre_ctx.load_registry().await;
+        let registry = self.dre_ctx.registry().await;
         let subnets = registry.subnets().await?;
 
         let subnets = subnets.values();
