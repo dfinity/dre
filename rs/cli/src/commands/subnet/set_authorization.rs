@@ -117,8 +117,8 @@ fn construct_summary(
     Ok(format!(
         "Updating the list of authorized subnets to:
 
-| Subnet id | Subnet Type | Public | 
-| --------- | ----------- | ------ | 
+| Subnet id | Subnet Type | Public |
+| --------- | ----------- | ------ |
 {}
 ",
         subnets

@@ -117,7 +117,13 @@ impl Store {
     ) -> anyhow::Result<Arc<dyn LazyRegistry>> {
         let registry_path = self.local_store_for_network(network)?;
 
-        info!("Using local registry path for network {}: {}", network.name, registry_path.display());
+        info!(
+            "Using local registry path for network {}: {} (version: {}, offline: {})",
+            network.name,
+            registry_path.display(),
+            version_height.map(|v| v.to_string()).unwrap_or_else(|| "latest".to_string()),
+            self.offline,
+        );
 
         match self.offline {
             true => warn!("Explicit offline mode! Registry won't be synced"),

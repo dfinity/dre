@@ -89,7 +89,8 @@ tokio = { workspace = true }
 url = { workspace = true }
 hex = { workspace = true }
 ic-registry-common-proto = { workspace = true }
-base64 = { version = "0.22" }
+base64 = { workspace = true }
+similar = { workspace = true }
 
 [dev-dependencies]
 actix-rt = { workspace = true }
