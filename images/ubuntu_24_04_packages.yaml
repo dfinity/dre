@@ -10,7 +10,7 @@
 version: 1
 
 sources:
-  - channel: noble main
+  - channel: noble main universe
     url: https://snapshot.ubuntu.com/ubuntu/20250826T000000Z
   - channel: noble-security main
     url: https://snapshot.ubuntu.com/ubuntu/20250826T000000Z
@@ -46,3 +46,4 @@ packages:
   - "clang-20" # partial IC build process run by target-determinator in commit annotator
   - "libffi-dev" # necessary to build the IC just like clang
   - "libsystemd-dev"
+  - "libvirt-dev"
