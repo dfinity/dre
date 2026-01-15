@@ -316,12 +316,12 @@ small_tests_deps = ["forum", "publish_notes", "release_index", "release_index_lo
             "test_size": "medium",
         },
         # Temporary disable large test because they are timing out
-        # {
-        #     "targets": large_tests,
-        #     "data": [],
-        #     "deps": large_tests_deps,
-        #     "test_size": "large",
-        # },
+        {
+            "targets": large_tests,
+            "data": [],
+            "deps": large_tests_deps,
+            "test_size": "large",
+        },
     ]
 ]
 
