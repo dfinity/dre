@@ -32,6 +32,11 @@ runs:
     ########################################
     # Setup
     ########################################
+    - name: "🐳 Fix docker socket permissions"
+      if: ${{ !startsWith(runner.name, 'dre-runner-custom') }}
+      shell: bash
+      run: sudo chmod 666 /var/run/docker.sock
+
     - name: "🔧 Free Up Disk Space"
       uses: jlumbroso/free-disk-space@v1.3.1
       if: ${{ !startsWith(runner.name, 'dre-runner-custom') }}
