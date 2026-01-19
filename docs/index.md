@@ -10,6 +10,7 @@ DRE (Decentralized Reliability Engineering) is a comprehensive suite of tools an
 
 ### DRE CLI Tool
 A command-line interface tool that provides essential functionality for:
+
 - Managing subnet configurations
 - Handling node operations
 - Executing network updates
@@ -17,6 +18,7 @@ A command-line interface tool that provides essential functionality for:
 
 ### Internal DRE Dashboard
 A web-based interface offering:
+
 - Real-time network monitoring
 - Deployment management
 - System metrics visualization
@@ -24,12 +26,14 @@ A web-based interface offering:
 
 ### Service Discovery
 Maintains an up-to-date registry of:
+
 - IC network targets
 - Log aggregation endpoints
 - Metrics collection points
 
 ### Log Management
 Comprehensive logging solutions for:
+
 - Host nodes
 - Guest nodes
 - Boundary nodes
