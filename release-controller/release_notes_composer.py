@@ -150,6 +150,7 @@ TEAM_PRETTY_MAP = {
     "utopia": "Utopia",
     "pocket-ic": "Pocket IC",
     "defi-team": "Defi team",
+    "defi": "Defi",
     "team-dsm": "DSM",
     "governance-team": "Governance",
     "sdk": "SDK",
