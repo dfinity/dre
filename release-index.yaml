@@ -8,6 +8,12 @@
 #         rc_name: <reference RC name>
 #         name: <version name>
 releases:
+  - rc_name: rc--2026-01-22_03-33
+    versions:
+      - name: base
+        version: b0a37d0119a5df1dad84e50dc8717b77978d8f04
+      - name: pre-signature-stash
+        version: 55d5801675db8f653c3164f5f198b4a1a53d238d
   - rc_name: rc--2026-01-08_03-31
     versions:
       - name: base
