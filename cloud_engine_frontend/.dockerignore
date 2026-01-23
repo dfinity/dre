@@ -1,0 +1,33 @@
+# Dependencies
+node_modules/
+
+# Build outputs (we build in Docker)
+build/
+.svelte-kit/
+
+# Development files
+.env
+.env.*
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Git
+.git/
+.gitignore
+
+# Docs
+*.md
+!README.md
+
+# Testing
+coverage/
+*.test.ts
+*.spec.ts
