@@ -9,7 +9,7 @@ use clap::Parser;
 use humantime::parse_duration;
 use opentelemetry::global;
 use prometheus::{Encoder, TextEncoder};
-use slog::{Drain, Logger, info, o};
+use slog::{Drain, Logger, error, info, o};
 use tokio::runtime::Runtime;
 use tokio::signal::unix::{SignalKind, signal};
 use tokio::sync::oneshot;
@@ -18,9 +18,8 @@ use url::Url;
 use utoipa::OpenApi;
 use utoipa_swagger_ui::SwaggerUi;
 
-use cloud_engine_controller_backend::handlers::{
-    auth_handlers, node_handlers, subnet_handlers, user_handlers, vm_handlers,
-};
+use cloud_engine_controller_backend::config::AppConfig;
+use cloud_engine_controller_backend::handlers::{node_handlers, subnet_handlers, vm_handlers};
 use cloud_engine_controller_backend::openapi::ApiDoc;
 use cloud_engine_controller_backend::state::AppState;
 
@@ -31,6 +30,21 @@ fn main() {
     let cli_args = CliArgs::parse();
     info!(log, "Starting Cloud Engine Controller Backend with args: {:?}", cli_args);
 
+    // Load application config from file
+    let config = match AppConfig::load(&cli_args.config_file) {
+        Ok(config) => {
+            info!(log, "Loaded config";
+                "project_id" => &config.gcp.project_id,
+                "zones" => ?config.gcp.zones
+            );
+            config
+        }
+        Err(e) => {
+            error!(log, "Failed to load config file: {}", e);
+            std::process::exit(1);
+        }
+    };
+
     let (server_stop_tx, server_stop_rx) = oneshot::channel();
 
     // Initialize metrics
@@ -39,9 +53,7 @@ fn main() {
         .build()
         .unwrap();
 
-    let provider = opentelemetry_sdk::metrics::SdkMeterProvider::builder()
-        .with_reader(exporter)
-        .build();
+    let provider = opentelemetry_sdk::metrics::SdkMeterProvider::builder().with_reader(exporter).build();
 
     global::set_meter_provider(provider.clone());
     let metrics_layer = HttpMetricsLayerBuilder::new().build();
@@ -55,7 +67,7 @@ fn main() {
             cli_args.poll_interval,
             cli_args.registry_query_timeout,
             cli_args.gcp_credentials_file.clone(),
-            cli_args.users_state_file.clone(),
+            config,
         )
         .await
     });
@@ -81,23 +93,17 @@ fn main() {
         )
         // Health check
         .route("/health", get(|| async { "OK" }))
-        // Auth routes
-        .route("/auth/verify", post(auth_handlers::verify_delegation))
-        .route("/auth/session", post(auth_handlers::get_session))
-        .route("/auth/logout", post(auth_handlers::logout))
-        // User routes
-        .route("/user/profile", post(user_handlers::get_profile))
-        .route("/user/gcp-account", post(user_handlers::set_gcp_account))
-        .route("/user/node-operator", post(user_handlers::set_node_operator))
+        // Config endpoint (to see current configuration)
+        .route("/config", get(vm_handlers::get_config))
         // VM routes
-        .route("/vms/list", post(vm_handlers::list_vms))
+        .route("/vms/list", get(vm_handlers::list_vms))
         .route("/vms/provision", post(vm_handlers::provision_vm))
         .route("/vms/delete", post(vm_handlers::delete_vm))
         // Node routes
-        .route("/nodes/list", post(node_handlers::list_nodes))
+        .route("/nodes/list", get(node_handlers::list_nodes))
         .route("/nodes/get", post(node_handlers::get_node))
         // Subnet routes
-        .route("/subnets/list", post(subnet_handlers::list_subnets))
+        .route("/subnets/list", get(subnet_handlers::list_subnets))
         .route("/subnets/create", post(subnet_handlers::create_subnet_proposal))
         .route("/subnets/delete", post(subnet_handlers::delete_subnet_proposal))
         // Swagger UI
@@ -107,12 +113,13 @@ fn main() {
         .layer(metrics_layer)
         .with_state(state.clone());
 
+    // Start the registry sync loop
+    let registry_sync_stop = rt.block_on(async { state.start_registry_sync_loop() });
+
     // Start the server
     let port = cli_args.port;
     let server_handle = rt.spawn(async move {
-        let listener = tokio::net::TcpListener::bind(format!("0.0.0.0:{}", port))
-            .await
-            .unwrap();
+        let listener = tokio::net::TcpListener::bind(format!("0.0.0.0:{}", port)).await.unwrap();
         info!(state.log, "Server started on port {}", port);
         axum::serve(listener, app)
             .with_graceful_shutdown(async move {
@@ -125,6 +132,9 @@ fn main() {
 
     // Wait for shutdown signal
     rt.block_on(shutdown_signal);
+
+    // Stop registry sync loop
+    registry_sync_stop.send(true).ok();
 
     // Signal server to stop
     server_stop_tx.send(()).ok();
@@ -161,17 +171,13 @@ async fn make_shutdown_signal(log: Logger) {
 #[derive(Parser, Debug)]
 #[clap(about = "Cloud Engine Controller Backend", version)]
 pub struct CliArgs {
-    #[clap(
-        long = "targets-dir",
-        help = "Directory for storing registry local store"
-    )]
+    #[clap(long = "config-file", help = "Path to application config JSON file (GCP project, zones, etc.)")]
+    config_file: PathBuf,
+
+    #[clap(long = "targets-dir", help = "Directory for storing registry local store")]
     targets_dir: PathBuf,
 
-    #[clap(
-        long = "port",
-        default_value = "8000",
-        help = "Server port"
-    )]
+    #[clap(long = "port", default_value = "8000", help = "Server port")]
     port: u16,
 
     #[clap(
@@ -190,22 +196,9 @@ pub struct CliArgs {
     )]
     registry_query_timeout: Duration,
 
-    #[clap(
-        long = "nns-url",
-        default_value = "https://ic0.app",
-        help = "NNS URL for registry sync"
-    )]
+    #[clap(long = "nns-url", default_value = "https://ic0.app", help = "NNS URL for registry sync")]
     nns_url: Url,
 
-    #[clap(
-        long = "gcp-credentials-file",
-        help = "Path to GCP service account JSON file (uses ADC if not provided)"
-    )]
+    #[clap(long = "gcp-credentials-file", help = "Path to GCP service account JSON file (uses ADC if not provided)")]
     gcp_credentials_file: Option<PathBuf>,
-
-    #[clap(
-        long = "users-state-file",
-        help = "Path to users state file for persistence"
-    )]
-    users_state_file: Option<PathBuf>,
 }

@@ -5,6 +5,7 @@ use axum::http::StatusCode;
 use axum::Json;
 use serde::Deserialize;
 use slog::info;
+use utoipa::ToSchema;
 use uuid::Uuid;
 
 use crate::models::subnet::{
@@ -13,20 +14,17 @@ use crate::models::subnet::{
 };
 use crate::state::AppState;
 
-/// Request with session token
-#[derive(Debug, Deserialize)]
-pub struct TokenRequest {
-    pub token: String,
-}
-
 /// Request to create a subnet proposal
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, ToSchema)]
 pub struct CreateSubnetProposalRequest {
-    pub token: String,
+    /// List of node IDs to include in the subnet
     pub node_ids: Vec<String>,
+    /// Subnet type (default: "application")
     #[serde(default = "default_subnet_type")]
     pub subnet_type: String,
+    /// Proposal title
     pub title: String,
+    /// Proposal summary
     pub summary: String,
 }
 
@@ -35,45 +33,34 @@ fn default_subnet_type() -> String {
 }
 
 /// Request to delete a subnet
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, ToSchema)]
 pub struct DeleteSubnetRequest {
-    pub token: String,
+    /// The subnet ID to delete
     pub subnet_id: String,
+    /// Proposal title
     pub title: String,
+    /// Proposal summary
     pub summary: String,
 }
 
-/// Helper to get session from token
-fn get_session(state: &AppState, token: &str) -> Result<crate::auth::Session, (StatusCode, String)> {
-    let session = state
-        .sessions
-        .get(token)
-        .ok_or((StatusCode::UNAUTHORIZED, "Session not found".to_string()))?;
-    
-    if session.is_expired() {
-        state.sessions.remove(token);
-        return Err((StatusCode::UNAUTHORIZED, "Session expired".to_string()));
-    }
-    
-    Ok(session.clone())
-}
-
-/// List subnets containing the user's nodes
+/// List subnets containing nodes from the configured node operator
+#[utoipa::path(
+    get,
+    path = "/subnets/list",
+    tag = "Subnets",
+    responses(
+        (status = 200, description = "List of subnets", body = SubnetListResponse),
+        (status = 400, description = "Node operator not configured"),
+        (status = 500, description = "Internal server error")
+    )
+)]
 pub async fn list_subnets(
     State(state): State<AppState>,
-    Json(request): Json<TokenRequest>,
 ) -> Result<Json<SubnetListResponse>, (StatusCode, String)> {
-    let session = get_session(&state, &request.token)?;
+    let node_operator = state.config.node_operator.as_ref()
+        .ok_or((StatusCode::BAD_REQUEST, "Node operator not configured in config file".to_string()))?;
 
-    let user = state
-        .get_user(&session.principal)
-        .ok_or((StatusCode::NOT_FOUND, "User not found".to_string()))?;
-
-    let node_operator = user
-        .node_operator
-        .ok_or((StatusCode::BAD_REQUEST, "Node operator not configured".to_string()))?;
-
-    // Get subnets containing user's nodes
+    // Get subnets containing operator's nodes
     let subnets = state
         .registry_manager
         .get_subnets_by_operator(&node_operator.principal_id);
@@ -83,21 +70,25 @@ pub async fn list_subnets(
 }
 
 /// Create a subnet creation proposal
+#[utoipa::path(
+    post,
+    path = "/subnets/create",
+    tag = "Subnets",
+    request_body = CreateSubnetProposalRequest,
+    responses(
+        (status = 200, description = "Proposal created", body = SubnetProposalResponse),
+        (status = 400, description = "Invalid request or node validation failed"),
+        (status = 404, description = "Node not found")
+    )
+)]
 pub async fn create_subnet_proposal(
     State(state): State<AppState>,
     Json(request): Json<CreateSubnetProposalRequest>,
 ) -> Result<Json<SubnetProposalResponse>, (StatusCode, String)> {
-    let session = get_session(&state, &request.token)?;
+    let node_operator = state.config.node_operator.as_ref()
+        .ok_or((StatusCode::BAD_REQUEST, "Node operator not configured in config file".to_string()))?;
 
-    let user = state
-        .get_user(&session.principal)
-        .ok_or((StatusCode::NOT_FOUND, "User not found".to_string()))?;
-
-    let node_operator = user
-        .node_operator
-        .ok_or((StatusCode::BAD_REQUEST, "Node operator not configured".to_string()))?;
-
-    // Validate that all nodes exist and belong to the user
+    // Validate that all nodes exist and belong to the configured operator
     for node_id in &request.node_ids {
         let node = state
             .registry_manager
@@ -106,7 +97,7 @@ pub async fn create_subnet_proposal(
 
         if node.operator_id.to_string() != node_operator.principal_id {
             return Err((StatusCode::BAD_REQUEST, format!(
-                "Node {} does not belong to your node operator",
+                "Node {} does not belong to the configured node operator",
                 node_id
             )));
         }
@@ -156,21 +147,25 @@ pub async fn create_subnet_proposal(
 }
 
 /// Create a subnet deletion proposal
+#[utoipa::path(
+    post,
+    path = "/subnets/delete",
+    tag = "Subnets",
+    request_body = DeleteSubnetRequest,
+    responses(
+        (status = 200, description = "Deletion proposal created", body = SubnetProposalResponse),
+        (status = 400, description = "Node operator not configured"),
+        (status = 404, description = "Subnet not found")
+    )
+)]
 pub async fn delete_subnet_proposal(
     State(state): State<AppState>,
     Json(request): Json<DeleteSubnetRequest>,
 ) -> Result<Json<SubnetProposalResponse>, (StatusCode, String)> {
-    let session = get_session(&state, &request.token)?;
+    let node_operator = state.config.node_operator.as_ref()
+        .ok_or((StatusCode::BAD_REQUEST, "Node operator not configured in config file".to_string()))?;
 
-    let user = state
-        .get_user(&session.principal)
-        .ok_or((StatusCode::NOT_FOUND, "User not found".to_string()))?;
-
-    let node_operator = user
-        .node_operator
-        .ok_or((StatusCode::BAD_REQUEST, "Node operator not configured".to_string()))?;
-
-    // Verify the subnet exists and user has nodes in it
+    // Verify the subnet exists and has nodes from the configured operator
     let subnets = state
         .registry_manager
         .get_subnets_by_operator(&node_operator.principal_id);
@@ -179,7 +174,7 @@ pub async fn delete_subnet_proposal(
         .iter()
         .find(|s| s.subnet_id == request.subnet_id)
         .ok_or((StatusCode::NOT_FOUND, format!(
-            "Subnet {} not found or you don't have nodes in it",
+            "Subnet {} not found or doesn't contain nodes from the configured operator",
             request.subnet_id
         )))?;
 

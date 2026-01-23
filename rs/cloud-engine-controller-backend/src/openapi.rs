@@ -1,20 +1,14 @@
 //! OpenAPI/Swagger configuration
 
-use utoipa::openapi::security::{Http, HttpAuthScheme, SecurityScheme};
-use utoipa::{Modify, OpenApi};
+use utoipa::OpenApi;
 
-use crate::auth::ii_delegation::{
-    Delegation, DelegationChain, SignedDelegation, VerifyDelegationRequest,
-    VerifyDelegationResponse,
-};
-use crate::auth::middleware::SessionInfo;
-use crate::handlers::node_handlers::{NodeInfo, NodeListResponse};
+use crate::config::{AppConfig, GcpConfig, NodeOperatorConfig};
+use crate::handlers::node_handlers::{GetNodeRequest, NodeInfo, NodeListResponse};
+use crate::handlers::subnet_handlers::{CreateSubnetProposalRequest, DeleteSubnetRequest};
+use crate::handlers::vm_handlers::{DeleteVmRequest, ProvisionVmRequestBody};
 use crate::models::subnet::{
     ProposalStatus, SubnetInfo, SubnetListResponse, SubnetProposal,
     SubnetProposalResponse,
-};
-use crate::models::user::{
-    GcpAccount, NodeOperatorInfo, UserProfile,
 };
 use crate::models::vm::{
     IcpNodeMapping, Vm, VmListResponse, VmProvisionRequest, VmProvisionResponse, VmStatus,
@@ -23,10 +17,25 @@ use crate::models::vm::{
 /// OpenAPI documentation
 #[derive(OpenApi)]
 #[openapi(
+    paths(
+        // Config endpoints
+        crate::handlers::vm_handlers::get_config,
+        // VM endpoints
+        crate::handlers::vm_handlers::list_vms,
+        crate::handlers::vm_handlers::provision_vm,
+        crate::handlers::vm_handlers::delete_vm,
+        // Node endpoints
+        crate::handlers::node_handlers::list_nodes,
+        crate::handlers::node_handlers::get_node,
+        // Subnet endpoints
+        crate::handlers::subnet_handlers::list_subnets,
+        crate::handlers::subnet_handlers::create_subnet_proposal,
+        crate::handlers::subnet_handlers::delete_subnet_proposal,
+    ),
     info(
         title = "Cloud Engine Controller Backend",
         version = "1.0.0",
-        description = "Backend API for managing GCP VMs and ICP node associations. All authenticated endpoints require a 'token' field in the request body.",
+        description = "Backend API for managing GCP VMs and ICP node associations. Configuration (GCP project, zones, node operator) is provided via a config file.",
         contact(
             name = "DRE Team",
             url = "https://github.com/dfinity/dre"
@@ -38,17 +47,10 @@ use crate::models::vm::{
     ),
     components(
         schemas(
-            // Auth schemas
-            Delegation,
-            SignedDelegation,
-            DelegationChain,
-            VerifyDelegationRequest,
-            VerifyDelegationResponse,
-            SessionInfo,
-            // User schemas
-            GcpAccount,
-            NodeOperatorInfo,
-            UserProfile,
+            // Config schemas
+            AppConfig,
+            GcpConfig,
+            NodeOperatorConfig,
             // VM schemas
             VmStatus,
             IcpNodeMapping,
@@ -56,38 +58,27 @@ use crate::models::vm::{
             VmProvisionRequest,
             VmProvisionResponse,
             VmListResponse,
+            ProvisionVmRequestBody,
+            DeleteVmRequest,
             // Node schemas
             NodeInfo,
             NodeListResponse,
+            GetNodeRequest,
             // Subnet schemas
             ProposalStatus,
             SubnetInfo,
             SubnetProposal,
             SubnetProposalResponse,
             SubnetListResponse,
+            CreateSubnetProposalRequest,
+            DeleteSubnetRequest,
         )
     ),
-    modifiers(&SecurityAddon),
     tags(
-        (name = "Authentication", description = "Internet Identity authentication endpoints"),
-        (name = "User", description = "User profile management"),
+        (name = "Config", description = "Configuration endpoints"),
         (name = "VMs", description = "GCP VM management"),
         (name = "Nodes", description = "ICP node information"),
         (name = "Subnets", description = "Subnet management via NNS proposals")
     )
 )]
 pub struct ApiDoc;
-
-/// Security scheme modifier
-struct SecurityAddon;
-
-impl Modify for SecurityAddon {
-    fn modify(&self, openapi: &mut utoipa::openapi::OpenApi) {
-        if let Some(components) = openapi.components.as_mut() {
-            components.add_security_scheme(
-                "bearer_auth",
-                SecurityScheme::Http(Http::new(HttpAuthScheme::Bearer)),
-            );
-        }
-    }
-}

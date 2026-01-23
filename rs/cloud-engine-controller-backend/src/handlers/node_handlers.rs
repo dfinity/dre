@@ -1,39 +1,18 @@
 //! ICP Node handlers
 
+use axum::Json;
 use axum::extract::State;
 use axum::http::StatusCode;
-use axum::Json;
 use serde::{Deserialize, Serialize};
 use utoipa::ToSchema;
 
 use crate::state::AppState;
 
-/// Request with session token
-#[derive(Debug, Deserialize)]
-pub struct TokenRequest {
-    pub token: String,
-}
-
 /// Request to get a specific node
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, ToSchema)]
 pub struct GetNodeRequest {
-    pub token: String,
+    /// The node ID to look up
     pub node_id: String,
-}
-
-/// Helper to get session from token
-fn get_session(state: &AppState, token: &str) -> Result<crate::auth::Session, (StatusCode, String)> {
-    let session = state
-        .sessions
-        .get(token)
-        .ok_or((StatusCode::UNAUTHORIZED, "Session not found".to_string()))?;
-    
-    if session.is_expired() {
-        state.sessions.remove(token);
-        return Err((StatusCode::UNAUTHORIZED, "Session expired".to_string()));
-    }
-    
-    Ok(session.clone())
 }
 
 /// Node information response
@@ -71,72 +50,64 @@ pub struct NodeListResponse {
     pub total: usize,
 }
 
-/// List ICP nodes owned by the user's node operator
-pub async fn list_nodes(
-    State(state): State<AppState>,
-    Json(request): Json<TokenRequest>,
-) -> Result<Json<NodeListResponse>, (StatusCode, String)> {
-    let session = get_session(&state, &request.token)?;
+/// Convert registry NodeInfo to handler NodeInfo
+fn convert_node(n: &crate::registry::sync::NodeInfo) -> NodeInfo {
+    NodeInfo {
+        node_id: n.node_id.to_string(),
+        ic_name: n.ic_name.clone(),
+        subnet_id: n.subnet_id.map(|s| s.to_string()),
+        dc_id: n.dc_id.clone(),
+        operator_id: n.operator_id.to_string(),
+        node_provider_id: n.node_provider_id.to_string(),
+        is_api_bn: n.is_api_bn,
+        ip_address: n.get_ip_as_str(),
+        domain: n.domain.clone(),
+    }
+}
 
-    let user = state
-        .get_user(&session.principal)
-        .ok_or((StatusCode::NOT_FOUND, "User not found".to_string()))?;
-
-    let node_operator = user
+/// List ICP nodes owned by the configured node operator
+#[utoipa::path(
+    get,
+    path = "/nodes/list",
+    tag = "Nodes",
+    responses(
+        (status = 200, description = "List of nodes", body = NodeListResponse),
+        (status = 400, description = "Node operator not configured"),
+        (status = 500, description = "Internal server error")
+    )
+)]
+pub async fn list_nodes(State(state): State<AppState>) -> Result<Json<NodeListResponse>, (StatusCode, String)> {
+    let node_operator = state
+        .config
         .node_operator
-        .ok_or((StatusCode::BAD_REQUEST, "Node operator not configured".to_string()))?;
+        .as_ref()
+        .ok_or((StatusCode::BAD_REQUEST, "Node operator not configured in config file".to_string()))?;
 
     // Get nodes from registry
-    let target_groups = state
-        .registry_manager
-        .get_nodes_by_operator(&node_operator.principal_id);
+    let registry_nodes = state.registry_manager.get_nodes_by_operator(&node_operator.principal_id);
 
-    let nodes: Vec<NodeInfo> = target_groups
-        .into_iter()
-        .map(|tg| {
-            let ip_address = tg.get_ip_as_str();
-            let subnet_id = tg.subnet_id.map(|s| s.to_string());
-            NodeInfo {
-                node_id: tg.node_id.to_string(),
-                ic_name: tg.ic_name.clone(),
-                subnet_id,
-                dc_id: tg.dc_id.clone(),
-                operator_id: tg.operator_id.to_string(),
-                node_provider_id: tg.node_provider_id.to_string(),
-                is_api_bn: tg.is_api_bn,
-                ip_address,
-                domain: tg.domain.clone(),
-            }
-        })
-        .collect();
+    let nodes: Vec<NodeInfo> = registry_nodes.iter().map(convert_node).collect();
 
     let total = nodes.len();
     Ok(Json(NodeListResponse { nodes, total }))
 }
 
 /// Get details for a specific node
-pub async fn get_node(
-    State(state): State<AppState>,
-    Json(request): Json<GetNodeRequest>,
-) -> Result<Json<NodeInfo>, (StatusCode, String)> {
-    let _session = get_session(&state, &request.token)?;
-
-    let tg = state
+#[utoipa::path(
+    post,
+    path = "/nodes/get",
+    tag = "Nodes",
+    request_body = GetNodeRequest,
+    responses(
+        (status = 200, description = "Node details", body = NodeInfo),
+        (status = 404, description = "Node not found")
+    )
+)]
+pub async fn get_node(State(state): State<AppState>, Json(request): Json<GetNodeRequest>) -> Result<Json<NodeInfo>, (StatusCode, String)> {
+    let n = state
         .registry_manager
         .get_node(&request.node_id)
         .ok_or((StatusCode::NOT_FOUND, format!("Node {} not found", request.node_id)))?;
 
-    let ip_address = tg.get_ip_as_str();
-    let subnet_id = tg.subnet_id.map(|s| s.to_string());
-    Ok(Json(NodeInfo {
-        node_id: tg.node_id.to_string(),
-        ic_name: tg.ic_name.clone(),
-        subnet_id,
-        dc_id: tg.dc_id.clone(),
-        operator_id: tg.operator_id.to_string(),
-        node_provider_id: tg.node_provider_id.to_string(),
-        is_api_bn: tg.is_api_bn,
-        ip_address,
-        domain: tg.domain.clone(),
-    }))
+    Ok(Json(convert_node(&n)))
 }

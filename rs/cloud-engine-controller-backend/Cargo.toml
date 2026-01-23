@@ -29,11 +29,16 @@ ic-agent = { workspace = true }
 ic-types = { workspace = true }
 ic-management-types = { workspace = true }
 ic-registry-client-helpers = { workspace = true }
+ic-registry-client = { workspace = true }
+ic-registry-client-fake = { workspace = true }
 ic-interfaces-registry = { workspace = true }
 ic-registry-local-registry = { workspace = true }
-
-# Internal dependencies
-service-discovery = { path = "../ic-observability/service-discovery" }
+ic-registry-local-store = { workspace = true }
+ic-registry-nns-data-provider = { workspace = true }
+ic-registry-common-proto = { workspace = true }
+ic-registry-keys = { workspace = true }
+ic-protobuf = { workspace = true }
+prost = { workspace = true }
 
 # GCP
 gcp_auth = { workspace = true }
@@ -60,9 +65,6 @@ thiserror = { workspace = true }
 anyhow = { workspace = true }
 chrono = { workspace = true }
 uuid = { workspace = true }
-base64 = { workspace = true }
-sha2 = { workspace = true }
-hex = { workspace = true }
 parking_lot = { workspace = true }
 dashmap = { workspace = true }
 

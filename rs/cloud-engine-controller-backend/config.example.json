@@ -1,0 +1,14 @@
+{
+  "gcp": {
+    "project_id": "your-gcp-project-id",
+    "zones": [
+      "us-central1-a",
+      "us-central1-b",
+      "europe-west1-b"
+    ]
+  },
+  "node_operator": {
+    "principal_id": "xph6u-z3z2t-s7hh7-gtlxh-bbgbx-aatlm-eab4o-bsank-nqruh-3ub4q-sae",
+    "display_name": "DFINITY"
+  }
+}

@@ -5,22 +5,15 @@ use axum::http::StatusCode;
 use axum::Json;
 use serde::Deserialize;
 use slog::{error, info};
+use utoipa::ToSchema;
 
+use crate::config::AppConfig;
 use crate::models::vm::{Vm, VmListResponse, VmProvisionRequest, VmProvisionResponse};
 use crate::state::AppState;
 
-/// Request with embedded auth token
-#[derive(Debug, Deserialize)]
-pub struct ListVmsRequest {
-    /// Session token
-    pub token: String,
-}
-
-/// Request with embedded auth token and provision data
-#[derive(Debug, Deserialize)]
-pub struct ProvisionVmRequest {
-    /// Session token  
-    pub token: String,
+/// Request to provision a VM
+#[derive(Debug, Deserialize, ToSchema)]
+pub struct ProvisionVmRequestBody {
     /// VM name
     pub name: String,
     /// GCP zone
@@ -50,8 +43,8 @@ fn default_disk_size() -> u64 {
     500
 }
 
-impl From<ProvisionVmRequest> for VmProvisionRequest {
-    fn from(req: ProvisionVmRequest) -> Self {
+impl From<ProvisionVmRequestBody> for VmProvisionRequest {
+    fn from(req: ProvisionVmRequestBody) -> Self {
         Self {
             name: req.name,
             zone: req.zone,
@@ -65,52 +58,50 @@ impl From<ProvisionVmRequest> for VmProvisionRequest {
 }
 
 /// Request to delete VM
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, ToSchema)]
 pub struct DeleteVmRequest {
-    /// Session token
-    pub token: String,
-    /// VM ID
+    /// VM ID (can be "zone/name" or just "name")
     pub vm_id: String,
 }
 
-/// Helper to get session from token
-fn get_session(state: &AppState, token: &str) -> Result<crate::auth::Session, (StatusCode, String)> {
-    let session = state
-        .sessions
-        .get(token)
-        .ok_or((StatusCode::UNAUTHORIZED, "Session not found".to_string()))?;
-    
-    if session.is_expired() {
-        state.sessions.remove(token);
-        return Err((StatusCode::UNAUTHORIZED, "Session expired".to_string()));
-    }
-    
-    Ok(session.clone())
+/// Get current application configuration
+#[utoipa::path(
+    get,
+    path = "/config",
+    tag = "Config",
+    responses(
+        (status = 200, description = "Application configuration", body = AppConfig)
+    )
+)]
+pub async fn get_config(
+    State(state): State<AppState>,
+) -> Json<AppConfig> {
+    Json((*state.config).clone())
 }
 
-/// List VMs for the current user's GCP project
+/// List VMs for the configured GCP project
+#[utoipa::path(
+    get,
+    path = "/vms/list",
+    tag = "VMs",
+    responses(
+        (status = 200, description = "List of VMs", body = VmListResponse),
+        (status = 500, description = "Internal server error")
+    )
+)]
 pub async fn list_vms(
     State(state): State<AppState>,
-    Json(request): Json<ListVmsRequest>,
 ) -> Result<Json<VmListResponse>, (StatusCode, String)> {
-    let session = get_session(&state, &request.token)?;
-
-    let user = state
-        .get_user(&session.principal)
-        .ok_or((StatusCode::NOT_FOUND, "User not found".to_string()))?;
-
-    let gcp_account = user
-        .gcp_account
-        .ok_or((StatusCode::BAD_REQUEST, "GCP account not configured".to_string()))?;
-
     if !state.gcp_client.is_available() {
         return Err((StatusCode::INTERNAL_SERVER_ERROR, "GCP client not available".to_string()));
     }
 
+    let config = &state.config;
+
     // List VMs from all configured zones
     let instances = state
         .gcp_client
-        .list_instances_all_zones(&gcp_account.project_id, &gcp_account.zones)
+        .list_instances_all_zones(&config.gcp.project_id, &config.gcp.zones)
         .await
         .map_err(|e| {
             error!(state.log, "Failed to list VMs"; "error" => %e);
@@ -143,25 +134,28 @@ pub async fn list_vms(
 }
 
 /// Provision a new VM
+#[utoipa::path(
+    post,
+    path = "/vms/provision",
+    tag = "VMs",
+    request_body = ProvisionVmRequestBody,
+    responses(
+        (status = 200, description = "VM provisioning started", body = VmProvisionResponse),
+        (status = 400, description = "Invalid request"),
+        (status = 500, description = "Internal server error")
+    )
+)]
 pub async fn provision_vm(
     State(state): State<AppState>,
-    Json(request): Json<ProvisionVmRequest>,
+    Json(request): Json<ProvisionVmRequestBody>,
 ) -> Result<Json<VmProvisionResponse>, (StatusCode, String)> {
-    let session = get_session(&state, &request.token)?;
-
-    let user = state
-        .get_user(&session.principal)
-        .ok_or((StatusCode::NOT_FOUND, "User not found".to_string()))?;
-
-    let gcp_account = user
-        .gcp_account
-        .ok_or((StatusCode::BAD_REQUEST, "GCP account not configured".to_string()))?;
+    let config = &state.config;
 
     // Validate zone is in allowed list
-    if !gcp_account.zones.contains(&request.zone) {
+    if !config.gcp.zones.contains(&request.zone) {
         return Err((StatusCode::BAD_REQUEST, format!(
-            "Zone {} is not in your allowed zones: {:?}",
-            request.zone, gcp_account.zones
+            "Zone {} is not in configured zones: {:?}",
+            request.zone, config.gcp.zones
         )));
     }
 
@@ -174,7 +168,7 @@ pub async fn provision_vm(
     // Create the instance
     let operation = state
         .gcp_client
-        .create_instance(&gcp_account.project_id, &provision_request.zone, &provision_request)
+        .create_instance(&config.gcp.project_id, &provision_request.zone, &provision_request)
         .await
         .map_err(|e| {
             error!(state.log, "Failed to create VM"; "error" => %e);
@@ -196,19 +190,23 @@ pub async fn provision_vm(
 }
 
 /// Delete a VM
+#[utoipa::path(
+    post,
+    path = "/vms/delete",
+    tag = "VMs",
+    request_body = DeleteVmRequest,
+    responses(
+        (status = 200, description = "VM deletion started", body = VmProvisionResponse),
+        (status = 400, description = "Invalid request"),
+        (status = 404, description = "VM not found"),
+        (status = 500, description = "Internal server error")
+    )
+)]
 pub async fn delete_vm(
     State(state): State<AppState>,
     Json(request): Json<DeleteVmRequest>,
 ) -> Result<Json<VmProvisionResponse>, (StatusCode, String)> {
-    let session = get_session(&state, &request.token)?;
-
-    let user = state
-        .get_user(&session.principal)
-        .ok_or((StatusCode::NOT_FOUND, "User not found".to_string()))?;
-
-    let gcp_account = user
-        .gcp_account
-        .ok_or((StatusCode::BAD_REQUEST, "GCP account not configured".to_string()))?;
+    let config = &state.config;
 
     if !state.gcp_client.is_available() {
         return Err((StatusCode::INTERNAL_SERVER_ERROR, "GCP client not available".to_string()));
@@ -221,10 +219,10 @@ pub async fn delete_vm(
     } else {
         // Try to find the VM in all zones
         let mut found_zone = None;
-        for zone in &gcp_account.zones {
+        for zone in &config.gcp.zones {
             if let Ok(_instance) = state
                 .gcp_client
-                .get_instance(&gcp_account.project_id, zone, &request.vm_id)
+                .get_instance(&config.gcp.project_id, zone, &request.vm_id)
                 .await
             {
                 found_zone = Some(zone.clone());
@@ -238,9 +236,9 @@ pub async fn delete_vm(
     };
 
     // Validate zone is in allowed list
-    if !gcp_account.zones.contains(&zone) {
+    if !config.gcp.zones.contains(&zone) {
         return Err((StatusCode::BAD_REQUEST, format!(
-            "Zone {} is not in your allowed zones",
+            "Zone {} is not in configured zones",
             zone
         )));
     }
@@ -248,7 +246,7 @@ pub async fn delete_vm(
     // Delete the instance
     let operation = state
         .gcp_client
-        .delete_instance(&gcp_account.project_id, &zone, &vm_name)
+        .delete_instance(&config.gcp.project_id, &zone, &vm_name)
         .await
         .map_err(|e| {
             error!(state.log, "Failed to delete VM"; "error" => %e);

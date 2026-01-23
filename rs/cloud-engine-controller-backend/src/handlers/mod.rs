@@ -1,9 +1,7 @@
 //! HTTP handlers for the REST API
 
-pub mod auth_handlers;
 pub mod node_handlers;
 pub mod subnet_handlers;
-pub mod user_handlers;
 pub mod vm_handlers;
 
 use axum::http::StatusCode;
@@ -49,13 +47,6 @@ impl ApiError {
     pub fn bad_request(message: impl Into<String>) -> Self {
         Self {
             status: StatusCode::BAD_REQUEST,
-            message: message.into(),
-        }
-    }
-
-    pub fn unauthorized(message: impl Into<String>) -> Self {
-        Self {
-            status: StatusCode::UNAUTHORIZED,
             message: message.into(),
         }
     }
