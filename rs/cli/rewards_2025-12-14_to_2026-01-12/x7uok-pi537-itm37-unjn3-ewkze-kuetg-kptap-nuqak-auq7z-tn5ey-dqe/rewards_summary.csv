@@ -1,0 +1,31 @@
+day_utc,base_rewards_total,adjusted_rewards_total,adjusted_rewards_percent,nodes_in_registry,assigned_nodes,underperforming_nodes_count,underperforming_nodes
+2025-12-14,11351786,10301403,90.75,28,14,16,"3hmzi, 52ykw, 5qfrp, 5sabo, 5zldm, ayf37, f6etz, kgjee, kl6gp, oagfb, p2pul, pgjz5, puggd, tqxq3, wqpvr, y4kyj"
+2025-12-15,11351786,10247869,90.28,28,14,16,"3hmzi, 52ykw, 5qfrp, 5sabo, 5zldm, ayf37, f6etz, kgjee, kl6gp, oagfb, p2pul, pgjz5, puggd, tqxq3, wqpvr, y4kyj"
+2025-12-16,11351786,9782248,86.17,28,14,18,"3hmzi, 52ykw, 5qfrp, 5sabo, 5zldm, ayf37, f6etz, kgjee, kl6gp, lm2xj, oagfb, p2pul, pgjz5, puggd, qae5l, tqxq3, wqpvr, y4kyj"
+2025-12-17,11351786,10078835,88.79,28,14,17,"3hmzi, 52ykw, 5qfrp, 5sabo, 5zldm, ayf37, f6etz, kgjee, kl6gp, oagfb, p2pul, pgjz5, puggd, qae5l, tqxq3, wqpvr, y4kyj"
+2025-12-18,11351786,10119635,89.15,28,14,17,"3hmzi, 52ykw, 5qfrp, 5sabo, 5zldm, ayf37, f6etz, kgjee, kl6gp, oagfb, p2pul, pgjz5, puggd, qae5l, tqxq3, wqpvr, y4kyj"
+2025-12-19,11351786,10112348,89.08,28,14,17,"3hmzi, 52ykw, 5qfrp, 5sabo, 5zldm, ayf37, f6etz, kgjee, kl6gp, oagfb, p2pul, pgjz5, puggd, qae5l, tqxq3, wqpvr, y4kyj"
+2025-12-20,11351786,10238624,90.19,28,14,16,"3hmzi, 52ykw, 5qfrp, 5sabo, 5zldm, ayf37, f6etz, kgjee, kl6gp, oagfb, p2pul, pgjz5, puggd, tqxq3, wqpvr, y4kyj"
+2025-12-21,11351786,10271340,90.48,28,14,16,"3hmzi, 52ykw, 5qfrp, 5sabo, 5zldm, ayf37, f6etz, kgjee, kl6gp, oagfb, p2pul, pgjz5, puggd, tqxq3, wqpvr, y4kyj"
+2025-12-22,11351786,10291042,90.66,28,14,16,"3hmzi, 52ykw, 5qfrp, 5sabo, 5zldm, ayf37, f6etz, kgjee, kl6gp, oagfb, p2pul, pgjz5, puggd, tqxq3, wqpvr, y4kyj"
+2025-12-23,11351786,11018985,97.07,28,13,2,"f6etz, qae5l"
+2025-12-24,11351786,11027449,97.14,28,13,1,f6etz
+2025-12-25,11351786,10915923,96.16,28,13,17,"3hmzi, 52ykw, 5qfrp, 5sabo, 5zldm, ayf37, f6etz, kgjee, kl6gp, oagfb, p2pul, pgjz5, puggd, qae5l, tqxq3, wqpvr, y4kyj"
+2025-12-26,11351786,10986312,96.78,28,13,2,"f6etz, qae5l"
+2025-12-27,11351786,10970668,96.64,28,13,2,"f6etz, qae5l"
+2025-12-28,11351786,10944154,96.41,28,13,2,"f6etz, qae5l"
+2025-12-29,11351786,11023290,97.11,28,13,2,"f6etz, qae5l"
+2025-12-30,11351786,10829732,95.40,28,13,17,"3hmzi, 52ykw, 5qfrp, 5sabo, 5zldm, ayf37, f6etz, kgjee, kl6gp, oagfb, p2pul, pgjz5, puggd, qae5l, tqxq3, wqpvr, y4kyj"
+2025-12-31,11351786,10757394,94.76,28,13,18,"3hmzi, 52ykw, 5qfrp, 5sabo, 5zldm, ayf37, c6vcy, f6etz, kgjee, kl6gp, oagfb, p2pul, pgjz5, puggd, qae5l, tqxq3, wqpvr, y4kyj"
+2026-1-1,11351786,10747251,94.67,28,13,18,"3hmzi, 52ykw, 5qfrp, 5sabo, 5zldm, ayf37, c6vcy, f6etz, kgjee, kl6gp, oagfb, p2pul, pgjz5, puggd, qae5l, tqxq3, wqpvr, y4kyj"
+2026-1-2,11351786,10687914,94.15,28,13,18,"3hmzi, 52ykw, 5qfrp, 5sabo, 5zldm, ayf37, c6vcy, f6etz, kgjee, kl6gp, oagfb, p2pul, pgjz5, puggd, qae5l, tqxq3, wqpvr, y4kyj"
+2026-1-3,11351786,10141970,89.34,28,13,19,"3hmzi, 52ykw, 5qfrp, 5sabo, 5zldm, ayf37, c6vcy, f6etz, kgjee, kl6gp, lm2xj, oagfb, p2pul, pgjz5, puggd, qae5l, tqxq3, wqpvr, y4kyj"
+2026-1-4,11351786,9817389,86.48,28,13,21,"3hmzi, 3zfpk, 52ykw, 5qfrp, 5sabo, 5zldm, ayf37, c6vcy, f6etz, jo2yf, kgjee, kl6gp, lm2xj, oagfb, p2pul, pgjz5, puggd, qae5l, tqxq3, wqpvr, y4kyj"
+2026-1-5,11351786,9755039,85.93,28,13,21,"3hmzi, 3zfpk, 52ykw, 5qfrp, 5sabo, 5zldm, ayf37, c6vcy, f6etz, jo2yf, kgjee, kl6gp, lm2xj, oagfb, p2pul, pgjz5, puggd, qae5l, tqxq3, wqpvr, y4kyj"
+2026-1-6,11351786,9412086,82.91,28,13,21,"3hmzi, 3zfpk, 52ykw, 5qfrp, 5sabo, 5zldm, ayf37, c6vcy, f6etz, jo2yf, kgjee, kl6gp, lm2xj, oagfb, p2pul, pgjz5, puggd, qae5l, tqxq3, wqpvr, y4kyj"
+2026-1-7,11351786,10337452,91.06,28,13,19,"3hmzi, 52ykw, 5qfrp, 5sabo, 5zldm, ayf37, f6etz, jo2yf, kgjee, kl6gp, lm2xj, oagfb, p2pul, pgjz5, puggd, qae5l, tqxq3, wqpvr, y4kyj"
+2026-1-8,11351786,10872257,95.78,28,13,17,"3hmzi, 52ykw, 5qfrp, 5sabo, 5zldm, ayf37, f6etz, kgjee, kl6gp, oagfb, p2pul, pgjz5, puggd, qae5l, tqxq3, wqpvr, y4kyj"
+2026-1-9,11351786,11027449,97.14,28,13,1,f6etz
+2026-1-10,11351786,11027449,97.14,28,13,1,f6etz
+2026-1-11,11351786,11027449,97.14,28,13,1,f6etz
+2026-1-12,11351786,11027449,97.14,28,13,1,f6etz

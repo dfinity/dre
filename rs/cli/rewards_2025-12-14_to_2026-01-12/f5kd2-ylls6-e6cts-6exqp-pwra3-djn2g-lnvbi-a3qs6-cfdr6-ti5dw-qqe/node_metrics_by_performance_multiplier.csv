@@ -1,0 +1,15 @@
+day_utc,node_id,node_reward_type,region,dc_id,node_status,performance_multiplier,base_rewards_xdr_permyriad,adjusted_rewards_xdr_permyriad,subnet_assigned,subnet_assigned_failure_rate,num_blocks_proposed,num_blocks_failed,original_failure_rate,relative_failure_rate,extrapolated_failure_rate
+2025-12-30,mrpo5-7xhsn-22itc-szjxm-2e6lm-55mwi-xysfj-razxo-blba5-zqerk-3qe,type3.1,"Europe,CH,Fribourg",ne1,Unassigned,1,506447.6386036961,506447.6386036961,,,,,,,0
+2025-12-31,mrpo5-7xhsn-22itc-szjxm-2e6lm-55mwi-xysfj-razxo-blba5-zqerk-3qe,type3.1,"Europe,CH,Fribourg",ne1,Unassigned,1,506447.6386036961,506447.6386036961,,,,,,,0
+2026-1-1,mrpo5-7xhsn-22itc-szjxm-2e6lm-55mwi-xysfj-razxo-blba5-zqerk-3qe,type3.1,"Europe,CH,Fribourg",ne1,Unassigned,1,506447.6386036961,506447.6386036961,,,,,,,0
+2026-1-2,mrpo5-7xhsn-22itc-szjxm-2e6lm-55mwi-xysfj-razxo-blba5-zqerk-3qe,type3.1,"Europe,CH,Fribourg",ne1,Unassigned,1,506447.6386036961,506447.6386036961,,,,,,,0
+2026-1-3,mrpo5-7xhsn-22itc-szjxm-2e6lm-55mwi-xysfj-razxo-blba5-zqerk-3qe,type3.1,"Europe,CH,Fribourg",ne1,Unassigned,1,506447.6386036961,506447.6386036961,,,,,,,0
+2026-1-4,mrpo5-7xhsn-22itc-szjxm-2e6lm-55mwi-xysfj-razxo-blba5-zqerk-3qe,type3.1,"Europe,CH,Fribourg",ne1,Unassigned,1,506447.6386036961,506447.6386036961,,,,,,,0
+2026-1-5,mrpo5-7xhsn-22itc-szjxm-2e6lm-55mwi-xysfj-razxo-blba5-zqerk-3qe,type3.1,"Europe,CH,Fribourg",ne1,Unassigned,1,506447.6386036961,506447.6386036961,,,,,,,0
+2026-1-6,mrpo5-7xhsn-22itc-szjxm-2e6lm-55mwi-xysfj-razxo-blba5-zqerk-3qe,type3.1,"Europe,CH,Fribourg",ne1,Unassigned,1,506447.6386036961,506447.6386036961,,,,,,,0
+2026-1-7,mrpo5-7xhsn-22itc-szjxm-2e6lm-55mwi-xysfj-razxo-blba5-zqerk-3qe,type3.1,"Europe,CH,Fribourg",ne1,Unassigned,1,506447.6386036961,506447.6386036961,,,,,,,0
+2026-1-8,mrpo5-7xhsn-22itc-szjxm-2e6lm-55mwi-xysfj-razxo-blba5-zqerk-3qe,type3.1,"Europe,CH,Fribourg",ne1,Unassigned,1,506447.6386036961,506447.6386036961,,,,,,,0
+2026-1-9,mrpo5-7xhsn-22itc-szjxm-2e6lm-55mwi-xysfj-razxo-blba5-zqerk-3qe,type3.1,"Europe,CH,Fribourg",ne1,Unassigned,1,506447.6386036961,506447.6386036961,,,,,,,0
+2026-1-10,mrpo5-7xhsn-22itc-szjxm-2e6lm-55mwi-xysfj-razxo-blba5-zqerk-3qe,type3.1,"Europe,CH,Fribourg",ne1,Unassigned,1,506447.6386036961,506447.6386036961,,,,,,,0
+2026-1-11,mrpo5-7xhsn-22itc-szjxm-2e6lm-55mwi-xysfj-razxo-blba5-zqerk-3qe,type3.1,"Europe,CH,Fribourg",ne1,Unassigned,1,506447.6386036961,506447.6386036961,,,,,,,0
+2026-1-12,mrpo5-7xhsn-22itc-szjxm-2e6lm-55mwi-xysfj-razxo-blba5-zqerk-3qe,type3.1,"Europe,CH,Fribourg",ne1,Unassigned,1,506447.6386036961,506447.6386036961,,,,,,,0

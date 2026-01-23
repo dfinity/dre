@@ -1,0 +1,73 @@
+[package]
+name = "cloud-engine-controller-backend"
+version = { workspace = true }
+edition = { workspace = true }
+license.workspace = true
+
+[dependencies]
+# Web framework
+axum = { workspace = true }
+axum-otel-metrics.workspace = true
+tower = { workspace = true }
+tower-http = { workspace = true }
+
+# OpenAPI/Swagger
+utoipa = { workspace = true }
+utoipa-swagger-ui = { workspace = true }
+
+# Async runtime
+tokio = { workspace = true }
+futures = { workspace = true }
+futures-util = { workspace = true }
+
+# Serialization
+serde = { workspace = true }
+serde_json = { workspace = true }
+
+# IC dependencies
+ic-agent = { workspace = true }
+ic-types = { workspace = true }
+ic-management-types = { workspace = true }
+ic-registry-client-helpers = { workspace = true }
+ic-interfaces-registry = { workspace = true }
+ic-registry-local-registry = { workspace = true }
+
+# Internal dependencies
+service-discovery = { path = "../ic-observability/service-discovery" }
+
+# GCP
+gcp_auth = { workspace = true }
+reqwest = { workspace = true, features = ["json"] }
+
+# Metrics and observability
+prometheus.workspace = true
+opentelemetry.workspace = true
+opentelemetry_sdk.workspace = true
+opentelemetry-prometheus.workspace = true
+
+# Logging
+slog = { workspace = true }
+slog-async = { workspace = true }
+slog-term = { workspace = true }
+
+# CLI
+clap = { workspace = true }
+humantime = { workspace = true }
+
+# Utils
+url = { workspace = true }
+thiserror = { workspace = true }
+anyhow = { workspace = true }
+chrono = { workspace = true }
+uuid = { workspace = true }
+base64 = { workspace = true }
+sha2 = { workspace = true }
+hex = { workspace = true }
+parking_lot = { workspace = true }
+dashmap = { workspace = true }
+
+[dev-dependencies]
+tempfile = { workspace = true }
+reqwest = { workspace = true }
+assert_cmd = { workspace = true }
+tokio = { workspace = true, features = ["test-util"] }

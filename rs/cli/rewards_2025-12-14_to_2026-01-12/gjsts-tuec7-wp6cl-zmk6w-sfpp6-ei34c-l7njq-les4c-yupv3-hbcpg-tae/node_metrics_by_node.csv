@@ -1,0 +1,5 @@
+node_id,day_utc,node_reward_type,region,dc_id,node_status,performance_multiplier,base_rewards_xdr_permyriad,adjusted_rewards_xdr_permyriad,subnet_assigned,subnet_assigned_failure_rate,num_blocks_proposed,num_blocks_failed,original_failure_rate,relative_failure_rate,extrapolated_failure_rate
+eihqt-opds6-5r7xa-hr32z-k2xoa-bh4l4-65kld-v7gk3-bplt5-vmsw2-mqe,2026-1-9,type3.1,"Europe,CH,Luzern",lu1,Unassigned,1,506447.6386036961,506447.6386036961,,,,,,,0
+eihqt-opds6-5r7xa-hr32z-k2xoa-bh4l4-65kld-v7gk3-bplt5-vmsw2-mqe,2026-1-10,type3.1,"Europe,CH,Luzern",lu1,Unassigned,1,506447.6386036961,506447.6386036961,,,,,,,0
+eihqt-opds6-5r7xa-hr32z-k2xoa-bh4l4-65kld-v7gk3-bplt5-vmsw2-mqe,2026-1-11,type3.1,"Europe,CH,Luzern",lu1,Unassigned,1,506447.6386036961,506447.6386036961,,,,,,,0
+eihqt-opds6-5r7xa-hr32z-k2xoa-bh4l4-65kld-v7gk3-bplt5-vmsw2-mqe,2026-1-12,type3.1,"Europe,CH,Luzern",lu1,Unassigned,1,506447.6386036961,506447.6386036961,,,,,,,0

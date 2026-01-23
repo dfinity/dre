@@ -1,0 +1,23 @@
+day_utc,node_id,node_reward_type,region,dc_id,node_status,performance_multiplier,base_rewards_xdr_permyriad,adjusted_rewards_xdr_permyriad,subnet_assigned,subnet_assigned_failure_rate,num_blocks_proposed,num_blocks_failed,original_failure_rate,relative_failure_rate,extrapolated_failure_rate
+2025-12-22,vou34-3jw7y-l2tah-tssac-y5xop-3x3q4-z2ivi-gvmoc-amv7t-akkbz-vae,type3.1,"Europe,CH,Appenzell Ausserrhoden",ai1,Unassigned,1,506447.6386036961,506447.6386036961,,,,,,,0
+2025-12-23,vou34-3jw7y-l2tah-tssac-y5xop-3x3q4-z2ivi-gvmoc-amv7t-akkbz-vae,type3.1,"Europe,CH,Appenzell Ausserrhoden",ai1,Unassigned,1,506447.6386036961,506447.6386036961,,,,,,,0
+2025-12-24,vou34-3jw7y-l2tah-tssac-y5xop-3x3q4-z2ivi-gvmoc-amv7t-akkbz-vae,type3.1,"Europe,CH,Appenzell Ausserrhoden",ai1,Unassigned,1,506447.6386036961,506447.6386036961,,,,,,,0
+2025-12-25,vou34-3jw7y-l2tah-tssac-y5xop-3x3q4-z2ivi-gvmoc-amv7t-akkbz-vae,type3.1,"Europe,CH,Appenzell Ausserrhoden",ai1,Unassigned,1,506447.6386036961,506447.6386036961,,,,,,,0
+2025-12-26,vou34-3jw7y-l2tah-tssac-y5xop-3x3q4-z2ivi-gvmoc-amv7t-akkbz-vae,type3.1,"Europe,CH,Appenzell Ausserrhoden",ai1,Unassigned,1,506447.6386036961,506447.6386036961,,,,,,,0
+2025-12-27,vou34-3jw7y-l2tah-tssac-y5xop-3x3q4-z2ivi-gvmoc-amv7t-akkbz-vae,type3.1,"Europe,CH,Appenzell Ausserrhoden",ai1,Unassigned,1,506447.6386036961,506447.6386036961,,,,,,,0
+2025-12-28,vou34-3jw7y-l2tah-tssac-y5xop-3x3q4-z2ivi-gvmoc-amv7t-akkbz-vae,type3.1,"Europe,CH,Appenzell Ausserrhoden",ai1,Unassigned,1,506447.6386036961,506447.6386036961,,,,,,,0
+2025-12-29,vou34-3jw7y-l2tah-tssac-y5xop-3x3q4-z2ivi-gvmoc-amv7t-akkbz-vae,type3.1,"Europe,CH,Appenzell Ausserrhoden",ai1,Unassigned,1,506447.6386036961,506447.6386036961,,,,,,,0
+2025-12-30,vou34-3jw7y-l2tah-tssac-y5xop-3x3q4-z2ivi-gvmoc-amv7t-akkbz-vae,type3.1,"Europe,CH,Appenzell Ausserrhoden",ai1,Unassigned,1,506447.6386036961,506447.6386036961,,,,,,,0
+2025-12-31,vou34-3jw7y-l2tah-tssac-y5xop-3x3q4-z2ivi-gvmoc-amv7t-akkbz-vae,type3.1,"Europe,CH,Appenzell Ausserrhoden",ai1,Unassigned,1,506447.6386036961,506447.6386036961,,,,,,,0
+2026-1-1,vou34-3jw7y-l2tah-tssac-y5xop-3x3q4-z2ivi-gvmoc-amv7t-akkbz-vae,type3.1,"Europe,CH,Appenzell Ausserrhoden",ai1,Unassigned,1,506447.6386036961,506447.6386036961,,,,,,,0
+2026-1-2,vou34-3jw7y-l2tah-tssac-y5xop-3x3q4-z2ivi-gvmoc-amv7t-akkbz-vae,type3.1,"Europe,CH,Appenzell Ausserrhoden",ai1,Unassigned,1,506447.6386036961,506447.6386036961,,,,,,,0
+2026-1-3,vou34-3jw7y-l2tah-tssac-y5xop-3x3q4-z2ivi-gvmoc-amv7t-akkbz-vae,type3.1,"Europe,CH,Appenzell Ausserrhoden",ai1,Unassigned,1,506447.6386036961,506447.6386036961,,,,,,,0
+2026-1-4,vou34-3jw7y-l2tah-tssac-y5xop-3x3q4-z2ivi-gvmoc-amv7t-akkbz-vae,type3.1,"Europe,CH,Appenzell Ausserrhoden",ai1,Unassigned,1,506447.6386036961,506447.6386036961,,,,,,,0
+2026-1-5,vou34-3jw7y-l2tah-tssac-y5xop-3x3q4-z2ivi-gvmoc-amv7t-akkbz-vae,type3.1,"Europe,CH,Appenzell Ausserrhoden",ai1,Unassigned,1,506447.6386036961,506447.6386036961,,,,,,,0
+2026-1-6,vou34-3jw7y-l2tah-tssac-y5xop-3x3q4-z2ivi-gvmoc-amv7t-akkbz-vae,type3.1,"Europe,CH,Appenzell Ausserrhoden",ai1,Unassigned,1,506447.6386036961,506447.6386036961,,,,,,,0
+2026-1-7,vou34-3jw7y-l2tah-tssac-y5xop-3x3q4-z2ivi-gvmoc-amv7t-akkbz-vae,type3.1,"Europe,CH,Appenzell Ausserrhoden",ai1,Unassigned,1,506447.6386036961,506447.6386036961,,,,,,,0
+2026-1-8,vou34-3jw7y-l2tah-tssac-y5xop-3x3q4-z2ivi-gvmoc-amv7t-akkbz-vae,type3.1,"Europe,CH,Appenzell Ausserrhoden",ai1,Unassigned,1,506447.6386036961,506447.6386036961,,,,,,,0
+2026-1-9,vou34-3jw7y-l2tah-tssac-y5xop-3x3q4-z2ivi-gvmoc-amv7t-akkbz-vae,type3.1,"Europe,CH,Appenzell Ausserrhoden",ai1,Unassigned,1,506447.6386036961,506447.6386036961,,,,,,,0
+2026-1-10,vou34-3jw7y-l2tah-tssac-y5xop-3x3q4-z2ivi-gvmoc-amv7t-akkbz-vae,type3.1,"Europe,CH,Appenzell Ausserrhoden",ai1,Unassigned,1,506447.6386036961,506447.6386036961,,,,,,,0
+2026-1-11,vou34-3jw7y-l2tah-tssac-y5xop-3x3q4-z2ivi-gvmoc-amv7t-akkbz-vae,type3.1,"Europe,CH,Appenzell Ausserrhoden",ai1,Unassigned,1,506447.6386036961,506447.6386036961,,,,,,,0
+2026-1-12,vou34-3jw7y-l2tah-tssac-y5xop-3x3q4-z2ivi-gvmoc-amv7t-akkbz-vae,type3.1,"Europe,CH,Appenzell Ausserrhoden",ai1,Unassigned,1,506447.6386036961,506447.6386036961,,,,,,,0

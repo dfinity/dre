@@ -5,6 +5,7 @@ members = [
     "rs/decentralization",
     "rs/ic-management-backend",
     "rs/ic-management-types",
+    "rs/cloud-engine-controller-backend",
     "rs/ic-observability/config-writer-common",
     "rs/ic-observability/log-noise-filter-backend",
     "rs/ic-observability/log-noise-filter-downloader",
@@ -43,7 +44,7 @@ anyhow = "1.0.99"
 async-recursion = "1.1.1"
 async-trait = "0.1.89"
 axum-otel-metrics = "0.10.0"
-axum = "0.8.4"
+axum = { version = "0.8.4", features = ["macros"] }
 backoff = { version = "0.4.0", features = ["tokio"] }
 backon = "1.5.2"
 candid = "0.10.18"
@@ -216,6 +217,16 @@ ic-node-rewards-canister-api = { git = "https://github.com/dfinity/ic.git", rev 
 
 # dre-airflow deps, should be replaced with dre-airflow once
 indexmap = { version = "2.11.1", features = ["serde"] }
+
+# cloud-engine-controller-backend dependencies
+gcp_auth = "0.12"
+utoipa = { version = "5", features = ["axum_extras", "chrono"] }
+utoipa-swagger-ui = { version = "9", features = ["axum"] }
+tower = "0.5"
+tower-http = { version = "0.6", features = ["cors"] }
+uuid = { version = "1.11", features = ["v4", "serde"] }
+parking_lot = "0.12"
+dashmap = "6"
 
 [profile.release]
 # Add debug information to the release build (does NOT reduce the level of optimization!)
