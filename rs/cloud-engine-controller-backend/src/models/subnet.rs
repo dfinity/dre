@@ -11,6 +11,9 @@ pub struct SubnetInfo {
     /// Subnet type (application, system, etc.)
     #[serde(skip_serializing_if = "Option::is_none")]
     pub subnet_type: Option<String>,
+    /// Current GuestOS replica version
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub replica_version: Option<String>,
     /// Node IDs in this subnet
     pub node_ids: Vec<String>,
     /// Number of nodes in the subnet
@@ -107,4 +110,19 @@ pub struct SubnetDeleteRequest {
     pub title: String,
     /// Proposal summary/motivation
     pub summary: String,
+}
+
+/// Request to upgrade a subnet to a new GuestOS version
+#[derive(Debug, Clone, Serialize, Deserialize, ToSchema)]
+pub struct SubnetUpgradeRequest {
+    /// Subnet ID to upgrade
+    pub subnet_id: String,
+    /// Target GuestOS version ID
+    pub guestos_version_id: String,
+    /// Proposal title (optional, will be auto-generated if not provided)
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub title: Option<String>,
+    /// Proposal summary (optional, will be auto-generated if not provided)
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub summary: Option<String>,
 }

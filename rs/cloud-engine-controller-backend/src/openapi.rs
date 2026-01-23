@@ -4,15 +4,10 @@ use utoipa::OpenApi;
 
 use crate::config::{AppConfig, GcpConfig, NodeOperatorConfig};
 use crate::handlers::node_handlers::{GetNodeRequest, NodeInfo, NodeListResponse};
-use crate::handlers::subnet_handlers::{CreateSubnetProposalRequest, DeleteSubnetRequest};
+use crate::handlers::subnet_handlers::{CreateSubnetProposalRequest, DeleteSubnetRequest, SubnetUpgradeResponse};
 use crate::handlers::vm_handlers::{DeleteVmRequest, ProvisionVmRequestBody};
-use crate::models::subnet::{
-    ProposalStatus, SubnetInfo, SubnetListResponse, SubnetProposal,
-    SubnetProposalResponse,
-};
-use crate::models::vm::{
-    IcpNodeMapping, Vm, VmListResponse, VmProvisionRequest, VmProvisionResponse, VmStatus,
-};
+use crate::models::subnet::{ProposalStatus, SubnetInfo, SubnetListResponse, SubnetProposal, SubnetProposalResponse, SubnetUpgradeRequest};
+use crate::models::vm::{IcpNodeMapping, Vm, VmListResponse, VmProvisionRequest, VmProvisionResponse, VmStatus};
 
 /// OpenAPI documentation
 #[derive(OpenApi)]
@@ -31,6 +26,7 @@ use crate::models::vm::{
         crate::handlers::subnet_handlers::list_subnets,
         crate::handlers::subnet_handlers::create_subnet_proposal,
         crate::handlers::subnet_handlers::delete_subnet_proposal,
+        crate::handlers::subnet_handlers::upgrade_subnet,
     ),
     info(
         title = "Cloud Engine Controller Backend",
@@ -72,6 +68,8 @@ use crate::models::vm::{
             SubnetListResponse,
             CreateSubnetProposalRequest,
             DeleteSubnetRequest,
+            SubnetUpgradeRequest,
+            SubnetUpgradeResponse,
         )
     ),
     tags(

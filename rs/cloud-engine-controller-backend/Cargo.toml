@@ -38,7 +38,6 @@ ic-registry-nns-data-provider = { workspace = true }
 ic-registry-common-proto = { workspace = true }
 ic-registry-keys = { workspace = true }
 ic-protobuf = { workspace = true }
-prost = { workspace = true }
 
 # GCP
 gcp_auth = { workspace = true }

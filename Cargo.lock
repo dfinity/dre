@@ -1308,7 +1308,6 @@ dependencies = [
  "opentelemetry_sdk",
  "parking_lot",
  "prometheus",
- "prost",
  "reqwest",
  "serde",
  "serde_json",

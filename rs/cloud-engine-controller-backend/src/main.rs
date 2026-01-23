@@ -106,6 +106,7 @@ fn main() {
         .route("/subnets/list", get(subnet_handlers::list_subnets))
         .route("/subnets/create", post(subnet_handlers::create_subnet_proposal))
         .route("/subnets/delete", post(subnet_handlers::delete_subnet_proposal))
+        .route("/subnets/upgrade", post(subnet_handlers::upgrade_subnet))
         // Swagger UI
         .merge(SwaggerUi::new("/swagger-ui").url("/api-docs/openapi.json", ApiDoc::openapi()))
         // Layers
