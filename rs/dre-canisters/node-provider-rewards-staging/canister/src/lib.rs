@@ -18,7 +18,7 @@ use ic_node_rewards_canister_api::providers_rewards::{
 use ic_registry_canister_client::StableCanisterRegistryClient;
 use std::cell::RefCell;
 use std::sync::Arc;
-
+use ic_node_rewards_canister::timer_tasks::RecurringAsyncTaskNonSend;
 thread_local! {
     static REGISTRY_STORE: Arc<StableCanisterRegistryClient<RegistryStoreStableMemoryBorrower>> = {
         let store = StableCanisterRegistryClient::<RegistryStoreStableMemoryBorrower>::new(
@@ -52,7 +52,7 @@ fn post_upgrade() {
 
 
 pub fn schedule_timers() {
-    HourlySyncTask::new(&CANISTER).schedule(&METRICS_REGISTRY);
+    HourlySyncTask::new(&CANISTER).schedule();
     GetNodeProvidersRewardsInstructionsExporter::new(&CANISTER).schedule(&METRICS_REGISTRY);
 }
 
