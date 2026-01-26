@@ -70,6 +70,7 @@ impl ExecutableCommand for Ongoing {
         let rewards_ctx = NodeRewardsCtx {
             start_date,
             end_date,
+            algorithm_version: None,
             csv_detailed_output_path: self.common.csv_detailed_output_path.clone(),
             provider_id: self.common.provider_id.clone(),
             governance_providers_rewards,
