@@ -76,9 +76,7 @@ impl ExecutableCommand for PastRewards {
             .ok_or_else(|| anyhow::anyhow!("Cannot get previous day"))?;
 
         let node_providers = governance_client.get_node_providers().await?;
-        let algorithm_version = last
-            .algorithm_version
-            .and_then(|v| Some(RewardsCalculationAlgorithmVersion { version: v }));
+        let algorithm_version = last.algorithm_version.map(|v| RewardsCalculationAlgorithmVersion { version: v });
 
         let rewards_ctx = NodeRewardsCtx {
             start_date,
