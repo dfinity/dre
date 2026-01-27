@@ -3,8 +3,8 @@ use csv::Writer;
 use futures_util::future::join_all;
 use ic_base_types::{PrincipalId, SubnetId};
 use ic_canisters::node_rewards::NodeRewardsCanisterWrapper;
-use ic_node_rewards_canister_api::{DateUtc, RewardsCalculationAlgorithmVersion};
 use ic_node_rewards_canister_api::provider_rewards_calculation::{DailyNodeFailureRate, DailyNodeProviderRewards, DailyResults};
+use ic_node_rewards_canister_api::{DateUtc, RewardsCalculationAlgorithmVersion};
 use icp_ledger::AccountIdentifier;
 use itertools::Itertools;
 use log::info;
@@ -60,8 +60,11 @@ pub trait NodeRewardsDataFetcher {
         println!("Fetching node rewards for all providers from NRC from {} to {}...", start_date, end_date);
 
         let days: Vec<DateUtc> = start_date.iter_days().take_while(|day| day <= &end_date).map(DateUtc::from).collect();
-        let responses: Vec<anyhow::Result<DailyResults>> =
-            join_all(days.iter().map(|day| async move { node_rewards_client.get_rewards_daily(*day, ctx.algorithm_version).await })).await;
+        let responses: Vec<anyhow::Result<DailyResults>> = join_all(
+            days.iter()
+                .map(|day| async move { node_rewards_client.get_rewards_daily(*day, ctx.algorithm_version).await }),
+        )
+        .await;
 
         let mut providers_rewards: BTreeMap<PrincipalId, Vec<(DateUtc, DailyNodeProviderRewards)>> = BTreeMap::new();
         let mut subnets_failure_rates: BTreeMap<SubnetId, Vec<(DateUtc, f64)>> = BTreeMap::new();
