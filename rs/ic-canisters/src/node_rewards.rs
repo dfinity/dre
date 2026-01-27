@@ -2,9 +2,10 @@ use std::str::FromStr;
 
 use crate::IcAgentCanisterClient;
 use candid::Principal;
-use ic_node_rewards_canister_api::{RewardsCalculationAlgorithmVersion, provider_rewards_calculation::{
-    DailyResults, DateUtc, GetNodeProvidersRewardsCalculationRequest, GetNodeProvidersRewardsCalculationResponse,
-}};
+use ic_node_rewards_canister_api::{
+    RewardsCalculationAlgorithmVersion,
+    provider_rewards_calculation::{DailyResults, DateUtc, GetNodeProvidersRewardsCalculationRequest, GetNodeProvidersRewardsCalculationResponse},
+};
 
 const NODE_REWARDS_CANISTER: &str = "sgymv-uiaaa-aaaaa-aaaia-cai";
 
