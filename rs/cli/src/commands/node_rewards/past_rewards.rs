@@ -2,6 +2,7 @@ use chrono::{DateTime, Datelike};
 use clap::Args;
 use ic_canisters::governance::GovernanceCanisterWrapper;
 use ic_canisters::node_rewards::NodeRewardsCanisterWrapper;
+use ic_node_rewards_canister_api::RewardsCalculationAlgorithmVersion;
 use log::info;
 use std::collections::BTreeMap;
 
@@ -75,10 +76,12 @@ impl ExecutableCommand for PastRewards {
             .ok_or_else(|| anyhow::anyhow!("Cannot get previous day"))?;
 
         let node_providers = governance_client.get_node_providers().await?;
+        let algorithm_version = last.algorithm_version.map(|v| RewardsCalculationAlgorithmVersion { version: v });
 
         let rewards_ctx = NodeRewardsCtx {
             start_date,
             end_date,
+            algorithm_version,
             csv_detailed_output_path: self.common.csv_detailed_output_path.clone(),
             provider_id: self.common.provider_id.clone(),
             governance_providers_rewards,
