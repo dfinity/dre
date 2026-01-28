@@ -402,7 +402,7 @@ pub trait NodeRewardsCsvOutput {
 
         // Generate node providers summary CSV with ICP rewards and accounts only for PastRewards mode
         if ctx.is_past_rewards_mode {
-            self.create_node_providers_summary_csv(&rewards_dir)?;
+            self.create_node_providers_summary_csv(&rewards_dir, nrc_data)?;
         }
 
         Ok(())
@@ -781,12 +781,18 @@ pub trait NodeRewardsCsvOutput {
     }
 
     /// Create node providers summary CSV with provider IDs, rewards in ICP, and account information
-    fn create_node_providers_summary_csv(&self, output_dir: &str) -> anyhow::Result<()> {
+    fn create_node_providers_summary_csv(&self, output_dir: &str, nrc_data: &NrcData) -> anyhow::Result<()> {
         let filename = format!("{}/node_providers_summary.csv", output_dir);
         let mut wtr = Writer::from_path(&filename)?;
 
         // Write header
-        wtr.write_record(["node_provider_id", "rewards_icp", "account_id"])?;
+        wtr.write_record([
+            "node_provider_id",
+            "rewards_icp",
+            "account_id",
+            "total_base_rewards_xdr_permyriad",
+            "total_adjusted_rewards_xdr_permyriad",
+        ])?;
 
         let ctx = self.ctx();
 
@@ -820,7 +826,29 @@ pub trait NodeRewardsCsvOutput {
                 .map(|s| s.to_string())
                 .unwrap_or("".to_string());
 
-            wtr.write_record([&provider_id, &format!("{:.8}", rewards_icp), &account_id])?;
+            // Calculate total base and adjusted rewards from nrc_data (sum across all days)
+            let (total_base_rewards, total_adjusted_rewards) = provider_id_principal
+                .and_then(|id| nrc_data.providers_rewards.get(&id))
+                .map(|daily_rewards| {
+                    let base_total: u64 = daily_rewards
+                        .iter()
+                        .map(|(_, reward)| reward.total_base_rewards_xdr_permyriad.unwrap_or(0))
+                        .sum();
+                    let adjusted_total: u64 = daily_rewards
+                        .iter()
+                        .map(|(_, reward)| reward.total_adjusted_rewards_xdr_permyriad.unwrap_or(0))
+                        .sum();
+                    (base_total, adjusted_total)
+                })
+                .unwrap_or((0, 0));
+
+            wtr.write_record([
+                &provider_id,
+                &format!("{:.8}", rewards_icp),
+                &account_id,
+                &total_base_rewards.to_string(),
+                &total_adjusted_rewards.to_string(),
+            ])?;
         }
 
         wtr.flush()?;
