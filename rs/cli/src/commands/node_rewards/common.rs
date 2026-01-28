@@ -20,7 +20,6 @@ pub struct NodeRewardsCtx {
     pub end_date: NaiveDate,
     pub algorithm_version: Option<RewardsCalculationAlgorithmVersion>,
     pub csv_detailed_output_path: Option<String>,
-    pub provider_id: Option<String>,
     pub compare_with_governance: bool,
     pub governance_providers_rewards: BTreeMap<PrincipalId, u64>,
     pub governance_rewards_raw: ic_nns_governance_api::MonthlyNodeProviderRewards,
@@ -84,14 +83,6 @@ pub trait NodeRewardsDataFetcher {
                     println!("Error fetching node rewards for provider: {}", e);
                 }
             }
-        }
-
-        if let Some(ref provider_filter) = ctx.provider_id {
-            providers_rewards.retain(|provider_id, _| {
-                let provider_id_str = provider_id.to_string();
-                let prefix = get_provider_prefix(&provider_id_str);
-                provider_id_str == *provider_filter || prefix == *provider_filter
-            });
         }
 
         Ok(NrcData {
@@ -863,10 +854,6 @@ pub struct CommonArgs {
     /// If set, write detailed CSVs to this directory
     #[arg(long)]
     pub csv_detailed_output_path: Option<String>,
-
-    /// Filter to a single provider (full principal or provider prefix)
-    #[arg(long)]
-    pub provider_id: Option<String>,
 
     /// If set, display comparison table with governance rewards
     #[arg(long)]
