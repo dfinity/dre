@@ -83,7 +83,6 @@ impl ExecutableCommand for PastRewards {
             end_date,
             algorithm_version,
             csv_detailed_output_path: self.common.csv_detailed_output_path.clone(),
-            provider_id: self.common.provider_id.clone(),
             governance_providers_rewards,
             compare_with_governance: self.common.compare_with_governance,
             governance_rewards_raw: last.clone(),
