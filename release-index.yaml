@@ -12,10 +12,6 @@ releases:
     versions:
       - name: base
         version: 6f1ce3bb4c253f1bc4c5f432c7c47b06dccdba7e
-  - rc_name: rc--2026-01-29_16-08
-    versions:
-      - name: base
-        version: 181e1d713c3580a97991df4fb08fa7169c24ae27
   - rc_name: rc--2026-01-22_03-33
     versions:
       - name: base
