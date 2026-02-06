@@ -31,6 +31,7 @@ def external_crates_repository():
             "//rs/ic-canisters:Cargo.toml",
             "//rs/ic-management-backend:Cargo.toml",
             "//rs/ic-management-types:Cargo.toml",
+            "//rs/cloud-engine-controller-backend:Cargo.toml",
             "//rs/ic-observability/config-writer-common:Cargo.toml",
             "//rs/ic-observability/log-noise-filter-backend:Cargo.toml",
             "//rs/ic-observability/log-noise-filter-downloader:Cargo.toml",
