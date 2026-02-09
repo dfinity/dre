@@ -8,7 +8,7 @@
 - neuron_id: 34
   slack_id: UD5JPLYAH # Andrea Cerulli
 #- neuron_id: 35
-#  slack_id: 
+#  slack_id:
 - neuron_id: 36
   slack_id: UGN5F0F7B # Max Murphy
 - neuron_id: 37
@@ -20,7 +20,7 @@
 - neuron_id: 40
   slack_id: URT5Z7VDZ # Sasa Tomic
 # - neuron_id: 41
-#  slack_id: 
+#  slack_id:
 # - neuron_id: 42
 #   slack_id:
 - neuron_id: 43
@@ -41,10 +41,10 @@
   slack_id: USJPEC5F0 # Islam El-Ashi
 - neuron_id: 51
   slack_id: U02RFGQHP47 # Daniel Wong
-# - neuron_id: 52
-#  slack_id:
+- neuron_id: 52
+  slack_id: U032U709D6J # Rüdiger Birkner
 # - neuron_id: 53
-#  slack_id: 
+#  slack_id:
 - neuron_id: 54
   slack_id: U02RZR7PDK4 # Björn Assmann
 # - neuron_id: 55
@@ -58,9 +58,9 @@
 - neuron_id: 59
   slack_id: U02TEQHKV35 # Llorenç Muntaner Perello
 # - neuron_id: 60
-#  slack_id: 
+#  slack_id:
 # - neuron_id: 61
-#  slack_id: 
+#  slack_id:
 - neuron_id: 62
   slack_id: U8ET9T067 # Paul Liu
 - neuron_id: 63
@@ -80,7 +80,7 @@
 - neuron_id: 70
   slack_id: UFWTXMBB2 # Bas van Dijk
 #- neuron_id: 71
-#  slack_id: 
+#  slack_id:
 - neuron_id: 72
   slack_id: U0574S1N1BP # Jason Zhu
 - neuron_id: 73
@@ -103,5 +103,3 @@
 #   slack_id:
 - neuron_id: 17212304975669116357
   slack_id: U03LSTP0YB1 # Grégory Demay
-- neuron_id: 17511507705568200227
-  slack_id: U032U709D6J # Rüdiger Birkner
