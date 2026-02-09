@@ -76,7 +76,7 @@ ENV CARGO_HOME=/cargo
 COPY docker /docker
 
 # Download ic-admin
-ARG ic_git_revision=f34ab00f31dc3f223ef832be30303f93e59c19ec
+ARG ic_git_revision=ae359117f9c082eed13d3d57d8930fc3a38591af
 RUN  curl --fail https://download.dfinity.systems/ic/${ic_git_revision}/release/ic-admin.gz -o - | gunzip -c >| /usr/bin/ic-admin && \
     chmod +x /usr/bin/ic-admin
 
