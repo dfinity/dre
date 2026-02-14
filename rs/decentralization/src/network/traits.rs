@@ -1,3 +1,5 @@
+use log::info;
+
 use super::*;
 
 pub trait AvailableNodesQuerier {
@@ -40,13 +42,49 @@ pub trait TopologyManager: SubnetQuerier + AvailableNodesQuerier + Sync {
         all_nodes: &'a [Node],
     ) -> BoxFuture<'a, Result<SubnetChange, NetworkError>> {
         Box::pin(async move {
+            let mut available_nodes = self.available_nodes().await?;
+            let cache_added_nodes: Vec<_> = available_nodes.iter().filter(|n| add_nodes.iter().match_any(n)).cloned().collect();
+            if !only_nodes.is_empty() {
+                info!("`only` nodes provided. Overriding the pool of available nodes");
+                available_nodes.retain(|n| only_nodes.iter().match_any(n));
+            }
+            // To allow for more intuitive usage.
+            //
+            // The user requests a subnet of size n and provides some initial nodes
+            // (maybe just m where m is less than n) and the tool selects the
+            // remaining nodes from the pool of available nodes.
+            let size = if add_nodes.len() > size {
+                panic!("Cannot make subnet of size {size} with {} nodes", add_nodes.len());
+            } else {
+                let remaining_for_tool_to_pick = size - add_nodes.len();
+                if remaining_for_tool_to_pick > 0 {
+                    info!(
+                        "Provided {} nodes. The tool will pick remaining {remaining_for_tool_to_pick} to make a subnet with {size} nodes.",
+                        add_nodes.len()
+                    );
+                    if available_nodes.len() < remaining_for_tool_to_pick {
+                        panic!(
+                            "The pool of available_nodes is too small to pick the remaining {remaining_for_tool_to_pick}. Remaning pool has {} nodes.",
+                            available_nodes.len()
+                        );
+                    }
+                    info!("Picking {remaining_for_tool_to_pick} from the pool of {} nodes", available_nodes.len());
+                }
+                remaining_for_tool_to_pick
+            };
+
+            // The tool needs to see the explicitly added nodes as available_nodes.
+            //
+            // The previous size logic would not show correct numbers if this was
+            // done earlier.
+            available_nodes.extend(cache_added_nodes);
+
             SubnetChangeRequest {
-                available_nodes: self.available_nodes().await?,
+                available_nodes,
                 ..Default::default()
             }
             .adding_from_available(add_nodes)
             .excluding_from_available(exclude_nodes)
-            .adding_from_available(only_nodes)
             .resize(size, 0, 0, health_of_nodes, cordoned_features, all_nodes)
         })
     }
