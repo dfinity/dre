@@ -1,0 +1,2453 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Documentation for DFINITY's Decentralized Reliability Engineering (DRE) tools and processes">
+      
+      
+        <meta name="author" content="DFINITY Foundation">
+      
+      
+      
+        <link rel="prev" href="nns-motion-proposals.html">
+      
+      
+        <link rel="next" href="qualification/running-qualification.html">
+      
+      
+      <link rel="icon" href="assets/favicon.ico">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.5.49">
+    
+    
+      
+        <title>Node Rewards - DRE Documentation</title>
+      
+    
+    
+      <link rel="stylesheet" href="assets/stylesheets/main.6f8fc17f.min.css">
+      
+        
+        <link rel="stylesheet" href="assets/stylesheets/palette.06af60db.min.css">
+      
+      
+
+
+    
+    
+      
+        <script src="https://unpkg.com/iframe-worker/shim"></script>
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="https://unpkg.com/katex@0.16/dist/katex.min.css">
+    
+    <script>__md_scope=new URL(".",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#node-rewards-command" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+<header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="index.html" title="DRE Documentation" class="md-header__button md-logo" aria-label="DRE Documentation" data-md-component="logo">
+      
+  <img src="assets/favicon.ico" alt="logo">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            DRE Documentation
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Node Rewards
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme)" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3.9 12c0-1.71 1.39-3.1 3.1-3.1h4V7H7a5 5 0 0 0-5 5 5 5 0 0 0 5 5h4v-1.9H7c-1.71 0-3.1-1.39-3.1-3.1M8 13h8v-2H8zm9-6h-4v1.9h4c1.71 0 3.1 1.39 3.1 3.1s-1.39 3.1-3.1 3.1h-4V17h4a5 5 0 0 0 5-5 5 5 0 0 0-5-5"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_2" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M17 7H7a5 5 0 0 0-5 5 5 5 0 0 0 5 5h10a5 5 0 0 0 5-5 5 5 0 0 0-5-5m0 8a3 3 0 0 1-3-3 3 3 0 0 1 3-3 3 3 0 0 1 3 3 3 3 0 0 1-3 3"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="black" data-md-color-accent="indigo"  aria-label="Switch to system preference"  type="radio" name="__palette" id="__palette_2">
+    
+      <label class="md-header__button md-icon" title="Switch to system preference" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M17 7H7a5 5 0 0 0-5 5 5 5 0 0 0 5 5h10a5 5 0 0 0 5-5 5 5 0 0 0-5-5M7 15a3 3 0 0 1-3-3 3 3 0 0 1 3-3 3 3 0 0 1 3 3 3 3 0 0 1-3 3"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      <label class="md-header__button md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+      </label>
+      <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+          <a href="javascript:void(0)" class="md-search__icon md-icon" title="Share" aria-label="Share" data-clipboard data-clipboard-text="" data-md-component="search-share" tabindex="-1">
+            
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9a3 3 0 0 0-3 3 3 3 0 0 0 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.15c-.05.21-.08.43-.08.66 0 1.61 1.31 2.91 2.92 2.91s2.92-1.3 2.92-2.91A2.92 2.92 0 0 0 18 16.08"/></svg>
+          </a>
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/dfinity/dre/" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.7.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2024 Fonticons, Inc.--><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8M97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+  </div>
+  <div class="md-source__repository">
+    dfinity/dre
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+            
+<nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="index.html" class="md-tabs__link">
+        
+  
+    
+  
+  Home
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="getting-started.html" class="md-tabs__link">
+          
+  
+    
+  
+  Getting Started
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="decentralization.html" class="md-tabs__link">
+          
+  
+    
+  
+  Core Concepts
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+    
+  
+  
+    
+    
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="create-a-neuron.html" class="md-tabs__link">
+          
+  
+    
+  
+  Guides
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+    
+    
+      
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="k8s/tips-and-tricks.html" class="md-tabs__link">
+          
+  
+    
+  
+  Development
+
+        </a>
+      </li>
+    
+  
+
+    
+  
+
+      
+    </ul>
+  </div>
+</nav>
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="index.html" title="DRE Documentation" class="md-nav__button md-logo" aria-label="DRE Documentation" data-md-component="logo">
+      
+  <img src="assets/favicon.ico" alt="logo">
+
+    </a>
+    DRE Documentation
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/dfinity/dre/" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.7.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2024 Fonticons, Inc.--><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8M97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+  </div>
+  <div class="md-source__repository">
+    dfinity/dre
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="index.html" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Home
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Getting Started
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            Getting Started
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="getting-started.html" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Installation
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="contributing.html" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Contributing Guide
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="how-to-update-docs.html" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Documentation Guide
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Core Concepts
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            Core Concepts
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="decentralization.html" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Decentralization
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="make-release.html" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Release Management
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="subnet-decentralization-whatif.html" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Subnet Management
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_3_4" id="__nav_3_4_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Trustworthy Metrics
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_4">
+            <span class="md-nav__icon md-icon"></span>
+            Trustworthy Metrics
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="trustworthy-metrics/trustworthy-metrics.html" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Overview
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="trustworthy-metrics/architecture.html" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Architecture
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="trustworthy-metrics/untrusted-metrics.html" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Untrusted Metrics
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+      
+        
+        
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="">
+            
+  
+  <span class="md-ellipsis">
+    Guides
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            Guides
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="create-a-neuron.html" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Creating a Neuron
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="nns-proposals.html" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    NNS Proposals
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="nns-motion-proposals.html" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Submitting Motion Proposals
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  <span class="md-ellipsis">
+    Node Rewards
+  </span>
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="node-rewards.html" class="md-nav__link md-nav__link--active">
+        
+  
+  <span class="md-ellipsis">
+    Node Rewards
+  </span>
+  
+
+      </a>
+      
+        
+
+  
+
+<nav class="md-nav md-nav--secondary" aria-label="On this page">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      On this page
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#overview" class="md-nav__link">
+    <span class="md-ellipsis">
+      Overview
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#command-structure" class="md-nav__link">
+    <span class="md-ellipsis">
+      Command Structure
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Command Structure">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#modes" class="md-nav__link">
+    <span class="md-ellipsis">
+      Modes
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#options" class="md-nav__link">
+    <span class="md-ellipsis">
+      Options
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#usage-examples" class="md-nav__link">
+    <span class="md-ellipsis">
+      Usage Examples
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Usage Examples">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#check-ongoing-rewards" class="md-nav__link">
+    <span class="md-ellipsis">
+      Check Ongoing Rewards
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#check-past-rewards-for-a-specific-month" class="md-nav__link">
+    <span class="md-ellipsis">
+      Check Past Rewards for a Specific Month
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#filter-by-provider-id" class="md-nav__link">
+    <span class="md-ellipsis">
+      Filter by Provider ID
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#export-detailed-csv-reports" class="md-nav__link">
+    <span class="md-ellipsis">
+      Export Detailed CSV Reports
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#complete-example-export-past-month-with-provider-filter" class="md-nav__link">
+    <span class="md-ellipsis">
+      Complete Example: Export Past Month with Provider Filter
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#understanding-the-output" class="md-nav__link">
+    <span class="md-ellipsis">
+      Understanding the Output
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Understanding the Output">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#daily-rewards-summary" class="md-nav__link">
+    <span class="md-ellipsis">
+      Daily Rewards Summary
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#comparison-table-past-rewards-mode" class="md-nav__link">
+    <span class="md-ellipsis">
+      Comparison Table (Past Rewards Mode)
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#csv-export-files" class="md-nav__link">
+    <span class="md-ellipsis">
+      CSV Export Files
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="CSV Export Files">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#per-provider-files" class="md-nav__link">
+    <span class="md-ellipsis">
+      Per-Provider Files
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Per-Provider Files">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#base_rewardscsv" class="md-nav__link">
+    <span class="md-ellipsis">
+      base_rewards.csv
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#base_rewards_type3csv" class="md-nav__link">
+    <span class="md-ellipsis">
+      base_rewards_type3.csv
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#rewards_summarycsv" class="md-nav__link">
+    <span class="md-ellipsis">
+      rewards_summary.csv
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#node_metrics_by_daycsv" class="md-nav__link">
+    <span class="md-ellipsis">
+      node_metrics_by_day.csv
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#node_metrics_by_nodecsv" class="md-nav__link">
+    <span class="md-ellipsis">
+      node_metrics_by_node.csv
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#global-files" class="md-nav__link">
+    <span class="md-ellipsis">
+      Global Files
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Global Files">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#subnets_failure_ratescsv" class="md-nav__link">
+    <span class="md-ellipsis">
+      subnets_failure_rates.csv
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#common-use-cases" class="md-nav__link">
+    <span class="md-ellipsis">
+      Common Use Cases
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Common Use Cases">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-monthly-reward-verification" class="md-nav__link">
+    <span class="md-ellipsis">
+      1. Monthly Reward Verification
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-daily-performance-monitoring" class="md-nav__link">
+    <span class="md-ellipsis">
+      2. Daily Performance Monitoring
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3-export-for-analysis" class="md-nav__link">
+    <span class="md-ellipsis">
+      3. Export for Analysis
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#4-identifying-underperforming-nodes" class="md-nav__link">
+    <span class="md-ellipsis">
+      4. Identifying Underperforming Nodes
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="qualification/running-qualification.html" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Running Qualification
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="be-dr-dre.html" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Being a DRE
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+    
+    
+      
+      
+        
+          
+          
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_4_7" >
+        
+          
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="rs/cli/index.html" class="md-nav__link ">
+              
+  
+  <span class="md-ellipsis">
+    CLI Tool
+  </span>
+  
+
+            </a>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_7">
+            <span class="md-nav__icon md-icon"></span>
+            CLI Tool
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+    
+    
+      
+      
+        
+          
+          
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_4_8" >
+        
+          
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="trusted-neurons-alerts/index.html" class="md-nav__link ">
+              
+  
+  <span class="md-ellipsis">
+    Trusted Neurons Alerts
+  </span>
+  
+
+            </a>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_8_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_8">
+            <span class="md-nav__icon md-icon"></span>
+            Trusted Neurons Alerts
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+    
+    
+      
+      
+        
+          
+          
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_4_9" >
+        
+          
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="release-controller/index.html" class="md-nav__link ">
+              
+  
+  <span class="md-ellipsis">
+    IC Release Controller and Release Notes
+  </span>
+  
+
+            </a>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_9_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_9">
+            <span class="md-nav__icon md-icon"></span>
+            IC Release Controller and Release Notes
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Development
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            Development
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_5_1" >
+        
+          
+          <label class="md-nav__link" for="__nav_5_1" id="__nav_5_1_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Kubernetes
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_5_1_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5_1">
+            <span class="md-nav__icon md-icon"></span>
+            Kubernetes
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="k8s/tips-and-tricks.html" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Tips and Tricks
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="k8s/elastic-commands.html" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Elastic configuration
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_5_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_5_2" id="__nav_5_2_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Bazel
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_5_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5_2">
+            <span class="md-nav__icon md-icon"></span>
+            Bazel
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="bazel/tips-and-tricks.html" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Tips and Tricks
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+  
+
+<nav class="md-nav md-nav--secondary" aria-label="On this page">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      On this page
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#overview" class="md-nav__link">
+    <span class="md-ellipsis">
+      Overview
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#command-structure" class="md-nav__link">
+    <span class="md-ellipsis">
+      Command Structure
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Command Structure">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#modes" class="md-nav__link">
+    <span class="md-ellipsis">
+      Modes
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#options" class="md-nav__link">
+    <span class="md-ellipsis">
+      Options
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#usage-examples" class="md-nav__link">
+    <span class="md-ellipsis">
+      Usage Examples
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Usage Examples">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#check-ongoing-rewards" class="md-nav__link">
+    <span class="md-ellipsis">
+      Check Ongoing Rewards
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#check-past-rewards-for-a-specific-month" class="md-nav__link">
+    <span class="md-ellipsis">
+      Check Past Rewards for a Specific Month
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#filter-by-provider-id" class="md-nav__link">
+    <span class="md-ellipsis">
+      Filter by Provider ID
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#export-detailed-csv-reports" class="md-nav__link">
+    <span class="md-ellipsis">
+      Export Detailed CSV Reports
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#complete-example-export-past-month-with-provider-filter" class="md-nav__link">
+    <span class="md-ellipsis">
+      Complete Example: Export Past Month with Provider Filter
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#understanding-the-output" class="md-nav__link">
+    <span class="md-ellipsis">
+      Understanding the Output
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Understanding the Output">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#daily-rewards-summary" class="md-nav__link">
+    <span class="md-ellipsis">
+      Daily Rewards Summary
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#comparison-table-past-rewards-mode" class="md-nav__link">
+    <span class="md-ellipsis">
+      Comparison Table (Past Rewards Mode)
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#csv-export-files" class="md-nav__link">
+    <span class="md-ellipsis">
+      CSV Export Files
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="CSV Export Files">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#per-provider-files" class="md-nav__link">
+    <span class="md-ellipsis">
+      Per-Provider Files
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Per-Provider Files">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#base_rewardscsv" class="md-nav__link">
+    <span class="md-ellipsis">
+      base_rewards.csv
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#base_rewards_type3csv" class="md-nav__link">
+    <span class="md-ellipsis">
+      base_rewards_type3.csv
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#rewards_summarycsv" class="md-nav__link">
+    <span class="md-ellipsis">
+      rewards_summary.csv
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#node_metrics_by_daycsv" class="md-nav__link">
+    <span class="md-ellipsis">
+      node_metrics_by_day.csv
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#node_metrics_by_nodecsv" class="md-nav__link">
+    <span class="md-ellipsis">
+      node_metrics_by_node.csv
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#global-files" class="md-nav__link">
+    <span class="md-ellipsis">
+      Global Files
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Global Files">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#subnets_failure_ratescsv" class="md-nav__link">
+    <span class="md-ellipsis">
+      subnets_failure_rates.csv
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#common-use-cases" class="md-nav__link">
+    <span class="md-ellipsis">
+      Common Use Cases
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Common Use Cases">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-monthly-reward-verification" class="md-nav__link">
+    <span class="md-ellipsis">
+      1. Monthly Reward Verification
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-daily-performance-monitoring" class="md-nav__link">
+    <span class="md-ellipsis">
+      2. Daily Performance Monitoring
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3-export-for-analysis" class="md-nav__link">
+    <span class="md-ellipsis">
+      3. Export for Analysis
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#4-identifying-underperforming-nodes" class="md-nav__link">
+    <span class="md-ellipsis">
+      4. Identifying Underperforming Nodes
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+  
+    <a href="https://github.com/dfinity/dre/edit/main/docs/node-rewards.md" title="Edit this page" class="md-content__button md-icon">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M10 20H6V4h7v5h5v3.1l2-2V8l-6-6H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h4zm10.2-7c.1 0 .3.1.4.2l1.3 1.3c.2.2.2.6 0 .8l-1 1-2.1-2.1 1-1c.1-.1.2-.2.4-.2m0 3.9L14.1 23H12v-2.1l6.1-6.1z"/></svg>
+    </a>
+  
+  
+    
+      
+    
+    <a href="https://github.com/dfinity/dre/raw/main/docs/node-rewards.md" title="View source of this page" class="md-content__button md-icon">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M17 18c.56 0 1 .44 1 1s-.44 1-1 1-1-.44-1-1 .44-1 1-1m0-3c-2.73 0-5.06 1.66-6 4 .94 2.34 3.27 4 6 4s5.06-1.66 6-4c-.94-2.34-3.27-4-6-4m0 6.5a2.5 2.5 0 0 1-2.5-2.5 2.5 2.5 0 0 1 2.5-2.5 2.5 2.5 0 0 1 2.5 2.5 2.5 2.5 0 0 1-2.5 2.5M9.27 20H6V4h7v5h5v4.07c.7.08 1.36.25 2 .49V8l-6-6H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h4.5a8.2 8.2 0 0 1-1.23-2"/></svg>
+    </a>
+  
+
+
+<h1 id="node-rewards-command">Node Rewards Command<a class="headerlink" href="#node-rewards-command" title="Permanent link">&para;</a></h1>
+<p>The <code>node-rewards</code> command allows node providers to check and analyze their rewards by querying the Node Rewards Canister (NRC) and comparing them with governance rewards from the NNS. This tool provides comprehensive insights into daily rewards, performance metrics, and helps identify discrepancies between calculated rewards and actual governance payouts.</p>
+<h2 id="overview">Overview<a class="headerlink" href="#overview" title="Permanent link">&para;</a></h2>
+<p>The <code>node-rewards</code> command fetches reward data from two sources:</p>
+<ol>
+<li><strong>Node Rewards Canister (NRC)</strong>: Calculates rewards based on daily node performance metrics</li>
+<li><strong>Governance (NNS)</strong>: Actual rewards paid out through governance snapshots</li>
+</ol>
+<p>By comparing these two sources, node providers can:
+- Verify that their rewards match expectations
+- Identify any discrepancies between calculated and actual rewards
+- Monitor daily performance and identify underperforming nodes
+- Export detailed CSV reports for further analysis</p>
+<h2 id="command-structure">Command Structure<a class="headerlink" href="#command-structure" title="Permanent link">&para;</a></h2>
+<p>The command has two modes:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>dre<span class="w"> </span>node-rewards<span class="w"> </span>&lt;mode&gt;<span class="w"> </span><span class="o">[</span>options<span class="o">]</span>
+</span></code></pre></div>
+<h3 id="modes">Modes<a class="headerlink" href="#modes" title="Permanent link">&para;</a></h3>
+<ol>
+<li><strong><code>ongoing</code></strong>: Shows rewards from the latest governance snapshot timestamp to yesterday</li>
+<li><strong><code>past-rewards &lt;month&gt;</code></strong>: Shows past rewards for a specific month (format: <code>YYYY-MM</code>) and compares with governance</li>
+</ol>
+<h3 id="options">Options<a class="headerlink" href="#options" title="Permanent link">&para;</a></h3>
+<p>Both modes support the following options:</p>
+<ul>
+<li><code>--csv-detailed-output-path &lt;path&gt;</code>: If set, writes detailed CSV files to the specified directory</li>
+<li><code>--provider-id &lt;id&gt;</code>: Filter to a single provider (full principal ID or provider prefix)</li>
+</ul>
+<h2 id="usage-examples">Usage Examples<a class="headerlink" href="#usage-examples" title="Permanent link">&para;</a></h2>
+<h3 id="check-ongoing-rewards">Check Ongoing Rewards<a class="headerlink" href="#check-ongoing-rewards" title="Permanent link">&para;</a></h3>
+<p>View rewards from the latest governance snapshot to yesterday:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>dre<span class="w"> </span>node-rewards<span class="w"> </span>ongoing
+</span></code></pre></div>
+<p>This will display a daily rewards summary table showing:
+- Daily base and adjusted rewards totals
+- Number of nodes and assigned nodes
+- Underperforming nodes (nodes with performance multiplier &lt; 1.0)
+- Adjusted rewards percentage</p>
+<h3 id="check-past-rewards-for-a-specific-month">Check Past Rewards for a Specific Month<a class="headerlink" href="#check-past-rewards-for-a-specific-month" title="Permanent link">&para;</a></h3>
+<p>View and compare rewards for a past month (e.g., October 2024):</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>dre<span class="w"> </span>node-rewards<span class="w"> </span>past-rewards<span class="w"> </span><span class="m">2024</span>-10
+</span></code></pre></div>
+<p>This mode provides:
+- Daily rewards summary for the specified month
+- Comparison table showing NRC vs Governance rewards
+- Difference and percentage difference calculations
+- List of underperforming nodes</p>
+<h3 id="filter-by-provider-id">Filter by Provider ID<a class="headerlink" href="#filter-by-provider-id" title="Permanent link">&para;</a></h3>
+<p>Check rewards for a specific provider using their full principal ID or prefix:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>dre<span class="w"> </span>node-rewards<span class="w"> </span>ongoing<span class="w"> </span>--provider-id<span class="w"> </span>tm3pc-2bjsx-hhv3v-fsrt7-wotdj-nbu3t-ewloq-uporp-tacou-lupdn-oae
+</span></code></pre></div>
+<p>Or using just the prefix:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>dre<span class="w"> </span>node-rewards<span class="w"> </span>ongoing<span class="w"> </span>--provider-id<span class="w"> </span>tm3pc
+</span></code></pre></div>
+<h3 id="export-detailed-csv-reports">Export Detailed CSV Reports<a class="headerlink" href="#export-detailed-csv-reports" title="Permanent link">&para;</a></h3>
+<p>Generate comprehensive CSV files for further analysis:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>dre<span class="w"> </span>node-rewards<span class="w"> </span>ongoing<span class="w"> </span>--csv-detailed-output-path<span class="w"> </span>./rewards_export
+</span></code></pre></div>
+<p>This creates a directory structure like:</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>rewards_export/
+</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>└── rewards_2024-10-01_to_2024-10-31/
+</span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a>    ├── &lt;provider_id&gt;/
+</span><span id="__span-6-4"><a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a>    │   ├── base_rewards.csv
+</span><span id="__span-6-5"><a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a>    │   ├── base_rewards_type3.csv
+</span><span id="__span-6-6"><a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a>    │   ├── rewards_summary.csv
+</span><span id="__span-6-7"><a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a>    │   ├── node_metrics_by_day.csv
+</span><span id="__span-6-8"><a id="__codelineno-6-8" name="__codelineno-6-8" href="#__codelineno-6-8"></a>    │   └── node_metrics_by_node.csv
+</span><span id="__span-6-9"><a id="__codelineno-6-9" name="__codelineno-6-9" href="#__codelineno-6-9"></a>    └── subnets_failure_rates.csv
+</span></code></pre></div>
+<h3 id="complete-example-export-past-month-with-provider-filter">Complete Example: Export Past Month with Provider Filter<a class="headerlink" href="#complete-example-export-past-month-with-provider-filter" title="Permanent link">&para;</a></h3>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>dre<span class="w"> </span>node-rewards<span class="w"> </span>past-rewards<span class="w"> </span><span class="m">2024</span>-10<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a><span class="w">    </span>--provider-id<span class="w"> </span>tm3pc<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-7-3"><a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a><span class="w">    </span>--csv-detailed-output-path<span class="w"> </span>./october_rewards
+</span></code></pre></div>
+<h2 id="understanding-the-output">Understanding the Output<a class="headerlink" href="#understanding-the-output" title="Permanent link">&para;</a></h2>
+<h3 id="daily-rewards-summary">Daily Rewards Summary<a class="headerlink" href="#daily-rewards-summary" title="Permanent link">&para;</a></h3>
+<p>When viewing rewards in console mode (without CSV export), you'll see a table for each provider showing:</p>
+<table>
+<thead>
+<tr>
+<th>Column</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Day</strong></td>
+<td>UTC day (YYYY-MM-DD)</td>
+</tr>
+<tr>
+<td><strong>Base Rewards Total</strong></td>
+<td>Sum of <code>base_rewards_xdr_permyriad</code> across all nodes (XDRPermyriad)</td>
+</tr>
+<tr>
+<td><strong>Adjusted Rewards Total</strong></td>
+<td>Sum of <code>adjusted_rewards_xdr_permyriad</code> across all nodes (XDRPermyriad)</td>
+</tr>
+<tr>
+<td><strong>Adjusted Rewards %</strong></td>
+<td>(Adjusted Rewards Total / Base Rewards Total) × 100%</td>
+</tr>
+<tr>
+<td><strong>Nodes</strong></td>
+<td>Total nodes found in registry on that day</td>
+</tr>
+<tr>
+<td><strong>Assigned</strong></td>
+<td>Number of nodes assigned to a subnet on that day</td>
+</tr>
+<tr>
+<td><strong>Underperf</strong></td>
+<td>Number of nodes with performance multiplier &lt; 1.0</td>
+</tr>
+<tr>
+<td><strong>Underperf Nodes</strong></td>
+<td>Comma-separated list of underperforming node IDs (prefixes)</td>
+</tr>
+</tbody>
+</table>
+<h3 id="comparison-table-past-rewards-mode">Comparison Table (Past Rewards Mode)<a class="headerlink" href="#comparison-table-past-rewards-mode" title="Permanent link">&para;</a></h3>
+<p>When using <code>past-rewards</code> mode, an additional comparison table is displayed:</p>
+<table>
+<thead>
+<tr>
+<th>Column</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Provider</strong></td>
+<td>Provider ID prefix</td>
+</tr>
+<tr>
+<td><strong>NRC</strong></td>
+<td>Total rewards from Node Rewards Canister (XDRPermyriad)</td>
+</tr>
+<tr>
+<td><strong>Governance</strong></td>
+<td>Total rewards from NNS governance (XDRPermyriad)</td>
+</tr>
+<tr>
+<td><strong>Difference</strong></td>
+<td>NRC - Governance (XDRPermyriad)</td>
+</tr>
+<tr>
+<td><strong>% Diff</strong></td>
+<td>(Difference / NRC) × 100%</td>
+</tr>
+<tr>
+<td><strong>Underperforming Nodes</strong></td>
+<td>List of node prefixes with performance issues</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition tip">
+<p class="admonition-title">Understanding Rewards Units</p>
+<p>All rewards are displayed in <strong>XDRPermyriad</strong> (XDR per ten-thousand). This is a standardized unit used for reward calculations on the IC.</p>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Performance Multiplier</p>
+<p>Nodes with a performance multiplier &lt; 1.0 are considered underperforming. This multiplier affects the adjusted rewards based on the node's actual performance metrics.</p>
+</div>
+<h2 id="csv-export-files">CSV Export Files<a class="headerlink" href="#csv-export-files" title="Permanent link">&para;</a></h2>
+<p>When using <code>--csv-detailed-output-path</code>, the following CSV files are generated:</p>
+<h3 id="per-provider-files">Per-Provider Files<a class="headerlink" href="#per-provider-files" title="Permanent link">&para;</a></h3>
+<p>Each provider gets a directory with these files:</p>
+<h4 id="base_rewardscsv"><code>base_rewards.csv</code><a class="headerlink" href="#base_rewardscsv" title="Permanent link">&para;</a></h4>
+<p>Contains base reward calculations by reward type and region:
+- <code>day_utc</code>: Date in UTC
+- <code>monthly_xdr_permyriad</code>: Monthly base reward
+- <code>daily_xdr_permyriad</code>: Daily base reward
+- <code>node_reward_type</code>: Type of reward (e.g., Type1, Type2, Type3)
+- <code>region</code>: Geographic region</p>
+<h4 id="base_rewards_type3csv"><code>base_rewards_type3.csv</code><a class="headerlink" href="#base_rewards_type3csv" title="Permanent link">&para;</a></h4>
+<p>Contains Type3 reward calculations (region-based rewards):
+- <code>day_utc</code>: Date in UTC
+- <code>value_xdr_permyriad</code>: Daily reward value
+- <code>region</code>: Geographic region
+- <code>nodes_count</code>: Number of nodes in this region
+- <code>avg_rewards_xdr_permyriad</code>: Average reward per node
+- <code>avg_coefficient</code>: Average coefficient applied</p>
+<h4 id="rewards_summarycsv"><code>rewards_summary.csv</code><a class="headerlink" href="#rewards_summarycsv" title="Permanent link">&para;</a></h4>
+<p>Daily summary of rewards per provider:
+- <code>day_utc</code>: Date in UTC
+- <code>base_rewards_total</code>: Total base rewards for the day
+- <code>adjusted_rewards_total</code>: Total adjusted rewards after performance multipliers
+- <code>adjusted_rewards_percent</code>: Percentage of base rewards received
+- <code>rewards_total_xdr_permyriad</code>: Total rewards for the day
+- <code>nodes_in_registry</code>: Total nodes in registry
+- <code>assigned_nodes</code>: Number of nodes assigned to subnets
+- <code>underperforming_nodes_count</code>: Count of underperforming nodes
+- <code>underperforming_nodes</code>: Comma-separated list of node IDs</p>
+<h4 id="node_metrics_by_daycsv"><code>node_metrics_by_day.csv</code><a class="headerlink" href="#node_metrics_by_daycsv" title="Permanent link">&para;</a></h4>
+<p>Node-level metrics organized by day:
+- <code>day_utc</code>: Date in UTC
+- <code>node_id</code>: Full node principal ID
+- <code>node_reward_type</code>: Reward type for the node
+- <code>region</code>: Geographic region
+- <code>dc_id</code>: Datacenter ID
+- <code>node_status</code>: Assigned, Unassigned, or Unknown
+- <code>performance_multiplier</code>: Performance multiplier (1.0 = full performance)
+- <code>rewards_reduction</code>: Reduction applied to rewards
+- <code>base_rewards_xdr_permyriad</code>: Base rewards for this node
+- <code>adjusted_rewards_xdr_permyriad</code>: Adjusted rewards after multiplier
+- <code>subnet_assigned</code>: Subnet ID if assigned
+- <code>subnet_assigned_failure_rate</code>: Failure rate of the subnet
+- <code>num_blocks_proposed</code>: Number of blocks proposed
+- <code>num_blocks_failed</code>: Number of blocks that failed
+- <code>original_failure_rate</code>: Original failure rate
+- <code>relative_failure_rate</code>: Relative failure rate
+- <code>extrapolated_failure_rate</code>: Extrapolated failure rate (for unassigned nodes)</p>
+<h4 id="node_metrics_by_nodecsv"><code>node_metrics_by_node.csv</code><a class="headerlink" href="#node_metrics_by_nodecsv" title="Permanent link">&para;</a></h4>
+<p>Same data as <code>node_metrics_by_day.csv</code>, but organized by node ID (all days for a node are grouped together).</p>
+<h3 id="global-files">Global Files<a class="headerlink" href="#global-files" title="Permanent link">&para;</a></h3>
+<h4 id="subnets_failure_ratescsv"><code>subnets_failure_rates.csv</code><a class="headerlink" href="#subnets_failure_ratescsv" title="Permanent link">&para;</a></h4>
+<p>Subnet-level failure rate data:
+- <code>subnet_id</code>: Subnet principal ID
+- <code>day_utc</code>: Date in UTC
+- <code>failure_rate</code>: Failure rate for the subnet on that day</p>
+<h2 id="common-use-cases">Common Use Cases<a class="headerlink" href="#common-use-cases" title="Permanent link">&para;</a></h2>
+<h3 id="1-monthly-reward-verification">1. Monthly Reward Verification<a class="headerlink" href="#1-monthly-reward-verification" title="Permanent link">&para;</a></h3>
+<p>At the end of each month, verify that your rewards match expectations:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>dre<span class="w"> </span>node-rewards<span class="w"> </span>past-rewards<span class="w"> </span><span class="m">2024</span>-10<span class="w"> </span>--provider-id<span class="w"> </span>&lt;your-provider-id&gt;
+</span></code></pre></div>
+<p>Review the comparison table to ensure NRC and Governance rewards match. If there's a significant difference, investigate the causes (e.g., underperforming nodes, timing differences).</p>
+<h3 id="2-daily-performance-monitoring">2. Daily Performance Monitoring<a class="headerlink" href="#2-daily-performance-monitoring" title="Permanent link">&para;</a></h3>
+<p>Check ongoing rewards to monitor daily performance:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a>dre<span class="w"> </span>node-rewards<span class="w"> </span>ongoing<span class="w"> </span>--provider-id<span class="w"> </span>&lt;your-provider-id&gt;
+</span></code></pre></div>
+<p>Look for:
+- Sudden drops in adjusted rewards percentage
+- New underperforming nodes
+- Changes in assigned node count</p>
+<h3 id="3-export-for-analysis">3. Export for Analysis<a class="headerlink" href="#3-export-for-analysis" title="Permanent link">&para;</a></h3>
+<p>Generate CSV files for detailed analysis in spreadsheet tools:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a>dre<span class="w"> </span>node-rewards<span class="w"> </span>past-rewards<span class="w"> </span><span class="m">2024</span>-10<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-10-2"><a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a><span class="w">    </span>--provider-id<span class="w"> </span>&lt;your-provider-id&gt;<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-10-3"><a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a><span class="w">    </span>--csv-detailed-output-path<span class="w"> </span>./reports
+</span></code></pre></div>
+<p>Then analyze:
+- Trends in <code>node_metrics_by_node.csv</code> to identify problematic nodes
+- Performance patterns in <code>rewards_summary.csv</code>
+- Subnet failure rates in <code>subnets_failure_rates.csv</code></p>
+<h3 id="4-identifying-underperforming-nodes">4. Identifying Underperforming Nodes<a class="headerlink" href="#4-identifying-underperforming-nodes" title="Permanent link">&para;</a></h3>
+<p>The command automatically identifies nodes with performance multiplier &lt; 1.0. Review the "Underperf Nodes" column to see which nodes need attention:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a>dre<span class="w"> </span>node-rewards<span class="w"> </span>ongoing<span class="w"> </span>--provider-id<span class="w"> </span>&lt;your-provider-id&gt;
+</span></code></pre></div>
+<p>Common causes for underperformance:
+- High failure rates
+- Network issues
+- Subnet-specific problems</p>
+
+
+
+
+
+
+
+  
+    
+  
+  
+    
+  
+
+
+  <aside class="md-source-file">
+    
+      
+  <span class="md-source-file__fact">
+    <span class="md-icon" title="Last update">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
+    </span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-datetime">February 13, 2026 10:50:02</span>
+  </span>
+
+    
+    
+      
+  <span class="md-source-file__fact">
+    <span class="md-icon" title="Created">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M14.47 15.08 11 13V7h1.5v5.25l3.08 1.83c-.41.28-.79.62-1.11 1m-1.39 4.84c-.36.05-.71.08-1.08.08-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8c0 .37-.03.72-.08 1.08.69.1 1.33.32 1.92.64.1-.56.16-1.13.16-1.72 0-5.5-4.5-10-10-10S2 6.5 2 12s4.47 10 10 10c.59 0 1.16-.06 1.72-.16-.32-.59-.54-1.23-.64-1.92M18 15v3h-3v2h3v3h2v-3h3v-2h-3v-3z"/></svg>
+    </span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-datetime">February 13, 2026 10:50:02</span>
+  </span>
+
+    
+    
+    
+      
+  <span class="md-source-file__fact">
+    
+      
+  <span class="md-icon" title="Contributors">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 2A10 10 0 0 0 2 12c0 4.42 2.87 8.17 6.84 9.5.5.08.66-.23.66-.5v-1.69c-2.77.6-3.36-1.34-3.36-1.34-.46-1.16-1.11-1.47-1.11-1.47-.91-.62.07-.6.07-.6 1 .07 1.53 1.03 1.53 1.03.87 1.52 2.34 1.07 2.91.83.09-.65.35-1.09.63-1.34-2.22-.25-4.55-1.11-4.55-4.92 0-1.11.38-2 1.03-2.71-.1-.25-.45-1.29.1-2.64 0 0 .84-.27 2.75 1.02.79-.22 1.65-.33 2.5-.33s1.71.11 2.5.33c1.91-1.29 2.75-1.02 2.75-1.02.55 1.35.2 2.39.1 2.64.65.71 1.03 1.6 1.03 2.71 0 3.82-2.34 4.66-4.57 4.91.36.31.69.92.69 1.85V21c0 .27.16.59.67.5C19.14 20.16 22 16.42 22 12A10 10 0 0 0 12 2"/></svg>
+  </span>
+  <span>GitHub</span>
+
+    
+    <nav>
+      
+        <a href="https://github.com/pietrodimarco-dfinity" class="md-author" title="@pietrodimarco-dfinity">
+          
+          <img src="https://avatars.githubusercontent.com/u/124565147?v=4&size=72" alt="pietrodimarco-dfinity">
+        </a>
+      
+        <a href="https://github.com/web-flow" class="md-author" title="@web-flow">
+          
+          <img src="https://avatars.githubusercontent.com/u/19864447?v=4&size=72" alt="web-flow">
+        </a>
+      
+      
+      
+    </nav>
+  </span>
+
+    
+  </aside>
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+        <div class="md-social">
+  
+    
+    
+    
+    
+      
+      
+    
+    <a href="https://github.com/dfinity/dre" target="_blank" rel="noopener" title="github.com" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.7.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2024 Fonticons, Inc.--><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8M97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+      <div class="md-progress" data-md-component="progress" role="progressbar"></div>
+    
+    
+    <script id="__config" type="application/json">{"base": ".", "features": ["navigation.instant", "navigation.instant.prefetch", "navigation.instant.progress", "navigation.tracking", "navigation.tabs", "navigation.sections", "navigation.expand", "navigation.indexes", "navigation.top", "search.suggest", "search.highlight", "search.share", "content.action.edit", "content.action.view", "content.tooltips", "content.code.copy", "content.code.annotate"], "search": "assets/javascripts/workers/search.6ce7567c.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
+    
+    
+      <script src="assets/javascripts/bundle.88dd0f4e.min.js"></script>
+      
+        <script src="javascript/katex.js"></script>
+      
+        <script src="https://unpkg.com/katex@0.16/dist/katex.min.js"></script>
+      
+        <script src="https://unpkg.com/katex@0.16/dist/contrib/auto-render.min.js"></script>
+      
+    
+  </body>
+</html>

@@ -1,0 +1,2243 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Documentation for DFINITY's Decentralized Reliability Engineering (DRE) tools and processes">
+      
+      
+        <meta name="author" content="DFINITY Foundation">
+      
+      
+      
+        <link rel="prev" href="../trusted-neurons-alerts/index.html">
+      
+      
+        <link rel="next" href="../k8s/tips-and-tricks.html">
+      
+      
+      <link rel="icon" href="../assets/favicon.ico">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.5.49">
+    
+    
+      
+        <title>Release controller - DRE Documentation</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.6f8fc17f.min.css">
+      
+        
+        <link rel="stylesheet" href="../assets/stylesheets/palette.06af60db.min.css">
+      
+      
+
+
+    
+    
+      
+        <script src="https://unpkg.com/iframe-worker/shim"></script>
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="https://unpkg.com/katex@0.16/dist/katex.min.css">
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#release-controller" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+<header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../index.html" title="DRE Documentation" class="md-header__button md-logo" aria-label="DRE Documentation" data-md-component="logo">
+      
+  <img src="../assets/favicon.ico" alt="logo">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            DRE Documentation
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Release controller
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme)" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3.9 12c0-1.71 1.39-3.1 3.1-3.1h4V7H7a5 5 0 0 0-5 5 5 5 0 0 0 5 5h4v-1.9H7c-1.71 0-3.1-1.39-3.1-3.1M8 13h8v-2H8zm9-6h-4v1.9h4c1.71 0 3.1 1.39 3.1 3.1s-1.39 3.1-3.1 3.1h-4V17h4a5 5 0 0 0 5-5 5 5 0 0 0-5-5"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_2" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M17 7H7a5 5 0 0 0-5 5 5 5 0 0 0 5 5h10a5 5 0 0 0 5-5 5 5 0 0 0-5-5m0 8a3 3 0 0 1-3-3 3 3 0 0 1 3-3 3 3 0 0 1 3 3 3 3 0 0 1-3 3"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="black" data-md-color-accent="indigo"  aria-label="Switch to system preference"  type="radio" name="__palette" id="__palette_2">
+    
+      <label class="md-header__button md-icon" title="Switch to system preference" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M17 7H7a5 5 0 0 0-5 5 5 5 0 0 0 5 5h10a5 5 0 0 0 5-5 5 5 0 0 0-5-5M7 15a3 3 0 0 1-3-3 3 3 0 0 1 3-3 3 3 0 0 1 3 3 3 3 0 0 1-3 3"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      <label class="md-header__button md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+      </label>
+      <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+          <a href="javascript:void(0)" class="md-search__icon md-icon" title="Share" aria-label="Share" data-clipboard data-clipboard-text="" data-md-component="search-share" tabindex="-1">
+            
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9a3 3 0 0 0-3 3 3 3 0 0 0 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.15c-.05.21-.08.43-.08.66 0 1.61 1.31 2.91 2.92 2.91s2.92-1.3 2.92-2.91A2.92 2.92 0 0 0 18 16.08"/></svg>
+          </a>
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/dfinity/dre/" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.7.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2024 Fonticons, Inc.--><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8M97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+  </div>
+  <div class="md-source__repository">
+    dfinity/dre
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+            
+<nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../index.html" class="md-tabs__link">
+        
+  
+    
+  
+  Home
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../getting-started.html" class="md-tabs__link">
+          
+  
+    
+  
+  Getting Started
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../decentralization.html" class="md-tabs__link">
+          
+  
+    
+  
+  Core Concepts
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+    
+  
+  
+    
+    
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="../create-a-neuron.html" class="md-tabs__link">
+          
+  
+    
+  
+  Guides
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+    
+    
+      
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../k8s/tips-and-tricks.html" class="md-tabs__link">
+          
+  
+    
+  
+  Development
+
+        </a>
+      </li>
+    
+  
+
+    
+  
+
+      
+    </ul>
+  </div>
+</nav>
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../index.html" title="DRE Documentation" class="md-nav__button md-logo" aria-label="DRE Documentation" data-md-component="logo">
+      
+  <img src="../assets/favicon.ico" alt="logo">
+
+    </a>
+    DRE Documentation
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/dfinity/dre/" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.7.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2024 Fonticons, Inc.--><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8M97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+  </div>
+  <div class="md-source__repository">
+    dfinity/dre
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../index.html" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Home
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Getting Started
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            Getting Started
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../getting-started.html" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Installation
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../contributing.html" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Contributing Guide
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../how-to-update-docs.html" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Documentation Guide
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Core Concepts
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            Core Concepts
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../decentralization.html" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Decentralization
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../make-release.html" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Release Management
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../subnet-decentralization-whatif.html" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Subnet Management
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_3_4" id="__nav_3_4_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Trustworthy Metrics
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_4">
+            <span class="md-nav__icon md-icon"></span>
+            Trustworthy Metrics
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../trustworthy-metrics/trustworthy-metrics.html" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Overview
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../trustworthy-metrics/architecture.html" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Architecture
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../trustworthy-metrics/untrusted-metrics.html" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Untrusted Metrics
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+      
+        
+        
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="">
+            
+  
+  <span class="md-ellipsis">
+    Guides
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            Guides
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../create-a-neuron.html" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Creating a Neuron
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../nns-proposals.html" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    NNS Proposals
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../nns-motion-proposals.html" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Submitting Motion Proposals
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../node-rewards.html" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Node Rewards
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../qualification/running-qualification.html" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Running Qualification
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../be-dr-dre.html" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Being a DRE
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+    
+    
+      
+      
+        
+          
+          
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_4_7" >
+        
+          
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../rs/cli/index.html" class="md-nav__link ">
+              
+  
+  <span class="md-ellipsis">
+    CLI Tool
+  </span>
+  
+
+            </a>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_7">
+            <span class="md-nav__icon md-icon"></span>
+            CLI Tool
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+    
+    
+      
+      
+        
+          
+          
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_4_8" >
+        
+          
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../trusted-neurons-alerts/index.html" class="md-nav__link ">
+              
+  
+  <span class="md-ellipsis">
+    Trusted Neurons Alerts
+  </span>
+  
+
+            </a>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_8_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_8">
+            <span class="md-nav__icon md-icon"></span>
+            Trusted Neurons Alerts
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+    
+    
+      
+      
+        
+          
+          
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_9" checked>
+        
+          
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="index.html" class="md-nav__link md-nav__link--active">
+              
+  
+  <span class="md-ellipsis">
+    IC Release Controller and Release Notes
+  </span>
+  
+
+            </a>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_9_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_4_9">
+            <span class="md-nav__icon md-icon"></span>
+            IC Release Controller and Release Notes
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Development
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            Development
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_5_1" >
+        
+          
+          <label class="md-nav__link" for="__nav_5_1" id="__nav_5_1_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Kubernetes
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_5_1_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5_1">
+            <span class="md-nav__icon md-icon"></span>
+            Kubernetes
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../k8s/tips-and-tricks.html" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Tips and Tricks
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../k8s/elastic-commands.html" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Elastic configuration
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_5_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_5_2" id="__nav_5_2_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Bazel
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_5_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5_2">
+            <span class="md-nav__icon md-icon"></span>
+            Bazel
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../bazel/tips-and-tricks.html" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Tips and Tricks
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+  
+
+<nav class="md-nav md-nav--secondary" aria-label="On this page">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      On this page
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#usage" class="md-nav__link">
+    <span class="md-ellipsis">
+      Usage
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Usage">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#release-index-reference" class="md-nav__link">
+    <span class="md-ellipsis">
+      Release index reference
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#recreating-notes" class="md-nav__link">
+    <span class="md-ellipsis">
+      Recreating notes
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Recreating notes">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#recreate-google-doc" class="md-nav__link">
+    <span class="md-ellipsis">
+      Recreate Google Doc
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#recreate-github-pr-with-release-notes" class="md-nav__link">
+    <span class="md-ellipsis">
+      Recreate GitHub PR with release notes
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#in-production" class="md-nav__link">
+    <span class="md-ellipsis">
+      In production
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#contributing" class="md-nav__link">
+    <span class="md-ellipsis">
+      Contributing
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Contributing">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#commit-annotator" class="md-nav__link">
+    <span class="md-ellipsis">
+      commit annotator
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#reconciler" class="md-nav__link">
+    <span class="md-ellipsis">
+      reconciler
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#resolving-issues" class="md-nav__link">
+    <span class="md-ellipsis">
+      Resolving issues
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Resolving issues">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#diagnostics" class="md-nav__link">
+    <span class="md-ellipsis">
+      Diagnostics
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#google-docs-generation-was-wrong-for-particular-commit" class="md-nav__link">
+    <span class="md-ellipsis">
+      Google Docs generation was wrong for particular commit
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Google Docs generation was wrong for particular commit">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#resolution" class="md-nav__link">
+    <span class="md-ellipsis">
+      Resolution
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#release-notes-are-not-yet-ready-for-a-long-time" class="md-nav__link">
+    <span class="md-ellipsis">
+      Release notes are not yet ready for a long time
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Release notes are not yet ready for a long time">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#diagnostics_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      Diagnostics
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#resolution_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      Resolution
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#missing-proposal" class="md-nav__link">
+    <span class="md-ellipsis">
+      Missing proposal
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Missing proposal">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#evaluation" class="md-nav__link">
+    <span class="md-ellipsis">
+      Evaluation
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#resolution_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      Resolution
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#development" class="md-nav__link">
+    <span class="md-ellipsis">
+      Development
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Development">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#running-the-reconciler-in-dry-run-mode" class="md-nav__link">
+    <span class="md-ellipsis">
+      Running the reconciler in dry-run mode
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#running-the-reconciler-in-the-container-it-ships" class="md-nav__link">
+    <span class="md-ellipsis">
+      Running the reconciler in the container it ships
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#running-the-annotator-locally-in-dry-run-mode" class="md-nav__link">
+    <span class="md-ellipsis">
+      Running the annotator locally in "dry-run mode"
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#manually-annotate-a-troublesome-commit" class="md-nav__link">
+    <span class="md-ellipsis">
+      Manually annotate a troublesome commit
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#generate-release-notes-locally" class="md-nav__link">
+    <span class="md-ellipsis">
+      Generate release notes locally
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Generate release notes locally">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#method-1-using-bazel-with-specific-rc-names" class="md-nav__link">
+    <span class="md-ellipsis">
+      Method 1: Using Bazel with specific RC names
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#method-2-using-bazel-with-generic-names-and-local-commit-annotator" class="md-nav__link">
+    <span class="md-ellipsis">
+      Method 2: Using Bazel with generic names and local commit annotator
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#method-3-using-rye-python-environment" class="md-nav__link">
+    <span class="md-ellipsis">
+      Method 3: Using Rye (Python environment)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#commit-annotator-options" class="md-nav__link">
+    <span class="md-ellipsis">
+      Commit Annotator Options
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#tests" class="md-nav__link">
+    <span class="md-ellipsis">
+      Tests
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Tests">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#unit-tests" class="md-nav__link">
+    <span class="md-ellipsis">
+      Unit tests
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#typing-correctness" class="md-nav__link">
+    <span class="md-ellipsis">
+      Typing correctness
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#maintenance" class="md-nav__link">
+    <span class="md-ellipsis">
+      Maintenance
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+  
+    <a href="https://github.com/dfinity/dre/edit/main/docs/release-controller/README.md" title="Edit this page" class="md-content__button md-icon">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M10 20H6V4h7v5h5v3.1l2-2V8l-6-6H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h4zm10.2-7c.1 0 .3.1.4.2l1.3 1.3c.2.2.2.6 0 .8l-1 1-2.1-2.1 1-1c.1-.1.2-.2.4-.2m0 3.9L14.1 23H12v-2.1l6.1-6.1z"/></svg>
+    </a>
+  
+  
+    
+      
+    
+    <a href="https://github.com/dfinity/dre/raw/main/docs/release-controller/README.md" title="View source of this page" class="md-content__button md-icon">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M17 18c.56 0 1 .44 1 1s-.44 1-1 1-1-.44-1-1 .44-1 1-1m0-3c-2.73 0-5.06 1.66-6 4 .94 2.34 3.27 4 6 4s5.06-1.66 6-4c-.94-2.34-3.27-4-6-4m0 6.5a2.5 2.5 0 0 1-2.5-2.5 2.5 2.5 0 0 1 2.5-2.5 2.5 2.5 0 0 1 2.5 2.5 2.5 2.5 0 0 1-2.5 2.5M9.27 20H6V4h7v5h5v4.07c.7.08 1.36.25 2 .49V8l-6-6H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h4.5a8.2 8.2 0 0 1-1.23-2"/></svg>
+    </a>
+  
+
+
+<h1 id="release-controller">Release controller<a class="headerlink" href="#release-controller" title="Permanent link">&para;</a></h1>
+<p>Automates the process of proposing new releases for IC HostOS and GuestOS.</p>
+<h2 id="usage">Usage<a class="headerlink" href="#usage" title="Permanent link">&para;</a></h2>
+<ol>
+<li>Register new release / version in <a href="https://github.com/dfinity/dre/blob/main/release-index.yaml">release-index.yaml</a>
+  <div class="language-yaml highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nt">releases</span><span class="p">:</span>
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">rc_name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">rc--2024-02-21_23-01</span>
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="w">    </span><span class="nt">versions</span><span class="p">:</span>
+</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="w">      </span><span class="c1"># It is customary but not mandatory to add a link to the</span>
+</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="w">      </span><span class="c1"># Qualification pipeline:</span>
+</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="w">      </span><span class="c1"># https://github.com/dfinity/ic/actions/runs/14491317106</span>
+</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">base</span>
+</span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a><span class="w">        </span><span class="nt">version</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">2e921c9adfc71f3edc96a9eb5d85fc742e7d8a9f</span>
+</span></code></pre></div></li>
+<li>Relevant teams are notified with a link to a Google document for them to review the release notes.  In parallel, placeholder post is created in the forum to prepare for publication of the release notes.</li>
+<li>Once the Google document is reviewed (all teams crossed out), PR will be created with release notes.</li>
+<li>Once that PR is merged, the proposal will be placed and the placeholder forum post is updated with the final release notes.</li>
+<li>Once trusted neurons have voted to adopt the proposal, the adopted release can be rolled out (beyond the scope of release controller).</li>
+</ol>
+<h3 id="release-index-reference">Release index reference<a class="headerlink" href="#release-index-reference" title="Permanent link">&para;</a></h3>
+<p>Releases are composed of a list of dictionaries, each having (1) an <code>rc_name</code> corresponding to the RC branch to be released, and (2) a list of versions each containing a <code>name</code> (at least one of which is typically named <code>base</code> and corresponds to the first listed version) and a <code>version</code> containing the commit ID desired to be tagged and released; two additional version fields <code>changelog_base</code> and <code>security_fix</code> are documented below.</p>
+<p>Out of each version within a release, a release branch named <code>{rc_name}-{version.name}</code> will be constructed to create a specific release for GuestOS and (in the case of the <code>base</code> or first version of all releases) HostOS.  There is currently no way to force a feature / non-base version of a release to turn into a proposed HostOS release.</p>
+<p>Only the two most recent releases will be paid attention to by the release controller.</p>
+<p>The release notes (changelog) for each release version is generated automatically, starting from a prior version which is typically determined automatically.  In the case of any base version of a release, the prior base release is considered the baseline for the release notes; in the case of a non-base / feature version, the base version the same release is considered the baseline.</p>
+<p>You can override this behavior; a version can have an additional <code>changelog_base</code> dictionary with (optional) keys <code>GuestOS</code> and/or <code>HostOS</code>, whose values must be the name of another release (<code>rc_name</code>) listed in the index, as well as the name of one of its versions (typically <code>base</code>).  This dictionary allows you to override which release/version combo is used as the baseline for (the start of) the release notes that will be generated for this OS and version combination.  Here is an example:</p>
+<div class="language-yaml highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="nt">releases</span><span class="p">:</span>
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">rc_name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">rc--2025-05-23_03-21</span>
+</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="w">    </span><span class="nt">versions</span><span class="p">:</span>
+</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">base</span>
+</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="w">        </span><span class="nt">version</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">16825c5cbff83a51983d849b60c9d26b3268bbb6</span>
+</span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a><span class="w">        </span><span class="nt">changelog_base</span><span class="p">:</span>
+</span><span id="__span-1-7"><a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a><span class="w">          </span><span class="c1"># Base the changelog for GuestOS at this version onto the May 1st base release.</span>
+</span><span id="__span-1-8"><a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a><span class="w">          </span><span class="c1"># Due to absence of HostOS key, use the normal HostOS baseline detection mechanism</span>
+</span><span id="__span-1-9"><a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a><span class="w">          </span><span class="c1"># for its changelog.</span>
+</span><span id="__span-1-10"><a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a><span class="w">          </span><span class="nt">GuestOS</span><span class="p">:</span>
+</span><span id="__span-1-11"><a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a><span class="w">            </span><span class="nt">rc_name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">rc--2025-05-01_03-23</span>
+</span><span id="__span-1-12"><a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a><span class="w">            </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">base</span>
+</span><span id="__span-1-13"><a id="__codelineno-1-13" name="__codelineno-1-13" href="#__codelineno-1-13"></a><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">rc_name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">rc--2025-05-15_03-20</span>
+</span><span id="__span-1-14"><a id="__codelineno-1-14" name="__codelineno-1-14" href="#__codelineno-1-14"></a><span class="w">    </span><span class="nt">versions</span><span class="p">:</span>
+</span><span id="__span-1-15"><a id="__codelineno-1-15" name="__codelineno-1-15" href="#__codelineno-1-15"></a><span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">base</span>
+</span><span id="__span-1-16"><a id="__codelineno-1-16" name="__codelineno-1-16" href="#__codelineno-1-16"></a><span class="w">        </span><span class="nt">version</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">59ad18a77fbeaf3ebbba863972ff20f7ab588d7a</span>
+</span><span id="__span-1-17"><a id="__codelineno-1-17" name="__codelineno-1-17" href="#__codelineno-1-17"></a><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">rc_name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">rc--2025-05-01_03-23</span>
+</span><span id="__span-1-18"><a id="__codelineno-1-18" name="__codelineno-1-18" href="#__codelineno-1-18"></a><span class="w">    </span><span class="nt">versions</span><span class="p">:</span>
+</span><span id="__span-1-19"><a id="__codelineno-1-19" name="__codelineno-1-19" href="#__codelineno-1-19"></a><span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">base</span>
+</span><span id="__span-1-20"><a id="__codelineno-1-20" name="__codelineno-1-20" href="#__codelineno-1-20"></a><span class="w">        </span><span class="nt">version</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">f195ba756bc3bf170a2888699e5e74101fdac6ba</span>
+</span></code></pre></div>
+<p>Finally, changelog generation can be suppressed entirely by adding <code>security_fix: true</code> to a version.  This creates an abridged release notes containing no changes at all, and indicating to the users that the code plus the changes will be available at a later date.  Use this flag when a release must be performed from the private security-fixes-only repository, as otherwise the changelog code will not work.</p>
+<div class="language-yaml highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="nt">releases</span><span class="p">:</span>
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">rc_name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">rc--2025-05-23_03-21</span>
+</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="w">    </span><span class="nt">versions</span><span class="p">:</span>
+</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">base</span>
+</span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="w">        </span><span class="nt">version</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">16825c5cbff83a51983d849b60c9d26b3268bbb6</span>
+</span><span id="__span-2-6"><a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a><span class="w">        </span><span class="nt">security_fix</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+</span></code></pre></div>
+<p>You are allowed to periodically clean up old releases from the release index, so long as the commit IDs they list are not in the blessed versions for HostOS or GuestOS, and none of the remaining releases refer to them via the <code>changelog_base</code> field.  As a rule of thumb, it will not cause problems to delete releases six months or older.</p>
+<h2 id="recreating-notes">Recreating notes<a class="headerlink" href="#recreating-notes" title="Permanent link">&para;</a></h2>
+<p>Sometimes you'd want to recreate notes, either because a bug occured on the first generation, or you just want to have updated version of the notes submitted.</p>
+<h3 id="recreate-google-doc">Recreate Google Doc<a class="headerlink" href="#recreate-google-doc" title="Permanent link">&para;</a></h3>
+<p>To recreate Google Doc, remove the document from <a href="https://drive.google.com/drive/folders/1y-nuH29Gd5Err3pazYH6-LzcDShcOIFf">Google Drive directory</a> or rename it such that it doesn't include any release details.</p>
+<h3 id="recreate-github-pr-with-release-notes">Recreate GitHub PR with release notes<a class="headerlink" href="#recreate-github-pr-with-release-notes" title="Permanent link">&para;</a></h3>
+<p>To recreate GitHub PR, close the outstanding PR and make sure to <strong>delete the branch of the PR</strong>.</p>
+<h2 id="in-production">In production<a class="headerlink" href="#in-production" title="Permanent link">&para;</a></h2>
+<p>Several credentials are necessary.  For the reconciler:</p>
+<ol>
+<li>The Google Drive credentials.  These are stored in the DRE Team vault and named <em>FIT on-call schedule sync and release controller Google Drive credential</em>.  Saved to a file, the path to this file must be set in environment variable <code>GDOCS_CREDENTIALS_PATH</code>.</li>
+<li><code>PROPOSER_NEURON_ID</code> should be set to the neuron ID of the proposer, and the proposer key material should be saved to a file (asn the DRE team for information), whose path should be added to environment variable <code>PROPOSER_KEY_FILE</code>.</li>
+<li>The <code>GITHUB_TOKEN</code> environment variable must be set to the token that has access to the IC and DRE repositories.  This secret resides in the DRE Team vault under the name <em>Release Controller GitHub API Key</em>.  In the reconciler, this token is used to push tags.</li>
+</ol>
+<p>The commit annotator only needs the <code>GITHUB_TOKEN</code> credentials.  This token is used to push notes.</p>
+<h2 id="contributing">Contributing<a class="headerlink" href="#contributing" title="Permanent link">&para;</a></h2>
+<p>The project is split into two parts - commit annotator and reconciler.</p>
+<p>If you want fix a bug, or add a feature, please consider writing a test.</p>
+<h3 id="commit-annotator">commit annotator<a class="headerlink" href="#commit-annotator" title="Permanent link">&para;</a></h3>
+<p>This simple service checks out each commit on <code>master</code> and <code>rc-*</code> branches of IC repo and runs <a href="https://github.com/bazel-contrib/target-determinator">target-determinator</a> to identify whether GuestOS build changed as a result of changes in that commit. This information is then pushed to git notes and later used by reconciler.</p>
+<p>The annotator has a bonus mode to manually annotate failing commits.  See below for more info.</p>
+<h3 id="reconciler">reconciler<a class="headerlink" href="#reconciler" title="Permanent link">&para;</a></h3>
+<p>Reconciler is responsible for:</p>
+<ol>
+<li>
+<p>generating a draft of the release notes
+  Done by release_notes.py. See <em>Generate release notes locally</em> in this document for manual release notes generation.</p>
+</li>
+<li>
+<p>making a forum post with the release notes draft
+  The draft release notes generated in step (1) are published as a post to a Discourse thread (which will be created if necessary).</p>
+</li>
+<li>
+<p>Google Docs publish
+  Done by google_docs.py. The draft of the release notes is published to Google Docs for internal engineering review.</p>
+</li>
+<li>
+<p>creating a GitHub PR to publish notes
+  Done by publish_notes.py once the notes are ready for review according to the content of the respective Google Doc. It's not recommended to run this manually. Instead, if you have an issue, try to create a unit test to resolve the issue. You can download the Google Doc you're having problems with to use it in your test. See tests that use <code>release-controller/test_data/b0ade55f7e8999e2842fe3f49df163ba224b71a2.docx</code>.</p>
+</li>
+<li>
+<p>placing the proposal for electing a version
+  Done by dre_cli.py / reconciler.py. There should be a logs for the command that was run if you want to debug any issues with it.</p>
+</li>
+<li>
+<p>forum post update
+  Done by forum.py. You can run the program manually to debug issues. Change the <code>main()</code> function to your needs.</p>
+</li>
+</ol>
+<p>It's important to note that forum logic depends on finding alredy created blog posts by querying posts from authenticated user (@DRETeam). For those reasons, it won't be able to find manually created posts by other users.</p>
+<h2 id="resolving-issues">Resolving issues<a class="headerlink" href="#resolving-issues" title="Permanent link">&para;</a></h2>
+<h3 id="diagnostics">Diagnostics<a class="headerlink" href="#diagnostics" title="Permanent link">&para;</a></h3>
+<p>The release controller <a href="https://grafana.ch1-rel1.dfinity.network/d/release-controller/release-controller">has its own dashboard</a>.
+Use the dashboard to supervise the progress of the components that comprise the release controller.</p>
+<h3 id="google-docs-generation-was-wrong-for-particular-commit">Google Docs generation was wrong for particular commit<a class="headerlink" href="#google-docs-generation-was-wrong-for-particular-commit" title="Permanent link">&para;</a></h3>
+<p>This could happen if release-index.yaml was wrongly configured or if there's a major bug that needs to be adressed before regenerating the notes again.</p>
+<h4 id="resolution">Resolution<a class="headerlink" href="#resolution" title="Permanent link">&para;</a></h4>
+<ol>
+<li>To cause the reconciler to regenerate release notes: move the document outside of the Google Drive folder. Renaming it to something meaningless (e.g. to-delete-12-09-24) should also do the trick.</li>
+<li>To fix the code in the commit annotator: manually generate the release notes (see below) on your computer and make changes to the queries or the code until the notes look as expected.</li>
+</ol>
+<h3 id="release-notes-are-not-yet-ready-for-a-long-time">Release notes are not yet ready for a long time<a class="headerlink" href="#release-notes-are-not-yet-ready-for-a-long-time" title="Permanent link">&para;</a></h3>
+<p>This is caused by one or more missing GuestOS / HostOS annotations.  Release controller is stuck generating release notes because it's missing a note for some commit.</p>
+<h4 id="diagnostics_1">Diagnostics<a class="headerlink" href="#diagnostics_1" title="Permanent link">&para;</a></h4>
+<p>Verify that the annotator has completed and is not stuck on any branch (use the dashboard listed above).</p>
+<p>If <code>target-determinator</code> is crashing as the annotator executes it, here is how you find the failing commit causing the crash:</p>
+<ol>
+<li>Click on the Custom query square on the title of the <em>Combined annotater and reconciler logs</em> pane on the dashboard.</li>
+<li>Search for <code>annotate_object</code> -- the most recent occurrence will have the failing commit ID.</li>
+</ol>
+<h4 id="resolution_1">Resolution<a class="headerlink" href="#resolution_1" title="Permanent link">&para;</a></h4>
+<p>If the problem is that the annotator keeps crashing because a commit is not buildable, you can manually annotate that commit and that will cause the annotator to skip it.  There is an example below on how to manually annotate a failing commit.</p>
+<p>You may have to annotate all commits not annotated prior to the failing commit as well (although that should not be necessary because the annotator generally annotates from oldest to newest commit, so all older commits should already be annotated).</p>
+<blockquote>
+<p>[!TIP]
+If someone messed up and labeled commits in between, commit annotator might report that it labeled everything when it did not, and reconciler may never be ready with the release notes.
+Run the below commands on IC repo to find gaps where there are commits without labels.</p>
+</blockquote>
+<div class="language-shell highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>git<span class="w"> </span>fetch<span class="w"> </span>origin<span class="w"> </span><span class="s1">&#39;refs/notes/*:refs/notes/*&#39;</span><span class="w"> </span>-f<span class="w"> </span>--prune
+</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>git<span class="w"> </span>log<span class="w"> </span>--format<span class="o">=</span><span class="s1">&#39;%H&#39;</span><span class="w"> </span>--no-merges<span class="w"> </span><span class="nv">$BASE_COMMIT</span>..<span class="nv">$RELEASE_COMMIT</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>xargs<span class="w"> </span>-L1<span class="w"> </span>-I_commit<span class="w"> </span>bash<span class="w"> </span>-c<span class="w"> </span><span class="s2">&quot;echo -n &#39;_commit &#39;; git notes --ref guestos-changed show _commit | cat&quot;</span>
+</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="c1"># substitute guestos-changed with hostos-changed to detect gaps in HostOS annotations.</span>
+</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="c1"># substitute guestos-changed with guestos-targets to see targets and target-determinator output for that commit&#39;s annotation work..</span>
+</span></code></pre></div>
+<h3 id="missing-proposal">Missing proposal<a class="headerlink" href="#missing-proposal" title="Permanent link">&para;</a></h3>
+<p>Proposal placement most likely failed.</p>
+<h4 id="evaluation">Evaluation<a class="headerlink" href="#evaluation" title="Permanent link">&para;</a></h4>
+<p>release-controller should have a warning message something like this:</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>&quot;version 99ab7f03700ba6cf832eb18ffd55228f56ae927a: earlier proposal submission attempted but most likely failed&quot;
+</span></code></pre></div>
+<p>Make sure also that few minutes have passed and that public dashboard still doesn't list the proposal.  Sometimes it takes a minute or two.</p>
+<p>If the proposal was indeed submitted, you don't have to do anything -- the reconciler will notice and continue normally.</p>
+<h4 id="resolution_2">Resolution<a class="headerlink" href="#resolution_2" title="Permanent link">&para;</a></h4>
+<blockquote>
+<p>[!WARNING]
+Should resolve by itself in newer versions</p>
+</blockquote>
+<ol>
+<li>Top up the release-controller neuron if needed</li>
+<li>Execute into the pod
+  <div class="language-text highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>kubectl -n release-controller exec -it deployment/release-controller -- bash
+</span></code></pre></div></li>
+<li>Delete the state
+  <div class="language-text highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>rm /state/&lt;full_commit_hash&gt;
+</span></code></pre></div></li>
+</ol>
+<h2 id="development">Development<a class="headerlink" href="#development" title="Permanent link">&para;</a></h2>
+<p>Please see the parent folder's <code>README.md</code> for virtual environment setup.
+Follow the whole <em>Contributing</em> section to the letter.</p>
+<h3 id="running-the-reconciler-in-dry-run-mode">Running the reconciler in dry-run mode<a class="headerlink" href="#running-the-reconciler-in-dry-run-mode" title="Permanent link">&para;</a></h3>
+<div class="language-sh highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>bazel<span class="w"> </span>run<span class="w"> </span>//release-controller:release-controller<span class="w"> </span>--<span class="w"> </span>--dry-run<span class="w"> </span>--verbose
+</span></code></pre></div>
+<p>No credentials of any kind are required by this mode.  By default everything the
+reconciler does in this mode has no outward effect.</p>
+<p>All the operations it executes are volatile as well.</p>
+<p>If you want the release notes this mock mode stores to be persisted in a folder
+so they are not regenerated on every run:</p>
+<div class="language-sh highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="nb">export</span><span class="w"> </span><span class="nv">RECONCILER_DRY_RUN_RELEASE_NOTES_STORAGE</span><span class="o">=</span>/tmp/dryrun/relnotes
+</span><span id="__span-8-2"><a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a>bazel<span class="w"> </span>run<span class="w"> </span>//release-controller:release-controller<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-8-3"><a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a><span class="w">  </span>--action_env<span class="o">=</span>RECONCILER_DRY_RUN_RELEASE_NOTES_STORAGE<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-8-4"><a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a><span class="w">  </span>--<span class="w"> </span>--dry-run<span class="w"> </span>--verbose
+</span></code></pre></div>
+<p>If you want the mock forum interactions to be remembered between runs:</p>
+<div class="language-sh highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="nb">export</span><span class="w"> </span><span class="nv">RECONCILER_DRY_RUN_FORUM_STORAGE</span><span class="o">=</span>/tmp/dryrun/forum
+</span><span id="__span-9-2"><a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a>bazel<span class="w"> </span>run<span class="w"> </span>//release-controller:release-controller<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-9-3"><a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a><span class="w">  </span>--action_env<span class="o">=</span>RECONCILER_DRY_RUN_FORUM_STORAGE<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-9-4"><a id="__codelineno-9-4" name="__codelineno-9-4" href="#__codelineno-9-4"></a><span class="w">  </span>--<span class="w"> </span>--dry-run<span class="w"> </span>--verbose
+</span></code></pre></div>
+<p>Typing errors preventing you from running it, because you are editing code and
+testing your changes?  Add <code>--output_groups=-mypy</code> right after <code>bazel run</code>.</p>
+<p>The optional argument <code>--skip-preloading-state</code> makes it so that the reconciler
+will not preload its list of known proposals by version from the governance
+canister.  It is useful (in conjunction with an empty reconciler state folder)
+to make the reconciler do all the work of submitting proposals again.  It should
+only be used alongside <code>--dry-run</code>, to avoid submitting proposals twice.</p>
+<h3 id="running-the-reconciler-in-the-container-it-ships">Running the reconciler in the container it ships<a class="headerlink" href="#running-the-reconciler-in-the-container-it-ships" title="Permanent link">&para;</a></h3>
+<p>You can load the reconciler into your local podman or docker system:</p>
+<div class="language-sh highlight"><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a>bazel<span class="w"> </span>run<span class="w"> </span>//release-controller:oci_image_load
+</span></code></pre></div>
+<p>This will spit out a SHA256 sum, which is the name of the container image just
+built and imported into your containerization system.  Run it as follows:</p>
+<div class="language-sh highlight"><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a><span class="nv">SHASUM</span><span class="o">=</span>...
+</span><span id="__span-11-2"><a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a>podman<span class="w"> </span>run<span class="w"> </span>--rm<span class="w"> </span>-it<span class="w"> </span>--entrypoint<span class="o">=</span>/release-controller/release-controller<span class="w"> </span><span class="nv">$SHASUM</span>
+</span></code></pre></div>
+<p>Or, in short:</p>
+<div class="language-sh highlight"><pre><span></span><code><span id="__span-12-1"><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a>mkdir<span class="w"> </span>-p<span class="w"> </span>-m<span class="w"> </span><span class="m">0777</span><span class="w"> </span>/tmp/git
+</span><span id="__span-12-2"><a id="__codelineno-12-2" name="__codelineno-12-2" href="#__codelineno-12-2"></a>podman<span class="w"> </span>run<span class="w"> </span>--rm<span class="w"> </span>-it<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-12-3"><a id="__codelineno-12-3" name="__codelineno-12-3" href="#__codelineno-12-3"></a><span class="w">  </span>-v<span class="w"> </span>/tmp/git:/root/.cache<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-12-4"><a id="__codelineno-12-4" name="__codelineno-12-4" href="#__codelineno-12-4"></a><span class="w">  </span>--entrypoint<span class="w"> </span>/release-controller/release-controller<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-12-5"><a id="__codelineno-12-5" name="__codelineno-12-5" href="#__codelineno-12-5"></a><span class="w">  </span><span class="k">$(</span>bazel<span class="w"> </span>run<span class="w"> </span>--verbose_failures<span class="w"> </span>//release-controller:oci_image_load<span class="w"> </span><span class="p">|</span><span class="w"> </span>tail<span class="w"> </span>-1<span class="w"> </span><span class="p">|</span><span class="w"> </span>cut<span class="w"> </span>-d<span class="w"> </span>:<span class="w"> </span>-f<span class="w"> </span><span class="m">3</span><span class="k">)</span>
+</span></code></pre></div>
+<h3 id="running-the-annotator-locally-in-dry-run-mode">Running the annotator locally in "dry-run mode"<a class="headerlink" href="#running-the-annotator-locally-in-dry-run-mode" title="Permanent link">&para;</a></h3>
+<p>The annotator can be run in a mostly stateless mode, for one single loop,
+with the following options:</p>
+<div class="language-sh highlight"><pre><span></span><code><span id="__span-13-1"><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a>bazel<span class="w"> </span>run<span class="w"> </span>//release-controller:commit-annotator<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-13-2"><a id="__codelineno-13-2" name="__codelineno-13-2" href="#__codelineno-13-2"></a><span class="w">  </span>--<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-13-3"><a id="__codelineno-13-3" name="__codelineno-13-3" href="#__codelineno-13-3"></a><span class="w">  </span>--no-push-annotations<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-13-4"><a id="__codelineno-13-4" name="__codelineno-13-4" href="#__codelineno-13-4"></a><span class="w">  </span>--loop-every<span class="o">=</span><span class="m">0</span><span class="w"> </span><span class="se">\</span>
+</span><span id="__span-13-5"><a id="__codelineno-13-5" name="__codelineno-13-5" href="#__codelineno-13-5"></a><span class="w">  </span>--no-fetch-annotations<span class="w"> </span><span class="se">\ </span><span class="c1"># don&#39;t clobber locally created annotations </span>
+</span><span id="__span-13-6"><a id="__codelineno-13-6" name="__codelineno-13-6" href="#__codelineno-13-6"></a><span class="w">  </span>--verbose
+</span></code></pre></div>
+<p>The annotator can also be run as a podman container, with a similar
+technique as above.  However, the annotator requires <code>--user $UID</code>
+because Bazel will not run as root (UID 0).</p>
+<p>Please consult <code>--help</code> for additional options.</p>
+<h3 id="manually-annotate-a-troublesome-commit">Manually annotate a troublesome commit<a class="headerlink" href="#manually-annotate-a-troublesome-commit" title="Permanent link">&para;</a></h3>
+<div class="language-sh highlight"><pre><span></span><code><span id="__span-14-1"><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a><span class="nb">export</span><span class="w"> </span><span class="nv">GITHUB_TOKEN</span><span class="o">=</span>&lt;any<span class="w"> </span>Github<span class="w"> </span>token<span class="w"> </span>with<span class="w"> </span>push<span class="w"> </span>access<span class="w"> </span>to<span class="w"> </span>the<span class="w"> </span>IC<span class="w"> </span>repo&gt;
+</span><span id="__span-14-2"><a id="__codelineno-14-2" name="__codelineno-14-2" href="#__codelineno-14-2"></a><span class="nv">COMMIT_TO_ANNOTATE</span><span class="o">=</span>9da8cc52d3d576410174bb28d629862f05a635e0
+</span><span id="__span-14-3"><a id="__codelineno-14-3" name="__codelineno-14-3" href="#__codelineno-14-3"></a><span class="nv">AFFECTS_OS</span><span class="o">=</span>yes
+</span><span id="__span-14-4"><a id="__codelineno-14-4" name="__codelineno-14-4" href="#__codelineno-14-4"></a><span class="nv">WHICH_OS</span><span class="o">=</span>HostOS<span class="w"> </span><span class="c1"># or GuestOS, or leave out --os-kind for all OSes</span>
+</span><span id="__span-14-5"><a id="__codelineno-14-5" name="__codelineno-14-5" href="#__codelineno-14-5"></a>bazel<span class="w"> </span>run<span class="w"> </span>//release-controller:commit-annotator<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-14-6"><a id="__codelineno-14-6" name="__codelineno-14-6" href="#__codelineno-14-6"></a><span class="w">  </span>--<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-14-7"><a id="__codelineno-14-7" name="__codelineno-14-7" href="#__codelineno-14-7"></a><span class="w">  </span>manually-annotate<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-14-8"><a id="__codelineno-14-8" name="__codelineno-14-8" href="#__codelineno-14-8"></a><span class="w">  </span><span class="nv">$COMMIT_TO_ANNOTATE</span><span class="w"> </span><span class="nv">$AFFECTS_OS</span><span class="w"> </span>--os-kind<span class="w"> </span><span class="nv">$WHICH_OS</span>
+</span></code></pre></div>
+<h3 id="generate-release-notes-locally">Generate release notes locally<a class="headerlink" href="#generate-release-notes-locally" title="Permanent link">&para;</a></h3>
+<p>Release notes can be generated locally using several approaches:</p>
+<h4 id="method-1-using-bazel-with-specific-rc-names">Method 1: Using Bazel with specific RC names<a class="headerlink" href="#method-1-using-bazel-with-specific-rc-names" title="Permanent link">&para;</a></h4>
+<div class="language-sh highlight"><pre><span></span><code><span id="__span-15-1"><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a><span class="nv">PREV_RC</span><span class="o">=</span>rc--2025-03-27_03-14-base
+</span><span id="__span-15-2"><a id="__codelineno-15-2" name="__codelineno-15-2" href="#__codelineno-15-2"></a><span class="nv">PREV_COMMIT</span><span class="o">=</span>3ae3649a2366aaca83404b692fc58e4c6e604a25
+</span><span id="__span-15-3"><a id="__codelineno-15-3" name="__codelineno-15-3" href="#__codelineno-15-3"></a><span class="nv">CURR_RC</span><span class="o">=</span>rc--2025-04-03_03-15
+</span><span id="__span-15-4"><a id="__codelineno-15-4" name="__codelineno-15-4" href="#__codelineno-15-4"></a><span class="nv">CURR_COMMIT</span><span class="o">=</span>68fc31a141b25f842f078c600168d8211339f422
+</span><span id="__span-15-5"><a id="__codelineno-15-5" name="__codelineno-15-5" href="#__codelineno-15-5"></a>bazel<span class="w"> </span>run<span class="w"> </span>//release-controller:release-notes<span class="w"> </span>--<span class="w"> </span><span class="nv">$PREV_RC</span><span class="w"> </span><span class="nv">$PREV_COMMIT</span><span class="w"> </span><span class="nv">$CURR_RC</span><span class="w"> </span><span class="nv">$CURR_COMMIT</span><span class="w"> </span>--verbose<span class="w"> </span>--commit-annotator<span class="o">=</span><span class="nb">local</span>
+</span></code></pre></div>
+<h4 id="method-2-using-bazel-with-generic-names-and-local-commit-annotator">Method 2: Using Bazel with generic names and local commit annotator<a class="headerlink" href="#method-2-using-bazel-with-generic-names-and-local-commit-annotator" title="Permanent link">&para;</a></h4>
+<div class="language-sh highlight"><pre><span></span><code><span id="__span-16-1"><a id="__codelineno-16-1" name="__codelineno-16-1" href="#__codelineno-16-1"></a>bazel<span class="w"> </span>run<span class="w"> </span>//release-controller:release-notes<span class="w"> </span>--<span class="w"> </span>prev<span class="w"> </span>bf0d4d1b8cb6c0c19a5afa1454ada014847aa5c6<span class="w"> </span>curr<span class="w"> </span>07c01746ee3fa7700eb0eb781a7c26a53f989b1a<span class="w"> </span>--commit-annotator<span class="o">=</span><span class="nb">local</span>
+</span></code></pre></div>
+<h4 id="method-3-using-rye-python-environment">Method 3: Using Rye (Python environment)<a class="headerlink" href="#method-3-using-rye-python-environment" title="Permanent link">&para;</a></h4>
+<p>First, ensure your Python environment is set up:</p>
+<div class="language-sh highlight"><pre><span></span><code><span id="__span-17-1"><a id="__codelineno-17-1" name="__codelineno-17-1" href="#__codelineno-17-1"></a>rye<span class="w"> </span>sync
+</span></code></pre></div>
+<p>Then run the release notes script directly:</p>
+<div class="language-sh highlight"><pre><span></span><code><span id="__span-18-1"><a id="__codelineno-18-1" name="__codelineno-18-1" href="#__codelineno-18-1"></a>rye<span class="w"> </span>run<span class="w"> </span>python3<span class="w"> </span>release-controller/release_notes.py<span class="w"> </span>prev<span class="w"> </span>bf0d4d1b8cb6c0c19a5afa1454ada014847aa5c6<span class="w"> </span>curr<span class="w"> </span>07c01746ee3fa7700eb0eb781a7c26a53f989b1a<span class="w"> </span>--commit-annotator<span class="o">=</span><span class="nb">local</span>
+</span></code></pre></div>
+<h4 id="commit-annotator-options">Commit Annotator Options<a class="headerlink" href="#commit-annotator-options" title="Permanent link">&para;</a></h4>
+<p>The form of the command above requires you to run a commit annotator in
+parallel.  If you want to use the internal commit annotator that does not
+need a commit annotator running in parallel, add option
+<code>--commit-annotator-url local</code> instead.  If you want to <em>recalculate</em> the
+commit annotations instead of using cached ones, you can use option
+<code>--commit-annotator-url recreate</code>.  This last option is useful when
+testing the effects of changes made to the commit annotator code or Bazel
+query formulas the annotator uses.</p>
+<p>A great tip / trick to diagnose exactly what the release notes and
+commit annotation processes would do is to pick a commit from the IC
+repo, figure out which its parent commit is, then run:</p>
+<div class="language-sh highlight"><pre><span></span><code><span id="__span-19-1"><a id="__codelineno-19-1" name="__codelineno-19-1" href="#__codelineno-19-1"></a><span class="nv">PREV_RC</span><span class="o">=</span>prev
+</span><span id="__span-19-2"><a id="__codelineno-19-2" name="__codelineno-19-2" href="#__codelineno-19-2"></a><span class="nv">PREV_COMMIT</span><span class="o">=</span>1354f31c9cd4fb6b4a65ab64eb9ac4a0a4d16839<span class="w"> </span><span class="c1"># parent commit</span>
+</span><span id="__span-19-3"><a id="__codelineno-19-3" name="__codelineno-19-3" href="#__codelineno-19-3"></a><span class="nv">CURR_RC</span><span class="o">=</span>curr
+</span><span id="__span-19-4"><a id="__codelineno-19-4" name="__codelineno-19-4" href="#__codelineno-19-4"></a><span class="nv">CURR_COMMIT</span><span class="o">=</span>f8131bfbc2d339716a9cff06e04de49a68e5a80b<span class="w"> </span><span class="c1"># commit</span>
+</span><span id="__span-19-5"><a id="__codelineno-19-5" name="__codelineno-19-5" href="#__codelineno-19-5"></a>bazel<span class="w"> </span>run<span class="w"> </span>//release-controller:release-notes<span class="w"> </span>--<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-19-6"><a id="__codelineno-19-6" name="__codelineno-19-6" href="#__codelineno-19-6"></a><span class="w">   </span><span class="nv">$PREV_RC</span><span class="w"> </span><span class="nv">$PREV_COMMIT</span><span class="w"> </span><span class="nv">$CURR_RC</span><span class="w"> </span><span class="nv">$CURR_COMMIT</span><span class="w"> </span><span class="se">\</span>
+</span><span id="__span-19-7"><a id="__codelineno-19-7" name="__codelineno-19-7" href="#__codelineno-19-7"></a><span class="w">   </span>--commit-annotator-url<span class="w"> </span>recreate<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-19-8"><a id="__codelineno-19-8" name="__codelineno-19-8" href="#__codelineno-19-8"></a><span class="w">  </span>--os-kind<span class="o">=</span>GuestOS<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-19-9"><a id="__codelineno-19-9" name="__codelineno-19-9" href="#__codelineno-19-9"></a><span class="w">  </span>--verbose
+</span><span id="__span-19-10"><a id="__codelineno-19-10" name="__codelineno-19-10" href="#__codelineno-19-10"></a>bazel<span class="w"> </span>run<span class="w"> </span>//release-controller:release-notes<span class="w"> </span>--<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-19-11"><a id="__codelineno-19-11" name="__codelineno-19-11" href="#__codelineno-19-11"></a><span class="w">   </span><span class="nv">$PREV_RC</span><span class="w"> </span><span class="nv">$PREV_COMMIT</span><span class="w"> </span><span class="nv">$CURR_RC</span><span class="w"> </span><span class="nv">$CURR_COMMIT</span><span class="w"> </span><span class="se">\</span>
+</span><span id="__span-19-12"><a id="__codelineno-19-12" name="__codelineno-19-12" href="#__codelineno-19-12"></a><span class="w">   </span>--commit-annotator-url<span class="w"> </span>recreate<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-19-13"><a id="__codelineno-19-13" name="__codelineno-19-13" href="#__codelineno-19-13"></a><span class="w">  </span>--os-kind<span class="o">=</span>HostOS<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-19-14"><a id="__codelineno-19-14" name="__codelineno-19-14" href="#__codelineno-19-14"></a><span class="w">  </span>--verbose
+</span></code></pre></div>
+<p>That run tells you what the annotation process would do for that single
+commit in question.</p>
+<p>Please consult <code>--help</code> for additional options.</p>
+<h3 id="tests">Tests<a class="headerlink" href="#tests" title="Permanent link">&para;</a></h3>
+<h4 id="unit-tests">Unit tests<a class="headerlink" href="#unit-tests" title="Permanent link">&para;</a></h4>
+<div class="language-sh highlight"><pre><span></span><code><span id="__span-20-1"><a id="__codelineno-20-1" name="__codelineno-20-1" href="#__codelineno-20-1"></a>bazel<span class="w"> </span><span class="nb">test</span><span class="w"> </span>//release-controller/...
+</span></code></pre></div>
+<p>The above runs all tests and typechecks tested files.</p>
+<p>With a <code>.venv</code> setup by <code>rye</code>, you can also run (with varying levels of success):</p>
+<div class="language-sh highlight"><pre><span></span><code><span id="__span-21-1"><a id="__codelineno-21-1" name="__codelineno-21-1" href="#__codelineno-21-1"></a><span class="nb">export</span><span class="w"> </span><span class="nv">PYTHONPATH</span><span class="o">=</span><span class="nv">$PWD</span>/release-controller/
+</span><span id="__span-21-2"><a id="__codelineno-21-2" name="__codelineno-21-2" href="#__codelineno-21-2"></a>.venv/bin/python3<span class="w"> </span>release-controller/tests/runner.py
+</span></code></pre></div>
+<p>If you want to run a specific test file, specify its path as an argument
+to the above command line.</p>
+<h4 id="typing-correctness">Typing correctness<a class="headerlink" href="#typing-correctness" title="Permanent link">&para;</a></h4>
+<p>Building it all tests MyPy types:</p>
+<div class="language-sh highlight"><pre><span></span><code><span id="__span-22-1"><a id="__codelineno-22-1" name="__codelineno-22-1" href="#__codelineno-22-1"></a>bazel<span class="w"> </span>build<span class="w"> </span>//release-controller/...
+</span></code></pre></div>
+<h3 id="maintenance">Maintenance<a class="headerlink" href="#maintenance" title="Permanent link">&para;</a></h3>
+<p>The container image currently used by release controller components
+is an Ubuntu 24.04 image built by Bazel.  Refer to <a href="https://github.com/dfinity/dre/blob/main/release-controller/BUILD.bazel">BUILD.bazel</a>
+and <a href="https://github.com/dfinity/dre/blob/main/images/BUILD.bazel">images/BUILD.bazel</a> for instructions
+on how to maintain and update the images.</p>
+
+
+
+
+
+
+
+  
+    
+  
+  
+    
+  
+
+
+  <aside class="md-source-file">
+    
+      
+  <span class="md-source-file__fact">
+    <span class="md-icon" title="Last update">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
+    </span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-datetime">February 13, 2026 10:50:02</span>
+  </span>
+
+    
+    
+      
+  <span class="md-source-file__fact">
+    <span class="md-icon" title="Created">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M14.47 15.08 11 13V7h1.5v5.25l3.08 1.83c-.41.28-.79.62-1.11 1m-1.39 4.84c-.36.05-.71.08-1.08.08-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8c0 .37-.03.72-.08 1.08.69.1 1.33.32 1.92.64.1-.56.16-1.13.16-1.72 0-5.5-4.5-10-10-10S2 6.5 2 12s4.47 10 10 10c.59 0 1.16-.06 1.72-.16-.32-.59-.54-1.23-.64-1.92M18 15v3h-3v2h3v3h2v-3h3v-2h-3v-3z"/></svg>
+    </span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-datetime">February 13, 2026 10:50:02</span>
+  </span>
+
+    
+    
+    
+      
+  <span class="md-source-file__fact">
+    
+      
+  <span class="md-icon" title="Contributors">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 2A10 10 0 0 0 2 12c0 4.42 2.87 8.17 6.84 9.5.5.08.66-.23.66-.5v-1.69c-2.77.6-3.36-1.34-3.36-1.34-.46-1.16-1.11-1.47-1.11-1.47-.91-.62.07-.6.07-.6 1 .07 1.53 1.03 1.53 1.03.87 1.52 2.34 1.07 2.91.83.09-.65.35-1.09.63-1.34-2.22-.25-4.55-1.11-4.55-4.92 0-1.11.38-2 1.03-2.71-.1-.25-.45-1.29.1-2.64 0 0 .84-.27 2.75 1.02.79-.22 1.65-.33 2.5-.33s1.71.11 2.5.33c1.91-1.29 2.75-1.02 2.75-1.02.55 1.35.2 2.39.1 2.64.65.71 1.03 1.6 1.03 2.71 0 3.82-2.34 4.66-4.57 4.91.36.31.69.92.69 1.85V21c0 .27.16.59.67.5C19.14 20.16 22 16.42 22 12A10 10 0 0 0 12 2"/></svg>
+  </span>
+  <span>GitHub</span>
+
+    
+    <nav>
+      
+        <a href="https://github.com/sasa-tomic" class="md-author" title="@sasa-tomic">
+          
+          <img src="https://avatars.githubusercontent.com/u/34031969?v=4&size=72" alt="sasa-tomic">
+        </a>
+      
+        <a href="https://github.com/web-flow" class="md-author" title="@web-flow">
+          
+          <img src="https://avatars.githubusercontent.com/u/19864447?v=4&size=72" alt="web-flow">
+        </a>
+      
+      
+      
+    </nav>
+  </span>
+
+    
+  </aside>
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+        <div class="md-social">
+  
+    
+    
+    
+    
+      
+      
+    
+    <a href="https://github.com/dfinity/dre" target="_blank" rel="noopener" title="github.com" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.7.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2024 Fonticons, Inc.--><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8M97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+      <div class="md-progress" data-md-component="progress" role="progressbar"></div>
+    
+    
+    <script id="__config" type="application/json">{"base": "..", "features": ["navigation.instant", "navigation.instant.prefetch", "navigation.instant.progress", "navigation.tracking", "navigation.tabs", "navigation.sections", "navigation.expand", "navigation.indexes", "navigation.top", "search.suggest", "search.highlight", "search.share", "content.action.edit", "content.action.view", "content.tooltips", "content.code.copy", "content.code.annotate"], "search": "../assets/javascripts/workers/search.6ce7567c.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.88dd0f4e.min.js"></script>
+      
+        <script src="../javascript/katex.js"></script>
+      
+        <script src="https://unpkg.com/katex@0.16/dist/katex.min.js"></script>
+      
+        <script src="https://unpkg.com/katex@0.16/dist/contrib/auto-render.min.js"></script>
+      
+    
+  </body>
+</html>

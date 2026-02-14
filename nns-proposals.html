@@ -1,0 +1,2390 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Documentation for DFINITY's Decentralized Reliability Engineering (DRE) tools and processes">
+      
+      
+        <meta name="author" content="DFINITY Foundation">
+      
+      
+      
+        <link rel="prev" href="create-a-neuron.html">
+      
+      
+        <link rel="next" href="nns-motion-proposals.html">
+      
+      
+      <link rel="icon" href="assets/favicon.ico">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.5.49">
+    
+    
+      
+        <title>NNS Proposals - DRE Documentation</title>
+      
+    
+    
+      <link rel="stylesheet" href="assets/stylesheets/main.6f8fc17f.min.css">
+      
+        
+        <link rel="stylesheet" href="assets/stylesheets/palette.06af60db.min.css">
+      
+      
+
+
+    
+    
+      
+        <script src="https://unpkg.com/iframe-worker/shim"></script>
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="https://unpkg.com/katex@0.16/dist/katex.min.css">
+    
+    <script>__md_scope=new URL(".",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#submitting-nns-proposals" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+<header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="index.html" title="DRE Documentation" class="md-header__button md-logo" aria-label="DRE Documentation" data-md-component="logo">
+      
+  <img src="assets/favicon.ico" alt="logo">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            DRE Documentation
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              NNS Proposals
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme)" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3.9 12c0-1.71 1.39-3.1 3.1-3.1h4V7H7a5 5 0 0 0-5 5 5 5 0 0 0 5 5h4v-1.9H7c-1.71 0-3.1-1.39-3.1-3.1M8 13h8v-2H8zm9-6h-4v1.9h4c1.71 0 3.1 1.39 3.1 3.1s-1.39 3.1-3.1 3.1h-4V17h4a5 5 0 0 0 5-5 5 5 0 0 0-5-5"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_2" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M17 7H7a5 5 0 0 0-5 5 5 5 0 0 0 5 5h10a5 5 0 0 0 5-5 5 5 0 0 0-5-5m0 8a3 3 0 0 1-3-3 3 3 0 0 1 3-3 3 3 0 0 1 3 3 3 3 0 0 1-3 3"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="black" data-md-color-accent="indigo"  aria-label="Switch to system preference"  type="radio" name="__palette" id="__palette_2">
+    
+      <label class="md-header__button md-icon" title="Switch to system preference" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M17 7H7a5 5 0 0 0-5 5 5 5 0 0 0 5 5h10a5 5 0 0 0 5-5 5 5 0 0 0-5-5M7 15a3 3 0 0 1-3-3 3 3 0 0 1 3-3 3 3 0 0 1 3 3 3 3 0 0 1-3 3"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      <label class="md-header__button md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+      </label>
+      <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+          <a href="javascript:void(0)" class="md-search__icon md-icon" title="Share" aria-label="Share" data-clipboard data-clipboard-text="" data-md-component="search-share" tabindex="-1">
+            
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9a3 3 0 0 0-3 3 3 3 0 0 0 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.15c-.05.21-.08.43-.08.66 0 1.61 1.31 2.91 2.92 2.91s2.92-1.3 2.92-2.91A2.92 2.92 0 0 0 18 16.08"/></svg>
+          </a>
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/dfinity/dre/" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.7.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2024 Fonticons, Inc.--><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8M97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+  </div>
+  <div class="md-source__repository">
+    dfinity/dre
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+            
+<nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="index.html" class="md-tabs__link">
+        
+  
+    
+  
+  Home
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="getting-started.html" class="md-tabs__link">
+          
+  
+    
+  
+  Getting Started
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="decentralization.html" class="md-tabs__link">
+          
+  
+    
+  
+  Core Concepts
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+    
+  
+  
+    
+    
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="create-a-neuron.html" class="md-tabs__link">
+          
+  
+    
+  
+  Guides
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+    
+    
+      
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="k8s/tips-and-tricks.html" class="md-tabs__link">
+          
+  
+    
+  
+  Development
+
+        </a>
+      </li>
+    
+  
+
+    
+  
+
+      
+    </ul>
+  </div>
+</nav>
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="index.html" title="DRE Documentation" class="md-nav__button md-logo" aria-label="DRE Documentation" data-md-component="logo">
+      
+  <img src="assets/favicon.ico" alt="logo">
+
+    </a>
+    DRE Documentation
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/dfinity/dre/" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.7.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2024 Fonticons, Inc.--><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8M97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+  </div>
+  <div class="md-source__repository">
+    dfinity/dre
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="index.html" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Home
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Getting Started
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            Getting Started
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="getting-started.html" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Installation
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="contributing.html" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Contributing Guide
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="how-to-update-docs.html" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Documentation Guide
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Core Concepts
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            Core Concepts
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="decentralization.html" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Decentralization
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="make-release.html" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Release Management
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="subnet-decentralization-whatif.html" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Subnet Management
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_3_4" id="__nav_3_4_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Trustworthy Metrics
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_4">
+            <span class="md-nav__icon md-icon"></span>
+            Trustworthy Metrics
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="trustworthy-metrics/trustworthy-metrics.html" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Overview
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="trustworthy-metrics/architecture.html" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Architecture
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="trustworthy-metrics/untrusted-metrics.html" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Untrusted Metrics
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+      
+        
+        
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="">
+            
+  
+  <span class="md-ellipsis">
+    Guides
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            Guides
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="create-a-neuron.html" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Creating a Neuron
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  <span class="md-ellipsis">
+    NNS Proposals
+  </span>
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="nns-proposals.html" class="md-nav__link md-nav__link--active">
+        
+  
+  <span class="md-ellipsis">
+    NNS Proposals
+  </span>
+  
+
+      </a>
+      
+        
+
+  
+
+<nav class="md-nav md-nav--secondary" aria-label="On this page">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      On this page
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#get-the-principal-from-your-hsm" class="md-nav__link">
+    <span class="md-ellipsis">
+      Get the principal from your HSM
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#get-the-neuron-id-associated-with-your-hsm" class="md-nav__link">
+    <span class="md-ellipsis">
+      Get the neuron id associated with your HSM
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#getting-the-mainnet-firewall-rules" class="md-nav__link">
+    <span class="md-ellipsis">
+      Getting the Mainnet firewall rules
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#get-the-node-rewards-table-used-for-the-node-provider-compensation" class="md-nav__link">
+    <span class="md-ellipsis">
+      Get the Node Rewards Table, used for the Node Provider compensation
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#update-the-node-rewards-table" class="md-nav__link">
+    <span class="md-ellipsis">
+      Update the Node Rewards Table
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#enable-the-https-outcalls-on-a-subnet" class="md-nav__link">
+    <span class="md-ellipsis">
+      Enable the HTTPs outcalls on a subnet
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#removing-node-operator-principal-id" class="md-nav__link">
+    <span class="md-ellipsis">
+      Removing node operator principal id
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#replacing-or-removing-nodes-in-a-subnet" class="md-nav__link">
+    <span class="md-ellipsis">
+      Replacing (or removing) nodes in a subnet
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#replacing-and-optimizing-nodes-in-all-subnet-with-unhealthy-nodes" class="md-nav__link">
+    <span class="md-ellipsis">
+      Replacing and optimizing nodes in all subnet with unhealthy nodes
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Replacing and optimizing nodes in all subnet with unhealthy nodes">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#freeing-up-removing-from-their-subnets-nodes-from-a-specific-dc" class="md-nav__link">
+    <span class="md-ellipsis">
+      Freeing up (removing from their subnets) nodes from a specific DC
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#dumping-raw-registry-versions-for-precise-diffs" class="md-nav__link">
+    <span class="md-ellipsis">
+      Dumping raw registry versions (for precise diffs)
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#replacing-a-specific-node-in-a-subnet" class="md-nav__link">
+    <span class="md-ellipsis">
+      Replacing a Specific Node in a Subnet
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Replacing a Specific Node in a Subnet">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#prerequisites" class="md-nav__link">
+    <span class="md-ellipsis">
+      Prerequisites
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#step-by-step-instructions" class="md-nav__link">
+    <span class="md-ellipsis">
+      Step-by-Step Instructions
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Step-by-Step Instructions">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-understand-the-command-structure" class="md-nav__link">
+    <span class="md-ellipsis">
+      1. Understand the Command Structure
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-example-command" class="md-nav__link">
+    <span class="md-ellipsis">
+      2. Example Command
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3-execute-the-command" class="md-nav__link">
+    <span class="md-ellipsis">
+      3. Execute the Command
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#4-verify-the-proposal-details" class="md-nav__link">
+    <span class="md-ellipsis">
+      4. Verify the Proposal Details
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#5-confirm-the-replacement" class="md-nav__link">
+    <span class="md-ellipsis">
+      5. Confirm the Replacement
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#6-post-execution-verification" class="md-nav__link">
+    <span class="md-ellipsis">
+      6. Post-Execution Verification
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#7-post-execution-verification" class="md-nav__link">
+    <span class="md-ellipsis">
+      7. Post-Execution Verification
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#example-output" class="md-nav__link">
+    <span class="md-ellipsis">
+      Example Output
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#notes" class="md-nav__link">
+    <span class="md-ellipsis">
+      Notes
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#additional-resources" class="md-nav__link">
+    <span class="md-ellipsis">
+      Additional Resources
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#removing-nodes-from-the-registry" class="md-nav__link">
+    <span class="md-ellipsis">
+      Removing nodes from the registry
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="nns-motion-proposals.html" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Submitting Motion Proposals
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="node-rewards.html" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Node Rewards
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="qualification/running-qualification.html" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Running Qualification
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="be-dr-dre.html" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Being a DRE
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+    
+    
+      
+      
+        
+          
+          
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_4_7" >
+        
+          
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="rs/cli/index.html" class="md-nav__link ">
+              
+  
+  <span class="md-ellipsis">
+    CLI Tool
+  </span>
+  
+
+            </a>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_7">
+            <span class="md-nav__icon md-icon"></span>
+            CLI Tool
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+    
+    
+      
+      
+        
+          
+          
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_4_8" >
+        
+          
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="trusted-neurons-alerts/index.html" class="md-nav__link ">
+              
+  
+  <span class="md-ellipsis">
+    Trusted Neurons Alerts
+  </span>
+  
+
+            </a>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_8_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_8">
+            <span class="md-nav__icon md-icon"></span>
+            Trusted Neurons Alerts
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+    
+    
+      
+      
+        
+          
+          
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_4_9" >
+        
+          
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="release-controller/index.html" class="md-nav__link ">
+              
+  
+  <span class="md-ellipsis">
+    IC Release Controller and Release Notes
+  </span>
+  
+
+            </a>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_9_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_9">
+            <span class="md-nav__icon md-icon"></span>
+            IC Release Controller and Release Notes
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Development
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            Development
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_5_1" >
+        
+          
+          <label class="md-nav__link" for="__nav_5_1" id="__nav_5_1_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Kubernetes
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_5_1_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5_1">
+            <span class="md-nav__icon md-icon"></span>
+            Kubernetes
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="k8s/tips-and-tricks.html" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Tips and Tricks
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="k8s/elastic-commands.html" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Elastic configuration
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_5_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_5_2" id="__nav_5_2_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Bazel
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_5_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5_2">
+            <span class="md-nav__icon md-icon"></span>
+            Bazel
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="bazel/tips-and-tricks.html" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Tips and Tricks
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+  
+
+<nav class="md-nav md-nav--secondary" aria-label="On this page">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      On this page
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#get-the-principal-from-your-hsm" class="md-nav__link">
+    <span class="md-ellipsis">
+      Get the principal from your HSM
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#get-the-neuron-id-associated-with-your-hsm" class="md-nav__link">
+    <span class="md-ellipsis">
+      Get the neuron id associated with your HSM
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#getting-the-mainnet-firewall-rules" class="md-nav__link">
+    <span class="md-ellipsis">
+      Getting the Mainnet firewall rules
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#get-the-node-rewards-table-used-for-the-node-provider-compensation" class="md-nav__link">
+    <span class="md-ellipsis">
+      Get the Node Rewards Table, used for the Node Provider compensation
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#update-the-node-rewards-table" class="md-nav__link">
+    <span class="md-ellipsis">
+      Update the Node Rewards Table
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#enable-the-https-outcalls-on-a-subnet" class="md-nav__link">
+    <span class="md-ellipsis">
+      Enable the HTTPs outcalls on a subnet
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#removing-node-operator-principal-id" class="md-nav__link">
+    <span class="md-ellipsis">
+      Removing node operator principal id
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#replacing-or-removing-nodes-in-a-subnet" class="md-nav__link">
+    <span class="md-ellipsis">
+      Replacing (or removing) nodes in a subnet
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#replacing-and-optimizing-nodes-in-all-subnet-with-unhealthy-nodes" class="md-nav__link">
+    <span class="md-ellipsis">
+      Replacing and optimizing nodes in all subnet with unhealthy nodes
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Replacing and optimizing nodes in all subnet with unhealthy nodes">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#freeing-up-removing-from-their-subnets-nodes-from-a-specific-dc" class="md-nav__link">
+    <span class="md-ellipsis">
+      Freeing up (removing from their subnets) nodes from a specific DC
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#dumping-raw-registry-versions-for-precise-diffs" class="md-nav__link">
+    <span class="md-ellipsis">
+      Dumping raw registry versions (for precise diffs)
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#replacing-a-specific-node-in-a-subnet" class="md-nav__link">
+    <span class="md-ellipsis">
+      Replacing a Specific Node in a Subnet
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Replacing a Specific Node in a Subnet">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#prerequisites" class="md-nav__link">
+    <span class="md-ellipsis">
+      Prerequisites
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#step-by-step-instructions" class="md-nav__link">
+    <span class="md-ellipsis">
+      Step-by-Step Instructions
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Step-by-Step Instructions">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-understand-the-command-structure" class="md-nav__link">
+    <span class="md-ellipsis">
+      1. Understand the Command Structure
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-example-command" class="md-nav__link">
+    <span class="md-ellipsis">
+      2. Example Command
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3-execute-the-command" class="md-nav__link">
+    <span class="md-ellipsis">
+      3. Execute the Command
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#4-verify-the-proposal-details" class="md-nav__link">
+    <span class="md-ellipsis">
+      4. Verify the Proposal Details
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#5-confirm-the-replacement" class="md-nav__link">
+    <span class="md-ellipsis">
+      5. Confirm the Replacement
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#6-post-execution-verification" class="md-nav__link">
+    <span class="md-ellipsis">
+      6. Post-Execution Verification
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#7-post-execution-verification" class="md-nav__link">
+    <span class="md-ellipsis">
+      7. Post-Execution Verification
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#example-output" class="md-nav__link">
+    <span class="md-ellipsis">
+      Example Output
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#notes" class="md-nav__link">
+    <span class="md-ellipsis">
+      Notes
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#additional-resources" class="md-nav__link">
+    <span class="md-ellipsis">
+      Additional Resources
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#removing-nodes-from-the-registry" class="md-nav__link">
+    <span class="md-ellipsis">
+      Removing nodes from the registry
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+  
+    <a href="https://github.com/dfinity/dre/edit/main/docs/nns-proposals.md" title="Edit this page" class="md-content__button md-icon">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M10 20H6V4h7v5h5v3.1l2-2V8l-6-6H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h4zm10.2-7c.1 0 .3.1.4.2l1.3 1.3c.2.2.2.6 0 .8l-1 1-2.1-2.1 1-1c.1-.1.2-.2.4-.2m0 3.9L14.1 23H12v-2.1l6.1-6.1z"/></svg>
+    </a>
+  
+  
+    
+      
+    
+    <a href="https://github.com/dfinity/dre/raw/main/docs/nns-proposals.md" title="View source of this page" class="md-content__button md-icon">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M17 18c.56 0 1 .44 1 1s-.44 1-1 1-1-.44-1-1 .44-1 1-1m0-3c-2.73 0-5.06 1.66-6 4 .94 2.34 3.27 4 6 4s5.06-1.66 6-4c-.94-2.34-3.27-4-6-4m0 6.5a2.5 2.5 0 0 1-2.5-2.5 2.5 2.5 0 0 1 2.5-2.5 2.5 2.5 0 0 1 2.5 2.5 2.5 2.5 0 0 1-2.5 2.5M9.27 20H6V4h7v5h5v4.07c.7.08 1.36.25 2 .49V8l-6-6H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h4.5a8.2 8.2 0 0 1-1.23-2"/></svg>
+    </a>
+  
+
+
+<h1 id="submitting-nns-proposals">Submitting NNS proposals<a class="headerlink" href="#submitting-nns-proposals" title="Permanent link">&para;</a></h1>
+<p>Most of the commands here can be run in multiple ways. Currently we are putting in the effort to make <code>dre</code> as useful as possible. As such it provides support for <code>dry_run</code> as default and that can be highly beneficial in most scenarios (for eg. if someone is asking you to submit a proposal for them the best practice way is to run a <code>dry_run</code> and ask them to double check the command and the payload that would be submitted) and that is why we recommend using <code>dre</code> whenever possible. In some use-cases <code>dre</code> cannot help you, and that is when you should use whatever tool/script is at hand.</p>
+<h3 id="get-the-principal-from-your-hsm">Get the principal from your HSM<a class="headerlink" href="#get-the-principal-from-your-hsm" title="Permanent link">&para;</a></h3>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>❯<span class="w"> </span>dfx<span class="w"> </span>identity<span class="w"> </span>use<span class="w"> </span>hsm
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>Using<span class="w"> </span>identity:<span class="w"> </span><span class="s2">&quot;hsm&quot;</span>.
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>❯<span class="w"> </span><span class="nb">export</span><span class="w"> </span><span class="nv">DFX_HSM_PIN</span><span class="o">=</span><span class="k">$(</span>cat<span class="w"> </span>~/.hsm-pin<span class="k">)</span>
+</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>❯<span class="w"> </span>dfx<span class="w"> </span>identity<span class="w"> </span>get-principal
+</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>as4rt-t4nqh-64j36-ubyaa-2c6uz-f2qbm-67llh-ftd3y-epn2e-wzaut-wae
+</span></code></pre></div>
+<h3 id="get-the-neuron-id-associated-with-your-hsm">Get the neuron id associated with your HSM<a class="headerlink" href="#get-the-neuron-id-associated-with-your-hsm" title="Permanent link">&para;</a></h3>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>❯<span class="w"> </span><span class="nb">export</span><span class="w"> </span><span class="nv">DFX_HSM_PIN</span><span class="o">=</span><span class="k">$(</span>cat<span class="w"> </span>~/.hsm-pin<span class="k">)</span>
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>❯<span class="w"> </span>dfx<span class="w"> </span>canister<span class="w"> </span>--identity<span class="o">=</span>hsm<span class="w"> </span>--network<span class="o">=</span>ic<span class="w"> </span>call<span class="w"> </span>rrkah-fqaaa-aaaaa-aaaaq-cai<span class="w"> </span>get_neuron_ids<span class="w"> </span><span class="s1">&#39;()&#39;</span>
+</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="o">(</span>vec<span class="w"> </span><span class="o">{</span><span class="w"> </span><span class="m">40</span><span class="w"> </span>:<span class="w"> </span>nat64<span class="w"> </span><span class="o">})</span>
+</span></code></pre></div>
+<h3 id="getting-the-mainnet-firewall-rules">Getting the Mainnet firewall rules<a class="headerlink" href="#getting-the-mainnet-firewall-rules" title="Permanent link">&para;</a></h3>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>dre<span class="w"> </span>get<span class="w"> </span>firewall-rules<span class="w"> </span>replica_nodes<span class="w"> </span><span class="p">|</span><span class="w"> </span>jq
+</span></code></pre></div>
+<h3 id="get-the-node-rewards-table-used-for-the-node-provider-compensation">Get the Node Rewards Table, used for the Node Provider compensation<a class="headerlink" href="#get-the-node-rewards-table-used-for-the-node-provider-compensation" title="Permanent link">&para;</a></h3>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>dre<span class="w"> </span>get<span class="w"> </span>node-rewards-table
+</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="o">{</span>
+</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="w">  </span><span class="s2">&quot;table&quot;</span>:<span class="w"> </span><span class="o">{</span>
+</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="w">    </span><span class="s2">&quot;Asia&quot;</span>:<span class="w"> </span><span class="o">{</span>
+</span><span id="__span-3-5"><a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a><span class="o">[</span>...<span class="o">]</span>
+</span><span id="__span-3-6"><a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a><span class="o">}</span>
+</span></code></pre></div>
+<h3 id="update-the-node-rewards-table">Update the Node Rewards Table<a class="headerlink" href="#update-the-node-rewards-table" title="Permanent link">&para;</a></h3>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>dre<span class="w"> </span>propose<span class="w"> </span>update-node-rewards-table<span class="w"> </span>--summary-file<span class="w"> </span><span class="m">2022</span>-12-type3.md<span class="w"> </span>--updated-node-rewards<span class="w"> </span><span class="s2">&quot;</span><span class="k">$(</span>cat<span class="w"> </span><span class="m">2022</span>-12-type3-rewards.json<span class="w"> </span><span class="p">|</span><span class="w"> </span>jq<span class="w"> </span>-c<span class="k">)</span><span class="s2">&quot;</span>
+</span></code></pre></div>
+<h3 id="enable-the-https-outcalls-on-a-subnet">Enable the HTTPs outcalls on a subnet<a class="headerlink" href="#enable-the-https-outcalls-on-a-subnet" title="Permanent link">&para;</a></h3>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>dre<span class="w"> </span>propose<span class="w"> </span>update-subnet<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="w">    </span>--features<span class="w"> </span><span class="s2">&quot;http_requests&quot;</span><span class="w"> </span><span class="se">\</span>
+</span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="w">    </span>--subnet<span class="w"> </span>uzr34-akd3s-xrdag-3ql62-ocgoh-ld2ao-tamcv-54e7j-krwgb-2gm4z-oqe<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-5-4"><a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a><span class="w">    </span>--summary<span class="w"> </span><span class="s2">&quot;Enable the HTTPS outcalls feature on the non-whitelisted uzr34 subnet so that the exchange rate canister can query exchange rate data.&quot;</span>
+</span></code></pre></div>
+<h3 id="removing-node-operator-principal-id">Removing node operator principal id<a class="headerlink" href="#removing-node-operator-principal-id" title="Permanent link">&para;</a></h3>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>dre<span class="w"> </span>propose<span class="w"> </span>remove-node-operators<span class="w"> </span>kdqam-hauon-sdvym-42eyg-5wyff-4ywbw-v6iij-2sw2z-bu4rj-ejusn-jae<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="w">    </span>--summary<span class="w"> </span><span class="s2">&quot;&lt;An appropriate summary for the proposal, and a link to the forum post for further discussion, if possible&gt;&quot;</span>
+</span></code></pre></div>
+<h3 id="replacing-or-removing-nodes-in-a-subnet">Replacing (or removing) nodes in a subnet<a class="headerlink" href="#replacing-or-removing-nodes-in-a-subnet" title="Permanent link">&para;</a></h3>
+<p>There are situations where nodes need to be removed from subnets, such as for maintenance. Subnets are expected to maintain a certain size (number of nodes). Therefore, nodes cannot simply be removed from a subnet; new nodes must be added back into the subnet to maintain the required number.</p>
+<p>The <code>ic-admin</code> command for this is <code>propose-to-change-subnet-membership</code> but this command should NOT be invoked directly from <code>ic-admin</code> because it's necessary to consider the effect of node replacement on the subnet decentralization.
+The DRE tool will 1) find the optimal replacement for a node the given subnet, and 2) help you to review and submit the required NNS proposal.</p>
+<p>Typical usage would be like this:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>dre<span class="w"> </span>subnet<span class="w"> </span>replace<span class="w"> </span>&lt;NODE_ID...&gt;
+</span></code></pre></div>
+<p><strong>Note:</strong> It is possible to provide multiple node IDs in the same command line, but they MUST be in the same subnet.</p>
+<p>Example usage to remove an unhealthy node from the subnet <code>tdb26</code>:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>dre<span class="w"> </span>subnet<span class="w"> </span>replace<span class="w"> </span>--id<span class="w"> </span>tdb26-jop6k-aogll-7ltgs-eruif-6kk7m-qpktf-gdiqx-mxtrf-vb5e6-eqe
+</span></code></pre></div>
+<p>Example usage to remove healthy nodes from their current subnet:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a>dre<span class="w"> </span>subnet<span class="w"> </span>replace<span class="w"> </span>--nodes<span class="w"> </span>tm3pc-2bjsx-hhv3v-fsrt7-wotdj-nbu3t-ewloq-uporp-tacou-lupdn-oae<span class="w"> </span>5iihd-fkroy-ow5zp-hlvwz-bsgbl-mecta-kxubm-6adxr-ckcu6-prsus-fqe<span class="w"> </span>--motivation<span class="w"> </span><span class="s2">&quot;Removing nodes for redeployment. Link to the forum post: https://forum.dfinity.org/....&quot;</span>
+</span></code></pre></div>
+<h3 id="replacing-and-optimizing-nodes-in-all-subnet-with-unhealthy-nodes">Replacing and optimizing nodes in all subnet with unhealthy nodes<a class="headerlink" href="#replacing-and-optimizing-nodes-in-all-subnet-with-unhealthy-nodes" title="Permanent link">&para;</a></h3>
+<p>It is possible to run a single dre command to a) find all subnets with unhealthy nodes, b) subnet proposals for all subnets with unhealthy nodes, and attempt to replace a few additional nodes to improve optimization.</p>
+<p>The invocation is straighforward:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a>dre<span class="w"> </span>heal
+</span></code></pre></div>
+<p>Please pay close attention to the output of the command and if possible get someone else to double check the effect on decentralization before confirming the proposal submission.</p>
+<h4 id="freeing-up-removing-from-their-subnets-nodes-from-a-specific-dc">Freeing up (removing from their subnets) nodes from a specific DC<a class="headerlink" href="#freeing-up-removing-from-their-subnets-nodes-from-a-specific-dc" title="Permanent link">&para;</a></h4>
+<p>To free up nodes from a specific data center (e.g., bo1) within subnets, follow these steps:</p>
+<p>First, <a href="https://dashboard.internetcomputer.org/center/bo1">open the public dashboard for the DC in question</a> to find a list of subnets that include nodes from the data center. Or, alternatively, you can bypass the public dashboard by querying the registry directly:</p>
+<p><div class="language-bash highlight"><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a>dre<span class="w"> </span>registry<span class="w"> </span><span class="p">|</span><span class="w"> </span>jq<span class="w"> </span><span class="s1">&#39;.nodes[] | select((.dc_id == &quot;bo1&quot;) and (.subnet_id != null))&#39;</span>
+</span></code></pre></div>
+<strong>Explanation</strong>: This command retrieves a dump of the registry, extracts the list of nodes, and selects only those that belong to the <code>bo1</code> data center and have a <code>subnet_id</code> set (i.e., not null).</p>
+<h4 id="dumping-raw-registry-versions-for-precise-diffs">Dumping raw registry versions (for precise diffs)<a class="headerlink" href="#dumping-raw-registry-versions-for-precise-diffs" title="Permanent link">&para;</a></h4>
+<p>Use the DRE CLI to dump raw registry versions, either a single version or a range, for exact inspection of changes:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-12-1"><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a><span class="c1"># One version</span>
+</span><span id="__span-12-2"><a id="__codelineno-12-2" name="__codelineno-12-2" href="#__codelineno-12-2"></a>dre<span class="w"> </span>registry<span class="w"> </span>--dump-version<span class="w"> </span><span class="m">12345</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>jq
+</span><span id="__span-12-3"><a id="__codelineno-12-3" name="__codelineno-12-3" href="#__codelineno-12-3"></a>
+</span><span id="__span-12-4"><a id="__codelineno-12-4" name="__codelineno-12-4" href="#__codelineno-12-4"></a><span class="c1"># Range: Python-style indexing (end-exclusive). Indexing semantics:</span>
+</span><span id="__span-12-5"><a id="__codelineno-12-5" name="__codelineno-12-5" href="#__codelineno-12-5"></a><span class="c1"># - Positive indices are 1-based positions (registry is 1-based)</span>
+</span><span id="__span-12-6"><a id="__codelineno-12-6" name="__codelineno-12-6" href="#__codelineno-12-6"></a><span class="c1"># - 0 means start (same as omitting FROM)</span>
+</span><span id="__span-12-7"><a id="__codelineno-12-7" name="__codelineno-12-7" href="#__codelineno-12-7"></a><span class="c1"># - Negative indices count from end (-1 is last)</span>
+</span><span id="__span-12-8"><a id="__codelineno-12-8" name="__codelineno-12-8" href="#__codelineno-12-8"></a><span class="c1"># - Reversed ranges yield empty results</span>
+</span><span id="__span-12-9"><a id="__codelineno-12-9" name="__codelineno-12-9" href="#__codelineno-12-9"></a>dre<span class="w"> </span>registry<span class="w"> </span>--dump-versions<span class="w"> </span>-5<span class="w"> </span>&gt;<span class="w"> </span>last5.json
+</span><span id="__span-12-10"><a id="__codelineno-12-10" name="__codelineno-12-10" href="#__codelineno-12-10"></a>
+</span><span id="__span-12-11"><a id="__codelineno-12-11" name="__codelineno-12-11" href="#__codelineno-12-11"></a><span class="c1"># All versions (large output)</span>
+</span><span id="__span-12-12"><a id="__codelineno-12-12" name="__codelineno-12-12" href="#__codelineno-12-12"></a>dre<span class="w"> </span>registry<span class="w"> </span>--dump-versions<span class="w"> </span>&gt;<span class="w"> </span>all.json
+</span></code></pre></div>
+<p>Each output element is a single registry record at a registry version with best-effort decoded value. Unknown byte blobs are shown compactly using base64 as <code>{ "bytes_base64": "..." }</code>. For short byte arrays the tool may also add a <code>principal</code> string.</p>
+<details>
+  <summary><i>Click here to see the output of the above command</i></summary>
+  <div class="language-json highlight"><pre><span></span><code><span id="__span-13-1"><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a><span class="p">{</span>
+</span><span id="__span-13-2"><a id="__codelineno-13-2" name="__codelineno-13-2" href="#__codelineno-13-2"></a><span class="w">  </span><span class="nt">&quot;node_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;4jtgm-ywxcc-xh3o3-x2omx-tgmdm-gobca-agb3a-alvw4-dhmyn-khis6-xae&quot;</span><span class="p">,</span>
+</span><span id="__span-13-3"><a id="__codelineno-13-3" name="__codelineno-13-3" href="#__codelineno-13-3"></a><span class="w">  </span><span class="nt">&quot;xnet&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-13-4"><a id="__codelineno-13-4" name="__codelineno-13-4" href="#__codelineno-13-4"></a><span class="w">    </span><span class="nt">&quot;ip_addr&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;2600:c0d:3002:4:6801:dfff:fee7:5ae8&quot;</span><span class="p">,</span>
+</span><span id="__span-13-5"><a id="__codelineno-13-5" name="__codelineno-13-5" href="#__codelineno-13-5"></a><span class="w">    </span><span class="nt">&quot;port&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">2497</span>
+</span><span id="__span-13-6"><a id="__codelineno-13-6" name="__codelineno-13-6" href="#__codelineno-13-6"></a><span class="w">  </span><span class="p">},</span>
+</span><span id="__span-13-7"><a id="__codelineno-13-7" name="__codelineno-13-7" href="#__codelineno-13-7"></a><span class="w">  </span><span class="nt">&quot;http&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-13-8"><a id="__codelineno-13-8" name="__codelineno-13-8" href="#__codelineno-13-8"></a><span class="w">    </span><span class="nt">&quot;ip_addr&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;2600:c0d:3002:4:6801:dfff:fee7:5ae8&quot;</span><span class="p">,</span>
+</span><span id="__span-13-9"><a id="__codelineno-13-9" name="__codelineno-13-9" href="#__codelineno-13-9"></a><span class="w">    </span><span class="nt">&quot;port&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">8080</span>
+</span><span id="__span-13-10"><a id="__codelineno-13-10" name="__codelineno-13-10" href="#__codelineno-13-10"></a><span class="w">  </span><span class="p">},</span>
+</span><span id="__span-13-11"><a id="__codelineno-13-11" name="__codelineno-13-11" href="#__codelineno-13-11"></a><span class="w">  </span><span class="nt">&quot;node_operator_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;ut325-qbq5v-fli2f-e2a5h-qapdd-fsuyv-xej2j-ogvux-i3fc2-5nj3a-2ae&quot;</span><span class="p">,</span>
+</span><span id="__span-13-12"><a id="__codelineno-13-12" name="__codelineno-13-12" href="#__codelineno-13-12"></a><span class="w">  </span><span class="nt">&quot;chip_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span>
+</span><span id="__span-13-13"><a id="__codelineno-13-13" name="__codelineno-13-13" href="#__codelineno-13-13"></a><span class="w">  </span><span class="nt">&quot;hostos_version_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;2e269c77aa2f6b2353ddad6a4ac3d5ddcac196b1&quot;</span><span class="p">,</span>
+</span><span id="__span-13-14"><a id="__codelineno-13-14" name="__codelineno-13-14" href="#__codelineno-13-14"></a><span class="w">  </span><span class="nt">&quot;public_ipv4_config&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span>
+</span><span id="__span-13-15"><a id="__codelineno-13-15" name="__codelineno-13-15" href="#__codelineno-13-15"></a><span class="w">  </span><span class="nt">&quot;subnet_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;nl6hn-ja4yw-wvmpy-3z2jx-ymc34-pisx3-3cp5z-3oj4a-qzzny-jbsv3-4qe&quot;</span><span class="p">,</span>
+</span><span id="__span-13-16"><a id="__codelineno-13-16" name="__codelineno-13-16" href="#__codelineno-13-16"></a><span class="w">  </span><span class="nt">&quot;dc_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;bo1&quot;</span><span class="p">,</span>
+</span><span id="__span-13-17"><a id="__codelineno-13-17" name="__codelineno-13-17" href="#__codelineno-13-17"></a><span class="w">  </span><span class="nt">&quot;node_provider_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;lq5ra-f4ibl-t7wpy-hennc-m4eb7-tnfxe-eorgd-onpsl-wervo-7chjj-6qe&quot;</span><span class="p">,</span>
+</span><span id="__span-13-18"><a id="__codelineno-13-18" name="__codelineno-13-18" href="#__codelineno-13-18"></a><span class="w">  </span><span class="nt">&quot;status&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Healthy&quot;</span>
+</span><span id="__span-13-19"><a id="__codelineno-13-19" name="__codelineno-13-19" href="#__codelineno-13-19"></a><span class="p">}</span>
+</span><span id="__span-13-20"><a id="__codelineno-13-20" name="__codelineno-13-20" href="#__codelineno-13-20"></a><span class="p">{</span>
+</span><span id="__span-13-21"><a id="__codelineno-13-21" name="__codelineno-13-21" href="#__codelineno-13-21"></a><span class="w">  </span><span class="nt">&quot;node_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;af7ti-auyik-jfsne-tljmz-6purg-2msmy-jw34z-b4ie3-abk5f-h23xt-zae&quot;</span><span class="p">,</span>
+</span><span id="__span-13-22"><a id="__codelineno-13-22" name="__codelineno-13-22" href="#__codelineno-13-22"></a><span class="w">  </span><span class="nt">&quot;xnet&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-13-23"><a id="__codelineno-13-23" name="__codelineno-13-23" href="#__codelineno-13-23"></a><span class="w">    </span><span class="nt">&quot;ip_addr&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;2600:c0d:3002:4:6801:19ff:fe8c:de47&quot;</span><span class="p">,</span>
+</span><span id="__span-13-24"><a id="__codelineno-13-24" name="__codelineno-13-24" href="#__codelineno-13-24"></a><span class="w">    </span><span class="nt">&quot;port&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">2497</span>
+</span><span id="__span-13-25"><a id="__codelineno-13-25" name="__codelineno-13-25" href="#__codelineno-13-25"></a><span class="w">  </span><span class="p">},</span>
+</span><span id="__span-13-26"><a id="__codelineno-13-26" name="__codelineno-13-26" href="#__codelineno-13-26"></a><span class="w">  </span><span class="nt">&quot;http&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-13-27"><a id="__codelineno-13-27" name="__codelineno-13-27" href="#__codelineno-13-27"></a><span class="w">    </span><span class="nt">&quot;ip_addr&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;2600:c0d:3002:4:6801:19ff:fe8c:de47&quot;</span><span class="p">,</span>
+</span><span id="__span-13-28"><a id="__codelineno-13-28" name="__codelineno-13-28" href="#__codelineno-13-28"></a><span class="w">    </span><span class="nt">&quot;port&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">8080</span>
+</span><span id="__span-13-29"><a id="__codelineno-13-29" name="__codelineno-13-29" href="#__codelineno-13-29"></a><span class="w">  </span><span class="p">},</span>
+</span><span id="__span-13-30"><a id="__codelineno-13-30" name="__codelineno-13-30" href="#__codelineno-13-30"></a><span class="w">  </span><span class="nt">&quot;node_operator_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;ut325-qbq5v-fli2f-e2a5h-qapdd-fsuyv-xej2j-ogvux-i3fc2-5nj3a-2ae&quot;</span><span class="p">,</span>
+</span><span id="__span-13-31"><a id="__codelineno-13-31" name="__codelineno-13-31" href="#__codelineno-13-31"></a><span class="w">  </span><span class="nt">&quot;chip_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span>
+</span><span id="__span-13-32"><a id="__codelineno-13-32" name="__codelineno-13-32" href="#__codelineno-13-32"></a><span class="w">  </span><span class="nt">&quot;hostos_version_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;2e269c77aa2f6b2353ddad6a4ac3d5ddcac196b1&quot;</span><span class="p">,</span>
+</span><span id="__span-13-33"><a id="__codelineno-13-33" name="__codelineno-13-33" href="#__codelineno-13-33"></a><span class="w">  </span><span class="nt">&quot;public_ipv4_config&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span>
+</span><span id="__span-13-34"><a id="__codelineno-13-34" name="__codelineno-13-34" href="#__codelineno-13-34"></a><span class="w">  </span><span class="nt">&quot;subnet_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;w4rem-dv5e3-widiz-wbpea-kbttk-mnzfm-tzrc7-svcj3-kbxyb-zamch-hqe&quot;</span><span class="p">,</span>
+</span><span id="__span-13-35"><a id="__codelineno-13-35" name="__codelineno-13-35" href="#__codelineno-13-35"></a><span class="w">  </span><span class="nt">&quot;dc_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;bo1&quot;</span><span class="p">,</span>
+</span><span id="__span-13-36"><a id="__codelineno-13-36" name="__codelineno-13-36" href="#__codelineno-13-36"></a><span class="w">  </span><span class="nt">&quot;node_provider_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;lq5ra-f4ibl-t7wpy-hennc-m4eb7-tnfxe-eorgd-onpsl-wervo-7chjj-6qe&quot;</span><span class="p">,</span>
+</span><span id="__span-13-37"><a id="__codelineno-13-37" name="__codelineno-13-37" href="#__codelineno-13-37"></a><span class="w">  </span><span class="nt">&quot;status&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Healthy&quot;</span>
+</span><span id="__span-13-38"><a id="__codelineno-13-38" name="__codelineno-13-38" href="#__codelineno-13-38"></a><span class="p">}</span>
+</span><span id="__span-13-39"><a id="__codelineno-13-39" name="__codelineno-13-39" href="#__codelineno-13-39"></a><span class="p">{</span>
+</span><span id="__span-13-40"><a id="__codelineno-13-40" name="__codelineno-13-40" href="#__codelineno-13-40"></a><span class="w">  </span><span class="nt">&quot;node_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;fd5e4-a2xzl-lxu7m-kjvn6-2arnt-jghro-rdrgx-zvvkd-j2hza-pbwl4-5qe&quot;</span><span class="p">,</span>
+</span><span id="__span-13-41"><a id="__codelineno-13-41" name="__codelineno-13-41" href="#__codelineno-13-41"></a><span class="w">  </span><span class="nt">&quot;xnet&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-13-42"><a id="__codelineno-13-42" name="__codelineno-13-42" href="#__codelineno-13-42"></a><span class="w">    </span><span class="nt">&quot;ip_addr&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;2600:c0d:3002:4:6801:94ff:fec9:6b&quot;</span><span class="p">,</span>
+</span><span id="__span-13-43"><a id="__codelineno-13-43" name="__codelineno-13-43" href="#__codelineno-13-43"></a><span class="w">    </span><span class="nt">&quot;port&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">2497</span>
+</span><span id="__span-13-44"><a id="__codelineno-13-44" name="__codelineno-13-44" href="#__codelineno-13-44"></a><span class="w">  </span><span class="p">},</span>
+</span><span id="__span-13-45"><a id="__codelineno-13-45" name="__codelineno-13-45" href="#__codelineno-13-45"></a><span class="w">  </span><span class="nt">&quot;http&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-13-46"><a id="__codelineno-13-46" name="__codelineno-13-46" href="#__codelineno-13-46"></a><span class="w">    </span><span class="nt">&quot;ip_addr&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;2600:c0d:3002:4:6801:94ff:fec9:6b&quot;</span><span class="p">,</span>
+</span><span id="__span-13-47"><a id="__codelineno-13-47" name="__codelineno-13-47" href="#__codelineno-13-47"></a><span class="w">    </span><span class="nt">&quot;port&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">8080</span>
+</span><span id="__span-13-48"><a id="__codelineno-13-48" name="__codelineno-13-48" href="#__codelineno-13-48"></a><span class="w">  </span><span class="p">},</span>
+</span><span id="__span-13-49"><a id="__codelineno-13-49" name="__codelineno-13-49" href="#__codelineno-13-49"></a><span class="w">  </span><span class="nt">&quot;node_operator_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;ut325-qbq5v-fli2f-e2a5h-qapdd-fsuyv-xej2j-ogvux-i3fc2-5nj3a-2ae&quot;</span><span class="p">,</span>
+</span><span id="__span-13-50"><a id="__codelineno-13-50" name="__codelineno-13-50" href="#__codelineno-13-50"></a><span class="w">  </span><span class="nt">&quot;chip_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span>
+</span><span id="__span-13-51"><a id="__codelineno-13-51" name="__codelineno-13-51" href="#__codelineno-13-51"></a><span class="w">  </span><span class="nt">&quot;hostos_version_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;2e269c77aa2f6b2353ddad6a4ac3d5ddcac196b1&quot;</span><span class="p">,</span>
+</span><span id="__span-13-52"><a id="__codelineno-13-52" name="__codelineno-13-52" href="#__codelineno-13-52"></a><span class="w">  </span><span class="nt">&quot;public_ipv4_config&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span>
+</span><span id="__span-13-53"><a id="__codelineno-13-53" name="__codelineno-13-53" href="#__codelineno-13-53"></a><span class="w">  </span><span class="nt">&quot;subnet_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;tdb26-jop6k-aogll-7ltgs-eruif-6kk7m-qpktf-gdiqx-mxtrf-vb5e6-eqe&quot;</span><span class="p">,</span>
+</span><span id="__span-13-54"><a id="__codelineno-13-54" name="__codelineno-13-54" href="#__codelineno-13-54"></a><span class="w">  </span><span class="nt">&quot;dc_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;bo1&quot;</span><span class="p">,</span>
+</span><span id="__span-13-55"><a id="__codelineno-13-55" name="__codelineno-13-55" href="#__codelineno-13-55"></a><span class="w">  </span><span class="nt">&quot;node_provider_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;lq5ra-f4ibl-t7wpy-hennc-m4eb7-tnfxe-eorgd-onpsl-wervo-7chjj-6qe&quot;</span><span class="p">,</span>
+</span><span id="__span-13-56"><a id="__codelineno-13-56" name="__codelineno-13-56" href="#__codelineno-13-56"></a><span class="w">  </span><span class="nt">&quot;status&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Healthy&quot;</span>
+</span><span id="__span-13-57"><a id="__codelineno-13-57" name="__codelineno-13-57" href="#__codelineno-13-57"></a><span class="p">}</span>
+</span><span id="__span-13-58"><a id="__codelineno-13-58" name="__codelineno-13-58" href="#__codelineno-13-58"></a><span class="p">{</span>
+</span><span id="__span-13-59"><a id="__codelineno-13-59" name="__codelineno-13-59" href="#__codelineno-13-59"></a><span class="w">  </span><span class="nt">&quot;node_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;q2ucv-x7dv5-hheao-ocsye-jbg4z-enm75-ss62d-ehqhj-zwwm3-cap5q-tqe&quot;</span><span class="p">,</span>
+</span><span id="__span-13-60"><a id="__codelineno-13-60" name="__codelineno-13-60" href="#__codelineno-13-60"></a><span class="w">  </span><span class="nt">&quot;xnet&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-13-61"><a id="__codelineno-13-61" name="__codelineno-13-61" href="#__codelineno-13-61"></a><span class="w">    </span><span class="nt">&quot;ip_addr&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;2600:c0d:3002:4:6801:bcff:fee7:4008&quot;</span><span class="p">,</span>
+</span><span id="__span-13-62"><a id="__codelineno-13-62" name="__codelineno-13-62" href="#__codelineno-13-62"></a><span class="w">    </span><span class="nt">&quot;port&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">2497</span>
+</span><span id="__span-13-63"><a id="__codelineno-13-63" name="__codelineno-13-63" href="#__codelineno-13-63"></a><span class="w">  </span><span class="p">},</span>
+</span><span id="__span-13-64"><a id="__codelineno-13-64" name="__codelineno-13-64" href="#__codelineno-13-64"></a><span class="w">  </span><span class="nt">&quot;http&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-13-65"><a id="__codelineno-13-65" name="__codelineno-13-65" href="#__codelineno-13-65"></a><span class="w">    </span><span class="nt">&quot;ip_addr&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;2600:c0d:3002:4:6801:bcff:fee7:4008&quot;</span><span class="p">,</span>
+</span><span id="__span-13-66"><a id="__codelineno-13-66" name="__codelineno-13-66" href="#__codelineno-13-66"></a><span class="w">    </span><span class="nt">&quot;port&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">8080</span>
+</span><span id="__span-13-67"><a id="__codelineno-13-67" name="__codelineno-13-67" href="#__codelineno-13-67"></a><span class="w">  </span><span class="p">},</span>
+</span><span id="__span-13-68"><a id="__codelineno-13-68" name="__codelineno-13-68" href="#__codelineno-13-68"></a><span class="w">  </span><span class="nt">&quot;node_operator_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;ut325-qbq5v-fli2f-e2a5h-qapdd-fsuyv-xej2j-ogvux-i3fc2-5nj3a-2ae&quot;</span><span class="p">,</span>
+</span><span id="__span-13-69"><a id="__codelineno-13-69" name="__codelineno-13-69" href="#__codelineno-13-69"></a><span class="w">  </span><span class="nt">&quot;chip_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span>
+</span><span id="__span-13-70"><a id="__codelineno-13-70" name="__codelineno-13-70" href="#__codelineno-13-70"></a><span class="w">  </span><span class="nt">&quot;hostos_version_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;2e269c77aa2f6b2353ddad6a4ac3d5ddcac196b1&quot;</span><span class="p">,</span>
+</span><span id="__span-13-71"><a id="__codelineno-13-71" name="__codelineno-13-71" href="#__codelineno-13-71"></a><span class="w">  </span><span class="nt">&quot;public_ipv4_config&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span>
+</span><span id="__span-13-72"><a id="__codelineno-13-72" name="__codelineno-13-72" href="#__codelineno-13-72"></a><span class="w">  </span><span class="nt">&quot;subnet_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;io67a-2jmkw-zup3h-snbwi-g6a5n-rm5dn-b6png-lvdpl-nqnto-yih6l-gqe&quot;</span><span class="p">,</span>
+</span><span id="__span-13-73"><a id="__codelineno-13-73" name="__codelineno-13-73" href="#__codelineno-13-73"></a><span class="w">  </span><span class="nt">&quot;dc_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;bo1&quot;</span><span class="p">,</span>
+</span><span id="__span-13-74"><a id="__codelineno-13-74" name="__codelineno-13-74" href="#__codelineno-13-74"></a><span class="w">  </span><span class="nt">&quot;node_provider_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;lq5ra-f4ibl-t7wpy-hennc-m4eb7-tnfxe-eorgd-onpsl-wervo-7chjj-6qe&quot;</span><span class="p">,</span>
+</span><span id="__span-13-75"><a id="__codelineno-13-75" name="__codelineno-13-75" href="#__codelineno-13-75"></a><span class="w">  </span><span class="nt">&quot;status&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Healthy&quot;</span>
+</span><span id="__span-13-76"><a id="__codelineno-13-76" name="__codelineno-13-76" href="#__codelineno-13-76"></a><span class="p">}</span>
+</span></code></pre></div>
+</details>
+
+<p>To further refine the command and group nodes by subnets:
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-14-1"><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a><span class="nv">DC</span><span class="o">=</span>bo1
+</span><span id="__span-14-2"><a id="__codelineno-14-2" name="__codelineno-14-2" href="#__codelineno-14-2"></a>dre<span class="w"> </span>registry<span class="w"> </span><span class="p">|</span><span class="w"> </span>jq<span class="w"> </span>-r<span class="w"> </span><span class="s1">&#39;.nodes | map(select((.dc_id == &quot;&#39;</span><span class="nv">$DC</span><span class="s1">&#39;&quot;) and (.subnet_id != null))) | group_by(.subnet_id) | map(&quot;dre subnet replace --exclude &#39;</span><span class="nv">$DC</span><span class="s1">&#39; --nodes \([.[].node_id] | join(&quot; &quot;))&quot;) | .[]&#39;</span>
+</span></code></pre></div></p>
+<details>
+<summary><i>Click here to see the explanation of the jq command</i></summary>
+
+1.  **`-r` (raw output):**
+
+    -   This option tells `jq` to output raw strings instead of JSON-formatted strings. This is particularly useful when you want to generate command-line strings like the one you're creating.
+2.  **`.nodes`:**
+
+    -   This accesses the `nodes` array in the JSON structure.
+3.  **`map(select((.dc_id == "bo1") and (.subnet_id != null)))`:**
+
+    -   This filters the nodes array. It keeps only the nodes where `dc_id` is `"bo1"` and `subnet_id` is not `null`. `map` applies this filter to each element of the array.
+4.  **`group_by(.subnet_id)`:**
+
+    -   This groups the filtered nodes by their `subnet_id`. The result is an array of arrays, where each inner array contains nodes that share the same `subnet_id`.
+5.  **`map("dre subnet replace --exclude '$DC' --nodes \([.[].node_id] | join(" "))")`:**
+
+    -   This `map` applies a transformation to each group (each inner array).
+    -   The transformation constructs a string that starts with `"dre subnet replace --exclude '$DC' --nodes "`.
+    -   `\([.[].node_id] | join(" "))`:
+        -   `.[].node_id` accesses the `node_id` of each node in the current group.
+        -   `join(" ")` joins all the `node_id`s into a single string separated by spaces.
+    -   The result is a string for each subnet that lists all its nodes.
+6.  **`.[]`:**
+
+    -   This unwraps the array of strings created by the previous `map` step into individual strings. This means the output will be a list of commands, one per line.
+</details>
+
+<details>
+<summary><i>Click here to see the example output</i></summary>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-15-1"><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a>dre subnet replace --exclude bo1 --nodes q2ucv-x7dv5-hheao-ocsye-jbg4z-enm75-ss62d-ehqhj-zwwm3-cap5q-tqe
+</span><span id="__span-15-2"><a id="__codelineno-15-2" name="__codelineno-15-2" href="#__codelineno-15-2"></a>dre subnet replace --exclude bo1 --nodes 4jtgm-ywxcc-xh3o3-x2omx-tgmdm-gobca-agb3a-alvw4-dhmyn-khis6-xae
+</span><span id="__span-15-3"><a id="__codelineno-15-3" name="__codelineno-15-3" href="#__codelineno-15-3"></a>dre subnet replace --exclude bo1 --nodes fd5e4-a2xzl-lxu7m-kjvn6-2arnt-jghro-rdrgx-zvvkd-j2hza-pbwl4-5qe
+</span><span id="__span-15-4"><a id="__codelineno-15-4" name="__codelineno-15-4" href="#__codelineno-15-4"></a>dre subnet replace --exclude bo1 --nodes af7ti-auyik-jfsne-tljmz-6purg-2msmy-jw34z-b4ie3-abk5f-h23xt-zae
+</span></code></pre></div>
+</details>
+
+<p>You would now go through each of these output lines (subnets) and submit proposals. Remember to include a motivation for each proposal. For example:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-16-1"><a id="__codelineno-16-1" name="__codelineno-16-1" href="#__codelineno-16-1"></a>dre<span class="w"> </span>subnet<span class="w"> </span>replace<span class="w"> </span>--exclude<span class="w"> </span>bo1<span class="w"> </span>--nodes<span class="w"> </span>q2ucv-x7dv5-hheao-ocsye-jbg4z-enm75-ss62d-ehqhj-zwwm3-cap5q-tqe<span class="w"> </span>--motivation<span class="w"> </span><span class="s2">&quot;Removing BO1 nodes for maintenance&quot;</span>
+</span></code></pre></div>
+<h3 id="replacing-a-specific-node-in-a-subnet">Replacing a Specific Node in a Subnet<a class="headerlink" href="#replacing-a-specific-node-in-a-subnet" title="Permanent link">&para;</a></h3>
+<p>The following step-by-step instructions describe how a node in a subnet can be replaced using the DRE tool while maintaining the same number of nodes in the subnet.</p>
+<h4 id="prerequisites">Prerequisites<a class="headerlink" href="#prerequisites" title="Permanent link">&para;</a></h4>
+<ul>
+<li>DRE tool installed and configured.</li>
+<li>Knowledge of the node IDs to be replaced.</li>
+</ul>
+<h4 id="step-by-step-instructions">Step-by-Step Instructions<a class="headerlink" href="#step-by-step-instructions" title="Permanent link">&para;</a></h4>
+<h5 id="1-understand-the-command-structure">1. Understand the Command Structure<a class="headerlink" href="#1-understand-the-command-structure" title="Permanent link">&para;</a></h5>
+<p>The command to replace a node looks like this:
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-17-1"><a id="__codelineno-17-1" name="__codelineno-17-1" href="#__codelineno-17-1"></a>❯<span class="w"> </span>dre<span class="w"> </span>subnet<span class="w"> </span>replace<span class="w"> </span>--nodes<span class="w"> </span>&lt;NODES_TO_REMOVE&gt;<span class="w"> </span>--motivation<span class="w"> </span><span class="s2">&quot;&lt;REPLACEMENT_REASON&gt;&quot;</span>
+</span></code></pre></div></p>
+<h5 id="2-example-command">2. Example Command<a class="headerlink" href="#2-example-command" title="Permanent link">&para;</a></h5>
+<p>Below is an example command to replace a node in subnet <code>pjljw</code>:
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-18-1"><a id="__codelineno-18-1" name="__codelineno-18-1" href="#__codelineno-18-1"></a>❯<span class="w"> </span>dre<span class="w"> </span>subnet<span class="w"> </span>replace<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-18-2"><a id="__codelineno-18-2" name="__codelineno-18-2" href="#__codelineno-18-2"></a><span class="w">  </span>--nodes<span class="w"> </span>z6jp6-245uu-gh3cs-sblcy-f3jmj-s4ngl-v3z4u-lafz2-qudjr-6mbqx-vqe<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-18-3"><a id="__codelineno-18-3" name="__codelineno-18-3" href="#__codelineno-18-3"></a><span class="w">  </span>--motivation<span class="w"> </span><span class="s2">&quot;Requested by the node operator in order to redeploy all nodes in the DC after 48 months, and switch to a new node operator ID.&quot;</span>
+</span></code></pre></div></p>
+<p>Note that it's possible to provide multiple node ids in the command above, separated by spaces, as long as they are all in the same subnet.</p>
+<h5 id="3-execute-the-command">3. Execute the Command<a class="headerlink" href="#3-execute-the-command" title="Permanent link">&para;</a></h5>
+<p>Run the command to propose the node replacement. The tool will perform a series of checks and outputs similar to the following:</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-19-1"><a id="__codelineno-19-1" name="__codelineno-19-1" href="#__codelineno-19-1"></a>2024-12-27T17:33:31.470Z INFO  dre &gt; Running version 0.5.7-9c513fc1
+</span><span id="__span-19-2"><a id="__codelineno-19-2" name="__codelineno-19-2" href="#__codelineno-19-2"></a>2024-12-27T17:33:31.541Z INFO  dre::store &gt; Using local registry path for network mainnet: /home/user/.cache/dre-store/local_registry/mainnet
+</span><span id="__span-19-3"><a id="__codelineno-19-3" name="__codelineno-19-3" href="#__codelineno-19-3"></a>...
+</span><span id="__span-19-4"><a id="__codelineno-19-4" name="__codelineno-19-4" href="#__codelineno-19-4"></a>2024-12-27T17:33:54.327Z INFO  dre::ic_admin &gt; running ic-admin:
+</span><span id="__span-19-5"><a id="__codelineno-19-5" name="__codelineno-19-5" href="#__codelineno-19-5"></a>...
+</span></code></pre></div>
+<h5 id="4-verify-the-proposal-details">4. Verify the Proposal Details<a class="headerlink" href="#4-verify-the-proposal-details" title="Permanent link">&para;</a></h5>
+<p>Review the details provided by the tool for:
+- <strong>Nodes to be removed</strong>
+- <strong>Nodes to be added</strong>
+- <strong>Impact on decentralization metrics</strong></p>
+<h5 id="5-confirm-the-replacement">5. Confirm the Replacement<a class="headerlink" href="#5-confirm-the-replacement" title="Permanent link">&para;</a></h5>
+<p>If the proposal details look correct, confirm the action when prompted:
+<div class="language-text highlight"><pre><span></span><code><span id="__span-20-1"><a id="__codelineno-20-1" name="__codelineno-20-1" href="#__codelineno-20-1"></a>Do you want to continue? yes
+</span></code></pre></div></p>
+<h5 id="6-post-execution-verification">6. Post-Execution Verification<a class="headerlink" href="#6-post-execution-verification" title="Permanent link">&para;</a></h5>
+<p>To get the proposal adopted and executed:
+- Please answer questions in the forum if there are any for the proposal.</p>
+<h5 id="7-post-execution-verification">7. Post-Execution Verification<a class="headerlink" href="#7-post-execution-verification" title="Permanent link">&para;</a></h5>
+<p>After the replacement process is complete:
+- Verify that the new node is active and healthy in the subnet.</p>
+<h4 id="example-output">Example Output<a class="headerlink" href="#example-output" title="Permanent link">&para;</a></h4>
+<p>The tool provides a detailed summary of the decentralization impact, as shown below:</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-21-1"><a id="__codelineno-21-1" name="__codelineno-21-1" href="#__codelineno-21-1"></a>Decentralization Nakamoto coefficient changes for subnet `pjljw`:
+</span><span id="__span-21-2"><a id="__codelineno-21-2" name="__codelineno-21-2" href="#__codelineno-21-2"></a>
+</span><span id="__span-21-3"><a id="__codelineno-21-3" name="__codelineno-21-3" href="#__codelineno-21-3"></a>    node_provider: 5.00 -&gt; 5.00    (+0%)
+</span><span id="__span-21-4"><a id="__codelineno-21-4" name="__codelineno-21-4" href="#__codelineno-21-4"></a>      data_center: 5.00 -&gt; 5.00    (+0%)
+</span><span id="__span-21-5"><a id="__codelineno-21-5" name="__codelineno-21-5" href="#__codelineno-21-5"></a>data_center_owner: 5.00 -&gt; 5.00    (+0%)
+</span><span id="__span-21-6"><a id="__codelineno-21-6" name="__codelineno-21-6" href="#__codelineno-21-6"></a>             area: 5.00 -&gt; 5.00    (+0%)
+</span><span id="__span-21-7"><a id="__codelineno-21-7" name="__codelineno-21-7" href="#__codelineno-21-7"></a>          country: 4.00 -&gt; 4.00    (+0%)
+</span></code></pre></div>
+<h4 id="notes">Notes<a class="headerlink" href="#notes" title="Permanent link">&para;</a></h4>
+<ul>
+<li>Always verify the decentralization impact to ensure the subnet remains balanced.</li>
+<li>If any issues arise, consult the DRE documentation or reach out to the appropriate support channels.</li>
+</ul>
+<h4 id="additional-resources">Additional Resources<a class="headerlink" href="#additional-resources" title="Permanent link">&para;</a></h4>
+<ul>
+<li><a href="https://github.com/dfinity/dre">DRE GitHub Repository</a></li>
+<li><a href="https://forum.dfinity.org/">Dfinity Forum</a></li>
+</ul>
+<h3 id="removing-nodes-from-the-registry">Removing nodes from the registry<a class="headerlink" href="#removing-nodes-from-the-registry" title="Permanent link">&para;</a></h3>
+<p>Here is an example where we remove all AW1 nodes from the registry, for redeployment. Note that the nodes should already be removed from the subnet(s), so they should in unassigned state (awaiting subnet).
+You can get the node status by checking <a href="https://dashboard.internetcomputer.org/center/aw1">the public dashboard</a> or with <code>dre registry</code> and then analyzing the generated JSON from the command.</p>
+<p>After all relevant nodes are removed from their subnets, you can also remove them from the registry with:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-22-1"><a id="__codelineno-22-1" name="__codelineno-22-1" href="#__codelineno-22-1"></a>dre<span class="w"> </span>nodes<span class="w"> </span>remove<span class="w"> </span>aw1<span class="w"> </span>--motivation<span class="w"> </span><span class="s2">&quot;Removing AW1 nodes for redeployment&quot;</span>
+</span></code></pre></div>
+
+
+
+
+
+
+
+  
+    
+  
+  
+    
+  
+
+
+  <aside class="md-source-file">
+    
+      
+  <span class="md-source-file__fact">
+    <span class="md-icon" title="Last update">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
+    </span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-datetime">February 13, 2026 10:50:02</span>
+  </span>
+
+    
+    
+      
+  <span class="md-source-file__fact">
+    <span class="md-icon" title="Created">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M14.47 15.08 11 13V7h1.5v5.25l3.08 1.83c-.41.28-.79.62-1.11 1m-1.39 4.84c-.36.05-.71.08-1.08.08-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8c0 .37-.03.72-.08 1.08.69.1 1.33.32 1.92.64.1-.56.16-1.13.16-1.72 0-5.5-4.5-10-10-10S2 6.5 2 12s4.47 10 10 10c.59 0 1.16-.06 1.72-.16-.32-.59-.54-1.23-.64-1.92M18 15v3h-3v2h3v3h2v-3h3v-2h-3v-3z"/></svg>
+    </span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-datetime">February 13, 2026 10:50:02</span>
+  </span>
+
+    
+    
+    
+      
+  <span class="md-source-file__fact">
+    
+      
+  <span class="md-icon" title="Contributors">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 2A10 10 0 0 0 2 12c0 4.42 2.87 8.17 6.84 9.5.5.08.66-.23.66-.5v-1.69c-2.77.6-3.36-1.34-3.36-1.34-.46-1.16-1.11-1.47-1.11-1.47-.91-.62.07-.6.07-.6 1 .07 1.53 1.03 1.53 1.03.87 1.52 2.34 1.07 2.91.83.09-.65.35-1.09.63-1.34-2.22-.25-4.55-1.11-4.55-4.92 0-1.11.38-2 1.03-2.71-.1-.25-.45-1.29.1-2.64 0 0 .84-.27 2.75 1.02.79-.22 1.65-.33 2.5-.33s1.71.11 2.5.33c1.91-1.29 2.75-1.02 2.75-1.02.55 1.35.2 2.39.1 2.64.65.71 1.03 1.6 1.03 2.71 0 3.82-2.34 4.66-4.57 4.91.36.31.69.92.69 1.85V21c0 .27.16.59.67.5C19.14 20.16 22 16.42 22 12A10 10 0 0 0 12 2"/></svg>
+  </span>
+  <span>GitHub</span>
+
+    
+    <nav>
+      
+        <a href="https://github.com/sasa-tomic" class="md-author" title="@sasa-tomic">
+          
+          <img src="https://avatars.githubusercontent.com/u/34031969?v=4&size=72" alt="sasa-tomic">
+        </a>
+      
+        <a href="https://github.com/web-flow" class="md-author" title="@web-flow">
+          
+          <img src="https://avatars.githubusercontent.com/u/19864447?v=4&size=72" alt="web-flow">
+        </a>
+      
+      
+      
+    </nav>
+  </span>
+
+    
+  </aside>
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+        <div class="md-social">
+  
+    
+    
+    
+    
+      
+      
+    
+    <a href="https://github.com/dfinity/dre" target="_blank" rel="noopener" title="github.com" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.7.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2024 Fonticons, Inc.--><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8M97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+      <div class="md-progress" data-md-component="progress" role="progressbar"></div>
+    
+    
+    <script id="__config" type="application/json">{"base": ".", "features": ["navigation.instant", "navigation.instant.prefetch", "navigation.instant.progress", "navigation.tracking", "navigation.tabs", "navigation.sections", "navigation.expand", "navigation.indexes", "navigation.top", "search.suggest", "search.highlight", "search.share", "content.action.edit", "content.action.view", "content.tooltips", "content.code.copy", "content.code.annotate"], "search": "assets/javascripts/workers/search.6ce7567c.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
+    
+    
+      <script src="assets/javascripts/bundle.88dd0f4e.min.js"></script>
+      
+        <script src="javascript/katex.js"></script>
+      
+        <script src="https://unpkg.com/katex@0.16/dist/katex.min.js"></script>
+      
+        <script src="https://unpkg.com/katex@0.16/dist/contrib/auto-render.min.js"></script>
+      
+    
+  </body>
+</html>
