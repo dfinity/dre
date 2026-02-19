@@ -12,6 +12,8 @@ releases:
     versions:
       - name: base
         version: c016162d2861e5ad6260d4f62c511a3e5cef5a31
+      - name: hotfix-populate-nns-key
+        version: 6369f81e543ab56eb9532b4d67b88239742481fd
   - rc_name: rc--2026-02-05_03-47
     versions:
       - name: base
