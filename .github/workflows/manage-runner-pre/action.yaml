@@ -41,7 +41,7 @@ runs:
         tool-cache: true
         large-packages: true  # this is slow
 
-    - uses: bazelbuild/setup-bazelisk@v3
+    - uses: bazel-contrib/setup-bazel@0.14.0
 
     ########################################
     # Download and unpack cache
