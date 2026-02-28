@@ -16,8 +16,6 @@ releases:
     versions:
       - name: base
         version: 007c473c9c7fc820c49eea5c823cdd4b9404119d
-      - name: hotfix-007c473c
-        version: 88c343984244998e3d8a2512933f1f5d568b8886
       - name: hotfix-007c473c-retry-flaky-tests
         version: de43a3737ea619fa55b7c4d7c9ebf970a20f473e
   - rc_name: rc--2026-02-12_20-24
