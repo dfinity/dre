@@ -49,6 +49,7 @@ impl Step for UpgradeSubnets {
                     SubnetType::Application => "application subnets",
                     SubnetType::System => "system subnets",
                     SubnetType::VerifiedApplication => "verified-application subnets",
+                    SubnetType::CloudEngine => "cloud-engine subnets",
                 },
                 None => "unassigned nodes",
             },
@@ -65,6 +66,7 @@ impl Step for UpgradeSubnets {
                     SubnetType::Application => "application_subnet",
                     SubnetType::System => "system_subnet",
                     SubnetType::VerifiedApplication => "verified-application_subnet",
+                    SubnetType::CloudEngine => "cloud-engine_subnet",
                 },
                 None => "unassigned_nodes",
             }

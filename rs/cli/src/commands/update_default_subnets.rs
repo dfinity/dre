@@ -215,6 +215,7 @@ fn construct_summary(
                         SubnetType::Application => "Application",
                         SubnetType::System => "System",
                         SubnetType::VerifiedApplication => "Verified Application",
+                        SubnetType::CloudEngine => "Cloud Engine",
                     },
                     match (was_default, excluded_desc.is_none()) {
                         // The state doesn't change
