@@ -12,6 +12,10 @@ releases:
     versions:
       - name: base
         version: 79faae8b354edbf45ae858f1c88bcd1eba4897a5
+  - rc_name: rc--2026-03-02_11-09
+    versions:
+      - name: base
+        version: 781ef50bd6bfbcfac6769b55361d0624247009c1
   - rc_name: rc--2026-02-20_12-29 
     versions:
       - name: base
