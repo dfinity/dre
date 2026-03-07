@@ -556,6 +556,7 @@ impl RegistryState {
                                                 match subnet_type {
                                                     SubnetType::Application | SubnetType::VerifiedApplication => "App",
                                                     SubnetType::System => "System",
+                                                    SubnetType::CloudEngine => "CloudEngine",
                                                 },
                                                 i
                                             )

@@ -274,6 +274,9 @@ impl TryFrom<ProposalInfo> for Proposal {
                 Action::UpdateCanisterSettings(a) => serde_json::to_value(a)?,
                 Action::DeregisterKnownNeuron(a) => serde_json::to_value(a)?,
                 Action::FulfillSubnetRentalRequest(a) => serde_json::to_value(a)?,
+                Action::BlessAlternativeGuestOsVersion(a) => serde_json::to_value(a)?,
+                Action::TakeCanisterSnapshot(a) => serde_json::to_value(a)?,
+                Action::LoadCanisterSnapshot(a) => serde_json::to_value(a)?,
             },
         })
     }
