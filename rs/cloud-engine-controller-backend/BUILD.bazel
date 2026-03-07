@@ -1,0 +1,52 @@
+load("@//rs:oci_images.bzl", "rust_binary_oci_image_rules")
+load("@crate_index_dre//:defs.bzl", "aliases", "all_crate_deps")
+load("@rules_rust//rust:defs.bzl", "rust_binary", "rust_test")
+
+DEPS = [
+    "//rs/ic-observability/service-discovery",
+    "//rs/ic-management-types",
+]
+
+DEV_DEPENDENCIES = [
+    "@crate_index_dre//:assert_cmd",
+    "@crate_index_dre//:tokio",
+    "@crate_index_dre//:tempfile",
+    "@crate_index_dre//:anyhow",
+    "@crate_index_dre//:reqwest",
+    "@crate_index_dre//:serde_json",
+]
+
+rust_binary(
+    name = "cloud-engine-controller-backend",
+    srcs = glob(["src/**/*.rs"]),
+    aliases = aliases(),
+    proc_macro_deps = all_crate_deps(
+        proc_macro = True,
+    ),
+    stamp = 1,
+    deps = all_crate_deps(
+        normal = True,
+    ) + DEPS,
+)
+
+rust_binary_oci_image_rules(
+    name = "oci_image",
+    src = ":cloud-engine-controller-backend",
+    base_image = "@debian-slim",
+)
+
+rust_test(
+    name = "unit_test",
+    aliases = aliases(
+        normal_dev = True,
+        proc_macro_dev = True,
+    ),
+    crate = ":cloud-engine-controller-backend",
+    proc_macro_deps = all_crate_deps(
+        proc_macro_dev = True,
+    ),
+    deps = all_crate_deps(
+        normal_dev = True,
+    ) + DEPS,
+    tags = ["requires-network"]
+)
