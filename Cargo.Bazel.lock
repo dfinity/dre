@@ -1,5 +1,5 @@
 {
-  "checksum": "7f5b8a79b39bdff24118bcd37794ebb16580480befa84746a4e1fef90f5c7aa1",
+  "checksum": "33b8ed729ea114a3e646d15f0de81def7da491d1eb36c4827aa5a59e0f873aea",
   "crates": {
     "actix-codec 0.5.2": {
       "name": "actix-codec",
@@ -6743,9 +6743,9 @@
       ],
       "license_file": "LICENSE"
     },
-    "canister-log-fetcher 0.7.3": {
+    "canister-log-fetcher 0.7.4": {
       "name": "canister-log-fetcher",
-      "version": "0.7.3",
+      "version": "0.7.4",
       "package_url": null,
       "repository": null,
       "targets": [],
@@ -6800,7 +6800,7 @@
           "selects": {}
         },
         "edition": "2024",
-        "version": "0.7.3"
+        "version": "0.7.4"
       },
       "license": "Apache-2.0",
       "license_ids": [
@@ -8291,9 +8291,9 @@
       ],
       "license_file": "LICENSE-APACHE"
     },
-    "config-writer-common 0.7.3": {
+    "config-writer-common 0.7.4": {
       "name": "config-writer-common",
-      "version": "0.7.3",
+      "version": "0.7.4",
       "package_url": null,
       "repository": null,
       "targets": [
@@ -8357,7 +8357,7 @@
           "selects": {}
         },
         "edition": "2024",
-        "version": "0.7.3"
+        "version": "0.7.4"
       },
       "license": "Apache-2.0",
       "license_ids": [
@@ -11435,9 +11435,9 @@
       ],
       "license_file": "LICENSE-APACHE"
     },
-    "decentralization 0.7.3": {
+    "decentralization 0.7.4": {
       "name": "decentralization",
-      "version": "0.7.3",
+      "version": "0.7.4",
       "package_url": null,
       "repository": null,
       "targets": [
@@ -11543,7 +11543,7 @@
           ],
           "selects": {}
         },
-        "version": "0.7.3"
+        "version": "0.7.4"
       },
       "license": null,
       "license_ids": [],
@@ -13229,9 +13229,9 @@
       ],
       "license_file": "LICENSE-MIT"
     },
-    "dre 0.7.3": {
+    "dre 0.7.4": {
       "name": "dre",
-      "version": "0.7.3",
+      "version": "0.7.4",
       "package_url": null,
       "repository": null,
       "targets": [
@@ -13343,7 +13343,7 @@
               "target": "dotenv"
             },
             {
-              "id": "dre 0.7.3",
+              "id": "dre 0.7.4",
               "target": "build_script_build"
             },
             {
@@ -13588,7 +13588,7 @@
           ],
           "selects": {}
         },
-        "version": "0.7.3"
+        "version": "0.7.4"
       },
       "build_script_attrs": {
         "compile_data_glob": [
@@ -16584,9 +16584,9 @@
       ],
       "license_file": "LICENSE-APACHE"
     },
-    "general-testnet-service-discovery 0.7.3": {
+    "general-testnet-service-discovery 0.7.4": {
       "name": "general-testnet-service-discovery",
-      "version": "0.7.3",
+      "version": "0.7.4",
       "package_url": null,
       "repository": null,
       "targets": [],
@@ -16678,7 +16678,7 @@
           ],
           "selects": {}
         },
-        "version": "0.7.3"
+        "version": "0.7.4"
       },
       "license": "Apache-2.0",
       "license_ids": [
@@ -20517,9 +20517,9 @@
       "license_ids": [],
       "license_file": null
     },
-    "ic-canisters 0.7.3": {
+    "ic-canisters 0.7.4": {
       "name": "ic-canisters",
-      "version": "0.7.3",
+      "version": "0.7.4",
       "package_url": null,
       "repository": null,
       "targets": [
@@ -20692,7 +20692,7 @@
           ],
           "selects": {}
         },
-        "version": "0.7.3"
+        "version": "0.7.4"
       },
       "license": "Apache-2.0",
       "license_ids": [
@@ -24699,9 +24699,9 @@
       "license_ids": [],
       "license_file": null
     },
-    "ic-management-backend 0.7.3": {
+    "ic-management-backend 0.7.4": {
       "name": "ic-management-backend",
-      "version": "0.7.3",
+      "version": "0.7.4",
       "package_url": null,
       "repository": null,
       "targets": [
@@ -24935,7 +24935,7 @@
           ],
           "selects": {}
         },
-        "version": "0.7.3"
+        "version": "0.7.4"
       },
       "license": "Apache-2.0",
       "license_ids": [
@@ -25099,9 +25099,9 @@
       "license_ids": [],
       "license_file": null
     },
-    "ic-management-types 0.7.3": {
+    "ic-management-types 0.7.4": {
       "name": "ic-management-types",
-      "version": "0.7.3",
+      "version": "0.7.4",
       "package_url": null,
       "repository": null,
       "targets": [
@@ -25227,7 +25227,7 @@
           ],
           "selects": {}
         },
-        "version": "0.7.3"
+        "version": "0.7.4"
       },
       "license": "Apache-2.0",
       "license_ids": [
@@ -36311,9 +36311,9 @@
       ],
       "license_file": "LICENSE-APACHE"
     },
-    "log-fetcher 0.7.3": {
+    "log-fetcher 0.7.4": {
       "name": "log-fetcher",
-      "version": "0.7.3",
+      "version": "0.7.4",
       "package_url": null,
       "repository": null,
       "targets": [],
@@ -36368,7 +36368,7 @@
           "selects": {}
         },
         "edition": "2024",
-        "version": "0.7.3"
+        "version": "0.7.4"
       },
       "license": "Apache-2.0",
       "license_ids": [
@@ -36376,9 +36376,9 @@
       ],
       "license_file": null
     },
-    "log-noise-filter-backend 0.7.3": {
+    "log-noise-filter-backend 0.7.4": {
       "name": "log-noise-filter-backend",
-      "version": "0.7.3",
+      "version": "0.7.4",
       "package_url": null,
       "repository": null,
       "targets": [
@@ -36442,7 +36442,7 @@
           "selects": {}
         },
         "edition": "2024",
-        "version": "0.7.3"
+        "version": "0.7.4"
       },
       "license": "Apache-2.0",
       "license_ids": [
@@ -36450,9 +36450,9 @@
       ],
       "license_file": null
     },
-    "log-noise-filter-downloader 0.7.3": {
+    "log-noise-filter-downloader 0.7.4": {
       "name": "log-noise-filter-downloader",
-      "version": "0.7.3",
+      "version": "0.7.4",
       "package_url": null,
       "repository": null,
       "targets": [],
@@ -36507,7 +36507,7 @@
           "selects": {}
         },
         "edition": "2024",
-        "version": "0.7.3"
+        "version": "0.7.4"
       },
       "license": "Apache-2.0",
       "license_ids": [
@@ -37756,9 +37756,9 @@
       ],
       "license_file": "LICENSE-APACHE"
     },
-    "multiservice-discovery 0.7.3": {
+    "multiservice-discovery 0.7.4": {
       "name": "multiservice-discovery",
-      "version": "0.7.3",
+      "version": "0.7.4",
       "package_url": null,
       "repository": null,
       "targets": [],
@@ -37898,7 +37898,7 @@
           "selects": {}
         },
         "edition": "2024",
-        "version": "0.7.3"
+        "version": "0.7.4"
       },
       "license": "Apache-2.0",
       "license_ids": [
@@ -37906,9 +37906,9 @@
       ],
       "license_file": null
     },
-    "multiservice-discovery-downloader 0.7.3": {
+    "multiservice-discovery-downloader 0.7.4": {
       "name": "multiservice-discovery-downloader",
-      "version": "0.7.3",
+      "version": "0.7.4",
       "package_url": null,
       "repository": null,
       "targets": [],
@@ -37979,7 +37979,7 @@
           "selects": {}
         },
         "edition": "2024",
-        "version": "0.7.3"
+        "version": "0.7.4"
       },
       "license": "Apache-2.0",
       "license_ids": [
@@ -37987,9 +37987,9 @@
       ],
       "license_file": null
     },
-    "multiservice-discovery-shared 0.7.3": {
+    "multiservice-discovery-shared 0.7.4": {
       "name": "multiservice-discovery-shared",
-      "version": "0.7.3",
+      "version": "0.7.4",
       "package_url": null,
       "repository": null,
       "targets": [
@@ -38041,7 +38041,7 @@
           "selects": {}
         },
         "edition": "2024",
-        "version": "0.7.3"
+        "version": "0.7.4"
       },
       "license": "Apache-2.0",
       "license_ids": [
@@ -38965,9 +38965,9 @@
       ],
       "license_file": "LICENSE-APACHE"
     },
-    "obs-canister-clients 0.7.3": {
+    "obs-canister-clients 0.7.4": {
       "name": "obs-canister-clients",
-      "version": "0.7.3",
+      "version": "0.7.4",
       "package_url": null,
       "repository": null,
       "targets": [
@@ -39019,7 +39019,7 @@
           "selects": {}
         },
         "edition": "2024",
-        "version": "0.7.3"
+        "version": "0.7.4"
       },
       "license": "Apache-2.0",
       "license_ids": [
@@ -43152,9 +43152,9 @@
       ],
       "license_file": "LICENSE"
     },
-    "prometheus-config-updater 0.7.3": {
+    "prometheus-config-updater 0.7.4": {
       "name": "prometheus-config-updater",
-      "version": "0.7.3",
+      "version": "0.7.4",
       "package_url": null,
       "repository": null,
       "targets": [],
@@ -43245,7 +43245,7 @@
           "selects": {}
         },
         "edition": "2024",
-        "version": "0.7.3"
+        "version": "0.7.4"
       },
       "license": "Apache-2.0",
       "license_ids": [
@@ -50410,9 +50410,9 @@
       ],
       "license_file": "LICENSE"
     },
-    "service-discovery 0.7.3": {
+    "service-discovery 0.7.4": {
       "name": "service-discovery",
-      "version": "0.7.3",
+      "version": "0.7.4",
       "package_url": null,
       "repository": null,
       "targets": [
@@ -50557,7 +50557,7 @@
           "selects": {}
         },
         "edition": "2024",
-        "version": "0.7.3"
+        "version": "0.7.4"
       },
       "license": "Apache-2.0",
       "license_ids": [
@@ -51336,9 +51336,9 @@
       ],
       "license_file": "LICENSE"
     },
-    "slack-notifications 0.7.3": {
+    "slack-notifications 0.7.4": {
       "name": "slack-notifications",
-      "version": "0.7.3",
+      "version": "0.7.4",
       "package_url": null,
       "repository": null,
       "targets": [],
@@ -51445,7 +51445,7 @@
           "selects": {}
         },
         "edition": "2024",
-        "version": "0.7.3"
+        "version": "0.7.4"
       },
       "license": "Apache-2.0",
       "license_ids": [
@@ -52119,9 +52119,9 @@
       ],
       "license_file": "LICENSE-APACHE"
     },
-    "sns-downloader 0.7.3": {
+    "sns-downloader 0.7.4": {
       "name": "sns-downloader",
-      "version": "0.7.3",
+      "version": "0.7.4",
       "package_url": null,
       "repository": null,
       "targets": [],
@@ -52188,7 +52188,7 @@
           "selects": {}
         },
         "edition": "2024",
-        "version": "0.7.3"
+        "version": "0.7.4"
       },
       "license": "Apache-2.0",
       "license_ids": [
@@ -57028,9 +57028,9 @@
       "license_ids": [],
       "license_file": null
     },
-    "trustworthy-node-metrics-types 0.7.3": {
+    "trustworthy-node-metrics-types 0.7.4": {
       "name": "trustworthy-node-metrics-types",
-      "version": "0.7.3",
+      "version": "0.7.4",
       "package_url": null,
       "repository": null,
       "targets": [
@@ -57090,7 +57090,7 @@
           "selects": {}
         },
         "edition": "2024",
-        "version": "0.7.3"
+        "version": "0.7.4"
       },
       "license": "Apache-2.0",
       "license_ids": [
@@ -64822,26 +64822,26 @@
   },
   "binary_crates": [],
   "workspace_members": {
-    "canister-log-fetcher 0.7.3": "rs/canister-log-fetcher",
-    "config-writer-common 0.7.3": "rs/ic-observability/config-writer-common",
-    "decentralization 0.7.3": "rs/decentralization",
-    "dre 0.7.3": "rs/cli",
-    "general-testnet-service-discovery 0.7.3": "rs/ic-observability/general-testnet-service-discovery",
-    "ic-canisters 0.7.3": "rs/ic-canisters",
-    "ic-management-backend 0.7.3": "rs/ic-management-backend",
-    "ic-management-types 0.7.3": "rs/ic-management-types",
-    "log-fetcher 0.7.3": "rs/log-fetcher",
-    "log-noise-filter-backend 0.7.3": "rs/ic-observability/log-noise-filter-backend",
-    "log-noise-filter-downloader 0.7.3": "rs/ic-observability/log-noise-filter-downloader",
-    "multiservice-discovery 0.7.3": "rs/ic-observability/multiservice-discovery",
-    "multiservice-discovery-downloader 0.7.3": "rs/ic-observability/multiservice-discovery-downloader",
-    "multiservice-discovery-shared 0.7.3": "rs/ic-observability/multiservice-discovery-shared",
-    "obs-canister-clients 0.7.3": "rs/ic-observability/obs-canister-clients",
-    "prometheus-config-updater 0.7.3": "rs/ic-observability/prometheus-config-updater",
-    "service-discovery 0.7.3": "rs/ic-observability/service-discovery",
-    "slack-notifications 0.7.3": "rs/slack-notifications",
-    "sns-downloader 0.7.3": "rs/ic-observability/sns-downloader",
-    "trustworthy-node-metrics-types 0.7.3": "rs/dre-canisters/trustworthy-node-metrics/src/trustworthy-node-metrics-types"
+    "canister-log-fetcher 0.7.4": "rs/canister-log-fetcher",
+    "config-writer-common 0.7.4": "rs/ic-observability/config-writer-common",
+    "decentralization 0.7.4": "rs/decentralization",
+    "dre 0.7.4": "rs/cli",
+    "general-testnet-service-discovery 0.7.4": "rs/ic-observability/general-testnet-service-discovery",
+    "ic-canisters 0.7.4": "rs/ic-canisters",
+    "ic-management-backend 0.7.4": "rs/ic-management-backend",
+    "ic-management-types 0.7.4": "rs/ic-management-types",
+    "log-fetcher 0.7.4": "rs/log-fetcher",
+    "log-noise-filter-backend 0.7.4": "rs/ic-observability/log-noise-filter-backend",
+    "log-noise-filter-downloader 0.7.4": "rs/ic-observability/log-noise-filter-downloader",
+    "multiservice-discovery 0.7.4": "rs/ic-observability/multiservice-discovery",
+    "multiservice-discovery-downloader 0.7.4": "rs/ic-observability/multiservice-discovery-downloader",
+    "multiservice-discovery-shared 0.7.4": "rs/ic-observability/multiservice-discovery-shared",
+    "obs-canister-clients 0.7.4": "rs/ic-observability/obs-canister-clients",
+    "prometheus-config-updater 0.7.4": "rs/ic-observability/prometheus-config-updater",
+    "service-discovery 0.7.4": "rs/ic-observability/service-discovery",
+    "slack-notifications 0.7.4": "rs/slack-notifications",
+    "sns-downloader 0.7.4": "rs/ic-observability/sns-downloader",
+    "trustworthy-node-metrics-types 0.7.4": "rs/dre-canisters/trustworthy-node-metrics/src/trustworthy-node-metrics-types"
   },
   "conditions": {
     "aarch64-apple-darwin": [

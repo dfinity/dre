@@ -173,7 +173,7 @@ impl PublicDashboardHealthClient {
 
     fn api_node_list(&self) -> anyhow::Result<Url> {
         self.base_url
-            .join("/api/node-list")
+            .join("/api/v3/nodes")
             .map_err(|e| anyhow::anyhow!("Error joining url: {:?}", e))
     }
 
@@ -188,7 +188,9 @@ impl PublicDashboardHealthClient {
             .client
             .execute(request)
             .await
-            .map_err(|e| anyhow::anyhow!("Error while fetching data from public dashboard: {:?}", e))?;
+            .map_err(|e| anyhow::anyhow!("Error while fetching data from public dashboard: {:?}", e))?
+            .error_for_status()
+            .map_err(|e| anyhow::anyhow!("Error while fetching data from public dashboard, response: {e:?}"))?;
 
         let response_text = response.text().await.map_err(|e| anyhow::anyhow!("Error reading response text: {}", e))?;
         let response: Value = serde_json::from_str(&response_text)
