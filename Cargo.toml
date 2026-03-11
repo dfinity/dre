@@ -217,6 +217,9 @@ ic-node-rewards-canister-api = { git = "https://github.com/dfinity/ic.git", rev 
 # dre-airflow deps, should be replaced with dre-airflow once
 indexmap = { version = "2.11.1", features = ["serde"] }
 
+[patch.crates-io]
+ic-error-types = { git = "https://github.com/dfinity/ic.git", rev = "89cc1c20223532c900b94de5bc6bd8cbde278797" }
+
 [profile.release]
 # Add debug information to the release build (does NOT reduce the level of optimization!)
 # Makes flamegraphs and backtraces more readable.
