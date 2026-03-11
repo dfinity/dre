@@ -1,5 +1,5 @@
 use base64::{Engine as _, engine::general_purpose as b64};
-use ic_crypto_utils_threshold_sig_der::parse_threshold_sig_key_from_der;
+use ic_crypto_utils_threshold_sig_der::{KeyConversionError, parse_threshold_sig_key_from_der};
 use ic_registry_client::client::ThresholdSigPublicKey;
 use service_discovery::job_types::{JobType, JobTypeParseError};
 use service_discovery::registry_sync::nns_reachable;
@@ -26,7 +26,7 @@ pub struct DefinitionDto {
 
 #[derive(Debug)]
 pub(crate) enum BadDtoError {
-    InvalidPublicKey(String, std::io::Error),
+    InvalidPublicKey(String, KeyConversionError),
     NNSUnreachable(String),
 }
 

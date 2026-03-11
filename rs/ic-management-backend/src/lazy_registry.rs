@@ -640,6 +640,7 @@ impl LazyRegistry for LazyRegistryImpl {
                                         match subnet_type {
                                             SubnetType::System => "System",
                                             SubnetType::Application | SubnetType::VerifiedApplication => "App",
+                                            SubnetType::CloudEngine => "CloudEngine",
                                         },
                                         i
                                     )

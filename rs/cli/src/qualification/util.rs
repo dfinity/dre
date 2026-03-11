@@ -159,6 +159,7 @@ impl StepCtx {
                                 SubnetType::Application => "application".to_string(),
                                 SubnetType::System => "system".to_string(),
                                 SubnetType::VerifiedApplication => "verified-app".to_string(),
+                                SubnetType::CloudEngine => "cloud-engine".to_string(),
                             },
                             s.principal.to_string(),
                             s.replica_version.clone(),
