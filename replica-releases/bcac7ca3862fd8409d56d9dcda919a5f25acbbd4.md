@@ -6,10 +6,10 @@ Additionally, descriptions of some changes might have been slightly modified to 
 
 To see a full list of commits added since last release, compare the revisions on [GitHub](https://github.com/dfinity/ic/compare/release-2026-03-06_10-46-base...release-2026-03-13_04-37-base).
 ## Features:
+* [`5a9ca8606`](https://github.com/dfinity/ic/commit/5a9ca8606) DSM: Increase storage pricing ([#9127](https://github.com/dfinity/ic/pull/9127))
 * [`165934384`](https://github.com/dfinity/ic/commit/165934384) Consensus(ic-recovery): ask the user to touch their Yubikey during SSH transfers ([#9282](https://github.com/dfinity/ic/pull/9282))
 * [`5b2e76419`](https://github.com/dfinity/ic/commit/5b2e76419) Consensus: Implement `get_all_for_broadcast` for the IDKG pool ([#9260](https://github.com/dfinity/ic/pull/9260))
 * [`473dbcbe6`](https://github.com/dfinity/ic/commit/473dbcbe6) Node: add certified membership check to API Boundary Node health monitoring ([#9047](https://github.com/dfinity/ic/pull/9047))
-* [`5a9ca8606`](https://github.com/dfinity/ic/commit/5a9ca8606) DSM: increase storage pricing ([#9127](https://github.com/dfinity/ic/pull/9127))
 * [`e227b3b86`](https://github.com/dfinity/ic/commit/e227b3b86) DSM: Add types for canister snapshot visibility settings ([#9158](https://github.com/dfinity/ic/pull/9158))
 ## Bugfixes:
 * [`665463001`](https://github.com/dfinity/ic/commit/665463001) Consensus: Allow read_state request for the subnet type ([#9308](https://github.com/dfinity/ic/pull/9308))
