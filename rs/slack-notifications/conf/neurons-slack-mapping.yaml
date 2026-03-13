@@ -7,8 +7,8 @@
   slack_id: UKJUP3G3X # Juliana Che
 - neuron_id: 34
   slack_id: UD5JPLYAH # Andrea Cerulli
-#- neuron_id: 35
-#  slack_id:
+- neuron_id: 35
+  slack_id: U028546NL7P # Stefan Schneider
 - neuron_id: 36
   slack_id: UGN5F0F7B # Max Murphy
 - neuron_id: 37
@@ -19,24 +19,24 @@
   slack_id: U0245CNF536 # Luka Skugor
 - neuron_id: 40
   slack_id: URT5Z7VDZ # Sasa Tomic
-# - neuron_id: 41
-#  slack_id:
-# - neuron_id: 42
-#   slack_id:
+- neuron_id: 41
+  slack_id: U09Q6GYCMPW # Severin Amrein
+- neuron_id: 42
+  slack_id: U08T214CCM9 # Francesco Rizzi
 - neuron_id: 43
   slack_id: U01F2AZLZBL # Ryan Croote
 - neuron_id: 44
   slack_id: U050JEB66LT # Sion Hoang
 - neuron_id: 45
   slack_id: UJU6XENEQ # Mamiko Inoue
-# - neuron_id: 46
-#   slack_id:
+- neuron_id: 46
+  slack_id: U08G6V486UA # Mathieu Ducroux
 - neuron_id: 47
   slack_id: U033DN6T2PL # Mathias Björkqvist
 - neuron_id: 48
-  slack_id: UCJCD32MQ # Manu Drijvers
-- neuron_id: 49
-  slack_id: UKLPH8QDV # Dimitris Sarlis
+  slack_id: U071XETFTCJ # Antonio Ventilii
+# - neuron_id: 49
+#   slack_id:
 - neuron_id: 50
   slack_id: USJPEC5F0 # Islam El-Ashi
 - neuron_id: 51
@@ -55,8 +55,8 @@
   slack_id: U010G9RRJ4A # Shuo Wang
 - neuron_id: 58
   slack_id: U047B65SPB3 # Nikola Milosavljevic
-- neuron_id: 59
-  slack_id: U02TEQHKV35 # Llorenç Muntaner Perello
+# - neuron_id: 59
+#   slack_id:
 # - neuron_id: 60
 #  slack_id:
 # - neuron_id: 61
