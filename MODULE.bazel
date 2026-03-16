@@ -166,7 +166,7 @@ http_archive(
     build_file = "@//3rdparty:BUILD.codeowners.bazel",
 )
 
-IC_REPO_VERSION = "89cc1c20223532c900b94de5bc6bd8cbde278797"
+IC_REPO_VERSION = "155341a1566089bdd643ace8227a99a83844d835"
 
 http_archive(
     name = "ic_repo",
