@@ -22,9 +22,10 @@ use ic_registry_client_helpers::{
     api_boundary_node::ApiBoundaryNodeRegistry,
     node::{NodeId, NodeRegistry, SubnetId},
     node_operator::{NodeOperatorRegistry, PrincipalId},
-    subnet::{SubnetListRegistry, SubnetTransportRegistry},
+    subnet::{SubnetListRegistry, SubnetRegistry, SubnetTransportRegistry},
 };
 use ic_registry_local_registry::{LocalRegistry, LocalRegistryError};
+use ic_registry_subnet_type::SubnetType;
 use job_types::JobType;
 use regex::Regex;
 use serde::{Deserialize, Serialize};
@@ -62,6 +63,7 @@ pub struct TargetGroup {
     /// A set of labels that are associated with the targets listed in
     /// `socket_addr`.
     pub subnet_id: Option<SubnetId>,
+    pub subnet_type: Option<SubnetType>,
     pub dc_id: String,
     pub operator_id: PrincipalId,
     pub node_provider_id: PrincipalId,
@@ -218,6 +220,24 @@ impl IcServiceDiscoveryImpl {
                 }
             };
 
+            let subnet_type = match reg_client.get_subnet_type(subnet_id, latest_version) {
+                Ok(Some(pb_st)) => match SubnetType::try_from(pb_st) {
+                    Ok(st) => Some(st),
+                    Err(e) => {
+                        warn!(log, "Failed to convert subnet type for subnet {}: {:?}", subnet_id, e);
+                        None
+                    }
+                },
+                Ok(None) => {
+                    warn!(log, "Subnet type not found for subnet {}", subnet_id);
+                    None
+                }
+                Err(e) => {
+                    warn!(log, "Error while fetching subnet type for subnet {}: {:?}", subnet_id, e);
+                    None
+                }
+            };
+
             for (node_id, node_record) in t_infos {
                 Self::add_node_to_node_targets(
                     node_id,
@@ -226,6 +246,7 @@ impl IcServiceDiscoveryImpl {
                     reg_client,
                     &mut node_targets,
                     Some(subnet_id),
+                    subnet_type,
                     ic_name,
                     api_bns.contains(&node_id),
                 )?;
@@ -254,6 +275,7 @@ impl IcServiceDiscoveryImpl {
                 reg_client,
                 &mut node_targets,
                 None,
+                None,
                 ic_name,
                 api_bns.contains(&node_id),
             )?;
@@ -268,6 +290,7 @@ impl IcServiceDiscoveryImpl {
         reg_client: &dyn RegistryClient,
         node_targets: &mut BTreeSet<TargetGroup>,
         subnet_id: Option<SubnetId>,
+        subnet_type: Option<SubnetType>,
         ic_name: &str,
         is_api_bn: bool,
     ) -> Result<(), IcServiceDiscoveryError> {
@@ -283,6 +306,7 @@ impl IcServiceDiscoveryImpl {
         (*node_targets).insert(TargetGroup {
             targets: vec![socket_addr].into_iter().collect(),
             subnet_id,
+            subnet_type,
             node_id,
             ic_name: ic_name.into(),
             dc_id: node_operator.dc_id,

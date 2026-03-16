@@ -18,6 +18,7 @@ ic-protobuf = { workspace = true }
 ic-registry-client = { workspace = true }
 ic-registry-client-fake = { workspace = true }
 ic-registry-client-helpers = { workspace = true }
+ic-registry-subnet-type = { workspace = true }
 ic-registry-common-proto = { workspace = true }
 ic-registry-keys = { workspace = true }
 ic-registry-local-registry = { workspace = true }

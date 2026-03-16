@@ -4,6 +4,7 @@ use std::{
     net::SocketAddr,
 };
 
+use ic_registry_subnet_type::SubnetType;
 use ic_types::{NodeId, PrincipalId, SubnetId};
 use serde::{Deserialize, Serialize};
 use service_discovery::{TargetGroup, job_types::JobType};
@@ -19,6 +20,7 @@ pub struct TargetDto {
     /// A set of labels that are associated with the targets listed in
     /// `socket_addr`.
     pub subnet_id: Option<SubnetId>,
+    pub subnet_type: Option<SubnetType>,
 
     pub dc_id: String,
     pub operator_id: PrincipalId,
@@ -57,6 +59,7 @@ pub fn map_to_target_dto(
         ic_name: def_name,
         targets: value.targets.clone(),
         subnet_id: value.subnet_id,
+        subnet_type: value.subnet_type,
         dc_id: value.dc_id.clone(),
         operator_id: value.operator_id,
         node_provider_id: value.node_provider_id,
@@ -76,6 +79,7 @@ impl From<&TargetDto> for TargetGroup {
             node_provider_id: value.node_provider_id,
             operator_id: value.operator_id,
             subnet_id: value.subnet_id,
+            subnet_type: value.subnet_type,
             targets: value.targets.clone(),
             is_api_bn: value.is_api_bn,
             domain: value.domain.clone(),
@@ -93,6 +97,7 @@ impl From<&TargetGroup> for TargetDto {
             ic_name: value.ic_name.clone(),
             targets: value.targets.clone(),
             subnet_id: value.subnet_id,
+            subnet_type: value.subnet_type,
             dc_id: value.dc_id.clone(),
             operator_id: value.operator_id,
             node_provider_id: value.node_provider_id,
