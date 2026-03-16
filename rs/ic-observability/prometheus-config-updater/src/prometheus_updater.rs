@@ -188,8 +188,12 @@ mod tests {
             subnet_id: Some(SubnetId::from(
                 PrincipalId::from_str("x33ed-h457x-bsgyx-oqxqf-6pzwv-wkhzr-rm2j3-npodi-purzm-n66cg-gae").unwrap(),
             )),
-            dc_id: None,
-            operator_id: None,
+            subnet_type: None,
+            dc_id: "".to_string(),
+            operator_id: PrincipalId::new_anonymous(),
+            node_provider_id: PrincipalId::new_anonymous(),
+            is_api_bn: false,
+            domain: None,
         };
 
         let mut tg_set = BTreeSet::new();

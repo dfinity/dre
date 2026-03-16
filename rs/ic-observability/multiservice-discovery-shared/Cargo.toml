@@ -10,6 +10,7 @@ license.workspace = true
 service-discovery = { path = "../service-discovery" }
 serde = { workspace = true }
 serde_json = { workspace = true }
+ic-registry-subnet-type = { workspace = true }
 ic-types = { workspace = true }
 erased-serde = { workspace = true }
 regex = { workspace = true }

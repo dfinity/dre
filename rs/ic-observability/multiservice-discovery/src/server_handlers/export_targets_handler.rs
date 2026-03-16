@@ -33,6 +33,7 @@ pub(super) async fn export_targets(
             node_provider_id: PrincipalId::new_anonymous(),
             operator_id: PrincipalId::new_anonymous(),
             subnet_id: None,
+            subnet_type: None,
             // These are old boundary nodes which are not the same as API boundary nodes
             // with time these should become api boundary nodes
             is_api_bn: false,
