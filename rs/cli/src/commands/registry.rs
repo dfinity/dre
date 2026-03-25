@@ -564,6 +564,7 @@ async fn get_subnets_and_nodes(
             is_halted: record.is_halted,
             halt_at_cup_height: record.halt_at_cup_height,
             chain_key_config: record.chain_key_config.clone(),
+            subnet_admins: record.subnet_admins.clone(),
         })
         .collect::<Vec<_>>();
     let nodes = _get_nodes(local_registry, node_operators, &subnets, health_client).await?;
@@ -841,6 +842,7 @@ struct SubnetRecord {
     is_halted: bool,
     halt_at_cup_height: bool,
     chain_key_config: Option<ChainKeyConfig>,
+    subnet_admins: Vec<PrincipalId>,
 }
 
 #[derive(Clone, Debug, Serialize)]

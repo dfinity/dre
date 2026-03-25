@@ -3,6 +3,7 @@ use crate::health::HealthStatusQuerier;
 use crate::node_labels;
 use crate::proposal::{self, ProposalAgent, SubnetUpdateProposal, UpdateUnassignedNodesProposal};
 use crate::public_dashboard::query_ic_dashboard_list;
+use candid::Principal;
 use decentralization::network::{AvailableNodesQuerier, NodesConverter, SubnetQuerier, SubnetQueryBy};
 use futures::TryFutureExt;
 use futures::future::BoxFuture;
@@ -589,6 +590,11 @@ impl RegistryState {
                         is_halted: sr.is_halted,
                         halt_at_cup_height: sr.halt_at_cup_height,
                         chain_key_config: sr.chain_key_config.clone(),
+                        subnet_admins: sr
+                            .subnet_admins
+                            .iter()
+                            .map(|p| PrincipalId::from(Principal::from_slice(&p.raw)))
+                            .collect(),
                     },
                 )
             })
