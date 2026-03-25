@@ -839,6 +839,7 @@
     }
   ],
   "subnet_type": "system",
+  "subnet_admins": [],
   "metadata": {
     "name": "Internet Identity"
   },
