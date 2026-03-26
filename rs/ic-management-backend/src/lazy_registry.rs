@@ -1,3 +1,4 @@
+use candid::Principal;
 use indexmap::{IndexMap, IndexSet};
 use std::net::Ipv6Addr;
 use std::path::PathBuf;
@@ -666,6 +667,11 @@ impl LazyRegistry for LazyRegistryImpl {
                             is_halted: sr.is_halted,
                             halt_at_cup_height: sr.halt_at_cup_height,
                             chain_key_config: sr.chain_key_config.clone(),
+                            subnet_admins: sr
+                                .subnet_admins
+                                .iter()
+                                .map(|p| PrincipalId::from(Principal::from_slice(&p.raw)))
+                                .collect(),
                         },
                     )
                 })

@@ -275,6 +275,7 @@ pub struct Subnet {
     pub halt_at_cup_height: bool,
     #[serde(skip_serializing_if = "Option::is_none", default)]
     pub chain_key_config: Option<ChainKeyConfig>,
+    pub subnet_admins: Vec<PrincipalId>,
 }
 
 type Application = String;
