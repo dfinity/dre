@@ -46,14 +46,6 @@ impl ExecutableCommand for ForceReplace {
         let from: BTreeSet<PrincipalId> = self.from.iter().cloned().collect();
         let to: BTreeSet<PrincipalId> = self.to.iter().cloned().collect();
 
-        if from.len() != to.len() {
-            cmd.error(
-                clap::error::ErrorKind::InvalidValue,
-                "`from` and `to` have to contain the same number of elements".to_string(),
-            )
-            .exit();
-        }
-
         let duplicates = from.intersection(&to).collect_vec();
 
         if duplicates.is_empty() {
