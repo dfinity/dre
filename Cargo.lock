@@ -1122,9 +1122,9 @@ dependencies = [
 
 [[package]]
 name = "candid"
-version = "0.10.24"
+version = "0.10.26"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "601b519700ec333a2a2c7eb3e8e1eca89177055e3e1fb24ca42cbbb025986696"
+checksum = "846adba6d1b4a00eeb8d4a0e4b88dfab570c25ad150cd52e51dfdc4f9d0a66cd"
 dependencies = [
  "anyhow",
  "binread",
@@ -1154,9 +1154,9 @@ dependencies = [
 
 [[package]]
 name = "candid_derive"
-version = "0.10.24"
+version = "0.10.26"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f195a40cd3d199191fc8b534165fadd78c08a1f9666222addaf9f58593002a73"
+checksum = "4c367110b158be2edc335a4ad70f3467fa588d5c5675e149ef38638a8e281fc4"
 dependencies = [
  "lazy_static",
  "proc-macro2",
@@ -6133,15 +6133,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "itertools"
-version = "0.14.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2b192c782037fadd9cfa75548310488aabdbf3d2da73885b31bd0abd03351285"
-dependencies = [
- "either",
-]
-
-[[package]]
 name = "itoa"
 version = "1.0.17"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -7611,7 +7602,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "be769465445e8c1474e9c5dac2018218498557af32d9ed057325ec9a41ae81bf"
 dependencies = [
  "heck 0.5.0",
- "itertools 0.14.0",
+ "itertools 0.13.0",
  "log",
  "multimap",
  "once_cell",
@@ -7631,7 +7622,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8a56d757972c98b346a9b766e3f02746cde6dd1cd1d1d563472929fdd74bec4d"
 dependencies = [
  "anyhow",
- "itertools 0.14.0",
+ "itertools 0.13.0",
  "proc-macro2",
  "quote",
  "syn 2.0.117",
