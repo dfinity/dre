@@ -11,12 +11,12 @@ jobs:
     container: ghcr.io/dfinity/dre/actions-runner:6413f2909a49329ecbf5371ee7ddf07a9799b625
     steps:
       - name: Create GitHub App Token
-        uses: actions/create-github-app-token@v2
+        uses: actions/create-github-app-token@v3
         id: app-token
         with:
           app-id: ${{ vars.PR_AUTOMATION_BOT_PUBLIC_APP_ID }}
           private-key: ${{ secrets.PR_AUTOMATION_BOT_PUBLIC_PRIVATE_KEY }}
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - name: "🔧 Setup runner"
         uses: ./.github/workflows/manage-runner-pre
 
@@ -57,7 +57,7 @@ jobs:
           ./bin/release-controller-update-data-model.sh
 
       - name: "🆕 Create a new Pull Request with the changes"
-        uses: peter-evans/create-pull-request@v7
+        uses: peter-evans/create-pull-request@v8
         with:
           commit-message: "chore(deps): Update dependencies"
           branch: bot-update-deps
