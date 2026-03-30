@@ -1,5 +1,5 @@
 {
-  "checksum": "dbfb45c33b8906733f5f63664c5629cd73045fc5f362aa6fb80851f111fd135c",
+  "checksum": "c17ae249f31c226d95abf920a9e5dda44ab6ecdfc143ee67f29123171db04657",
   "crates": {
     "actix-codec 0.5.2": {
       "name": "actix-codec",
@@ -1446,88 +1446,6 @@
       ],
       "license_file": "LICENSE-APACHE"
     },
-    "anstream 0.6.21": {
-      "name": "anstream",
-      "version": "0.6.21",
-      "package_url": "https://github.com/rust-cli/anstyle.git",
-      "repository": {
-        "Http": {
-          "url": "https://static.crates.io/crates/anstream/0.6.21/download",
-          "sha256": "43d5b281e737544384e969a5ccad3f1cdd24b48086a0fc1b2a5262a26b8f4f4a"
-        }
-      },
-      "targets": [
-        {
-          "Library": {
-            "crate_name": "anstream",
-            "crate_root": "src/lib.rs",
-            "srcs": {
-              "allow_empty": true,
-              "include": [
-                "**/*.rs"
-              ]
-            }
-          }
-        }
-      ],
-      "library_target_name": "anstream",
-      "common_attrs": {
-        "compile_data_glob": [
-          "**"
-        ],
-        "crate_features": {
-          "common": [
-            "auto",
-            "wincon"
-          ],
-          "selects": {}
-        },
-        "deps": {
-          "common": [
-            {
-              "id": "anstyle 1.0.14",
-              "target": "anstyle"
-            },
-            {
-              "id": "anstyle-parse 0.2.7",
-              "target": "anstyle_parse"
-            },
-            {
-              "id": "anstyle-query 1.1.5",
-              "target": "anstyle_query"
-            },
-            {
-              "id": "colorchoice 1.0.5",
-              "target": "colorchoice"
-            },
-            {
-              "id": "is_terminal_polyfill 1.70.2",
-              "target": "is_terminal_polyfill"
-            },
-            {
-              "id": "utf8parse 0.2.2",
-              "target": "utf8parse"
-            }
-          ],
-          "selects": {
-            "x86_64-pc-windows-msvc": [
-              {
-                "id": "anstyle-wincon 3.0.11",
-                "target": "anstyle_wincon"
-              }
-            ]
-          }
-        },
-        "edition": "2021",
-        "version": "0.6.21"
-      },
-      "license": "MIT OR Apache-2.0",
-      "license_ids": [
-        "Apache-2.0",
-        "MIT"
-      ],
-      "license_file": "LICENSE-APACHE"
-    },
     "anstream 1.0.0": {
       "name": "anstream",
       "version": "1.0.0",
@@ -1649,61 +1567,6 @@
         },
         "edition": "2021",
         "version": "1.0.14"
-      },
-      "license": "MIT OR Apache-2.0",
-      "license_ids": [
-        "Apache-2.0",
-        "MIT"
-      ],
-      "license_file": "LICENSE-APACHE"
-    },
-    "anstyle-parse 0.2.7": {
-      "name": "anstyle-parse",
-      "version": "0.2.7",
-      "package_url": "https://github.com/rust-cli/anstyle.git",
-      "repository": {
-        "Http": {
-          "url": "https://static.crates.io/crates/anstyle-parse/0.2.7/download",
-          "sha256": "4e7644824f0aa2c7b9384579234ef10eb7efb6a0deb83f9630a49594dd9c15c2"
-        }
-      },
-      "targets": [
-        {
-          "Library": {
-            "crate_name": "anstyle_parse",
-            "crate_root": "src/lib.rs",
-            "srcs": {
-              "allow_empty": true,
-              "include": [
-                "**/*.rs"
-              ]
-            }
-          }
-        }
-      ],
-      "library_target_name": "anstyle_parse",
-      "common_attrs": {
-        "compile_data_glob": [
-          "**"
-        ],
-        "crate_features": {
-          "common": [
-            "default",
-            "utf8"
-          ],
-          "selects": {}
-        },
-        "deps": {
-          "common": [
-            {
-              "id": "utf8parse 0.2.2",
-              "target": "utf8parse"
-            }
-          ],
-          "selects": {}
-        },
-        "edition": "2021",
-        "version": "0.2.7"
       },
       "license": "MIT OR Apache-2.0",
       "license_ids": [
@@ -3191,7 +3054,7 @@
         "deps": {
           "common": [
             {
-              "id": "candid 0.10.24",
+              "id": "candid 0.10.26",
               "target": "candid"
             },
             {
@@ -6508,14 +6371,14 @@
       ],
       "license_file": "LICENSE-APACHE"
     },
-    "candid 0.10.24": {
+    "candid 0.10.26": {
       "name": "candid",
-      "version": "0.10.24",
+      "version": "0.10.26",
       "package_url": "https://github.com/dfinity/candid",
       "repository": {
         "Http": {
-          "url": "https://static.crates.io/crates/candid/0.10.24/download",
-          "sha256": "601b519700ec333a2a2c7eb3e8e1eca89177055e3e1fb24ca42cbbb025986696"
+          "url": "https://static.crates.io/crates/candid/0.10.26/download",
+          "sha256": "846adba6d1b4a00eeb8d4a0e4b88dfab570c25ad150cd52e51dfdc4f9d0a66cd"
         }
       },
       "targets": [
@@ -6612,7 +6475,7 @@
         "proc_macro_deps": {
           "common": [
             {
-              "id": "candid_derive 0.10.24",
+              "id": "candid_derive 0.10.26",
               "target": "candid_derive"
             },
             {
@@ -6622,7 +6485,7 @@
           ],
           "selects": {}
         },
-        "version": "0.10.24"
+        "version": "0.10.26"
       },
       "license": "Apache-2.0",
       "license_ids": [
@@ -6665,7 +6528,7 @@
         "deps": {
           "common": [
             {
-              "id": "candid 0.10.24",
+              "id": "candid 0.10.26",
               "target": "candid"
             },
             {
@@ -6682,14 +6545,14 @@
       "license_ids": [],
       "license_file": null
     },
-    "candid_derive 0.10.24": {
+    "candid_derive 0.10.26": {
       "name": "candid_derive",
-      "version": "0.10.24",
+      "version": "0.10.26",
       "package_url": "https://github.com/dfinity/candid",
       "repository": {
         "Http": {
-          "url": "https://static.crates.io/crates/candid_derive/0.10.24/download",
-          "sha256": "f195a40cd3d199191fc8b534165fadd78c08a1f9666222addaf9f58593002a73"
+          "url": "https://static.crates.io/crates/candid_derive/0.10.26/download",
+          "sha256": "4c367110b158be2edc335a4ad70f3467fa588d5c5675e149ef38638a8e281fc4"
         }
       },
       "targets": [
@@ -6733,7 +6596,7 @@
           "selects": {}
         },
         "edition": "2021",
-        "version": "0.10.24"
+        "version": "0.10.26"
       },
       "license": "Apache-2.0",
       "license_ids": [
@@ -6789,7 +6652,7 @@
               "target": "anyhow"
             },
             {
-              "id": "candid 0.10.24",
+              "id": "candid 0.10.26",
               "target": "candid"
             },
             {
@@ -10538,7 +10401,7 @@
               "target": "build_info"
             },
             {
-              "id": "candid 0.10.24",
+              "id": "candid 0.10.26",
               "target": "candid"
             },
             {
@@ -12261,7 +12124,7 @@
         "deps": {
           "common": [
             {
-              "id": "candid 0.10.24",
+              "id": "candid 0.10.26",
               "target": "candid"
             },
             {
@@ -12381,7 +12244,7 @@
         "deps": {
           "common": [
             {
-              "id": "candid 0.10.24",
+              "id": "candid 0.10.26",
               "target": "candid"
             },
             {
@@ -13408,7 +13271,7 @@
               "target": "base64"
             },
             {
-              "id": "candid 0.10.24",
+              "id": "candid 0.10.26",
               "target": "candid"
             },
             {
@@ -13624,7 +13487,7 @@
               "target": "rosetta_core"
             },
             {
-              "id": "rust_decimal 1.40.0",
+              "id": "rust_decimal 1.41.0",
               "target": "rust_decimal"
             },
             {
@@ -14679,14 +14542,14 @@
       ],
       "license_file": "LICENSE-APACHE"
     },
-    "env_logger 0.11.9": {
+    "env_logger 0.11.10": {
       "name": "env_logger",
-      "version": "0.11.9",
+      "version": "0.11.10",
       "package_url": "https://github.com/rust-cli/env_logger",
       "repository": {
         "Http": {
-          "url": "https://static.crates.io/crates/env_logger/0.11.9/download",
-          "sha256": "b2daee4ea451f429a58296525ddf28b45a3b64f1acf6587e2067437bb11e218d"
+          "url": "https://static.crates.io/crates/env_logger/0.11.10/download",
+          "sha256": "0621c04f2196ac3f488dd583365b9c09be011a4ab8b9f37248ffcc8f6198b56a"
         }
       },
       "targets": [
@@ -14721,7 +14584,7 @@
         "deps": {
           "common": [
             {
-              "id": "anstream 0.6.21",
+              "id": "anstream 1.0.0",
               "target": "anstream"
             },
             {
@@ -14744,7 +14607,7 @@
           "selects": {}
         },
         "edition": "2021",
-        "version": "0.11.9"
+        "version": "0.11.10"
       },
       "license": "MIT OR Apache-2.0",
       "license_ids": [
@@ -19722,7 +19585,7 @@
               "target": "cached"
             },
             {
-              "id": "candid 0.10.24",
+              "id": "candid 0.10.26",
               "target": "candid"
             },
             {
@@ -19945,7 +19808,7 @@
               "target": "cached"
             },
             {
-              "id": "candid 0.10.24",
+              "id": "candid 0.10.26",
               "target": "candid"
             },
             {
@@ -20151,7 +20014,7 @@
               "target": "bytes"
             },
             {
-              "id": "candid 0.10.24",
+              "id": "candid 0.10.26",
               "target": "candid"
             },
             {
@@ -20245,7 +20108,7 @@
         "deps": {
           "common": [
             {
-              "id": "candid 0.10.24",
+              "id": "candid 0.10.26",
               "target": "candid"
             },
             {
@@ -20307,7 +20170,7 @@
         "deps": {
           "common": [
             {
-              "id": "candid 0.10.24",
+              "id": "candid 0.10.26",
               "target": "candid"
             },
             {
@@ -20673,7 +20536,7 @@
               "target": "byteorder"
             },
             {
-              "id": "candid 0.10.24",
+              "id": "candid 0.10.26",
               "target": "candid"
             },
             {
@@ -21030,7 +20893,7 @@
         "deps": {
           "common": [
             {
-              "id": "candid 0.10.24",
+              "id": "candid 0.10.26",
               "target": "candid"
             },
             {
@@ -21205,7 +21068,7 @@
         "deps": {
           "common": [
             {
-              "id": "candid 0.10.24",
+              "id": "candid 0.10.26",
               "target": "candid"
             },
             {
@@ -23309,7 +23172,7 @@
         "deps": {
           "common": [
             {
-              "id": "candid 0.10.24",
+              "id": "candid 0.10.26",
               "target": "candid"
             },
             {
@@ -23590,7 +23453,7 @@
         "deps": {
           "common": [
             {
-              "id": "candid 0.10.24",
+              "id": "candid 0.10.26",
               "target": "candid"
             },
             {
@@ -23654,7 +23517,7 @@
         "deps": {
           "common": [
             {
-              "id": "candid 0.10.24",
+              "id": "candid 0.10.26",
               "target": "candid"
             },
             {
@@ -23764,7 +23627,7 @@
         "deps": {
           "common": [
             {
-              "id": "candid 0.10.24",
+              "id": "candid 0.10.26",
               "target": "candid"
             },
             {
@@ -23912,7 +23775,7 @@
         "deps": {
           "common": [
             {
-              "id": "candid 0.10.24",
+              "id": "candid 0.10.26",
               "target": "candid"
             },
             {
@@ -24095,7 +23958,7 @@
         "deps": {
           "common": [
             {
-              "id": "candid 0.10.24",
+              "id": "candid 0.10.26",
               "target": "candid"
             },
             {
@@ -24211,7 +24074,7 @@
         "deps": {
           "common": [
             {
-              "id": "candid 0.10.24",
+              "id": "candid 0.10.26",
               "target": "candid"
             },
             {
@@ -24505,7 +24368,7 @@
         "deps": {
           "common": [
             {
-              "id": "candid 0.10.24",
+              "id": "candid 0.10.26",
               "target": "candid"
             },
             {
@@ -24602,7 +24465,7 @@
         "deps": {
           "common": [
             {
-              "id": "candid 0.10.24",
+              "id": "candid 0.10.26",
               "target": "candid"
             },
             {
@@ -24674,7 +24537,7 @@
         "deps": {
           "common": [
             {
-              "id": "candid 0.10.24",
+              "id": "candid 0.10.26",
               "target": "candid"
             },
             {
@@ -24855,7 +24718,7 @@
               "target": "backon"
             },
             {
-              "id": "candid 0.10.24",
+              "id": "candid 0.10.26",
               "target": "candid"
             },
             {
@@ -24879,7 +24742,7 @@
               "target": "dotenv"
             },
             {
-              "id": "env_logger 0.11.9",
+              "id": "env_logger 0.11.10",
               "target": "env_logger"
             },
             {
@@ -25092,7 +24955,7 @@
         "deps": {
           "common": [
             {
-              "id": "candid 0.10.24",
+              "id": "candid 0.10.26",
               "target": "candid"
             },
             {
@@ -25150,7 +25013,7 @@
         "deps": {
           "common": [
             {
-              "id": "candid 0.10.24",
+              "id": "candid 0.10.26",
               "target": "candid"
             },
             {
@@ -25255,7 +25118,7 @@
               "target": "anyhow"
             },
             {
-              "id": "candid 0.10.24",
+              "id": "candid 0.10.26",
               "target": "candid"
             },
             {
@@ -25539,7 +25402,7 @@
         "deps": {
           "common": [
             {
-              "id": "candid 0.10.24",
+              "id": "candid 0.10.26",
               "target": "candid"
             },
             {
@@ -25591,7 +25454,7 @@
               "target": "prost"
             },
             {
-              "id": "rust_decimal 1.40.0",
+              "id": "rust_decimal 1.41.0",
               "target": "rust_decimal"
             }
           ],
@@ -25708,7 +25571,7 @@
         "deps": {
           "common": [
             {
-              "id": "candid 0.10.24",
+              "id": "candid 0.10.26",
               "target": "candid"
             },
             {
@@ -25952,7 +25815,7 @@
               "target": "prost"
             },
             {
-              "id": "rust_decimal 1.40.0",
+              "id": "rust_decimal 1.41.0",
               "target": "rust_decimal"
             },
             {
@@ -26238,7 +26101,7 @@
         "deps": {
           "common": [
             {
-              "id": "candid 0.10.24",
+              "id": "candid 0.10.26",
               "target": "candid"
             },
             {
@@ -26315,7 +26178,7 @@
         "deps": {
           "common": [
             {
-              "id": "rust_decimal 1.40.0",
+              "id": "rust_decimal 1.41.0",
               "target": "rust_decimal"
             }
           ],
@@ -26402,7 +26265,7 @@
         "deps": {
           "common": [
             {
-              "id": "candid 0.10.24",
+              "id": "candid 0.10.26",
               "target": "candid"
             },
             {
@@ -26465,7 +26328,7 @@
         "deps": {
           "common": [
             {
-              "id": "candid 0.10.24",
+              "id": "candid 0.10.26",
               "target": "candid"
             },
             {
@@ -26481,7 +26344,7 @@
               "target": "prost"
             },
             {
-              "id": "rust_decimal 1.40.0",
+              "id": "rust_decimal 1.41.0",
               "target": "rust_decimal"
             },
             {
@@ -26689,7 +26552,7 @@
         "deps": {
           "common": [
             {
-              "id": "candid 0.10.24",
+              "id": "candid 0.10.26",
               "target": "candid"
             },
             {
@@ -26777,7 +26640,7 @@
         "deps": {
           "common": [
             {
-              "id": "candid 0.10.24",
+              "id": "candid 0.10.26",
               "target": "candid"
             },
             {
@@ -26976,7 +26839,7 @@
         "deps": {
           "common": [
             {
-              "id": "candid 0.10.24",
+              "id": "candid 0.10.26",
               "target": "candid"
             },
             {
@@ -27169,7 +27032,7 @@
               "target": "lazy_static"
             },
             {
-              "id": "rust_decimal 1.40.0",
+              "id": "rust_decimal 1.41.0",
               "target": "rust_decimal"
             },
             {
@@ -27234,7 +27097,7 @@
         "deps": {
           "common": [
             {
-              "id": "candid 0.10.24",
+              "id": "candid 0.10.26",
               "target": "candid"
             },
             {
@@ -27402,7 +27265,7 @@
               "target": "build_info"
             },
             {
-              "id": "candid 0.10.24",
+              "id": "candid 0.10.26",
               "target": "candid"
             },
             {
@@ -27662,7 +27525,7 @@
               "target": "registry_canister"
             },
             {
-              "id": "rust_decimal 1.40.0",
+              "id": "rust_decimal 1.41.0",
               "target": "rust_decimal"
             },
             {
@@ -27791,7 +27654,7 @@
         "deps": {
           "common": [
             {
-              "id": "candid 0.10.24",
+              "id": "candid 0.10.26",
               "target": "candid"
             },
             {
@@ -28095,7 +27958,7 @@
         "deps": {
           "common": [
             {
-              "id": "candid 0.10.24",
+              "id": "candid 0.10.26",
               "target": "candid"
             },
             {
@@ -28151,7 +28014,7 @@
         "deps": {
           "common": [
             {
-              "id": "candid 0.10.24",
+              "id": "candid 0.10.26",
               "target": "candid"
             },
             {
@@ -28236,7 +28099,7 @@
         "deps": {
           "common": [
             {
-              "id": "candid 0.10.24",
+              "id": "candid 0.10.26",
               "target": "candid"
             },
             {
@@ -28260,7 +28123,7 @@
               "target": "rewards_calculation"
             },
             {
-              "id": "rust_decimal 1.40.0",
+              "id": "rust_decimal 1.41.0",
               "target": "rust_decimal"
             },
             {
@@ -28316,7 +28179,7 @@
               "target": "bincode"
             },
             {
-              "id": "candid 0.10.24",
+              "id": "candid 0.10.26",
               "target": "candid"
             },
             {
@@ -28472,7 +28335,7 @@
               "target": "attestation"
             },
             {
-              "id": "candid 0.10.24",
+              "id": "candid 0.10.26",
               "target": "candid"
             },
             {
@@ -28876,7 +28739,7 @@
         "deps": {
           "common": [
             {
-              "id": "candid 0.10.24",
+              "id": "candid 0.10.26",
               "target": "candid"
             },
             {
@@ -29135,7 +28998,7 @@
         "deps": {
           "common": [
             {
-              "id": "candid 0.10.24",
+              "id": "candid 0.10.26",
               "target": "candid"
             },
             {
@@ -29360,7 +29223,7 @@
         "deps": {
           "common": [
             {
-              "id": "candid 0.10.24",
+              "id": "candid 0.10.26",
               "target": "candid"
             },
             {
@@ -29420,7 +29283,7 @@
         "deps": {
           "common": [
             {
-              "id": "candid 0.10.24",
+              "id": "candid 0.10.26",
               "target": "candid"
             },
             {
@@ -29480,7 +29343,7 @@
         "deps": {
           "common": [
             {
-              "id": "candid 0.10.24",
+              "id": "candid 0.10.26",
               "target": "candid"
             },
             {
@@ -29549,7 +29412,7 @@
         "deps": {
           "common": [
             {
-              "id": "candid 0.10.24",
+              "id": "candid 0.10.26",
               "target": "candid"
             },
             {
@@ -29953,7 +29816,7 @@
               "target": "build_info"
             },
             {
-              "id": "candid 0.10.24",
+              "id": "candid 0.10.26",
               "target": "candid"
             },
             {
@@ -30149,7 +30012,7 @@
               "target": "rand_chacha"
             },
             {
-              "id": "rust_decimal 1.40.0",
+              "id": "rust_decimal 1.41.0",
               "target": "rust_decimal"
             },
             {
@@ -30283,7 +30146,7 @@
               "target": "bytes"
             },
             {
-              "id": "candid 0.10.24",
+              "id": "candid 0.10.26",
               "target": "candid"
             },
             {
@@ -30456,7 +30319,7 @@
               "target": "num_traits"
             },
             {
-              "id": "rust_decimal 1.40.0",
+              "id": "rust_decimal 1.41.0",
               "target": "rust_decimal"
             }
           ],
@@ -30513,7 +30376,7 @@
         "deps": {
           "common": [
             {
-              "id": "candid 0.10.24",
+              "id": "candid 0.10.26",
               "target": "candid"
             },
             {
@@ -30565,7 +30428,7 @@
               "target": "num_traits"
             },
             {
-              "id": "rust_decimal 1.40.0",
+              "id": "rust_decimal 1.41.0",
               "target": "rust_decimal"
             }
           ],
@@ -30626,7 +30489,7 @@
               "target": "base64"
             },
             {
-              "id": "candid 0.10.24",
+              "id": "candid 0.10.26",
               "target": "candid"
             },
             {
@@ -30766,7 +30629,7 @@
               "target": "build_info"
             },
             {
-              "id": "candid 0.10.24",
+              "id": "candid 0.10.26",
               "target": "candid"
             },
             {
@@ -30948,7 +30811,7 @@
               "target": "build_info"
             },
             {
-              "id": "candid 0.10.24",
+              "id": "candid 0.10.26",
               "target": "candid"
             },
             {
@@ -31052,7 +30915,7 @@
               "target": "prost"
             },
             {
-              "id": "rust_decimal 1.40.0",
+              "id": "rust_decimal 1.41.0",
               "target": "rust_decimal"
             },
             {
@@ -31150,7 +31013,7 @@
         "deps": {
           "common": [
             {
-              "id": "candid 0.10.24",
+              "id": "candid 0.10.26",
               "target": "candid"
             },
             {
@@ -31226,7 +31089,7 @@
         "deps": {
           "common": [
             {
-              "id": "candid 0.10.24",
+              "id": "candid 0.10.26",
               "target": "candid"
             },
             {
@@ -31528,7 +31391,7 @@
         "deps": {
           "common": [
             {
-              "id": "candid 0.10.24",
+              "id": "candid 0.10.26",
               "target": "candid"
             },
             {
@@ -31616,7 +31479,7 @@
         "deps": {
           "common": [
             {
-              "id": "candid 0.10.24",
+              "id": "candid 0.10.26",
               "target": "candid"
             },
             {
@@ -31715,7 +31578,7 @@
               "target": "bincode"
             },
             {
-              "id": "candid 0.10.24",
+              "id": "candid 0.10.26",
               "target": "candid"
             },
             {
@@ -31948,7 +31811,7 @@
         "deps": {
           "common": [
             {
-              "id": "candid 0.10.24",
+              "id": "candid 0.10.26",
               "target": "candid"
             },
             {
@@ -32368,7 +32231,7 @@
               "target": "anyhow"
             },
             {
-              "id": "candid 0.10.24",
+              "id": "candid 0.10.26",
               "target": "candid"
             },
             {
@@ -32524,7 +32387,7 @@
         "deps": {
           "common": [
             {
-              "id": "candid 0.10.24",
+              "id": "candid 0.10.26",
               "target": "candid"
             },
             {
@@ -32778,7 +32641,7 @@
         "deps": {
           "common": [
             {
-              "id": "candid 0.10.24",
+              "id": "candid 0.10.26",
               "target": "candid"
             },
             {
@@ -32909,7 +32772,7 @@
         "deps": {
           "common": [
             {
-              "id": "candid 0.10.24",
+              "id": "candid 0.10.26",
               "target": "candid"
             },
             {
@@ -32971,7 +32834,7 @@
         "deps": {
           "common": [
             {
-              "id": "candid 0.10.24",
+              "id": "candid 0.10.26",
               "target": "candid"
             },
             {
@@ -33034,7 +32897,7 @@
         "deps": {
           "common": [
             {
-              "id": "candid 0.10.24",
+              "id": "candid 0.10.26",
               "target": "candid"
             },
             {
@@ -33105,7 +32968,7 @@
               "target": "base32"
             },
             {
-              "id": "candid 0.10.24",
+              "id": "candid 0.10.26",
               "target": "candid"
             },
             {
@@ -34645,62 +34508,6 @@
         },
         "edition": "2018",
         "version": "0.13.0"
-      },
-      "license": "MIT OR Apache-2.0",
-      "license_ids": [
-        "Apache-2.0",
-        "MIT"
-      ],
-      "license_file": "LICENSE-APACHE"
-    },
-    "itertools 0.14.0": {
-      "name": "itertools",
-      "version": "0.14.0",
-      "package_url": "https://github.com/rust-itertools/itertools",
-      "repository": {
-        "Http": {
-          "url": "https://static.crates.io/crates/itertools/0.14.0/download",
-          "sha256": "2b192c782037fadd9cfa75548310488aabdbf3d2da73885b31bd0abd03351285"
-        }
-      },
-      "targets": [
-        {
-          "Library": {
-            "crate_name": "itertools",
-            "crate_root": "src/lib.rs",
-            "srcs": {
-              "allow_empty": true,
-              "include": [
-                "**/*.rs"
-              ]
-            }
-          }
-        }
-      ],
-      "library_target_name": "itertools",
-      "common_attrs": {
-        "compile_data_glob": [
-          "**"
-        ],
-        "crate_features": {
-          "common": [
-            "default",
-            "use_alloc",
-            "use_std"
-          ],
-          "selects": {}
-        },
-        "deps": {
-          "common": [
-            {
-              "id": "either 1.15.0",
-              "target": "either"
-            }
-          ],
-          "selects": {}
-        },
-        "edition": "2018",
-        "version": "0.14.0"
       },
       "license": "MIT OR Apache-2.0",
       "license_ids": [
@@ -39229,7 +39036,7 @@
         "deps": {
           "common": [
             {
-              "id": "candid 0.10.24",
+              "id": "candid 0.10.26",
               "target": "candid"
             },
             {
@@ -41221,7 +41028,7 @@
         "deps": {
           "common": [
             {
-              "id": "candid 0.10.24",
+              "id": "candid 0.10.26",
               "target": "candid"
             },
             {
@@ -43856,7 +43663,7 @@
               "target": "heck"
             },
             {
-              "id": "itertools 0.14.0",
+              "id": "itertools 0.13.0",
               "target": "itertools"
             },
             {
@@ -43947,7 +43754,7 @@
               "target": "anyhow"
             },
             {
-              "id": "itertools 0.14.0",
+              "id": "itertools 0.13.0",
               "target": "itertools"
             },
             {
@@ -46240,7 +46047,7 @@
               "target": "build_info"
             },
             {
-              "id": "candid 0.10.24",
+              "id": "candid 0.10.26",
               "target": "candid"
             },
             {
@@ -46986,7 +46793,7 @@
               "target": "maplit"
             },
             {
-              "id": "rust_decimal 1.40.0",
+              "id": "rust_decimal 1.41.0",
               "target": "rust_decimal"
             },
             {
@@ -47424,7 +47231,7 @@
               "target": "bytes"
             },
             {
-              "id": "candid 0.10.24",
+              "id": "candid 0.10.26",
               "target": "candid"
             },
             {
@@ -47611,14 +47418,14 @@
       ],
       "license_file": "LICENSE-APACHE"
     },
-    "rust_decimal 1.40.0": {
+    "rust_decimal 1.41.0": {
       "name": "rust_decimal",
-      "version": "1.40.0",
+      "version": "1.41.0",
       "package_url": "https://github.com/paupino/rust-decimal",
       "repository": {
         "Http": {
-          "url": "https://static.crates.io/crates/rust_decimal/1.40.0/download",
-          "sha256": "61f703d19852dbf87cbc513643fa81428361eb6940f1ac14fd58155d295a3eb0"
+          "url": "https://static.crates.io/crates/rust_decimal/1.41.0/download",
+          "sha256": "2ce901f9a19d251159075a4c37af514c3b8ef99c22e02dd8c19161cf397ee94a"
         }
       },
       "targets": [
@@ -47671,7 +47478,7 @@
               "target": "num_traits"
             },
             {
-              "id": "rust_decimal 1.40.0",
+              "id": "rust_decimal 1.41.0",
               "target": "build_script_build"
             },
             {
@@ -47682,7 +47489,7 @@
           "selects": {}
         },
         "edition": "2021",
-        "version": "1.40.0"
+        "version": "1.41.0"
       },
       "build_script_attrs": {
         "compile_data_glob": [
@@ -51595,7 +51402,7 @@
               "target": "anyhow"
             },
             {
-              "id": "candid 0.10.24",
+              "id": "candid 0.10.26",
               "target": "candid"
             },
             {
@@ -51607,7 +51414,7 @@
               "target": "dotenv"
             },
             {
-              "id": "env_logger 0.11.9",
+              "id": "env_logger 0.11.10",
               "target": "env_logger"
             },
             {
@@ -52472,7 +52279,7 @@
         "deps": {
           "common": [
             {
-              "id": "candid 0.10.24",
+              "id": "candid 0.10.26",
               "target": "candid"
             },
             {
@@ -57296,7 +57103,7 @@
         "deps": {
           "common": [
             {
-              "id": "candid 0.10.24",
+              "id": "candid 0.10.26",
               "target": "candid"
             },
             {
@@ -65372,7 +65179,7 @@
     "backon 1.6.0",
     "base64 0.22.1",
     "byteorder 1.5.0",
-    "candid 0.10.24",
+    "candid 0.10.26",
     "chrono 0.4.44",
     "clap 4.6.0",
     "clap-num 1.2.0",
@@ -65391,7 +65198,7 @@
     "dirs 5.0.1",
     "dotenv 0.15.0",
     "edit 0.1.5",
-    "env_logger 0.11.9",
+    "env_logger 0.11.10",
     "erased-serde 0.4.10",
     "flate2 1.1.9",
     "fs-err 3.3.0",
@@ -65463,7 +65270,7 @@
     "retry 2.2.0",
     "rewards-calculation 0.9.0",
     "rosetta-core 0.9.0",
-    "rust_decimal 1.40.0",
+    "rust_decimal 1.41.0",
     "self_update 0.41.0",
     "serde 1.0.228",
     "serde_json 1.0.149",
