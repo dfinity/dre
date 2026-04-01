@@ -35,6 +35,12 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Update tags in code
+        run: |
+          set -euo pipefail
+          TAG="${GITHUB_REF#refs/tags/}"
+          python3 bin/mk-release.py "$TAG"
+
       - name: Determine Rust toolchain from rust-toolchain.toml
         id: rust
         run: |
