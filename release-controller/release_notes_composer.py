@@ -171,7 +171,7 @@ EXCLUDE_CHANGES_FILTERS = [
     r"pocket[_-]ic",
     r"^Cargo.lock$",
     r"registry\/admin",
-    r"canister(?!_(state|manager|snapshot|sandbox|http|types))",
+    r"canister(?!_(state|manager|snapshot|sandbox))",
 ]
 
 EXCLUDED_SCOPES = [
