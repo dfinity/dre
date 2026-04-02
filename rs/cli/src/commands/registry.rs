@@ -6,11 +6,10 @@ use ic_canisters::IcAgentCanisterClient;
 use ic_canisters::governance::GovernanceCanisterWrapper;
 use ic_management_backend::{health::HealthStatusQuerier, lazy_registry::LazyRegistry};
 use ic_management_types::{HealthStatus, Network};
-use ic_protobuf::registry::node::v1::NodeRewardType;
 use ic_protobuf::registry::{
     dc::v1::DataCenterRecord,
     hostos_version::v1::HostosVersionRecord,
-    node::v1::{ConnectionEndpoint, IPv4InterfaceConfig},
+    node::v1::{ConnectionEndpoint, IPv4InterfaceConfig, NodeRewardType},
     replica_version::v1::ReplicaVersionRecord,
     subnet::v1::{ChainKeyConfig, SubnetFeatures},
     unassigned_nodes_config::v1::UnassignedNodesConfigRecord,
@@ -621,7 +620,10 @@ async fn _get_nodes(
                     None => "".to_string(),
                 },
                 status: nodes_health.get(k).unwrap_or(&ic_management_types::HealthStatus::Unknown).clone(),
-                node_reward_type: record.node_reward_type.unwrap_or(NodeRewardType::Unspecified).to_string(),
+                node_reward_type: match record.node_reward_type {
+                    Some(NodeRewardType::Unspecified) | None => "unspecified".to_string(),
+                    Some(t) => t.to_string(),
+                },
                 dc_owner: record.operator.datacenter.clone().map(|dc| dc.owner.name).unwrap_or_default(),
                 guestos_version_id: subnet.map(|sr| sr.replica_version_id.to_string()),
                 country: record.operator.datacenter.clone().map(|dc| dc.country).unwrap_or_default(),
