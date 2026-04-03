@@ -14,7 +14,7 @@ jobs:
       labels: dre-runner-custom
     container: ghcr.io/dfinity/dre/actions-runner:6413f2909a49329ecbf5371ee7ddf07a9799b625
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: "☁️ Setup runner"
         uses: ./.github/workflows/manage-runner-pre
@@ -31,7 +31,7 @@ jobs:
     needs: [test]
     runs-on: macos-14
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           fetch-depth: 0
 
@@ -79,7 +79,7 @@ jobs:
           cargo build --release -p dre --target aarch64-apple-darwin
 
       - name: Upload macOS aarch64 artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: dre-aarch64-apple-darwin
           path: target/aarch64-apple-darwin/release/dre
@@ -97,7 +97,7 @@ jobs:
           cargo build --release -p dre --target x86_64-apple-darwin
 
       - name: Upload macOS x86_64 artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: dre-x86_64-apple-darwin
           path: target/x86_64-apple-darwin/release/dre
@@ -113,7 +113,7 @@ jobs:
       packages: write
       pages: write
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           fetch-tags: true
           fetch-depth: 0
@@ -125,7 +125,7 @@ jobs:
       # If regular secrets.GITHUB_TOKEN is used instead, the push will not trigger any actions
       # https://github.com/orgs/community/discussions/25702
       - name: Create GitHub App Token
-        uses: actions/create-github-app-token@v2
+        uses: actions/create-github-app-token@v3
         id: app-token
         with:
           app-id: ${{ vars.PR_AUTOMATION_BOT_PUBLIC_APP_ID }}
@@ -158,7 +158,7 @@ jobs:
           cp --dereference bazel-out/k8-opt/bin/rs/cli/dre release/artifacts/dre-x86_64-unknown-linux
 
       - name: Download macOS x86_64 artifact
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: dre-x86_64-apple-darwin
           path: release/artifacts/
@@ -168,7 +168,7 @@ jobs:
         run: mv release/artifacts/dre release/artifacts/dre-x86_64-apple-darwin
 
       - name: Download macOS aarch64 artifact
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: dre-aarch64-apple-darwin
           path: release/artifacts/
@@ -184,7 +184,7 @@ jobs:
 
       - name: "🆕 📢 Prepare release"
         # v0.1.15
-        uses: softprops/action-gh-release@72f2c25fcb47643c292f7107632f7a47c1df5cd8
+        uses: softprops/action-gh-release@153bb8e04406b158c6c84fc1615b65b24149a1fe
         id: release
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
@@ -202,7 +202,7 @@ jobs:
           rm -rf release
 
       - name: "🆕 Create a new Pull Request with the changes"
-        uses: peter-evans/create-pull-request@v7
+        uses: peter-evans/create-pull-request@v8
         with:
           commit-message: "chore(release): New release of `dre` version ${{ steps.tag.outputs.tag }}"
           branch: bot-release-${{ steps.tag.outputs.tag }}
