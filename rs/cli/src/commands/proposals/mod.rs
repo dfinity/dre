@@ -277,6 +277,7 @@ impl TryFrom<ProposalInfo> for Proposal {
                 Action::BlessAlternativeGuestOsVersion(a) => serde_json::to_value(a)?,
                 Action::TakeCanisterSnapshot(a) => serde_json::to_value(a)?,
                 Action::LoadCanisterSnapshot(a) => serde_json::to_value(a)?,
+                Action::CreateCanisterAndInstallCode(a) => serde_json::to_value(a)?,
             },
         })
     }
