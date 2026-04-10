@@ -18,12 +18,12 @@ jobs:
       matrix:
         runner: [1, 2, 3, 4] # We currently have 4 runners, adjust this number if more runners are added
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
         with:
           fetch-depth: 1
 
       - name: "☁️ Setup bazelisk"
-        uses: bazelbuild/setup-bazelisk@v3
+        uses: bazelbuild/setup-bazelisk@b39c379c82683a5f25d34f0d062761f62693e0b2 # v3
 
       - name: Clean Bazel Cache
         run: |
