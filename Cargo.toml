@@ -42,7 +42,7 @@ ahash = "0.8.12"
 anyhow = "1.0.99"
 async-recursion = "1.1.1"
 async-trait = "0.1.89"
-axum-otel-metrics = "0.11.0"
+axum-otel-metrics = "0.13.0"
 axum = "0.8.8"
 backoff = { version = "0.4.0", features = ["tokio"] }
 backon = "1.5.2"
