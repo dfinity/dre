@@ -8,6 +8,12 @@
 #         rc_name: <reference RC name>
 #         name: <version name>
 releases:
+  - rc_name: rc--2026-04-24_04-21
+    versions:
+      - name: base
+        version: 920df8055260f443ac3335cc0f2b06e285a688b4
+      - name: dirty-accessed-charging
+        version: 52cf4d105ed7ae882e45d09d364c961d2fb442d3 
   - rc_name: rc--2026-04-16_04-20
     versions:
       - name: base
