@@ -12,6 +12,8 @@ releases:
     versions:
       - name: base
         version: f31310fe9d4237e1352477ae9a9b009bbe78c968
+      - name: dirty-accessed-charging
+        version: fa3e237b0ba69d4ba64524c5c120cd11f452c192 
   - rc_name: rc--2026-04-24_04-21
     versions:
       - name: base
