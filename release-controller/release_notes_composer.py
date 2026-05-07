@@ -40,6 +40,7 @@ REPLICA_TEAMS = set(
     [
         "consensus-owners",
         "consensus",
+        "core-protocol",
         "crypto-team",
         "dept-crypto-library",
         "execution-owners",
@@ -86,9 +87,8 @@ class Team:
 
 RELEASE_NOTES_REVIEWERS: dict[OsKind, list[Team]] = {
     GUESTOS: [
-        Team("consensus", "@team-consensus", "SRJ3R849E", False),
+        Team("core-protocol", "@team-core-protocol", "", False),
         Team("node", "@node-team", "S027838EY30", False),
-        Team("team-dsm", "@team-dsm", "S09R319PHC1", False),
     ],
     HOSTOS: [
         Team("node", "@node-team", "S027838EY30", True),
@@ -113,6 +113,7 @@ TEAM_PRETTY_MAP = {
     "boundarynode-team": "Boundary Nodes",
     "consensus-owners": "Consensus",
     "consensus": "Consensus",
+    "core-protocol": "Core Protocol",
     "cross-chain-team": "Cross Chain",
     "crypto-team": "Crypto",
     "dept-crypto-library": "Crypto",
