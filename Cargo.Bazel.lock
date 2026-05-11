@@ -1,5 +1,5 @@
 {
-  "checksum": "14b9ca83cfd5906d02a0fb365964be4755ab0de3ee8b3191e7daf43c2223475d",
+  "checksum": "be7e586a908e6e97b5991acd9e9c588e12fd1616368a05757585f4e022cb8c13",
   "crates": {
     "actix-codec 0.5.2": {
       "name": "actix-codec",
@@ -33,7 +33,7 @@
         "deps": {
           "common": [
             {
-              "id": "bitflags 2.11.0",
+              "id": "bitflags 2.11.1",
               "target": "bitflags"
             },
             {
@@ -57,7 +57,7 @@
               "target": "pin_project_lite"
             },
             {
-              "id": "tokio 1.51.1",
+              "id": "tokio 1.52.3",
               "target": "tokio"
             },
             {
@@ -137,7 +137,7 @@
               "target": "actix_utils"
             },
             {
-              "id": "bitflags 2.11.0",
+              "id": "bitflags 2.11.1",
               "target": "bitflags"
             },
             {
@@ -205,7 +205,7 @@
               "target": "smallvec"
             },
             {
-              "id": "tokio 1.51.1",
+              "id": "tokio 1.52.3",
               "target": "tokio"
             },
             {
@@ -399,7 +399,7 @@
               "target": "futures_core"
             },
             {
-              "id": "tokio 1.51.1",
+              "id": "tokio 1.52.3",
               "target": "tokio"
             }
           ],
@@ -490,7 +490,7 @@
               "target": "socket2"
             },
             {
-              "id": "tokio 1.51.1",
+              "id": "tokio 1.52.3",
               "target": "tokio"
             },
             {
@@ -1430,7 +1430,7 @@
         "deps": {
           "common": [
             {
-              "id": "libc 0.2.184",
+              "id": "libc 0.2.185",
               "target": "libc"
             }
           ],
@@ -1664,7 +1664,7 @@
           "selects": {
             "cfg(windows)": [
               {
-                "id": "windows-sys 0.61.2",
+                "id": "windows-sys 0.60.2",
                 "target": "windows_sys"
               }
             ]
@@ -1723,7 +1723,7 @@
                 "target": "once_cell_polyfill"
               },
               {
-                "id": "windows-sys 0.61.2",
+                "id": "windows-sys 0.60.2",
                 "target": "windows_sys"
               }
             ]
@@ -2347,14 +2347,14 @@
       ],
       "license_file": "LICENSE"
     },
-    "assert_cmd 2.2.0": {
+    "assert_cmd 2.2.1": {
       "name": "assert_cmd",
-      "version": "2.2.0",
+      "version": "2.2.1",
       "package_url": "https://github.com/assert-rs/assert_cmd.git",
       "repository": {
         "Http": {
-          "url": "https://static.crates.io/crates/assert_cmd/2.2.0/download",
-          "sha256": "9a686bbee5efb88a82df0621b236e74d925f470e5445d3220a5648b892ec99c9"
+          "url": "https://static.crates.io/crates/assert_cmd/2.2.1/download",
+          "sha256": "39bae1d3fa576f7c6519514180a72559268dd7d1fe104070956cb687bc6673bd"
         }
       },
       "targets": [
@@ -2395,7 +2395,7 @@
               "target": "anstyle"
             },
             {
-              "id": "assert_cmd 2.2.0",
+              "id": "assert_cmd 2.2.1",
               "target": "build_script_build"
             },
             {
@@ -2422,14 +2422,14 @@
           "selects": {
             "cfg(any())": [
               {
-                "id": "libc 0.2.184",
+                "id": "libc 0.2.185",
                 "target": "libc"
               }
             ]
           }
         },
         "edition": "2024",
-        "version": "2.2.0"
+        "version": "2.2.1"
       },
       "build_script_attrs": {
         "compile_data_glob": [
@@ -2626,7 +2626,7 @@
               "target": "pin_project_lite"
             },
             {
-              "id": "tokio 1.51.1",
+              "id": "tokio 1.52.3",
               "target": "tokio"
             }
           ],
@@ -3273,14 +3273,14 @@
       ],
       "license_file": "LICENSE"
     },
-    "axum 0.8.8": {
+    "axum 0.8.9": {
       "name": "axum",
-      "version": "0.8.8",
+      "version": "0.8.9",
       "package_url": "https://github.com/tokio-rs/axum",
       "repository": {
         "Http": {
-          "url": "https://static.crates.io/crates/axum/0.8.8/download",
-          "sha256": "8b52af3cb4058c895d37317bb27508dccc8e5f2d39454016b297bf4a400597b8"
+          "url": "https://static.crates.io/crates/axum/0.8.9/download",
+          "sha256": "31b698c5f9a010f6573133b09e0de5408834d0c82f8d7475a89fc1867a71cd90"
         }
       },
       "targets": [
@@ -3409,11 +3409,11 @@
               "target": "sync_wrapper"
             },
             {
-              "id": "tokio 1.51.1",
+              "id": "tokio 1.52.3",
               "target": "tokio"
             },
             {
-              "id": "tokio-tungstenite 0.28.0",
+              "id": "tokio-tungstenite 0.29.0",
               "target": "tokio_tungstenite"
             },
             {
@@ -3436,7 +3436,7 @@
           "selects": {}
         },
         "edition": "2021",
-        "version": "0.8.8"
+        "version": "0.8.9"
       },
       "license": "MIT",
       "license_ids": [
@@ -3665,7 +3665,7 @@
         "deps": {
           "common": [
             {
-              "id": "axum 0.8.8",
+              "id": "axum 0.8.9",
               "target": "axum"
             },
             {
@@ -3775,7 +3775,7 @@
               "target": "rand"
             },
             {
-              "id": "tokio 1.51.1",
+              "id": "tokio 1.52.3",
               "target": "tokio",
               "alias": "tokio_1"
             }
@@ -3863,13 +3863,13 @@
           "selects": {
             "aarch64-apple-darwin": [
               {
-                "id": "tokio 1.51.1",
+                "id": "tokio 1.52.3",
                 "target": "tokio"
               }
             ],
             "aarch64-unknown-linux-gnu": [
               {
-                "id": "tokio 1.51.1",
+                "id": "tokio 1.52.3",
                 "target": "tokio"
               }
             ],
@@ -3887,19 +3887,19 @@
             ],
             "x86_64-pc-windows-msvc": [
               {
-                "id": "tokio 1.51.1",
+                "id": "tokio 1.52.3",
                 "target": "tokio"
               }
             ],
             "x86_64-unknown-linux-gnu": [
               {
-                "id": "tokio 1.51.1",
+                "id": "tokio 1.52.3",
                 "target": "tokio"
               }
             ],
             "x86_64-unknown-nixos-gnu": [
               {
-                "id": "tokio 1.51.1",
+                "id": "tokio 1.52.3",
                 "target": "tokio"
               }
             ]
@@ -4706,14 +4706,14 @@
       ],
       "license_file": "LICENSE-APACHE"
     },
-    "bitflags 2.11.0": {
+    "bitflags 2.11.1": {
       "name": "bitflags",
-      "version": "2.11.0",
+      "version": "2.11.1",
       "package_url": "https://github.com/bitflags/bitflags",
       "repository": {
         "Http": {
-          "url": "https://static.crates.io/crates/bitflags/2.11.0/download",
-          "sha256": "843867be96c8daad0d758b57df9392b6d8d271134fce549de6ce169ff98a92af"
+          "url": "https://static.crates.io/crates/bitflags/2.11.1/download",
+          "sha256": "c4512299f36f043ab09a583e57bceb5a5aab7a73db1805848e8fef3c9e8c78b3"
         }
       },
       "targets": [
@@ -4742,7 +4742,7 @@
           "selects": {}
         },
         "edition": "2021",
-        "version": "2.11.0"
+        "version": "2.11.1"
       },
       "license": "MIT OR Apache-2.0",
       "license_ids": [
@@ -6741,7 +6741,7 @@
               "target": "anyhow"
             },
             {
-              "id": "clap 4.6.0",
+              "id": "clap 4.6.1",
               "target": "clap"
             },
             {
@@ -6769,7 +6769,7 @@
               "target": "serde_json"
             },
             {
-              "id": "tokio 1.51.1",
+              "id": "tokio 1.52.3",
               "target": "tokio"
             },
             {
@@ -6958,25 +6958,25 @@
           "selects": {
             "aarch64-apple-darwin": [
               {
-                "id": "libc 0.2.184",
+                "id": "libc 0.2.185",
                 "target": "libc"
               }
             ],
             "aarch64-unknown-linux-gnu": [
               {
-                "id": "libc 0.2.184",
+                "id": "libc 0.2.185",
                 "target": "libc"
               }
             ],
             "x86_64-unknown-linux-gnu": [
               {
-                "id": "libc 0.2.184",
+                "id": "libc 0.2.185",
                 "target": "libc"
               }
             ],
             "x86_64-unknown-nixos-gnu": [
               {
-                "id": "libc 0.2.184",
+                "id": "libc 0.2.185",
                 "target": "libc"
               }
             ]
@@ -7338,14 +7338,14 @@
       ],
       "license_file": "LICENSE"
     },
-    "clap 4.6.0": {
+    "clap 4.6.1": {
       "name": "clap",
-      "version": "4.6.0",
+      "version": "4.6.1",
       "package_url": "https://github.com/clap-rs/clap",
       "repository": {
         "Http": {
-          "url": "https://static.crates.io/crates/clap/4.6.0/download",
-          "sha256": "b193af5b67834b676abd72466a96c1024e6a6ad978a1f484bd90b85c94041351"
+          "url": "https://static.crates.io/crates/clap/4.6.1/download",
+          "sha256": "1ddb117e43bbf7dacf0a4190fef4d345b9bad68dfc649cb349e7d17d28428e51"
         }
       },
       "targets": [
@@ -7397,13 +7397,13 @@
         "proc_macro_deps": {
           "common": [
             {
-              "id": "clap_derive 4.6.0",
+              "id": "clap_derive 4.6.1",
               "target": "clap_derive"
             }
           ],
           "selects": {}
         },
-        "version": "4.6.0"
+        "version": "4.6.1"
       },
       "license": "MIT OR Apache-2.0",
       "license_ids": [
@@ -7538,14 +7538,14 @@
       ],
       "license_file": "LICENSE-APACHE"
     },
-    "clap_complete 4.6.0": {
+    "clap_complete 4.6.4": {
       "name": "clap_complete",
-      "version": "4.6.0",
+      "version": "4.6.4",
       "package_url": "https://github.com/clap-rs/clap",
       "repository": {
         "Http": {
-          "url": "https://static.crates.io/crates/clap_complete/4.6.0/download",
-          "sha256": "19c9f1dde76b736e3681f28cec9d5a61299cbaae0fce80a68e43724ad56031eb"
+          "url": "https://static.crates.io/crates/clap_complete/4.6.4/download",
+          "sha256": "e3e962dae2b1e5007fe9e3db363ddc43a8bf25546d279f7a8a4401204690e80c"
         }
       },
       "targets": [
@@ -7576,14 +7576,14 @@
         "deps": {
           "common": [
             {
-              "id": "clap 4.6.0",
+              "id": "clap 4.6.1",
               "target": "clap"
             }
           ],
           "selects": {}
         },
         "edition": "2024",
-        "version": "4.6.0"
+        "version": "4.6.4"
       },
       "license": "MIT OR Apache-2.0",
       "license_ids": [
@@ -7592,14 +7592,14 @@
       ],
       "license_file": "LICENSE-APACHE"
     },
-    "clap_derive 4.6.0": {
+    "clap_derive 4.6.1": {
       "name": "clap_derive",
-      "version": "4.6.0",
+      "version": "4.6.1",
       "package_url": "https://github.com/clap-rs/clap",
       "repository": {
         "Http": {
-          "url": "https://static.crates.io/crates/clap_derive/4.6.0/download",
-          "sha256": "1110bd8a634a1ab8cb04345d8d878267d57c3cf1b38d91b71af6686408bbca6a"
+          "url": "https://static.crates.io/crates/clap_derive/4.6.1/download",
+          "sha256": "f2ce8604710f6733aa641a2b3731eaa1e8b3d9973d5e3565da11800813f997a9"
         }
       },
       "targets": [
@@ -7649,7 +7649,7 @@
           "selects": {}
         },
         "edition": "2024",
-        "version": "4.6.0"
+        "version": "4.6.1"
       },
       "license": "MIT OR Apache-2.0",
       "license_ids": [
@@ -8385,7 +8385,7 @@
         "deps": {
           "common": [
             {
-              "id": "libc 0.2.184",
+              "id": "libc 0.2.185",
               "target": "libc"
             },
             {
@@ -8640,7 +8640,7 @@
               "target": "core_foundation_sys"
             },
             {
-              "id": "libc 0.2.184",
+              "id": "libc 0.2.185",
               "target": "libc"
             }
           ],
@@ -8699,7 +8699,7 @@
               "target": "core_foundation_sys"
             },
             {
-              "id": "libc 0.2.184",
+              "id": "libc 0.2.185",
               "target": "libc"
             }
           ],
@@ -8850,25 +8850,25 @@
           "selects": {
             "aarch64-linux-android": [
               {
-                "id": "libc 0.2.184",
+                "id": "libc 0.2.185",
                 "target": "libc"
               }
             ],
             "cfg(all(target_arch = \"aarch64\", target_os = \"linux\"))": [
               {
-                "id": "libc 0.2.184",
+                "id": "libc 0.2.185",
                 "target": "libc"
               }
             ],
             "cfg(all(target_arch = \"aarch64\", target_vendor = \"apple\"))": [
               {
-                "id": "libc 0.2.184",
+                "id": "libc 0.2.185",
                 "target": "libc"
               }
             ],
             "cfg(all(target_arch = \"loongarch64\", target_os = \"linux\"))": [
               {
-                "id": "libc 0.2.184",
+                "id": "libc 0.2.185",
                 "target": "libc"
               }
             ]
@@ -9384,7 +9384,7 @@
         "deps": {
           "common": [
             {
-              "id": "bitflags 2.11.0",
+              "id": "bitflags 2.11.1",
               "target": "bitflags"
             },
             {
@@ -11227,7 +11227,7 @@
         "deps": {
           "common": [
             {
-              "id": "libc 0.2.184",
+              "id": "libc 0.2.185",
               "target": "libc"
             },
             {
@@ -11355,7 +11355,7 @@
               "target": "num_cpus"
             },
             {
-              "id": "tokio 1.51.1",
+              "id": "tokio 1.52.3",
               "target": "tokio"
             }
           ],
@@ -11482,7 +11482,7 @@
               "target": "log"
             },
             {
-              "id": "rand 0.9.2",
+              "id": "rand 0.9.4",
               "target": "rand"
             },
             {
@@ -11511,7 +11511,7 @@
               "target": "regex"
             },
             {
-              "id": "tokio 1.51.1",
+              "id": "tokio 1.52.3",
               "target": "tokio"
             }
           ],
@@ -12862,7 +12862,7 @@
             ],
             "cfg(unix)": [
               {
-                "id": "libc 0.2.184",
+                "id": "libc 0.2.185",
                 "target": "libc"
               }
             ],
@@ -12929,13 +12929,13 @@
             ],
             "cfg(unix)": [
               {
-                "id": "libc 0.2.184",
+                "id": "libc 0.2.185",
                 "target": "libc"
               }
             ],
             "cfg(windows)": [
               {
-                "id": "windows-sys 0.61.2",
+                "id": "windows-sys 0.60.2",
                 "target": "windows_sys"
               }
             ]
@@ -12991,7 +12991,7 @@
             ],
             "cfg(unix)": [
               {
-                "id": "libc 0.2.184",
+                "id": "libc 0.2.185",
                 "target": "libc"
               }
             ],
@@ -13283,7 +13283,7 @@
               "target": "chrono"
             },
             {
-              "id": "clap 4.6.0",
+              "id": "clap 4.6.1",
               "target": "clap"
             },
             {
@@ -13291,7 +13291,7 @@
               "target": "clap_num"
             },
             {
-              "id": "clap_complete 4.6.0",
+              "id": "clap_complete 4.6.4",
               "target": "clap_complete"
             },
             {
@@ -13491,7 +13491,7 @@
               "target": "rosetta_core"
             },
             {
-              "id": "rust_decimal 1.41.0",
+              "id": "rust_decimal 1.42.0",
               "target": "rust_decimal"
             },
             {
@@ -13539,7 +13539,7 @@
               "target": "tempfile"
             },
             {
-              "id": "tokio 1.51.1",
+              "id": "tokio 1.52.3",
               "target": "tokio"
             },
             {
@@ -13587,7 +13587,7 @@
         "deps": {
           "common": [
             {
-              "id": "clap 4.6.0",
+              "id": "clap 4.6.1",
               "target": "clap"
             },
             {
@@ -14862,25 +14862,25 @@
           "selects": {
             "cfg(target_os = \"hermit\")": [
               {
-                "id": "libc 0.2.184",
+                "id": "libc 0.2.185",
                 "target": "libc"
               }
             ],
             "cfg(target_os = \"wasi\")": [
               {
-                "id": "libc 0.2.184",
+                "id": "libc 0.2.185",
                 "target": "libc"
               }
             ],
             "cfg(unix)": [
               {
-                "id": "libc 0.2.184",
+                "id": "libc 0.2.185",
                 "target": "libc"
               }
             ],
             "cfg(windows)": [
               {
-                "id": "windows-sys 0.61.2",
+                "id": "windows-sys 0.60.2",
                 "target": "windows_sys"
               }
             ]
@@ -15386,7 +15386,7 @@
             ],
             "cfg(unix)": [
               {
-                "id": "libc 0.2.184",
+                "id": "libc 0.2.185",
                 "target": "libc"
               }
             ]
@@ -15973,7 +15973,7 @@
           "selects": {
             "cfg(unix)": [
               {
-                "id": "libc 0.2.184",
+                "id": "libc 0.2.185",
                 "target": "libc"
               }
             ],
@@ -16604,7 +16604,7 @@
               "target": "anyhow"
             },
             {
-              "id": "axum 0.8.8",
+              "id": "axum 0.8.9",
               "target": "axum"
             },
             {
@@ -16616,7 +16616,7 @@
               "target": "chrono"
             },
             {
-              "id": "clap 4.6.0",
+              "id": "clap 4.6.1",
               "target": "clap"
             },
             {
@@ -16660,7 +16660,7 @@
               "target": "slog_term"
             },
             {
-              "id": "tokio 1.51.1",
+              "id": "tokio 1.52.3",
               "target": "tokio"
             },
             {
@@ -16846,7 +16846,7 @@
             ],
             "cfg(unix)": [
               {
-                "id": "libc 0.2.184",
+                "id": "libc 0.2.185",
                 "target": "libc"
               }
             ],
@@ -16933,7 +16933,7 @@
           "selects": {
             "cfg(all(any(target_os = \"linux\", target_os = \"android\"), not(any(all(target_os = \"linux\", target_env = \"\"), getrandom_backend = \"custom\", getrandom_backend = \"linux_raw\", getrandom_backend = \"rdrand\", getrandom_backend = \"rndr\"))))": [
               {
-                "id": "libc 0.2.184",
+                "id": "libc 0.2.185",
                 "target": "libc"
               }
             ],
@@ -16951,43 +16951,43 @@
             ],
             "cfg(any(target_os = \"dragonfly\", target_os = \"freebsd\", target_os = \"hurd\", target_os = \"illumos\", target_os = \"cygwin\", all(target_os = \"horizon\", target_arch = \"arm\")))": [
               {
-                "id": "libc 0.2.184",
+                "id": "libc 0.2.185",
                 "target": "libc"
               }
             ],
             "cfg(any(target_os = \"haiku\", target_os = \"redox\", target_os = \"nto\", target_os = \"aix\"))": [
               {
-                "id": "libc 0.2.184",
+                "id": "libc 0.2.185",
                 "target": "libc"
               }
             ],
             "cfg(any(target_os = \"ios\", target_os = \"visionos\", target_os = \"watchos\", target_os = \"tvos\"))": [
               {
-                "id": "libc 0.2.184",
+                "id": "libc 0.2.185",
                 "target": "libc"
               }
             ],
             "cfg(any(target_os = \"macos\", target_os = \"openbsd\", target_os = \"vita\", target_os = \"emscripten\"))": [
               {
-                "id": "libc 0.2.184",
+                "id": "libc 0.2.185",
                 "target": "libc"
               }
             ],
             "cfg(target_os = \"netbsd\")": [
               {
-                "id": "libc 0.2.184",
+                "id": "libc 0.2.185",
                 "target": "libc"
               }
             ],
             "cfg(target_os = \"solaris\")": [
               {
-                "id": "libc 0.2.184",
+                "id": "libc 0.2.185",
                 "target": "libc"
               }
             ],
             "cfg(target_os = \"vxworks\")": [
               {
-                "id": "libc 0.2.184",
+                "id": "libc 0.2.185",
                 "target": "libc"
               }
             ]
@@ -17069,7 +17069,7 @@
           "selects": {
             "cfg(all(any(target_os = \"linux\", target_os = \"android\"), not(any(all(target_os = \"linux\", target_env = \"\"), getrandom_backend = \"custom\", getrandom_backend = \"linux_raw\", getrandom_backend = \"rdrand\", getrandom_backend = \"rndr\"))))": [
               {
-                "id": "libc 0.2.184",
+                "id": "libc 0.2.185",
                 "target": "libc"
               }
             ],
@@ -17093,43 +17093,43 @@
             ],
             "cfg(any(target_os = \"dragonfly\", target_os = \"freebsd\", target_os = \"hurd\", target_os = \"illumos\", target_os = \"cygwin\", all(target_os = \"horizon\", target_arch = \"arm\")))": [
               {
-                "id": "libc 0.2.184",
+                "id": "libc 0.2.185",
                 "target": "libc"
               }
             ],
             "cfg(any(target_os = \"haiku\", target_os = \"redox\", target_os = \"nto\", target_os = \"aix\"))": [
               {
-                "id": "libc 0.2.184",
+                "id": "libc 0.2.185",
                 "target": "libc"
               }
             ],
             "cfg(any(target_os = \"ios\", target_os = \"visionos\", target_os = \"watchos\", target_os = \"tvos\"))": [
               {
-                "id": "libc 0.2.184",
+                "id": "libc 0.2.185",
                 "target": "libc"
               }
             ],
             "cfg(any(target_os = \"macos\", target_os = \"openbsd\", target_os = \"vita\", target_os = \"emscripten\"))": [
               {
-                "id": "libc 0.2.184",
+                "id": "libc 0.2.185",
                 "target": "libc"
               }
             ],
             "cfg(target_os = \"netbsd\")": [
               {
-                "id": "libc 0.2.184",
+                "id": "libc 0.2.185",
                 "target": "libc"
               }
             ],
             "cfg(target_os = \"solaris\")": [
               {
-                "id": "libc 0.2.184",
+                "id": "libc 0.2.185",
                 "target": "libc"
               }
             ],
             "cfg(target_os = \"vxworks\")": [
               {
-                "id": "libc 0.2.184",
+                "id": "libc 0.2.185",
                 "target": "libc"
               }
             ]
@@ -17461,7 +17461,7 @@
               "target": "slab"
             },
             {
-              "id": "tokio 1.51.1",
+              "id": "tokio 1.52.3",
               "target": "tokio"
             },
             {
@@ -18865,7 +18865,7 @@
               "target": "smallvec"
             },
             {
-              "id": "tokio 1.51.1",
+              "id": "tokio 1.52.3",
               "target": "tokio"
             },
             {
@@ -18979,7 +18979,7 @@
               "alias": "pki_types"
             },
             {
-              "id": "tokio 1.51.1",
+              "id": "tokio 1.52.3",
               "target": "tokio"
             },
             {
@@ -19079,7 +19079,7 @@
               "target": "pin_project_lite"
             },
             {
-              "id": "tokio 1.51.1",
+              "id": "tokio 1.52.3",
               "target": "tokio"
             },
             {
@@ -19183,7 +19183,7 @@
               "target": "ipnet"
             },
             {
-              "id": "libc 0.2.184",
+              "id": "libc 0.2.185",
               "target": "libc"
             },
             {
@@ -19199,7 +19199,7 @@
               "target": "socket2"
             },
             {
-              "id": "tokio 1.51.1",
+              "id": "tokio 1.52.3",
               "target": "tokio"
             },
             {
@@ -19466,7 +19466,7 @@
               "target": "slog"
             },
             {
-              "id": "tokio 1.51.1",
+              "id": "tokio 1.52.3",
               "target": "tokio"
             },
             {
@@ -19769,7 +19769,7 @@
           "selects": {
             "cfg(not(target_family = \"wasm\"))": [
               {
-                "id": "tokio 1.51.1",
+                "id": "tokio 1.52.3",
                 "target": "tokio"
               }
             ]
@@ -20000,7 +20000,7 @@
           "selects": {
             "cfg(not(target_family = \"wasm\"))": [
               {
-                "id": "tokio 1.51.1",
+                "id": "tokio 1.52.3",
                 "target": "tokio"
               }
             ]
@@ -20363,7 +20363,7 @@
               "target": "serde_cbor"
             },
             {
-              "id": "tokio 1.51.1",
+              "id": "tokio 1.52.3",
               "target": "tokio"
             },
             {
@@ -23390,7 +23390,7 @@
               "target": "slog"
             },
             {
-              "id": "tokio 1.51.1",
+              "id": "tokio 1.52.3",
               "target": "tokio"
             },
             {
@@ -23442,7 +23442,7 @@
         "deps": {
           "common": [
             {
-              "id": "axum 0.8.8",
+              "id": "axum 0.8.9",
               "target": "axum"
             },
             {
@@ -23466,7 +23466,7 @@
               "target": "slog"
             },
             {
-              "id": "tokio 1.51.1",
+              "id": "tokio 1.52.3",
               "target": "tokio"
             },
             {
@@ -24795,7 +24795,7 @@
               "target": "chrono"
             },
             {
-              "id": "clap 4.6.0",
+              "id": "clap 4.6.1",
               "target": "clap"
             },
             {
@@ -24955,7 +24955,7 @@
               "target": "strum"
             },
             {
-              "id": "tokio 1.51.1",
+              "id": "tokio 1.52.3",
               "target": "tokio"
             },
             {
@@ -25247,7 +25247,7 @@
               "target": "strum"
             },
             {
-              "id": "tokio 1.51.1",
+              "id": "tokio 1.52.3",
               "target": "tokio"
             },
             {
@@ -25327,7 +25327,7 @@
               "target": "ic_adapter_metrics_client"
             },
             {
-              "id": "libc 0.2.184",
+              "id": "libc 0.2.185",
               "target": "libc"
             },
             {
@@ -25523,7 +25523,7 @@
               "target": "prost"
             },
             {
-              "id": "rust_decimal 1.41.0",
+              "id": "rust_decimal 1.42.0",
               "target": "rust_decimal"
             }
           ],
@@ -25884,7 +25884,7 @@
               "target": "prost"
             },
             {
-              "id": "rust_decimal 1.41.0",
+              "id": "rust_decimal 1.42.0",
               "target": "rust_decimal"
             },
             {
@@ -26247,7 +26247,7 @@
         "deps": {
           "common": [
             {
-              "id": "rust_decimal 1.41.0",
+              "id": "rust_decimal 1.42.0",
               "target": "rust_decimal"
             }
           ],
@@ -26413,7 +26413,7 @@
               "target": "prost"
             },
             {
-              "id": "rust_decimal 1.41.0",
+              "id": "rust_decimal 1.42.0",
               "target": "rust_decimal"
             },
             {
@@ -27101,7 +27101,7 @@
               "target": "lazy_static"
             },
             {
-              "id": "rust_decimal 1.41.0",
+              "id": "rust_decimal 1.42.0",
               "target": "rust_decimal"
             },
             {
@@ -27594,7 +27594,7 @@
               "target": "registry_canister"
             },
             {
-              "id": "rust_decimal 1.41.0",
+              "id": "rust_decimal 1.42.0",
               "target": "rust_decimal"
             },
             {
@@ -28192,7 +28192,7 @@
               "target": "rewards_calculation"
             },
             {
-              "id": "rust_decimal 1.41.0",
+              "id": "rust_decimal 1.42.0",
               "target": "rust_decimal"
             },
             {
@@ -28912,7 +28912,7 @@
               "target": "thiserror"
             },
             {
-              "id": "tokio 1.51.1",
+              "id": "tokio 1.52.3",
               "target": "tokio"
             },
             {
@@ -29296,7 +29296,7 @@
               "target": "candid"
             },
             {
-              "id": "clap 4.6.0",
+              "id": "clap 4.6.1",
               "target": "clap"
             },
             {
@@ -29730,7 +29730,7 @@
               "target": "lazy_static"
             },
             {
-              "id": "libc 0.2.184",
+              "id": "libc 0.2.185",
               "target": "libc"
             },
             {
@@ -29965,7 +29965,7 @@
               "target": "candid_utils"
             },
             {
-              "id": "clap 4.6.0",
+              "id": "clap 4.6.1",
               "target": "clap"
             },
             {
@@ -30153,7 +30153,7 @@
               "target": "rand_chacha"
             },
             {
-              "id": "rust_decimal 1.41.0",
+              "id": "rust_decimal 1.42.0",
               "target": "rust_decimal"
             },
             {
@@ -30291,7 +30291,7 @@
               "target": "candid"
             },
             {
-              "id": "clap 4.6.0",
+              "id": "clap 4.6.1",
               "target": "clap"
             },
             {
@@ -30460,7 +30460,7 @@
               "target": "num_traits"
             },
             {
-              "id": "rust_decimal 1.41.0",
+              "id": "rust_decimal 1.42.0",
               "target": "rust_decimal"
             }
           ],
@@ -30569,7 +30569,7 @@
               "target": "num_traits"
             },
             {
-              "id": "rust_decimal 1.41.0",
+              "id": "rust_decimal 1.42.0",
               "target": "rust_decimal"
             }
           ],
@@ -31056,7 +31056,7 @@
               "target": "prost"
             },
             {
-              "id": "rust_decimal 1.41.0",
+              "id": "rust_decimal 1.42.0",
               "target": "rust_decimal"
             },
             {
@@ -31454,7 +31454,7 @@
               "target": "lazy_static"
             },
             {
-              "id": "libc 0.2.184",
+              "id": "libc 0.2.185",
               "target": "libc"
             },
             {
@@ -31470,7 +31470,7 @@
               "target": "prost"
             },
             {
-              "id": "tokio 1.51.1",
+              "id": "tokio 1.52.3",
               "target": "tokio"
             },
             {
@@ -32081,7 +32081,7 @@
               "target": "time"
             },
             {
-              "id": "tokio 1.51.1",
+              "id": "tokio 1.52.3",
               "target": "tokio"
             }
           ],
@@ -32461,7 +32461,7 @@
               "target": "candid"
             },
             {
-              "id": "clap 4.6.0",
+              "id": "clap 4.6.1",
               "target": "clap"
             },
             {
@@ -34456,7 +34456,7 @@
           "selects": {
             "cfg(any(unix, target_os = \"wasi\"))": [
               {
-                "id": "libc 0.2.184",
+                "id": "libc 0.2.185",
                 "target": "libc"
               }
             ],
@@ -34468,7 +34468,7 @@
             ],
             "cfg(windows)": [
               {
-                "id": "windows-sys 0.61.2",
+                "id": "windows-sys 0.60.2",
                 "target": "windows_sys"
               }
             ]
@@ -34746,62 +34746,6 @@
       ],
       "license_file": "LICENSE-APACHE"
     },
-    "itertools 0.14.0": {
-      "name": "itertools",
-      "version": "0.14.0",
-      "package_url": "https://github.com/rust-itertools/itertools",
-      "repository": {
-        "Http": {
-          "url": "https://static.crates.io/crates/itertools/0.14.0/download",
-          "sha256": "2b192c782037fadd9cfa75548310488aabdbf3d2da73885b31bd0abd03351285"
-        }
-      },
-      "targets": [
-        {
-          "Library": {
-            "crate_name": "itertools",
-            "crate_root": "src/lib.rs",
-            "srcs": {
-              "allow_empty": true,
-              "include": [
-                "**/*.rs"
-              ]
-            }
-          }
-        }
-      ],
-      "library_target_name": "itertools",
-      "common_attrs": {
-        "compile_data_glob": [
-          "**"
-        ],
-        "crate_features": {
-          "common": [
-            "default",
-            "use_alloc",
-            "use_std"
-          ],
-          "selects": {}
-        },
-        "deps": {
-          "common": [
-            {
-              "id": "either 1.15.0",
-              "target": "either"
-            }
-          ],
-          "selects": {}
-        },
-        "edition": "2018",
-        "version": "0.14.0"
-      },
-      "license": "MIT OR Apache-2.0",
-      "license_ids": [
-        "Apache-2.0",
-        "MIT"
-      ],
-      "license_file": "LICENSE-APACHE"
-    },
     "itoa 1.0.18": {
       "name": "itoa",
       "version": "1.0.18",
@@ -35003,7 +34947,7 @@
           "selects": {
             "cfg(unix)": [
               {
-                "id": "libc 0.2.184",
+                "id": "libc 0.2.185",
                 "target": "libc"
               }
             ],
@@ -35852,14 +35796,14 @@
       ],
       "license_file": "LICENSE-APACHE"
     },
-    "libc 0.2.184": {
+    "libc 0.2.185": {
       "name": "libc",
-      "version": "0.2.184",
+      "version": "0.2.185",
       "package_url": "https://github.com/rust-lang/libc",
       "repository": {
         "Http": {
-          "url": "https://static.crates.io/crates/libc/0.2.184/download",
-          "sha256": "48f5d2a454e16a5ea0f4ced81bd44e4cfc7bd3a507b61887c99fd3538b28e4af"
+          "url": "https://static.crates.io/crates/libc/0.2.185/download",
+          "sha256": "52ff2c0fe9bc6cb6b14a0592c2ff4fa9ceb83eea9db979b0487cd054946a2b8f"
         }
       },
       "targets": [
@@ -35904,14 +35848,14 @@
         "deps": {
           "common": [
             {
-              "id": "libc 0.2.184",
+              "id": "libc 0.2.185",
               "target": "build_script_build"
             }
           ],
           "selects": {}
         },
         "edition": "2021",
-        "version": "0.2.184"
+        "version": "0.2.185"
       },
       "build_script_attrs": {
         "compile_data_glob": [
@@ -36664,7 +36608,7 @@
               "target": "anyhow"
             },
             {
-              "id": "clap 4.6.0",
+              "id": "clap 4.6.1",
               "target": "clap"
             },
             {
@@ -36688,7 +36632,7 @@
               "target": "serde_json"
             },
             {
-              "id": "tokio 1.51.1",
+              "id": "tokio 1.52.3",
               "target": "tokio"
             },
             {
@@ -36738,11 +36682,11 @@
         "deps": {
           "common": [
             {
-              "id": "axum 0.8.8",
+              "id": "axum 0.8.9",
               "target": "axum"
             },
             {
-              "id": "clap 4.6.0",
+              "id": "clap 4.6.1",
               "target": "clap"
             },
             {
@@ -36770,7 +36714,7 @@
               "target": "slog_term"
             },
             {
-              "id": "tokio 1.51.1",
+              "id": "tokio 1.52.3",
               "target": "tokio"
             }
           ],
@@ -36803,7 +36747,7 @@
               "target": "anyhow"
             },
             {
-              "id": "clap 4.6.0",
+              "id": "clap 4.6.1",
               "target": "clap"
             },
             {
@@ -36831,7 +36775,7 @@
               "target": "slog_term"
             },
             {
-              "id": "tokio 1.51.1",
+              "id": "tokio 1.52.3",
               "target": "tokio"
             },
             {
@@ -37107,7 +37051,7 @@
         "deps": {
           "common": [
             {
-              "id": "libc 0.2.184",
+              "id": "libc 0.2.185",
               "target": "libc"
             },
             {
@@ -37814,7 +37758,7 @@
           "selects": {
             "cfg(any(unix, target_os = \"hermit\", target_os = \"wasi\"))": [
               {
-                "id": "libc 0.2.184",
+                "id": "libc 0.2.185",
                 "target": "libc"
               }
             ],
@@ -38095,7 +38039,7 @@
         "deps": {
           "common": [
             {
-              "id": "axum 0.8.8",
+              "id": "axum 0.8.9",
               "target": "axum"
             },
             {
@@ -38107,7 +38051,7 @@
               "target": "base64"
             },
             {
-              "id": "clap 4.6.0",
+              "id": "clap 4.6.1",
               "target": "clap"
             },
             {
@@ -38187,7 +38131,7 @@
               "target": "slog_term"
             },
             {
-              "id": "tokio 1.51.1",
+              "id": "tokio 1.52.3",
               "target": "tokio"
             },
             {
@@ -38204,7 +38148,7 @@
               "target": "anyhow"
             },
             {
-              "id": "assert_cmd 2.2.0",
+              "id": "assert_cmd 2.2.1",
               "target": "assert_cmd"
             },
             {
@@ -38245,7 +38189,7 @@
         "deps": {
           "common": [
             {
-              "id": "clap 4.6.0",
+              "id": "clap 4.6.1",
               "target": "clap"
             },
             {
@@ -38293,7 +38237,7 @@
               "target": "slog_term"
             },
             {
-              "id": "tokio 1.51.1",
+              "id": "tokio 1.52.3",
               "target": "tokio"
             },
             {
@@ -38495,7 +38439,7 @@
               "target": "cfg_if"
             },
             {
-              "id": "libc 0.2.184",
+              "id": "libc 0.2.185",
               "target": "libc"
             },
             {
@@ -38829,7 +38773,7 @@
               "target": "once_cell"
             },
             {
-              "id": "rand 0.9.2",
+              "id": "rand 0.9.4",
               "target": "rand"
             },
             {
@@ -39137,7 +39081,7 @@
           "selects": {
             "cfg(not(windows))": [
               {
-                "id": "libc 0.2.184",
+                "id": "libc 0.2.185",
                 "target": "libc"
               }
             ],
@@ -39329,7 +39273,7 @@
               "target": "ic_agent"
             },
             {
-              "id": "rand 0.9.2",
+              "id": "rand 0.9.4",
               "target": "rand"
             },
             {
@@ -39505,7 +39449,7 @@
               "target": "snafu"
             },
             {
-              "id": "tokio 1.51.1",
+              "id": "tokio 1.52.3",
               "target": "tokio"
             },
             {
@@ -40120,7 +40064,7 @@
               "target": "percent_encoding"
             },
             {
-              "id": "rand 0.9.2",
+              "id": "rand 0.9.4",
               "target": "rand"
             },
             {
@@ -40672,7 +40616,7 @@
             ],
             "cfg(unix)": [
               {
-                "id": "libc 0.2.184",
+                "id": "libc 0.2.185",
                 "target": "libc"
               }
             ],
@@ -43216,7 +43160,7 @@
         "deps": {
           "common": [
             {
-              "id": "bitflags 2.11.0",
+              "id": "bitflags 2.11.1",
               "target": "bitflags"
             },
             {
@@ -43291,7 +43235,7 @@
         "deps": {
           "common": [
             {
-              "id": "bitflags 2.11.0",
+              "id": "bitflags 2.11.1",
               "target": "bitflags"
             },
             {
@@ -43377,7 +43321,7 @@
               "target": "lazy_static"
             },
             {
-              "id": "libc 0.2.184",
+              "id": "libc 0.2.185",
               "target": "libc"
             },
             {
@@ -43464,7 +43408,7 @@
               "target": "base64"
             },
             {
-              "id": "clap 4.6.0",
+              "id": "clap 4.6.1",
               "target": "clap"
             },
             {
@@ -43524,7 +43468,7 @@
               "target": "slog_term"
             },
             {
-              "id": "tokio 1.51.1",
+              "id": "tokio 1.52.3",
               "target": "tokio"
             },
             {
@@ -43734,7 +43678,7 @@
               "target": "bit_vec"
             },
             {
-              "id": "bitflags 2.11.0",
+              "id": "bitflags 2.11.1",
               "target": "bitflags"
             },
             {
@@ -43909,7 +43853,7 @@
               "target": "heck"
             },
             {
-              "id": "itertools 0.14.0",
+              "id": "itertools 0.13.0",
               "target": "itertools"
             },
             {
@@ -44000,7 +43944,7 @@
               "target": "anyhow"
             },
             {
-              "id": "itertools 0.14.0",
+              "id": "itertools 0.13.0",
               "target": "itertools"
             },
             {
@@ -44568,7 +44512,7 @@
               "target": "thiserror"
             },
             {
-              "id": "tokio 1.51.1",
+              "id": "tokio 1.52.3",
               "target": "tokio"
             },
             {
@@ -44661,7 +44605,7 @@
               "target": "lru_slab"
             },
             {
-              "id": "rand 0.9.2",
+              "id": "rand 0.9.4",
               "target": "rand"
             },
             {
@@ -44760,7 +44704,7 @@
         "deps": {
           "common": [
             {
-              "id": "libc 0.2.184",
+              "id": "libc 0.2.185",
               "target": "libc"
             },
             {
@@ -45105,25 +45049,25 @@
           "selects": {
             "aarch64-apple-darwin": [
               {
-                "id": "libc 0.2.184",
+                "id": "libc 0.2.185",
                 "target": "libc"
               }
             ],
             "aarch64-unknown-linux-gnu": [
               {
-                "id": "libc 0.2.184",
+                "id": "libc 0.2.185",
                 "target": "libc"
               }
             ],
             "x86_64-unknown-linux-gnu": [
               {
-                "id": "libc 0.2.184",
+                "id": "libc 0.2.185",
                 "target": "libc"
               }
             ],
             "x86_64-unknown-nixos-gnu": [
               {
-                "id": "libc 0.2.184",
+                "id": "libc 0.2.185",
                 "target": "libc"
               }
             ]
@@ -45139,14 +45083,14 @@
       ],
       "license_file": "LICENSE-APACHE"
     },
-    "rand 0.9.2": {
+    "rand 0.9.4": {
       "name": "rand",
-      "version": "0.9.2",
+      "version": "0.9.4",
       "package_url": "https://github.com/rust-random/rand",
       "repository": {
         "Http": {
-          "url": "https://static.crates.io/crates/rand/0.9.2/download",
-          "sha256": "6db2770f06117d490610c7488547d543617b21bfa07796d7a12f6f1bd53850d1"
+          "url": "https://static.crates.io/crates/rand/0.9.4/download",
+          "sha256": "44c5af06bb1b7d3216d91932aed5265164bf384dc89cd6ba05cf59a35f5f76ea"
         }
       },
       "targets": [
@@ -45194,7 +45138,7 @@
           "selects": {}
         },
         "edition": "2021",
-        "version": "0.9.2"
+        "version": "0.9.4"
       },
       "license": "MIT OR Apache-2.0",
       "license_ids": [
@@ -45730,7 +45674,7 @@
         "deps": {
           "common": [
             {
-              "id": "bitflags 2.11.0",
+              "id": "bitflags 2.11.1",
               "target": "bitflags"
             }
           ],
@@ -45777,7 +45721,7 @@
         "deps": {
           "common": [
             {
-              "id": "bitflags 2.11.0",
+              "id": "bitflags 2.11.1",
               "target": "bitflags"
             }
           ],
@@ -46785,7 +46729,7 @@
                 "target": "pin_project_lite"
               },
               {
-                "id": "tokio 1.51.1",
+                "id": "tokio 1.52.3",
                 "target": "tokio"
               },
               {
@@ -46973,7 +46917,7 @@
         "deps": {
           "common": [
             {
-              "id": "rand 0.9.2",
+              "id": "rand 0.9.4",
               "target": "rand"
             }
           ],
@@ -47055,7 +46999,7 @@
               "target": "maplit"
             },
             {
-              "id": "rust_decimal 1.41.0",
+              "id": "rust_decimal 1.42.0",
               "target": "rust_decimal"
             },
             {
@@ -47218,13 +47162,13 @@
             ],
             "cfg(all(all(target_arch = \"aarch64\", target_endian = \"little\"), target_vendor = \"apple\", any(target_os = \"ios\", target_os = \"macos\", target_os = \"tvos\", target_os = \"visionos\", target_os = \"watchos\")))": [
               {
-                "id": "libc 0.2.184",
+                "id": "libc 0.2.185",
                 "target": "libc"
               }
             ],
             "cfg(all(any(all(target_arch = \"aarch64\", target_endian = \"little\"), all(target_arch = \"arm\", target_endian = \"little\")), any(target_os = \"android\", target_os = \"linux\")))": [
               {
-                "id": "libc 0.2.184",
+                "id": "libc 0.2.185",
                 "target": "libc"
               }
             ]
@@ -47485,7 +47429,7 @@
               "target": "anyhow"
             },
             {
-              "id": "axum 0.8.8",
+              "id": "axum 0.8.9",
               "target": "axum"
             },
             {
@@ -47553,7 +47497,7 @@
               "target": "serde_with"
             },
             {
-              "id": "tokio 1.51.1",
+              "id": "tokio 1.52.3",
               "target": "tokio"
             },
             {
@@ -47680,14 +47624,14 @@
       ],
       "license_file": "LICENSE-APACHE"
     },
-    "rust_decimal 1.41.0": {
+    "rust_decimal 1.42.0": {
       "name": "rust_decimal",
-      "version": "1.41.0",
+      "version": "1.42.0",
       "package_url": "https://github.com/paupino/rust-decimal",
       "repository": {
         "Http": {
-          "url": "https://static.crates.io/crates/rust_decimal/1.41.0/download",
-          "sha256": "2ce901f9a19d251159075a4c37af514c3b8ef99c22e02dd8c19161cf397ee94a"
+          "url": "https://static.crates.io/crates/rust_decimal/1.42.0/download",
+          "sha256": "0c5108e3d4d903e21aac27f12ba5377b6b34f9f44b325e4894c7924169d06995"
         }
       },
       "targets": [
@@ -47740,7 +47684,7 @@
               "target": "num_traits"
             },
             {
-              "id": "rust_decimal 1.41.0",
+              "id": "rust_decimal 1.42.0",
               "target": "build_script_build"
             },
             {
@@ -47751,7 +47695,7 @@
           "selects": {}
         },
         "edition": "2021",
-        "version": "1.41.0"
+        "version": "1.42.0"
       },
       "build_script_attrs": {
         "compile_data_glob": [
@@ -48079,7 +48023,7 @@
         "deps": {
           "common": [
             {
-              "id": "bitflags 2.11.0",
+              "id": "bitflags 2.11.1",
               "target": "bitflags"
             },
             {
@@ -48095,7 +48039,7 @@
                 "alias": "libc_errno"
               },
               {
-                "id": "libc 0.2.184",
+                "id": "libc 0.2.185",
                 "target": "libc"
               }
             ],
@@ -48118,7 +48062,7 @@
                 "alias": "libc_errno"
               },
               {
-                "id": "libc 0.2.184",
+                "id": "libc 0.2.185",
                 "target": "libc"
               }
             ],
@@ -48140,7 +48084,7 @@
                 "alias": "libc_errno"
               },
               {
-                "id": "libc 0.2.184",
+                "id": "libc 0.2.185",
                 "target": "libc"
               }
             ],
@@ -48151,7 +48095,7 @@
                 "alias": "libc_errno"
               },
               {
-                "id": "libc 0.2.184",
+                "id": "libc 0.2.185",
                 "target": "libc"
               }
             ],
@@ -48255,7 +48199,7 @@
         "deps": {
           "common": [
             {
-              "id": "bitflags 2.11.0",
+              "id": "bitflags 2.11.1",
               "target": "bitflags"
             },
             {
@@ -48271,7 +48215,7 @@
                 "alias": "libc_errno"
               },
               {
-                "id": "libc 0.2.184",
+                "id": "libc 0.2.185",
                 "target": "libc"
               }
             ],
@@ -48294,7 +48238,7 @@
                 "alias": "libc_errno"
               },
               {
-                "id": "libc 0.2.184",
+                "id": "libc 0.2.185",
                 "target": "libc"
               }
             ],
@@ -48305,7 +48249,7 @@
                 "alias": "libc_errno"
               },
               {
-                "id": "windows-sys 0.61.2",
+                "id": "windows-sys 0.60.2",
                 "target": "windows_sys"
               }
             ],
@@ -48316,7 +48260,7 @@
                 "alias": "libc_errno"
               },
               {
-                "id": "libc 0.2.184",
+                "id": "libc 0.2.185",
                 "target": "libc"
               }
             ]
@@ -49274,7 +49218,7 @@
         "deps": {
           "common": [
             {
-              "id": "bitflags 2.11.0",
+              "id": "bitflags 2.11.1",
               "target": "bitflags"
             },
             {
@@ -49286,7 +49230,7 @@
               "target": "core_foundation_sys"
             },
             {
-              "id": "libc 0.2.184",
+              "id": "libc 0.2.185",
               "target": "libc"
             },
             {
@@ -49347,7 +49291,7 @@
         "deps": {
           "common": [
             {
-              "id": "bitflags 2.11.0",
+              "id": "bitflags 2.11.1",
               "target": "bitflags"
             },
             {
@@ -49359,7 +49303,7 @@
               "target": "core_foundation_sys"
             },
             {
-              "id": "libc 0.2.184",
+              "id": "libc 0.2.185",
               "target": "libc"
             },
             {
@@ -49415,7 +49359,7 @@
               "target": "core_foundation_sys"
             },
             {
-              "id": "libc 0.2.184",
+              "id": "libc 0.2.185",
               "target": "libc"
             }
           ],
@@ -50847,7 +50791,7 @@
               "target": "thiserror"
             },
             {
-              "id": "tokio 1.51.1",
+              "id": "tokio 1.52.3",
               "target": "tokio"
             },
             {
@@ -50934,7 +50878,7 @@
               "target": "bitfield"
             },
             {
-              "id": "bitflags 2.11.0",
+              "id": "bitflags 2.11.1",
               "target": "bitflags"
             },
             {
@@ -50954,7 +50898,7 @@
               "target": "lazy_static"
             },
             {
-              "id": "libc 0.2.184",
+              "id": "libc 0.2.185",
               "target": "libc"
             },
             {
@@ -51342,7 +51286,7 @@
               "target": "errno"
             },
             {
-              "id": "libc 0.2.184",
+              "id": "libc 0.2.185",
               "target": "libc"
             }
           ],
@@ -51668,7 +51612,7 @@
               "target": "candid"
             },
             {
-              "id": "clap 4.6.0",
+              "id": "clap 4.6.1",
               "target": "clap"
             },
             {
@@ -51748,7 +51692,7 @@
               "target": "serde_yaml"
             },
             {
-              "id": "tokio 1.51.1",
+              "id": "tokio 1.52.3",
               "target": "tokio"
             }
           ],
@@ -52443,7 +52387,7 @@
         "deps": {
           "common": [
             {
-              "id": "clap 4.6.0",
+              "id": "clap 4.6.1",
               "target": "clap"
             },
             {
@@ -52487,7 +52431,7 @@
               "target": "slog_term"
             },
             {
-              "id": "tokio 1.51.1",
+              "id": "tokio 1.52.3",
               "target": "tokio"
             },
             {
@@ -52609,7 +52553,7 @@
           "selects": {
             "cfg(unix)": [
               {
-                "id": "libc 0.2.184",
+                "id": "libc 0.2.185",
                 "target": "libc"
               }
             ],
@@ -52671,13 +52615,13 @@
           "selects": {
             "cfg(any(unix, target_os = \"wasi\"))": [
               {
-                "id": "libc 0.2.184",
+                "id": "libc 0.2.185",
                 "target": "libc"
               }
             ],
             "cfg(windows)": [
               {
-                "id": "windows-sys 0.61.2",
+                "id": "windows-sys 0.60.2",
                 "target": "windows_sys"
               }
             ]
@@ -52942,7 +52886,7 @@
               "target": "cfg_if"
             },
             {
-              "id": "libc 0.2.184",
+              "id": "libc 0.2.185",
               "target": "libc"
             },
             {
@@ -53922,7 +53866,7 @@
         "deps": {
           "common": [
             {
-              "id": "bitflags 2.11.0",
+              "id": "bitflags 2.11.1",
               "target": "bitflags"
             },
             {
@@ -53994,7 +53938,7 @@
               "target": "core_foundation_sys"
             },
             {
-              "id": "libc 0.2.184",
+              "id": "libc 0.2.185",
               "target": "libc"
             },
             {
@@ -54400,7 +54344,7 @@
             ],
             "cfg(unix)": [
               {
-                "id": "libc 0.2.184",
+                "id": "libc 0.2.185",
                 "target": "libc"
               }
             ],
@@ -54496,7 +54440,7 @@
             ],
             "cfg(windows)": [
               {
-                "id": "windows-sys 0.61.2",
+                "id": "windows-sys 0.60.2",
                 "target": "windows_sys"
               }
             ],
@@ -54648,7 +54592,7 @@
           "selects": {
             "cfg(windows)": [
               {
-                "id": "windows-sys 0.61.2",
+                "id": "windows-sys 0.60.2",
                 "target": "windows_sys"
               }
             ]
@@ -54754,7 +54698,7 @@
             ],
             "cfg(windows)": [
               {
-                "id": "windows-sys 0.61.2",
+                "id": "windows-sys 0.60.2",
                 "target": "windows_sys"
               }
             ]
@@ -55689,14 +55633,14 @@
       ],
       "license_file": "LICENSE-APACHE"
     },
-    "tokio 1.51.1": {
+    "tokio 1.52.3": {
       "name": "tokio",
-      "version": "1.51.1",
+      "version": "1.52.3",
       "package_url": "https://github.com/tokio-rs/tokio",
       "repository": {
         "Http": {
-          "url": "https://static.crates.io/crates/tokio/1.51.1/download",
-          "sha256": "f66bf9585cda4b724d3e78ab34b73fb2bbaba9011b9bfdf69dc836382ea13b8c"
+          "url": "https://static.crates.io/crates/tokio/1.52.3/download",
+          "sha256": "8fc7f01b389ac15039e4dc9531aa973a135d7a4135281b12d7c1bc79fd57fffe"
         }
       },
       "targets": [
@@ -55769,7 +55713,7 @@
           "selects": {
             "aarch64-apple-darwin": [
               {
-                "id": "libc 0.2.184",
+                "id": "libc 0.2.185",
                 "target": "libc"
               },
               {
@@ -55783,7 +55727,7 @@
             ],
             "aarch64-unknown-linux-gnu": [
               {
-                "id": "libc 0.2.184",
+                "id": "libc 0.2.185",
                 "target": "libc"
               },
               {
@@ -55797,7 +55741,7 @@
             ],
             "wasm32-wasip1": [
               {
-                "id": "libc 0.2.184",
+                "id": "libc 0.2.185",
                 "target": "libc"
               }
             ],
@@ -55813,7 +55757,7 @@
             ],
             "x86_64-unknown-linux-gnu": [
               {
-                "id": "libc 0.2.184",
+                "id": "libc 0.2.185",
                 "target": "libc"
               },
               {
@@ -55827,7 +55771,7 @@
             ],
             "x86_64-unknown-nixos-gnu": [
               {
-                "id": "libc 0.2.184",
+                "id": "libc 0.2.185",
                 "target": "libc"
               },
               {
@@ -55851,7 +55795,7 @@
           ],
           "selects": {}
         },
-        "version": "1.51.1"
+        "version": "1.52.3"
       },
       "license": "MIT",
       "license_ids": [
@@ -55962,7 +55906,7 @@
               "target": "pin_project_lite"
             },
             {
-              "id": "tokio 1.51.1",
+              "id": "tokio 1.52.3",
               "target": "tokio"
             },
             {
@@ -56040,7 +55984,7 @@
               "target": "rustls"
             },
             {
-              "id": "tokio 1.51.1",
+              "id": "tokio 1.52.3",
               "target": "tokio"
             }
           ],
@@ -56104,7 +56048,7 @@
               "target": "pin_project_lite"
             },
             {
-              "id": "tokio 1.51.1",
+              "id": "tokio 1.52.3",
               "target": "tokio"
             }
           ],
@@ -56119,14 +56063,14 @@
       ],
       "license_file": "LICENSE"
     },
-    "tokio-tungstenite 0.28.0": {
+    "tokio-tungstenite 0.29.0": {
       "name": "tokio-tungstenite",
-      "version": "0.28.0",
+      "version": "0.29.0",
       "package_url": "https://github.com/snapview/tokio-tungstenite",
       "repository": {
         "Http": {
-          "url": "https://static.crates.io/crates/tokio-tungstenite/0.28.0/download",
-          "sha256": "d25a406cddcc431a75d3d9afc6a7c0f7428d4891dd973e4d54c56b46127bf857"
+          "url": "https://static.crates.io/crates/tokio-tungstenite/0.29.0/download",
+          "sha256": "8f72a05e828585856dacd553fba484c242c46e391fb0e58917c942ee9202915c"
         }
       },
       "targets": [
@@ -56168,18 +56112,18 @@
               "target": "log"
             },
             {
-              "id": "tokio 1.51.1",
+              "id": "tokio 1.52.3",
               "target": "tokio"
             },
             {
-              "id": "tungstenite 0.28.0",
+              "id": "tungstenite 0.29.0",
               "target": "tungstenite"
             }
           ],
           "selects": {}
         },
         "edition": "2018",
-        "version": "0.28.0"
+        "version": "0.29.0"
       },
       "license": "MIT",
       "license_ids": [
@@ -56243,7 +56187,7 @@
               "target": "pin_project_lite"
             },
             {
-              "id": "tokio 1.51.1",
+              "id": "tokio 1.52.3",
               "target": "tokio"
             }
           ],
@@ -56531,7 +56475,7 @@
               "target": "socket2"
             },
             {
-              "id": "tokio 1.51.1",
+              "id": "tokio 1.52.3",
               "target": "tokio"
             },
             {
@@ -56735,7 +56679,7 @@
               "target": "slab"
             },
             {
-              "id": "tokio 1.51.1",
+              "id": "tokio 1.52.3",
               "target": "tokio"
             },
             {
@@ -56859,7 +56803,7 @@
               "target": "sync_wrapper"
             },
             {
-              "id": "tokio 1.51.1",
+              "id": "tokio 1.52.3",
               "target": "tokio"
             },
             {
@@ -56954,7 +56898,7 @@
               "target": "async_compression"
             },
             {
-              "id": "bitflags 2.11.0",
+              "id": "bitflags 2.11.1",
               "target": "bitflags"
             },
             {
@@ -56990,7 +56934,7 @@
               "target": "pin_project_lite"
             },
             {
-              "id": "tokio 1.51.1",
+              "id": "tokio 1.52.3",
               "target": "tokio"
             },
             {
@@ -57452,14 +57396,14 @@
       ],
       "license_file": "LICENSE"
     },
-    "tungstenite 0.28.0": {
+    "tungstenite 0.29.0": {
       "name": "tungstenite",
-      "version": "0.28.0",
+      "version": "0.29.0",
       "package_url": "https://github.com/snapview/tungstenite-rs",
       "repository": {
         "Http": {
-          "url": "https://static.crates.io/crates/tungstenite/0.28.0/download",
-          "sha256": "8628dcc84e5a09eb3d8423d6cb682965dea9133204e8fb3efee74c2a0c259442"
+          "url": "https://static.crates.io/crates/tungstenite/0.29.0/download",
+          "sha256": "6c01152af293afb9c7c2a57e4b559c5620b421f6d133261c60dd2d0cdb38e6b8"
         }
       },
       "targets": [
@@ -57514,7 +57458,7 @@
               "target": "log"
             },
             {
-              "id": "rand 0.9.2",
+              "id": "rand 0.9.4",
               "target": "rand"
             },
             {
@@ -57524,16 +57468,12 @@
             {
               "id": "thiserror 2.0.18",
               "target": "thiserror"
-            },
-            {
-              "id": "utf-8 0.7.6",
-              "target": "utf8"
             }
           ],
           "selects": {}
         },
         "edition": "2021",
-        "version": "0.28.0"
+        "version": "0.29.0"
       },
       "license": "MIT OR Apache-2.0",
       "license_ids": [
@@ -58220,45 +58160,6 @@
       ],
       "license_file": "LICENSE"
     },
-    "utf-8 0.7.6": {
-      "name": "utf-8",
-      "version": "0.7.6",
-      "package_url": "https://github.com/SimonSapin/rust-utf8",
-      "repository": {
-        "Http": {
-          "url": "https://static.crates.io/crates/utf-8/0.7.6/download",
-          "sha256": "09cc8ee72d2a9becf2f2febe0205bbed8fc6615b7cb429ad062dc7b7ddd036a9"
-        }
-      },
-      "targets": [
-        {
-          "Library": {
-            "crate_name": "utf8",
-            "crate_root": "src/lib.rs",
-            "srcs": {
-              "allow_empty": true,
-              "include": [
-                "**/*.rs"
-              ]
-            }
-          }
-        }
-      ],
-      "library_target_name": "utf8",
-      "common_attrs": {
-        "compile_data_glob": [
-          "**"
-        ],
-        "edition": "2015",
-        "version": "0.7.6"
-      },
-      "license": "MIT OR Apache-2.0",
-      "license_ids": [
-        "Apache-2.0",
-        "MIT"
-      ],
-      "license_file": "LICENSE-APACHE"
-    },
     "utf8-width 0.1.8": {
       "name": "utf8-width",
       "version": "0.1.8",
@@ -58549,7 +58450,7 @@
           "selects": {
             "cfg(unix)": [
               {
-                "id": "libc 0.2.184",
+                "id": "libc 0.2.185",
                 "target": "libc"
               }
             ]
@@ -59595,7 +59496,7 @@
               "target": "ahash"
             },
             {
-              "id": "bitflags 2.11.0",
+              "id": "bitflags 2.11.1",
               "target": "bitflags"
             },
             {
@@ -59669,7 +59570,7 @@
         "deps": {
           "common": [
             {
-              "id": "bitflags 2.11.0",
+              "id": "bitflags 2.11.1",
               "target": "bitflags"
             },
             {
@@ -60171,7 +60072,7 @@
           "selects": {
             "cfg(windows)": [
               {
-                "id": "windows-sys 0.61.2",
+                "id": "windows-sys 0.60.2",
                 "target": "windows_sys"
               }
             ]
@@ -60878,6 +60779,31 @@
         "compile_data_glob": [
           "**"
         ],
+        "crate_features": {
+          "common": [
+            "Win32",
+            "Win32_Foundation",
+            "Win32_Globalization",
+            "Win32_Networking",
+            "Win32_Networking_WinSock",
+            "Win32_Security",
+            "Win32_Storage",
+            "Win32_Storage_FileSystem",
+            "Win32_System",
+            "Win32_System_Com",
+            "Win32_System_Console",
+            "Win32_System_Diagnostics",
+            "Win32_System_Diagnostics_Debug",
+            "Win32_System_IO",
+            "Win32_System_SystemInformation",
+            "Win32_System_Threading",
+            "Win32_System_WindowsProgramming",
+            "Win32_UI",
+            "Win32_UI_Shell",
+            "default"
+          ],
+          "selects": {}
+        },
         "deps": {
           "common": [
             {
@@ -60936,7 +60862,6 @@
             "Wdk_System_IO",
             "Win32",
             "Win32_Foundation",
-            "Win32_Globalization",
             "Win32_Networking",
             "Win32_Networking_WinSock",
             "Win32_Security",
@@ -60949,8 +60874,6 @@
             "Win32_System",
             "Win32_System_Com",
             "Win32_System_Console",
-            "Win32_System_Diagnostics",
-            "Win32_System_Diagnostics_Debug",
             "Win32_System_IO",
             "Win32_System_LibraryLoader",
             "Win32_System_Memory",
@@ -63026,7 +62949,7 @@
               "target": "serde_json"
             },
             {
-              "id": "tokio 1.51.1",
+              "id": "tokio 1.52.3",
               "target": "tokio"
             },
             {
@@ -63438,7 +63361,7 @@
               "target": "anyhow"
             },
             {
-              "id": "bitflags 2.11.0",
+              "id": "bitflags 2.11.1",
               "target": "bitflags"
             },
             {
@@ -63913,7 +63836,7 @@
             ],
             "cfg(any(target_os = \"freebsd\", target_os = \"netbsd\"))": [
               {
-                "id": "libc 0.2.184",
+                "id": "libc 0.2.185",
                 "target": "libc"
               }
             ]
@@ -65420,7 +65343,7 @@
     "anyhow 1.0.102",
     "async-recursion 1.1.1",
     "async-trait 0.1.89",
-    "axum 0.8.8",
+    "axum 0.8.9",
     "axum-otel-metrics 0.11.0",
     "backoff 0.4.0",
     "backon 1.6.0",
@@ -65428,9 +65351,9 @@
     "byteorder 1.5.0",
     "candid 0.10.27",
     "chrono 0.4.44",
-    "clap 4.6.0",
+    "clap 4.6.1",
     "clap-num 1.2.0",
-    "clap_complete 4.6.0",
+    "clap_complete 4.6.4",
     "colored 2.2.0",
     "comfy-table 7.2.2",
     "crossbeam 0.8.4",
@@ -65509,7 +65432,7 @@
     "prometheus 0.14.0",
     "prometheus-http-query 0.8.3",
     "prost 0.13.5",
-    "rand 0.9.2",
+    "rand 0.9.4",
     "rand_seeder 0.3.0",
     "regex 1.12.3",
     "registry-canister 0.9.0",
@@ -65517,7 +65440,7 @@
     "retry 2.2.0",
     "rewards-calculation 0.9.0",
     "rosetta-core 0.9.0",
-    "rust_decimal 1.41.0",
+    "rust_decimal 1.42.0",
     "self_update 0.41.0",
     "serde 1.0.228",
     "serde_json 1.0.149",
@@ -65535,13 +65458,13 @@
     "tabular 0.2.0",
     "tempfile 3.27.0",
     "thiserror 2.0.18",
-    "tokio 1.51.1",
+    "tokio 1.52.3",
     "tokio-util 0.7.18",
     "url 2.5.8"
   ],
   "direct_dev_deps": [
     "actix-rt 2.11.0",
-    "assert_cmd 2.2.0",
+    "assert_cmd 2.2.1",
     "serial_test 2.0.0",
     "wiremock 0.6.4"
   ],
