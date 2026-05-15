@@ -8,6 +8,10 @@
 #         rc_name: <reference RC name>
 #         name: <version name>
 releases:
+  - rc_name: rc--2026-05-15_10-22
+    versions:
+      - name: base 
+        version: c7552446d8adacafd4329e1ff2c26d43b3e530a7
   - rc_name: rc--2026-05-07_04-27
     versions:
       - name: base
