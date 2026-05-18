@@ -205,6 +205,33 @@ If the proposal was indeed submitted, you don't have to do anything -- the recon
   rm /state/<full_commit_hash>
   ```
 
+### Forcing resubmission of a previously-submitted proposal
+
+The reconciler rebuilds its in-memory state on every cycle from the public
+dashboard and the governance canister (via `dre proposals filter -t
+ic-os-version-election`), and treats every matching election proposal as
+"already submitted" regardless of its status.  A rejected or failed proposal
+will therefore prevent the reconciler from ever submitting a fresh one for
+the same version.
+
+To work around this, pass one or more `--ignore-proposal-id=<id>` flags
+when starting the reconciler.  Each listed proposal is filtered out of
+the dashboard / governance lookups, so the affected version goes back to
+the "no proposal" state and the reconciler submits a new proposal on the
+next cycle.
+
+In production, edit `bases/apps/ic-release-controller/controller/controller.yaml`
+in the `k8s` repo and append the flag(s) to the `release-controller` container's
+`args` list, e.g.
+
+```yaml
+args: [--one-line-logs, --verbose, --ignore-proposal-id=141776]
+```
+
+Caveat: the IC governance canister independently refuses to re-elect a
+version that is already blessed.  This flag only helps when the prior
+proposal did **not** result in a blessing (typically REJECTED or FAILED).
+
 ## Development
 
 Please see the parent folder's `README.md` for virtual environment setup.
@@ -243,11 +270,11 @@ bazel run //release-controller:release-controller \
 Typing errors preventing you from running it, because you are editing code and
 testing your changes?  Add `--output_groups=-mypy` right after `bazel run`.
 
-The optional argument `--skip-preloading-state` makes it so that the reconciler
-will not preload its list of known proposals by version from the governance
-canister.  It is useful (in conjunction with an empty reconciler state folder)
-to make the reconciler do all the work of submitting proposals again.  It should
-only be used alongside `--dry-run`, to avoid submitting proposals twice.
+The optional argument `--ignore-proposal-id` (repeatable, takes an NNS proposal
+ID) makes the reconciler skip the matching election proposal when it builds its
+list of known proposals by version.  The corresponding version is then treated
+as not yet proposed and a fresh proposal is submitted on the next cycle.  See
+*Forcing resubmission of a previously-submitted proposal* above.
 
 ### Running the reconciler in the container it ships
 
