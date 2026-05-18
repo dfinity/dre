@@ -38,6 +38,7 @@ class Release(BaseModel):
 
 class ReleaseIndex(BaseModel):
     model_config = ConfigDict(extra="forbid")
+    ignored_proposals: List[int] = []
     releases: List[Release]
 
     def version(self, rc_name: str, name: str) -> str:

@@ -7,6 +7,15 @@
 #       HostOS or GuestOS:
 #         rc_name: <reference RC name>
 #         name: <version name>
+# - Use 'ignored_proposals' (top-level) to force the reconciler to forget
+#   specific NNS election proposals when it builds its in-memory state, so
+#   the affected versions go back to the "no proposal" state and a fresh
+#   proposal is submitted on the next cycle.  Intended to recover from
+#   rejected / failed proposals.  Remove the entry once the replacement
+#   proposal has been submitted; the IC governance canister will still
+#   refuse to re-elect an already blessed version.
+ignored_proposals:
+  - 141776 # GuestOS election proposal rejected; resubmit the version.
 releases:
   - rc_name: rc--2026-05-15_10-22
     versions:

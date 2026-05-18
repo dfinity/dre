@@ -205,6 +205,42 @@ If the proposal was indeed submitted, you don't have to do anything -- the recon
   rm /state/<full_commit_hash>
   ```
 
+### Forcing resubmission of a previously-submitted proposal
+
+The reconciler rebuilds its in-memory state on every cycle from the public
+dashboard and the governance canister (via `dre proposals filter -t
+ic-os-version-election`), and treats every matching election proposal as
+"already submitted" regardless of its status.  A rejected or failed proposal
+will therefore prevent the reconciler from ever submitting a fresh one for
+the same version.
+
+To work around this, edit [`release-index.yaml`](../release-index.yaml)
+and add a top-level `ignored_proposals` entry listing the NNS proposal IDs
+to forget.  The reconciler reads this list on every cycle (no redeploy
+required) and drops the matching proposals from its dashboard / governance
+lookups before they reach `ReconcilerState`, so the affected versions go
+back to the "no proposal" state and a fresh proposal is submitted on the
+next cycle.
+
+```yaml
+ignored_proposals:
+  - 141776 # GuestOS election proposal rejected; resubmit the version.
+releases:
+  - rc_name: rc--...
+    versions:
+      - ...
+```
+
+Caveats:
+
+- The IC governance canister independently refuses to re-elect a version
+  that is already blessed.  This lever only helps when the prior
+  proposal did **not** result in a blessing (typically REJECTED or
+  FAILED).
+- Remove the entry from `release-index.yaml` once the replacement
+  proposal has been submitted.  Leaving it in indefinitely silently
+  swallows any future state for the same proposal id.
+
 ## Development
 
 Please see the parent folder's `README.md` for virtual environment setup.
@@ -243,11 +279,10 @@ bazel run //release-controller:release-controller \
 Typing errors preventing you from running it, because you are editing code and
 testing your changes?  Add `--output_groups=-mypy` right after `bazel run`.
 
-The optional argument `--skip-preloading-state` makes it so that the reconciler
-will not preload its list of known proposals by version from the governance
-canister.  It is useful (in conjunction with an empty reconciler state folder)
-to make the reconciler do all the work of submitting proposals again.  It should
-only be used alongside `--dry-run`, to avoid submitting proposals twice.
+To force the reconciler to resubmit a proposal whose prior submission was
+rejected or otherwise failed, edit `release-index.yaml` and add the
+proposal ID to the top-level `ignored_proposals` list.  See *Forcing
+resubmission of a previously-submitted proposal* above.
 
 ### Running the reconciler in the container it ships
 

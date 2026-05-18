@@ -6,6 +6,7 @@ import dryrun
 import git_repo
 import pydantic_yaml
 import pytest_mock.plugin
+import reconciler_state
 from dre_cli import ElectionProposal
 from public_dashboard import DashboardAPI
 from reconciler import Reconciler
@@ -138,6 +139,165 @@ def _defaults_for_test(
 
 def _cdf(r: git_repo.GitRepo) -> commit_annotation.ChangeDeterminatorProtocol:
     return commit_annotation.LocalCommitChangeDeterminator(r)
+
+
+def _ignore_filter_retriever_fixture() -> typing.Callable[
+    [],
+    tuple[dict[str, ElectionProposal], dict[str, ElectionProposal]],
+]:
+    """
+    Build a self-contained retriever returning one GuestOS and one HostOS
+    election proposal with distinct IDs.  This bypasses ``MockDashboard``
+    (whose ``_fake_proposal`` always emits ``hostos_version_to_elect``)
+    so the test exercises both branches of the ignore filter.
+    """
+    guestos_commit = "11" * 20
+    hostos_commit = "22" * 20
+
+    def retriever() -> tuple[
+        dict[str, ElectionProposal], dict[str, ElectionProposal]
+    ]:
+        guestos: dict[str, ElectionProposal] = {
+            guestos_commit: {
+                "id": 200001,
+                "payload": {
+                    "replica_version_to_elect": guestos_commit,
+                    "release_package_sha256_hex": "aa" * 32,
+                },
+                "proposal_timestamp_seconds": 1743789296,
+                "proposer": 61,
+                "status": "REJECTED",
+                "summary": "...stubbed out...",
+                "title": "Elect new IC/GuestOS revision (test fixture)",
+            }
+        }
+        hostos: dict[str, ElectionProposal] = {
+            hostos_commit: {
+                "id": 200002,
+                "payload": {
+                    "hostos_version_to_elect": hostos_commit,
+                    "release_package_sha256_hex": "bb" * 32,
+                },
+                "proposal_timestamp_seconds": 1743789296,
+                "proposer": 61,
+                "status": "REJECTED",
+                "summary": "...stubbed out...",
+                "title": "Elect new IC/HostOS revision (test fixture)",
+            }
+        }
+        return guestos, hostos
+
+    return retriever
+
+
+def test_reconciler_filtered_proposals_retriever_drops_ignored_ids() -> None:
+    """
+    With ``ignored_proposals`` set, the wrapper around the proposal
+    retriever must omit any matching proposal so the corresponding
+    version is treated by ``ReconcilerState`` as not yet proposed.
+    """
+    retriever = _ignore_filter_retriever_fixture()
+    guestos_commit, hostos_commit = "11" * 20, "22" * 20
+    ignored_guestos_id = 200001
+    rs = ReconcilerState()
+
+    wrapped = Reconciler._filtered_proposals_retriever(
+        retriever,
+        source="dashboard",
+        ignore_proposal_ids=[ignored_guestos_id],
+    )
+    guestos, hostos = wrapped()
+
+    assert guestos == {}, guestos
+    assert list(hostos.keys()) == [hostos_commit], hostos
+    assert hostos[hostos_commit]["id"] == 200002
+
+    rs.update_state(wrapped)
+    assert isinstance(
+        rs.version_proposal(guestos_commit, const.GUESTOS),
+        reconciler_state.NoProposal,
+    )
+    assert isinstance(
+        rs.version_proposal(hostos_commit, const.HOSTOS),
+        reconciler_state.SubmittedProposal,
+    )
+
+
+def test_reconciler_filtered_proposals_retriever_is_noop_without_ids() -> None:
+    """Without ``ignored_proposals``, the wrapper returns the data unchanged."""
+    retriever = _ignore_filter_retriever_fixture()
+
+    direct_guestos, direct_hostos = retriever()
+    wrapped_guestos, wrapped_hostos = Reconciler._filtered_proposals_retriever(
+        retriever,
+        source="dashboard",
+        ignore_proposal_ids=[],
+    )()
+
+    assert wrapped_guestos == direct_guestos
+    assert wrapped_hostos == direct_hostos
+
+
+def test_reconciler_picks_up_ignored_proposals_from_release_index(
+    ic_repo: git_repo.GitRepo,
+    mocker: pytest_mock.plugin.MockerFixture,
+) -> None:
+    """
+    ``ignored_proposals`` declared at the top of ``release-index.yaml`` must
+    propagate through the loader into the per-cycle ignore set, so a
+    previously-rejected proposal stops blocking resubmission.
+    """
+    with mocker.patch.object(ic_repo, "push_release_tags"):
+        d, f, n, rs, a, dre, s, rl, p, db = _defaults_for_test()
+        already_blocked_hostos_id = 138817
+        rl = StaticReleaseLoader(
+            pydantic_yaml.to_yaml_str(
+                ReleaseIndexModel.model_validate(
+                    {
+                        "ignored_proposals": [already_blocked_hostos_id],
+                        "releases": [
+                            _release(
+                                "rc--2025-10-02_03-13",
+                                {"base": "45657852c1eca6728ff313808db29b47c862ad13"},
+                            ),
+                            _release(
+                                "rc--2025-09-25_09-52",
+                                {"base": "206b61a8616bc93d36d6a014e5cc8edf1ba256ae"},
+                            ),
+                            _release(
+                                "rc--2025-09-19_10-17",
+                                {"base": "bf0d4d1b8cb6c0c19a5afa1454ada014847aa5c6"},
+                            ),
+                        ],
+                    }
+                )
+            )
+        )
+        reconciler = Reconciler(
+            f, rl, n, p, "", rs, ic_repo, lambda: _cdf(ic_repo), a, dre, db, s
+        )
+
+        def fake_approved_release_notes(*args):  # type: ignore
+            return f"Fake changelog for {args}"
+
+        rl.proposal_summary = fake_approved_release_notes  # type: ignore
+        reconciler.reconcile()
+
+        # The HostOS dashboard fixture pins id 138817 to both top releases.
+        # After reconcile, those versions must have been seen as "not yet
+        # proposed" — i.e. the reconciler issued a fresh proposal for them
+        # (dryrun.DRECli returns a synthetic, version-derived ID), so the
+        # state for them no longer points at the ignored id.
+        for commit in (
+            "45657852c1eca6728ff313808db29b47c862ad13",
+            "206b61a8616bc93d36d6a014e5cc8edf1ba256ae",
+        ):
+            prop = rs.version_proposal(commit, const.HOSTOS)
+            assert isinstance(prop, reconciler_state.SubmittedProposal), prop
+            assert prop.proposal_id != already_blocked_hostos_id, (
+                f"Expected a fresh proposal id for HostOS commit {commit}, "
+                f"got the previously-blocked id {already_blocked_hostos_id}."
+            )
 
 
 def test_reconciler_reconciles_without_error_already_submitted_proposals(
