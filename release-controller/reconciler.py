@@ -418,19 +418,8 @@ class Reconciler:
         dashboard: public_dashboard.DashboardAPI,
         slack_announcer: slack_announce.SlackAnnouncerProtocol,
         ignore_releases: list[str] | None = None,
-        ignore_proposal_ids: typing.Iterable[int] | None = None,
     ):
-        """Create a new reconciler.
-
-        ``ignore_proposal_ids`` is an optional set of NNS proposal IDs that
-        will be dropped from the result of every election-proposal lookup
-        before it is loaded into the reconciler state.  This allows forcing
-        a resubmission for a version whose prior proposal is no longer
-        actionable (e.g. rejected/failed).  Note that the IC governance
-        canister still independently rejects re-election of an already
-        blessed version, so this only helps when the prior proposal did
-        not bless the version.
-        """
+        """Create a new reconciler."""
         self.forum_client = forum_client
         self.loader = loader
         self.notes_client = notes_client
@@ -440,15 +429,14 @@ class Reconciler:
         self.ic_prometheus = active_version_provider
         self.ic_repo = ic_repo
         self.ignore_releases = ignore_releases or []
-        self.ignore_proposal_ids: set[int] = set(ignore_proposal_ids or ())
         self.dre = dre
         self.dashboard = dashboard
         self.slack_announcer = slack_announcer
         self.change_determinator_factory = change_determinator_factory
         self.local_release_state: dict[str, dict[str, dict[OsKind, VersionState]]] = {}
 
+    @staticmethod
     def _filtered_proposals_retriever(
-        self,
         retriever: typing.Callable[
             [],
             tuple[
@@ -457,6 +445,7 @@ class Reconciler:
             ],
         ],
         source: str,
+        ignore_proposal_ids: typing.Iterable[int],
     ) -> typing.Callable[
         [],
         tuple[
@@ -466,11 +455,12 @@ class Reconciler:
     ]:
         """Wrap a proposal retriever so it drops ignored proposal IDs.
 
-        When the reconciler is started with ``--ignore-proposal-id``, the
-        wrapped retriever omits any matching proposals from the dictionaries
-        used to populate :class:`reconciler_state.ReconcilerState`, so the
-        affected versions are treated as if no proposal had been submitted.
+        The wrapped retriever omits any proposal whose ``id`` is listed in
+        the index's top-level ``ignored_proposals`` so the affected versions
+        are treated by :class:`reconciler_state.ReconcilerState` as if no
+        proposal had been submitted.
         """
+        ignore_set: set[int] = set(ignore_proposal_ids)
 
         def _drop_ignored(
             d: dict[str, dre_cli.ElectionProposal],
@@ -478,11 +468,11 @@ class Reconciler:
         ) -> dict[str, dre_cli.ElectionProposal]:
             out: dict[str, dre_cli.ElectionProposal] = {}
             for version, proposal in d.items():
-                if proposal["id"] in self.ignore_proposal_ids:
+                if proposal["id"] in ignore_set:
                     LOGGER.warning(
                         "Ignoring %s %s election proposal %s for version %s"
-                        " (requested via --ignore-proposal-id); the"
-                        " reconciler will treat this version as not yet"
+                        " (listed in release-index.yaml ignored_proposals);"
+                        " the reconciler will treat this version as not yet"
                         " proposed.",
                         source,
                         os_kind,
@@ -498,7 +488,7 @@ class Reconciler:
             dict[str, dre_cli.ElectionProposal],
         ]:
             guestos, hostos = retriever()
-            if not self.ignore_proposal_ids:
+            if not ignore_set:
                 return guestos, hostos
             return (
                 _drop_ignored(guestos, GUESTOS),
@@ -511,6 +501,14 @@ class Reconciler:
         """Reconcile the state of the network with the release index."""
         logger = LOGGER.getChild("reconciler")
         index = self.loader.index()
+        ignore_proposal_ids = list(index.root.ignored_proposals)
+        if ignore_proposal_ids:
+            logger.info(
+                "release-index.yaml requests that proposals %s be ignored"
+                " when populating reconciler state; the corresponding"
+                " versions will be treated as not yet proposed.",
+                ignore_proposal_ids,
+            )
 
         # As a matter of principle, we will only process the very top
         # two releases (and all its versions).  All else will be
@@ -525,6 +523,7 @@ class Reconciler:
                 self._filtered_proposals_retriever(
                     self.dashboard.get_election_proposals_by_version,
                     source="dashboard",
+                    ignore_proposal_ids=ignore_proposal_ids,
                 )
             )
         except Exception as e:
@@ -541,6 +540,7 @@ class Reconciler:
             self._filtered_proposals_retriever(
                 self.dre.get_election_proposals_by_version,
                 source="dre",
+                ignore_proposal_ids=ignore_proposal_ids,
             )
         )
 
@@ -1033,24 +1033,6 @@ def main() -> None:
         help="Set the Prometheus telemetry port to listen on.  Telemetry is only served if --loop-every is greater than 0.",
     )
     parser.add_argument(
-        "--ignore-proposal-id",
-        action="append",
-        type=int,
-        dest="ignore_proposal_ids",
-        default=[],
-        metavar="ID",
-        help=(
-            "Ignore an NNS election proposal by ID when loading the"
-            " reconciler state, so the corresponding version is treated as"
-            " not yet proposed and a fresh proposal is submitted on the"
-            " next cycle.  Repeat the flag to ignore multiple proposals."
-            "  Use this to force resubmission for a version whose prior"
-            " election proposal was rejected or otherwise failed; the IC"
-            " governance canister will still reject any proposal that"
-            " tries to re-elect an already blessed version."
-        ),
-    )
-    parser.add_argument(
         "dotenv_file",
         nargs="?",
     )
@@ -1155,7 +1137,6 @@ def main() -> None:
         nns_url="https://ic0.app",
         state=state,
         ignore_releases=IGNORED_RELEASES,
-        ignore_proposal_ids=opts.ignore_proposal_ids,
         ic_repo=ic_repo,
         active_version_provider=ICPrometheus(
             url="https://victoria.mainnet.dfinity.network/select/0/prometheus"

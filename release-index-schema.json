@@ -6,6 +6,13 @@
       "type": "object",
       "additionalProperties": false,
       "properties": {
+        "ignored_proposals": {
+          "type": "array",
+          "items": {
+            "type": "integer"
+          },
+          "description": "NNS election proposal IDs the reconciler must treat as if they had never been submitted, so it submits a fresh proposal for the underlying version on the next cycle. Intended to recover from rejected/failed proposals."
+        },
         "releases": {
           "type": "array",
           "items": {

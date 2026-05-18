@@ -214,23 +214,32 @@ ic-os-version-election`), and treats every matching election proposal as
 will therefore prevent the reconciler from ever submitting a fresh one for
 the same version.
 
-To work around this, pass one or more `--ignore-proposal-id=<id>` flags
-when starting the reconciler.  Each listed proposal is filtered out of
-the dashboard / governance lookups, so the affected version goes back to
-the "no proposal" state and the reconciler submits a new proposal on the
+To work around this, edit [`release-index.yaml`](../release-index.yaml)
+and add a top-level `ignored_proposals` entry listing the NNS proposal IDs
+to forget.  The reconciler reads this list on every cycle (no redeploy
+required) and drops the matching proposals from its dashboard / governance
+lookups before they reach `ReconcilerState`, so the affected versions go
+back to the "no proposal" state and a fresh proposal is submitted on the
 next cycle.
 
-In production, edit `bases/apps/ic-release-controller/controller/controller.yaml`
-in the `k8s` repo and append the flag(s) to the `release-controller` container's
-`args` list, e.g.
-
 ```yaml
-args: [--one-line-logs, --verbose, --ignore-proposal-id=141776]
+ignored_proposals:
+  - 141776 # GuestOS election proposal rejected; resubmit the version.
+releases:
+  - rc_name: rc--...
+    versions:
+      - ...
 ```
 
-Caveat: the IC governance canister independently refuses to re-elect a
-version that is already blessed.  This flag only helps when the prior
-proposal did **not** result in a blessing (typically REJECTED or FAILED).
+Caveats:
+
+- The IC governance canister independently refuses to re-elect a version
+  that is already blessed.  This lever only helps when the prior
+  proposal did **not** result in a blessing (typically REJECTED or
+  FAILED).
+- Remove the entry from `release-index.yaml` once the replacement
+  proposal has been submitted.  Leaving it in indefinitely silently
+  swallows any future state for the same proposal id.
 
 ## Development
 
@@ -270,11 +279,10 @@ bazel run //release-controller:release-controller \
 Typing errors preventing you from running it, because you are editing code and
 testing your changes?  Add `--output_groups=-mypy` right after `bazel run`.
 
-The optional argument `--ignore-proposal-id` (repeatable, takes an NNS proposal
-ID) makes the reconciler skip the matching election proposal when it builds its
-list of known proposals by version.  The corresponding version is then treated
-as not yet proposed and a fresh proposal is submitted on the next cycle.  See
-*Forcing resubmission of a previously-submitted proposal* above.
+To force the reconciler to resubmit a proposal whose prior submission was
+rejected or otherwise failed, edit `release-index.yaml` and add the
+proposal ID to the top-level `ignored_proposals` list.  See *Forcing
+resubmission of a previously-submitted proposal* above.
 
 ### Running the reconciler in the container it ships
 
