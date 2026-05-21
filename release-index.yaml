@@ -17,6 +17,10 @@
 ignored_proposals:
   - 141776 # GuestOS election proposal rejected; resubmit the version.
 releases:
+  - rc_name: rc--2026-05-21_04-45
+    versions:
+      - name: base 
+        version: 8115fd246af1286cda2934f7d707336cbbbda43f
   - rc_name: rc--2026-05-15_10-22
     versions:
       - name: base 
