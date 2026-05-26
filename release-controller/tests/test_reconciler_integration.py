@@ -141,101 +141,122 @@ def _cdf(r: git_repo.GitRepo) -> commit_annotation.ChangeDeterminatorProtocol:
     return commit_annotation.LocalCommitChangeDeterminator(r)
 
 
-def _ignore_filter_retriever_fixture() -> typing.Callable[
-    [],
-    tuple[dict[str, ElectionProposal], dict[str, ElectionProposal]],
-]:
-    """
-    Build a self-contained retriever returning one GuestOS and one HostOS
-    election proposal with distinct IDs.  This bypasses ``MockDashboard``
-    (whose ``_fake_proposal`` always emits ``hostos_version_to_elect``)
-    so the test exercises both branches of the ignore filter.
-    """
-    guestos_commit = "11" * 20
-    hostos_commit = "22" * 20
+_FIXTURE_GUESTOS_COMMIT = "11" * 20
+_FIXTURE_HOSTOS_COMMIT = "22" * 20
 
-    def retriever() -> tuple[
-        dict[str, ElectionProposal], dict[str, ElectionProposal]
-    ]:
-        guestos: dict[str, ElectionProposal] = {
-            guestos_commit: {
-                "id": 200001,
-                "payload": {
-                    "replica_version_to_elect": guestos_commit,
-                    "release_package_sha256_hex": "aa" * 32,
-                },
-                "proposal_timestamp_seconds": 1743789296,
-                "proposer": 61,
-                "status": "REJECTED",
-                "summary": "...stubbed out...",
-                "title": "Elect new IC/GuestOS revision (test fixture)",
-            }
-        }
-        hostos: dict[str, ElectionProposal] = {
-            hostos_commit: {
-                "id": 200002,
-                "payload": {
-                    "hostos_version_to_elect": hostos_commit,
-                    "release_package_sha256_hex": "bb" * 32,
-                },
-                "proposal_timestamp_seconds": 1743789296,
-                "proposer": 61,
-                "status": "REJECTED",
-                "summary": "...stubbed out...",
-                "title": "Elect new IC/HostOS revision (test fixture)",
-            }
-        }
-        return guestos, hostos
 
-    return retriever
+def _ignore_filter_raw_proposals_fixture() -> list[ElectionProposal]:
+    """
+    Return a flat list of raw election proposals -- one GuestOS, one HostOS,
+    with distinct IDs.  This bypasses ``MockDashboard`` (whose ``_fake_proposal``
+    always emits ``hostos_version_to_elect``) so tests exercise both branches
+    of the ignore filter and the by-version aggregator.
+    """
+    return [
+        {
+            "id": 200001,
+            "payload": {
+                "replica_version_to_elect": _FIXTURE_GUESTOS_COMMIT,
+                "release_package_sha256_hex": "aa" * 32,
+            },
+            "proposal_timestamp_seconds": 1743789296,
+            "proposer": 61,
+            "status": "REJECTED",
+            "summary": "...stubbed out...",
+            "title": "Elect new IC/GuestOS revision (test fixture)",
+        },
+        {
+            "id": 200002,
+            "payload": {
+                "hostos_version_to_elect": _FIXTURE_HOSTOS_COMMIT,
+                "release_package_sha256_hex": "bb" * 32,
+            },
+            "proposal_timestamp_seconds": 1743789296,
+            "proposer": 61,
+            "status": "REJECTED",
+            "summary": "...stubbed out...",
+            "title": "Elect new IC/HostOS revision (test fixture)",
+        },
+    ]
 
 
 def test_reconciler_filtered_proposals_retriever_drops_ignored_ids() -> None:
     """
-    With ``ignored_proposals`` set, the wrapper around the proposal
-    retriever must omit any matching proposal so the corresponding
+    With ``ignored_proposals`` set, the wrapper around the raw-list retriever
+    must drop any matching proposal before aggregation, so the corresponding
     version is treated by ``ReconcilerState`` as not yet proposed.
     """
-    retriever = _ignore_filter_retriever_fixture()
-    guestos_commit, hostos_commit = "11" * 20, "22" * 20
     ignored_guestos_id = 200001
     rs = ReconcilerState()
 
     wrapped = Reconciler._filtered_proposals_retriever(
-        retriever,
+        _ignore_filter_raw_proposals_fixture,
         source="dashboard",
         ignore_proposal_ids=[ignored_guestos_id],
     )
     guestos, hostos = wrapped()
 
     assert guestos == {}, guestos
-    assert list(hostos.keys()) == [hostos_commit], hostos
-    assert hostos[hostos_commit]["id"] == 200002
+    assert list(hostos.keys()) == [_FIXTURE_HOSTOS_COMMIT], hostos
+    assert hostos[_FIXTURE_HOSTOS_COMMIT]["id"] == 200002
 
     rs.update_state(wrapped)
     assert isinstance(
-        rs.version_proposal(guestos_commit, const.GUESTOS),
+        rs.version_proposal(_FIXTURE_GUESTOS_COMMIT, const.GUESTOS),
         reconciler_state.NoProposal,
     )
     assert isinstance(
-        rs.version_proposal(hostos_commit, const.HOSTOS),
+        rs.version_proposal(_FIXTURE_HOSTOS_COMMIT, const.HOSTOS),
         reconciler_state.SubmittedProposal,
     )
 
 
 def test_reconciler_filtered_proposals_retriever_is_noop_without_ids() -> None:
-    """Without ``ignored_proposals``, the wrapper returns the data unchanged."""
-    retriever = _ignore_filter_retriever_fixture()
-
-    direct_guestos, direct_hostos = retriever()
+    """Without ``ignored_proposals``, the wrapper aggregates every proposal."""
     wrapped_guestos, wrapped_hostos = Reconciler._filtered_proposals_retriever(
-        retriever,
+        _ignore_filter_raw_proposals_fixture,
         source="dashboard",
         ignore_proposal_ids=[],
     )()
 
-    assert wrapped_guestos == direct_guestos
-    assert wrapped_hostos == direct_hostos
+    assert list(wrapped_guestos.keys()) == [_FIXTURE_GUESTOS_COMMIT]
+    assert wrapped_guestos[_FIXTURE_GUESTOS_COMMIT]["id"] == 200001
+    assert list(wrapped_hostos.keys()) == [_FIXTURE_HOSTOS_COMMIT]
+    assert wrapped_hostos[_FIXTURE_HOSTOS_COMMIT]["id"] == 200002
+
+
+def test_reconciler_filtered_proposals_retriever_falls_back_to_next_highest_id() -> (
+    None
+):
+    """
+    When several proposals target the same version and only the highest-id
+    one is in ``ignored_proposals``, the wrapper must fall back to the next-
+    highest-id proposal for that version, NOT report the version as
+    unproposed.  This is what prevents a stale ``ignored_proposals`` entry
+    from causing the reconciler to fire a duplicate election proposal once
+    the targeted version has been re-elected by a fresh submission.
+    """
+    version = "33" * 20
+
+    def retriever() -> list[ElectionProposal]:
+        return [
+            _guestos_election_proposal(300_005, version, status="FAILED"),
+            _guestos_election_proposal(300_004, version, status="EXECUTED"),
+            _guestos_election_proposal(300_003, version, status="FAILED"),
+        ]
+
+    wrapped = Reconciler._filtered_proposals_retriever(
+        retriever,
+        source="dashboard",
+        ignore_proposal_ids=[300_005],
+    )
+    guestos, hostos = wrapped()
+    assert hostos == {}
+    assert list(guestos.keys()) == [version]
+    assert guestos[version]["id"] == 300_004, (
+        "Wrapper must fall back to the next-highest-id non-ignored proposal,"
+        " not drop the version entirely."
+    )
 
 
 def test_reconciler_picks_up_ignored_proposals_from_release_index(
@@ -329,10 +350,13 @@ The NNS proposal is here: [IC NNS Proposal 138708](https://dashboard.internetcom
 Here is a summary of the changes since the last GuestOS release:
 
 Fake changelog for ('206b61a8616bc93d36d6a014e5cc8edf1ba256ae', 'GuestOS', False)"""
+        # MockDashboard pins two HostOS-encoded proposals (138817 and 138814)
+        # to each of the two top releases.  proposals_by_version keeps the
+        # one with the largest id, so the forum post must reference 138817.
         expected_hostos_post = """Hello there!
 
 We are happy to announce that voting is now open for [a new HostOS release](https://github.com/dfinity/ic/tree/release-2025-09-25_09-52-base).
-The NNS proposal is here: [IC NNS Proposal 138814](https://dashboard.internetcomputer.org/proposal/138814).
+The NNS proposal is here: [IC NNS Proposal 138817](https://dashboard.internetcomputer.org/proposal/138817).
 
 Here is a summary of the changes since the last HostOS release:
 
@@ -527,3 +551,189 @@ To see a full list of commits added since last release, compare the revisions on
 """.rstrip()
         assert guestos_post["cooked"] == expected_guestos_release_notes
         assert hostos_post["cooked"] == expected_hostos_release_notes
+
+
+def _guestos_election_proposal(
+    proposal_id: int, version: str, status: str = "EXECUTED"
+) -> ElectionProposal:
+    return {
+        "id": proposal_id,
+        "payload": {
+            "replica_version_to_elect": version,
+            "release_package_sha256_hex": "aa" * 32,
+        },
+        "proposal_timestamp_seconds": 1743789296,
+        "proposer": 61,
+        "status": status,
+        "summary": "...stubbed out...",
+        "title": f"Elect new IC/GuestOS revision (commit {version[:7]})",
+    }
+
+
+def _hostos_election_proposal(
+    proposal_id: int, version: str, status: str = "EXECUTED"
+) -> ElectionProposal:
+    return {
+        "id": proposal_id,
+        "payload": {
+            "hostos_version_to_elect": version,
+            "release_package_sha256_hex": "bb" * 32,
+        },
+        "proposal_timestamp_seconds": 1743789296,
+        "proposer": 61,
+        "status": status,
+        "summary": "...stubbed out...",
+        "title": f"Elect new IC/HostOS revision (commit {version[:7]})",
+    }
+
+
+def test_dashboard_get_election_proposals_by_version_keeps_highest_id_for_duplicates() -> (
+    None
+):
+    """
+    When several NNS election proposals target the same version (e.g. an
+    earlier attempt failed and was resubmitted), the proposal-by-version
+    lookup must return the proposal with the largest ``id``.
+
+    Regression test: a prior implementation built the dict by unconditional
+    overwrite inside a (buggy) nested loop, so whichever proposal happened to
+    be assigned last (i.e. the oldest, given that the dashboard API returns
+    proposals newest-first) ended up in the dict.  Combined with
+    ``ignored_proposals`` that targeted the failed (oldest) proposal, this
+    caused the reconciler to lose track of the successful resubmission and
+    fire a duplicate election proposal on every restart.
+    """
+    guestos_version = "11" * 20
+    hostos_version = "22" * 20
+
+    class _Dashboard(DashboardAPI):
+        def get_past_election_proposals(self) -> list[ElectionProposal]:
+            # Returned newest-first, matching the real dashboard API ordering.
+            return [
+                _guestos_election_proposal(200_004, guestos_version, status="OPEN"),
+                _guestos_election_proposal(200_003, guestos_version, status="EXECUTED"),
+                _guestos_election_proposal(200_001, guestos_version, status="FAILED"),
+                _hostos_election_proposal(200_002, hostos_version, status="EXECUTED"),
+                _hostos_election_proposal(200_000, hostos_version, status="FAILED"),
+            ]
+
+    guestos, hostos = _Dashboard().get_election_proposals_by_version()
+    assert list(guestos.keys()) == [guestos_version]
+    assert guestos[guestos_version]["id"] == 200_004
+    assert list(hostos.keys()) == [hostos_version]
+    assert hostos[hostos_version]["id"] == 200_002
+
+
+def test_dre_cli_get_election_proposals_by_version_keeps_highest_id_for_duplicates() -> (
+    None
+):
+    """Same contract as the dashboard version (see docstring there)."""
+    guestos_version = "33" * 20
+    hostos_version = "44" * 20
+
+    class _DRECli(dryrun.DRECli):
+        def get_past_election_proposals(self) -> list[ElectionProposal]:
+            return [
+                _guestos_election_proposal(300_004, guestos_version, status="OPEN"),
+                _guestos_election_proposal(300_003, guestos_version, status="EXECUTED"),
+                _guestos_election_proposal(300_001, guestos_version, status="FAILED"),
+                _hostos_election_proposal(300_002, hostos_version, status="EXECUTED"),
+                _hostos_election_proposal(300_000, hostos_version, status="FAILED"),
+            ]
+
+    guestos, hostos = _DRECli().get_election_proposals_by_version()
+    assert list(guestos.keys()) == [guestos_version]
+    assert guestos[guestos_version]["id"] == 300_004
+    assert list(hostos.keys()) == [hostos_version]
+    assert hostos[hostos_version]["id"] == 300_002
+
+
+def test_reconciler_skips_submission_when_version_already_in_blessed_set(
+    ic_repo: git_repo.GitRepo,
+    mocker: pytest_mock.plugin.MockerFixture,
+) -> None:
+    """
+    Safety net: if a version is already in the elected (``blessed``) set but
+    the reconciler has no record of its proposal -- e.g. because the
+    proposal that elected it is listed in ``ignored_proposals`` and the
+    operator forgot to remove it -- the reconciler must NOT submit another
+    election proposal, because the governance canister would reject the
+    duplicate.  See ``release-controller/reconciler.py`` proposal-submission
+    branch for the corresponding short-circuit.
+    """
+    with mocker.patch.object(ic_repo, "push_release_tags"):
+        d, f, n, rs, a, dre, s, rl, p, db = _defaults_for_test()
+        already_elected_version = "45657852c1eca6728ff313808db29b47c862ad13"
+
+        # Dashboard / DRE see no proposals at all for the target version
+        # (the only proposal that ever targeted it was filtered out by
+        # ignored_proposals upstream; we simulate that by returning an empty
+        # list).  Combined with the version being in the elected set, this
+        # is exactly the situation that used to drive duplicate submissions.
+        mocker.patch.object(db, "get_past_election_proposals", return_value=[])
+        mocker.patch.object(dre, "get_past_election_proposals", return_value=[])
+        mocker.patch.object(
+            dre,
+            "get_blessed_hostos_versions",
+            return_value={already_elected_version},
+        )
+        mocker.patch.object(
+            dre,
+            "get_active_hostos_versions",
+            return_value={already_elected_version},
+        )
+        propose_spy = mocker.spy(dre, "propose_to_revise_elected_os_versions")
+
+        rl = StaticReleaseLoader(
+            pydantic_yaml.to_yaml_str(
+                ReleaseIndexModel.model_validate(
+                    {
+                        "releases": [
+                            _release(
+                                "rc--2025-10-02_03-13",
+                                {"base": already_elected_version},
+                            ),
+                            _release(
+                                "rc--2025-09-25_09-52",
+                                {"base": "206b61a8616bc93d36d6a014e5cc8edf1ba256ae"},
+                            ),
+                            # Third RC so find_base_release can resolve a
+                            # base for the second-newest release.
+                            _release(
+                                "rc--2025-09-19_10-17",
+                                {"base": "bf0d4d1b8cb6c0c19a5afa1454ada014847aa5c6"},
+                            ),
+                        ],
+                    }
+                )
+            )
+        )
+        reconciler = Reconciler(
+            f, rl, n, p, "", rs, ic_repo, lambda: _cdf(ic_repo), a, dre, db, s
+        )
+
+        def fake_approved_release_notes(*args):  # type: ignore
+            return f"Fake changelog for {args}"
+
+        rl.proposal_summary = fake_approved_release_notes  # type: ignore
+        reconciler.reconcile()
+
+        # No HostOS election proposal should have been submitted for the
+        # already-elected version.  Submissions for other unrelated test
+        # versions are not prevented.
+        hostos_submitted_versions = [
+            call.kwargs["version"]
+            for call in propose_spy.call_args_list
+            if call.kwargs.get("os_kind") == const.HOSTOS
+        ]
+        assert already_elected_version not in hostos_submitted_versions, (
+            "Reconciler submitted a duplicate election proposal for"
+            f" already-elected version {already_elected_version}:"
+            f" {hostos_submitted_versions}"
+        )
+        # Reconciler state must still be NoProposal for that version, since
+        # the short-circuit deliberately does not synthesise a proposal id.
+        assert isinstance(
+            rs.version_proposal(already_elected_version, const.HOSTOS),
+            reconciler_state.NoProposal,
+        )

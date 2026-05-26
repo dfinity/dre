@@ -437,13 +437,7 @@ class Reconciler:
 
     @staticmethod
     def _filtered_proposals_retriever(
-        retriever: typing.Callable[
-            [],
-            tuple[
-                dict[str, dre_cli.ElectionProposal],
-                dict[str, dre_cli.ElectionProposal],
-            ],
-        ],
+        raw_retriever: typing.Callable[[], list[dre_cli.ElectionProposal]],
         source: str,
         ignore_proposal_ids: typing.Iterable[int],
     ) -> typing.Callable[
@@ -453,47 +447,40 @@ class Reconciler:
             dict[str, dre_cli.ElectionProposal],
         ],
     ]:
-        """Wrap a proposal retriever so it drops ignored proposal IDs.
+        """Wrap a raw proposal-list retriever into a by-version aggregator
+        that drops ignored proposal IDs *before* aggregating.
 
-        The wrapped retriever omits any proposal whose ``id`` is listed in
-        the index's top-level ``ignored_proposals`` so the affected versions
-        are treated by :class:`reconciler_state.ReconcilerState` as if no
-        proposal had been submitted.
+        Any proposal whose ``id`` is listed in the index's top-level
+        ``ignored_proposals`` is removed from the input list, then the
+        remaining proposals are aggregated by :func:`dre_cli.proposals_by_version`.
+        Filtering at the list level (rather than after aggregation) means a
+        stale ``ignored_proposals`` entry cannot accidentally hide an
+        otherwise-valid proposal that targets the same version -- the
+        next-highest-id proposal for that version simply takes its place.
         """
         ignore_set: set[int] = set(ignore_proposal_ids)
-
-        def _drop_ignored(
-            d: dict[str, dre_cli.ElectionProposal],
-            os_kind: OsKind,
-        ) -> dict[str, dre_cli.ElectionProposal]:
-            out: dict[str, dre_cli.ElectionProposal] = {}
-            for version, proposal in d.items():
-                if proposal["id"] in ignore_set:
-                    LOGGER.warning(
-                        "Ignoring %s %s election proposal %s for version %s"
-                        " (listed in release-index.yaml ignored_proposals);"
-                        " the reconciler will treat this version as not yet"
-                        " proposed.",
-                        source,
-                        os_kind,
-                        proposal["id"],
-                        version,
-                    )
-                    continue
-                out[version] = proposal
-            return out
 
         def wrapped() -> tuple[
             dict[str, dre_cli.ElectionProposal],
             dict[str, dre_cli.ElectionProposal],
         ]:
-            guestos, hostos = retriever()
-            if not ignore_set:
-                return guestos, hostos
-            return (
-                _drop_ignored(guestos, GUESTOS),
-                _drop_ignored(hostos, HOSTOS),
-            )
+            proposals = list(raw_retriever())
+            if ignore_set:
+                kept: list[dre_cli.ElectionProposal] = []
+                for proposal in proposals:
+                    if proposal["id"] in ignore_set:
+                        LOGGER.warning(
+                            "Ignoring %s election proposal %s"
+                            " (listed in release-index.yaml ignored_proposals);"
+                            " the reconciler will treat the targeted version as"
+                            " though this proposal had never been submitted.",
+                            source,
+                            proposal["id"],
+                        )
+                        continue
+                    kept.append(proposal)
+                proposals = kept
+            return dre_cli.proposals_by_version(proposals)
 
         return wrapped
 
@@ -521,7 +508,7 @@ class Reconciler:
         try:
             self.state.update_state(
                 self._filtered_proposals_retriever(
-                    self.dashboard.get_election_proposals_by_version,
+                    self.dashboard.get_past_election_proposals,
                     source="dashboard",
                     ignore_proposal_ids=ignore_proposal_ids,
                 )
@@ -538,7 +525,7 @@ class Reconciler:
         # that have the freshest state (dashboard lags).
         self.state.update_state(
             self._filtered_proposals_retriever(
-                self.dre.get_election_proposals_by_version,
+                self.dre.get_past_election_proposals,
                 source="dre",
                 ignore_proposal_ids=ignore_proposal_ids,
             )
@@ -903,6 +890,30 @@ class Reconciler:
                             "The following revisions will be unelected: %s",
                             unelect_versions,
                         )
+
+                        if release_commit in blessed:
+                            # Safety net: the version is already elected on the
+                            # NNS but no proposal id is recorded in reconciler
+                            # state.  This happens when release-index.yaml's
+                            # ignored_proposals lists every proposal that ever
+                            # targeted this version, so the proposal-retriever
+                            # hides the one that actually elected it.  Submitting
+                            # would create a duplicate that the governance
+                            # canister rejects -- just skip and warn loudly so
+                            # the operator drops the stale entry.
+                            revlogger.warning(
+                                "Version %s is already in the elected %s set but"
+                                " the reconciler has no record of its election"
+                                " proposal; refusing to submit a duplicate."
+                                "  This usually means release-index.yaml's"
+                                " ignored_proposals contains a stale id for the"
+                                " proposal that actually elected this version;"
+                                " remove that entry once the replacement has"
+                                " been submitted.",
+                                release_commit,
+                                v.os_kind,
+                            )
+                            continue
 
                     if v.os_kind == GUESTOS:
                         launch_measurements = fetch_launch_measurements(

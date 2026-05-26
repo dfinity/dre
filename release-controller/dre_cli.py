@@ -39,6 +39,64 @@ class ElectionProposal(typing.TypedDict):
     payload: HostosElectionProposalPayload | GuestosElectionProposalPayload
 
 
+def proposals_by_version(
+    proposals: typing.Iterable[ElectionProposal],
+    ignore_ids: typing.Iterable[int] = (),
+) -> tuple[dict[str, ElectionProposal], dict[str, ElectionProposal]]:
+    """
+    Aggregate a flat list of IC OS election proposals into two
+    version -> proposal dicts (GuestOS, HostOS), with three semantics that
+    cooperate to make ``release-index.yaml``'s ``ignored_proposals`` mechanism
+    safe:
+
+    * ``ignore_ids`` is applied **before** aggregation, so dropping a stale
+      proposal does not also drop a perfectly good alternative proposal
+      targeting the same version.
+    * When several proposals target the same version (e.g. a failed attempt
+      was resubmitted), the proposal with the largest ``id`` wins -- there
+      is no reliance on the iteration order of the input.
+    * Proposals with no version in their payload (or with an empty one) are
+      ignored.
+
+    Regression test target: the previous implementation built the dict by
+    unconditional overwrite inside a buggy nested loop, so whichever
+    proposal happened to be assigned last (the oldest given a newest-first
+    input) ended up in the dict.  Combined with a stale ``ignored_proposals``
+    entry, this caused the reconciler to lose track of a successful
+    resubmission and fire a duplicate election proposal on every restart.
+    """
+    guestos: dict[str, ElectionProposal] = {}
+    hostos: dict[str, ElectionProposal] = {}
+    ignored: set[int] = set(ignore_ids)
+
+    def keep_if_newer(
+        store: dict[str, ElectionProposal],
+        version: str,
+        proposal: ElectionProposal,
+    ) -> None:
+        existing = store.get(version)
+        if existing is None or proposal["id"] > existing["id"]:
+            store[version] = proposal
+
+    for proposal in proposals:
+        if proposal["id"] in ignored:
+            continue
+        payload = proposal["payload"]
+        if "replica_version_to_elect" in payload:
+            guestos_version = typing.cast(
+                GuestosElectionProposalPayload, payload
+            ).get("replica_version_to_elect")
+            if guestos_version:
+                keep_if_newer(guestos, guestos_version, proposal)
+        if "hostos_version_to_elect" in payload:
+            hostos_version = typing.cast(
+                HostosElectionProposalPayload, payload
+            ).get("hostos_version_to_elect")
+            if hostos_version:
+                keep_if_newer(hostos, hostos_version, proposal)
+    return guestos, hostos
+
+
 def _mode_flags(dry_run: bool) -> list[str]:
     """
     Return what DRE flag set to use depending on the mode.
@@ -149,28 +207,10 @@ class DRECli:
         """
         Get all IC OS election proposals in two separate dictionaries keyed
         by version -- the first dictionary contains GuestOS proposals, and
-        the second contains HostOS proposals."""
-        d: dict[str, ElectionProposal] = {}
-        od: dict[str, ElectionProposal] = {}
-        known_proposals = self.get_past_election_proposals()
-        for proposal in known_proposals:
-            for proposal in known_proposals:
-                payload = proposal["payload"]
-                if "replica_version_to_elect" in payload:
-                    replica_version = typing.cast(
-                        GuestosElectionProposalPayload, payload
-                    ).get("replica_version_to_elect")
-                    if not replica_version:
-                        continue
-                    d[replica_version] = proposal
-                if "hostos_version_to_elect" in payload:
-                    hostos_version = typing.cast(
-                        HostosElectionProposalPayload, payload
-                    ).get("hostos_version_to_elect")
-                    if not hostos_version:
-                        continue
-                    od[hostos_version] = proposal
-        return d, od
+        the second contains HostOS proposals.  See
+        :func:`proposals_by_version` for the aggregation semantics.
+        """
+        return proposals_by_version(self.get_past_election_proposals())
 
     def propose_to_revise_elected_os_versions(
         self,
