@@ -224,7 +224,7 @@ next cycle.
 
 ```yaml
 ignored_proposals:
-  - 141776 # GuestOS election proposal rejected; resubmit the version.
+  - 123456 # GuestOS election proposal rejected; resubmit the version.
 releases:
   - rc_name: rc--...
     versions:
@@ -237,9 +237,14 @@ Caveats:
   that is already blessed.  This lever only helps when the prior
   proposal did **not** result in a blessing (typically REJECTED or
   FAILED).
-- Remove the entry from `release-index.yaml` once the replacement
-  proposal has been submitted.  Leaving it in indefinitely silently
-  swallows any future state for the same proposal id.
+- **Remove the entry from `release-index.yaml` once the replacement
+  proposal has been submitted.**  Leaving a stale entry around is
+  harmless for the version it was added for -- the proposal-by-version
+  lookup keeps the largest-id proposal for that version, so a later
+  successful resubmission still takes precedence.  As a safety net, the
+  reconciler also refuses to submit a fresh proposal for a version that
+  is already in the elected (`blessed`) set, logging a clear warning if
+  it sees the situation.
 
 ## Development
 

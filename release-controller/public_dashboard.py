@@ -36,29 +36,10 @@ class DashboardAPI:
         """
         Get IC OS election proposals in two separate dictionaries keyed
         by version -- the first dictionary contains GuestOS proposals, and
-        the second contains HostOS proposals."""
-
-        d: dict[str, dre_cli.ElectionProposal] = {}
-        od: dict[str, dre_cli.ElectionProposal] = {}
-        known_proposals = self.get_past_election_proposals()
-        for proposal in known_proposals:
-            for proposal in known_proposals:
-                payload = proposal["payload"]
-                if "replica_version_to_elect" in payload:
-                    replica_version = typing.cast(
-                        dre_cli.GuestosElectionProposalPayload, payload
-                    ).get("replica_version_to_elect")
-                    if not replica_version:
-                        continue
-                    d[replica_version] = proposal
-                if "hostos_version_to_elect" in payload:
-                    hostos_version = typing.cast(
-                        dre_cli.HostosElectionProposalPayload, payload
-                    ).get("hostos_version_to_elect")
-                    if not hostos_version:
-                        continue
-                    od[hostos_version] = proposal
-        return d, od
+        the second contains HostOS proposals.  See
+        :func:`dre_cli.proposals_by_version` for the aggregation semantics.
+        """
+        return dre_cli.proposals_by_version(self.get_past_election_proposals())
 
 
 if __name__ == "__main__":

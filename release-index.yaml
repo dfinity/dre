@@ -14,8 +14,7 @@
 #   rejected / failed proposals.  Remove the entry once the replacement
 #   proposal has been submitted; the IC governance canister will still
 #   refuse to re-elect an already blessed version.
-ignored_proposals:
-  - 141776 # GuestOS election proposal rejected; resubmit the version.
+ignored_proposals: []
 releases:
   - rc_name: rc--2026-05-21_04-45
     versions:
