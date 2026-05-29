@@ -20,6 +20,8 @@ releases:
     versions:
       - name: base 
         version: a47e5434753752c1d2972fbc4407d14f88964285
+      - name: canister-logging 
+        version: b090f12a838fc5118002d5e832f459cb4c46c399
   - rc_name: rc--2026-05-21_04-45
     versions:
       - name: base 
