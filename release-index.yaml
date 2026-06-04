@@ -16,6 +16,10 @@
 #   refuse to re-elect an already blessed version.
 ignored_proposals: []
 releases:
+  - rc_name: rc--2026-06-04_04-52
+    versions:
+      - name: base 
+        version: b95f4a32b41798de115aac9298b51dd1662f1da5
   - rc_name: rc--2026-05-29_04-44
     versions:
       - name: base 
