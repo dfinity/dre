@@ -14,7 +14,8 @@
 #   rejected / failed proposals.  Remove the entry once the replacement
 #   proposal has been submitted; the IC governance canister will still
 #   refuse to re-elect an already blessed version.
-ignored_proposals: []
+ignored_proposals:
+  - 142125 # GuestOS base b95f4a32b41798de115aac9298b51dd1662f1da5 election FAILED: its auto-computed retire list included 62e841d27ea12451f504e74c54843b7cbf93ca4d, which was still deployed to a subnet at execution time. That subnet has since been upgraded off it, so a resubmission can retire it cleanly. Remove this entry once the replacement proposal has been submitted.
 releases:
   - rc_name: rc--2026-06-04_04-52
     versions:
