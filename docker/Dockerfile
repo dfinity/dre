@@ -65,7 +65,7 @@ RUN rust_version=$(grep -oP '(?<=channel = ")[^"]+' /usr/src/rust-toolchain.toml
     curl --fail https://sh.rustup.rs -sSf \
     | sh -s -- -y --default-toolchain ${rust_version}-x86_64-unknown-linux-gnu --no-modify-path && \
     rustup default ${rust_version}-x86_64-unknown-linux-gnu && \
-    rustup component add rls && \
+    rustup component add rust-analyzer && \
     chown -R ubuntu.ubuntu ${RUSTUP_HOME} ${CARGO_HOME}
 
 # Cargo maintains a local cache of the registry index and of git checkouts of crates at CARGO_HOME
