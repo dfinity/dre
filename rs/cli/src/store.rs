@@ -33,10 +33,7 @@ async fn find_github_release_tag_for_commit(commit: &str) -> anyhow::Result<Stri
         let mut page = 1u32;
         loop {
             let refs: Vec<GitRef> = client
-                .get(format!(
-                    "https://api.github.com/repos/dfinity/ic/git/matching-refs/tags/release-{}",
-                    year
-                ))
+                .get(format!("https://api.github.com/repos/dfinity/ic/git/matching-refs/tags/release-{}", year))
                 .query(&[("per_page", "100"), ("page", page.to_string().as_str())])
                 .send()
                 .await?
