@@ -147,17 +147,27 @@ class DRECli:
 
     def get_blessed_guestos_versions(self) -> set[str]:
         """Query the blessed GuestOS versions."""
-        return set(
-            typing.cast(
-                list[str],
-                json.loads(
-                    subprocess.check_output(
-                        [self.cli, "get", "blessed-replica-versions", "--json"],
-                        env=self.env,
-                    )
-                )["value"]["blessed_version_ids"],
+        # `dre get` forwards its arguments verbatim to `ic-admin`, so the
+        # output format is dictated by the ic-admin build that matches the
+        # currently deployed registry canister (downloaded at runtime), not
+        # by this code.  Newer ic-admin releases ignore `--json` for this
+        # subcommand and print a plain newline-separated list of version IDs;
+        # older ones wrapped it in {"value": {"blessed_version_ids": [...]}}.
+        # Accept both so a registry-canister upgrade can't break us again.
+        output = subprocess.check_output(
+            [self.cli, "get", "blessed-replica-versions", "--json"],
+            env=self.env,
+            text=True,
+        ).strip()
+        try:
+            parsed = json.loads(output)
+        except json.JSONDecodeError:
+            parsed = None
+        if isinstance(parsed, dict):
+            return set(
+                typing.cast(list[str], parsed["value"]["blessed_version_ids"])
             )
-        )
+        return {line.strip() for line in output.splitlines() if line.strip()}
 
     def get_blessed_hostos_versions(self) -> set[str]:
         """Query the blessed HostOS versions."""
