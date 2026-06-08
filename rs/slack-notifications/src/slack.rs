@@ -273,6 +273,7 @@ mod tests {
             deadline_timestamp_seconds: None,
             derived_proposal_information: None,
             total_potential_voting_power: None,
+            success_value: None,
         }
     }
 
