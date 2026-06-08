@@ -12,6 +12,59 @@ use log::{debug, info, warn};
 use std::os::unix::fs::PermissionsExt;
 use std::{io::Read, path::PathBuf, sync::Arc, time::Duration};
 
+#[derive(serde::Deserialize)]
+struct GitRefObject {
+    sha: String,
+}
+
+#[derive(serde::Deserialize)]
+struct GitRef {
+    #[serde(rename = "ref")]
+    ref_name: String,
+    object: GitRefObject,
+}
+
+async fn find_github_release_tag_for_commit(commit: &str) -> anyhow::Result<String> {
+    use chrono::Datelike;
+    let client = reqwest::Client::builder().user_agent("dre-cli").build()?;
+    let current_year = chrono::Utc::now().year();
+
+    for year in (2024..=current_year).rev() {
+        let mut page = 1u32;
+        loop {
+            let refs: Vec<GitRef> = client
+                .get(format!(
+                    "https://api.github.com/repos/dfinity/ic/git/matching-refs/tags/release-{}",
+                    year
+                ))
+                .query(&[("per_page", "100"), ("page", page.to_string().as_str())])
+                .send()
+                .await?
+                .error_for_status()?
+                .json()
+                .await?;
+
+            let count = refs.len();
+            for git_ref in refs {
+                if git_ref.object.sha == commit {
+                    let tag = git_ref.ref_name.trim_start_matches("refs/tags/").to_string();
+                    return Ok(tag);
+                }
+            }
+
+            if count < 100 {
+                break;
+            }
+            page += 1;
+        }
+    }
+
+    Err(anyhow::anyhow!(
+        "No GitHub release tag found for commit {}. The commit may not have an associated IC release.",
+        commit
+    ))
+}
+
 use crate::{
     auth::Neuron,
     cordoned_feature_fetcher::{CordonedFeatureFetcher, CordonedFeatureFetcherImpl},
@@ -26,7 +79,7 @@ pub struct Store {
 }
 
 const DURATION_BETWEEN_CHECKS_FOR_NEW_IC_ADMIN: Duration = Duration::from_secs(60 * 60 * 24);
-pub const FALLBACK_IC_ADMIN_VERSION: &str = "1a1cb8cbff5e5c5c1fd01ec37e3c22e5119f12c3";
+pub const FALLBACK_IC_ADMIN_VERSION: &str = "b95f4a32b41798de115aac9298b51dd1662f1da5";
 
 impl Store {
     #[cfg(not(test))]
@@ -169,14 +222,15 @@ impl Store {
     }
 
     async fn download_ic_admin(&self, version: &str, path: &PathBuf) -> anyhow::Result<()> {
-        let url = if std::env::consts::OS == "macos" {
-            // Apple Silicon will emulate x86 architecture.
-            format!("https://download.dfinity.systems/ic/{version}/binaries/x86_64-darwin/ic-admin.gz")
-        } else {
-            format!("https://download.dfinity.systems/ic/{version}/binaries/x86_64-linux/ic-admin.gz")
+        let tag = find_github_release_tag_for_commit(version).await?;
+        let asset_name = match (std::env::consts::OS, std::env::consts::ARCH) {
+            ("macos", _) => "ic-admin-arm64-darwin.gz",
+            (_, "aarch64") => "ic-admin-arm64-linux.gz",
+            _ => "ic-admin-x86_64-linux.gz",
         };
+        let url = format!("https://github.com/dfinity/ic/releases/download/{tag}/{asset_name}");
         info!("Downloading ic-admin version: {} from {}", version, url);
-        let body = reqwest::get(url).await?.error_for_status()?.bytes().await?;
+        let body = reqwest::get(&url).await?.error_for_status()?.bytes().await?;
         let mut decoded = GzDecoder::new(body.as_ref());
 
         let path_parent = path.parent().ok_or(anyhow::anyhow!("Failed to get parent for ic admin revision dir"))?;
