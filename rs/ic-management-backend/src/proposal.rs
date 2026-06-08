@@ -82,6 +82,7 @@ impl From<ProposalInfo> for ProposalInfoInternal {
             deadline_timestamp_seconds: _,
             derived_proposal_information: _,
             total_potential_voting_power: _,
+            success_value: _,
         } = p;
         ProposalInfoInternal {
             id: id.expect("missing proposal id").id,
