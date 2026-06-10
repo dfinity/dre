@@ -279,7 +279,7 @@ mod tests {
 
     #[test]
     fn grouping_into_1_message() {
-        let proposals = vec![gen_test_proposal(1000, 40, "summary", 5), gen_test_proposal(1001, 40, "summary", 5)];
+        let proposals = vec![gen_test_proposal(1000, 77, "summary", 5), gen_test_proposal(1001, 40, "summary", 5)];
         unsafe {
             std::env::set_var("SLACK_URL", "http://localhost");
             std::env::set_var("SLACK_CHANNEL_PROPOSALS_INTERNAL", "#nns-proposals-test-internal");
@@ -288,13 +288,13 @@ mod tests {
         assert_eq!(message_groups.len(), 1);
         let msg1 = &message_groups[0];
         assert_eq!(msg1.slack_channel.as_ref().unwrap(), "#nns-proposals-test-internal");
-        assert_eq!(msg1.proposer_mention, "<@URT5Z7VDZ>");
+        assert_eq!(msg1.proposer_mention, "<@U04CMGD6XDH>");
         assert_eq!(msg1.motivation, "summary".to_string());
     }
 
     #[test]
     fn grouping_into_2_message() {
-        let proposals = vec![gen_test_proposal(1000, 40, "summary 1", 5), gen_test_proposal(1001, 40, "summary 2", 5)];
+        let proposals = vec![gen_test_proposal(1000, 77, "summary 1", 5), gen_test_proposal(1001, 40, "summary 2", 5)];
         unsafe {
             std::env::set_var("SLACK_URL", "http://localhost");
             std::env::set_var("SLACK_CHANNEL_PROPOSALS_INTERNAL", "#nns-proposals-test-internal");
@@ -305,15 +305,15 @@ mod tests {
         assert_eq!(message_groups[0].proposer_mention, "<@URT5Z7VDZ>");
         assert_eq!(message_groups[0].motivation, "summary 1".to_string());
         assert_eq!(message_groups[1].slack_channel.as_ref().unwrap(), "#nns-proposals-test-internal");
-        assert_eq!(message_groups[1].proposer_mention, "<@URT5Z7VDZ>");
+        assert_eq!(message_groups[1].proposer_mention, "<@U04CMGD6XDH>");
         assert_eq!(message_groups[1].motivation, "summary 2".to_string());
     }
 
     #[test]
     fn grouping_into_2_message_2_slack_channels() {
         let proposals = vec![
-            gen_test_proposal(1000, 40, "summary 1", 5),
-            gen_test_proposal(1001, 40, "summary 1", 4), // Motion proposal --> external channel
+            gen_test_proposal(1000, 77, "summary 1", 5),
+            gen_test_proposal(1001, 77, "summary 1", 4), // Motion proposal --> external channel
         ];
         unsafe {
             std::env::set_var("SLACK_URL", "http://localhost");
@@ -323,10 +323,10 @@ mod tests {
         let message_groups = MessageGroups::try_from(proposals).unwrap().message_groups;
         assert_eq!(message_groups.len(), 2);
         assert_eq!(message_groups[0].slack_channel.as_ref().unwrap(), "#nns-proposals-test-internal");
-        assert_eq!(message_groups[0].proposer_mention, "<@URT5Z7VDZ>");
+        assert_eq!(message_groups[0].proposer_mention, "<@U04CMGD6XDH>");
         assert_eq!(message_groups[0].motivation, "summary 1".to_string());
         assert_eq!(message_groups[1].slack_channel.as_ref().unwrap(), "#nns-proposals-test-external");
-        assert_eq!(message_groups[1].proposer_mention, "<@URT5Z7VDZ>");
+        assert_eq!(message_groups[1].proposer_mention, "<@U04CMGD6XDH>");
         assert_eq!(message_groups[1].motivation, "summary 1".to_string());
     }
 
@@ -352,7 +352,7 @@ mod tests {
 
     #[test]
     fn mention_devrel() {
-        let proposals = vec![gen_test_proposal(1000, 40, "summary 1", Topic::SnsAndCommunityFund.into())];
+        let proposals = vec![gen_test_proposal(1000, 77, "summary 1", Topic::SnsAndCommunityFund.into())];
         unsafe {
             std::env::set_var("SLACK_URL", "http://localhost");
             std::env::set_var("SLACK_CHANNEL_PROPOSALS_INTERNAL", "#nns-proposals-test-internal");
@@ -362,7 +362,7 @@ mod tests {
         assert_eq!(message_groups.len(), 1);
         assert_eq!(message_groups[0].slack_channel.as_ref().unwrap(), "#nns-proposals-test-internal");
         assert_eq!(message_groups[0].alert_mention, format!("{}{}", TRUSTED_NEURONS_TAG, DEVREL_TAG));
-        assert_eq!(message_groups[0].proposer_mention, "<@URT5Z7VDZ>");
+        ssert_eq!(message_groups[0].proposer_mention, "<@U04CMGD6XDH>");
         assert_eq!(message_groups[0].motivation, "summary 1".to_string());
     }
 }
