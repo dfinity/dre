@@ -302,7 +302,7 @@ mod tests {
         let message_groups = MessageGroups::try_from(proposals).unwrap().message_groups;
         assert_eq!(message_groups.len(), 2);
         assert_eq!(message_groups[0].slack_channel.as_ref().unwrap(), "#nns-proposals-test-internal");
-        assert_eq!(message_groups[0].proposer_mention, "<@URT5Z7VDZ>");
+        assert_eq!(message_groups[0].proposer_mention, "<@U04CMGD6XDH>");
         assert_eq!(message_groups[0].motivation, "summary 1".to_string());
         assert_eq!(message_groups[1].slack_channel.as_ref().unwrap(), "#nns-proposals-test-internal");
         assert_eq!(message_groups[1].proposer_mention, "<@U04CMGD6XDH>");
@@ -332,7 +332,7 @@ mod tests {
 
     #[test]
     fn mention_trusted_neurons() {
-        let proposals = vec![gen_test_proposal(1000, 40, "summary 1", 5), gen_test_proposal(1001, 80, "summary 1", 7)];
+        let proposals = vec![gen_test_proposal(1000, 77, "summary 1", 5), gen_test_proposal(1001, 80, "summary 1", 7)];
         unsafe {
             std::env::set_var("SLACK_URL", "http://localhost");
             std::env::set_var("SLACK_CHANNEL_PROPOSALS_INTERNAL", "#nns-proposals-test-internal");
@@ -342,7 +342,7 @@ mod tests {
         assert_eq!(message_groups.len(), 2);
         assert_eq!(message_groups[0].slack_channel.as_ref().unwrap(), "#nns-proposals-test-internal");
         assert_eq!(message_groups[0].alert_mention, TRUSTED_NEURONS_TAG);
-        assert_eq!(message_groups[0].proposer_mention, "<@URT5Z7VDZ>");
+        assert_eq!(message_groups[0].proposer_mention, "<@U04CMGD6XDH>");
         assert_eq!(message_groups[0].motivation, "summary 1".to_string());
         assert_eq!(message_groups[1].slack_channel.as_ref().unwrap(), "#nns-proposals-test-internal");
         assert_eq!(message_groups[1].alert_mention, RELEASE_TEAM_TAG);
