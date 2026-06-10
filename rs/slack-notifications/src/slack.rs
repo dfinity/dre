@@ -362,7 +362,7 @@ mod tests {
         assert_eq!(message_groups.len(), 1);
         assert_eq!(message_groups[0].slack_channel.as_ref().unwrap(), "#nns-proposals-test-internal");
         assert_eq!(message_groups[0].alert_mention, format!("{}{}", TRUSTED_NEURONS_TAG, DEVREL_TAG));
-        ssert_eq!(message_groups[0].proposer_mention, "<@U04CMGD6XDH>");
+        assert_eq!(message_groups[0].proposer_mention, "<@U04CMGD6XDH>");
         assert_eq!(message_groups[0].motivation, "summary 1".to_string());
     }
 }
