@@ -279,7 +279,7 @@ mod tests {
 
     #[test]
     fn grouping_into_1_message() {
-        let proposals = vec![gen_test_proposal(1000, 77, "summary", 5), gen_test_proposal(1001, 40, "summary", 5)];
+        let proposals = vec![gen_test_proposal(1000, 77, "summary", 5), gen_test_proposal(1001, 77, "summary", 5)];
         unsafe {
             std::env::set_var("SLACK_URL", "http://localhost");
             std::env::set_var("SLACK_CHANNEL_PROPOSALS_INTERNAL", "#nns-proposals-test-internal");
@@ -294,7 +294,7 @@ mod tests {
 
     #[test]
     fn grouping_into_2_message() {
-        let proposals = vec![gen_test_proposal(1000, 77, "summary 1", 5), gen_test_proposal(1001, 40, "summary 2", 5)];
+        let proposals = vec![gen_test_proposal(1000, 77, "summary 1", 5), gen_test_proposal(1001, 77, "summary 2", 5)];
         unsafe {
             std::env::set_var("SLACK_URL", "http://localhost");
             std::env::set_var("SLACK_CHANNEL_PROPOSALS_INTERNAL", "#nns-proposals-test-internal");
