@@ -26,7 +26,7 @@ pub struct LazyGitImpl {
     hostos_releases: RwLock<Option<Arc<ArtifactReleases>>>,
     ic_repo: RwLock<IcRepo>,
     network: Network,
-    blessed_replica_versions: Vec<String>,
+    elected_replica_versions: Vec<String>,
     elected_hostos_versions: Vec<String>,
 }
 
@@ -65,13 +65,13 @@ impl LazyGit for LazyGitImpl {
 }
 
 impl LazyGitImpl {
-    pub fn new(network: Network, blessed_replica_versions: Vec<String>, elected_hostos_versions: Vec<String>) -> anyhow::Result<Self> {
+    pub fn new(network: Network, elected_replica_versions: Vec<String>, elected_hostos_versions: Vec<String>) -> anyhow::Result<Self> {
         Ok(Self {
             guestos_releases: RwLock::new(None),
             hostos_releases: RwLock::new(None),
             ic_repo: RwLock::new(IcRepo::new()?),
             network,
-            blessed_replica_versions,
+            elected_replica_versions,
             elected_hostos_versions,
         })
     }
@@ -96,13 +96,13 @@ impl LazyGitImpl {
             )).unwrap();
         }
 
-        let blessed_versions: HashSet<&String> = self.blessed_replica_versions.iter().chain(self.elected_hostos_versions.iter()).collect();
+        let elected_versions: HashSet<&String> = self.elected_replica_versions.iter().chain(self.elected_hostos_versions.iter()).collect();
 
         // A HashMap from the git revision to the latest commit branch in which the
         // commit is present
         let mut commit_to_release: HashMap<String, Release> = HashMap::new();
         let mut ic_repo = self.ic_repo.write().await;
-        blessed_versions.into_iter().for_each(|commit_hash| {
+        elected_versions.into_iter().for_each(|commit_hash| {
             match ic_repo.get_branches_with_commit(commit_hash) {
                 // For each commit get a list of branches that have the commit
                 Ok(branches) => {
@@ -142,11 +142,11 @@ impl LazyGitImpl {
             }
         });
 
-        for (blessed_versions, mut to_update, artifact_type) in [
-            (&self.blessed_replica_versions, self.guestos_releases.write().await, Artifact::GuestOs),
+        for (elected_versions, mut to_update, artifact_type) in [
+            (&self.elected_replica_versions, self.guestos_releases.write().await, Artifact::GuestOs),
             (&self.elected_hostos_versions, self.hostos_releases.write().await, Artifact::HostOs),
         ] {
-            let releases = blessed_versions
+            let releases = elected_versions
                 .iter()
                 .map(|version| commit_to_release.get(version).unwrap().clone())
                 .sorted_by_key(|rr| rr.time)

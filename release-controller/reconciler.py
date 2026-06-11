@@ -846,9 +846,9 @@ class Reconciler:
                             revlogger.info(
                                 "Oldest active GuestOS release: %s", oldest_rc.rc_name
                             )
-                            blessed = self.dre.get_blessed_guestos_versions()
+                            elected = self.dre.get_elected_guestos_versions()
                             revlogger.info(
-                                "Currently elected GuestOS versions: %s", blessed
+                                "Currently elected GuestOS versions: %s", elected
                             )
 
                         elif v.os_kind == HOSTOS:
@@ -869,21 +869,21 @@ class Reconciler:
                             revlogger.info(
                                 "Oldest active HostOS release: %s", oldest_rc.rc_name
                             )
-                            blessed = self.dre.get_blessed_hostos_versions()
+                            elected = self.dre.get_elected_hostos_versions()
                             revlogger.info(
-                                "Currently elected HostOS versions: %s", blessed
+                                "Currently elected HostOS versions: %s", elected
                             )
                         else:
                             # Appease the almighty type checker gods.
                             active = []
-                            blessed = set()
+                            elected = set()
                             assert 0, "not reached"
 
                         unelect_versions.extend(
                             versions_to_unelect(
                                 index,
                                 active_versions=active,
-                                elected_versions=list(blessed),
+                                elected_versions=list(elected),
                             ),
                         )
                         revlogger.info(
@@ -891,7 +891,7 @@ class Reconciler:
                             unelect_versions,
                         )
 
-                        if release_commit in blessed:
+                        if release_commit in elected:
                             # Safety net: the version is already elected on the
                             # NNS but no proposal id is recorded in reconciler
                             # state.  This happens when release-index.yaml's

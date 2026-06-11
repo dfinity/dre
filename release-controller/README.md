@@ -66,7 +66,7 @@ releases:
         security_fix: true
 ```
 
-You are allowed to periodically clean up old releases from the release index, so long as the commit IDs they list are not in the blessed versions for HostOS or GuestOS, and none of the remaining releases refer to them via the `changelog_base` field.  As a rule of thumb, it will not cause problems to delete releases six months or older.
+You are allowed to periodically clean up old releases from the release index, so long as the commit IDs they list are not in the elected versions for HostOS or GuestOS, and none of the remaining releases refer to them via the `changelog_base` field.  As a rule of thumb, it will not cause problems to delete releases six months or older.
 
 ## Recreating notes
 
@@ -234,8 +234,8 @@ releases:
 Caveats:
 
 - The IC governance canister independently refuses to re-elect a version
-  that is already blessed.  This lever only helps when the prior
-  proposal did **not** result in a blessing (typically REJECTED or
+  that is already elected.  This lever only helps when the prior
+  proposal did **not** result in an electing (typically REJECTED or
   FAILED).
 - **Remove the entry from `release-index.yaml` once the replacement
   proposal has been submitted.**  Leaving a stale entry around is
@@ -243,7 +243,7 @@ Caveats:
   lookup keeps the largest-id proposal for that version, so a later
   successful resubmission still takes precedence.  As a safety net, the
   reconciler also refuses to submit a fresh proposal for a version that
-  is already in the elected (`blessed`) set, logging a clear warning if
+  is already in the elected set, logging a clear warning if
   it sees the situation.
 
 ## Development

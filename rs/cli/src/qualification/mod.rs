@@ -1,11 +1,11 @@
 use backon::{ExponentialBuilder, Retryable};
 use comfy_table::CellAlignment;
 use comfy_table_util::Table;
-use ensure_blessed_versions::EnsureBlessedRevisions;
+use ensure_elected_versions::EnsureElectedRevisions;
 use ic_registry_subnet_type::SubnetType;
 use itertools::Itertools;
 
-use retire_blessed_versions::RetireBlessedVersions;
+use retire_elected_versions::RetireElectedVersions;
 use run_workload_test::Workload;
 use run_xnet_test::RunXnetTest;
 use std::{path::PathBuf, time::Duration};
@@ -17,8 +17,8 @@ use util::StepCtx;
 use crate::ctx::DreContext;
 
 mod comfy_table_util;
-mod ensure_blessed_versions;
-mod retire_blessed_versions;
+mod ensure_elected_versions;
+mod retire_elected_versions;
 mod run_workload_test;
 mod run_xnet_test;
 mod step;
@@ -91,10 +91,10 @@ impl QualificationExecutorBuilder {
 impl QualificationExecutor {
     fn _new(ctx: QualificationExecutorBuilder) -> anyhow::Result<Self> {
         let steps = vec![
-            // Ensure the beginning version is blessed
+            // Ensure the beginning version is elected
             // This step will be skipped for testnet runs, but may be
             // required for staging
-            Steps::EnsureBlessedVersions(EnsureBlessedRevisions {
+            Steps::EnsureElectedVersions(EnsureElectedRevisions {
                 version: ctx.from_version.clone(),
             }),
             // Ensure app subnets are on beginning version
@@ -121,10 +121,10 @@ impl QualificationExecutor {
                 subnet_type: None,
                 to_version: ctx.from_version.clone(),
             }),
-            // Blessing the version which we are qualifying
+            // Electing the version which we are qualifying
             // This step will be run on each network and marks the
             // beginning of a qualification
-            Steps::EnsureBlessedVersions(EnsureBlessedRevisions {
+            Steps::EnsureElectedVersions(EnsureElectedRevisions {
                 version: ctx.to_version.clone(),
             }),
             // Upgrading deployment canisters
@@ -165,11 +165,11 @@ impl QualificationExecutor {
             // retire the initial version.
             // This step may not be required on staging but the version
             // will just be re-elected in the next step
-            Steps::RetireBlessedVersions(RetireBlessedVersions {
+            Steps::RetireElectedVersions(RetireElectedVersions {
                 versions: vec![ctx.from_version.clone()],
             }),
-            // Bless initial replica version with update-img
-            Steps::EnsureBlessedVersions(EnsureBlessedRevisions {
+            // Elect initial replica version with update-img
+            Steps::EnsureElectedVersions(EnsureElectedRevisions {
                 version: ctx.from_version.clone(),
             }),
             // Downgrade application subnets
