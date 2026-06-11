@@ -15,7 +15,6 @@ use ic_management_types::{
 use ic_protobuf::registry::firewall::v1::FirewallRuleSet;
 use ic_protobuf::registry::node::v1::NodeRewardType;
 use ic_protobuf::registry::node_rewards::v2::NodeRewardsTable;
-use ic_protobuf::registry::replica_version::v1::BlessedReplicaVersions;
 use ic_protobuf::registry::{
     api_boundary_node::v1::ApiBoundaryNodeRecord, dc::v1::DataCenterRecord, hostos_version::v1::HostosVersionRecord,
     replica_version::v1::ReplicaVersionRecord, subnet::v1::SubnetRecord, unassigned_nodes_config::v1::UnassignedNodesConfigRecord,
@@ -215,10 +214,6 @@ impl LazyRegistryEntry for ApiBoundaryNodeRecord {
     const KEY_PREFIX: &'static str = API_BOUNDARY_NODE_RECORD_KEY_PREFIX;
 }
 
-impl LazyRegistryEntry for BlessedReplicaVersions {
-    const KEY_PREFIX: &'static str = "blessed_replica_versions";
-}
-
 impl LazyRegistryEntry for NodeRewardsTable {
     const KEY_PREFIX: &'static str = NODE_REWARDS_TABLE_KEY;
 }
@@ -349,13 +344,9 @@ impl LazyRegistry for LazyRegistryImpl {
                 return Ok(elected.to_owned());
             }
 
-            let record = get_family_entries::<BlessedReplicaVersions>(self)?
-                .first_entry()
-                .ok_or(anyhow::anyhow!("No blessed replica versions found"))?
-                .get()
-                .to_owned();
+            let record = get_family_entries::<ReplicaVersionRecord>(self)?.into_keys().collect_vec();
 
-            let record = Arc::new(record.blessed_version_ids);
+            let record = Arc::new(record);
             *self.elected_guestos.write().await = Some(record.clone());
             Ok(record)
         })
