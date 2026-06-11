@@ -19,17 +19,17 @@ use ic_management_types::{
 use ic_protobuf::registry::api_boundary_node::v1::ApiBoundaryNodeRecord;
 use ic_protobuf::registry::crypto::v1::PublicKey;
 use ic_protobuf::registry::hostos_version::v1::HostosVersionRecord;
-use ic_protobuf::registry::replica_version::v1::{BlessedReplicaVersions, ReplicaVersionRecord};
+use ic_protobuf::registry::replica_version::v1::ReplicaVersionRecord;
 use ic_protobuf::registry::unassigned_nodes_config::v1::UnassignedNodesConfigRecord;
 use ic_protobuf::registry::{dc::v1::DataCenterRecord, node::v1::NodeRecord, node_operator::v1::NodeOperatorRecord, subnet::v1::SubnetRecord};
 use ic_registry_client::client::ThresholdSigPublicKey;
 use ic_registry_client_fake::FakeRegistryClient;
 use ic_registry_client_helpers::node::NodeRegistry;
+use ic_registry_client_helpers::replica_version::ReplicaVersionRegistry;
 use ic_registry_common_proto::pb::local_store::v1::{ChangelogEntry as PbChangelogEntry, KeyMutation as PbKeyMutation, MutationType};
 use ic_registry_keys::{API_BOUNDARY_NODE_RECORD_KEY_PREFIX, DATA_CENTER_KEY_PREFIX};
 use ic_registry_keys::{
     HOSTOS_VERSION_KEY_PREFIX, NODE_OPERATOR_RECORD_KEY_PREFIX, NODE_RECORD_KEY_PREFIX, REPLICA_VERSION_KEY_PREFIX, SUBNET_RECORD_KEY_PREFIX,
-    make_blessed_replica_versions_key,
 };
 use ic_registry_keys::{ROOT_SUBNET_ID_KEY, make_crypto_threshold_signing_pubkey_key};
 use ic_registry_local_registry::LocalRegistry;
@@ -271,13 +271,9 @@ impl RegistryState {
     pub async fn get_elected_guestos_versions(&self) -> Result<Vec<String>, anyhow::Error> {
         match self
             .local_registry
-            .get_value(&make_blessed_replica_versions_key(), self.local_registry.get_latest_version())
+            .get_all_replica_version_records(self.local_registry.get_latest_version())
         {
-            Ok(Some(bytes)) => {
-                let cfg = BlessedReplicaVersions::decode(&bytes[..]).expect("Error decoding BlessedReplicaVersions from the LocalRegistry");
-
-                Ok(cfg.blessed_version_ids)
-            }
+            Ok(Some(versions)) => Ok(versions.into_iter().map(|(v, _)| v).collect()),
             _ => Err(anyhow::anyhow!("No elected GuestOS versions found".to_string(),)),
         }
     }
