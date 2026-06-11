@@ -92,7 +92,7 @@ pub async fn run_backend(
             .service(self::query_decentralization::decentralization_subnet_query)
             .service(self::query_decentralization::decentralization_whatif_query)
             .service(self::release::releases_list_all)
-            .service(self::release::blessed)
+            .service(self::release::elected)
             .service(self::governance_canister::governance_canister_version_endpoint)
     })
     .shutdown_timeout(10)

@@ -94,12 +94,9 @@ def parallel_ssh_run_without_raise(nodes: typing.List[str], username: str, comma
     stop=stop_after_attempt(5),
     wait=wait_exponential(multiplier=1, min=2, max=10),
 )
-def download_ic_binary(remote_path: str, blessed: bool = True):
+def download_ic_binary(remote_path: str):
     """Download an IC binary from from the DFINITY CDN and return the binary bytes."""
-    if blessed:
-        url = f"https://download.dfinity.systems/blessed/ic/{remote_path}"
-    else:
-        url = f"https://download.dfinity.systems/ic/{remote_path}"
+    url = f"https://download.dfinity.systems/ic/{remote_path}"
     logging.info("Downloading: %s", url)
     resp = requests.get(url, timeout=30)
     resp.raise_for_status()
@@ -111,7 +108,7 @@ def compute_ic_executable_path(executable_name: str, git_revision: str):
     return pathlib.Path.home() / "bin" / f"{executable_name}.{git_revision}"
 
 
-def download_ic_executable(git_revision: str, executable_name: str, blessed: bool = False):
+def download_ic_executable(git_revision: str, executable_name: str):
     """Download a platform-specific executable for the given git revision and return the local path."""
     local_path = compute_ic_executable_path(executable_name=executable_name, git_revision=git_revision)
     if local_path.exists() and local_path.stat().st_size > 0 and os.access(local_path, os.X_OK):
@@ -120,7 +117,7 @@ def download_ic_executable(git_revision: str, executable_name: str, blessed: boo
 
     platform_lower = platform.system().lower()
     remote_path = f"{git_revision}/binaries/x86_64-{platform_lower}/{executable_name}.gz"
-    contents = download_ic_binary(remote_path=remote_path, blessed=blessed)
+    contents = download_ic_binary(remote_path=remote_path)
 
     local_path.parent.mkdir(exist_ok=True, parents=True)  # Ensure the parent directory exists
     with open(local_path, "wb") as f:
@@ -137,7 +134,7 @@ def compute_local_canister_path(canister_name: str, git_revision: str):
     return pathlib.Path.home() / "tmp" / "canisters" / f"{canister_name}.{git_revision}.wasm"
 
 
-def download_ic_canister(git_revision: str, canister_name: str, blessed: bool = False):
+def download_ic_canister(git_revision: str, canister_name: str):
     """Download a platform-specific executable for the given git revision and return the local path."""
     local_path = compute_local_canister_path(canister_name=canister_name, git_revision=git_revision)
     if local_path.exists() and local_path.stat().st_size > 0:
@@ -145,7 +142,7 @@ def download_ic_canister(git_revision: str, canister_name: str, blessed: bool = 
         return local_path
 
     remote_path = f"{git_revision}/canisters/{canister_name}.wasm.gz"
-    contents = download_ic_binary(remote_path=remote_path, blessed=blessed)
+    contents = download_ic_binary(remote_path=remote_path)
 
     local_path.parent.mkdir(exist_ok=True, parents=True)  # Ensure the parent directory exists
     with open(local_path, "wb") as f:

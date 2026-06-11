@@ -309,15 +309,15 @@ impl RegistryState {
                     *DATETIME_NAME_GROUP,
                 )).unwrap();
             }
-            let blessed_replica_versions = self.get_elected_guestos_versions().await?;
+            let elected_replica_versions = self.get_elected_guestos_versions().await?;
             let elected_hostos_versions = self.get_elected_hostos_versions().await?;
 
-            let blessed_versions: HashSet<&String> = blessed_replica_versions.iter().chain(elected_hostos_versions.iter()).collect();
+            let elected_versions: HashSet<&String> = elected_replica_versions.iter().chain(elected_hostos_versions.iter()).collect();
 
             // A HashMap from the git revision to the latest commit branch in which the
             // commit is present
             let mut commit_to_release: HashMap<String, Release> = HashMap::new();
-            blessed_versions.into_iter().for_each(|commit_hash| {
+            elected_versions.into_iter().for_each(|commit_hash| {
                 let ic_repo = self.ic_repo.as_mut().unwrap();
                 match ic_repo.get_branches_with_commit(commit_hash) {
                     // For each commit get a list of branches that have the commit
@@ -358,13 +358,13 @@ impl RegistryState {
                 }
             });
 
-            for (blessed_versions, ArtifactReleases { artifact, releases }) in [
-                (blessed_replica_versions, &mut self.guestos_releases),
+            for (elected_versions, ArtifactReleases { artifact, releases }) in [
+                (elected_replica_versions, &mut self.guestos_releases),
                 (elected_hostos_versions, &mut self.hostos_releases),
             ] {
                 releases.clear();
                 releases.extend(
-                    blessed_versions
+                    elected_versions
                         .iter()
                         .filter_map(|version| match commit_to_release.get(version) {
                             Some(release) => Some(release.clone()),
@@ -677,7 +677,7 @@ impl RegistryState {
         }
     }
 
-    pub async fn blessed_versions(&self, artifact: &Artifact) -> Result<Vec<String>> {
+    pub async fn elected_versions(&self, artifact: &Artifact) -> Result<Vec<String>> {
         match artifact {
             Artifact::HostOs => self.get_elected_hostos_versions().await,
             Artifact::GuestOs => self.get_elected_guestos_versions().await,
