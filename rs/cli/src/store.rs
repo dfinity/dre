@@ -24,22 +24,57 @@ struct GitRef {
     object: GitRefObject,
 }
 
-async fn find_github_release_tag_for_commit(commit: &str) -> anyhow::Result<String> {
+// The earliest year for which dfinity/ic publishes dated `release-*` tags.
+const EARLIEST_IC_RELEASE_YEAR: i32 = 2024;
+
+/// Resolves an IC commit hash to its GitHub release tag (e.g.
+/// `release-2026-06-04_04-52-base`).
+///
+/// IC release tags are named `release-YYYY-MM-DD_HH-MM-<variant>`, so they are
+/// grouped per year via the `matching-refs` API. For the common case (version
+/// derived from the registry canister or the embedded fallback) the commit is
+/// always recent, so we only look at the current year's releases. A full scan
+/// back to [`EARLIEST_IC_RELEASE_YEAR`] is only performed when the user pins an
+/// arbitrary `--ic-admin-version <commit>`, which may point to an older release.
+async fn find_github_release_tag_for_commit(commit: &str, deep_scan: bool) -> anyhow::Result<String> {
     use chrono::Datelike;
     let client = reqwest::Client::builder().user_agent("dre-cli").build()?;
     let current_year = chrono::Utc::now().year();
 
-    for year in (2024..=current_year).rev() {
+    // Always include the previous year as well, so lookups keep working in early
+    // January before the first release of the new year is published.
+    let oldest_year = if deep_scan {
+        EARLIEST_IC_RELEASE_YEAR
+    } else {
+        (current_year - 1).max(EARLIEST_IC_RELEASE_YEAR)
+    };
+
+    // Authenticated requests get a much higher rate limit (5000/hour vs 60/hour).
+    let github_token = std::env::var("GITHUB_TOKEN").ok().filter(|t| !t.is_empty());
+
+    for year in (oldest_year..=current_year).rev() {
         let mut page = 1u32;
         loop {
-            let refs: Vec<GitRef> = client
-                .get(format!("https://api.github.com/repos/dfinity/ic/git/matching-refs/tags/release-{}", year))
-                .query(&[("per_page", "100"), ("page", page.to_string().as_str())])
-                .send()
-                .await?
-                .error_for_status()?
-                .json()
-                .await?;
+            let url = format!("https://api.github.com/repos/dfinity/ic/git/matching-refs/tags/release-{}", year);
+            let mut request = client.get(&url).query(&[("per_page", "100"), ("page", page.to_string().as_str())]);
+            if let Some(token) = &github_token {
+                request = request.bearer_auth(token);
+            }
+            let response = request.send().await?;
+
+            // Surface GitHub rate-limiting explicitly, since unauthenticated requests
+            // are capped at 60/hour per IP and the raw 403 is otherwise cryptic.
+            if response.status() == reqwest::StatusCode::FORBIDDEN
+                && response.headers().get("x-ratelimit-remaining").and_then(|v| v.to_str().ok()) == Some("0")
+            {
+                return Err(anyhow::anyhow!(
+                    "GitHub API rate limit exceeded while resolving the ic-admin release for commit {}. \
+                     Set the GITHUB_TOKEN environment variable to raise the limit, or pass an explicit \
+                     binary with --ic-admin <path>.",
+                    commit
+                ));
+            }
+            let refs: Vec<GitRef> = response.error_for_status()?.json().await?;
 
             let count = refs.len();
             for git_ref in refs {
@@ -56,10 +91,12 @@ async fn find_github_release_tag_for_commit(commit: &str) -> anyhow::Result<Stri
         }
     }
 
-    Err(anyhow::anyhow!(
-        "No GitHub release tag found for commit {}. The commit may not have an associated IC release.",
-        commit
-    ))
+    let hint = if deep_scan {
+        "The commit may not have an associated IC release. Pass an explicit binary with --ic-admin <path> if needed."
+    } else {
+        "Only recent releases were checked. If this is an older commit, pin it explicitly with --ic-admin-version <commit>."
+    };
+    Err(anyhow::anyhow!("No GitHub release tag found for commit {}. {}", commit, hint))
 }
 
 use crate::{
@@ -218,8 +255,8 @@ impl Store {
         Ok(self.ic_admin_revision_dir()?.join(version).join("ic-admin"))
     }
 
-    async fn download_ic_admin(&self, version: &str, path: &PathBuf) -> anyhow::Result<()> {
-        let tag = find_github_release_tag_for_commit(version).await?;
+    async fn download_ic_admin(&self, version: &str, path: &PathBuf, deep_scan: bool) -> anyhow::Result<()> {
+        let tag = find_github_release_tag_for_commit(version, deep_scan).await?;
         let asset_name = match (std::env::consts::OS, std::env::consts::ARCH) {
             ("macos", _) => "ic-admin-arm64-darwin.gz",
             (_, "aarch64") => "ic-admin-arm64-linux.gz",
@@ -238,11 +275,11 @@ impl Store {
         Ok(())
     }
 
-    async fn init_ic_admin(&self, version: &str, network: &Network, neuron: Neuron) -> anyhow::Result<Arc<IcAdminImpl>> {
+    async fn init_ic_admin(&self, version: &str, network: &Network, neuron: Neuron, deep_scan: bool) -> anyhow::Result<Arc<IcAdminImpl>> {
         let path = self.ic_admin_path_for_version(version)?;
 
         if !path.exists() {
-            self.download_ic_admin(version, &path).await?;
+            self.download_ic_admin(version, &path, deep_scan).await?;
         }
 
         info!("Using ic-admin: {}", path.display());
@@ -259,8 +296,10 @@ impl Store {
 
     pub async fn ic_admin(&self, version: &IcAdminVersion, network: &Network, neuron: Neuron) -> anyhow::Result<Arc<IcAdminImpl>> {
         match version {
-            IcAdminVersion::Fallback => self.init_ic_admin(FALLBACK_IC_ADMIN_VERSION, network, neuron).await,
-            IcAdminVersion::Strict(ver) => self.init_ic_admin(ver, network, neuron).await,
+            // The fallback version is recent, so a shallow scan suffices.
+            IcAdminVersion::Fallback => self.init_ic_admin(FALLBACK_IC_ADMIN_VERSION, network, neuron, false).await,
+            // The user pinned an arbitrary commit which may be old; scan all releases.
+            IcAdminVersion::Strict(ver) => self.init_ic_admin(ver, network, neuron, true).await,
             // This is the most probable way of running
             IcAdminVersion::FromRegistry => {
                 let mut status_file = fs_err::File::open(&self.ic_admin_status_file()?)?;
@@ -309,7 +348,8 @@ impl Store {
                     }
                 };
 
-                let ic_admin = self.init_ic_admin(&version, network, neuron).await?;
+                // The registry canister version tracks mainnet and is always recent.
+                let ic_admin = self.init_ic_admin(&version, network, neuron, false).await?;
 
                 // Only update file when the sync
                 // with governance has been performed
