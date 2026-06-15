@@ -255,10 +255,23 @@ impl Store {
     }
 
     async fn download_ic_admin(&self, tag: &str, path: &PathBuf) -> anyhow::Result<()> {
+        // dfinity/ic only publishes these ic-admin assets. Notably there is no
+        // x86_64 (Intel) macOS build, so that platform is unsupported.
         let asset_name = match (std::env::consts::OS, std::env::consts::ARCH) {
-            ("macos", _) => "ic-admin-arm64-darwin.gz",
-            (_, "aarch64") => "ic-admin-arm64-linux.gz",
-            _ => "ic-admin-x86_64-linux.gz",
+            ("macos", "aarch64") => "ic-admin-arm64-darwin.gz",
+            ("linux", "aarch64") => "ic-admin-arm64-linux.gz",
+            ("linux", "x86_64") => "ic-admin-x86_64-linux.gz",
+            ("macos", arch) => {
+                return Err(anyhow::anyhow!(
+                    "ic-admin is not published for macOS on {arch}; only Apple Silicon (arm64) is supported. \
+                     Provide a binary explicitly with --ic-admin <path>."
+                ));
+            }
+            (os, arch) => {
+                return Err(anyhow::anyhow!(
+                    "ic-admin is not published for {os}/{arch}. Provide a binary explicitly with --ic-admin <path>."
+                ));
+            }
         };
         let url = format!("https://github.com/dfinity/ic/releases/download/{tag}/{asset_name}");
         info!("Downloading ic-admin release {} from {}", tag, url);

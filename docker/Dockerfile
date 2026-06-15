@@ -75,9 +75,10 @@ ENV CARGO_HOME=/cargo
 # Used to detect the Dockerfile changes and automatically rebuild the image
 COPY docker /docker
 
-# Download ic-admin
-ARG ic_git_revision=89cc1c20223532c900b94de5bc6bd8cbde278797
-RUN  curl --fail https://download.dfinity.systems/ic/${ic_git_revision}/release/ic-admin.gz -o - | gunzip -c >| /usr/bin/ic-admin && \
+# Download ic-admin from GitHub releases (download.dfinity.systems no longer serves it).
+# The image is x86_64 linux, so we fetch the matching asset from a pinned IC release tag.
+ARG ic_release_tag=release-2026-06-04_04-52-base
+RUN  curl --fail -L https://github.com/dfinity/ic/releases/download/${ic_release_tag}/ic-admin-x86_64-linux.gz -o - | gunzip -c >| /usr/bin/ic-admin && \
     chmod +x /usr/bin/ic-admin
 
 USER ubuntu

@@ -20,9 +20,9 @@ pub struct GlobalArgs {
     pub ic_admin: Option<String>,
 
     #[clap(long, global = true, env = "IC_ADMIN_VERSION", default_value = "from-registry", value_parser = clap::value_parser!(IcAdminVersion), help = r#"Specify the version of ic-admin to use:
-    1. from-registry, registry, reg, r, governance, g => version matching the NNS registry canister (default)
-    2. fallback, default, f, d                         => fallback version embedded at build time
-    3. <commit>                                        => specific commit/release (scans all IC releases)"#)]
+    1. from-registry, registry, reg, r, from-governance, governance, govn, g => version matching the NNS registry canister (default)
+    2. fallback, default, f, d                                               => fallback version embedded at build time
+    3. <commit>                                                              => specific commit/release (scans all IC releases)"#)]
     pub ic_admin_version: IcAdminVersion,
 
     #[clap(
