@@ -36,7 +36,11 @@ const EARLIEST_IC_RELEASE_YEAR: i32 = 2024;
 /// always recent, so we only look at the current year's releases. A full scan
 /// back to [`EARLIEST_IC_RELEASE_YEAR`] is only performed when the user pins an
 /// arbitrary `--ic-admin-version <commit>`, which may point to an older release.
-async fn find_github_release_tag_for_commit(commit: &str, deep_scan: bool) -> anyhow::Result<String> {
+///
+/// Returns `Ok(None)` when no release tag matches the commit (the commit exists
+/// but isn't a published IC release); network/rate-limit problems are returned
+/// as `Err`.
+async fn find_github_release_tag_for_commit(commit: &str, deep_scan: bool) -> anyhow::Result<Option<String>> {
     use chrono::Datelike;
     let client = reqwest::Client::builder().user_agent("dre-cli").build()?;
     let current_year = chrono::Utc::now().year();
@@ -80,7 +84,7 @@ async fn find_github_release_tag_for_commit(commit: &str, deep_scan: bool) -> an
             for git_ref in refs {
                 if git_ref.object.sha == commit {
                     let tag = git_ref.ref_name.trim_start_matches("refs/tags/").to_string();
-                    return Ok(tag);
+                    return Ok(Some(tag));
                 }
             }
 
@@ -91,12 +95,7 @@ async fn find_github_release_tag_for_commit(commit: &str, deep_scan: bool) -> an
         }
     }
 
-    let hint = if deep_scan {
-        "The commit may not have an associated IC release. Pass an explicit binary with --ic-admin <path> if needed."
-    } else {
-        "Only recent releases were checked. If this is an older commit, pin it explicitly with --ic-admin-version <commit>."
-    };
-    Err(anyhow::anyhow!("No GitHub release tag found for commit {}. {}", commit, hint))
+    Ok(None)
 }
 
 use crate::{
@@ -255,15 +254,14 @@ impl Store {
         Ok(self.ic_admin_revision_dir()?.join(version).join("ic-admin"))
     }
 
-    async fn download_ic_admin(&self, version: &str, path: &PathBuf, deep_scan: bool) -> anyhow::Result<()> {
-        let tag = find_github_release_tag_for_commit(version, deep_scan).await?;
+    async fn download_ic_admin(&self, tag: &str, path: &PathBuf) -> anyhow::Result<()> {
         let asset_name = match (std::env::consts::OS, std::env::consts::ARCH) {
             ("macos", _) => "ic-admin-arm64-darwin.gz",
             (_, "aarch64") => "ic-admin-arm64-linux.gz",
             _ => "ic-admin-x86_64-linux.gz",
         };
         let url = format!("https://github.com/dfinity/ic/releases/download/{tag}/{asset_name}");
-        info!("Downloading ic-admin version: {} from {}", version, url);
+        info!("Downloading ic-admin release {} from {}", tag, url);
         let body = reqwest::get(&url).await?.error_for_status()?.bytes().await?;
         let mut decoded = GzDecoder::new(body.as_ref());
 
@@ -275,15 +273,60 @@ impl Store {
         Ok(())
     }
 
-    async fn init_ic_admin(&self, version: &str, network: &Network, neuron: Neuron, deep_scan: bool) -> anyhow::Result<Arc<IcAdminImpl>> {
-        let path = self.ic_admin_path_for_version(version)?;
+    /// Ensures an ic-admin binary for `version` is available locally, downloading
+    /// it from the matching GitHub release if needed.
+    ///
+    /// When `allow_fallback` is set and `version` has no published release (which
+    /// is common for the registry/NNS-derived version, since only elected releases
+    /// are tagged), it transparently falls back to [`FALLBACK_IC_ADMIN_VERSION`].
+    /// Returns the IcAdmin handle together with the version actually used.
+    async fn init_ic_admin(
+        &self,
+        version: &str,
+        network: &Network,
+        neuron: Neuron,
+        deep_scan: bool,
+        allow_fallback: bool,
+    ) -> anyhow::Result<(Arc<IcAdminImpl>, String)> {
+        let mut effective_version = version.to_string();
+        let path = self.ic_admin_path_for_version(&effective_version)?;
 
-        if !path.exists() {
-            self.download_ic_admin(version, &path, deep_scan).await?;
-        }
+        let path = if path.exists() {
+            path
+        } else {
+            match find_github_release_tag_for_commit(version, deep_scan).await? {
+                Some(tag) => {
+                    self.download_ic_admin(&tag, &path).await?;
+                    path
+                }
+                None if allow_fallback => {
+                    warn!(
+                        "Version {} has no published IC release; falling back to embedded ic-admin {}",
+                        version, FALLBACK_IC_ADMIN_VERSION
+                    );
+                    effective_version = FALLBACK_IC_ADMIN_VERSION.to_string();
+                    let fallback_path = self.ic_admin_path_for_version(&effective_version)?;
+                    if !fallback_path.exists() {
+                        let tag = find_github_release_tag_for_commit(FALLBACK_IC_ADMIN_VERSION, false)
+                            .await?
+                            .ok_or_else(|| anyhow::anyhow!("Fallback ic-admin version {} has no published release", FALLBACK_IC_ADMIN_VERSION))?;
+                        self.download_ic_admin(&tag, &fallback_path).await?;
+                    }
+                    fallback_path
+                }
+                None => {
+                    let hint = if deep_scan {
+                        "The commit may not have an associated IC release. Pass an explicit binary with --ic-admin <path> if needed."
+                    } else {
+                        "Only recent releases were checked. If this is an older commit, pin it explicitly with --ic-admin-version <commit>."
+                    };
+                    return Err(anyhow::anyhow!("No GitHub release tag found for commit {}. {}", version, hint));
+                }
+            }
+        };
 
         info!("Using ic-admin: {}", path.display());
-        Ok(Arc::new(IcAdminImpl::new(
+        let ic_admin = Arc::new(IcAdminImpl::new(
             network.clone(),
             Some(
                 path.to_str()
@@ -291,15 +334,17 @@ impl Store {
                     .to_string(),
             ),
             neuron,
-        )))
+        ));
+        Ok((ic_admin, effective_version))
     }
 
     pub async fn ic_admin(&self, version: &IcAdminVersion, network: &Network, neuron: Neuron) -> anyhow::Result<Arc<IcAdminImpl>> {
         match version {
             // The fallback version is recent, so a shallow scan suffices.
-            IcAdminVersion::Fallback => self.init_ic_admin(FALLBACK_IC_ADMIN_VERSION, network, neuron, false).await,
-            // The user pinned an arbitrary commit which may be old; scan all releases.
-            IcAdminVersion::Strict(ver) => self.init_ic_admin(ver, network, neuron, true).await,
+            IcAdminVersion::Fallback => Ok(self.init_ic_admin(FALLBACK_IC_ADMIN_VERSION, network, neuron, false, false).await?.0),
+            // The user pinned an arbitrary commit which may be old; scan all releases
+            // and don't silently substitute a different version.
+            IcAdminVersion::Strict(ver) => Ok(self.init_ic_admin(ver, network, neuron, true, false).await?.0),
             // This is the most probable way of running
             IcAdminVersion::FromRegistry => {
                 let mut status_file = fs_err::File::open(&self.ic_admin_status_file()?)?;
@@ -348,12 +393,13 @@ impl Store {
                     }
                 };
 
-                // The registry canister version tracks mainnet and is always recent.
-                let ic_admin = self.init_ic_admin(&version, network, neuron, false).await?;
+                // The registry/NNS canister version is a recent commit but is often
+                // not a tagged release, so allow falling back to the embedded version.
+                let (ic_admin, effective_version) = self.init_ic_admin(&version, network, neuron, false, true).await?;
 
-                // Only update file when the sync
-                // with governance has been performed
-                fs_err::write(self.ic_admin_status_file()?, version)?;
+                // Cache the version actually used (post-fallback), so subsequent runs
+                // don't repeatedly try to resolve an unreleased registry commit.
+                fs_err::write(self.ic_admin_status_file()?, effective_version)?;
                 Ok(ic_admin)
             }
         }
