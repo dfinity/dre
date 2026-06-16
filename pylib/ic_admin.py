@@ -93,10 +93,10 @@ class IcAdmin:
                     node_ids[member] = subnet_id
         return node_ids
 
-    def get_blessed_versions(self):
-        """Query the blessed versions."""
-        logging.debug("NNS %s: get-blessed-replica-versions", self.nns_url)
-        return json.loads(self.ic_admin_run("get-blessed-replica-versions", "--json"))
+    def get_elected_versions(self):
+        """Query the elected versions."""
+        logging.debug("NNS %s: get-elected-replica-versions", self.nns_url)
+        return json.loads(self.ic_admin_run("get-elected-replica-versions", "--json"))
 
     def get_subnet(self, subnet_num):
         """Query the subnet data."""

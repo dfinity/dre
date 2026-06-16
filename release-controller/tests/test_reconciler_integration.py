@@ -648,12 +648,12 @@ def test_dre_cli_get_election_proposals_by_version_keeps_highest_id_for_duplicat
     assert hostos[hostos_version]["id"] == 300_002
 
 
-def test_reconciler_skips_submission_when_version_already_in_blessed_set(
+def test_reconciler_skips_submission_when_version_already_in_elected_set(
     ic_repo: git_repo.GitRepo,
     mocker: pytest_mock.plugin.MockerFixture,
 ) -> None:
     """
-    Safety net: if a version is already in the elected (``blessed``) set but
+    Safety net: if a version is already in the elected set but
     the reconciler has no record of its proposal -- e.g. because the
     proposal that elected it is listed in ``ignored_proposals`` and the
     operator forgot to remove it -- the reconciler must NOT submit another
@@ -674,7 +674,7 @@ def test_reconciler_skips_submission_when_version_already_in_blessed_set(
         mocker.patch.object(dre, "get_past_election_proposals", return_value=[])
         mocker.patch.object(
             dre,
-            "get_blessed_hostos_versions",
+            "get_elected_hostos_versions",
             return_value={already_elected_version},
         )
         mocker.patch.object(

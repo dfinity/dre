@@ -145,15 +145,15 @@ class DRECli:
             ),
         )
 
-    def get_blessed_guestos_versions(self) -> set[str]:
-        """Query the blessed GuestOS versions."""
+    def get_elected_guestos_versions(self) -> set[str]:
+        """Query the elected GuestOS versions."""
         # `dre get` forwards its arguments verbatim to `ic-admin`, so the
         # output format is dictated by the ic-admin build that matches the
         # currently deployed registry canister (downloaded at runtime), not
         # by this code. With the migration away from blessed versions, ic-admin
         # has had a few formats. Support all of them here.
         output = subprocess.check_output(
-            [self.cli, "get", "blessed-replica-versions", "--json"],
+            [self.cli, "get", "elected-replica-versions", "--json"],
             env=self.env,
             text=True,
         ).strip()
@@ -174,8 +174,8 @@ class DRECli:
         else:
             return {line.strip() for line in output.splitlines() if line.strip()}
 
-    def get_blessed_hostos_versions(self) -> set[str]:
-        """Query the blessed HostOS versions."""
+    def get_elected_hostos_versions(self) -> set[str]:
+        """Query the elected HostOS versions."""
         return set(
             typing.cast(
                 list[str],
@@ -301,6 +301,6 @@ class DRECli:
 
 if __name__ == "__main__":
     cli = DRECli()
-    print("Blessed GuestOS", cli.get_blessed_guestos_versions())
-    print("Blessed HostOS ", cli.get_blessed_hostos_versions())
+    print("Elected GuestOS", cli.get_elected_guestos_versions())
+    print("Elected HostOS ", cli.get_elected_hostos_versions())
     print("Active HostOS  ", cli.get_active_hostos_versions())

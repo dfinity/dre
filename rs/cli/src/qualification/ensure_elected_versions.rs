@@ -9,24 +9,24 @@ use crate::{
 
 use super::{comfy_table_util::Table, util::StepCtx};
 
-pub struct EnsureBlessedRevisions {
+pub struct EnsureElectedRevisions {
     pub version: String,
 }
 
-impl Step for EnsureBlessedRevisions {
+impl Step for EnsureElectedRevisions {
     fn help(&self) -> String {
-        format!("Check if version {} is blessed", self.version)
+        format!("Check if version {} is elected", self.version)
     }
 
     fn name(&self) -> String {
-        "ensure_blessed_revision".to_string()
+        "ensure_elected_revision".to_string()
     }
 
     async fn execute(&self, ctx: &StepCtx) -> anyhow::Result<()> {
         let registry = ctx.dre_ctx().registry().await;
-        let blessed_versions = registry.elected_guestos().await?;
+        let elected_versions = registry.elected_guestos().await?;
 
-        if blessed_versions.contains(&self.version) {
+        if elected_versions.contains(&self.version) {
             return Ok(());
         }
         let sha = fetch_shasum_for_disk_img(&self.version).await?;
@@ -53,7 +53,7 @@ impl Step for EnsureBlessedRevisions {
                             ],
                         },
                         IcAdminProposalOptions {
-                            title: Some(format!("Blessing version: {}", &self.version)),
+                            title: Some(format!("Electing version: {}", &self.version)),
                             summary: Some("Some updates".to_string()),
                             motivation: None,
                         },
@@ -66,11 +66,11 @@ impl Step for EnsureBlessedRevisions {
         place_proposal.retry(ExponentialBuilder::default()).await?;
 
         registry.sync_with_nns().await?;
-        let blessed_versions = registry.elected_guestos().await?;
+        let elected_versions = registry.elected_guestos().await?;
 
         let table = Table::new()
-            .with_columns(&[("Blessed versions", CellAlignment::Center)])
-            .with_rows(blessed_versions.iter().map(|ver| vec![ver.to_string()]).collect_vec())
+            .with_columns(&[("Elected versions", CellAlignment::Center)])
+            .with_rows(elected_versions.iter().map(|ver| vec![ver.to_string()]).collect_vec())
             .to_table();
 
         ctx.print_table(table);

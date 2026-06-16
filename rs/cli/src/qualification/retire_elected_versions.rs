@@ -6,31 +6,31 @@ use crate::ic_admin::{IcAdminProposal, IcAdminProposalCommand, IcAdminProposalOp
 
 use super::{comfy_table_util::Table, step::Step, util::StepCtx};
 
-pub struct RetireBlessedVersions {
+pub struct RetireElectedVersions {
     pub versions: Vec<String>,
 }
 
-impl Step for RetireBlessedVersions {
+impl Step for RetireElectedVersions {
     fn help(&self) -> String {
         format!("Check that the following versions are retired: {}", self.versions.iter().join(", "))
     }
 
     fn name(&self) -> String {
-        "retire_blessed_versions".to_string()
+        "retire_elected_versions".to_string()
     }
 
     async fn execute(&self, ctx: &StepCtx) -> anyhow::Result<()> {
         let registry = ctx.dre_ctx().registry().await;
 
-        let blessed_versions = registry.elected_guestos().await?;
+        let elected_versions = registry.elected_guestos().await?;
         let mut to_unelect = vec![];
         for version in &self.versions {
-            if blessed_versions.contains(version) {
+            if elected_versions.contains(version) {
                 to_unelect.push(version);
             }
         }
         if to_unelect.is_empty() {
-            ctx.print_text(format!("Versions {} are not blessed, skipping step", self.versions.iter().join(",")));
+            ctx.print_text(format!("Versions {} are not elected, skipping step", self.versions.iter().join(",")));
             return Ok(());
         }
 
@@ -60,11 +60,11 @@ impl Step for RetireBlessedVersions {
         place_proposal.retry(ExponentialBuilder::default()).await?;
 
         registry.sync_with_nns().await?;
-        let blessed_versions = registry.elected_guestos().await?;
+        let elected_versions = registry.elected_guestos().await?;
 
         let table = Table::new()
-            .with_columns(&[("Blessed versions", CellAlignment::Center)])
-            .with_rows(blessed_versions.iter().map(|ver| vec![ver.to_string()]).collect_vec())
+            .with_columns(&[("Elected versions", CellAlignment::Center)])
+            .with_rows(elected_versions.iter().map(|ver| vec![ver.to_string()]).collect_vec())
             .to_table();
 
         ctx.print_table(table);
