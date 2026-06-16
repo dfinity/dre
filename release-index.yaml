@@ -22,6 +22,8 @@ releases:
     versions:
       - name: base 
         version: 557d7278dcbb0305411c6536645c3a32b4ec64b6
+      - name: hotfix 
+        version: 93274f1726d9575389004069c4a46a32084051f5
   - rc_name: rc--2026-06-04_04-52
     versions:
       - name: base 
