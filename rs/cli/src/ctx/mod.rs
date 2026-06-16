@@ -8,7 +8,7 @@ use ic_management_backend::{
     proposal::{ProposalAgent, ProposalAgentImpl},
 };
 use ic_management_types::Network;
-use log::warn;
+use log::{info, warn};
 
 use crate::{
     artifact_downloader::{ArtifactDownloader, ArtifactDownloaderImpl},
@@ -45,6 +45,9 @@ pub struct DreContext {
     artifact_downloader: Arc<dyn ArtifactDownloader>,
     neuron: RefCell<Option<Neuron>>,
     version: IcAdminVersion,
+    /// Explicit ic-admin binary path/command (from `--ic-admin`). When set, it
+    /// takes precedence over `version` and no download is performed.
+    ic_admin_path_override: Option<String>,
     neuron_opts: NeuronOpts,
     cordoned_features_fetcher: Arc<dyn CordonedFeatureFetcher>,
     health_client: Arc<dyn HealthStatusQuerier>,
@@ -60,6 +63,7 @@ impl DreContext {
         verbose: bool,
         auth_requirement: AuthRequirement,
         ic_admin_version: IcAdminVersion,
+        ic_admin_path_override: Option<String>,
         cordoned_features_fetcher: Arc<dyn CordonedFeatureFetcher>,
         health_client: Arc<dyn HealthStatusQuerier>,
         store: Store,
@@ -76,6 +80,7 @@ impl DreContext {
             artifact_downloader: Arc::new(ArtifactDownloaderImpl {}) as Arc<dyn ArtifactDownloader>,
             neuron: RefCell::new(None),
             version: ic_admin_version,
+            ic_admin_path_override,
             neuron_opts: NeuronOpts {
                 auth_opts: auth,
                 requirement: auth_requirement,
@@ -114,6 +119,7 @@ impl DreContext {
             args.verbose,
             require_auth,
             args.ic_admin_version.clone(),
+            args.ic_admin.clone(),
             store.cordoned_features_fetcher(args.cordoned_features_file.clone())?,
             store.health_client(&network)?,
             store,
@@ -155,7 +161,20 @@ impl DreContext {
             return Ok(a.clone());
         }
 
-        let ic_admin = self.store.ic_admin(&self.version, self.network(), self.neuron().await?).await?;
+        let ic_admin: Arc<dyn IcAdmin> = match &self.ic_admin_path_override {
+            // An explicit `--ic-admin` binary was provided: use it directly and skip
+            // any download/version resolution.
+            Some(path) => {
+                // If a filesystem path was given (rather than a bare command resolved
+                // via $PATH), fail early with a clear message when it's missing.
+                if (path.contains(std::path::MAIN_SEPARATOR) || path.contains('/')) && !std::path::Path::new(path).exists() {
+                    return Err(anyhow::anyhow!("ic-admin binary specified via --ic-admin not found at `{}`", path));
+                }
+                info!("Using explicit ic-admin: {}", path);
+                Arc::new(IcAdminImpl::new(self.network().clone(), Some(path.clone()), self.neuron().await?))
+            }
+            None => self.store.ic_admin(&self.version, self.network(), self.neuron().await?).await?,
+        };
         *self.ic_admin.borrow_mut() = Some(ic_admin.clone());
         Ok(ic_admin)
     }
@@ -314,6 +333,7 @@ pub mod tests {
             artifact_downloader,
             neuron: RefCell::new(Some(neuron.clone())),
             version: IcAdminVersion::Strict("Shouldn't reach this because of mock".to_string()),
+            ic_admin_path_override: None,
             neuron_opts: super::NeuronOpts {
                 auth_opts: AuthOpts {
                     private_key_pem: None,
