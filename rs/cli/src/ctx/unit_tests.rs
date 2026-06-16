@@ -43,6 +43,7 @@ async fn get_context(network: &Network, version: IcAdminVersion) -> anyhow::Resu
         false,
         AuthRequirement::Anonymous,
         version,
+        None,
         Arc::new(MockCordonedFeatureFetcher::new()),
         Arc::new(MockHealthStatusQuerier::new()),
         Store::new(false)?,
@@ -55,7 +56,9 @@ struct AdminVersionTestScenario<'a> {
     name: &'static str,
     version: IcAdminVersion,
     should_delete_status_file: bool,
-    should_contain: Option<&'a str>,
+    // Acceptable substrings for the resolved ic-admin path. Empty means the
+    // resolution is expected to fail. Multiple values means "any of".
+    should_contain: Vec<&'a str>,
 }
 
 impl<'a> AdminVersionTestScenario<'a> {
@@ -64,7 +67,7 @@ impl<'a> AdminVersionTestScenario<'a> {
             name,
             version: IcAdminVersion::FromRegistry,
             should_delete_status_file: false,
-            should_contain: None,
+            should_contain: vec![],
         }
     }
 
@@ -81,7 +84,14 @@ impl<'a> AdminVersionTestScenario<'a> {
 
     fn should_contain(self, ver: &'a str) -> Self {
         Self {
-            should_contain: Some(ver),
+            should_contain: vec![ver],
+            ..self
+        }
+    }
+
+    fn should_contain_any(self, vers: Vec<&'a str>) -> Self {
+        Self {
+            should_contain: vers,
             ..self
         }
     }
@@ -90,21 +100,25 @@ impl<'a> AdminVersionTestScenario<'a> {
 #[test]
 fn init_tests_ic_admin_version() {
     let runtime = tokio::runtime::Runtime::new().unwrap();
-    let version_on_s3 = "e47293c0bd7f39540245913f7f75be3d6863183c";
+    // A real commit that has a published IC release (release-2026-06-04_04-52-canister-logging).
+    let released_version = "fb721da900b9e9219773ee312f987971338f7c62";
     let mainnet = Network::mainnet_unchecked().unwrap();
     let registry_version = runtime.block_on(registry_canister_version(mainnet.get_nns_urls()[0].clone())).unwrap();
 
     let tests = &[
+        // The registry/NNS canister commit is usually not a tagged release, so dre
+        // either matches it directly (if it happens to be released) or falls back to
+        // the embedded version. Both are valid outcomes.
         AdminVersionTestScenario::new("match registry canister")
             .delete_status_file()
-            .should_contain(&registry_version.stringified_hash),
+            .should_contain_any(vec![&registry_version.stringified_hash, FALLBACK_IC_ADMIN_VERSION]),
         AdminVersionTestScenario::new("use default version")
             .version(IcAdminVersion::Fallback)
             .should_contain(FALLBACK_IC_ADMIN_VERSION),
-        AdminVersionTestScenario::new("existing version on s3")
-            .version(IcAdminVersion::Strict(version_on_s3.to_string()))
-            .should_contain(version_on_s3),
-        AdminVersionTestScenario::new("random version not present on s3").version(IcAdminVersion::Strict("random-version".to_string())),
+        AdminVersionTestScenario::new("strict released version")
+            .version(IcAdminVersion::Strict(released_version.to_string()))
+            .should_contain(released_version),
+        AdminVersionTestScenario::new("strict unreleased version errors").version(IcAdminVersion::Strict("random-version".to_string())),
     ];
 
     for test in tests {
@@ -115,7 +129,7 @@ fn init_tests_ic_admin_version() {
 
         let maybe_ctx = runtime.block_on(get_context(&mainnet, test.version.clone()));
 
-        if let Some(ver) = test.should_contain {
+        if !test.should_contain.is_empty() {
             assert!(
                 maybe_ctx.is_ok(),
                 "Test `{}`: expected to create DreContext, but got error: {:?}",
@@ -128,11 +142,11 @@ fn init_tests_ic_admin_version() {
             assert!(ic_admin_path.is_ok(), "Expected Ok, but was: {:?}", ic_admin_path);
             let ic_admin_path = ic_admin_path.unwrap().ic_admin_path().unwrap_or_default();
             assert!(
-                ic_admin_path.contains(ver),
-                "Test `{}`: ic_admin_path `{}`, expected version `{}`",
+                test.should_contain.iter().any(|ver| ic_admin_path.contains(ver)),
+                "Test `{}`: ic_admin_path `{}`, expected to contain one of `{:?}`",
                 test.name,
                 ic_admin_path,
-                ver
+                test.should_contain
             )
         } else {
             assert!(
@@ -176,6 +190,7 @@ async fn get_ctx_for_neuron_test(
         true,
         requirement,
         IcAdminVersion::Strict("Shouldn't get to here".to_string()),
+        None,
         Arc::new(MockCordonedFeatureFetcher::new()),
         Arc::new(MockHealthStatusQuerier::new()),
         Store::new(offline)?,
