@@ -25,8 +25,8 @@ jobs:
       ########################################
       - name: "⚒️ Run autoupdate for ic-deps"
         run: |
-          rye sync
-          rye run python3 scripts/auto-update-revisions.py
+          uv sync
+          uv run python3 scripts/auto-update-revisions.py
 
       - name: "⚒️ Completely delete bazel cache and then recreate it"
         run: |
