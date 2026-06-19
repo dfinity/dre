@@ -22,6 +22,8 @@ releases:
     versions:
       - name: base
         version: 63e7f8649be744b7ea75bd5571189a2c04ac49bd
+      - name: canister-logging
+        version: 33d4bd8ef292fb135e8a63ad232912b1459eef50
   - rc_name: rc--2026-06-12_04-52
     versions:
       - name: base 
