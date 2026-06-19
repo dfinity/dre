@@ -1,5 +1,5 @@
 [toolchain]
 # Make sure docker/Dockerfile has the same Rust toolchain version
-channel = "1.90.0"
+channel = "1.91.1"
 profile = "default"
 components = ["rust-analyzer"]
