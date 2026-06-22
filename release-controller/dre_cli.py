@@ -153,7 +153,7 @@ class DRECli:
         # by this code. With the migration away from blessed versions, ic-admin
         # has had a few formats. Support all of them here.
         output = subprocess.check_output(
-            [self.cli, "get", "elected-replica-versions", "--json"],
+            [self.cli, "get", "elected-guestos-versions", "--json"],
             env=self.env,
             text=True,
         ).strip()
