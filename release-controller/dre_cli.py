@@ -153,7 +153,7 @@ class DRECli:
         # by this code. With the migration away from blessed versions, ic-admin
         # has had a few formats. Support all of them here.
         output = subprocess.check_output(
-            [self.cli, "get", "elected-replica-versions", "--json"],
+            [self.cli, "get", "elected-guestos-versions", "--json"],
             env=self.env,
             text=True,
         ).strip()
@@ -170,9 +170,19 @@ class DRECli:
         # New format, with --json support
         elif isinstance(parsed, list):
             return set(parsed)
-        # New format, without --json support
+        # New format, without --json support.  The output may be either one
+        # bare version per line, or a pretty-printed JSON-ish array that is not
+        # quite valid JSON (e.g. it carries log noise or trailing commas that
+        # make json.loads fail above).  Normalise each line by stripping any
+        # surrounding brackets, quotes and commas so that we never leak those
+        # characters into the version ids passed to `--versions-to-unelect`.
         else:
-            return {line.strip() for line in output.splitlines() if line.strip()}
+            versions = set()
+            for line in output.splitlines():
+                token = line.strip().strip("[]").strip().strip(",").strip().strip('"')
+                if token:
+                    versions.add(token)
+            return versions
 
     def get_elected_hostos_versions(self) -> set[str]:
         """Query the elected HostOS versions."""
