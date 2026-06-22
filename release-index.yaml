@@ -17,6 +17,7 @@
 ignored_proposals:
   - 142125 # GuestOS base b95f4a32b41798de115aac9298b51dd1662f1da5 election FAILED: its auto-computed retire list included 62e841d27ea12451f504e74c54843b7cbf93ca4d, which was still deployed to a subnet at execution time. That subnet has since been upgraded off it, so a resubmission can retire it cleanly. Remove this entry once the replacement proposal has been submitted.
   - 142145 # Resubmission of the same b95f4a32b41798de115aac9298b51dd1662f1da5 election (after ignoring 142125) FAILED again: its retire list still includes 62e841d27ea12451f504e74c54843b7cbf93ca4d, which remains in use by two API boundary nodes still running that version, so the registry invariant rejects unelecting it. This entry only unblocks a fresh resubmission once those API boundary nodes have been upgraded off 62e841d. Remove once the replacement proposal has been submitted.
+  - 142444 # GuestOS base 63e7f8649be744b7ea75bd5571189a2c04ac49bd election FAILED: poorly formated list of version.
 releases:
   - rc_name: rc--2026-06-18_04-52
     versions:
