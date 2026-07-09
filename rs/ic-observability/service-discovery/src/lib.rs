@@ -16,7 +16,7 @@ use std::{
 
 use anyhow::Result;
 use ic_interfaces_registry::{RegistryClient, RegistryClientResult};
-use ic_protobuf::registry::node::v1::NodeRecord;
+use ic_protobuf::registry::node::v1::{NodeRecord, NodeRewardType};
 use ic_registry_client::client::{RegistryClientError, RegistryVersion};
 use ic_registry_client_helpers::{
     api_boundary_node::ApiBoundaryNodeRegistry,
@@ -64,6 +64,7 @@ pub struct TargetGroup {
     /// `socket_addr`.
     pub subnet_id: Option<SubnetId>,
     pub subnet_type: Option<SubnetType>,
+    pub node_reward_type: Option<NodeRewardType>,
     pub dc_id: String,
     pub operator_id: PrincipalId,
     pub node_provider_id: PrincipalId,
@@ -303,10 +304,18 @@ impl IcServiceDiscoveryImpl {
             .unwrap_or_default()
             .unwrap_or_default();
 
+        // Node reward type ("type1", "type3.1", ...) from the node record.
+        // Absent or Unspecified -> None, so no `node_type` label is emitted.
+        let node_reward_type = node_record
+            .node_reward_type
+            .and_then(|v| NodeRewardType::try_from(v).ok())
+            .filter(|t| *t != NodeRewardType::Unspecified);
+
         (*node_targets).insert(TargetGroup {
             targets: vec![socket_addr].into_iter().collect(),
             subnet_id,
             subnet_type,
+            node_reward_type,
             node_id,
             ic_name: ic_name.into(),
             dc_id: node_operator.dc_id,
