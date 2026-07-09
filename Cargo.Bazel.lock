@@ -1,5 +1,5 @@
 {
-  "checksum": "42caebc349211274d22d6696d3a2a68202e3bbea3d48e4a26953c87dce7a3231",
+  "checksum": "3804c4135bfcca159dcec52800164457cf5abdc7fe23b1f095fd7d87ffc8fbd0",
   "crates": {
     "actix-codec 0.5.2": {
       "name": "actix-codec",
@@ -38334,10 +38334,6 @@
             {
               "id": "erased-serde 0.4.10",
               "target": "erased_serde"
-            },
-            {
-              "id": "ic-protobuf 0.9.0",
-              "target": "ic_protobuf"
             },
             {
               "id": "ic-registry-subnet-type 0.9.0",

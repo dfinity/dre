@@ -26,10 +26,6 @@ impl From<TargetGroup> for ServiceDiscoveryRecord {
                     Some(subnet_type) => vec![(IC_SUBNET_TYPE.into(), subnet_type.as_ref().to_string())],
                     None => vec![],
                 })
-                .chain(match group.node_reward_type {
-                    Some(node_reward_type) => vec![(NODE_TYPE.into(), node_reward_type.to_string())],
-                    None => vec![],
-                })
                 .collect(),
         }
     }
@@ -40,4 +36,3 @@ const IC_NAME: &str = "ic";
 const IC_NODE: &str = "ic_node";
 const IC_SUBNET: &str = "ic_subnet";
 const IC_SUBNET_TYPE: &str = "ic_subnet_type";
-const NODE_TYPE: &str = "node_type";
