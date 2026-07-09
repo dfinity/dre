@@ -138,6 +138,7 @@ mod prometheus_serialize {
             targets,
             subnet_id,
             subnet_type: None,
+            node_reward_type: None,
             dc_id: "test".to_string(),
             operator_id: PrincipalId::new_anonymous(),
             node_provider_id: PrincipalId::new_anonymous(),

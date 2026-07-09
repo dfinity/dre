@@ -6745,6 +6745,7 @@ name = "multiservice-discovery-shared"
 version = "0.7.7"
 dependencies = [
  "erased-serde 0.4.10",
+ "ic-protobuf",
  "ic-registry-subnet-type",
  "ic-sns-wasm",
  "ic-types",
