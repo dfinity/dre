@@ -4,7 +4,6 @@ use std::{
     net::SocketAddr,
 };
 
-use ic_protobuf::registry::node::v1::NodeRewardType;
 use ic_registry_subnet_type::SubnetType;
 use ic_types::{NodeId, PrincipalId, SubnetId};
 use serde::{Deserialize, Serialize};
@@ -22,7 +21,6 @@ pub struct TargetDto {
     /// `socket_addr`.
     pub subnet_id: Option<SubnetId>,
     pub subnet_type: Option<SubnetType>,
-    pub node_reward_type: Option<NodeRewardType>,
 
     pub dc_id: String,
     pub operator_id: PrincipalId,
@@ -62,7 +60,6 @@ pub fn map_to_target_dto(
         targets: value.targets.clone(),
         subnet_id: value.subnet_id,
         subnet_type: value.subnet_type,
-        node_reward_type: value.node_reward_type,
         dc_id: value.dc_id.clone(),
         operator_id: value.operator_id,
         node_provider_id: value.node_provider_id,
@@ -83,7 +80,6 @@ impl From<&TargetDto> for TargetGroup {
             operator_id: value.operator_id,
             subnet_id: value.subnet_id,
             subnet_type: value.subnet_type,
-            node_reward_type: value.node_reward_type,
             targets: value.targets.clone(),
             is_api_bn: value.is_api_bn,
             domain: value.domain.clone(),
@@ -102,7 +98,6 @@ impl From<&TargetGroup> for TargetDto {
             targets: value.targets.clone(),
             subnet_id: value.subnet_id,
             subnet_type: value.subnet_type,
-            node_reward_type: value.node_reward_type,
             dc_id: value.dc_id.clone(),
             operator_id: value.operator_id,
             node_provider_id: value.node_provider_id,
