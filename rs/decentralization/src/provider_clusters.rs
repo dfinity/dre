@@ -27,7 +27,14 @@ lazy_static! {
                 PrincipalId::from_str("dhywe-eouw6-hstpj-ahsnw-xnjxq-cmqks-47mrg-nnncb-3sr5d-rac6m-nae").unwrap(),
                 PrincipalId::from_str("diyay-s4rfq-xnx23-zczwi-nptra-5254n-e4zn6-p7tqe-vqhzr-sd4gd-bqe").unwrap(),
             ]),
-        )
+        ),
+        (
+            "NP Group: ZarBlue".to_string(),
+            AHashSet::from_iter([
+                PrincipalId::from_str("rpfvr-s3kuw-xdqrr-pvuuj-hc7hl-olytw-yxlie-fmr74-sr572-6gdqx-iqe").unwrap(),
+                PrincipalId::from_str("glrjs-2dbzh-owbdd-fpp5e-eweoz-nsuto-e3jmk-tl42c-wem4f-qfpfa-qqe").unwrap(),
+            ]),
+        ),
     ]);
 }
 
