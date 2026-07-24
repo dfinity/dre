@@ -23,6 +23,8 @@ releases:
     versions:
       - name: base
         version: 1153c70d98a51ec2f023be9b3ce1d50c6b67da21
+      - name: deterministic-tracker
+        version: b7225383ebc592fa5f4e1eac1c8e403e1e098ef1
   - rc_name: rc--2026-07-17_04-19
     versions:
       - name: base
