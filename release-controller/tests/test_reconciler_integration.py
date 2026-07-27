@@ -76,6 +76,36 @@ class MockDashboard(DashboardAPI):
         ]
 
 
+# The NNS proposals that really elected GuestOS for the two most recent
+# releases of the default fixture index below.
+#
+# ``MockDashboard`` cannot supply these: its ``_fake_proposal`` always emits
+# ``hostos_version_to_elect``, whatever ``os_type`` it is handed, so it only
+# ever populates the HostOS half of :func:`dre_cli.proposals_by_version`.  The
+# GuestOS half was therefore left to ``dryrun.DRECli``, which does *not*
+# override ``get_past_election_proposals`` and so shells out to the real
+# ``dre proposals filter -t ic-os-version-election`` against the live
+# governance canister.  That query returns only the 100 most recent election
+# proposals, so the moment one of these two scrolled out of the window the
+# tests started asserting against whatever the chain happened to hold that
+# minute -- the same commit passed CI at one push and failed at the next.
+# Pin them instead.
+_FIXTURE_GUESTOS_ELECTION_PROPOSALS: dict[str, int] = {
+    "45657852c1eca6728ff313808db29b47c862ad13": 138814,
+    "206b61a8616bc93d36d6a014e5cc8edf1ba256ae": 138708,
+}
+
+
+class StubDRECli(dryrun.DRECli):
+    """``dryrun.DRECli`` with the live governance canister query stubbed out."""
+
+    def get_past_election_proposals(self) -> list[ElectionProposal]:
+        return [
+            _guestos_election_proposal(proposal_id, version)
+            for version, proposal_id in _FIXTURE_GUESTOS_ELECTION_PROPOSALS.items()
+        ]
+
+
 class MockActiveVersionProvider(object):
     def __init__(self, active_versions: list[str] | None = None):
         self.vers = active_versions if active_versions else []
@@ -125,7 +155,7 @@ def _defaults_for_test(
         dryrun.ReleaseNotesClient(),
         ReconcilerState(),
         MockActiveVersionProvider(),
-        dryrun.DRECli(),
+        StubDRECli(),
         dryrun.MockSlackAnnouncer(),
         StaticReleaseLoader(
             pydantic_yaml.to_yaml_str(
