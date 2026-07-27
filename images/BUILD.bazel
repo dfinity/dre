@@ -98,6 +98,24 @@ tar(
     ],
 )
 
+# gcc symlinks
+#
+# On a real Debian/Ubuntu system /usr/bin/cc and /usr/bin/c++ are
+# update-alternatives symlinks created by the gcc/g++ package postinst
+# scripts.  rules_distroless only unpacks the data archive of each .deb
+# and never runs maintainer scripts, so those two symlinks are absent
+# even though build-essential is installed.  Cargo (invoked by the
+# rules_rust crate_universe bootstrap during the `bazel query` that the
+# commit annotator runs against the IC repo) defaults to `cc` as its
+# linker driver and fails with "linker `cc` not found" without this.
+tar(
+    name = "gcc-symlinks",
+    mtree = [
+        "./usr/bin/cc type=link link=/usr/bin/gcc",
+        "./usr/bin/c++ type=link link=/usr/bin/g++",
+    ],
+)
+
 cacerts(
     name = "cacerts",
     package = select({
@@ -149,5 +167,6 @@ oci_image(
         ":cacerts-symlink",
         ":ubuntu_apk_flat",
         ":clang-symlinks",
+        ":gcc-symlinks",
     ],
 )
