@@ -27,8 +27,16 @@ releases:
         version: b7225383ebc592fa5f4e1eac1c8e403e1e098ef1
       - name: security-hotfix
         version: 0c121276f3156e97de98151d5f6bec6b73695f9f
+        changelog_base:
+          GuestOS:
+            rc_name: rc--2026-07-17_04-19
+            name: base
       - name: deterministic-tracker-security-hotfix
         version: bd3d261559a96ef4f55521111527b5e2ff6242a6
+        changelog_base:
+          GuestOS:
+            rc_name: rc--2026-07-23_04-21
+            name: security-hotfix
   - rc_name: rc--2026-07-17_04-19
     versions:
       - name: base
