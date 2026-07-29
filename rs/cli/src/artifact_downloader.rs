@@ -1,5 +1,9 @@
 #![allow(async_fn_in_trait)]
-use std::{fs::File, io::Write, path::Path};
+use std::{
+    fs::File,
+    io::Write,
+    path::{Path, PathBuf},
+};
 
 use futures::{StreamExt, future::BoxFuture, stream};
 use ic_management_types::Artifact;
@@ -27,6 +31,57 @@ pub trait ArtifactDownloader: Sync + Send {
             "https://download.dfinity.network/ic/{}/{}/update-img/update-img.tar.zst",
             version, s3_subdir
         )
+    }
+
+    fn get_s3_launch_measurements_url<'a>(&'a self, version: &'a str, s3_subdir: &'a str) -> String {
+        format!(
+            "https://download.dfinity.systems/ic/{}/{}/update-img/launch-measurements.json",
+            version, s3_subdir
+        )
+    }
+
+    fn get_r2_launch_measurements_url<'a>(&'a self, version: &'a str, s3_subdir: &'a str) -> String {
+        format!(
+            "https://download.dfinity.network/ic/{}/{}/update-img/launch-measurements.json",
+            version, s3_subdir
+        )
+    }
+
+    /// Downloads the SEV-SNP launch measurements published alongside the update
+    /// image and returns the path they were saved to.
+    ///
+    /// These must reach the election proposal: a version elected without them
+    /// cannot be attested, so its GuestOS refuses to start on a SEV-enabled
+    /// subnet and the subnet halts at the upgrade CUP, unable to move forward
+    /// or back. Callers are expected to treat a missing file as fatal rather
+    /// than electing the version without measurements.
+    fn download_launch_measurements<'a>(&'a self, image: &'a Artifact, version: &'a str) -> BoxFuture<'_, anyhow::Result<PathBuf>> {
+        Box::pin(async move {
+            let urls = vec![
+                self.get_s3_launch_measurements_url(version, &image.s3_folder()),
+                self.get_r2_launch_measurements_url(version, &image.s3_folder()),
+            ];
+
+            let mut errors = vec![];
+            for url in &urls {
+                match download_launch_measurements_from(url).await {
+                    Ok(path) => {
+                        info!("Launch measurements for {} saved at {}", version, path.display());
+                        return Ok(path);
+                    }
+                    Err(err) => {
+                        warn!("Error downloading {}: {}", url, err);
+                        errors.push(format!("{}: {}", url, err));
+                    }
+                }
+            }
+
+            Err(anyhow::anyhow!(
+                "Unable to download the launch measurements for {} from any of the following URLs:\n{}",
+                version,
+                errors.join("\n")
+            ))
+        })
     }
 
     fn download_file_and_get_sha256<'a>(&'a self, download_url: &'a str) -> BoxFuture<'_, anyhow::Result<String>> {
@@ -138,6 +193,30 @@ pub trait ArtifactDownloader: Sync + Send {
             Ok((update_urls, expected_hash))
         })
     }
+}
+
+/// Fetches `launch-measurements.json` from `url` into the same download tree
+/// the update images use, and returns where it landed. The file has to outlive
+/// this call because it is handed to `ic-admin` as a path.
+async fn download_launch_measurements_from(url: &str) -> anyhow::Result<PathBuf> {
+    let parsed = url::Url::parse(url)?;
+    let subdir = format!("{}{}", parsed.domain().expect("url.domain() is None"), parsed.path().to_owned());
+    let subdir = subdir.replace(|c: char| !c.is_ascii_alphanumeric(), "_");
+    let download_dir = format!("{}/tmp/ic/{}", dirs::home_dir().expect("home_dir is not set").as_path().display(), subdir);
+    let download_dir = Path::new(&download_dir);
+    fs_err::create_dir_all(download_dir).unwrap_or_else(|_| panic!("create_dir_all failed for {}", download_dir.display()));
+
+    let response = reqwest::get(url).await?;
+    if !response.status().is_success() {
+        return Err(anyhow::anyhow!("Download failed with http_code {}", response.status()));
+    }
+    let content = response.bytes().await?;
+
+    let path = download_dir.join("launch-measurements.json");
+    let mut file = File::create(&path)?;
+    file.write_all(&content)?;
+
+    Ok(path)
 }
 
 impl ArtifactDownloader for ArtifactDownloaderImpl {}

@@ -76,6 +76,9 @@ async fn dump_versions_outputs_records_sorted() {
     artifact_downloader
         .expect_download_images_and_validate_sha256()
         .returning(|_, _, _| Box::pin(async { Ok((vec![], String::new())) }));
+    artifact_downloader
+        .expect_download_launch_measurements()
+        .returning(|_, _| Box::pin(async { Ok(std::path::PathBuf::from("/tmp/launch-measurements.json")) }));
 
     let ctx = get_mocked_ctx(
         Network::mainnet_unchecked().unwrap(),
@@ -153,6 +156,9 @@ async fn list_versions_only_outputs_numbers() {
     artifact_downloader
         .expect_download_images_and_validate_sha256()
         .returning(|_, _, _| Box::pin(async { Ok((vec![], String::new())) }));
+    artifact_downloader
+        .expect_download_launch_measurements()
+        .returning(|_, _| Box::pin(async { Ok(std::path::PathBuf::from("/tmp/launch-measurements.json")) }));
 
     let ctx = get_mocked_ctx(
         Network::mainnet_unchecked().unwrap(),
@@ -236,6 +242,9 @@ async fn dump_versions_rejects_reversed_range() {
     artifact_downloader
         .expect_download_images_and_validate_sha256()
         .returning(|_, _, _| Box::pin(async { Ok((vec![], String::new())) }));
+    artifact_downloader
+        .expect_download_launch_measurements()
+        .returning(|_, _| Box::pin(async { Ok(std::path::PathBuf::from("/tmp/launch-measurements.json")) }));
 
     let ctx = get_mocked_ctx(
         Network::mainnet_unchecked().unwrap(),

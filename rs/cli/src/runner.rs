@@ -1,5 +1,6 @@
 use std::cell::RefCell;
 use std::collections::HashMap;
+use std::path::PathBuf;
 use std::sync::Arc;
 
 use ahash::AHashMap;
@@ -315,6 +316,19 @@ impl Runner {
             .download_images_and_validate_sha256(release_artifact, version, ignore_missing_urls)
             .await?;
 
+        // GuestOS elections must carry the SEV-SNP launch measurements. Without
+        // them the version cannot be attested, so its GuestOS refuses to start
+        // on a SEV-enabled subnet: the subnet halts at the upgrade CUP and only
+        // NNS intervention gets it back. Fail here rather than submit a
+        // proposal electing a version that cannot be launched.
+        //
+        // HostOS measurements are not supported by ic-admin yet, mirroring
+        // `release-controller/dre_cli.py`.
+        let launch_measurements_path = match release_artifact {
+            Artifact::GuestOs => Some(self.artifact_downloader.download_launch_measurements(release_artifact, version).await?),
+            Artifact::HostOs => None,
+        };
+
         let summary = match security_fix {
             true => format_security_hotfix(),
             false => format_regular_version_upgrade_summary(version, release_artifact, release_tag)?,
@@ -347,6 +361,7 @@ impl Runner {
                 summary,
                 update_urls,
                 versions_to_retire: retire_versions.clone(),
+                launch_measurements_path,
             })
         }
     }
@@ -1189,6 +1204,9 @@ pub struct UpdateVersion {
     pub update_urls: Vec<String>,
     pub stringified_hash: String,
     pub versions_to_retire: Option<Vec<String>>,
+    /// Path to the downloaded `launch-measurements.json`. Always set for
+    /// GuestOS; `None` for HostOS, whose measurements ic-admin cannot take yet.
+    pub launch_measurements_path: Option<PathBuf>,
 }
 
 impl UpdateVersion {
@@ -1217,6 +1235,10 @@ impl UpdateVersion {
                     versions,
                 ]
                 .concat(),
+                None => vec![],
+            },
+            match &self.launch_measurements_path {
+                Some(path) => vec!["--guest-launch-measurements-path".to_string(), path.display().to_string()],
                 None => vec![],
             },
         ]
