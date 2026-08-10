@@ -25,6 +25,10 @@ releases:
         version: fffab354a5cf76bf40ea3e0742de29e293277ff3
       - name: revert_dmt
         version: f88da30f9e365cf34bc96f9d23c11711b7f14975
+      - name: fix-repro
+        version: 798712972b1e4e8c4bcc1fbbc80fb00b15928a16
+      - name: revert_dmt-fix-repro
+        version: 5b05646ba7eb6b034ecd58ff436d69e8f4ad517f
   - rc_name: rc--2026-07-31_04-23
     versions:
       - name: base
