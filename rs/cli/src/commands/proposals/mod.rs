@@ -82,203 +82,295 @@ impl TryFrom<ProposalInfo> for Proposal {
     type Error = anyhow::Error;
 
     fn try_from(value: ProposalInfo) -> Result<Self, Self::Error> {
-        let proposal = value.proposal.clone().unwrap();
+        let id = value.id.ok_or_else(|| anyhow::anyhow!("proposal info carries no id"))?.id;
+        let proposal = value
+            .proposal
+            .clone()
+            .ok_or_else(|| anyhow::anyhow!("proposal {} carries no proposal body", id))?;
         Ok(Self {
-            id: value.id.unwrap().id,
+            id,
             proposal_timestamp_seconds: value.proposal_timestamp_seconds,
-            proposer: value.proposer.unwrap().id,
+            proposer: value.proposer.ok_or_else(|| anyhow::anyhow!("proposal {} carries no proposer", id))?.id,
             status: ProposalStatus::try_from(value.status)?,
             summary: proposal.summary,
             title: proposal.title.unwrap_or_default(),
             topic: Topic::try_from(value.topic)?,
-            payload: match proposal.action.unwrap() {
-                Action::ManageNeuron(a) => serde_json::to_value(a.command)?,
-                Action::ManageNetworkEconomics(a) => serde_json::to_value(a)?,
-                Action::Motion(a) => serde_json::to_value(a)?,
-                Action::ExecuteNnsFunction(a) => {
-                    if a.payload.is_empty() {
-                        serde_json::json!({})
-                    } else {
-                        match NnsFunction::try_from(a.nns_function)? {
-                            ic_nns_governance::pb::v1::NnsFunction::Unspecified => serde_json::to_value(a)?,
-                            ic_nns_governance::pb::v1::NnsFunction::CreateSubnet => {
-                                serde_json::to_value(Decode!(a.payload.as_slice(), CreateSubnetPayload)?)?
-                            }
-                            ic_nns_governance::pb::v1::NnsFunction::AddNodeToSubnet => {
-                                serde_json::to_value(Decode!(a.payload.as_slice(), AddNodesToSubnetPayload)?)?
-                            }
-                            ic_nns_governance::pb::v1::NnsFunction::NnsCanisterInstall => {
-                                serde_json::to_value(Decode!(a.payload.as_slice(), AddCanisterRequest)?)?
-                            }
-                            ic_nns_governance::pb::v1::NnsFunction::NnsCanisterUpgrade => {
-                                serde_json::to_value(Decode!(a.payload.as_slice(), ChangeCanisterRequest)?)?
-                            }
-                            ic_nns_governance::pb::v1::NnsFunction::BlessReplicaVersion => {
-                                serde_json::to_value(Decode!(a.payload.as_slice(), BlessReplicaVersionPayload)?)?
-                            }
-                            ic_nns_governance::pb::v1::NnsFunction::RecoverSubnet => {
-                                serde_json::to_value(Decode!(a.payload.as_slice(), RecoverSubnetPayload)?)?
-                            }
-                            ic_nns_governance::pb::v1::NnsFunction::UpdateConfigOfSubnet => {
-                                serde_json::to_value(Decode!(a.payload.as_slice(), UpdateSubnetPayload)?)?
-                            }
-                            ic_nns_governance::pb::v1::NnsFunction::AssignNoid => {
-                                serde_json::to_value(Decode!(a.payload.as_slice(), AddNodeOperatorPayload)?)?
-                            }
-                            // Unable to resolve rustls deps when adding `ic-nns-test-utils`
-                            ic_nns_governance::pb::v1::NnsFunction::NnsRootUpgrade => serde_json::json!({}),
-                            ic_nns_governance::pb::v1::NnsFunction::IcpXdrConversionRate => {
-                                serde_json::to_value(Decode!(a.payload.as_slice(), UpdateIcpXdrConversionRatePayload)?)?
-                            }
-                            ic_nns_governance::pb::v1::NnsFunction::DeployGuestosToAllSubnetNodes => {
-                                serde_json::to_value(Decode!(a.payload.as_slice(), DeployGuestosToAllSubnetNodesPayload)?)?
-                            }
-                            // Has an empty payload
-                            ic_nns_governance::pb::v1::NnsFunction::ClearProvisionalWhitelist => serde_json::json!({}),
-                            ic_nns_governance::pb::v1::NnsFunction::RemoveNodesFromSubnet => {
-                                serde_json::to_value(Decode!(a.payload.as_slice(), RemoveNodesFromSubnetPayload)?)?
-                            }
-                            ic_nns_governance::pb::v1::NnsFunction::SetAuthorizedSubnetworks => {
-                                serde_json::to_value(Decode!(a.payload.as_slice(), SetAuthorizedSubnetworkListArgs)?)?
-                            }
-                            ic_nns_governance::pb::v1::NnsFunction::SetFirewallConfig => {
-                                serde_json::to_value(Decode!(a.payload.as_slice(), SetFirewallConfigPayload)?)?
-                            }
-                            ic_nns_governance::pb::v1::NnsFunction::UpdateNodeOperatorConfig => {
-                                serde_json::to_value(Decode!(a.payload.as_slice(), UpdateNodeOperatorConfigPayload)?)?
-                            }
-                            ic_nns_governance::pb::v1::NnsFunction::StopOrStartNnsCanister => {
-                                serde_json::to_value(Decode!(a.payload.as_slice(), StopOrStartCanisterRequest)?)?
-                            }
-                            ic_nns_governance::pb::v1::NnsFunction::RemoveNodes => {
-                                serde_json::to_value(Decode!(a.payload.as_slice(), RemoveNodesPayload)?)?
-                            }
-                            ic_nns_governance::pb::v1::NnsFunction::UninstallCode => {
-                                serde_json::to_value(Decode!(a.payload.as_slice(), CanisterIdRecord)?)?
-                            }
-                            ic_nns_governance::pb::v1::NnsFunction::UpdateNodeRewardsTable => {
-                                serde_json::to_value(Decode!(a.payload.as_slice(), UpdateNodeRewardsTableProposalPayload)?)?
-                            }
-                            ic_nns_governance::pb::v1::NnsFunction::AddOrRemoveDataCenters => {
-                                serde_json::to_value(Decode!(a.payload.as_slice(), AddOrRemoveDataCentersProposalPayload)?)?
-                            }
-                            ic_nns_governance::pb::v1::NnsFunction::UpdateUnassignedNodesConfig => {
-                                serde_json::to_value(Decode!(a.payload.as_slice(), UpdateUnassignedNodesConfigPayload)?)?
-                            }
-                            ic_nns_governance::pb::v1::NnsFunction::RemoveNodeOperators => {
-                                serde_json::to_value(Decode!(a.payload.as_slice(), RemoveNodeOperatorsPayload)?)?
-                            }
-                            ic_nns_governance::pb::v1::NnsFunction::RerouteCanisterRanges => {
-                                serde_json::to_value(Decode!(a.payload.as_slice(), RerouteCanisterRangesPayload)?)?
-                            }
-                            ic_nns_governance::pb::v1::NnsFunction::AddFirewallRules => {
-                                serde_json::to_value(Decode!(a.payload.as_slice(), AddFirewallRulesPayload)?)?
-                            }
-                            ic_nns_governance::pb::v1::NnsFunction::RemoveFirewallRules => {
-                                serde_json::to_value(Decode!(a.payload.as_slice(), RemoveFirewallRulesPayload)?)?
-                            }
-                            ic_nns_governance::pb::v1::NnsFunction::UpdateFirewallRules => {
-                                serde_json::to_value(Decode!(a.payload.as_slice(), UpdateFirewallRulesPayload)?)?
-                            }
-                            ic_nns_governance::pb::v1::NnsFunction::PrepareCanisterMigration => {
-                                serde_json::to_value(Decode!(a.payload.as_slice(), PrepareCanisterMigrationPayload)?)?
-                            }
-                            ic_nns_governance::pb::v1::NnsFunction::CompleteCanisterMigration => {
-                                serde_json::to_value(Decode!(a.payload.as_slice(), CompleteCanisterMigrationPayload)?)?
-                            }
-                            ic_nns_governance::pb::v1::NnsFunction::AddSnsWasm => {
-                                serde_json::to_value(Decode!(a.payload.as_slice(), AddWasmRequest)?)?
-                            }
-                            ic_nns_governance::pb::v1::NnsFunction::ChangeSubnetMembership => {
-                                serde_json::to_value(Decode!(a.payload.as_slice(), ChangeSubnetMembershipPayload)?)?
-                            }
-                            ic_nns_governance::pb::v1::NnsFunction::UpdateSubnetType => {
-                                serde_json::to_value(Decode!(a.payload.as_slice(), UpdateSubnetPayload)?)?
-                            }
-                            ic_nns_governance::pb::v1::NnsFunction::ChangeSubnetTypeAssignment => {
-                                serde_json::to_value(Decode!(a.payload.as_slice(), UpdateSubnetPayload)?)?
-                            }
-                            ic_nns_governance::pb::v1::NnsFunction::UpdateSnsWasmSnsSubnetIds => {
-                                serde_json::to_value(Decode!(a.payload.as_slice(), UpdateSnsSubnetListRequest)?)?
-                            }
-                            ic_nns_governance::pb::v1::NnsFunction::UpdateAllowedPrincipals => {
-                                serde_json::to_value(Decode!(a.payload.as_slice(), UpdateAllowedPrincipalsRequest)?)?
-                            }
-                            ic_nns_governance::pb::v1::NnsFunction::RetireReplicaVersion => {
-                                serde_json::to_value(Decode!(a.payload.as_slice(), RetireReplicaVersionPayload)?)?
-                            }
-                            ic_nns_governance::pb::v1::NnsFunction::InsertSnsWasmUpgradePathEntries => {
-                                serde_json::to_value(Decode!(a.payload.as_slice(), InsertUpgradePathEntriesRequest)?)?
-                            }
-                            ic_nns_governance::pb::v1::NnsFunction::ReviseElectedGuestosVersions => {
-                                serde_json::to_value(Decode!(a.payload.as_slice(), ReviseElectedGuestosVersionsPayload)?)?
-                            }
-                            ic_nns_governance::pb::v1::NnsFunction::BitcoinSetConfig => {
-                                serde_json::to_value(Decode!(a.payload.as_slice(), BitcoinSetConfigProposal)?)?
-                            }
-                            ic_nns_governance::pb::v1::NnsFunction::UpdateElectedHostosVersions => {
-                                serde_json::to_value(Decode!(a.payload.as_slice(), UpdateElectedHostosVersionsPayload)?)?
-                            }
-                            ic_nns_governance::pb::v1::NnsFunction::UpdateNodesHostosVersion => {
-                                serde_json::to_value(Decode!(a.payload.as_slice(), UpdateNodesHostosVersionPayload)?)?
-                            }
-                            // Unable to resolve rustls deps when adding `ic-nns-test-utils`
-                            ic_nns_governance::pb::v1::NnsFunction::HardResetNnsRootToVersion => serde_json::json!({}),
-                            ic_nns_governance::pb::v1::NnsFunction::AddApiBoundaryNodes => {
-                                serde_json::to_value(Decode!(a.payload.as_slice(), AddApiBoundaryNodesPayload)?)?
-                            }
-                            ic_nns_governance::pb::v1::NnsFunction::RemoveApiBoundaryNodes => {
-                                serde_json::to_value(Decode!(a.payload.as_slice(), RemoveApiBoundaryNodesPayload)?)?
-                            }
-                            ic_nns_governance::pb::v1::NnsFunction::UpdateApiBoundaryNodesVersion => {
-                                serde_json::to_value(Decode!(a.payload.as_slice(), UpdateApiBoundaryNodesVersionPayload)?)?
-                            }
-                            ic_nns_governance::pb::v1::NnsFunction::DeployGuestosToSomeApiBoundaryNodes => {
-                                serde_json::to_value(Decode!(a.payload.as_slice(), UpdateApiBoundaryNodesVersionPayload)?)?
-                            }
-                            ic_nns_governance::pb::v1::NnsFunction::DeployGuestosToAllUnassignedNodes => {
-                                serde_json::to_value(Decode!(a.payload.as_slice(), DeployGuestosToAllUnassignedNodesPayload)?)?
-                            }
-                            ic_nns_governance::pb::v1::NnsFunction::UpdateSshReadonlyAccessForAllUnassignedNodes => {
-                                serde_json::to_value(Decode!(a.payload.as_slice(), UpdateSshReadOnlyAccessForAllUnassignedNodesPayload)?)?
-                            }
-                            ic_nns_governance::pb::v1::NnsFunction::ReviseElectedHostosVersions => {
-                                serde_json::to_value(Decode!(a.payload.as_slice(), UpdateElectedHostosVersionsPayload)?)?
-                            }
-                            ic_nns_governance::pb::v1::NnsFunction::DeployHostosToSomeNodes => {
-                                serde_json::to_value(Decode!(a.payload.as_slice(), UpdateNodesHostosVersionPayload)?)?
-                            }
-                            ic_nns_governance::pb::v1::NnsFunction::SubnetRentalRequest => {
-                                serde_json::to_value(Decode!(a.payload.as_slice(), SubnetRentalRequest)?)?
-                            }
-                            ic_nns_governance::pb::v1::NnsFunction::SetSubnetOperationalLevel => {
-                                serde_json::to_value(Decode!(a.payload.as_slice(), SetSubnetOperationalLevelPayload)?)?
-                            }
-                            _ => {
-                                serde_json::json!({})
+            payload: match proposal.action {
+                Some(action) => match action {
+                    Action::ManageNeuron(a) => serde_json::to_value(a.command)?,
+                    Action::ManageNetworkEconomics(a) => serde_json::to_value(a)?,
+                    Action::Motion(a) => serde_json::to_value(a)?,
+                    Action::ExecuteNnsFunction(a) => {
+                        if a.payload.is_empty() {
+                            serde_json::json!({})
+                        } else {
+                            match NnsFunction::try_from(a.nns_function)? {
+                                ic_nns_governance::pb::v1::NnsFunction::Unspecified => serde_json::to_value(a)?,
+                                ic_nns_governance::pb::v1::NnsFunction::CreateSubnet => {
+                                    serde_json::to_value(Decode!(a.payload.as_slice(), CreateSubnetPayload)?)?
+                                }
+                                ic_nns_governance::pb::v1::NnsFunction::AddNodeToSubnet => {
+                                    serde_json::to_value(Decode!(a.payload.as_slice(), AddNodesToSubnetPayload)?)?
+                                }
+                                ic_nns_governance::pb::v1::NnsFunction::NnsCanisterInstall => {
+                                    serde_json::to_value(Decode!(a.payload.as_slice(), AddCanisterRequest)?)?
+                                }
+                                ic_nns_governance::pb::v1::NnsFunction::NnsCanisterUpgrade => {
+                                    serde_json::to_value(Decode!(a.payload.as_slice(), ChangeCanisterRequest)?)?
+                                }
+                                ic_nns_governance::pb::v1::NnsFunction::BlessReplicaVersion => {
+                                    serde_json::to_value(Decode!(a.payload.as_slice(), BlessReplicaVersionPayload)?)?
+                                }
+                                ic_nns_governance::pb::v1::NnsFunction::RecoverSubnet => {
+                                    serde_json::to_value(Decode!(a.payload.as_slice(), RecoverSubnetPayload)?)?
+                                }
+                                ic_nns_governance::pb::v1::NnsFunction::UpdateConfigOfSubnet => {
+                                    serde_json::to_value(Decode!(a.payload.as_slice(), UpdateSubnetPayload)?)?
+                                }
+                                ic_nns_governance::pb::v1::NnsFunction::AssignNoid => {
+                                    serde_json::to_value(Decode!(a.payload.as_slice(), AddNodeOperatorPayload)?)?
+                                }
+                                // Unable to resolve rustls deps when adding `ic-nns-test-utils`
+                                ic_nns_governance::pb::v1::NnsFunction::NnsRootUpgrade => serde_json::json!({}),
+                                ic_nns_governance::pb::v1::NnsFunction::IcpXdrConversionRate => {
+                                    serde_json::to_value(Decode!(a.payload.as_slice(), UpdateIcpXdrConversionRatePayload)?)?
+                                }
+                                ic_nns_governance::pb::v1::NnsFunction::DeployGuestosToAllSubnetNodes => {
+                                    serde_json::to_value(Decode!(a.payload.as_slice(), DeployGuestosToAllSubnetNodesPayload)?)?
+                                }
+                                // Has an empty payload
+                                ic_nns_governance::pb::v1::NnsFunction::ClearProvisionalWhitelist => serde_json::json!({}),
+                                ic_nns_governance::pb::v1::NnsFunction::RemoveNodesFromSubnet => {
+                                    serde_json::to_value(Decode!(a.payload.as_slice(), RemoveNodesFromSubnetPayload)?)?
+                                }
+                                ic_nns_governance::pb::v1::NnsFunction::SetAuthorizedSubnetworks => {
+                                    serde_json::to_value(Decode!(a.payload.as_slice(), SetAuthorizedSubnetworkListArgs)?)?
+                                }
+                                ic_nns_governance::pb::v1::NnsFunction::SetFirewallConfig => {
+                                    serde_json::to_value(Decode!(a.payload.as_slice(), SetFirewallConfigPayload)?)?
+                                }
+                                ic_nns_governance::pb::v1::NnsFunction::UpdateNodeOperatorConfig => {
+                                    serde_json::to_value(Decode!(a.payload.as_slice(), UpdateNodeOperatorConfigPayload)?)?
+                                }
+                                ic_nns_governance::pb::v1::NnsFunction::StopOrStartNnsCanister => {
+                                    serde_json::to_value(Decode!(a.payload.as_slice(), StopOrStartCanisterRequest)?)?
+                                }
+                                ic_nns_governance::pb::v1::NnsFunction::RemoveNodes => {
+                                    serde_json::to_value(Decode!(a.payload.as_slice(), RemoveNodesPayload)?)?
+                                }
+                                ic_nns_governance::pb::v1::NnsFunction::UninstallCode => {
+                                    serde_json::to_value(Decode!(a.payload.as_slice(), CanisterIdRecord)?)?
+                                }
+                                ic_nns_governance::pb::v1::NnsFunction::UpdateNodeRewardsTable => {
+                                    serde_json::to_value(Decode!(a.payload.as_slice(), UpdateNodeRewardsTableProposalPayload)?)?
+                                }
+                                ic_nns_governance::pb::v1::NnsFunction::AddOrRemoveDataCenters => {
+                                    serde_json::to_value(Decode!(a.payload.as_slice(), AddOrRemoveDataCentersProposalPayload)?)?
+                                }
+                                ic_nns_governance::pb::v1::NnsFunction::UpdateUnassignedNodesConfig => {
+                                    serde_json::to_value(Decode!(a.payload.as_slice(), UpdateUnassignedNodesConfigPayload)?)?
+                                }
+                                ic_nns_governance::pb::v1::NnsFunction::RemoveNodeOperators => {
+                                    serde_json::to_value(Decode!(a.payload.as_slice(), RemoveNodeOperatorsPayload)?)?
+                                }
+                                ic_nns_governance::pb::v1::NnsFunction::RerouteCanisterRanges => {
+                                    serde_json::to_value(Decode!(a.payload.as_slice(), RerouteCanisterRangesPayload)?)?
+                                }
+                                ic_nns_governance::pb::v1::NnsFunction::AddFirewallRules => {
+                                    serde_json::to_value(Decode!(a.payload.as_slice(), AddFirewallRulesPayload)?)?
+                                }
+                                ic_nns_governance::pb::v1::NnsFunction::RemoveFirewallRules => {
+                                    serde_json::to_value(Decode!(a.payload.as_slice(), RemoveFirewallRulesPayload)?)?
+                                }
+                                ic_nns_governance::pb::v1::NnsFunction::UpdateFirewallRules => {
+                                    serde_json::to_value(Decode!(a.payload.as_slice(), UpdateFirewallRulesPayload)?)?
+                                }
+                                ic_nns_governance::pb::v1::NnsFunction::PrepareCanisterMigration => {
+                                    serde_json::to_value(Decode!(a.payload.as_slice(), PrepareCanisterMigrationPayload)?)?
+                                }
+                                ic_nns_governance::pb::v1::NnsFunction::CompleteCanisterMigration => {
+                                    serde_json::to_value(Decode!(a.payload.as_slice(), CompleteCanisterMigrationPayload)?)?
+                                }
+                                ic_nns_governance::pb::v1::NnsFunction::AddSnsWasm => {
+                                    serde_json::to_value(Decode!(a.payload.as_slice(), AddWasmRequest)?)?
+                                }
+                                ic_nns_governance::pb::v1::NnsFunction::ChangeSubnetMembership => {
+                                    serde_json::to_value(Decode!(a.payload.as_slice(), ChangeSubnetMembershipPayload)?)?
+                                }
+                                ic_nns_governance::pb::v1::NnsFunction::UpdateSubnetType => {
+                                    serde_json::to_value(Decode!(a.payload.as_slice(), UpdateSubnetPayload)?)?
+                                }
+                                ic_nns_governance::pb::v1::NnsFunction::ChangeSubnetTypeAssignment => {
+                                    serde_json::to_value(Decode!(a.payload.as_slice(), UpdateSubnetPayload)?)?
+                                }
+                                ic_nns_governance::pb::v1::NnsFunction::UpdateSnsWasmSnsSubnetIds => {
+                                    serde_json::to_value(Decode!(a.payload.as_slice(), UpdateSnsSubnetListRequest)?)?
+                                }
+                                ic_nns_governance::pb::v1::NnsFunction::UpdateAllowedPrincipals => {
+                                    serde_json::to_value(Decode!(a.payload.as_slice(), UpdateAllowedPrincipalsRequest)?)?
+                                }
+                                ic_nns_governance::pb::v1::NnsFunction::RetireReplicaVersion => {
+                                    serde_json::to_value(Decode!(a.payload.as_slice(), RetireReplicaVersionPayload)?)?
+                                }
+                                ic_nns_governance::pb::v1::NnsFunction::InsertSnsWasmUpgradePathEntries => {
+                                    serde_json::to_value(Decode!(a.payload.as_slice(), InsertUpgradePathEntriesRequest)?)?
+                                }
+                                ic_nns_governance::pb::v1::NnsFunction::ReviseElectedGuestosVersions => {
+                                    serde_json::to_value(Decode!(a.payload.as_slice(), ReviseElectedGuestosVersionsPayload)?)?
+                                }
+                                ic_nns_governance::pb::v1::NnsFunction::BitcoinSetConfig => {
+                                    serde_json::to_value(Decode!(a.payload.as_slice(), BitcoinSetConfigProposal)?)?
+                                }
+                                ic_nns_governance::pb::v1::NnsFunction::UpdateElectedHostosVersions => {
+                                    serde_json::to_value(Decode!(a.payload.as_slice(), UpdateElectedHostosVersionsPayload)?)?
+                                }
+                                ic_nns_governance::pb::v1::NnsFunction::UpdateNodesHostosVersion => {
+                                    serde_json::to_value(Decode!(a.payload.as_slice(), UpdateNodesHostosVersionPayload)?)?
+                                }
+                                // Unable to resolve rustls deps when adding `ic-nns-test-utils`
+                                ic_nns_governance::pb::v1::NnsFunction::HardResetNnsRootToVersion => serde_json::json!({}),
+                                ic_nns_governance::pb::v1::NnsFunction::AddApiBoundaryNodes => {
+                                    serde_json::to_value(Decode!(a.payload.as_slice(), AddApiBoundaryNodesPayload)?)?
+                                }
+                                ic_nns_governance::pb::v1::NnsFunction::RemoveApiBoundaryNodes => {
+                                    serde_json::to_value(Decode!(a.payload.as_slice(), RemoveApiBoundaryNodesPayload)?)?
+                                }
+                                ic_nns_governance::pb::v1::NnsFunction::UpdateApiBoundaryNodesVersion => {
+                                    serde_json::to_value(Decode!(a.payload.as_slice(), UpdateApiBoundaryNodesVersionPayload)?)?
+                                }
+                                ic_nns_governance::pb::v1::NnsFunction::DeployGuestosToSomeApiBoundaryNodes => {
+                                    serde_json::to_value(Decode!(a.payload.as_slice(), UpdateApiBoundaryNodesVersionPayload)?)?
+                                }
+                                ic_nns_governance::pb::v1::NnsFunction::DeployGuestosToAllUnassignedNodes => {
+                                    serde_json::to_value(Decode!(a.payload.as_slice(), DeployGuestosToAllUnassignedNodesPayload)?)?
+                                }
+                                ic_nns_governance::pb::v1::NnsFunction::UpdateSshReadonlyAccessForAllUnassignedNodes => {
+                                    serde_json::to_value(Decode!(a.payload.as_slice(), UpdateSshReadOnlyAccessForAllUnassignedNodesPayload)?)?
+                                }
+                                ic_nns_governance::pb::v1::NnsFunction::ReviseElectedHostosVersions => {
+                                    serde_json::to_value(Decode!(a.payload.as_slice(), UpdateElectedHostosVersionsPayload)?)?
+                                }
+                                ic_nns_governance::pb::v1::NnsFunction::DeployHostosToSomeNodes => {
+                                    serde_json::to_value(Decode!(a.payload.as_slice(), UpdateNodesHostosVersionPayload)?)?
+                                }
+                                ic_nns_governance::pb::v1::NnsFunction::SubnetRentalRequest => {
+                                    serde_json::to_value(Decode!(a.payload.as_slice(), SubnetRentalRequest)?)?
+                                }
+                                ic_nns_governance::pb::v1::NnsFunction::SetSubnetOperationalLevel => {
+                                    serde_json::to_value(Decode!(a.payload.as_slice(), SetSubnetOperationalLevelPayload)?)?
+                                }
+                                _ => {
+                                    serde_json::json!({})
+                                }
                             }
                         }
                     }
-                }
-                Action::ApproveGenesisKyc(a) => serde_json::to_value(a)?,
-                Action::AddOrRemoveNodeProvider(a) => serde_json::to_value(a)?,
-                Action::RewardNodeProvider(a) => serde_json::to_value(a)?,
-                Action::SetDefaultFollowees(a) => serde_json::to_value(a)?,
-                Action::RewardNodeProviders(a) => serde_json::to_value(a)?,
-                Action::RegisterKnownNeuron(a) => serde_json::to_value(a)?,
-                Action::SetSnsTokenSwapOpenTimeWindow(a) => serde_json::to_value(a)?,
-                Action::OpenSnsTokenSwap(a) => serde_json::to_value(a)?,
-                Action::CreateServiceNervousSystem(a) => serde_json::to_value(a)?,
-                Action::InstallCode(a) => serde_json::to_value(a)?,
-                Action::StopOrStartCanister(a) => serde_json::to_value(a)?,
-                Action::UpdateCanisterSettings(a) => serde_json::to_value(a)?,
-                Action::DeregisterKnownNeuron(a) => serde_json::to_value(a)?,
-                Action::FulfillSubnetRentalRequest(a) => serde_json::to_value(a)?,
-                Action::BlessAlternativeGuestOsVersion(a) => serde_json::to_value(a)?,
-                Action::TakeCanisterSnapshot(a) => serde_json::to_value(a)?,
-                Action::LoadCanisterSnapshot(a) => serde_json::to_value(a)?,
-                Action::CreateCanisterAndInstallCode(a) => serde_json::to_value(a)?,
+                    Action::ApproveGenesisKyc(a) => serde_json::to_value(a)?,
+                    Action::AddOrRemoveNodeProvider(a) => serde_json::to_value(a)?,
+                    Action::RewardNodeProvider(a) => serde_json::to_value(a)?,
+                    Action::SetDefaultFollowees(a) => serde_json::to_value(a)?,
+                    Action::RewardNodeProviders(a) => serde_json::to_value(a)?,
+                    Action::RegisterKnownNeuron(a) => serde_json::to_value(a)?,
+                    Action::SetSnsTokenSwapOpenTimeWindow(a) => serde_json::to_value(a)?,
+                    Action::OpenSnsTokenSwap(a) => serde_json::to_value(a)?,
+                    Action::CreateServiceNervousSystem(a) => serde_json::to_value(a)?,
+                    Action::InstallCode(a) => serde_json::to_value(a)?,
+                    Action::StopOrStartCanister(a) => serde_json::to_value(a)?,
+                    Action::UpdateCanisterSettings(a) => serde_json::to_value(a)?,
+                    Action::DeregisterKnownNeuron(a) => serde_json::to_value(a)?,
+                    Action::FulfillSubnetRentalRequest(a) => serde_json::to_value(a)?,
+                    Action::BlessAlternativeGuestOsVersion(a) => serde_json::to_value(a)?,
+                    Action::TakeCanisterSnapshot(a) => serde_json::to_value(a)?,
+                    Action::LoadCanisterSnapshot(a) => serde_json::to_value(a)?,
+                    Action::CreateCanisterAndInstallCode(a) => serde_json::to_value(a)?,
+                },
+                // Candid decodes a variant it does not recognise into `None`, so any
+                // action added to the governance canister after this build of `dre` lands
+                // here.  Refusing the whole proposal over an action we cannot name would
+                // hide it from every listing, so fall back to the canister's
+                // self-describing rendition of the action, or an empty payload when it
+                // did not send one.
+                None => match proposal.self_describing_action {
+                    Some(action) => serde_json::to_value(action)?,
+                    None => serde_json::json!({}),
+                },
             },
         })
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use ic_nns_common::pb::v1::{NeuronId, ProposalId};
+    use ic_nns_governance_api::{Proposal as GovernanceProposal, SelfDescribingProposalAction, SelfDescribingValue};
+
+    const PROPOSAL_ID: u64 = 143574;
+
+    fn proposal_info(proposal: GovernanceProposal) -> ProposalInfo {
+        ProposalInfo {
+            id: Some(ProposalId { id: PROPOSAL_ID }),
+            proposer: Some(NeuronId { id: 27 }),
+            proposal: Some(proposal),
+            topic: Topic::IcOsVersionDeployment as i32,
+            status: ProposalStatus::Open as i32,
+            ..Default::default()
+        }
+    }
+
+    /// Governance grows new action variants over time.  Candid decodes the ones this
+    /// build does not know about into `None`, which used to panic here and take down
+    /// every `dre proposals` invocation until the offending proposal aged out.
+    #[test]
+    fn unrecognised_action_converts_with_an_empty_payload() {
+        let info = proposal_info(GovernanceProposal {
+            title: Some("Set the very first standard engine replica version".to_string()),
+            action: None,
+            self_describing_action: None,
+            ..Default::default()
+        });
+
+        let proposal = Proposal::try_from(info).expect("an unrecognised action must not fail the conversion");
+
+        assert_eq!(proposal.id, PROPOSAL_ID);
+        assert_eq!(proposal.topic, Topic::IcOsVersionDeployment);
+        assert_eq!(proposal.payload, serde_json::json!({}));
+    }
+
+    #[test]
+    fn unrecognised_action_prefers_the_self_describing_action() {
+        let info = proposal_info(GovernanceProposal {
+            action: None,
+            self_describing_action: Some(SelfDescribingProposalAction {
+                type_name: Some("UpdateStandardEngineReplicaVersion".to_string()),
+                type_description: None,
+                value: Some(SelfDescribingValue::Text("e3d101b2".to_string())),
+            }),
+            ..Default::default()
+        });
+
+        let proposal = Proposal::try_from(info).expect("an unrecognised action must not fail the conversion");
+
+        assert_eq!(proposal.payload["type_name"], "UpdateStandardEngineReplicaVersion");
+    }
+
+    #[test]
+    fn a_malformed_proposal_is_an_error_rather_than_a_panic() {
+        for info in [
+            ProposalInfo {
+                id: None,
+                ..proposal_info(GovernanceProposal::default())
+            },
+            ProposalInfo {
+                proposer: None,
+                ..proposal_info(GovernanceProposal::default())
+            },
+            ProposalInfo {
+                proposal: None,
+                ..proposal_info(GovernanceProposal::default())
+            },
+        ] {
+            assert!(Proposal::try_from(info).is_err());
+        }
     }
 }
