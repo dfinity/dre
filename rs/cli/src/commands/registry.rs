@@ -408,9 +408,15 @@ fn decode_value_to_json(key: &str, bytes: &[u8]) -> Value {
         if let Ok(rec) = ic_protobuf::registry::unassigned_nodes_config::v1::UnassignedNodesConfigRecord::decode(bytes) {
             return normalize_protobuf_json(serde_json::to_value(&rec).unwrap_or(Value::Null));
         }
-    } else if key == "blessed_replica_versions" {
-        if let Ok(rec) = ic_protobuf::registry::replica_version::v1::BlessedReplicaVersions::decode(bytes) {
-            return normalize_protobuf_json(serde_json::to_value(&rec).unwrap_or(Value::Null));
+    } else if key == ic_registry_keys::make_standard_engine_replica_version_record_key().as_str() {
+        if let Ok(rec) = ic_protobuf::registry::standard_engine_replica_version::v1::StandardEngineReplicaVersionRecord::decode(bytes) {
+            // `StandardEngineReplicaVersionRecord` does not derive `Serialize`, so
+            // build the JSON object manually from its fields.
+            return serde_json::json!({
+                "new_replica_version_id": rec.new_replica_version_id,
+                "old_replica_version_id": rec.old_replica_version_id,
+                "deployment_progress": rec.deployment_progress,
+            });
         }
     }
 

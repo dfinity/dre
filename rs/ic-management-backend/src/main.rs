@@ -15,6 +15,10 @@ use url::Url;
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
+    // Standardize the process-level rustls CryptoProvider on aws-lc-rs (matching
+    // the ic repo). Without this, rustls panics when multiple providers are enabled.
+    let _ = rustls::crypto::aws_lc_rs::default_provider().install_default();
+
     dotenv().ok();
     unsafe {
         std::env::set_var("RUST_LOG", "info");

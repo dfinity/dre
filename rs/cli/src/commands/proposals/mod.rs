@@ -24,7 +24,6 @@ use registry_canister::mutations::{
     do_add_api_boundary_nodes::AddApiBoundaryNodesPayload,
     do_add_node_operator::AddNodeOperatorPayload,
     do_add_nodes_to_subnet::AddNodesToSubnetPayload,
-    do_bless_replica_version::BlessReplicaVersionPayload,
     do_change_subnet_membership::ChangeSubnetMembershipPayload,
     do_create_subnet::CreateSubnetPayload,
     do_deploy_guestos_to_all_subnet_nodes::DeployGuestosToAllSubnetNodesPayload,
@@ -118,9 +117,10 @@ impl TryFrom<ProposalInfo> for Proposal {
                                 ic_nns_governance::pb::v1::NnsFunction::NnsCanisterUpgrade => {
                                     serde_json::to_value(Decode!(a.payload.as_slice(), ChangeCanisterRequest)?)?
                                 }
-                                ic_nns_governance::pb::v1::NnsFunction::BlessReplicaVersion => {
-                                    serde_json::to_value(Decode!(a.payload.as_slice(), BlessReplicaVersionPayload)?)?
-                                }
+                                // `BlessReplicaVersion` is a legacy NNS function whose payload type
+                                // (`BlessReplicaVersionPayload`) has been removed from `registry_canister`.
+                                // It is superseded by `ReviseElectedGuestosVersions`; fall through to the
+                                // catch-all arm below.
                                 ic_nns_governance::pb::v1::NnsFunction::RecoverSubnet => {
                                     serde_json::to_value(Decode!(a.payload.as_slice(), RecoverSubnetPayload)?)?
                                 }
@@ -283,6 +283,7 @@ impl TryFrom<ProposalInfo> for Proposal {
                     Action::TakeCanisterSnapshot(a) => serde_json::to_value(a)?,
                     Action::LoadCanisterSnapshot(a) => serde_json::to_value(a)?,
                     Action::CreateCanisterAndInstallCode(a) => serde_json::to_value(a)?,
+                    Action::UpdateStandardEngineReplicaVersion(a) => serde_json::to_value(a)?,
                 },
                 // Candid decodes a variant it does not recognise into `None`, so any
                 // action added to the governance canister after this build of `dre` lands

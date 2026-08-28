@@ -27,6 +27,10 @@ mod metrics;
 mod server_handlers;
 
 fn main() {
+    // Standardize the process-level rustls CryptoProvider on aws-lc-rs (matching
+    // the ic repo). Without this, rustls panics when multiple providers are enabled.
+    let _ = rustls::crypto::aws_lc_rs::default_provider().install_default();
+
     let rt = Runtime::new().unwrap();
     let log = make_logger();
     let shutdown_signal = shutdown_signal(log.clone());

@@ -34,6 +34,10 @@ pub struct JobParameters {
 }
 
 fn main() -> Result<()> {
+    // Standardize the process-level rustls CryptoProvider on aws-lc-rs (matching
+    // the ic repo). Without this, rustls panics when multiple providers are enabled.
+    let _ = rustls::crypto::aws_lc_rs::default_provider().install_default();
+
     let cli_args = CliArgs::parse().validate()?;
     let public_key = cli_args.public_key.map(|pk: String| {
         let decoded = b64::STANDARD.decode(pk).unwrap();

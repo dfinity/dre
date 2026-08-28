@@ -49,7 +49,9 @@ impl NodeStatusCanister {
             agent: url
                 .iter()
                 .map(|url| {
-                    let client = reqwest::Client::builder()
+                    // Use ic-agent's re-exported reqwest so the client version matches
+                    // what `with_http_client` expects (ic-agent pins its own reqwest).
+                    let client = ic_agent::export::reqwest::Client::builder()
                         .use_rustls_tls()
                         .timeout(Duration::from_secs(30))
                         .build()

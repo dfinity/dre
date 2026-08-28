@@ -8,6 +8,7 @@ documentation.workspace = true
 license.workspace = true
 
 [dependencies]
+rustls = { workspace = true }
 clap.workspace = true
 fs-err.workspace = true
 humantime.workspace = true

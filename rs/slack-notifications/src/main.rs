@@ -112,7 +112,9 @@ struct ProposalPoller {
 impl ProposalPoller {
     fn new(target_network: Network) -> Self {
         let nns_url = target_network.get_nns_urls()[0].clone();
-        let client = reqwest::Client::builder()
+        // Use ic-agent's re-exported reqwest so the client version matches what
+        // `with_http_client` expects (ic-agent pins its own reqwest major version).
+        let client = ic_agent::export::reqwest::Client::builder()
             .use_rustls_tls()
             .timeout(Duration::from_secs(30))
             .build()
