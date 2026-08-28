@@ -23,6 +23,8 @@ releases:
     versions:
       - name: base
         version: e9fd136f3fed6cb44625379e056ad63789d52d2c
+      - name: all-in-one
+        version: a2a3e3dc570a82bf3d194a5ce896b4db2ec400cb
   - rc_name: rc--2026-08-20_03-30
     versions:
       - name: base
