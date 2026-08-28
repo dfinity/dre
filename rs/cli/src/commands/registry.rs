@@ -307,6 +307,14 @@ impl Registry {
 
         let unassigned_nodes_config = local_registry.get_unassigned_nodes()?;
 
+        let standard_engine_replica_version = local_registry
+            .get_standard_engine_replica_version()?
+            .map(|rec| StandardEngineReplicaVersion {
+                new_replica_version_id: rec.new_replica_version_id,
+                old_replica_version_id: rec.old_replica_version_id,
+                deployment_progress: rec.deployment_progress,
+            });
+
         // Calculate number of rewardable nodes for node operators
         for node_operator in node_operators.values_mut() {
             let mut nodes_by_health = IndexMap::new();
@@ -335,6 +343,7 @@ impl Registry {
             nodes,
             subnets,
             unassigned_nodes_config,
+            standard_engine_replica_version,
             dcs,
             node_operators: node_operators.values().cloned().collect_vec(),
             node_rewards_table,
@@ -792,6 +801,7 @@ struct RegistryDump {
     subnets: Vec<SubnetRecord>,
     nodes: Vec<NodeDetails>,
     unassigned_nodes_config: Option<UnassignedNodesConfigRecord>,
+    standard_engine_replica_version: Option<StandardEngineReplicaVersion>,
     dcs: Vec<DataCenterRecord>,
     node_operators: Vec<NodeOperator>,
     node_rewards_table: NodeRewardsTableFlattened,
@@ -799,6 +809,15 @@ struct RegistryDump {
     elected_guest_os_versions: Vec<ReplicaVersionRecord>,
     elected_host_os_versions: Vec<HostosVersionRecord>,
     node_providers: Vec<NodeProvider>,
+}
+
+/// User-friendly, serializable representation of a
+/// `StandardEngineReplicaVersionRecord` (which does not derive `Serialize`).
+#[derive(Clone, Debug, Serialize)]
+struct StandardEngineReplicaVersion {
+    new_replica_version_id: String,
+    old_replica_version_id: String,
+    deployment_progress: f64,
 }
 
 #[derive(Clone, Debug, Serialize)]
