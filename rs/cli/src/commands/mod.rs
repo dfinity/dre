@@ -1,5 +1,6 @@
 pub(crate) mod api_boundary_nodes;
 pub(crate) mod der_to_principal;
+pub(crate) mod engine_versions;
 pub(crate) mod firewall;
 pub mod get;
 pub(crate) mod governance;
