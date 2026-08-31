@@ -442,6 +442,12 @@ mod tests {
     const QUERY_TIMEOUT: Duration = Duration::from_secs(5);
     #[test]
     fn can_get_nns_targets_for() {
+        // The binaries install the process-level rustls CryptoProvider (aws-lc-rs)
+        // in their `main()`, but tests do not go through `main()`. Constructing a
+        // rustls TLS client here would otherwise panic because rustls cannot pick
+        // between the multiple enabled providers. Idempotent.
+        let _ = rustls::crypto::aws_lc_rs::default_provider().install_default();
+
         let mainnet_prefix = "tdb26";
         let tempdir = TempDir::new().unwrap();
         let ic_dir = PathBuf::from(tempdir.path()).join("mainnet");

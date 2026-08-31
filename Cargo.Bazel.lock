@@ -1,5 +1,5 @@
 {
-  "checksum": "10577ab31b5beac9d62938621c9c6ffdd5e16a08dbc610f2e99d35620dde6980",
+  "checksum": "2fa514c446d129b8b144edc31d4b0e4e8691b2c1547121e3afbbd2e0e76f47c0",
   "crates": {
     "actix-codec 0.5.2": {
       "name": "actix-codec",
@@ -51820,6 +51820,10 @@
             {
               "id": "itertools 0.13.0",
               "target": "itertools"
+            },
+            {
+              "id": "rustls 0.23.37",
+              "target": "rustls"
             }
           ],
           "selects": {}
