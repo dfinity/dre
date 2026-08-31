@@ -17,13 +17,15 @@ use ic_protobuf::registry::node::v1::NodeRewardType;
 use ic_protobuf::registry::node_rewards::v2::NodeRewardsTable;
 use ic_protobuf::registry::{
     api_boundary_node::v1::ApiBoundaryNodeRecord, dc::v1::DataCenterRecord, hostos_version::v1::HostosVersionRecord,
-    replica_version::v1::ReplicaVersionRecord, subnet::v1::SubnetRecord, unassigned_nodes_config::v1::UnassignedNodesConfigRecord,
+    replica_version::v1::ReplicaVersionRecord, standard_engine_replica_version::v1::StandardEngineReplicaVersionRecord, subnet::v1::SubnetRecord,
+    unassigned_nodes_config::v1::UnassignedNodesConfigRecord,
 };
 use ic_registry_client_helpers::node::NodeRegistry;
 use ic_registry_client_helpers::{node::NodeRecord, node_operator::NodeOperatorRecord};
 use ic_registry_keys::{
     API_BOUNDARY_NODE_RECORD_KEY_PREFIX, DATA_CENTER_KEY_PREFIX, FirewallRulesScope, HOSTOS_VERSION_KEY_PREFIX, NODE_OPERATOR_RECORD_KEY_PREFIX,
     NODE_RECORD_KEY_PREFIX, NODE_REWARDS_TABLE_KEY, REPLICA_VERSION_KEY_PREFIX, SUBNET_RECORD_KEY_PREFIX, make_firewall_rules_record_key,
+    make_standard_engine_replica_version_record_key,
 };
 use ic_registry_local_registry::LocalRegistry;
 use ic_registry_subnet_type::SubnetType;
@@ -119,6 +121,11 @@ pub trait LazyRegistry:
     fn get_unassigned_nodes(&self) -> anyhow::Result<Option<UnassignedNodesConfigRecord>>;
 
     fn get_datacenters(&self) -> anyhow::Result<Vec<DataCenterRecord>>;
+
+    /// The standard replica/guestos version that engines run when their own
+    /// `SubnetRecord.replica_version_id` is blank. Returns `None` when the
+    /// record is not present in the registry.
+    fn get_standard_engine_replica_version(&self) -> anyhow::Result<Option<StandardEngineReplicaVersionRecord>>;
 
     fn elected_guestos_records(&self) -> anyhow::Result<Vec<ReplicaVersionRecord>>;
 
@@ -805,6 +812,21 @@ impl LazyRegistry for LazyRegistryImpl {
             .map(|(_, (_, record))| record)
             .collect())
     }
+
+    fn get_standard_engine_replica_version(&self) -> anyhow::Result<Option<StandardEngineReplicaVersionRecord>> {
+        let key = make_standard_engine_replica_version_record_key();
+        let version = self.get_latest_version();
+        let value = self
+            .get_versioned_value(&key, version)
+            .map_err(|e| anyhow::anyhow!("Couldn't get standard engine replica version: {:?}", e))?;
+        value
+            .as_ref()
+            .map(|bytes| {
+                StandardEngineReplicaVersionRecord::decode(bytes.as_slice())
+                    .map_err(|e| anyhow::anyhow!("Couldn't decode standard engine replica version: {:?}", e))
+            })
+            .transpose()
+    }
 }
 
 impl NodesConverter for LazyRegistryImpl {
@@ -931,6 +953,8 @@ mock! {
         fn get_unassigned_nodes(&self) -> anyhow::Result<Option<UnassignedNodesConfigRecord>>;
 
         fn get_datacenters(&self) -> anyhow::Result<Vec<DataCenterRecord>>;
+
+        fn get_standard_engine_replica_version(&self) -> anyhow::Result<Option<StandardEngineReplicaVersionRecord>>;
 
         fn elected_guestos_records(&self) -> anyhow::Result<Vec<ReplicaVersionRecord>>;
 

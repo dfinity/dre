@@ -11,6 +11,13 @@ use log::{info, warn};
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
+    // Install the process-level rustls CryptoProvider. We standardize on
+    // `aws-lc-rs` to match the ic repo. Without this, rustls panics at runtime
+    // because it cannot automatically choose between multiple enabled providers.
+    if rustls::crypto::aws_lc_rs::default_provider().install_default().is_err() {
+        // A default provider is already installed; nothing to do.
+    }
+
     init_logger();
     let curr_version = env!("CARGO_PKG_VERSION");
     if curr_version != "0.0.0" {

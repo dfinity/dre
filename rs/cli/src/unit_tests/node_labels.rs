@@ -90,6 +90,7 @@ impl TestScenario {
 
 #[test]
 fn test_node_labels() {
+    super::install_default_crypto_provider();
     let runtime = tokio::runtime::Runtime::new().unwrap();
 
     let scenarios = vec![

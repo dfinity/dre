@@ -38,3 +38,4 @@ url = { workspace = true }
 
 [dev-dependencies]
 itertools = { workspace = true }
+rustls = { workspace = true }

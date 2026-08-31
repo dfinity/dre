@@ -9,6 +9,10 @@ mod download_loop;
 
 #[tokio::main]
 async fn main() {
+    // Standardize the process-level rustls CryptoProvider on aws-lc-rs (matching
+    // the ic repo). Without this, rustls panics when multiple providers are enabled.
+    let _ = rustls::crypto::aws_lc_rs::default_provider().install_default();
+
     let cli = Cli::parse();
     let logger = make_logger(from_str_to_log(&cli.log_level));
     info!(logger, "Running with following args: {:?}", cli);
