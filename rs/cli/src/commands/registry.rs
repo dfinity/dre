@@ -307,6 +307,27 @@ impl Registry {
 
         let unassigned_nodes_config = local_registry.get_unassigned_nodes()?;
 
+        let standard_engine_replica_version = local_registry.get_standard_engine_replica_version()?.map(|rec| {
+            // Determine which engines should run the new version. Only CloudEngine
+            // subnets that follow the standard train (blank `replica_version_id`)
+            // participate; an engine runs the new version iff its upgrade priority
+            // is `<= deployment_progress`. Mirrors `get_replica_version` in the ic
+            // repo (`rs/registry/helpers/src/subnet.rs`).
+            let engines_on_new_version = subnets
+                .iter()
+                .filter(|subnet| subnet.subnet_type == SubnetType::CloudEngine && subnet.replica_version_id.is_empty())
+                .filter(|subnet| engine_upgrade_priority(&subnet.subnet_id, &rec.new_replica_version_id) <= rec.deployment_progress)
+                .map(|subnet| subnet.subnet_id)
+                .collect();
+
+            StandardEngineReplicaVersion {
+                new_replica_version_id: rec.new_replica_version_id,
+                old_replica_version_id: rec.old_replica_version_id,
+                deployment_progress: rec.deployment_progress,
+                engines_on_new_version,
+            }
+        });
+
         // Calculate number of rewardable nodes for node operators
         for node_operator in node_operators.values_mut() {
             let mut nodes_by_health = IndexMap::new();
@@ -335,6 +356,7 @@ impl Registry {
             nodes,
             subnets,
             unassigned_nodes_config,
+            standard_engine_replica_version,
             dcs,
             node_operators: node_operators.values().cloned().collect_vec(),
             node_rewards_table,
@@ -408,9 +430,15 @@ fn decode_value_to_json(key: &str, bytes: &[u8]) -> Value {
         if let Ok(rec) = ic_protobuf::registry::unassigned_nodes_config::v1::UnassignedNodesConfigRecord::decode(bytes) {
             return normalize_protobuf_json(serde_json::to_value(&rec).unwrap_or(Value::Null));
         }
-    } else if key == "blessed_replica_versions" {
-        if let Ok(rec) = ic_protobuf::registry::replica_version::v1::BlessedReplicaVersions::decode(bytes) {
-            return normalize_protobuf_json(serde_json::to_value(&rec).unwrap_or(Value::Null));
+    } else if key == ic_registry_keys::make_standard_engine_replica_version_record_key().as_str() {
+        if let Ok(rec) = ic_protobuf::registry::standard_engine_replica_version::v1::StandardEngineReplicaVersionRecord::decode(bytes) {
+            // `StandardEngineReplicaVersionRecord` does not derive `Serialize`, so
+            // build the JSON object manually from its fields.
+            return serde_json::json!({
+                "new_replica_version_id": rec.new_replica_version_id,
+                "old_replica_version_id": rec.old_replica_version_id,
+                "deployment_progress": rec.deployment_progress,
+            });
         }
     }
 
@@ -786,6 +814,7 @@ struct RegistryDump {
     subnets: Vec<SubnetRecord>,
     nodes: Vec<NodeDetails>,
     unassigned_nodes_config: Option<UnassignedNodesConfigRecord>,
+    standard_engine_replica_version: Option<StandardEngineReplicaVersion>,
     dcs: Vec<DataCenterRecord>,
     node_operators: Vec<NodeOperator>,
     node_rewards_table: NodeRewardsTableFlattened,
@@ -793,6 +822,49 @@ struct RegistryDump {
     elected_guest_os_versions: Vec<ReplicaVersionRecord>,
     elected_host_os_versions: Vec<HostosVersionRecord>,
     node_providers: Vec<NodeProvider>,
+}
+
+/// User-friendly, serializable representation of a
+/// `StandardEngineReplicaVersionRecord` (which does not derive `Serialize`).
+#[derive(Clone, Debug, Serialize)]
+struct StandardEngineReplicaVersion {
+    new_replica_version_id: String,
+    old_replica_version_id: String,
+    deployment_progress: f64,
+    /// The list of engine subnets (CloudEngine subnets that follow the standard
+    /// upgrade train, i.e. have a blank `replica_version_id`) that should run
+    /// `new_replica_version_id` given the deployment progress. An engine runs
+    /// the new version iff its upgrade priority is `<= deployment_progress`.
+    engines_on_new_version: Vec<PrincipalId>,
+}
+
+/// Computes an engine's upgrade priority: a deterministic, pseudo-random value
+/// in the closed interval `[0.0, 1.0]`. When this value is
+/// `<= deployment_progress`, the engine should run the new standard replica
+/// version (otherwise the old one).
+///
+/// This is a faithful port of `engine_upgrade_priority` in the ic repo
+/// (`rs/registry/helpers/src/subnet.rs`). The hash input is the domain
+/// separation context `"upgrade priority"` (length-prefixed with a single byte),
+/// followed by the new replica version id and the engine's subnet id (its
+/// textual/principal representation).
+pub(crate) fn engine_upgrade_priority(subnet_id: &PrincipalId, new_replica_version_id: &str) -> f64 {
+    use sha2::{Digest, Sha256};
+
+    const DOMAIN: &str = "upgrade priority";
+
+    let mut hasher = Sha256::new();
+    // DomainSeparationContext: one length byte followed by the domain bytes.
+    hasher.update([DOMAIN.len() as u8]);
+    hasher.update(DOMAIN.as_bytes());
+    hasher.update(new_replica_version_id.as_bytes());
+    hasher.update(subnet_id.to_string().as_bytes());
+    let digest = hasher.finalize();
+
+    let first_8_bytes = <[u8; 8]>::try_from(&digest[0..8]).expect("SHA-256 digest is 32 bytes");
+    let priority_int = u64::from_le_bytes(first_8_bytes);
+
+    priority_int as f64 / u64::MAX as f64
 }
 
 #[derive(Clone, Debug, Serialize)]
@@ -1025,5 +1097,29 @@ fn filter_json_value(current: &mut Value, key: &str, value: &Value, comparison: 
             !arr.is_empty()
         }
         _ => false, // Since this is a string comparison, non-object and non-array values don't match
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::str::FromStr;
+
+    #[test]
+    fn engine_priority_matches_ic_reference_value() {
+        // Test vector taken verbatim from the ic repo
+        // (`rs/registry/helpers/src/subnet.rs::engine_priority_matches_hand_computed_value`).
+        // The expected value was independently computed via Python's hashlib.sha256
+        // over len(domain) || domain || new_version_id || subnet_id.to_string().
+        let subnet_id = PrincipalId::from_str("y6zu2-uqdaa-aaaaa-aaaap-yai").unwrap();
+        let priority = engine_upgrade_priority(&subnet_id, "eb3ab997954f2a91db8a42f84132cf37078d481c");
+        assert!((priority - 0.211_377).abs() < 1e-6, "got {priority}");
+    }
+
+    #[test]
+    fn engine_priority_is_in_unit_interval() {
+        let subnet_id = PrincipalId::from_str("y6zu2-uqdaa-aaaaa-aaaap-yai").unwrap();
+        let priority = engine_upgrade_priority(&subnet_id, "some-version");
+        assert!((0.0..=1.0).contains(&priority), "priority {priority} out of range");
     }
 }

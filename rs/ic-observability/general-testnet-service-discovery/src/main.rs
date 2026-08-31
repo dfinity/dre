@@ -15,6 +15,10 @@ mod storage;
 mod supervisor;
 
 fn main() {
+    // Standardize the process-level rustls CryptoProvider on aws-lc-rs (matching
+    // the ic repo). Without this, rustls panics when multiple providers are enabled.
+    let _ = rustls::crypto::aws_lc_rs::default_provider().install_default();
+
     let logger = make_logger();
     let args = CliArgs::parse();
     info!(logger, "Starting discovery with parameters: {:?}", args);

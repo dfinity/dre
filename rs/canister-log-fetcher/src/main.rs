@@ -18,6 +18,10 @@ mod entry;
 #[allow(clippy::iter_skip_zero)]
 #[tokio::main]
 async fn main() -> Result<(), anyhow::Error> {
+    // Standardize the process-level rustls CryptoProvider on aws-lc-rs (matching
+    // the ic repo). Without this, rustls panics when multiple providers are enabled.
+    let _ = rustls::crypto::aws_lc_rs::default_provider().install_default();
+
     let args = Cli::parse();
     init_logger(args.name.clone());
 

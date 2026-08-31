@@ -1,5 +1,6 @@
 use super::api_boundary_nodes::ApiBoundaryNodes;
 use super::der_to_principal::DerToPrincipal;
+use super::engine_versions::EngineVersions;
 use super::firewall::Firewall;
 use super::get::Get;
 use super::governance::Governance;
@@ -34,7 +35,7 @@ pub struct MainCommand {
     pub subcommands: Subcommands,
 }
 
-impl_executable_command_for_enums! { MainCommand, DerToPrincipal, Network, Subnet, Get, Propose, UpdateUnassignedNodes, Version, NodeMetrics, NodeRewards, HostOs, Nodes, ApiBoundaryNodes, Vote, Registry, Firewall, Upgrade, Proposals, Completions, Qualify, UpdateDefaultSubnets, Neuron, Governance }
+impl_executable_command_for_enums! { MainCommand, DerToPrincipal, Network, Subnet, Get, Propose, UpdateUnassignedNodes, Version, NodeMetrics, NodeRewards, HostOs, Nodes, ApiBoundaryNodes, Vote, Registry, Firewall, Upgrade, Proposals, Completions, Qualify, UpdateDefaultSubnets, Neuron, Governance, EngineVersions }
 
 #[derive(Args, Debug)]
 pub struct Completions {

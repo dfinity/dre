@@ -39,6 +39,7 @@ fn mock_confirmation_mode() -> ConfirmationModeOptions {
 
 #[tokio::test]
 async fn should_skip_update_same_version_nns_not_provided() {
+    super::install_default_crypto_provider();
     let mut ic_admin = MockIcAdmin::new();
     // In this test this function shouldn't be called
     ic_admin.expect_submit_proposal().never();
