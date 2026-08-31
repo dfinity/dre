@@ -3279,7 +3279,7 @@ dependencies = [
  "http-body",
  "http-body-util",
  "ic-certification 3.1.0",
- "ic-ed25519 0.6.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "ic-ed25519 0.6.0",
  "ic-transport-types",
  "ic-verify-bls-signature",
  "ic_principal",
@@ -3384,7 +3384,7 @@ version = "0.9.0"
 source = "git+https://github.com/dfinity/ic.git?rev=98ed17c502df46abd46d2dabe1f4332232855901#98ed17c502df46abd46d2dabe1f4332232855901"
 dependencies = [
  "ic-base-types",
- "ic-ed25519 0.6.0 (git+https://github.com/dfinity/ic.git?rev=98ed17c502df46abd46d2dabe1f4332232855901)",
+ "ic-ed25519 0.6.0",
  "ic-secp256k1",
  "ic-types",
  "rand 0.8.8",
@@ -3752,7 +3752,7 @@ dependencies = [
  "ic-crypto-internal-threshold-sig-canister-threshold-sig",
  "ic-crypto-internal-types",
  "ic-crypto-tls-cert-validation",
- "ic-ed25519 0.6.0 (git+https://github.com/dfinity/ic.git?rev=98ed17c502df46abd46d2dabe1f4332232855901)",
+ "ic-ed25519 0.6.0",
  "ic-protobuf",
  "ic-types",
  "serde",
@@ -3790,7 +3790,7 @@ version = "0.9.0"
 source = "git+https://github.com/dfinity/ic.git?rev=98ed17c502df46abd46d2dabe1f4332232855901#98ed17c502df46abd46d2dabe1f4332232855901"
 dependencies = [
  "hex",
- "ic-ed25519 0.6.0 (git+https://github.com/dfinity/ic.git?rev=98ed17c502df46abd46d2dabe1f4332232855901)",
+ "ic-ed25519 0.6.0",
  "ic-protobuf",
  "ic-types",
  "serde",
@@ -3816,7 +3816,7 @@ version = "0.9.0"
 source = "git+https://github.com/dfinity/ic.git?rev=98ed17c502df46abd46d2dabe1f4332232855901#98ed17c502df46abd46d2dabe1f4332232855901"
 dependencies = [
  "ic-base-types",
- "ic-ed25519 0.6.0 (git+https://github.com/dfinity/ic.git?rev=98ed17c502df46abd46d2dabe1f4332232855901)",
+ "ic-ed25519 0.6.0",
  "ic-protobuf",
 ]
 
@@ -4057,7 +4057,7 @@ dependencies = [
  "candid",
  "ic-agent",
  "ic-crypto-test-utils-reproducible-rng",
- "ic-ed25519 0.6.0 (git+https://github.com/dfinity/ic.git?rev=98ed17c502df46abd46d2dabe1f4332232855901)",
+ "ic-ed25519 0.6.0",
  "ic-icrc1",
  "ic-ledger-core",
  "ic-ledger-hash-of",
@@ -8290,7 +8290,7 @@ dependencies = [
  "candid",
  "hex",
  "ic-agent",
- "ic-ed25519 0.6.0 (git+https://github.com/dfinity/ic.git?rev=98ed17c502df46abd46d2dabe1f4332232855901)",
+ "ic-ed25519 0.6.0",
  "ic-secp256k1",
  "ic-types",
  "icp-ledger",
