@@ -23,6 +23,8 @@ releases:
     versions:
       - name: base
         version: 2c2c7c99bd526d8c3da51df32aeeb977e852292d
+      - name: -all-in-one-node
+        version: e590083e19085f4853bcd1256113f742c03cb8f1
   - rc_name: rc--2026-09-10_03-28
     versions:
       - name: base
