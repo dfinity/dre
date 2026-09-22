@@ -105,6 +105,15 @@ class StubDRECli(dryrun.DRECli):
             for version, proposal_id in _FIXTURE_GUESTOS_ELECTION_PROPOSALS.items()
         ]
 
+    def get_active_guestos_versions(self) -> set[str]:
+        # Same reasoning as the pinned election proposals above: the real
+        # implementation shells out to `dre registry` and would make these
+        # tests assert against whatever mainnet holds that minute.  The
+        # registry-derived contribution is covered by the unit tests in
+        # tests/test_dre_cli.py; here the active set stays whatever
+        # MockActiveVersionProvider supplies.
+        return set()
+
 
 class MockActiveVersionProvider(object):
     def __init__(self, active_versions: list[str] | None = None):

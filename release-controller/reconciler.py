@@ -833,7 +833,41 @@ class Reconciler:
                         #
                         # That is why this chunk of code is here.
                         if v.os_kind == GUESTOS:
-                            active = self.ic_prometheus.active_guestos_versions()
+                            # The registry is authoritative here.  If the
+                            # retire list touches a version the registry still
+                            # references, the governance canister adopts the
+                            # proposal and then traps at execution, which fails
+                            # the proposal as a whole -- so the version it was
+                            # meant to elect is not elected either.  Node
+                            # telemetry cannot see those references: the
+                            # standard engine's old version id, for one, pins a
+                            # version that runs nowhere.  Prometheus is kept
+                            # only as a supplementary signal, and a union means
+                            # a blind spot in either source can only make the
+                            # retire list shorter, never wrong.
+                            registry_active = self.dre.get_active_guestos_versions()
+                            revlogger.info(
+                                "GuestOS versions referenced by the registry: %s",
+                                sorted(registry_active),
+                            )
+                            try:
+                                running_active = set(
+                                    self.ic_prometheus.active_guestos_versions()
+                                )
+                                revlogger.info(
+                                    "GuestOS versions reported as running: %s",
+                                    sorted(running_active),
+                                )
+                            except Exception:
+                                revlogger.warning(
+                                    "Could not query the running GuestOS versions;"
+                                    " continuing with the registry-derived set"
+                                    " alone, which is what the registry"
+                                    " invariant checks against anyway.",
+                                    exc_info=True,
+                                )
+                                running_active = set()
+                            active = sorted(registry_active | running_active)
                             revlogger.info("Active GuestOS versions: %s", active)
                             try:
                                 oldest_rc = oldest_active_release(index, active)

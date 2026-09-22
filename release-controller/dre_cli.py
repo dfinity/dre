@@ -184,6 +184,13 @@ class DRECli:
                     versions.add(token)
             return versions
 
+    def _registry_dump(self) -> dict[str, typing.Any]:
+        """Return the registry dump produced by `dre registry`."""
+        return typing.cast(
+            dict[str, typing.Any],
+            json.loads(subprocess.check_output([self.cli, "registry"], env=self.env)),
+        )
+
     def get_elected_hostos_versions(self) -> set[str]:
         """Query the elected HostOS versions."""
         return set(
@@ -191,9 +198,7 @@ class DRECli:
                 list[str],
                 [
                     n["hostos_version_id"]
-                    for n in json.loads(
-                        subprocess.check_output([self.cli, "registry"], env=self.env)
-                    )["elected_host_os_versions"]
+                    for n in self._registry_dump()["elected_host_os_versions"]
                     if "hostos_version_id" in n and n["hostos_version_id"].strip()
                 ],
             )
@@ -206,13 +211,59 @@ class DRECli:
                 list[str],
                 [
                     n["hostos_version_id"]
-                    for n in json.loads(
-                        subprocess.check_output([self.cli, "registry"], env=self.env)
-                    )["nodes"]
+                    for n in self._registry_dump()["nodes"]
                     if "hostos_version_id" in n and n["hostos_version_id"].strip()
                 ],
             )
         )
+
+    def get_active_guestos_versions(self) -> set[str]:
+        """Query the GuestOS versions the registry still considers in use.
+
+        This mirrors ``check_replica_version_invariants`` in the registry
+        canister (``rs/registry/canister/src/invariants/replica_version.rs``),
+        which refuses to unelect any version referenced by:
+
+        * a subnet record,
+        * the unassigned nodes config,
+        * the standard engine record -- both the new *and* the old version id,
+        * an API boundary node record.
+
+        Deriving the set from the registry, rather than from node telemetry,
+        is what keeps the retire list built by
+        ``reconciler.versions_to_unelect`` in step with what the registry will
+        actually accept.  A version can be referenced by a record while
+        running nowhere at all: the standard engine's
+        ``old_replica_version_id`` keeps pinning a version after every engine
+        has already moved onto the new one, and it is only rewritten when the
+        next engine rollout starts.  Retiring such a version makes the
+        governance canister adopt the election proposal and then trap on
+        execution, which takes the whole proposal down -- the version the
+        proposal was meant to elect does not get elected either.
+        """
+        registry = self._registry_dump()
+        versions: set[str] = set()
+
+        def add(version: typing.Any) -> None:
+            if isinstance(version, str) and version.strip():
+                versions.add(version.strip())
+
+        for subnet in registry.get("subnets") or []:
+            # CloudEngine subnets that follow the standard upgrade train carry
+            # a blank replica_version_id; the standard engine record below is
+            # what pins the version they run.
+            add(subnet.get("replica_version_id"))
+
+        add((registry.get("unassigned_nodes_config") or {}).get("replica_version"))
+
+        standard_engine = registry.get("standard_engine_replica_version") or {}
+        add(standard_engine.get("new_replica_version_id"))
+        add(standard_engine.get("old_replica_version_id"))
+
+        for api_boundary_node in registry.get("api_bns") or []:
+            add(api_boundary_node.get("version"))
+
+        return versions
 
     def get_past_election_proposals(self) -> list[ElectionProposal]:
         """Get all known GuestOS / HostOS election proposals."""
