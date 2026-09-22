@@ -237,6 +237,18 @@ Caveats:
   that is already elected.  This lever only helps when the prior
   proposal did **not** result in an electing (typically REJECTED or
   FAILED).
+- Ignoring a proposal that FAILED on the registry invariant
+  (`Using a version that isn't elected ... in use: {...}`) is not enough on
+  its own.  That trap means the retire list named a version the registry
+  still references, and the resubmission recomputes the same list.  The
+  reconciler derives the list from the registry records the invariant itself
+  checks -- subnet records, the unassigned nodes config, the standard engine
+  record (both its new *and* old version id) and API boundary nodes -- so
+  whatever holds the version has to let go of it first.  The standard
+  engine's `old_replica_version_id` is the awkward one: it keeps pinning a
+  version after every engine has moved off it, and only the next engine
+  rollout rewrites it.  Electing without any retire list is always safe and
+  breaks the deadlock; the retirements then happen on a later cycle.
 - **Remove the entry from `release-index.yaml` once the replacement
   proposal has been submitted.**  Leaving a stale entry around is
   harmless for the version it was added for -- the proposal-by-version
