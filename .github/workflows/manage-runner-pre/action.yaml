@@ -54,7 +54,7 @@ runs:
         # Configure cache updates
         # https://github.com/actions/cache/blob/main/tips-and-workarounds.md#update-a-cache
         # https://github.com/actions/cache/blob/main/examples.md#---bazel
-        key: ${{ runner.os }}-bazel-${{ hashFiles('.bazelversion', '.bazelrc', 'WORKSPACE.bazel', 'Cargo.Bazel.lock', 'requirements.lock') }}
+        key: ${{ runner.os }}-bazel-${{ hashFiles('.bazelversion', '.bazelrc', 'WORKSPACE.bazel', 'Cargo.Bazel.lock', 'uv.lock') }}
         restore-keys: |
           ${{ runner.os }}-bazel-
 

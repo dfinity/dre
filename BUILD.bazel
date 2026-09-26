@@ -9,7 +9,10 @@ exports_files([
     "WORKSPACE.bazel",
     "mypy.ini",
     "pyproject.toml",
+    "uv.lock",
 ])
+
+# requirements.lock is generated from uv.lock using: uv export --format requirements-txt --output-file requirements.lock
 
 alias(
     name = "rustfmt",
