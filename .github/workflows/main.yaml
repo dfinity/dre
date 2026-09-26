@@ -119,7 +119,7 @@ jobs:
         if: ${{ github.ref == 'refs/heads/main' }}
         uses: ./.github/workflows/update-k8s-deployments
         with:
-          files-to-update: bases/apps/mainnet-dashboard/backend/base/deployment.yaml bases/apps/mainnet-dashboard/statefulset-slack.yaml bases/apps/service-discovery/service-discovery.yaml .github/workflows/dre-vector-configs.yaml
+          files-to-update: bases/apps/mainnet-dashboard/backend/base/deployment.yaml bases/apps/mainnet-dashboard/statefulset-slack.yaml bases/apps/service-discovery/service-discovery.yaml .github/workflows/dre-vector-configs.yaml bases/apps/vector/vector.yaml
           push-token: ${{ secrets.K8S_API_TOKEN }}
           component: containers
 
