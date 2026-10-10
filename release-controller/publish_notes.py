@@ -6,6 +6,8 @@ import typing
 from dotenv import load_dotenv
 from github import Auth
 from github import Github
+from github import UnknownObjectException
+from github.ContentFile import ContentFile
 from github.Repository import Repository
 from itertools import groupby
 from google_docs import ReleaseNotesClient
@@ -99,6 +101,71 @@ class PublishNotesClient:
         """Initialize the client with the given repository."""
         self.repo = repo
 
+    def _write_changelog(
+        self, version_path: str, changelog: str, branch_name: str, msg: str
+    ) -> None:
+        """
+        Create the changelog on the release notes branch, or update it in place
+        if it is already there but stale.
+
+        ``Repository.create_file`` is the GitHub *create* endpoint and fails with
+        422 when the path already exists, so a branch left over from an earlier
+        reconciler pass keeps its original changelog forever.  That is not
+        hypothetical: notes generated before a ``changelog_base`` override landed
+        in ``release-index.yaml`` stayed on the branch while the Google Doc was
+        regenerated against the new base, so the resulting pull request and the
+        doc disagreed about which commits the release contained.
+
+        Writing is skipped entirely when the committed content already matches,
+        so a reconciler that runs every 30 seconds does not push an identical
+        commit on every pass.
+        """
+        logger = LOGGER.getChild(branch_name)
+        try:
+            existing: ContentFile | list[ContentFile] | None = self.repo.get_contents(
+                version_path, ref=branch_name
+            )
+        except UnknownObjectException:
+            existing = None
+
+        if existing is None:
+            logger.info("Creating %s on branch %s", version_path, branch_name)
+            self.repo.create_file(
+                path=version_path,
+                message=msg,
+                content=changelog,
+                branch=branch_name,
+            )
+            return
+
+        if isinstance(existing, list):
+            raise RuntimeError(
+                f"Expected {version_path} on branch {branch_name} to be a file,"
+                " but the GitHub API returned a directory listing."
+            )
+
+        if existing.decoded_content.decode("utf-8") == changelog:
+            logger.debug(
+                "%s on branch %s already matches the changelog; nothing to commit.",
+                version_path,
+                branch_name,
+            )
+            return
+
+        logger.info(
+            "Updating stale %s on branch %s (the committed changelog differs from"
+            " the one just prepared).",
+            version_path,
+            branch_name,
+        )
+        self.repo.update_file(
+            path=version_path,
+            message=msg,
+            content=changelog,
+            sha=existing.sha,
+            branch=branch_name,
+        )
+
     def ensure_published(self, version: str, changelog: str, os_kind: OsKind) -> None:
         """Publish the release notes for the given version."""
         logger = LOGGER.getChild(version)
@@ -129,15 +196,25 @@ class PublishNotesClient:
 
         msg = f"chore(release): Elect version {version} as {os_kind} candidate for rollout"
         try:
-            logger.info("Creating file on branch %s", branch_name)
-            self.repo.create_file(
-                path=version_path,
-                message=msg,
-                content=changelog,
-                branch=branch_name,
+            self._write_changelog(
+                version_path=version_path,
+                changelog=changelog,
+                branch_name=branch_name,
+                msg=msg,
             )
-        except:  # pylint: disable=bare-except  # noqa: E722
-            logger.warning("Failed to create file on branch %s", branch_name)
+        except Exception:
+            # Deliberately do NOT fall through to create_pull() here.  A pull
+            # request opened on top of a failed write advertises a changelog that
+            # was never committed -- which is exactly how a branch carrying
+            # pre-changelog_base notes ended up in a PR that disagreed with its
+            # Google Doc.  Bail out and let the next reconciler pass retry.
+            logger.exception(
+                "Failed to write %s on branch %s; not opening a pull request"
+                " because it would advertise content that was never committed.",
+                version_path,
+                branch_name,
+            )
+            return
 
         logger.info(
             "Creating pull request for branch %s — please approve the PR at your leisure",
