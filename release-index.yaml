@@ -22,6 +22,10 @@ ignored_proposals:
   - 144042 # GuestOS base 2c2c7c99bd526d8c3da51df32aeeb977e852292d election FAILED: its auto-computed retire list included 7360f8f35bda2e4754bb7f2258d6852feec268e8, which was still in use at execution time (it was not deployed to any subnet, so the Prometheus-based active-version query did not see it), so the registry invariant rejected unelecting it. 
   - 144043 # GuestOS base 2c2c7c99bd526d8c3da51df32aeeb977e852292d election FAILED: its auto-computed retire list included 7360f8f35bda2e4754bb7f2258d6852feec268e8, which was still in use at execution time (it was not deployed to any subnet, so the Prometheus-based active-version query did not see it), so the registry invariant rejected unelecting it. 
 releases:
+  - rc_name: rc--2026-10-22_03-29
+    versions:
+      - name: base
+        version: 5e8370e0a84ffb783d6a9d77e0d3e90fa3914cfe
   - rc_name: rc--2026-10-16_03-29
     versions:
       - name: base
