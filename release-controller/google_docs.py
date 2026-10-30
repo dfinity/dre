@@ -47,7 +47,7 @@ class ReleaseNotesClient:
     def __init__(
         self,
         credentials_file: pathlib.Path,
-        release_notes_folder: str = "1y-nuH29Gd5Err3pazYH6-LzcDShcOIFf",
+        release_notes_folder: str = "1NvA2jwmmT_xPaRZXicygdCaBjspYwH8o",
     ) -> None:
         """Create a new ReleaseNotesClient."""
         settings = {

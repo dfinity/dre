@@ -74,7 +74,7 @@ Sometimes you'd want to recreate notes, either because a bug occured on the firs
 
 ### Recreate Google Doc
 
-To recreate Google Doc, remove the document from [Google Drive directory](https://drive.google.com/drive/folders/1y-nuH29Gd5Err3pazYH6-LzcDShcOIFf) or rename it such that it doesn't include any release details.
+To recreate Google Doc, remove the document from [Google Drive directory](https://drive.google.com/drive/folders/1NvA2jwmmT_xPaRZXicygdCaBjspYwH8o) or rename it such that it doesn't include any release details.
 
 ### Recreate GitHub PR with release notes
 
