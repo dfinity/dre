@@ -28,6 +28,10 @@ releases:
         version: 620b81c4bf6c59aa1065fe7412afcaf49e51503e
       - name: enable-heap-limits
         version: daeac6ee3d92e538d7871297f112396aeda3138a
+        changelog_base:
+          GuestOS:
+            rc_name: rc--2026-11-06_03-19
+            name: base
       - name: raised-heap-limits
         version: 8d892f1e75ca908f0ec2c555239e2402da3c78aa
   - rc_name: rc--2026-10-30_12-16
