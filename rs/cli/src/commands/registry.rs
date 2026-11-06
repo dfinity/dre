@@ -11,6 +11,7 @@ use ic_protobuf::registry::{
     hostos_version::v1::HostosVersionRecord,
     node::v1::{ConnectionEndpoint, IPv4InterfaceConfig, NodeRewardType},
     replica_version::v1::ReplicaVersionRecord,
+    standard_engine_replica_version::v1::StandardEngineReplicaVersionRecord,
     subnet::v1::{ChainKeyConfig, SubnetFeatures},
     unassigned_nodes_config::v1::UnassignedNodesConfigRecord,
 };
@@ -303,11 +304,19 @@ impl Registry {
 
         let dcs = local_registry.get_datacenters()?;
 
-        let (subnets, nodes) = get_subnets_and_nodes(&local_registry, &node_operators, ctx.health_client()).await?;
+        let standard_engine_replica_version_record = local_registry.get_standard_engine_replica_version()?;
+
+        let (subnets, nodes) = get_subnets_and_nodes(
+            &local_registry,
+            &node_operators,
+            standard_engine_replica_version_record.as_ref(),
+            ctx.health_client(),
+        )
+        .await?;
 
         let unassigned_nodes_config = local_registry.get_unassigned_nodes()?;
 
-        let standard_engine_replica_version = local_registry.get_standard_engine_replica_version()?.map(|rec| {
+        let standard_engine_replica_version = standard_engine_replica_version_record.map(|rec| {
             // Determine which engines should run the new version. Only CloudEngine
             // subnets that follow the standard train (blank `replica_version_id`)
             // participate; an engine runs the new version iff its upgrade priority
@@ -565,6 +574,7 @@ async fn get_node_operators(local_registry: &Arc<dyn LazyRegistry>, network: &Ne
 async fn get_subnets_and_nodes(
     local_registry: &Arc<dyn LazyRegistry>,
     node_operators: &IndexMap<PrincipalId, NodeOperator>,
+    standard_engine_replica_version: Option<&StandardEngineReplicaVersionRecord>,
     health_client: Arc<dyn HealthStatusQuerier>,
 ) -> anyhow::Result<(Vec<SubnetRecord>, Vec<NodeDetails>)> {
     let subnets = local_registry.subnets().await?;
@@ -580,6 +590,12 @@ async fn get_subnets_and_nodes(
             unit_delay_millis: record.unit_delay_millis,
             initial_notary_delay_millis: record.initial_notary_delay_millis,
             replica_version_id: record.replica_version.clone(),
+            resolved_replica_version_id: resolve_replica_version_id(
+                subnet_id,
+                record.subnet_type,
+                &record.replica_version,
+                standard_engine_replica_version,
+            ),
             dkg_interval_length: record.dkg_interval_length,
             start_as_nns: record.start_as_nns,
             subnet_type: record.subnet_type,
@@ -653,7 +669,7 @@ async fn _get_nodes(
                     Some(t) => t.to_string(),
                 },
                 dc_owner: record.operator.datacenter.clone().map(|dc| dc.owner.name).unwrap_or_default(),
-                guestos_version_id: subnet.map(|sr| sr.replica_version_id.to_string()),
+                guestos_version_id: subnet.and_then(|sr| sr.resolved_replica_version_id.clone()),
                 country: record.operator.datacenter.clone().map(|dc| dc.country).unwrap_or_default(),
             }
         })
@@ -867,6 +883,45 @@ pub(crate) fn engine_upgrade_priority(subnet_id: &PrincipalId, new_replica_versi
     priority_int as f64 / u64::MAX as f64
 }
 
+/// Returns the replica version that a subnet runs, according to the registry.
+///
+/// This is the subnet's `replica_version_id`, unless that is blank. Only a
+/// CloudEngine subnet may leave it blank, meaning the engine follows the
+/// standard engine replica version: it runs `new_replica_version_id` once its
+/// upgrade priority is `<= deployment_progress`, and `old_replica_version_id`
+/// until then. Mirrors `get_replica_version` in the ic repo
+/// (`rs/registry/helpers/src/subnet.rs`), which is what nodes use to pick the
+/// version to run.
+///
+/// Returns `None` when a blank `replica_version_id` cannot be resolved: the
+/// subnet is not a CloudEngine, or the registry has no standard engine replica
+/// version. The registry's invariants checks rule out both.
+fn resolve_replica_version_id(
+    subnet_id: &PrincipalId,
+    subnet_type: SubnetType,
+    replica_version_id: &str,
+    standard_engine_replica_version: Option<&StandardEngineReplicaVersionRecord>,
+) -> Option<String> {
+    if !replica_version_id.is_empty() {
+        return Some(replica_version_id.to_string());
+    }
+    if subnet_type != SubnetType::CloudEngine {
+        warn!("Subnet {subnet_id} has a blank replica_version_id, but its subnet_type is {subnet_type:?}, not CloudEngine");
+        return None;
+    }
+    let Some(standard_engine_replica_version) = standard_engine_replica_version else {
+        warn!("Engine {subnet_id} has a blank replica_version_id, but the registry has no standard engine replica version to resolve it");
+        return None;
+    };
+
+    let priority = engine_upgrade_priority(subnet_id, &standard_engine_replica_version.new_replica_version_id);
+    if priority <= standard_engine_replica_version.deployment_progress {
+        Some(standard_engine_replica_version.new_replica_version_id.clone())
+    } else {
+        Some(standard_engine_replica_version.old_replica_version_id.clone())
+    }
+}
+
 #[derive(Clone, Debug, Serialize)]
 struct ApiBoundaryNodeDetails {
     principal: PrincipalId,
@@ -905,6 +960,12 @@ struct SubnetRecord {
     unit_delay_millis: u64,
     initial_notary_delay_millis: u64,
     replica_version_id: String,
+    /// The replica version this subnet runs, according to the registry. It
+    /// equals `replica_version_id`, except on a CloudEngine whose
+    /// `replica_version_id` is blank: such an engine follows the standard engine
+    /// replica version, and this is the new or old version it is on. See
+    /// `resolve_replica_version_id`.
+    resolved_replica_version_id: Option<String>,
     dkg_interval_length: u64,
     dkg_dealings_per_block: u64,
     start_as_nns: bool,
@@ -1121,5 +1182,70 @@ mod tests {
         let subnet_id = PrincipalId::from_str("y6zu2-uqdaa-aaaaa-aaaap-yai").unwrap();
         let priority = engine_upgrade_priority(&subnet_id, "some-version");
         assert!((0.0..=1.0).contains(&priority), "priority {priority} out of range");
+    }
+
+    // The engine and new version of `engine_priority_matches_ic_reference_value`,
+    // so this engine's upgrade priority is ~0.211377.
+    const ENGINE_SUBNET_ID: &str = "y6zu2-uqdaa-aaaaa-aaaap-yai";
+    const NEW_REPLICA_VERSION_ID: &str = "eb3ab997954f2a91db8a42f84132cf37078d481c";
+    const OLD_REPLICA_VERSION_ID: &str = "79c01052b5f7f49d3cf53d04d696cb2893294cd3";
+
+    fn standard_engine_replica_version(deployment_progress: f64) -> StandardEngineReplicaVersionRecord {
+        StandardEngineReplicaVersionRecord {
+            new_replica_version_id: NEW_REPLICA_VERSION_ID.to_string(),
+            old_replica_version_id: OLD_REPLICA_VERSION_ID.to_string(),
+            deployment_progress,
+        }
+    }
+
+    #[test]
+    fn resolve_replica_version_id_returns_a_pinned_version() {
+        let subnet_id = PrincipalId::from_str(ENGINE_SUBNET_ID).unwrap();
+        let standard = standard_engine_replica_version(1.0);
+
+        // A pinned version wins, whatever the subnet type and the standard engine replica version.
+        for subnet_type in [SubnetType::Application, SubnetType::System, SubnetType::CloudEngine] {
+            assert_eq!(
+                resolve_replica_version_id(&subnet_id, subnet_type, "pinned-version", Some(&standard)),
+                Some("pinned-version".to_string()),
+                "subnet_type {subnet_type:?}"
+            );
+        }
+    }
+
+    #[test]
+    fn resolve_replica_version_id_follows_deployment_progress_for_a_blank_engine() {
+        let subnet_id = PrincipalId::from_str(ENGINE_SUBNET_ID).unwrap();
+        let priority = engine_upgrade_priority(&subnet_id, NEW_REPLICA_VERSION_ID);
+
+        for (deployment_progress, expected) in [
+            (0.0, OLD_REPLICA_VERSION_ID),
+            (priority - 0.01, OLD_REPLICA_VERSION_ID),
+            (priority, NEW_REPLICA_VERSION_ID),
+            (priority + 0.01, NEW_REPLICA_VERSION_ID),
+            (1.0, NEW_REPLICA_VERSION_ID),
+        ] {
+            let standard = standard_engine_replica_version(deployment_progress);
+            assert_eq!(
+                resolve_replica_version_id(&subnet_id, SubnetType::CloudEngine, "", Some(&standard)),
+                Some(expected.to_string()),
+                "deployment_progress {deployment_progress}, priority {priority}"
+            );
+        }
+    }
+
+    #[test]
+    fn resolve_replica_version_id_cannot_resolve_a_blank_non_engine() {
+        let subnet_id = PrincipalId::from_str(ENGINE_SUBNET_ID).unwrap();
+        let standard = standard_engine_replica_version(1.0);
+
+        assert_eq!(resolve_replica_version_id(&subnet_id, SubnetType::Application, "", Some(&standard)), None);
+    }
+
+    #[test]
+    fn resolve_replica_version_id_cannot_resolve_a_blank_engine_without_a_standard_version() {
+        let subnet_id = PrincipalId::from_str(ENGINE_SUBNET_ID).unwrap();
+
+        assert_eq!(resolve_replica_version_id(&subnet_id, SubnetType::CloudEngine, "", None), None);
     }
 }
