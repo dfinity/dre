@@ -27,7 +27,7 @@ class AlertsReceiver:
             text=Text("Vote :judge:", emoji=True),
             value=proposal_id,
             action_id="vote_blackhole",
-            url=f"https://nns.ic0.app/proposal/?u=qoctq-giaaa-aaaaa-aaaea-cai&proposal={proposal_id}"
+            url=f"https://nns.icp.net/voting/proposals/{proposal_id}"
         )
         silence_button = Button(
             text=Text("Silence :no_bell:", emoji=True),
