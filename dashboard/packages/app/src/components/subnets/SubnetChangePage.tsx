@@ -138,7 +138,7 @@ export const SubnetChangePage = ({ network }: { network: string }) => {
             <Typography variant='h3'>Subnet <span style={{ fontFamily: "Roboto Mono", background: 'rgba(0, 0, 0, 0.2)', padding: 8 }}>{change?.subnet_id}</span></Typography>
           </Grid>
           <Grid item xs={12}>
-            <Chip label="Vote on the proposal" component="a" href={`https://nns.ic0.app/proposal/?proposal=${change?.proposal_id}`} clickable target='_blank' icon={<HowToVoteIcon style={{ color: purple[500] }} />} />
+            <Chip label="Vote on the proposal" component="a" href={`https://nns.icp.net/voting/proposals/${change?.proposal_id}`} clickable target='_blank' icon={<HowToVoteIcon style={{ color: purple[500] }} />} />
           </Grid>
           <Typography variant="h5" style={{ marginLeft: 16 }}>Decentralization Nakamoto coefficients</Typography>
           <Grid item xs={12} container direction='column'>
