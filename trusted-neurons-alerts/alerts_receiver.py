@@ -1,14 +1,19 @@
+from typing import Optional
 from quart import Quart, request, jsonify
 from slack_app import SlackApp
+from open_messaging import OpenMessaging, OpenMessagingError
 from governance import GovernanceCanister
 from slackblocks import DividerBlock, SectionBlock, ActionsBlock, Button, Text, Message
 import logging
 
 class AlertsReceiver:
-    """Receives alerts from Alertmanager."""
-    
-    def __init__(self, slack_app: SlackApp):
+    """Receives alerts from Alertmanager and posts them to Slack or to Open Messaging."""
+
+    def __init__(self, slack_app: Optional[SlackApp] = None, open_messaging: Optional[OpenMessaging] = None):
+        if (slack_app is None) == (open_messaging is None):
+            raise ValueError("AlertsReceiver needs exactly one of slack_app and open_messaging")
         self.slack_app = slack_app
+        self.open_messaging = open_messaging
         self.governance_canister = GovernanceCanister()
         self.server = Quart(__name__)
         self.server.add_url_rule('/alert', 'alert', self.alert_handler, methods=['POST'])
@@ -50,11 +55,24 @@ class AlertsReceiver:
                 proposal_id = alert['labels']['proposal_id']
 
                 if not self.governance_canister.has_dfinity_voted(int(proposal_id)):
+                    alertname = alert['labels']['alertname']
+                    proposal_topic = alert['labels'].get('proposal_topic', 'Unknown')
+                    proposal_type = alert['labels'].get('proposal_type', 'Unknown')
+
+                    if self.open_messaging is not None:
+                        try:
+                            await self.open_messaging.send_alert(alertname, proposal_id, proposal_topic, proposal_type)
+                        except OpenMessagingError as e:
+                            # A non-2xx answer makes Alertmanager retry the notification.
+                            logging.error("Posting proposal %s to Open Messaging failed: %s", proposal_id, e)
+                            return jsonify({"error": "open messaging post failed"}), 502
+                        continue
+
                     text, blocks = self.format_alert(
-                        alertname=alert['labels']['alertname'],
+                        alertname=alertname,
                         proposal_id=proposal_id,
-                        proposal_topic=alert['labels'].get('proposal_topic', 'Unknown'),
-                        proposal_type=alert['labels'].get('proposal_type', 'Unknown')
+                        proposal_topic=proposal_topic,
+                        proposal_type=proposal_type
                     )
 
                     await self.slack_app.send_message(text, blocks)
