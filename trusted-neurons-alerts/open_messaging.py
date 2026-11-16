@@ -11,6 +11,7 @@ the proposal's matcher.
 
 import logging
 from urllib.parse import quote
+from urllib.parse import urlsplit
 
 import aiohttp
 
@@ -34,6 +35,20 @@ class OpenMessaging:
         self.webhook_url = webhook_url
         self.alertmanager_url = alertmanager_url.rstrip("/")
         self.timeout = aiohttp.ClientTimeout(total=timeout_seconds)
+
+    def redact(self, text: str) -> str:
+        """
+        Remove the webhook's address, path and secret from text.
+
+        A gateway or proxy may echo the request path in an error body, and
+        the path ends with the secret.
+        """
+        path = urlsplit(self.webhook_url).path.rstrip("/")
+        secret = path.rsplit("/", 1)[-1]
+        for value in (self.webhook_url, path, secret):
+            if len(value) >= 8:
+                text = text.replace(value, "<redacted>")
+        return text
 
     def silence_url(self, proposal_id: str) -> str:
         """Alertmanager's new-silence form, pre-filled for the proposal."""
@@ -74,5 +89,6 @@ class OpenMessaging:
             raise OpenMessagingError(f"could not reach the Open Messaging webhook: {type(e).__name__}") from None
 
         if status != 200 or body.strip() != "ok":
-            raise OpenMessagingError(f"Open Messaging webhook answered {status}: {body[:200]}")
+            # Redact before truncating, so a cut can't leave part of the secret.
+            raise OpenMessagingError(f"Open Messaging webhook answered {status}: {self.redact(body)[:200]}")
         logging.info("Posted proposal %s (%s) to Open Messaging", proposal_id, alertname)

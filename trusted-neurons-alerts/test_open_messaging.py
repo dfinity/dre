@@ -92,6 +92,34 @@ async def test_send_alert_rejects_anything_but_ok_without_leaking_the_address(st
 
 
 @pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "echo",
+    [
+        lambda request: f"Cannot POST {request.path}",
+        lambda request: f'{{"error": "bad hook", "url": "{request.url}"}}',
+        # The secret straddles the 200-character cut, so only redacting first keeps all of it out.
+        lambda request: "x" * 190 + request.path.rsplit("/", 1)[-1],
+    ],
+)
+async def test_send_alert_redacts_an_echoed_address(echo):
+    async def hook(request):
+        return web.Response(status=404, text=echo(request))
+
+    app = web.Application()
+    app.router.add_post(HOOK_PATH, hook)
+    async with TestServer(app) as server:
+        om = OpenMessaging(str(server.make_url(HOOK_PATH)), ALERTMANAGER_URL)
+        with pytest.raises(OpenMessagingError) as e:
+            await om.send_alert("ExpiresInLessThan2Hours", "123", "t", "t")
+
+    message = str(e.value)
+    assert "404" in message
+    assert "<redacted" in message
+    for fragment in ("not-a-real-secret", "not-a-real", "real-secret", HOOK_PATH):
+        assert fragment not in message
+
+
+@pytest.mark.asyncio
 async def test_send_alert_unreachable_does_not_leak_the_address():
     om = OpenMessaging("http://127.0.0.1:9" + HOOK_PATH, ALERTMANAGER_URL, timeout_seconds=5)
     with pytest.raises(OpenMessagingError) as e:
