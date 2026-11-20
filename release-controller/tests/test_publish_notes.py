@@ -7,6 +7,8 @@ from publish_notes import PublishNotesClient
 import pathlib
 from google_docs import google_doc_to_markdown
 from const import GUESTOS
+from github import GithubException
+from github import UnknownObjectException
 
 
 # @pytest.mark.skip(
@@ -413,3 +415,86 @@ To see a full list of commits added since last release, compare the revisions on
         )
 
     assert publish_client.ensure_published.call_count == 0  # pylint: disable=no-member
+
+
+def _repo_for_ensure_published(mocker, existing_content: str | None):
+    """
+    Minimal Repository double for ensure_published().
+
+    ``existing_content`` is the changelog already committed on the release notes
+    branch, or None when the branch does not carry the file yet.
+    """
+    repo = mocker.MagicMock()
+    # replica-releases/ on main does not yet contain this version.
+    repo.get_contents.side_effect = None
+    repo.get_pulls.return_value.totalCount = 0
+
+    listing = mocker.MagicMock()
+    listing.path = "replica-releases/some-other-version.md"
+
+    def get_contents(path, ref=None):
+        if ref is None:
+            return [listing]
+        if existing_content is None:
+            raise UnknownObjectException(404, None, None)
+        f = mocker.MagicMock()
+        f.decoded_content = existing_content.encode("utf-8")
+        f.sha = "blobsha"
+        return f
+
+    repo.get_contents.side_effect = get_contents
+    # The branch already exists whenever the file does.
+    branch = mocker.MagicMock()
+    branch.name = "replica-release-notes-" + "a" * 40
+    repo.get_branches.return_value = [branch] if existing_content is not None else []
+    return repo
+
+
+def test_ensure_published_creates_file_when_branch_is_fresh(mocker) -> None:
+    repo = _repo_for_ensure_published(mocker, existing_content=None)
+    PublishNotesClient(repo).ensure_published("a" * 40, "NEW CHANGELOG", GUESTOS)
+
+    repo.create_file.assert_called_once()
+    assert repo.create_file.call_args.kwargs["content"] == "NEW CHANGELOG"
+    repo.update_file.assert_not_called()
+    repo.create_pull.assert_called_once()
+
+
+def test_ensure_published_updates_stale_changelog_on_existing_branch(mocker) -> None:
+    """
+    Regression test: a branch left over from an earlier pass used to keep its
+    original changelog forever, because create_file() 422s on an existing path
+    and the failure was swallowed -- then a PR was opened anyway, advertising a
+    changelog that disagreed with the regenerated Google Doc.
+    """
+    repo = _repo_for_ensure_published(mocker, existing_content="STALE CHANGELOG")
+    PublishNotesClient(repo).ensure_published("a" * 40, "NEW CHANGELOG", GUESTOS)
+
+    repo.create_file.assert_not_called()
+    repo.update_file.assert_called_once()
+    assert repo.update_file.call_args.kwargs["content"] == "NEW CHANGELOG"
+    assert repo.update_file.call_args.kwargs["sha"] == "blobsha"
+    repo.create_pull.assert_called_once()
+
+
+def test_ensure_published_does_not_recommit_identical_changelog(mocker) -> None:
+    """The reconciler runs every 30s; identical content must not be recommitted."""
+    repo = _repo_for_ensure_published(mocker, existing_content="SAME CHANGELOG")
+    PublishNotesClient(repo).ensure_published("a" * 40, "SAME CHANGELOG", GUESTOS)
+
+    repo.create_file.assert_not_called()
+    repo.update_file.assert_not_called()
+    repo.create_pull.assert_called_once()
+
+
+def test_ensure_published_opens_no_pull_request_when_the_write_fails(mocker) -> None:
+    """
+    A PR opened on top of a failed write advertises content that was never
+    committed.  Bail out instead and let the next pass retry.
+    """
+    repo = _repo_for_ensure_published(mocker, existing_content="STALE CHANGELOG")
+    repo.update_file.side_effect = GithubException(422, None, None)
+
+    PublishNotesClient(repo).ensure_published("a" * 40, "NEW CHANGELOG", GUESTOS)
+
+    repo.create_pull.assert_not_called()
