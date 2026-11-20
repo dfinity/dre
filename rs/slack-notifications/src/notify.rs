@@ -6,7 +6,7 @@
 //! but renders only an attachment's fields, so the payload is built per
 //! destination; see [`crate::open_messaging`].
 
-use anyhow::{Result, anyhow};
+use anyhow::{Result, anyhow, bail};
 use log::info;
 use serde_json::json;
 
@@ -63,6 +63,24 @@ impl Notifier {
             client: reqwest::Client::new(),
             slack_url: std::env::var(SLACK_URL_ENV).ok().filter(|url| !url.is_empty()),
         }
+    }
+
+    /// Checks that every destination in the batch can be posted to at all.
+    ///
+    /// A Slack destination with no SLACK_URL is a configuration error rather
+    /// than a failed post: the caller holds its checkpoint back, so that the
+    /// announcements wait for the configuration to be fixed instead of being
+    /// logged once and lost.
+    pub fn check_ready(&self, messages: &[SlackMessage]) -> Result<()> {
+        if self.slack_url.is_some() {
+            return Ok(());
+        }
+        for message in messages {
+            if let Destination::Slack { channel } = &message.destination {
+                bail!("{} is unset, so the Slack channel {} cannot be posted to", SLACK_URL_ENV, channel);
+            }
+        }
+        Ok(())
     }
 
     pub async fn send(&self, message: &SlackMessage) -> Result<()> {
@@ -127,5 +145,64 @@ mod tests {
     fn redact_survives_an_unparsable_address() {
         // Nothing to strip, but it must not panic or return the address.
         assert_eq!(redact("not a url", "502 Bad Gateway"), "502 Bad Gateway");
+    }
+
+    /// Built by hand rather than from the environment, which the routing
+    /// tests of `slack` share and change.
+    fn notifier(slack_url: Option<&str>) -> Notifier {
+        // main() installs this for the binary; the tests do not run main().
+        let _ = rustls::crypto::aws_lc_rs::default_provider().install_default();
+        Notifier {
+            client: reqwest::Client::new(),
+            slack_url: slack_url.map(str::to_string),
+        }
+    }
+
+    fn message(destination: Destination) -> SlackMessage {
+        SlackMessage {
+            destination,
+            alert_mention: String::new(),
+            proposer_mention: String::new(),
+            proposer_neuron_id: 0,
+            motivation: String::new(),
+            proposals: vec![],
+        }
+    }
+
+    fn slack() -> SlackMessage {
+        message(Destination::Slack {
+            channel: "#nns-proposals".to_string(),
+        })
+    }
+
+    fn open_messaging() -> SlackMessage {
+        message(Destination::OpenMessaging {
+            webhook_url: WEBHOOK.to_string(),
+        })
+    }
+
+    #[test]
+    fn a_slack_destination_without_slack_url_is_not_ready() {
+        // The caller holds its checkpoint back on this, so that the
+        // announcements are not logged once and lost.
+        assert!(notifier(None).check_ready(&[slack()]).is_err());
+        assert!(notifier(None).check_ready(&[open_messaging(), slack()]).is_err());
+    }
+
+    #[test]
+    fn open_messaging_alone_needs_no_slack_url() {
+        assert!(notifier(None).check_ready(&[open_messaging()]).is_ok());
+    }
+
+    #[test]
+    fn a_slack_destination_with_slack_url_is_ready() {
+        assert!(notifier(Some("http://localhost")).check_ready(&[slack()]).is_ok());
+    }
+
+    #[test]
+    fn the_error_names_the_channel_but_holds_no_secret() {
+        let err = notifier(None).check_ready(&[slack()]).unwrap_err().to_string();
+        assert!(err.contains("#nns-proposals"), "{}", err);
+        assert!(err.contains(SLACK_URL_ENV), "{}", err);
     }
 }

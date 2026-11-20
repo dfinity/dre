@@ -32,6 +32,7 @@ registry-canister = { workspace = true }
 # resolves reqwest with it, which is why the Bazel build never needed this.
 reqwest = { workspace = true, features = ["json"] }
 retry = { workspace = true }
+rustls = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
 serde_yaml = { workspace = true }

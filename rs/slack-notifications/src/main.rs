@@ -26,6 +26,10 @@ const COOLING_PERIOD_SECS: u64 = 60;
 
 #[tokio::main]
 async fn main() {
+    // Standardize the process-level rustls CryptoProvider on aws-lc-rs (matching
+    // the ic repo). Without this, rustls panics when multiple providers are enabled.
+    let _ = rustls::crypto::aws_lc_rs::default_provider().install_default();
+
     unsafe {
         // set_var is safe in single-threaded context
         std::env::set_var("RUST_LOG", "info");
@@ -205,6 +209,15 @@ async fn notify_for_new_proposals(target_network: Network) {
             if let Ok(message_groups) = slack::MessageGroups::try_from(new_proposals.clone()) {
                 let notifier = notify::Notifier::new();
 
+                // Nothing can be posted at all: hold the checkpoint where it
+                // is, so the announcements wait for the configuration to be
+                // fixed instead of being logged once and lost.
+                if let Err(e) = notifier.check_ready(&message_groups.message_groups) {
+                    warn!("not announcing {} proposal group(s): {}", message_groups.message_groups.len(), e);
+                    sleep(Duration::from_secs(20)).await;
+                    continue;
+                }
+
                 for message in message_groups.message_groups.iter() {
                     if let Err(e) = notifier.send(message).await {
                         warn!("failed to send proposal notification: {}", e);
@@ -252,6 +265,15 @@ async fn notify_for_failed_proposals(target_network: Network) {
 
             if let Ok(message_groups) = slack::MessageGroups::try_from(new_failed_proposals.clone()) {
                 let notifier = notify::Notifier::new();
+
+                // Nothing can be posted at all: hold the checkpoint where it
+                // is, so the announcements wait for the configuration to be
+                // fixed instead of being logged once and lost.
+                if let Err(e) = notifier.check_ready(&message_groups.message_groups) {
+                    warn!("not announcing {} proposal group(s): {}", message_groups.message_groups.len(), e);
+                    sleep(Duration::from_secs(20)).await;
+                    continue;
+                }
 
                 for message in message_groups.message_groups.iter() {
                     if let Err(e) = notifier.send(message).await {
