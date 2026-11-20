@@ -27,7 +27,10 @@ lazy_static = { workspace = true }
 log = { workspace = true }
 regex = { workspace = true }
 registry-canister = { workspace = true }
-reqwest = { workspace = true }
+# The crate posts JSON payloads; the workspace declaration turns default
+# features off, so "json" is asked for here. The Bazel crate index already
+# resolves reqwest with it, which is why the Bazel build never needed this.
+reqwest = { workspace = true, features = ["json"] }
 retry = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }

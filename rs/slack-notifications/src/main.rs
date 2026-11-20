@@ -10,6 +10,8 @@ use std::convert::TryFrom;
 use std::io::Write;
 use std::time::SystemTime;
 use tokio::time::{Duration, sleep};
+mod notify;
+mod open_messaging;
 mod slack;
 use clap::Parser;
 use ic_nns_governance_api::{ListProposalInfoRequest, ListProposalInfoResponse, ProposalInfo};
@@ -21,8 +23,6 @@ extern crate lazy_static;
 // Time to wait for a new proposal after the last one was created before sending
 // out the Slack notification.
 const COOLING_PERIOD_SECS: u64 = 60;
-
-const SLACK_URL_ENV: &str = "SLACK_URL";
 
 #[tokio::main]
 async fn main() {
@@ -203,23 +203,11 @@ async fn notify_for_new_proposals(target_network: Network) {
             }
 
             if let Ok(message_groups) = slack::MessageGroups::try_from(new_proposals.clone()) {
-                let slack_hook = slack::SlackHook::new(std::env::var(SLACK_URL_ENV).expect("SLACK_URL environment variable must be set"));
+                let notifier = notify::Notifier::new();
 
-                for slack_message in message_groups.message_groups.iter() {
-                    match slack_hook.send(slack_message).await {
-                        Ok(response) => {
-                            println!(
-                                "Got a response: {}",
-                                response
-                                    .text()
-                                    .await
-                                    .unwrap_or_else(|_| { "ERROR: failed to decode the response from the slack servers".to_string() })
-                            );
-                        }
-                        Err(e) => {
-                            warn!("failed to send Slack notification: {}", e);
-                            continue;
-                        }
+                for message in message_groups.message_groups.iter() {
+                    if let Err(e) = notifier.send(message).await {
+                        warn!("failed to send proposal notification: {}", e);
                     }
                 }
                 if let Err(e) = last_notified_proposal.save(ProposalCheckpoint {
@@ -263,23 +251,11 @@ async fn notify_for_failed_proposals(target_network: Network) {
             }
 
             if let Ok(message_groups) = slack::MessageGroups::try_from(new_failed_proposals.clone()) {
-                let slack_hook = slack::SlackHook::new(std::env::var(SLACK_URL_ENV).expect("SLACK_URL environment variable must be set"));
+                let notifier = notify::Notifier::new();
 
-                for slack_message in message_groups.message_groups.iter() {
-                    match slack_hook.send(slack_message).await {
-                        Ok(response) => {
-                            println!(
-                                "Got a response: {}",
-                                response
-                                    .text()
-                                    .await
-                                    .unwrap_or_else(|_| { "ERROR: failed to decode the response from the slack servers".to_string() })
-                            );
-                        }
-                        Err(e) => {
-                            warn!("failed to send Slack notification: {}", e);
-                            continue;
-                        }
+                for message in message_groups.message_groups.iter() {
+                    if let Err(e) = notifier.send(message).await {
+                        warn!("failed to send proposal notification: {}", e);
                     }
                 }
 
