@@ -44,6 +44,11 @@ packages:
   - "python3" # release controller and commit annotator
   - "build-essential" # commit annotator (Bazel / Bazelisk)
   - "clang-20" # partial IC build process run by target-determinator in commit annotator
+  # rules_python repacks a wheel with the `zip` CLI whenever the IC patches it
+  # through pip.override (e.g. simple-parsing on Python 3.15).  Without zip the
+  # cquery that target-determinator runs fails to analyse the HostOS/SetupOS
+  # targets, and the commit annotator stops annotating altogether.
+  - "zip" # partial IC build process run by target-determinator in commit annotator
   - "libffi-dev" # necessary to build the IC just like clang
   - "libsystemd-dev"
   - "libvirt-dev"
