@@ -1,5 +1,5 @@
 {
-  "checksum": "2bf80a31bcdc469a896014599a3c05d3d71f12ee6b436c6e01c4a89f81c42d37",
+  "checksum": "8349d84085f7efede9f9c054b27ad04dd4bd59c6f5f6e21526f7efd717b2d985",
   "crates": {
     "actix-codec 0.5.2": {
       "name": "actix-codec",
@@ -52757,6 +52757,10 @@
             {
               "id": "retry 2.2.0",
               "target": "retry"
+            },
+            {
+              "id": "rustls 0.23.37",
+              "target": "rustls"
             },
             {
               "id": "serde 1.0.228",

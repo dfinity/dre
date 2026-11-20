@@ -9049,6 +9049,7 @@ dependencies = [
  "registry-canister",
  "reqwest 0.12.28",
  "retry",
+ "rustls",
  "serde",
  "serde_json",
  "serde_yaml",
