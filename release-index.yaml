@@ -22,6 +22,18 @@ ignored_proposals:
   - 144042 # GuestOS base 2c2c7c99bd526d8c3da51df32aeeb977e852292d election FAILED: its auto-computed retire list included 7360f8f35bda2e4754bb7f2258d6852feec268e8, which was still in use at execution time (it was not deployed to any subnet, so the Prometheus-based active-version query did not see it), so the registry invariant rejected unelecting it. 
   - 144043 # GuestOS base 2c2c7c99bd526d8c3da51df32aeeb977e852292d election FAILED: its auto-computed retire list included 7360f8f35bda2e4754bb7f2258d6852feec268e8, which was still in use at execution time (it was not deployed to any subnet, so the Prometheus-based active-version query did not see it), so the registry invariant rejected unelecting it. 
 releases:
+  - rc_name: rc--2026-11-20_03-19
+    versions:
+      - name: base
+        version: da6233202a0ae1bc778c37a14dc28a2aea2c6590
+      - name: enable-heap-limits
+        version: f80a8c35b50d6b155be5ba3a8803f68162d5c52a
+        changelog_base:
+          GuestOS:
+            rc_name: rc--2026-11-20_03-19
+            name: base
+      - name: raised-heap-limits
+        version: 6c07b448ae786ff35bace3010fc4616e1f7ab095
   - rc_name: rc--2026-11-13_03-18
     versions:
       - name: base
