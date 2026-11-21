@@ -25,14 +25,14 @@ RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone &
     echo Cleaning out APT cache for smaller images as per 'http://docs.projectatomic.io/container-best-practices/#_clearing_packaging_caches_and_temporary_package_downloads' >&2 && \
     apt-get clean
 
-ENV RYE_HOME="/opt/rye"
-ENV PATH="$RYE_HOME/shims:$PATH"
+ENV UV_HOME="/opt/uv"
+ENV PATH="$UV_HOME/bin:$PATH"
 
-RUN curl -sSf https://rye.astral.sh/get | RYE_NO_AUTO_INSTALL=1 RYE_INSTALL_OPTION="--yes" bash
+RUN curl -LsSf https://astral.sh/uv/install.sh | sh
 
-COPY pyproject.toml requirements.lock requirements-dev.lock .python-version README.md ./
+COPY pyproject.toml uv.lock .python-version README.md ./
 
-RUN rye sync --no-dev --no-lock
+RUN uv sync --no-dev
 
 # Install the "mold" linker for fast linking of Rust executables
 ARG mold_version=1.11.0
