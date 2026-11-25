@@ -34,6 +34,12 @@ releases:
             name: base
       - name: raised-heap-limits
         version: 6c07b448ae786ff35bace3010fc4616e1f7ab095
+      - name: enable-heap-limits-hotfix
+        version: 8aa8519624f131c98ce87f51d04fdd4937b1d959
+        changelog_base:
+          GuestOS:
+            rc_name: rc--2026-11-20_03-19
+            name: enable-heap-limits
   - rc_name: rc--2026-11-13_03-18
     versions:
       - name: base
