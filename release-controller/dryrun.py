@@ -292,6 +292,17 @@ class MockSlackAnnouncer(object):
             "Simulating announcement of %s %s in slack", os_kind, version_name
         )
 
+    def announce_release_on_open_messaging(
+        self,
+        webhook: str,
+        version_name: str,
+        google_doc_url: str,
+        os_kind: OsKind,
+    ) -> None:
+        self._logger.warning(
+            "Simulating announcement of %s %s in Open Messaging", os_kind, version_name
+        )
+
 
 def oneoff_dre_place_proposal() -> None:
     changelog = "Fake changelog"

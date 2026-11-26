@@ -761,16 +761,20 @@ class Reconciler:
                         os_kind=v.os_kind,
                     )
 
+            slack_webhook = os.environ.get(slack_announce.SLACK_WEBHOOK_URL_ENV)
+            open_messaging_webhook = slack_announce.open_messaging_webhook_from_env()
             if (
-                "SLACK_WEBHOOK_URL" in os.environ
+                (slack_webhook is not None or open_messaging_webhook is not None)
                 and needs_announce
                 and gdoc is not None
             ):
                 with phase("release notes announcement"):
                     # This should have never been in the Google Docs code.
                     revlogger.info("Announcing release notes")
-                    self.slack_announcer.announce_release(
-                        webhook=os.environ["SLACK_WEBHOOK_URL"],
+                    slack_announce.announce_release(
+                        self.slack_announcer,
+                        slack_webhook=slack_webhook,
+                        open_messaging_webhook=open_messaging_webhook,
                         version_name=release_tag,
                         google_doc_url=gdoc["alternateLink"],
                         os_kind=v.os_kind,
