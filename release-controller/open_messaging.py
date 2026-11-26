@@ -19,6 +19,7 @@ import typing
 import urllib.parse
 
 import requests
+import urllib3.exceptions
 from dotenv import load_dotenv
 
 from const import GUESTOS, OsKind
@@ -29,7 +30,7 @@ OPEN_MESSAGING_WEBHOOK_URL_ENV = "OPEN_MESSAGING_WEBHOOK_URL"
 
 # How long one post may take.
 TIMEOUT_SECONDS = 30
-# Retries after a failure to connect.
+# Retries after a connection that could not be made.
 MAX_RETRIES = 2
 RETRY_DELAY_SECONDS = 2.0
 # How much of an error body is kept in the error that is raised.
@@ -98,8 +99,17 @@ def redact(webhook_url: str, text: str) -> str:
     A gateway or proxy may echo the request path in an error body, and
     ``requests`` puts the address in the errors it formats, so anything
     derived from a failed post is passed through here before it is logged.
+
+    It never raises: it runs while an error that holds the address is being
+    handled, and an error of its own would carry that one along with it.
     """
-    path = urllib.parse.urlsplit(webhook_url).path.rstrip("/")
+    try:
+        path = urllib.parse.urlsplit(webhook_url).path.rstrip("/")
+    except ValueError:
+        # An address too malformed to parse, such as one with an unmatched
+        # "[", cannot be told apart from the rest of the text, so none of
+        # the text is kept.
+        return "<redacted: the webhook address is malformed>"
     secret = path.rsplit("/", 1)[-1]
     for value in (webhook_url, path, secret):
         # Short values are too generic to be the secret, and replacing them
@@ -109,13 +119,34 @@ def redact(webhook_url: str, text: str) -> str:
     return text
 
 
+def never_reached_the_gateway(error: requests.RequestException) -> bool:
+    """
+    Whether a post failed before a connection to the gateway was made.
+
+    Only such a post is safe to send again.  ``requests`` raises the same
+    ``ConnectionError`` for a connection dropped, or a response body that
+    timed out, after the gateway has accepted the post; those are told
+    apart by the cause ``urllib3`` gave, which for a connection that was
+    refused, not resolved or timed out is a ``ConnectTimeoutError`` (of
+    which ``NewConnectionError`` is a kind).
+    """
+    if not isinstance(error, requests.ConnectionError) or not error.args:
+        return False
+    reason = getattr(error.args[0], "reason", None)
+    return isinstance(
+        reason,
+        (urllib3.exceptions.NewConnectionError, urllib3.exceptions.ConnectTimeoutError),
+    )
+
+
 def post(webhook_url: str, body: dict[str, typing.Any]) -> None:
     """
     Post a payload to an Open Messaging webhook.
 
     The gateway answers a good post with a plain ``ok``, so a 2xx alone is
-    not taken as success.  A failure to connect is retried; nothing else
-    is, so that a post that may have arrived is not posted twice.
+    not taken as success.  A connection that could not be made is retried;
+    nothing else is, so that a post that may have arrived is not posted
+    twice.
     """
     attempt = 0
     while True:
@@ -126,7 +157,7 @@ def post(webhook_url: str, body: dict[str, typing.Any]) -> None:
             # Formatted with the address, so redacted, and raised without
             # its cause, which would print the address with the traceback.
             message = redact(webhook_url, str(e))
-            if isinstance(e, requests.ConnectionError) and attempt < MAX_RETRIES:
+            if never_reached_the_gateway(e) and attempt < MAX_RETRIES:
                 attempt += 1
                 LOGGER.warning(
                     "Could not reach the Open Messaging webhook, retrying (%s/%s): %s",

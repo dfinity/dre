@@ -3,6 +3,7 @@ import json
 import logging
 import socket
 import threading
+import time
 import traceback
 import typing
 
@@ -94,8 +95,24 @@ class _Response:
 
 
 @pytest.fixture
-def no_sleep(mocker: pytest_mock.MockerFixture) -> typing.Any:
-    return mocker.patch("open_messaging.time.sleep")
+def no_sleep(monkeypatch: pytest.MonkeyPatch) -> None:
+    # Not by patching time.sleep, which is the one every thread shares.
+    monkeypatch.setattr(open_messaging, "RETRY_DELAY_SECONDS", 0.0)
+
+
+def _logged(caplog: pytest.LogCaptureFixture) -> str:
+    """
+    What the release controller would log.
+
+    urllib3 names the request path in its DEBUG lines, but the release
+    controller never shows those: util.conventional_logging keeps urllib3 at
+    WARNING even with --verbose.
+    """
+    return "\n".join(
+        r.getMessage()
+        for r in caplog.records
+        if not (r.name.startswith("urllib3") and r.levelno < logging.WARNING)
+    )
 
 
 def test_post_accepts_ok(mocker: pytest_mock.MockerFixture) -> None:
@@ -142,34 +159,45 @@ def test_post_cuts_a_long_error_body(mocker: pytest_mock.MockerFixture) -> None:
     assert len(str(raised.value)) < open_messaging.MAX_ERROR_BODY + 50
 
 
-def test_post_retries_a_failure_to_connect(
-    mocker: pytest_mock.MockerFixture, no_sleep: typing.Any
+def _closed_port() -> int:
+    """A port nobody listens on."""
+    with socket.socket() as s:
+        s.bind(("127.0.0.1", 0))
+        return int(s.getsockname()[1])
+
+
+def _refused() -> requests.RequestException:
+    """The error requests really raises for a connection that was refused."""
+    try:
+        requests.post(f"http://127.0.0.1:{_closed_port()}/", json={}, timeout=5)
+    except requests.RequestException as e:
+        return e
+    raise AssertionError("a closed port took the post")
+
+
+def test_post_retries_a_connection_that_was_refused(
+    mocker: pytest_mock.MockerFixture, no_sleep: None
 ) -> None:
+    refused = _refused()
+    assert open_messaging.never_reached_the_gateway(refused)
     post = mocker.patch(
-        "open_messaging.requests.post",
-        side_effect=[
-            requests.ConnectionError(f"cannot connect to {WEBHOOK}"),
-            _Response(200, "ok"),
-        ],
+        "open_messaging.requests.post", side_effect=[refused, _Response(200, "ok")]
     )
     open_messaging.post(WEBHOOK, {})
     assert post.call_count == 2
 
 
 def test_post_gives_up_after_the_retries(
-    mocker: pytest_mock.MockerFixture, no_sleep: typing.Any
+    mocker: pytest_mock.MockerFixture, no_sleep: None
 ) -> None:
-    post = mocker.patch(
-        "open_messaging.requests.post",
-        side_effect=requests.ConnectionError(f"cannot connect to {WEBHOOK}"),
-    )
+    post = mocker.patch("open_messaging.requests.post", side_effect=_refused())
     with pytest.raises(OpenMessagingError):
         open_messaging.post(WEBHOOK, {})
     assert post.call_count == 1 + open_messaging.MAX_RETRIES
 
 
-def test_post_does_not_retry_a_post_that_may_have_arrived(
-    mocker: pytest_mock.MockerFixture, no_sleep: typing.Any
+def test_post_does_not_retry_a_read_timeout(
+    mocker: pytest_mock.MockerFixture, no_sleep: None
 ) -> None:
     post = mocker.patch(
         "open_messaging.requests.post",
@@ -178,6 +206,75 @@ def test_post_does_not_retry_a_post_that_may_have_arrived(
     with pytest.raises(OpenMessagingError):
         open_messaging.post(WEBHOOK, {})
     assert post.call_count == 1
+
+
+class _MisbehavingGateway:
+    """Takes each post, then misbehaves; counts the posts it took."""
+
+    def __init__(self, misbehave: typing.Callable[[socket.socket], None]) -> None:
+        self.posts = 0
+        self._misbehave = misbehave
+        self._listener = socket.create_server(("127.0.0.1", 0))
+        port = self._listener.getsockname()[1]
+        self.url = f"http://127.0.0.1:{port}/api/hooks/abc123/{SECRET}"
+        threading.Thread(target=self._accept, daemon=True).start()
+
+    def _accept(self) -> None:
+        while True:
+            try:
+                conn, _ = self._listener.accept()
+            except OSError:
+                return
+            # One thread per post, so that a post sent again is counted at
+            # once even while the first one is still being stalled.
+            threading.Thread(target=self._take, args=(conn,), daemon=True).start()
+
+    def _take(self, conn: socket.socket) -> None:
+        with conn:
+            request = b""
+            while b"\r\n\r\n" not in request:
+                chunk = conn.recv(65536)
+                if not chunk:
+                    return
+                request += chunk
+            self.posts += 1
+            self._misbehave(conn)
+
+    def close(self) -> None:
+        self._listener.close()
+
+
+def _stall_the_body(conn: socket.socket) -> None:
+    conn.sendall(b"HTTP/1.1 200 OK\r\nContent-Length: 2\r\n\r\n")
+    time.sleep(2)
+
+
+def _drop_the_connection(conn: socket.socket) -> None:
+    pass
+
+
+@pytest.mark.parametrize("misbehave", [_stall_the_body, _drop_the_connection])
+def test_post_is_not_sent_again_once_the_gateway_took_it(
+    monkeypatch: pytest.MonkeyPatch,
+    no_sleep: None,
+    caplog: pytest.LogCaptureFixture,
+    misbehave: typing.Callable[[socket.socket], None],
+) -> None:
+    # requests raises ConnectionError for both, as it does for a connection
+    # that was refused, but the gateway has the announcement already.
+    monkeypatch.setattr(open_messaging, "TIMEOUT_SECONDS", 0.5)
+    gateway = _MisbehavingGateway(misbehave)
+    try:
+        with (
+            caplog.at_level(logging.DEBUG),
+            pytest.raises(OpenMessagingError) as raised,
+        ):
+            open_messaging.post(gateway.url, {})
+    finally:
+        gateway.close()
+    assert gateway.posts == 1
+    assert SECRET not in "".join(traceback.format_exception(raised.value))
+    assert SECRET not in _logged(caplog)
 
 
 def test_announcer_posts_the_announcement(mocker: pytest_mock.MockerFixture) -> None:
@@ -242,20 +339,32 @@ def test_announcement_reaches_the_gateway_as_json() -> None:
 
 
 def test_a_real_connection_error_is_redacted_and_raised_without_its_cause(
-    no_sleep: typing.Any, caplog: pytest.LogCaptureFixture
+    no_sleep: None, caplog: pytest.LogCaptureFixture
 ) -> None:
-    # A port nobody listens on: requests names the address in its error.
-    with socket.socket() as s:
-        s.bind(("127.0.0.1", 0))
-        port = s.getsockname()[1]
-    url = f"http://127.0.0.1:{port}/api/hooks/abc123/{SECRET}"
+    # requests names the address in its error, on each retry too.
+    url = f"http://127.0.0.1:{_closed_port()}/api/hooks/abc123/{SECRET}"
     with caplog.at_level(logging.DEBUG), pytest.raises(OpenMessagingError) as raised:
         open_messaging.post(url, {})
     assert "<redacted>" in str(raised.value)
     assert raised.value.__cause__ is None
     assert raised.value.__suppress_context__
     assert SECRET not in "".join(traceback.format_exception(raised.value))
-    assert SECRET not in caplog.text
+    assert SECRET not in _logged(caplog)
+
+
+def test_a_malformed_address_is_redacted_and_raised_without_its_cause(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    # requests rejects it with an error that quotes it, and urllib cannot
+    # parse it to find the secret to strip.
+    url = f"https://[gateway.example/api/hooks/abc123/{SECRET}"
+    with caplog.at_level(logging.DEBUG), pytest.raises(OpenMessagingError) as raised:
+        open_messaging.post(url, {})
+    assert "malformed" in str(raised.value)
+    assert raised.value.__cause__ is None
+    assert raised.value.__suppress_context__
+    assert SECRET not in "".join(traceback.format_exception(raised.value))
+    assert SECRET not in _logged(caplog)
 
 
 # --- Redaction -----------------------------------------------------------------
@@ -288,5 +397,12 @@ def test_redact_ignores_a_trailing_slash() -> None:
     )
 
 
-def test_redact_survives_an_unparsable_address() -> None:
+def test_redact_survives_an_address_without_a_scheme() -> None:
     assert open_messaging.redact("not a url", "502 Bad Gateway") == "502 Bad Gateway"
+
+
+def test_redact_keeps_nothing_for_an_address_it_cannot_parse() -> None:
+    # An unmatched "[" makes urlsplit() raise, which must not escape.
+    url = f"https://[gateway.example/api/hooks/abc123/{SECRET}"
+    redacted = open_messaging.redact(url, f"Invalid URL {url!r}: no host; {SECRET}")
+    assert redacted == "<redacted: the webhook address is malformed>"

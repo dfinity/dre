@@ -193,6 +193,7 @@ py_binary(
     deps = ["dre_cli", "public_dashboard", "publish_notes", "forum", "process_watchdog", "prometheus", "release_notes_composer", "release_index_loader", "dryrun"] + [
         requirement("pydiscourse"),
         requirement("requests"),
+        requirement("urllib3"),
         requirement("types-requests"),
         requirement("prometheus-client"),
         requirement("python-dotenv"),
