@@ -273,6 +273,7 @@ large_tests_deps = ["commit-annotator"]
 small_tests = glob(["tests/test_*.py"], exclude=large_tests + medium_tests + integration_tests)
 small_tests_deps = ["forum", "publish_notes", "release_index", "release_index_loader", "dryrun", "git_repo"] + [
     requirement("httpretty"),
+    requirement("types-requests"),
 ]
 
 # We group tests into large, medium and small to take advantage of the
