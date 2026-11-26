@@ -277,7 +277,7 @@ class DRECli(dre_cli.DRECli):
         return crc32(version.encode("utf-8"))
 
 
-class MockSlackAnnouncer(object):
+class MockReleaseAnnouncer(object):
     def __init__(self) -> None:
         self._logger = LOGGER.getChild(self.__class__.__name__)
 
@@ -289,7 +289,7 @@ class MockSlackAnnouncer(object):
         os_kind: OsKind,
     ) -> None:
         self._logger.warning(
-            "Simulating announcement of %s %s in slack", os_kind, version_name
+            "Simulating announcement of %s %s in Open Messaging", os_kind, version_name
         )
 
 

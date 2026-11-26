@@ -188,16 +188,16 @@ py_library (
 py_binary(
     name = "release-controller",
     main = "reconciler.py",
-    srcs = ["reconciler.py", "slack_announce.py"],
+    srcs = ["reconciler.py", "open_messaging.py"],
     tags = ["typecheck"],
     deps = ["dre_cli", "public_dashboard", "publish_notes", "forum", "process_watchdog", "prometheus", "release_notes_composer", "release_index_loader", "dryrun"] + [
         requirement("pydiscourse"),
         requirement("requests"),
+        requirement("urllib3"),
         requirement("types-requests"),
         requirement("prometheus-client"),
         requirement("python-dotenv"),
         requirement("pygithub"),
-        requirement("slack-sdk"),
     ],
     data = ["//rs/cli:dre-embedded"],
 )
@@ -273,6 +273,8 @@ large_tests_deps = ["commit-annotator"]
 small_tests = glob(["tests/test_*.py"], exclude=large_tests + medium_tests + integration_tests)
 small_tests_deps = ["forum", "publish_notes", "release_index", "release_index_loader", "dryrun", "git_repo"] + [
     requirement("httpretty"),
+    requirement("requests"),
+    requirement("types-requests"),
 ]
 
 # We group tests into large, medium and small to take advantage of the

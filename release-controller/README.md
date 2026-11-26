@@ -87,6 +87,7 @@ Several credentials are necessary.  For the reconciler:
 1. The Google Drive credentials.  These are stored in the DRE Team vault and named *FIT on-call schedule sync and release controller Google Drive credential*.  Saved to a file, the path to this file must be set in environment variable `GDOCS_CREDENTIALS_PATH`.
 2. `PROPOSER_NEURON_ID` should be set to the neuron ID of the proposer, and the proposer key material should be saved to a file (asn the DRE team for information), whose path should be added to environment variable `PROPOSER_KEY_FILE`.
 3. The `GITHUB_TOKEN` environment variable must be set to the token that has access to the IC and DRE repositories.  This secret resides in the DRE Team vault under the name *Release Controller GitHub API Key*.  In the reconciler, this token is used to push tags.
+4. `OPEN_MESSAGING_WEBHOOK_URL` should be set to the Open Messaging webhook of the `eng-release` channel, where the release notes of each new version are announced.  Open Messaging renders only Slack-style attachments, so the announcement is posted as one attachment.  The address holds the webhook's secret and is redacted from every error.  If the variable is unset, the announcement is skipped with a warning.
 
 The commit annotator only needs the `GITHUB_TOKEN` credentials.  This token is used to push notes.
 
