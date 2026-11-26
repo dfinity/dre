@@ -14,7 +14,7 @@ import dre_cli
 import dryrun
 import public_dashboard
 import release_index
-import slack_announce
+import open_messaging
 import reconciler_state
 from const import OsKind, OS_KINDS, GUESTOS, HOSTOS
 from dotenv import load_dotenv
@@ -416,7 +416,7 @@ class Reconciler:
         active_version_provider: ActiveVersionProvider,
         dre: dre_cli.DRECli,
         dashboard: public_dashboard.DashboardAPI,
-        slack_announcer: slack_announce.SlackAnnouncerProtocol,
+        release_announcer: open_messaging.ReleaseAnnouncerProtocol,
         ignore_releases: list[str] | None = None,
     ):
         """Create a new reconciler."""
@@ -431,7 +431,7 @@ class Reconciler:
         self.ignore_releases = ignore_releases or []
         self.dre = dre
         self.dashboard = dashboard
-        self.slack_announcer = slack_announcer
+        self.release_announcer = release_announcer
         self.change_determinator_factory = change_determinator_factory
         self.local_release_state: dict[str, dict[str, dict[OsKind, VersionState]]] = {}
 
@@ -761,24 +761,23 @@ class Reconciler:
                         os_kind=v.os_kind,
                     )
 
-            slack_webhook = os.environ.get(slack_announce.SLACK_WEBHOOK_URL_ENV)
-            open_messaging_webhook = slack_announce.open_messaging_webhook_from_env()
-            if (
-                (slack_webhook is not None or open_messaging_webhook is not None)
-                and needs_announce
-                and gdoc is not None
-            ):
-                with phase("release notes announcement"):
-                    # This should have never been in the Google Docs code.
-                    revlogger.info("Announcing release notes")
-                    slack_announce.announce_release(
-                        self.slack_announcer,
-                        slack_webhook=slack_webhook,
-                        open_messaging_webhook=open_messaging_webhook,
-                        version_name=release_tag,
-                        google_doc_url=gdoc["alternateLink"],
-                        os_kind=v.os_kind,
+            if needs_announce and gdoc is not None:
+                webhook = open_messaging.webhook_from_env()
+                if webhook is None:
+                    revlogger.warning(
+                        "%s is not set.  Not announcing the release notes.",
+                        open_messaging.OPEN_MESSAGING_WEBHOOK_URL_ENV,
                     )
+                else:
+                    with phase("release notes announcement"):
+                        # This should have never been in the Google Docs code.
+                        revlogger.info("Announcing release notes on Open Messaging")
+                        self.release_announcer.announce_release(
+                            webhook=webhook,
+                            version_name=release_tag,
+                            google_doc_url=gdoc["alternateLink"],
+                            os_kind=v.os_kind,
+                        )
 
             with phase("release notes pull request") as p:
                 self.publish_client.publish_if_ready(
@@ -1164,8 +1163,10 @@ def main() -> None:
     )
     dashboard = public_dashboard.DashboardAPI()
     state = reconciler_state.ReconcilerState(None)
-    slack_announcer: slack_announce.SlackAnnouncerProtocol = (
-        slack_announce.SlackAnnouncer() if not dry_run else dryrun.MockSlackAnnouncer()
+    release_announcer: open_messaging.ReleaseAnnouncerProtocol = (
+        open_messaging.OpenMessagingAnnouncer()
+        if not dry_run
+        else dryrun.MockReleaseAnnouncer()
     )
 
     def change_determinator_factory() -> ChangeDeterminatorProtocol:
@@ -1190,7 +1191,7 @@ def main() -> None:
         active_version_provider=ICPrometheus(
             url="https://victoria.mainnet.dfinity.network/select/0/prometheus"
         ),
-        slack_announcer=slack_announcer,
+        release_announcer=release_announcer,
         dre=dre,
         dashboard=dashboard,
     )

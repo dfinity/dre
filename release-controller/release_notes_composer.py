@@ -81,17 +81,16 @@ class Team:
 
     name: str
     google_docs_handle: str
-    slack_id: str
     send_announcement: bool
 
 
 RELEASE_NOTES_REVIEWERS: dict[OsKind, list[Team]] = {
     GUESTOS: [
-        Team("core-protocol", "@team-core-protocol", "", False),
-        Team("node", "@node-team", "S027838EY30", False),
+        Team("core-protocol", "@team-core-protocol", False),
+        Team("node", "@node-team", False),
     ],
     HOSTOS: [
-        Team("node", "@node-team", "S027838EY30", True),
+        Team("node", "@node-team", True),
     ],
 }
 

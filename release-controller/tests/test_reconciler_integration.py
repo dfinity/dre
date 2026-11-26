@@ -152,7 +152,7 @@ def _defaults_for_test(
     ReconcilerState,
     MockActiveVersionProvider,
     dryrun.DRECli,
-    dryrun.MockSlackAnnouncer,
+    dryrun.MockReleaseAnnouncer,
     StaticReleaseLoader,
     dryrun.PublishNotesClient,
     MockDashboard,
@@ -165,7 +165,7 @@ def _defaults_for_test(
         ReconcilerState(),
         MockActiveVersionProvider(),
         StubDRECli(),
-        dryrun.MockSlackAnnouncer(),
+        dryrun.MockReleaseAnnouncer(),
         StaticReleaseLoader(
             pydantic_yaml.to_yaml_str(
                 ReleaseIndexModel.model_validate({"releases": releases})
